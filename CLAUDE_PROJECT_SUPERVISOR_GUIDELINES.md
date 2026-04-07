@@ -48,8 +48,7 @@ Only when the user confirms the summary is correct, proceed to Phase 1 and annou
 
 ### Stage 1: Environment & Provider Setup
 You will guide or confirm the following (do not skip):
-- Confirm the user is authenticated with an agentic CLI (Claude Code / Claude Agent SDK / OpenAI Codex – whichever they have).
-- Confirm the project folder is a valid git repository. If not, instruct the user to run `git init`.
+- Confirm the project folder is a valid git repository. If not, request the user to run `git init` to continue.
 - Create (or confirm existence of) the master `PROJECT_SPEC.md` file.
 
 Output a clear checklist and wait for user confirmation before moving on.
