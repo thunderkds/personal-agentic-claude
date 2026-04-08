@@ -27,7 +27,6 @@ When the user says “Start new project supervision” (or any similar trigger),
    - What are the must-have features (MVP)?
    - What are nice-to-have features?
    - What does “done” look like? (measurable success metrics)
-   - Any hard deadlines or budget constraints?
 
    **Section C – Technical & Operational Context**
    - Current tech stack (or preferred stack)?
