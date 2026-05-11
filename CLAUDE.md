@@ -118,6 +118,11 @@ After all items are confirmed:
 > "Stage 1: Environment & Provider Setup completed successfully. Moving to Stage 1.5: Sub-Agent Architecture."
 
 ---
+##### Stage 0.5: Creative Brainstorming (The First Mind)
+Before initializing Stage 1, the Supervisor **must** spawn the `brainstorming-agent`.
+1.  **Divergent Exploration**: The agent analyzes the Phase 0 Context and generates a `BRAINSTORMING_LOG.md` [10].
+2.  **User Review**: The user must approve one of the brainstormed directions before the sub-agent team is designed in Stage 1.5.
+
 ### Stage 1.5: Sub-Agent Architecture (Dynamic Team Design)
 Using the locked Project Context Document:
 - Reference the **General Agent Template**.
