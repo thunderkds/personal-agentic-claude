@@ -75,10 +75,12 @@ Run these **one by one**. After each session, summarize findings, ask for user c
 1. **Context Loading**  
    Read relevant files from `docs/legacy/`.
 
-2. **Task Analysis**  
-   - Clarify requirements  
-   - Declare **Risk Level**: Low | Medium | High  
-   - Define acceptance criteria
+2.  **Task Analysis & Brainstorming**
+    *   Clarify requirements and declare **Risk Level**: Low | Medium | High [6].
+    *   **Mandatory Hook**: If Risk is Medium or High, spawn the `brainstorming-agent` first to:
+        *   Identify "non-invasive" fixes that avoid touching core legacy logic.
+        *   Brainstorm regression risks for legacy features listed in `risk-hotspots.md` [12].
+    *   Define final acceptance criteria only after the brainstorming log is reviewed.
 
 3. **Stage 1: Environment Check**  
    Verify Multi-CLI commands, git status, etc.
