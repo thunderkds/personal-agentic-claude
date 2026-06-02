@@ -83,7 +83,7 @@ Run these **one by one**. After each session, summarize findings, ask for user c
 
 2. **Task Analysis & Brainstorming**
    - Clarify requirements and declare **Risk Level** (see [Risk Level Criteria](#risk-level-criteria)).
-   - **Mandatory Hook**: If Risk is **Medium or High**, spawn the `brainstorming-agent` (template in `agents/brainstorming.md`) first to:
+   - **Mandatory Hook**: If Risk is **Medium or High**, invoke the `brainstorming` skill (`.claude/skills/brainstorming/SKILL.md`) first to:
      - Identify "non-invasive" fixes that avoid touching core legacy logic.
      - Brainstorm regression risks for legacy features listed in `risk-hotspots.md`.
    - Define final acceptance criteria only after the brainstorming log is reviewed.
@@ -99,7 +99,7 @@ Run these **one by one**. After each session, summarize findings, ask for user c
 
    Add optional agents as needed:
    - `frontend-implementer.md` — Angular/TypeScript UI changes
-   - `brainstorming.md` — risk analysis (required for Medium/High tasks)
+   - `brainstorming` skill (`.claude/skills/brainstorming/SKILL.md`) — risk analysis (required for Medium/High tasks)
 
    Reference `docs/legacy/` in every agent prompt.
 
@@ -111,11 +111,23 @@ Run these **one by one**. After each session, summarize findings, ask for user c
 6. **Stage 3: Execution**  
    Implement changes per the TASK_GUIDE. Follow Karpathy principles.
 
-7. **Stage 4: Review**  
-   Verify changed files match acceptance criteria. Run lint and tests.
+7. **Stage 4: Review**
+   Run code review (always):
+   ```
+   Skill({ skill: "code-review" })
+   ```
+   Run security review if Risk Level is Medium or High:
+   ```
+   Skill({ skill: "security-review" })
+   ```
+   Verify changed files match acceptance criteria. Run lint and tests. Address all findings before Stage 5.
 
-8. **Stage 5: Integration**  
-   Confirm smoke tests pass. Update `docs/legacy/` if new insights were gained.
+8. **Stage 5: Integration**
+   Verify the change works end-to-end in the running app:
+   ```
+   Skill({ skill: "verify" })
+   ```
+   Confirm smoke tests pass. Update `docs/legacy/` if new insights were gained. Update `memory/` if new patterns were learned.
 
 ### Required Outputs for Every Task
 - Mode + Risk Level declaration
@@ -160,7 +172,8 @@ Run these **one by one**. After each session, summarize findings, ask for user c
 ---
 
 **Mandatory Folder Structure**:
-- `agents/` (general-agent-template.md, brainstorming.md, backend-implementer.md, frontend-implementer.md, common-infrastructure.md, qa-automation.md)
+- `agents/` (general-agent-template.md, backend-implementer.md, frontend-implementer.md, common-infrastructure.md, qa-automation.md)
+- `.claude/skills/` (brainstorming/SKILL.md — invoked via `Skill({ skill: "brainstorming" })`)
 - `tasks/` (all TASK_GUIDE files)
 - `docs/legacy/` (all investigation outputs)
 - `memory/` (session-persistent insights — read `MEMORY.md` index at session start; write new entries when new patterns or feedback are learned)
@@ -301,7 +314,7 @@ Every agent prompt **must** include these sections:
 
 ---
 
-### Brainstorming Agent (`agents/brainstorming.md`)
+### Brainstorming Skill (`.claude/skills/brainstorming/SKILL.md`)
 
 ```markdown
 ## Role
@@ -336,9 +349,9 @@ For each potential implementation approach:
 [list]
 ```
 
-Spawn command:
+Invoke command:
 ```
-Agent({ subagent_type: "general-purpose", prompt: "<contents of agents/brainstorming.md with TASK_DESCRIPTION filled in>" })
+Skill({ skill: "brainstorming" })
 ```
 
 ---
