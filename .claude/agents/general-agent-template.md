@@ -28,14 +28,31 @@ If any of these files is missing, **stop and notify the Supervisor before procee
 
 ---
 
+## Complexity Levels — How Much Process to Apply
+
+Your `TASK_GUIDE` assigns a **Complexity Level**. Scale your effort to it — this is the primary control for how much process you run. **Risk Level is a separate axis**: it gates `security-review` regardless of complexity (a C0 change to auth code is still High risk).
+
+| Level | Scope signal | Process | Skills | Model |
+|---|---|---|---|---|
+| **C0** Trivial | 1 file, ~≤10 LOC, no design decision (typo, copy, config flag) | Work inline — no worktree, no brainstorm | `code-review` optional | haiku |
+| **C1** Simple | 1–2 files, known pattern, no new abstraction | Single agent | `code-review` always; `verify` if user-facing | sonnet |
+| **C2** Moderate | 3+ files, *or* a design choice, *or* a new component | Plan before coding | `brainstorming` when >1 viable approach; `code-review` + `verify` | sonnet / opus |
+| **C3** Complex | Cross-cutting, architectural, unknowns, or touches shared/core | Decompose into subtasks; multi-agent | `brainstorming` **mandatory**; `code-review` + adversarial `verify` | opus |
+
+If the task proves harder than its assigned level, **escalate and pause** — notify the Supervisor with the new level rather than powering through. Anything larger than C3 is an **Epic** and must be split by the Supervisor at Stage 2 before pickup.
+
+---
+
 ## Available Skills (Callable by Any Agent)
+
+Trigger thresholds for these skills are set by the Complexity matrix above.
 
 | Skill | Invoke | When |
 |---|---|---|
-| `brainstorming` | `Skill({ skill: "brainstorming" })` | Facing architectural ambiguity or multiple valid paths |
-| `code-review` | `Skill({ skill: "code-review" })` | Before reporting task ready for review |
-| `security-review` | `Skill({ skill: "security-review" })` | Task Risk Level is Medium or High |
-| `verify` | `Skill({ skill: "verify" })` | After implementation — confirm feature works in running app |
+| `brainstorming` | `Skill({ skill: "brainstorming" })` | C2 when >1 viable approach; C3 mandatory |
+| `code-review` | `Skill({ skill: "code-review" })` | Before reporting task ready for review (C1+) |
+| `security-review` | `Skill({ skill: "security-review" })` | Task Risk Level is Medium or High (independent of complexity) |
+| `verify` | `Skill({ skill: "verify" })` | C1+ if user-facing; adversarial at C3 |
 | `run` | `Skill({ skill: "run" })` | Launch the app to observe behavior during development |
 
 ---

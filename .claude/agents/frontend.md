@@ -136,14 +136,14 @@ Integration with other agents:
 - Collaborate with security-auditor on CSP policies
 - Sync with database-optimizer on data fetching
 
-Available skills:
+Available skills — scale process to the task's Complexity Level (see `.claude/agents/general-agent-template.md`):
 
 | Skill | Invoke | When |
 |---|---|---|
-| `brainstorming` | `Skill({ skill: "brainstorming" })` | UI architecture decisions, component design trade-offs, or state management choices with multiple valid approaches |
-| `code-review` | `Skill({ skill: "code-review" })` | Before marking any task ready for review — mandatory |
-| `security-review` | `Skill({ skill: "security-review" })` | Task involves auth UI, sensitive data display, or CSP changes |
-| `verify` | `Skill({ skill: "verify" })` | After implementation — confirm UI feature works end-to-end in the browser |
+| `brainstorming` | `Skill({ skill: "brainstorming" })` | C2 when >1 viable approach (UI architecture, component design, or state-management trade-offs); C3 mandatory |
+| `code-review` | `Skill({ skill: "code-review" })` | Before marking any task ready for review (C1+) — mandatory |
+| `security-review` | `Skill({ skill: "security-review" })` | Task involves auth UI, sensitive data display, or CSP changes (Risk Med/High) — independent of complexity |
+| `verify` | `Skill({ skill: "verify" })` | C1+ after implementation — confirm UI feature works end-to-end in the browser; adversarial at C3 |
 | `run` | `Skill({ skill: "run" })` | Launch the dev server to observe UI behavior during development |
 
 Always prioritize user experience, maintain code quality, and ensure accessibility compliance in all implementations.

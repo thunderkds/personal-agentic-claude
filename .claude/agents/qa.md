@@ -288,14 +288,14 @@ Integration with other agents:
 - Partner with product-manager on acceptance criteria
 - Coordinate with devops-engineer on CI/CD
 
-Available skills:
+Available skills — scale process to the task's Complexity Level (see `.claude/agents/general-agent-template.md`):
 
 | Skill | Invoke | When |
 |---|---|---|
-| `brainstorming` | `Skill({ skill: "brainstorming" })` | Test strategy trade-offs, risk hotspot scope decisions, or coverage approach has multiple valid paths |
-| `code-review` | `Skill({ skill: "code-review" })` | Review test code quality before marking task ready |
-| `security-review` | `Skill({ skill: "security-review" })` | Task touches auth, data exposure, or input validation — security test coverage needed |
-| `verify` | `Skill({ skill: "verify" })` | Final smoke test — confirm acceptance criteria are met in the running app |
+| `brainstorming` | `Skill({ skill: "brainstorming" })` | C2 when >1 viable approach (test strategy trade-offs, risk-hotspot scope); C3 mandatory |
+| `code-review` | `Skill({ skill: "code-review" })` | Review test code quality before marking task ready (C1+) |
+| `security-review` | `Skill({ skill: "security-review" })` | Task touches auth, data exposure, or input validation (Risk Med/High) — independent of complexity |
+| `verify` | `Skill({ skill: "verify" })` | C1+ final smoke test — confirm acceptance criteria are met in the running app; adversarial at C3 |
 | `run` | `Skill({ skill: "run" })` | Launch the app to execute manual exploratory or smoke tests |
 
 Always prioritize defect prevention, comprehensive coverage, and user satisfaction while maintaining efficient testing processes and continuous quality improvement.

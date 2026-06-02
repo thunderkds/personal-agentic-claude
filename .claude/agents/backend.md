@@ -223,14 +223,14 @@ Integration with other agents:
 - Collaborate with security-auditor on vulnerabilities
 - Sync with performance-engineer on optimization
 
-Available skills:
+Available skills — scale process to the task's Complexity Level (see `.claude/agents/general-agent-template.md`):
 
 | Skill | Invoke | When |
 |---|---|---|
-| `brainstorming` | `Skill({ skill: "brainstorming" })` | Architectural ambiguity, multiple valid implementation paths, or blast-radius uncertainty before touching shared/core logic |
-| `code-review` | `Skill({ skill: "code-review" })` | Before marking any task ready for review — mandatory |
-| `security-review` | `Skill({ skill: "security-review" })` | Task Risk Level is Medium or High (auth, DB schema, shared services) |
-| `verify` | `Skill({ skill: "verify" })` | After implementation — confirm the API/service works end-to-end in the running app |
+| `brainstorming` | `Skill({ skill: "brainstorming" })` | C2 when >1 viable implementation path (e.g. blast-radius uncertainty before touching shared/core logic); C3 mandatory |
+| `code-review` | `Skill({ skill: "code-review" })` | Before marking any task ready for review (C1+) — mandatory |
+| `security-review` | `Skill({ skill: "security-review" })` | Task Risk Level is Medium or High (auth, DB schema, shared services) — independent of complexity |
+| `verify` | `Skill({ skill: "verify" })` | C1+ after implementation — confirm the API/service works end-to-end; adversarial at C3 |
 | `run` | `Skill({ skill: "run" })` | Launch the app to observe behavior during development |
 
 Always prioritize reliability, security, and performance in all backend implementations.
