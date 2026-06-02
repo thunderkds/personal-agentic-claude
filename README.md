@@ -56,8 +56,13 @@ The Supervisor never implements directly. It spawns focused sub-agents, each con
     common-infrastructure.md → subagent_type: "common-infrastructure"
     general-agent-template.md  # Shared base rules (not spawned directly)
   skills/          # Custom skills (auto-discovered by Claude Code)
-    brainstorming/
-      SKILL.md             → Skill({ skill: "brainstorming" })
+    brainstorming/         → Skill({ skill: "brainstorming" })      # Stage 0.5
+    grill-with-docs/       → Skill({ skill: "grill-with-docs" })    # Stage 2
+    to-issues/             → Skill({ skill: "to-issues" })          # Stage 2
+    tdd/                   → Skill({ skill: "tdd" })                # Stage 3
+    diagnose/              → Skill({ skill: "diagnose" })           # Stage 3
+    git-guardrails-claude-code/ → Skill({ skill: "git-guardrails-claude-code" })  # Stage 1 setup
+    blast-radius/          → Skill({ skill: "blast-radius" })       # Stage 4
   settings.local.json
 
 tasks/             # TASK_GUIDE_T001.md … generated at Stage 2, one per task
@@ -109,8 +114,37 @@ Two distinct mechanisms — do not confuse them:
 | Runs | Inline in the current conversation | Isolated sub-process with its own context window |
 | Use for | Cross-cutting analysis (brainstorm, review, verify) | Focused implementation in a worktree |
 
-**Custom skill in this repo:** `brainstorming`
+**Custom skills in this repo:** `brainstorming`, `grill-with-docs`, `to-issues`, `tdd`, `diagnose`, `git-guardrails-claude-code`, `blast-radius`
 **Built-in skills used:** `code-review`, `security-review`, `verify`, `run`, `update-config`, `fewer-permission-prompts`
+
+---
+
+## Custom skills
+
+Cross-cutting helpers the Supervisor invokes at specific pipeline stages. `brainstorming` ships with the original system; the rest were vendored (and adapted to this framework) from community skill collections.
+
+| Skill | Stage | Complexity | What it does |
+|---|---|---|---|
+| `brainstorming` | 0.5 | — | **Divergent** exploration — three implementation paths + adversarial review, written to `BRAINSTORMING_LOG.md` |
+| `grill-with-docs` | 2 | C1–C2 | **Convergent** grilling — interrogates the plan one question at a time, sharpens fuzzy terminology against the code, folds the glossary/decisions into `PROJECT_SPEC.md` (ADRs in `docs/adr/` only for hard-to-reverse calls) |
+| `to-issues` | 2 | C1 | Breaks the locked plan into **tracer-bullet vertical slices** — each a complete end-to-end path — that become `PROJECT_KANBAN.md` rows and `TASK_GUIDE` files, labelled with Complexity/Risk/Priority |
+| `tdd` | 3 | C1 | **Red → green → refactor**, one vertical slice at a time. Operationalizes the Karpathy Task Transformation Table (write the failing test first) |
+| `diagnose` | 3 | C1 | Disciplined bug / perf-regression loop: build a feedback loop → reproduce → 3–5 falsifiable hypotheses → instrument → fix + regression-test → post-mortem |
+| `git-guardrails-claude-code` | 1 setup | C0 | Installs a `PreToolUse` hook that blocks destructive git (`push`, `reset --hard`, `clean -f`, `branch -D`, `checkout/restore .`) before it runs — enforces "commit/push only when asked" mechanically |
+| `blast-radius` | 4 | — | For Medium/High-risk tasks touching sensitive data: inventories PII/PHI/credentials, traces data flow, scores exposure vectors, and estimates regulatory + financial breach impact |
+
+> These are **available** for the Supervisor to invoke at the mapped stage — not auto-run. The Supervisor decides based on each task's Complexity/Risk labels (e.g. `tdd`/`diagnose` for C1+ implementation, `blast-radius` only when Risk is Medium/High *and* sensitive data is in scope).
+
+### Authoring a skill
+
+New skills follow a house style so the Supervisor can rely on them. Start from **`templates/SKILL_template.md`** and keep these conventions:
+
+1. **One folder per skill**: `.claude/skills/<name>/SKILL.md`, where `<name>` matches the frontmatter `name:` exactly (that's the `Skill({ skill: "<name>" })` handle).
+2. **`description:` drives triggering** — it's the only text Claude sees when deciding to invoke. Say *what* it does and *when* (name the pipeline stage).
+3. **Section order**: `Role` → `Karpathy Operational Commands` (only the relevant overrides) → `Workflow` → `Communication Protocol`.
+4. **Adapt, don't copy** — when vendoring an external skill, strip external CLI/tool dependencies and route any state into `PROJECT_SPEC.md` rather than introducing new conventions.
+5. **Self-contained** — if you reference a sub-file, vendor it; bundled scripts go in `scripts/` (`chmod +x` + a smoke test).
+6. **Register it** in the `CLAUDE.md` custom-skill table *and* the Custom skills table above.
 
 ---
 
