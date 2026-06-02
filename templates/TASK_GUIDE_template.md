@@ -1,6 +1,8 @@
 # TASK_GUIDE — T[NNN]: [Short Title]
 **Date**: [YYYY-MM-DD]
+**Complexity Level**: C0 / C1 / C2 / C3
 **Risk Level**: Low / Medium / High
+**Priority**: P0 / P1 / P2
 **Assigned agent**: [agent name]
 **Agent guide**: `.claude/agents/[agent-file].md`
 
@@ -13,6 +15,7 @@ Before writing any code:
 2. Read `memory/MEMORY.md`
 3. Read this file completely
 4. Read `.claude/agents/[agent-file].md`
+5. Note the **Complexity Level** above and apply the matching process (brainstorm / decompose / verify depth / model) from the Complexity matrix in `.claude/agents/general-agent-template.md`
 
 If docs/legacy/ exists (legacy mode): also read `docs/legacy/risk-hotspots.md` and `docs/legacy/architecture.md`.
 

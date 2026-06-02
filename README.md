@@ -114,6 +114,39 @@ Two distinct mechanisms — do not confuse them:
 
 ---
 
+## Task Classification
+
+Every task carries three **independent** labels. They answer different questions and never collapse into one number — a one-line change can be trivial *effort* yet high *risk*.
+
+| Axis | Question it answers | What it controls |
+|---|---|---|
+| **Complexity** (C0–C3) | How much effort/process does this need? | Whether to brainstorm, decompose, spawn a sub-agent, which model, how deep to verify |
+| **Risk** (Low/Med/High) | How dangerous is it if it goes wrong? | Safety gates: `security-review`, approvals, must-not-touch enforcement |
+| **Priority** (P0/P1/P2) | When should we do it? | Ordering on the Kanban only — never *how* an agent works |
+
+### Complexity levels
+
+This is the axis an agent uses to **pick how much process to apply** to its assigned task.
+
+| Level | Name | Signals — how to classify | What the agent does | Model |
+|---|---|---|---|---|
+| **C0** | Trivial | 1 file, ~≤10 LOC, no design decision (typo, copy text, config flag flip) | Work inline — no worktree, no brainstorm. `code-review` optional. | haiku |
+| **C1** | Simple | 1–2 files, a known pattern, no new abstraction | No brainstorm. `code-review` always. `verify` if the change is user-facing. | sonnet |
+| **C2** | Moderate | 3+ files, *or* a real design choice, *or* a new component | `brainstorming` when more than one approach is viable. Full `code-review` + `verify`. | sonnet / opus |
+| **C3** | Complex | Cross-cutting, architectural, carries unknowns, or touches shared/core code | `brainstorming` **mandatory**. Decompose into subtasks. Multi-agent execution + adversarial `verify`. | opus |
+
+> **Above C3 = "Epic".** Not an executable level — if a task reads bigger than C3, the Supervisor must **split it into smaller tasks during Stage 2 (Planning)** before any agent picks it up.
+
+### How the axes compose
+
+> **Example:** a one-line change to the auth token check → **C0 (trivial effort)** but **High risk**. The agent skips brainstorming and the worktree, but `security-review` is still mandatory because of the Risk axis. Merging the two axes would lose this — which is why they stay separate.
+
+### Who assigns the level
+
+The **Supervisor sets a baseline** Complexity (and Risk + Priority) in each `TASK_GUIDE` during Stage 2. On pickup, an agent that discovers hidden complexity **escalates the level and pauses to notify the Supervisor** rather than silently powering through — so the plan stays honest.
+
+---
+
 ## Karpathy Engineering Principles
 
 All agents enforce these four principles:

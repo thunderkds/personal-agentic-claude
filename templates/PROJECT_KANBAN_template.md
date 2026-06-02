@@ -7,17 +7,19 @@
 
 ## Board
 
+> Task line format: **Txxx** — [title] | [agent] | C[0–3] | Risk: Low/Med/High | P[0–2]
+
 ### Todo
-- [ ] **T001** — [short title] | [agent] | Risk: Low/Med/High
+- [ ] **T001** — [short title] | [agent] | C2 | Risk: Low/Med/High | P1
 
 ### In Progress
-- [ ] **T002** — [short title] | [agent] | Risk: Low/Med/High | Started: [date]
+- [ ] **T002** — [short title] | [agent] | C2 | Risk: Low/Med/High | P1 | Started: [date]
 
 ### Ready for Review
-- [ ] **T003** — [short title] | [agent] | PR/branch: [branch name]
+- [ ] **T003** — [short title] | [agent] | C2 | PR/branch: [branch name]
 
 ### Done
-- [x] **T000** — [short title] | Completed: [date]
+- [x] **T000** — [short title] | C1 | Completed: [date]
 
 ---
 

@@ -69,6 +69,7 @@ All sub-agents inherit from this base template unless explicitly overridden.
 - Update the Memory/Insights section of PROJECT_SPEC.md with key learnings
 - Pause and ask the Supervisor if any ambiguity or error occurs
 - Work only inside the assigned git worktree
+- Scale process to the task's **Complexity Level (C0–C3)** — see the Complexity matrix in `.claude/agents/general-agent-template.md`. **Risk Level** separately gates `security-review`.
 
 **Default Communication Protocol:**
 - Use concise, structured messages
@@ -231,6 +232,7 @@ When the user invokes `/plan`, the Supervisor must:
 2. Take the approved Project Context Document and brainstorming direction.
 3. Create (or update) `PROJECT_SPEC.md` as the single source of truth using `templates/PROJECT_SPEC_template.md`.
 4. Create (or update) `PROJECT_KANBAN.md` as the compact task board using `templates/PROJECT_KANBAN_template.md`.
+5. Assign each task three independent labels: **Complexity (C0–C3)**, **Risk (Low/Med/High)**, and **Priority (P0–P2)**. Split any task larger than C3 (an **Epic**) into smaller tasks before generating guides. (Complexity drives agent process; Risk gates `security-review`; Priority sets ordering — see the matrix in `.claude/agents/general-agent-template.md`.)
 
 **Task State Management (Token-Efficient Design)**
 Use two files:
@@ -253,7 +255,7 @@ Only after confirmation, announce:
 For every task moved to In Progress:
 - Common-Infrastructure-Agent creates the git worktree.
 - The TASK_GUIDE_Txxx.md already exists in tasks/ — no need to regenerate it.
-- Tell the user the exact command to spawn the assigned sub-agent in that worktree.
+- Tell the user the exact command to spawn the assigned sub-agent in that worktree. Set the spawn model to match the task's **Complexity** (C0→haiku, C1→sonnet, C2→sonnet/opus, C3→opus).
 - The sub-agent must read both its TASK_GUIDE_Txxx.md (from tasks/) and the relevant agent guide from .claude/agents/.
 
 Run the app during implementation to catch regressions early:
@@ -305,6 +307,7 @@ Only after all tasks are integrated, announce:
 - The `.claude/agents/`, `.claude/skills/`, `tasks/`, `templates/`, and `memory/` folders are mandatory.
 - All TASK_GUIDE files are generated once in Stage 2 using `templates/TASK_GUIDE_template.md` and stored permanently in tasks/.
 - Every sub-agent must read `PROJECT_SPEC.md`, its TASK_GUIDE_Txxx.md, and the corresponding file in .claude/agents/ before starting work.
+- Every task carries a **Complexity (C0–C3)**, **Risk (Low/Med/High)**, and **Priority (P0–P2)** label. Tasks above C3 (Epics) must be split at Stage 2 before pickup.
 - Stage 4 (code-review) is mandatory for every task. Stage 4 security-review is mandatory for Medium/High risk tasks.
 - Stage 5 verify is mandatory before any merge.
 - The Supervisor must always specify the exact CLI + spawn command for every sub-agent.

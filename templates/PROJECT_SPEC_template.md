@@ -51,9 +51,9 @@
 
 ## Tasks
 
-| ID | Title | Status | Assigned Agent | Risk |
-|----|-------|--------|---------------|------|
-| T001 | [title] | Todo / In Progress / Review / Done | [agent] | Low / Med / High |
+| ID | Title | Status | Assigned Agent | Complexity | Risk | Priority |
+|----|-------|--------|---------------|-----------|------|----------|
+| T001 | [title] | Todo / In Progress / Review / Done | [agent] | C0–C3 | Low / Med / High | P0–P2 |
 
 ---
 
