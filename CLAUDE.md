@@ -44,7 +44,13 @@ The `subagent_type` is the agent's `name:` field (not the filename). Because Cla
 
 | Skill | Definition | When to use |
 |---|---|---|
-| `brainstorming` | `.claude/skills/brainstorming/SKILL.md` | Before planning: explore alternatives, surface edge cases |
+| `brainstorming` | `.claude/skills/brainstorming/SKILL.md` | Stage 0.5: divergent exploration — alternatives, edge cases |
+| `grill-with-docs` | `.claude/skills/grill-with-docs/SKILL.md` | Stage 2: convergent grilling — sharpen terminology, lock intent, record ADRs before breakdown |
+| `to-issues` | `.claude/skills/to-issues/SKILL.md` | Stage 2: break the plan into tracer-bullet vertical-slice tasks (feeds KANBAN + TASK_GUIDEs) |
+| `tdd` | `.claude/skills/tdd/SKILL.md` | Stage 3: red-green-refactor implementation, one vertical slice at a time |
+| `diagnose` | `.claude/skills/diagnose/SKILL.md` | Stage 3: disciplined bug / perf-regression diagnosis loop |
+| `git-guardrails-claude-code` | `.claude/skills/git-guardrails-claude-code/SKILL.md` | Stage 1 setup: install PreToolUse hook blocking destructive git |
+| `blast-radius` | `.claude/skills/blast-radius/SKILL.md` | Stage 4 (Medium/High Risk): quantify data-breach impact — sensitive-data inventory, exposure scoring, regulatory/financial estimate |
 
 **Built-in Claude Code skills** (no definition file needed — always present):
 
@@ -99,6 +105,7 @@ The project root **must** contain these folders:
    - templates/PROJECT_KANBAN_template.md
    - templates/TASK_GUIDE_template.md
    - templates/BRAINSTORMING_LOG_template.md
+   - templates/SKILL_template.md
 
 5. `memory/` folder containing:
    - memory/MEMORY.md (session-persistent insights index)
@@ -278,7 +285,13 @@ For every task that reaches "Ready for Review":
    Skill({ skill: "security-review" })
    ```
 
-3. Address all findings before moving to Stage 5. Update PROJECT_KANBAN.md status.
+3. **Blast-Radius Analysis** (if task Risk Level is Medium or High and the task touches sensitive data — PII/PHI/credentials/payment data):
+   ```
+   Skill({ skill: "blast-radius" })
+   ```
+   Quantifies the breach impact of the exposure surface `security-review` finds.
+
+4. Address all findings before moving to Stage 5. Update PROJECT_KANBAN.md status.
 
 ---
 
