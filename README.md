@@ -45,6 +45,69 @@ The Supervisor never implements directly. It spawns focused sub-agents, each con
 
 ---
 
+## The three pillars every task passes through
+
+Whatever the task, the flow walks the same three pillars **in order** — each with a gate that must
+be green before the next begins:
+
+```
+Pillar 1: Adapt the requirement   →   Pillar 2: Right implementation   →   Pillar 3: Evaluation
+  capture intent faithfully            build it test-first, surgically      prove it works, with evidence
+```
+
+| Pillar | What it guarantees | Gate (proof it happened) | Stage |
+|---|---|---|---|
+| **1. Adapt the requirement** | We're building the *right thing* — intent captured in the project's language, criteria traced to the request | **Requirement Fidelity Gate** signed off by Supervisor/user (not the implementer) before any code | Phase 0 → Stage 2, checked at Stage 3 start |
+| **2. Right implementation** | We're building it *the right way* — test-first, surgical, only the predicted files | `tdd` red→green→refactor + must-not-touch list | Stage 3 |
+| **3. Evaluation** | It *actually works* — verified by an independent oracle, with recorded evidence | **Evidence Gate** — verification command run + output pasted, no regression | Stage 4 → Stage 5 |
+
+The links between pillars are what keep the chain honest: every Acceptance Criterion **traces back
+to a line in the Requirement** (1→3), and the implementing agent is never the sole author of its own
+acceptance test (2 can't fake 3). The `TASK_GUIDE` is the single sheet where all three are recorded.
+
+---
+
+## How we evaluate agent work (correctness)
+
+The hardest question in any agentic pipeline is *"how do we know the agent actually did it right?"*
+This system answers it by making correctness **verifiable by construction**, not judged after the fact.
+
+### The principle
+
+Every task is phrased as a **verifiable goal**, never an imperative (the Karpathy *Task
+Transformation Table*): "add validation" → *"write tests for invalid inputs, then make them
+pass."* If a task can't be expressed as a pass/fail check, it isn't ready to spawn.
+
+### The evaluation layers
+
+| Layer | Oracle (what decides pass/fail) | Where |
+|---|---|---|
+| **1. Acceptance criteria** | Concrete `given → expect` rows + a single runnable verification command | `TASK_GUIDE` *Evaluation & Acceptance* section — filled **before** the agent starts |
+| **2. Tests (TDD)** | Failing test written/approved by the Supervisor, then made green | `tdd` skill, Stage 3 |
+| **3. Independent review** | A fresh context (not the implementer) reads the diff | `code-review` / `security-review`, Stage 4 |
+| **4. End-to-end behavior** | The real app is run and observed | `verify` / `run` skill, Stage 5 |
+| **5. No regression** | The full smoke suite stays green after merge | QA-agent owns the suite |
+
+### The one rule that prevents self-deception
+
+> **The implementing agent must not be the sole author of its own acceptance test.**
+> If one agent writes both the code and the test, it can make both agree while both are wrong.
+> The Supervisor writes or signs off on the oracle first, and review runs in a *separate* context
+> from implementation.
+
+### Evidence, not vibes
+
+Each `TASK_GUIDE` carries an **Evaluation & Acceptance** block with three parts:
+
+1. **Success Criteria** — observable `given → expect` rows (including negative cases)
+2. **Verification Command** — the exact command that proves it works
+3. **Evidence** — pass/fail + real output, filled in by the reviewer at Stage 4/5
+
+A task is **not done** until every evidence row is filled. This turns "looks done" into a record
+you can audit. See `templates/TASK_GUIDE_template.md` for the block.
+
+---
+
 ## Folder structure
 
 ```

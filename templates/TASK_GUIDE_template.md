@@ -21,17 +21,68 @@ If docs/legacy/ exists (legacy mode): also read `docs/legacy/risk-hotspots.md` a
 
 ---
 
-## Requirement
+## Requirement (Pillar 1 — Adapt the requirement)
 
 [Original user request — verbatim or closely paraphrased. Do not interpret yet.]
+
+**Restated intent** (Supervisor's interpretation, in the project's domain language):
+> [one or two sentences — what success means for the user]
+
+**Out of scope** (what this task explicitly does NOT do):
+- [non-goal 1]
+
+### Requirement Fidelity Gate (sign off BEFORE implementation)
+
+- [ ] Restated intent confirmed to match the user's request (by Supervisor / user — not the implementing agent)
+- [ ] Domain terms align with `PROJECT_SPEC.md` glossary (`grill-with-docs` run if terminology was fuzzy)
+- [ ] Every Acceptance Criterion below traces to a line in the Requirement
+
+> An agent must NOT start implementing until this gate is checked. If anything here is unclear,
+> STOP and ask the Supervisor (Karpathy: Think Before Coding).
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] [testable condition 1]
-- [ ] [testable condition 2]
-- [ ] [testable condition 3]
+> Each criterion must trace back to the Requirement above (Pillar 1 → Pillar 3 link).
+
+| # | Criterion (testable) | Traces to requirement |
+|---|----------------------|-----------------------|
+| 1 | [testable condition 1] | [which part of the requirement] |
+| 2 | [testable condition 2] | [which part of the requirement] |
+| 3 | [negative / boundary condition] | [which part of the requirement] |
+
+---
+
+## Evaluation & Acceptance (How we know the agent worked correctly)
+
+> Fill **Success Criteria** and **Verification Command** at Stage 2 (before spawning the agent).
+> The reviewer fills **Evidence** at Stage 4/5. A task is **not done** until every row has evidence.
+> Rule: the implementing agent must NOT be the sole author of its own acceptance test — the
+> Supervisor writes or signs off on the oracle first, so code and test can't be wrong together.
+
+### Success Criteria (observable, pass/fail)
+
+| # | Given (input/state) | Expect (output/behavior) | How it's checked |
+|---|---------------------|--------------------------|------------------|
+| 1 | [concrete input] | [concrete expected output] | automated test / manual / app run |
+| 2 | [negative / invalid input] | [expected failure or guard] | automated test |
+
+### Verification Command (exact, runnable)
+
+```bash
+# the single command (or short sequence) that proves this task works
+[e.g. pytest tests/test_T001.py -q   |   npm test -- T001   |   curl ... | grep ...]
+```
+
+### Evidence (filled by reviewer at Stage 4/5)
+
+| Check | Result | Notes / output snippet |
+|-------|--------|------------------------|
+| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
+| Negative cases hold | ☐ pass / ☐ fail | |
+| `verify` skill — works in running app | ☐ pass / ☐ fail | [what was observed] |
+| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
 
 ---
 
