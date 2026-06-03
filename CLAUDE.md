@@ -259,8 +259,15 @@ Only after confirmation, announce:
 ---
 
 ### Stage 3: Parallel Execution via Isolation
+
+> **The three-pillar chain every task must pass through, in order:**
+> **(1) Adapt the requirement** → **(2) Right implementation** → **(3) Evaluation.**
+> Each pillar has a gate. A pillar's gate must be green before the next pillar begins — no skipping ahead.
+
 For every task moved to In Progress:
 - Common-Infrastructure-Agent creates the git worktree.
+- **Pillar 1 gate (before any code):** the spawned agent must confirm the **Requirement Fidelity Gate** in its `TASK_GUIDE_Txxx.md` is checked — restated intent matches the request, terms align with the glossary, and every Acceptance Criterion traces to the requirement. If not, the agent STOPs and asks the Supervisor instead of guessing.
+- **Pillar 2 (implementation):** build the slice test-first (`tdd`), touching only the predicted files.
 - The TASK_GUIDE_Txxx.md already exists in tasks/ — no need to regenerate it.
 - Tell the user the exact command to spawn the assigned sub-agent in that worktree. Set the spawn model to match the task's **Complexity** (C0→haiku, C1→sonnet, C2→sonnet/opus, C3→opus).
 - The sub-agent must read both its TASK_GUIDE_Txxx.md (from tasks/) and the relevant agent guide from .claude/agents/.
@@ -291,7 +298,9 @@ For every task that reaches "Ready for Review":
    ```
    Quantifies the breach impact of the exposure surface `security-review` finds.
 
-4. Address all findings before moving to Stage 5. Update PROJECT_KANBAN.md status.
+4. **Evidence Gate** (always): open the task's `TASK_GUIDE_Txxx.md` **Evaluation & Acceptance** block and confirm the reviewer has filled the **Evidence** table — the verification command was actually run and its real output pasted in, negative cases hold, and the full smoke suite is still green. A task with empty evidence rows is **not** review-complete, regardless of how the diff looks. The implementing agent must not be the sole author of its own acceptance test — the Supervisor writes or signs off on the oracle.
+
+5. Address all findings before moving to Stage 5. Update PROJECT_KANBAN.md status.
 
 ---
 
@@ -302,6 +311,7 @@ After all Stage 4 reviews pass:
    ```
    Skill({ skill: "verify" })
    ```
+   Record the observed result in the task guide's **Evidence** table (`verify` row). Do not merge while any evidence row reads fail or is blank.
 
 2. **Confirm smoke tests pass** (coordinate with QA-Automation-Agent).
 
