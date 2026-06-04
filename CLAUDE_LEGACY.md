@@ -63,6 +63,12 @@ Run these **one by one**. After each session, summarize findings, ask for user c
 - `architecture.md`
 - `risk-hotspots.md`
 
+> **Structural Analysis (optional tooling).** `architecture.md` and `risk-hotspots.md` can be produced by
+> manual inspection **or** by a structural code-graph approach — building a dependency graph of the code
+> to compute hub/centrality (→ risk hotspots) and blast-radius (→ which files a change affects)
+> automatically. If such an approach is used, prefer its output and keep it fresh; otherwise produce these by
+> hand as today. Nothing below requires it — it only accelerates work the playbook already does.
+
 **Also scaffold the agent infrastructure** after Session 8 is confirmed:
 - Create `agents/` directory with files from [Appendix B](#appendix-b-agent-templates)
 - Create `PROJECT_SPEC.md` using template from [Appendix C](#appendix-c-project_specmd-template)
@@ -121,6 +127,8 @@ Run these **one by one**. After each session, summarize findings, ask for user c
    Skill({ skill: "security-review" })
    ```
    Verify changed files match acceptance criteria. Run lint and tests. Address all findings before Stage 5.
+   Bound review scope to the change's **blast radius** — the affected callers/dependents/tests per
+   `docs/legacy/risk-hotspots.md` and `architecture.md` — rather than re-reading the whole repo.
 
 8. **Stage 5: Integration**
    Verify the change works end-to-end in the running app:
