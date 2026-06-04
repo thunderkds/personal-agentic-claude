@@ -41,6 +41,8 @@ Your `TASK_GUIDE` assigns a **Complexity Level**. Scale your effort to it — th
 
 If the task proves harder than its assigned level, **escalate and pause** — notify the Supervisor with the new level rather than powering through. Anything larger than C3 is an **Epic** and must be split by the Supervisor at Stage 2 before pickup.
 
+**Risk axis — hub files.** A change touching a **hub file** (one many others import/call) has a large code-dependency blast radius and should be rated higher Risk, even when the edit is small. This is what `docs/legacy/risk-hotspots.md` captures in legacy mode; in greenfield it's a judgment call. Scope your review and testing to that blast radius — the affected callers/dependents/tests — not the whole repo.
+
 ---
 
 ## Available Skills (Callable by Any Agent)

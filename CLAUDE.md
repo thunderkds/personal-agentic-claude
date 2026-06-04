@@ -52,6 +52,8 @@ The `subagent_type` is the agent's `name:` field (not the filename). Because Cla
 | `git-guardrails-claude-code` | `.claude/skills/git-guardrails-claude-code/SKILL.md` | Stage 1 setup: install PreToolUse hook blocking destructive git |
 | `blast-radius` | `.claude/skills/blast-radius/SKILL.md` | Stage 4 (Medium/High Risk): quantify data-breach impact — sensitive-data inventory, exposure scoring, regulatory/financial estimate |
 
+> **Naming note:** the `blast-radius` skill above is about **data-breach** impact (PII/PHI, regulatory cost). It is distinct from the *code-dependency* "blast radius" referenced in Risk assignment and review scoping below (which files a change affects). Don't conflate the two.
+
 **Built-in Claude Code skills** (no definition file needed — always present):
 
 | Skill | When to use |
@@ -193,6 +195,8 @@ Guide the user through this checklist step by step.
    Please list every agentic CLI you have authenticated and the exact command to run it.
    Example: "Claude: claude | Codex: codex | Gemini: gemini"
 
+   *(Optional)* For non-trivial codebases, a structural code-graph approach — building a dependency graph of the code — can auto-compute hub/centrality (→ Risk, Stage 2) and a change's code-dependency blast radius (→ review scope, Stage 4). It's optional: if absent, those signals stay manual judgment. See the same note in `CLAUDE_LEGACY.md`.
+
 3. **Agent Guide Folder Verification**
    Confirm that the folder `.claude/agents/` exists in the project root and contains all required files.
    If any file is missing, output the template for it from `templates/` and ask the user to save it.
@@ -239,7 +243,7 @@ When the user invokes `/plan`, the Supervisor must:
 2. Take the approved Project Context Document and brainstorming direction.
 3. Create (or update) `PROJECT_SPEC.md` as the single source of truth using `templates/PROJECT_SPEC_template.md`.
 4. Create (or update) `PROJECT_KANBAN.md` as the compact task board using `templates/PROJECT_KANBAN_template.md`.
-5. Assign each task three independent labels: **Complexity (C0–C3)**, **Risk (Low/Med/High)**, and **Priority (P0–P2)**. Split any task larger than C3 (an **Epic**) into smaller tasks before generating guides. (Complexity drives agent process; Risk gates `security-review`; Priority sets ordering — see the matrix in `.claude/agents/general-agent-template.md`.)
+5. Assign each task three independent labels: **Complexity (C0–C3)**, **Risk (Low/Med/High)**, and **Priority (P0–P2)**. Split any task larger than C3 (an **Epic**) into smaller tasks before generating guides. (Complexity drives agent process; Risk gates `security-review`; Priority sets ordering — see the matrix in `.claude/agents/general-agent-template.md`.) When setting **Risk**, factor in whether the task touches a **hub file** — one many others depend on, so its code-dependency blast radius is large. In legacy mode this is recorded in `docs/legacy/risk-hotspots.md`; in greenfield it's a judgment call (optionally informed by a structural code-graph approach — see Stage 1). A hub touch raises Risk a level even when the edit itself is small.
 
 **Task State Management (Token-Efficient Design)**
 Use two files:
@@ -286,6 +290,7 @@ For every task that reaches "Ready for Review":
    ```
    Skill({ skill: "code-review" })
    ```
+   Bound the review to the change's **blast radius** — its affected callers, dependents, and tests — rather than re-reading the whole repo. This keeps review focused and token-efficient (the affected set comes from `risk-hotspots.md`/`architecture.md` in legacy mode, or from the predicted files + judgment in greenfield).
 
 2. **Security Review** (if task Risk Level is Medium or High):
    ```
