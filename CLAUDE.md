@@ -103,6 +103,7 @@ The project root **must** contain these folders:
    Contains one TASK_GUIDE_Txxx.md file for **every** task after Stage 2 is approved.
 
 4. `templates/` folder containing:
+   - templates/PRD_template.md
    - templates/PROJECT_SPEC_template.md
    - templates/PROJECT_KANBAN_template.md
    - templates/TASK_GUIDE_template.md
@@ -156,8 +157,12 @@ After collecting all answers:
 - Summarize everything in a clear Project Context Document (Markdown).
 - Ask the user: "Does this summary accurately represent the project? Any corrections?"
 
-Only when the user confirms, say:
-> "Context locked. Entering 5-Stage Agentic Pipeline. Initializing Stage 0.5: Creative Brainstorming."
+Only when the user confirms:
+- **PRD generation**: Generate `PRD.md` in the project root using `templates/PRD_template.md`, populated from the Phase 0 answers (Personas from Section A, User Stories and Functional Requirements from Section B, NFRs from Section C, Out of Scope from Section D). If the user already has a PRD, ask them to save it as `PRD.md` and skip generation.
+- Confirm `PRD.md` has been saved before continuing.
+
+Then say:
+> "Context locked. PRD.md generated. Entering 5-Stage Agentic Pipeline. Initializing Stage 0.5: Requirement Grilling → Creative Brainstorming."
 
 ---
 
@@ -166,19 +171,30 @@ Strictly follow this order. Never skip or reorder stages.
 
 ---
 
-### Stage 0.5: Creative Brainstorming (The First Mind)
+### Stage 0.5: Requirement Grilling → Creative Brainstorming (The First Mind)
 **Runs immediately after Phase 0 is confirmed. Must complete before Stage 1.**
+
+#### Step 0.5a — Requirement Grilling (PRD gate)
+
+Confirm `PRD.md` exists. Then invoke `grill-with-docs` in requirement mode:
+```
+Skill({ skill: "grill-with-docs", args: "mode=requirement" })
+```
+
+The skill validates `PRD.md` against the Phase 0 answers: FR traceability, NFR completeness, scope clarity, and ambiguity. Resolve all flagged items with the user. Do NOT proceed to brainstorming until the skill reports **PRD gate: PASS**.
+
+#### Step 0.5b — Creative Brainstorming
 
 Invoke the `brainstorming` skill:
 ```
 Skill({ skill: "brainstorming" })
 ```
 
-1. **Divergent Exploration**: The skill analyzes the Phase 0 Context and generates a `BRAINSTORMING_LOG.md` using the template at `templates/BRAINSTORMING_LOG_template.md`.
+1. **Divergent Exploration**: The skill analyzes the Phase 0 Context and `PRD.md`, then generates a `BRAINSTORMING_LOG.md` using the template at `templates/BRAINSTORMING_LOG_template.md`.
 2. **User Review**: The user must approve one of the brainstormed directions before proceeding.
 
 Only after the user selects a direction, announce:
-> "Stage 0.5: Brainstorming complete. Direction locked. Moving to Stage 1: Environment & Provider Setup."
+> "Stage 0.5: Requirement grilling passed. Brainstorming complete. Direction locked. Moving to Stage 1: Environment & Provider Setup."
 
 ---
 
@@ -204,7 +220,11 @@ Guide the user through this checklist step by step.
 4. **Git Repository Verification**
    Please run `git status` in your terminal and paste the output here.
 
-5. **Master `PROJECT_SPEC.md` File**
+5. **`PRD.md` File**
+   - Confirm `PRD.md` exists in the project root (generated at end of Phase 0 Step 2).
+   - If missing, generate it now using `templates/PRD_template.md` from the Phase 0 answers.
+
+6. **Master `PROJECT_SPEC.md` File**
    - If the file does not exist yet, use `templates/PROJECT_SPEC_template.md` and fill in the Project Context Document.
    - Ask the user to save it as `PROJECT_SPEC.md` in the project root, or confirm it already exists.
 
@@ -303,7 +323,7 @@ For every task that reaches "Ready for Review":
    ```
    Quantifies the breach impact of the exposure surface `security-review` finds.
 
-4. **Evidence Gate** (always): open the task's `TASK_GUIDE_Txxx.md` **Evaluation & Acceptance** block and confirm the reviewer has filled the **Evidence** table — the verification command was actually run and its real output pasted in, negative cases hold, and the full smoke suite is still green. A task with empty evidence rows is **not** review-complete, regardless of how the diff looks. The implementing agent must not be the sole author of its own acceptance test — the Supervisor writes or signs off on the oracle.
+4. **Evidence Gate** (always): open the task's `TASK_GUIDE_Txxx.md` **Evaluation & Acceptance** block and confirm the reviewer has filled the **Evidence** table — the verification command was actually run and its real output pasted in, negative cases hold, and the full smoke suite is still green. Also confirm every **Requirement Refs** entry (FR/NFR/US IDs) listed in the task's Pillar 1 section maps to at least one passing Acceptance Criterion. A task with empty evidence rows or uncovered Requirement Refs is **not** review-complete, regardless of how the diff looks. The implementing agent must not be the sole author of its own acceptance test — the Supervisor writes or signs off on the oracle.
 
 5. Address all findings before moving to Stage 5. Update PROJECT_KANBAN.md status.
 

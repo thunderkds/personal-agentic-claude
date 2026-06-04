@@ -24,9 +24,11 @@ Two playbooks are provided for different project contexts:
 Claude acts as a **Project Supervisor** that runs a 5-stage agentic pipeline:
 
 ```
-Phase 0: Context gathering (Q&A with you)
+Phase 0: Context gathering (Q&A with you) → PRD.md generated
   ↓
-Stage 0.5: Brainstorming — three implementation paths, adversarial review
+Stage 0.5a: Requirement grilling — PRD.md validated before brainstorming
+  ↓
+Stage 0.5b: Brainstorming — three implementation paths, adversarial review
   ↓
 Stage 1: Environment & provider setup
   ↓
@@ -57,9 +59,9 @@ Pillar 1: Adapt the requirement   →   Pillar 2: Right implementation   →   P
 
 | Pillar | What it guarantees | Gate (proof it happened) | Stage |
 |---|---|---|---|
-| **1. Adapt the requirement** | We're building the *right thing* — intent captured in the project's language, criteria traced to the request | **Requirement Fidelity Gate** signed off by Supervisor/user (not the implementer) before any code | Phase 0 → Stage 2, checked at Stage 3 start |
+| **1. Adapt the requirement** | We're building the *right thing* — intent captured in the project's language, criteria traced to the request, every FR/US ID in `PRD.md` covered | **Requirement Fidelity Gate** signed off by Supervisor/user (not the implementer) before any code; FR coverage confirmed at Stage 4 | Phase 0 → Stage 2, checked at Stage 3 start + Stage 4 |
 | **2. Right implementation** | We're building it *the right way* — test-first, surgical, only the predicted files | `tdd` red→green→refactor + must-not-touch list | Stage 3 |
-| **3. Evaluation** | It *actually works* — verified by an independent oracle, with recorded evidence | **Evidence Gate** — verification command run + output pasted, no regression | Stage 4 → Stage 5 |
+| **3. Evaluation** | It *actually works* — verified by an independent oracle, with recorded evidence | **Evidence Gate** — verification command run + output pasted, Requirement Refs covered, no regression | Stage 4 → Stage 5 |
 
 The links between pillars are what keep the chain honest: every Acceptance Criterion **traces back
 to a line in the Requirement** (1→3), and the implementing agent is never the sole author of its own
@@ -129,7 +131,7 @@ you can audit. See `templates/TASK_GUIDE_template.md` for the block.
   settings.local.json
 
 tasks/             # TASK_GUIDE_T001.md … generated at Stage 2, one per task
-templates/         # Blank templates for PROJECT_SPEC, KANBAN, TASK_GUIDE, BRAINSTORMING_LOG
+templates/         # Blank templates for PRD, PROJECT_SPEC, KANBAN, TASK_GUIDE, BRAINSTORMING_LOG
 memory/
   MEMORY.md        # Session-persistent insights index
 
@@ -146,8 +148,11 @@ Designed for new projects. The Supervisor starts with open-ended context gatheri
 **Key behaviors:**
 - Strict stage ordering — no stage can be skipped or reordered
 - All sub-agents spawned with real `subagent_type` values (backed by `.claude/agents/`)
+- `PRD.md` generated from `templates/PRD_template.md` at the end of Phase 0 — mandatory before brainstorming begins
+- `grill-with-docs` runs in **requirement mode** (Stage 0.5a) to validate `PRD.md` before brainstorming, then in **terminology mode** (Stage 2) to sharpen language before task breakdown
 - `BRAINSTORMING_LOG.md` generated from `templates/BRAINSTORMING_LOG_template.md` before planning begins
 - `PROJECT_SPEC.md` and `PROJECT_KANBAN.md` are the twin sources of truth
+- Each `TASK_GUIDE` carries a **Requirement Refs** field (FR/NFR/US IDs) that the Stage 4 Evidence Gate checks for coverage
 - Code review mandatory at Stage 4; security review mandatory for Medium/High risk tasks
 - `verify` skill mandatory before any merge
 
@@ -188,8 +193,8 @@ Cross-cutting helpers the Supervisor invokes at specific pipeline stages. `brain
 
 | Skill | Stage | Complexity | What it does |
 |---|---|---|---|
-| `brainstorming` | 0.5 | — | **Divergent** exploration — three implementation paths + adversarial review, written to `BRAINSTORMING_LOG.md` |
-| `grill-with-docs` | 2 | C1–C2 | **Convergent** grilling — interrogates the plan one question at a time, sharpens fuzzy terminology against the code, folds the glossary/decisions into `PROJECT_SPEC.md` (ADRs in `docs/adr/` only for hard-to-reverse calls) |
+| `brainstorming` | 0.5b | — | **Divergent** exploration — three implementation paths + adversarial review, written to `BRAINSTORMING_LOG.md` |
+| `grill-with-docs` | 0.5a + 2 | C1–C2 | Two modes: **requirement mode** (Stage 0.5a) validates `PRD.md` — FR traceability, NFR completeness, scope clarity — before brainstorming; **terminology mode** (Stage 2) interrogates the plan one question at a time and sharpens fuzzy terminology into `PROJECT_SPEC.md` |
 | `to-issues` | 2 | C1 | Breaks the locked plan into **tracer-bullet vertical slices** — each a complete end-to-end path — that become `PROJECT_KANBAN.md` rows and `TASK_GUIDE` files, labelled with Complexity/Risk/Priority |
 | `tdd` | 3 | C1 | **Red → green → refactor**, one vertical slice at a time. Operationalizes the Karpathy Task Transformation Table (write the failing test first) |
 | `diagnose` | 3 | C1 | Disciplined bug / perf-regression loop: build a feedback loop → reproduce → 3–5 falsifiable hypotheses → instrument → fix + regression-test → post-mortem |
