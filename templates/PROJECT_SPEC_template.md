@@ -2,6 +2,10 @@
 **Last updated**: [YYYY-MM-DD]
 **Version**: 1.0
 
+> **Scope of this document**: *How* to build it safely — architecture, agent config, constraints, risk areas, task state, and accumulated learnings.
+> Product intent (personas, user stories, FR/NFR, success metrics) lives in `PRD.md`.
+> If Critical Constraints here conflict with Out of Scope in `PRD.md`, resolve before Stage 2.
+
 ---
 
 ## Project Identity

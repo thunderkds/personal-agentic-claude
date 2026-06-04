@@ -151,10 +151,25 @@ Designed for new projects. The Supervisor starts with open-ended context gatheri
 - `PRD.md` generated from `templates/PRD_template.md` at the end of Phase 0 — mandatory before brainstorming begins
 - `grill-with-docs` runs in **requirement mode** (Stage 0.5a) to validate `PRD.md` before brainstorming, then in **terminology mode** (Stage 2) to sharpen language before task breakdown
 - `BRAINSTORMING_LOG.md` generated from `templates/BRAINSTORMING_LOG_template.md` before planning begins
-- `PROJECT_SPEC.md` and `PROJECT_KANBAN.md` are the twin sources of truth
+- `PRD.md` and `PROJECT_SPEC.md` are **complementary, not duplicates** — see table below
+- `PROJECT_SPEC.md` and `PROJECT_KANBAN.md` are the twin sources of truth for delivery
 - Each `TASK_GUIDE` carries a **Requirement Refs** field (FR/NFR/US IDs) that the Stage 4 Evidence Gate checks for coverage
 - Code review mandatory at Stage 4; security review mandatory for Medium/High risk tasks
 - `verify` skill mandatory before any merge
+
+### PRD.md vs PROJECT_SPEC.md
+
+These two documents look similar at a glance but answer different questions for different readers:
+
+| | `PRD.md` | `PROJECT_SPEC.md` |
+|---|---|---|
+| **Question** | *What* to build and *why* | *How* to build it safely |
+| **Written** | Phase 0 (from Q&A answers) | Stage 1–2 (Supervisor + agents) |
+| **Read by** | `grill-with-docs`, `brainstorming`, TASK_GUIDE authors | Every sub-agent before writing code |
+| **Contains** | Personas, User Stories (US-NNN), Functional Reqs (FR-NNN), NFRs, KPIs, Out of Scope, Open Questions | Architecture summary, Critical Constraints, Risk Areas, Sub-Agent Team, Task board, Memory/Insights |
+| **Does NOT contain** | Architecture, agent config, task state | Personas, user stories, success metrics |
+
+The only field that appears in both is project name (an anchor, not duplicated content). If the **Out of Scope** list in `PRD.md` ever conflicts with **Critical Constraints** in `PROJECT_SPEC.md`, resolve the conflict before Stage 2 — both documents are authoritative in their own domain, so a contradiction means one of them is wrong.
 
 ---
 

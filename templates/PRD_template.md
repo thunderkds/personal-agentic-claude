@@ -3,6 +3,10 @@
 **Status**: Draft / In Review / Approved
 **Owner**: [name or team]
 
+> **Scope of this document**: *What* to build and *why* — product intent, user stories, requirements, success metrics.
+> Technical decisions, architecture, agent config, and task state live in `PROJECT_SPEC.md`.
+> If Out of Scope here conflicts with Critical Constraints there, resolve the conflict before Stage 2.
+
 ---
 
 ## Overview
