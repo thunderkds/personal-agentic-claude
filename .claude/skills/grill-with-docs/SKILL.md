@@ -21,6 +21,10 @@ This skill operates in two modes. The active mode is passed via `args: "mode=<mo
 - Validate: each FR traces to a User Story; each User Story is clearly scoped; Out of Scope is explicit; no FR is ambiguous (would two engineers implement it differently?).
 - Challenge missing NFRs (performance, security, scale) implied by Phase 0 Q&A Section C answers.
 - Flag every Open Question that lacks an owner or due date.
+- **Re-test the Assumptions list** from Phase 0 Step 1.5: any FR/NFR derived from a supervisor
+  default or a `"you decide"` deferral is treated as *unconfirmed* — resolve it via the Ambiguity
+  Resolution Protocol (forced choice for material, bounded, user-facing ambiguity) before it can
+  drive a task. A requirement that traces only to a guess does **not** pass the gate.
 - Output: annotated `PRD.md` with unresolved items flagged inline (`<!-- FLAGGED: ... -->`); gate sign-off when all items are resolved.
 - Notify: "Requirement grilling complete. N FRs validated, M open questions resolved, K items flagged for user. PRD gate: PASS / FAIL."
 
