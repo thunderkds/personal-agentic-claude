@@ -37,10 +37,13 @@ Stage 1.5: Sub-agent team design
 Stage 2: Planning (/plan) — PROJECT_SPEC.md + task guides generated
   ↓
 Stage 3: Parallel execution — each task runs in an isolated git worktree
+         (DB tasks pass the migration-safety gate before code goes green)
   ↓
-Stage 4: Code review + security review
+Stage 4: Code review + security review (+ migration-safety for DB tasks)
   ↓
 Stage 5: Integration & end-to-end verification
+  ↓
+Post-merge: ship — deployment plan + rollback plan + release notes
 ```
 
 The Supervisor never implements directly. It spawns focused sub-agents, each constrained to their worktree and their assigned task guide.
@@ -128,10 +131,12 @@ you can audit. See `templates/TASK_GUIDE_template.md` for the block.
     diagnose/              → Skill({ skill: "diagnose" })           # Stage 3
     git-guardrails-claude-code/ → Skill({ skill: "git-guardrails-claude-code" })  # Stage 1 setup
     blast-radius/          → Skill({ skill: "blast-radius" })       # Stage 4
+    migration-safety/      → Skill({ skill: "migration-safety" })   # Stage 3/4 (DB)
+    ship/                  → Skill({ skill: "ship" })               # post-Stage 5
   settings.local.json
 
 tasks/             # TASK_GUIDE_T001.md … generated at Stage 2, one per task
-templates/         # Blank templates for PRD, PROJECT_SPEC, KANBAN, TASK_GUIDE, BRAINSTORMING_LOG
+templates/         # Blank templates for PRD, PROJECT_SPEC, KANBAN, TASK_GUIDE, BRAINSTORMING_LOG, SKILL, ADR, RUNBOOK
 memory/
   MEMORY.md        # Session-persistent insights index
 
@@ -197,7 +202,7 @@ Two distinct mechanisms — do not confuse them:
 | Runs | Inline in the current conversation | Isolated sub-process with its own context window |
 | Use for | Cross-cutting analysis (brainstorm, review, verify) | Focused implementation in a worktree |
 
-**Custom skills in this repo:** `brainstorming`, `grill-with-docs`, `to-issues`, `tdd`, `diagnose`, `git-guardrails-claude-code`, `blast-radius`
+**Custom skills in this repo:** `brainstorming`, `grill-with-docs`, `to-issues`, `tdd`, `diagnose`, `git-guardrails-claude-code`, `blast-radius`, `migration-safety`, `ship`
 **Built-in skills used:** `code-review`, `security-review`, `verify`, `run`, `update-config`, `fewer-permission-prompts`
 
 ---
@@ -215,8 +220,10 @@ Cross-cutting helpers the Supervisor invokes at specific pipeline stages. `brain
 | `diagnose` | 3 | C1 | Disciplined bug / perf-regression loop: build a feedback loop → reproduce → 3–5 falsifiable hypotheses → instrument → fix + regression-test → post-mortem |
 | `git-guardrails-claude-code` | 1 setup | C0 | Installs a `PreToolUse` hook that blocks destructive git (`push`, `reset --hard`, `clean -f`, `branch -D`, `checkout/restore .`) before it runs — enforces "commit/push only when asked" mechanically |
 | `blast-radius` | 4 | — | For Medium/High-risk tasks touching sensitive data: inventories PII/PHI/credentials, traces data flow, scores exposure vectors, and estimates regulatory + financial breach impact |
+| `migration-safety` | 3 + 4 | C1–C2 | Go/no-go **gate** for any task touching DB schema/migrations: checks reversibility (tested down-migration), backward compat (expand-contract), zero-downtime ordering, locking, backfill plan, and silent data-loss. Pairs with `blast-radius` (that one = breach impact; this one = migration blast radius) |
+| `ship` | post-5 | — | Post-merge release **planner**: derives release scope from merged tasks/commits, produces a detailed deployment plan + rollback plan + user-facing release notes, and appends a runbook entry. It plans and de-risks; the operator executes — it never auto-deploys |
 
-> These are **available** for the Supervisor to invoke at the mapped stage — not auto-run. The Supervisor decides based on each task's Complexity/Risk labels (e.g. `tdd`/`diagnose` for C1+ implementation, `blast-radius` only when Risk is Medium/High *and* sensitive data is in scope).
+> These are **available** for the Supervisor to invoke at the mapped stage — not auto-run. The Supervisor decides based on each task's Complexity/Risk labels (e.g. `tdd`/`diagnose` for C1+ implementation, `blast-radius` only when Risk is Medium/High *and* sensitive data is in scope). Two are **condition-driven mandatory**, not discretionary: `migration-safety` fires whenever a task adds/changes a DB schema/migration, and `ship` runs once all tasks for a milestone integrate.
 
 ### Authoring a skill
 

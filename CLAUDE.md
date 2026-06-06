@@ -51,6 +51,8 @@ The `subagent_type` is the agent's `name:` field (not the filename). Because Cla
 | `diagnose` | `.claude/skills/diagnose/SKILL.md` | Stage 3: disciplined bug / perf-regression diagnosis loop |
 | `git-guardrails-claude-code` | `.claude/skills/git-guardrails-claude-code/SKILL.md` | Stage 1 setup: install PreToolUse hook blocking destructive git |
 | `blast-radius` | `.claude/skills/blast-radius/SKILL.md` | Stage 4 (Medium/High Risk): quantify data-breach impact — sensitive-data inventory, exposure scoring, regulatory/financial estimate |
+| `migration-safety` | `.claude/skills/migration-safety/SKILL.md` | Stage 3/4: go/no-go gate for any task touching DB schema/migrations — reversibility, backward-compat, zero-downtime, no silent data loss |
+| `ship` | `.claude/skills/ship/SKILL.md` | Post-Stage-5: turn merged tasks into a runnable deployment plan, rollback plan, and release notes; append a runbook entry (plans, never auto-deploys) |
 
 > **Naming note:** the `blast-radius` skill above is about **data-breach** impact (PII/PHI, regulatory cost). It is distinct from the *code-dependency* "blast radius" referenced in Risk assignment and review scoping below (which files a change affects). Don't conflate the two.
 
@@ -109,6 +111,8 @@ The project root **must** contain these folders:
    - templates/TASK_GUIDE_template.md
    - templates/BRAINSTORMING_LOG_template.md
    - templates/SKILL_template.md
+   - templates/ADR_template.md
+   - templates/RUNBOOK_template.md
 
 5. `memory/` folder containing:
    - memory/MEMORY.md (session-persistent insights index)
@@ -291,7 +295,7 @@ Only after confirmation, announce:
 For every task moved to In Progress:
 - Common-Infrastructure-Agent creates the git worktree.
 - **Pillar 1 gate (before any code):** the spawned agent must confirm the **Requirement Fidelity Gate** in its `TASK_GUIDE_Txxx.md` is checked — restated intent matches the request, terms align with the glossary, and every Acceptance Criterion traces to the requirement. If not, the agent STOPs and asks the Supervisor instead of guessing.
-- **Pillar 2 (implementation):** build the slice test-first (`tdd`), touching only the predicted files.
+- **Pillar 2 (implementation):** build the slice test-first (`tdd`), touching only the predicted files. If the slice adds or changes a **DB schema/migration**, run `Skill({ skill: "migration-safety" })` and pass its go/no-go gate **before** the implementation gate goes green.
 - The TASK_GUIDE_Txxx.md already exists in tasks/ — no need to regenerate it.
 - Tell the user the exact command to spawn the assigned sub-agent in that worktree. Set the spawn model to match the task's **Complexity** (C0→haiku, C1→sonnet, C2→sonnet/opus, C3→opus).
 - The sub-agent must read both its TASK_GUIDE_Txxx.md (from tasks/) and the relevant agent guide from .claude/agents/.
@@ -323,9 +327,15 @@ For every task that reaches "Ready for Review":
    ```
    Quantifies the breach impact of the exposure surface `security-review` finds.
 
-4. **Evidence Gate** (always): open the task's `TASK_GUIDE_Txxx.md` **Evaluation & Acceptance** block and confirm the reviewer has filled the **Evidence** table — the verification command was actually run and its real output pasted in, negative cases hold, and the full smoke suite is still green. Also confirm every **Requirement Refs** entry (FR/NFR/US IDs) listed in the task's Pillar 1 section maps to at least one passing Acceptance Criterion. A task with empty evidence rows or uncovered Requirement Refs is **not** review-complete, regardless of how the diff looks. The implementing agent must not be the sole author of its own acceptance test — the Supervisor writes or signs off on the oracle.
+4. **Migration Safety** (mandatory if the task added or changed a DB schema/migration):
+   ```
+   Skill({ skill: "migration-safety" })
+   ```
+   Confirms the migration is reversible, backward-compatible, zero-downtime, and loses no data before it ships. A DB task with a failing or unrun migration-safety gate is **not** review-complete.
 
-5. Address all findings before moving to Stage 5. Update PROJECT_KANBAN.md status.
+5. **Evidence Gate** (always): open the task's `TASK_GUIDE_Txxx.md` **Evaluation & Acceptance** block and confirm the reviewer has filled the **Evidence** table — the verification command was actually run and its real output pasted in, negative cases hold, and the full smoke suite is still green. Also confirm every **Requirement Refs** entry (FR/NFR/US IDs) listed in the task's Pillar 1 section maps to at least one passing Acceptance Criterion. A task with empty evidence rows or uncovered Requirement Refs is **not** review-complete, regardless of how the diff looks. The implementing agent must not be the sole author of its own acceptance test — the Supervisor writes or signs off on the oracle.
+
+6. Address all findings before moving to Stage 5. Update PROJECT_KANBAN.md status.
 
 ---
 
@@ -346,6 +356,12 @@ After all Stage 4 reviews pass:
 
 5. Merge the worktree and close the task on PROJECT_KANBAN.md.
 
+6. **Post-merge release planning** (once all tasks for the milestone are integrated):
+   ```
+   Skill({ skill: "ship" })
+   ```
+   Turns the merged tasks/commits into a runnable deployment plan, a rollback plan, and user-facing release notes, then appends a runbook entry. `ship` **plans and de-risks** the release — it never auto-deploys; the operator executes the plan.
+
 Only after all tasks are integrated, announce:
 > "Stage 5: Integration complete. All tasks merged. Project milestone delivered."
 
@@ -357,7 +373,8 @@ Only after all tasks are integrated, announce:
 - Every sub-agent must read `PROJECT_SPEC.md`, its TASK_GUIDE_Txxx.md, and the corresponding file in .claude/agents/ before starting work.
 - Every task carries a **Complexity (C0–C3)**, **Risk (Low/Med/High)**, and **Priority (P0–P2)** label. Tasks above C3 (Epics) must be split at Stage 2 before pickup.
 - Stage 4 (code-review) is mandatory for every task. Stage 4 security-review is mandatory for Medium/High risk tasks.
-- Stage 5 verify is mandatory before any merge.
+- Stage 3/4 `migration-safety` is mandatory for any task that adds or changes a DB schema/migration.
+- Stage 5 verify is mandatory before any merge. After all tasks integrate, Stage 5 `ship` produces the release/rollback plan.
 - The Supervisor must always specify the exact CLI + spawn command for every sub-agent.
 - Never assume the user knows how to run a particular CLI — always give the full command.
 

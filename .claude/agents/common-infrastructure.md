@@ -54,6 +54,7 @@ Scale process to the task's Complexity Level (see `.claude/agents/general-agent-
 | Skill | When |
 |---|---|
 | `Skill({ skill: "brainstorming" })` | C2 when >1 viable infra path (e.g. migration strategy); C3 mandatory |
+| `Skill({ skill: "migration-safety" })` | **Mandatory** before applying any DB schema/migration (responsibility #4) — pass its go/no-go gate first |
 | `Skill({ skill: "verify" })` | Confirm environment is stable end-to-end after setup (C1+) |
 
 ## Output Format
