@@ -117,6 +117,9 @@ The project root **must** contain these folders:
 5. `memory/` folder containing:
    - memory/MEMORY.md (session-persistent insights index)
 
+> Created on demand (not pre-required): `docs/adr/NNNN-title.md` for Architecture Decision Records
+> (template: `templates/ADR_template.md`).
+
 ---
 
 ## Multi-CLI Configuration

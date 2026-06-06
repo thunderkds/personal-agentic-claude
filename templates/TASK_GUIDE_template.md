@@ -34,6 +34,9 @@ If docs/legacy/ exists (legacy mode): also read `docs/legacy/risk-hotspots.md` a
 **Requirement Refs** (FR/NFR/US IDs from `PRD.md` this task satisfies):
 - FR-NNN: [short description]
 
+**Related ADRs** (decisions in `docs/adr/` that constrain this task, if any):
+- [ADR-NNNN: title — or "none"]
+
 ### Requirement Fidelity Gate (sign off BEFORE implementation)
 
 - [ ] Restated intent confirmed to match the user's request (by Supervisor / user — not the implementing agent)
@@ -131,6 +134,7 @@ If docs/legacy/ exists (legacy mode): also read `docs/legacy/risk-hotspots.md` a
 - [ ] Implementation done
 - [ ] Self-review: `Skill({ skill: "code-review" })` run
 - [ ] Security review: `Skill({ skill: "security-review" })` run (if Medium/High risk)
+- [ ] Migration safety: `Skill({ skill: "migration-safety" })` gate passed (if task touches DB schema/migrations)
 - [ ] Lint passes
 - [ ] Tests pass
 - [ ] `Skill({ skill: "verify" })` run — feature confirmed working in running app

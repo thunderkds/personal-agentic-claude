@@ -111,6 +111,20 @@ Each `TASK_GUIDE` carries an **Evaluation & Acceptance** block with three parts:
 A task is **not done** until every evidence row is filled. This turns "looks done" into a record
 you can audit. See `templates/TASK_GUIDE_template.md` for the block.
 
+### Building the *right thing* (not just building it right)
+
+The layers above answer *"did we build it right?"* — but they all trace back to the requirement, so a
+**vague or empty user answer** can drift the whole project while every gate stays green. The
+**Ambiguity Resolution Protocol** (`CLAUDE.md` Phase 0 Step 1.5) guards the input:
+
+- **Never silently fill a gap** — operationalizes Karpathy *Ask vs. Guess*.
+- **Materiality heuristic** — if you can't name two builds that differ on the answer, pick the
+  simplest and move on (no interrogation fatigue).
+- **Forced choice** for *user-facing* ambiguity (defer *internal-mechanism* choices to brainstorming),
+  with trade-offs shown and a real escape hatch.
+- **Provenance** — choices are recorded with a rationale; `"you decide"` becomes a tracked,
+  reversible assumption, surfaced for review (not laundered into a stated fact).
+
 ---
 
 ## Folder structure
@@ -137,12 +151,19 @@ you can audit. See `templates/TASK_GUIDE_template.md` for the block.
 
 tasks/             # TASK_GUIDE_T001.md … generated at Stage 2, one per task
 templates/         # Blank templates for PRD, PROJECT_SPEC, KANBAN, TASK_GUIDE, BRAINSTORMING_LOG, SKILL, ADR, RUNBOOK
+docs/
+  MULTI_AGENT.md   # Using the system with other CLIs (Codex, Cursor) — see below
+  adr/             # Architecture Decision Records (created on demand)
 memory/
   MEMORY.md        # Session-persistent insights index
 
 CLAUDE.md          # Greenfield playbook (active supervisor instructions)
 CLAUDE_LEGACY.md   # Brownfield playbook
 ```
+
+> **Using other agents (Codex, Cursor, …):** Claude stays the supervisor; other CLIs can implement a
+> single `TASK_GUIDE` while the Evidence Gate (run by Claude) judges the result. See
+> [`docs/MULTI_AGENT.md`](docs/MULTI_AGENT.md) for dispatch recipes.
 
 ---
 

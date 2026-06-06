@@ -42,6 +42,28 @@
 
 ---
 
+## Assumptions & Deferred Decisions
+
+Choices the supervisor made for the user (vague answer) or the user deferred (`"you decide"`), per
+the Ambiguity Resolution Protocol. Each is **reversible** until confirmed — revisit before it
+hardens into architecture.
+
+| # | Assumption / Deferred decision | Source | Rationale | Revisit by |
+|---|--------------------------------|--------|-----------|-----------|
+| 1 | [what was assumed] | INFERRED / DEFAULT | [one-line why] | [trigger or date] |
+
+---
+
+## Architecture Decision Records
+
+Index of `docs/adr/NNNN-title.md` — recorded only for hard-to-reverse, surprising trade-offs.
+
+| ADR | Title | Status | Related Tasks |
+|-----|-------|--------|---------------|
+| [0001](docs/adr/0001-title.md) | [decision] | Accepted | [Txxx] |
+
+---
+
 ## Sub-Agent Team
 
 | Agent | Role | CLI Spawn Command |

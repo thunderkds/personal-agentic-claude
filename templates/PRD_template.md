@@ -74,7 +74,11 @@ The following are explicitly excluded from this project:
 
 ## Open Questions / Assumptions
 
-| # | Question / Assumption | Owner | Due |
-|---|----------------------|-------|-----|
-| 1 | [unresolved decision or stated assumption] | [name] | [YYYY-MM-DD] |
-| 2 | [question] | [name] | [YYYY-MM-DD] |
+Provenance per the Ambiguity Resolution Protocol (`CLAUDE.md` Phase 0 Step 1.5):
+**STATED** = user said it · **INFERRED** = supervisor guessed from a vague answer · **DEFAULT** =
+filled an empty answer. INFERRED/DEFAULT items must be confirmed before they can drive a task.
+
+| # | Question / Assumption | Source | Owner | Revisit / Due |
+|---|----------------------|--------|-------|---------------|
+| 1 | [unresolved decision or stated assumption] | STATED / INFERRED / DEFAULT | [name] | [trigger or YYYY-MM-DD] |
+| 2 | [question] | — | [name] | [YYYY-MM-DD] |

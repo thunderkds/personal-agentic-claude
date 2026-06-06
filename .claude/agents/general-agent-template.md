@@ -54,8 +54,13 @@ Trigger thresholds for these skills are set by the Complexity matrix above.
 | `brainstorming` | `Skill({ skill: "brainstorming" })` | C2 when >1 viable approach; C3 mandatory |
 | `code-review` | `Skill({ skill: "code-review" })` | Before reporting task ready for review (C1+) |
 | `security-review` | `Skill({ skill: "security-review" })` | Task Risk Level is Medium or High (independent of complexity) |
+| `migration-safety` | `Skill({ skill: "migration-safety" })` | Any task that adds/changes a DB schema or migration — pass the gate before code goes green |
 | `verify` | `Skill({ skill: "verify" })` | C1+ if user-facing; adversarial at C3 |
 | `run` | `Skill({ skill: "run" })` | Launch the app to observe behavior during development |
+
+> Stage-specific skills the Supervisor (not implementers) drives: `to-issues` + `grill-with-docs`
+> at Stage 2, `ship` post-merge, `blast-radius` at Stage 4 for sensitive-data tasks, `diagnose` for
+> hard bugs. See the full table in `CLAUDE.md`.
 
 ---
 

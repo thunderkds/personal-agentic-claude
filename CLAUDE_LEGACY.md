@@ -89,6 +89,12 @@ Run these **one by one**. After each session, summarize findings, ask for user c
 
 2. **Task Analysis & Brainstorming**
    - Clarify requirements and declare **Risk Level** (see [Risk Level Criteria](#risk-level-criteria)).
+   - **Ambiguity Resolution (anti-hallucination)**: never silently fill a vague/empty answer. Apply
+     the materiality heuristic — *if you can't name two concrete fixes that would differ on the
+     answer, pick the simplest and move on*; otherwise resolve **user-facing** ambiguity now via
+     forced choice (2–4 options with trade-offs + an escape hatch), and defer **internal-mechanism**
+     choices to brainstorming. Record each choice + a one-line rationale; log `"you decide"` picks as
+     reversible assumptions. (Mirrors `CLAUDE.md` Phase 0 Step 1.5.)
    - **Mandatory Hook**: If Risk is **Medium or High**, invoke the `brainstorming` skill (`.claude/skills/brainstorming/SKILL.md`) first to:
      - Identify "non-invasive" fixes that avoid touching core legacy logic.
      - Brainstorm regression risks for legacy features listed in `risk-hotspots.md`.
@@ -116,6 +122,11 @@ Run these **one by one**. After each session, summarize findings, ask for user c
 
 6. **Stage 3: Execution**  
    Implement changes per the TASK_GUIDE. Follow Karpathy principles.
+   If the change adds/alters a **DB schema or migration**, run `migration-safety` and pass its
+   go/no-go gate before proceeding — doubly important in a legacy/production codebase:
+   ```
+   Skill({ skill: "migration-safety" })
+   ```
 
 7. **Stage 4: Review**
    Run code review (always):
@@ -125,6 +136,10 @@ Run these **one by one**. After each session, summarize findings, ask for user c
    Run security review if Risk Level is Medium or High:
    ```
    Skill({ skill: "security-review" })
+   ```
+   Run migration-safety review if the change touched DB schema/migrations (mandatory):
+   ```
+   Skill({ skill: "migration-safety" })
    ```
    Verify changed files match acceptance criteria. Run lint and tests. Address all findings before Stage 5.
    Bound review scope to the change's **blast radius** — the affected callers/dependents/tests per
@@ -136,6 +151,10 @@ Run these **one by one**. After each session, summarize findings, ask for user c
    Skill({ skill: "verify" })
    ```
    Confirm smoke tests pass. Update `docs/legacy/` if new insights were gained. Update `memory/` if new patterns were learned.
+   For a release (one or more tasks integrated), produce the deployment/rollback/release plan:
+   ```
+   Skill({ skill: "ship" })
+   ```
 
 ### Required Outputs for Every Task
 - Mode + Risk Level declaration
@@ -175,15 +194,21 @@ Run these **one by one**. After each session, summarize findings, ask for user c
 - Never assume modern best practices without explicit approval.
 - Strictly surgical changes — no large refactors unless requested.
 - Supervisor must always provide exact CLI spawn commands (format: `Agent({ subagent_type: "...", prompt: "..." })`).
+- `migration-safety` is mandatory for any task that adds or changes a DB schema/migration (Stage 3 + Stage 4).
+- Record genuinely hard-to-reverse, surprising trade-off decisions as ADRs in `docs/adr/NNNN-title.md`
+  (template: `templates/ADR_template.md`); otherwise note them in `docs/legacy/architecture.md`.
 - Update `PROJECT_SPEC.md` Memory/Insights section with key learnings.
 
 ---
 
 **Mandatory Folder Structure**:
 - `agents/` (general-agent-template.md, backend-implementer.md, frontend-implementer.md, common-infrastructure.md, qa-automation.md)
-- `.claude/skills/` (brainstorming/SKILL.md — invoked via `Skill({ skill: "brainstorming" })`)
+- `.claude/skills/` (custom skills invoked via `Skill({ skill: "<name>" })` — `brainstorming`,
+  `grill-with-docs`, `to-issues`, `tdd`, `diagnose`, `git-guardrails-claude-code`, `blast-radius`,
+  `migration-safety`, `ship`)
 - `tasks/` (all TASK_GUIDE files)
 - `docs/legacy/` (all investigation outputs)
+- `docs/adr/` (Architecture Decision Records — created on demand for hard-to-reverse trade-offs)
 - `memory/` (session-persistent insights — read `MEMORY.md` index at session start; write new entries when new patterns or feedback are learned)
 
 ---
