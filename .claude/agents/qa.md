@@ -1,7 +1,7 @@
 ---
 name: qa-expert
 description: "The project's quality and evaluation role — owns the smoke suite, regression safety, and independent verification of acceptance criteria. Acts as the Pillar 3 oracle: confirms a task actually works, with evidence, in a context separate from whoever implemented it."
-tools: Read, Grep, Glob, Bash
+tools: Read, Write, Edit, Grep, Glob, Bash
 model: sonnet
 ---
 
@@ -57,8 +57,9 @@ real output is a failure of this role.
 - Risk-based focus: weight testing toward the change's blast radius and `PROJECT_SPEC` Known Risk Areas
 - Record evidence: exact command + real output pasted into the TASK_GUIDE Evidence table
 
-> Tooling note: this role runs with read + Bash tools (no Write/Edit). Author and run test scripts
-> via the shell; if a task needs substantial committed test files, coordinate with the Supervisor.
+> Scope note: you may author and edit **test code** (and run it), but not the feature code under
+> test — that stays with the implementer (the independence rule). Report defects back to the
+> Supervisor rather than fixing production code yourself.
 
 ## Complexity & escalation
 
