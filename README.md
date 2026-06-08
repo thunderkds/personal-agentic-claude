@@ -19,6 +19,59 @@ Two playbooks are provided for different project contexts:
 
 ---
 
+## Setup: Supervisor Routing Enforcement
+
+The Supervisor role is enforced at two levels — a native hook for Claude Code, and a universal fallback via `CLAUDE.md` that works across all agents.
+
+### Level 1 — Claude Code hook (recommended)
+
+`.claude/settings.json` wires a `UserPromptSubmit` hook that injects a Supervisor routing reminder into every prompt. **Copy this file into every new project that uses this framework.**
+
+```bash
+cp /path/to/per-agentic-claude/.claude/settings.json .claude/settings.json
+```
+
+Or create `.claude/settings.json` manually:
+
+```json
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import json; print(json.dumps({'hookSpecificOutput': {'hookEventName': 'UserPromptSubmit', 'additionalContext': 'SUPERVISOR ROUTING: Analyze this prompt through the Supervisor lens. Decide which sub-agent (common-infrastructure, backend-developer, frontend-developer, qa-expert) to dispatch, or handle inline. Never skip the supervisor role.'}}))\""
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+> If you already have a `.claude/settings.json`, merge the `UserPromptSubmit` entry into the existing `hooks` object — don't replace the whole file.
+
+After saving, open `/hooks` in Claude Code or restart the session to reload.
+
+### Level 2 — `CLAUDE.md` (universal fallback)
+
+`CLAUDE.md` already contains `"You must stay in this role for the entire conversation and all future conversations in this project. Never break character."` — this is the baseline enforcement that works for **any agent that reads a project instructions file** (Claude Code, Cursor, Codex, Gemini CLI, etc.). No extra setup needed; it's active the moment you copy `CLAUDE.md` into your project.
+
+### Level 3 — Other agents (optional)
+
+If you use Cursor, Codex, or another agent alongside Claude Code, you can add agent-specific instruction files to reinforce the Supervisor role mechanically:
+
+| Agent | File to create | Content |
+|---|---|---|
+| **Cursor** | `.cursorrules` | Paste the first two paragraphs of `CLAUDE.md` (role declaration + "never break character") |
+| **Codex** | `AGENTS.md` | Same content as above |
+| **Gemini CLI** | `GEMINI.md` | Same content as above |
+
+These files are not included in this repo (they're agent-specific and optional), but any agent that supports a project-level instruction file will respect the Supervisor role through them.
+
+---
+
 ## How it works
 
 Claude acts as a **Project Supervisor** that runs a 5-stage agentic pipeline:
