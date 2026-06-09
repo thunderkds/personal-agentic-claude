@@ -334,3 +334,25 @@ All agents enforce these four principles:
 | **Simplicity First** | Reject any abstraction not explicitly requested. If 200 lines can be 50, rewrite. |
 | **Surgical Changes** | Touch only code required by the task. Do not "improve" adjacent code. |
 | **Goal-Driven Execution** | Convert every instruction into a verifiable success criterion before starting. |
+
+---
+
+## Design Influences: Intent-Driven Development (IDD)
+
+[IDD](https://intentdrivendevelopment.org/) is an emerging methodology where humans define *what should exist and why*, and autonomous agents determine *how and when it is built*. Its core artifact is an **Intent document** — a self-contained spec with three mandatory sections: **WHY** (motivation), **WHAT** (requirements), and **HOW** (implementation plan).
+
+This pipeline already implements IDD's substance. The vocabulary maps as follows:
+
+| IDD concept | This repo's equivalent |
+|---|---|
+| **WHY** (motivation / business rationale) | `PRD.md` — Overview, Personas, User Stories |
+| **WHAT** (requirements, success criteria) | `PRD.md` — FR/NFR tables + TASK_GUIDE Acceptance Criteria |
+| **HOW** (implementation plan + tasks) | `TASK_GUIDE` — Approach, Files to Change, Test Plan |
+| **Domain Context** (boundaries, glossary) | `PROJECT_SPEC.md` glossary + `grill-with-docs` |
+| **Intent Fidelity** (how closely output matches intent) | Pillar 1 **Requirement Fidelity Gate** — signed off before any code |
+| **Risk Dials** (autonomy controls) | Complexity (C0–C3) + Risk (Low/Med/High) — two independent dials |
+| **Intent Hierarchy** (org → domain → task) | Phase 0 → `PRD.md` → `PROJECT_SPEC.md` → `TASK_GUIDE` |
+
+The main structural difference: IDD bundles WHY+WHAT+HOW into one document per feature. This pipeline separates them — `PRD.md` holds the product intent (WHY+WHAT, product-reader-facing) and each `TASK_GUIDE` holds the implementation intent (HOW, agent-facing). The split is intentional: it keeps product intent stable while implementation details evolve task by task, and it prevents agents from accidentally treating product rationale as an implementation instruction.
+
+No additional tooling or templates are needed to align with IDD.
