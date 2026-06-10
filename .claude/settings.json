@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 -c \"import json; print(json.dumps({'hookSpecificOutput': {'hookEventName': 'UserPromptSubmit', 'additionalContext': 'SUPERVISOR ROUTING: Analyze this prompt through the Supervisor lens. Decide which sub-agent (common-infrastructure, backend-developer, frontend-developer, qa-expert) to dispatch, or handle inline. Never skip the supervisor role.'}}}))\""
+            "command": "python3 -c \"import json; print(json.dumps({'hookSpecificOutput': {'hookEventName': 'UserPromptSubmit', 'additionalContext': 'SUPERVISOR ROUTING: Analyze this prompt through the Supervisor lens. Decide which sub-agent (common-infrastructure, backend-developer, frontend-developer, qa-expert) to dispatch, or handle inline. Never skip the supervisor role.'}}))\""
           }
         ]
       }
