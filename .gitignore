@@ -1,0 +1,40 @@
+# ============================================================
+# Section 1: Project-specific files (never commit to this repo)
+# ============================================================
+# Generated per-project at Stage 2 — not part of the framework
+tasks/*
+!tasks/.gitkeep
+
+# Per-project memory contents
+memory/*
+!memory/.gitkeep
+
+# Per-project planning & design documents
+PRD.md
+PROJECT_SPEC.md
+PROJECT_KANBAN.md
+BRAINSTORMING_LOG.md
+
+# Scratchpad
+task.txt
+
+# ============================================================
+# Section 2: OS / editor noise
+# ============================================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ============================================================
+# Section 3: Shell / test artifacts
+# ============================================================
+# Temp dirs that shell scripts may create during testing
+tmp/
+.tmp/
+*.tmp
