@@ -54,7 +54,8 @@ Shared resources are **symlinked** from `~/.supervisor` so all projects update a
 Replace `your-username` with your GitHub username, then run from inside the target project root:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/your-username/personal-agentic-claude/main/setup.sh | GITHUB_USERNAME=your-username sh
+GITHUB_USERNAME=your-username
+curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-claude/main/setup.sh | GITHUB_USERNAME=$GITHUB_USERNAME sh
 ```
 
 That's it. The script clones the framework to `~/.supervisor` and wires everything into the current directory.
