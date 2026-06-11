@@ -1,229 +1,106 @@
 # Supervisor Agent Deployment System
 
-Deploy a structured multi-agent supervisor framework into any project with a single command.
+A general-purpose multi-agent supervisor framework for Claude Code. Install once, deploy into any project.
 
 ---
 
-## What this repo is
+## How it works
 
-This repo is a general-purpose supervisor framework for Claude Code. It provides a set of agent
-definitions, skills, and templates that turn Claude into an autonomous project supervisor —
-orchestrating a team of specialized sub-agents through a structured delivery pipeline. The framework
-is project-agnostic: you install it once and deploy it into as many projects as you like. General
-resources (agents, skills, templates) are shared from a central clone and symlinked into each
-project; project-specific files (task guides, memory, PRD) are always created fresh per project and
-are never shared.
+```
+Phase 0: Clarify requirements → lock PRD
+    ↓
+Stage 0.5: Grill PRD → Brainstorm directions → lock direction
+    ↓
+Stage 1: Setup environment, verify folders, configure hooks
+    ↓
+Stage 1.5: Design sub-agent team
+    ↓
+Stage 2 (/plan): Generate PROJECT_SPEC + KANBAN + TASK_GUIDEs
+    ↓
+Stage 3: Parallel execution — each task in its own worktree (TDD)
+    ↓
+Stage 4: Code review (+ security review for Medium/High risk tasks)
+    ↓
+Stage 5: Verify end-to-end → merge → ship
+```
+
+**Three pillars every task must pass (Stage 3→5):**
+1. **Requirement fidelity** — intent matches, terms align, ACs trace to FRs
+2. **Right implementation** — built test-first, touches only predicted files
+3. **Evaluation** — evidence table filled, smoke suite green, reviewer signs off
+
+---
+
+## Repository layout
+
+| Path | What it contains |
+|------|-----------------|
+| `.claude/agents/` | Sub-agent definitions (common-infrastructure, backend, frontend, qa) |
+| `.claude/skills/` | Custom skills (brainstorming, grill-with-docs, tdd, ship, …) |
+| `.claude/hooks/` | Pipeline enforcement hooks (auto-kanban, gate checks, merge blocks) |
+| `.claude/settings.json` | Hook wiring |
+| `templates/` | Blank templates for PRD, PROJECT_SPEC, KANBAN, TASK_GUIDE, etc. |
+| `CLAUDE.md` | Supervisor instructions (greenfield) |
+| `CLAUDE_LEGACY.md` | Supervisor instructions (brownfield / existing codebase) |
+| `tasks/` | *(per project)* Task guides generated at Stage 2 |
+| `memory/MEMORY.md` | *(per project)* Session-persistent insights index |
+
+Shared resources are **symlinked** from `~/.supervisor` so all projects update automatically. Project-specific files are created fresh and never overwritten.
 
 ---
 
 ## Quick Start
 
 ```sh
-# curl variant (replace YOUR_GITHUB_USERNAME/per-agentic-claude with your fork URL when the repo is public)
-curl -fsSL https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/per-agentic-claude/main/setup.sh | sh
-
-# wget variant
-wget -qO- https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/per-agentic-claude/main/setup.sh | sh
+# Run from inside the target project root
+sh setup.sh                              # prompts for GitHub username
+sh setup.sh --copy                       # copy mode — local edits, no auto-updates
+GITHUB_USERNAME=your-username sh setup.sh  # non-interactive / CI
 ```
 
-> **Placeholder notice:** the URL above is a placeholder. Replace `YOUR_GITHUB_USERNAME/per-agentic-claude`
-> with the actual raw URL of your fork before using.
-
-Run from inside the target project's root directory.
-
----
-
-## Prerequisites
-
-- **git** — required for cloning and updating the central clone
-- **bash** or **sh** (POSIX-compatible) — both scripts are POSIX-compatible; no bash 4+ features required
-
----
-
-## Installation
-
-### 1. Clone via `setup.sh`
-
-Run `setup.sh` from inside the root of the project you want to deploy into:
-
-```sh
-sh setup.sh          # default: symlink mode
-sh setup.sh --copy   # copy mode (see Override per Project below)
-```
-
-The script:
-1. Clones this repo to `~/.supervisor` (the central clone) if it does not already exist.
-2. Prompts you to choose **greenfield** or **brownfield** mode.
-3. Reads the `MANIFEST` and symlinks (or copies) each listed resource into the current directory.
-4. Creates `CLAUDE.md` (greenfield) or `CLAUDE_LEGACY.md` as `CLAUDE.md` (brownfield).
-5. Scaffolds project-specific folders and files.
-
-### 2. Greenfield vs brownfield
-
-| Mode | When to use | `CLAUDE.md` source |
-|------|-------------|-------------------|
-| **Greenfield** | Starting a new project from scratch | `CLAUDE.md` |
-| **Brownfield** | Working in an existing or production codebase | `CLAUDE_LEGACY.md` |
-
-Choose at the interactive prompt. The choice only affects which supervisor playbook is active.
-
-### 3. What gets deployed
-
-The following table matches the `MANIFEST`:
-
-| Resource | Type | Description |
-|----------|------|-------------|
-| `.claude/agents/` | Shared (symlinked) | Sub-agent definitions auto-discovered by Claude Code |
-| `.claude/skills/` | Shared (symlinked) | Custom skill definitions auto-discovered by Claude Code |
-| `.claude/hooks/` | Shared (symlinked) | Pipeline enforcement hooks (see Pipeline Enforcement Hooks) |
-| `.claude/settings.json` | Shared (symlinked) | Hook wiring — connects events to hook scripts |
-| `templates/` | Shared (symlinked) | Blank templates for PRD, PROJECT_SPEC, KANBAN, TASK_GUIDE, etc. |
-| `CLAUDE.md` | Shared (symlinked) | Active supervisor instructions (greenfield or brownfield) |
-| `tasks/` | Project-specific (created fresh) | Task guides generated at Stage 2, one per task |
-| `memory/MEMORY.md` | Project-specific (created fresh) | Session-persistent insights index |
-
-Shared resources are symlinked by default so all projects receive updates automatically when you
-run `update.sh`. Project-specific files are never symlinked and are never overwritten on re-runs.
+The script prompts for your GitHub username (or reads `$GITHUB_USERNAME`), builds the clone URL as `https://github.com/<username>/personal-agentic-claude.git`, clones to `~/.supervisor`, prompts for greenfield/brownfield, then symlinks everything from `MANIFEST` into the current directory.
 
 ---
 
 ## Update
 
-Pull the latest framework changes into all projects that use it:
-
 ```sh
-sh update.sh
+sh update.sh   # pulls latest into ~/.supervisor; symlinked projects update instantly
 ```
 
-`update.sh` must be run from the project directory or anywhere — it operates on the central clone
-(`~/.supervisor`), not the project. What it does:
-
-1. Runs `git pull --ff-only` on the central clone.
-2. Reports the commit range that was pulled (`old-sha → new-sha`) with one-line summaries.
-3. Warns if the `MANIFEST` changed, indicating new resources are available — re-run `setup.sh` to
-   deploy them.
-4. If already up to date, reports `HEAD` and exits cleanly.
-
-Because projects use symlinks into the central clone, the updated files are immediately active in
-every symlinked project — no per-project action needed (unless `MANIFEST` changed).
-
----
-
-## Add a Skill Globally
-
-To add a new skill that is available in all projects:
-
-1. Create the skill folder inside the central clone:
-   ```sh
-   mkdir -p ~/.supervisor/.claude/skills/my-skill
-   # Create ~/.supervisor/.claude/skills/my-skill/SKILL.md following templates/SKILL_template.md
-   ```
-2. Add the skill path to `~/.supervisor/MANIFEST` if you want it auto-deployed to new projects.
-3. Commit and push from the central clone:
-   ```sh
-   git -C ~/.supervisor add .claude/skills/my-skill MANIFEST
-   git -C ~/.supervisor commit -m "feat(skills): add my-skill"
-   git -C ~/.supervisor push
-   ```
-4. On any machine where you want the change, run:
-   ```sh
-   sh update.sh
-   ```
-
-All projects using symlinks will see the new skill immediately after the pull.
-
----
-
-## Override per Project
-
-To customize a resource for a single project without affecting others, use the `--copy` flag:
-
-```sh
-sh setup.sh --copy
-```
-
-This copies each `MANIFEST` resource into the project instead of symlinking it. You can then edit
-the local copy freely.
-
-**Important:** copied files do not auto-update. When you run `update.sh`, the central clone updates
-but the local copies in `--copy` projects are not touched. To pull upstream changes into a copied
-resource you must either:
-- Re-run `sh setup.sh --copy` for files that have not been locally edited (idempotent for
-  unchanged files).
-- Manually merge changes from `~/.supervisor/<path>` into the project's local copy.
-
-> If a file is already a symlink from a previous install and you re-run with `--copy`, the script
-> warns and skips that file. Remove the symlink manually first to switch modes.
-
----
-
-## Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `SUPERVISOR_PATH` | `~/.supervisor` | Path to the central clone. Set this to use a non-default location. |
-
-Example:
-
-```sh
-SUPERVISOR_PATH=/opt/supervisor sh setup.sh
-SUPERVISOR_PATH=/opt/supervisor sh update.sh
-```
-
-Both `setup.sh` and `update.sh` respect this variable.
+If `MANIFEST` changed, re-run `setup.sh` to deploy new resources.
 
 ---
 
 ## Pipeline Enforcement Hooks
 
-The framework ships five Claude Code hooks that enforce the agentic pipeline automatically —
-no prompt injection, no "please remember to…". Each hook does real work: blocking tool calls,
-updating files, or printing actionable output.
+Five hooks enforce the pipeline automatically — no prompt reminders needed.
 
-| # | Event | File | What it does |
-|---|-------|------|--------------|
-| 1 | `PostToolUse / Write` | `post_write_register_task.py` | When a `TASK_GUIDE_Txxx.md` is written, parses its metadata and auto-inserts the task under `### Todo` in `PROJECT_KANBAN.md`. |
-| 2 | `PreToolUse / Agent` | `pre_agent_validate_guide.py` | Before any agent is spawned, checks that the matching `tasks/TASK_GUIDE_Txxx.md` exists. **Blocks** the spawn if missing, prompting Stage 2 planning first. |
-| 3 | `PostToolUse / Agent` | `post_agent_move_to_review.py` | After an agent finishes, automatically moves its task from `In Progress` → `Ready for Review` in the kanban. |
-| 4 | `Stop` | `stop_review_reminder.py` | After every response, scans the kanban for tasks in `Ready for Review` and prints a reminder with the exact `Skill()` calls needed for Stage 4 review. |
-| 5 | `PreToolUse / Bash` | `pre_bash_block_unsafe_merge.py` | Intercepts `git push`, `git merge`, and `git rebase`. **Blocks** if any task is `In Progress`, or if any `Ready for Review` task is missing Stage 5 verify evidence in its guide. |
-
-Hook scripts live in `.claude/hooks/` and are wired in `.claude/settings.json`. They are shared
-resources (symlinked from the central clone) so all projects receive updates via `update.sh`.
-
-### How the hooks enforce the pipeline
-
-```
-Write TASK_GUIDE  →  [Hook 1] auto-registers in KANBAN (Todo)
-         │
-         ▼
-Spawn Agent (T###)  →  [Hook 2] blocks if TASK_GUIDE missing
-         │
-         ▼
-Agent finishes  →  [Hook 3] moves task to Ready for Review
-         │
-         ▼
-Claude stops  →  [Hook 4] prints Stage 4 review reminder
-         │
-         ▼
-git push/merge  →  [Hook 5] blocks if In Progress tasks or missing verify evidence
-```
-
-No task can ship without passing through every gate.
+| Hook | Event | What it does |
+|------|-------|--------------|
+| `post_write_register_task.py` | PostToolUse / Write | Writes a `TASK_GUIDE_Txxx.md` → auto-inserts task in `PROJECT_KANBAN.md` under Todo |
+| `pre_agent_validate_guide.py` | PreToolUse / Agent | **Blocks** agent spawn if matching `TASK_GUIDE` is missing |
+| `post_agent_move_to_review.py` | PostToolUse / Agent | Moves task `In Progress → Ready for Review` after agent finishes |
+| `stop_review_reminder.py` | Stop | Prints Stage 4 review reminder for any `Ready for Review` tasks |
+| `pre_bash_block_unsafe_merge.py` | PreToolUse / Bash | **Blocks** `git push/merge/rebase` if tasks are In Progress or verify evidence is missing |
 
 ---
 
-## Git Submodule Alternative (Optional)
+## Prerequisites
 
-Instead of a central clone managed by `setup.sh`, you can add this repo as a git submodule inside
-your project:
+- `git`
+- `bash` / POSIX `sh`
 
-```sh
-git submodule add https://github.com/YOUR_GITHUB_USERNAME/per-agentic-claude .supervisor
-```
+---
 
-Then symlink or copy resources manually from `.supervisor/` into the project root. Run
-`git submodule update --remote` to pull updates. This approach ties the framework version to the
-project's commit history, which is useful when you need reproducible, pinned deployments. The
-`setup.sh` / `update.sh` workflow is simpler for most use cases; submodules are the better fit when
-strict version pinning matters.
+## Options
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `SUPERVISOR_PATH` | `~/.supervisor` | Override the central clone location |
+
+**Greenfield vs Brownfield** — chosen interactively during `setup.sh`. Brownfield uses `CLAUDE_LEGACY.md` which adds legacy-codebase guidance (risk hotspots, strangler-fig patterns).
+
+**`--copy` mode** — copies instead of symlinking. Files do not auto-update; merge upstream changes manually from `~/.supervisor/<path>`.
+
+**Git submodule alternative** — add as `.supervisor` submodule for pinned versioning; symlink resources manually; update with `git submodule update --remote`.
