@@ -51,16 +51,13 @@ Shared resources are **symlinked** from `~/.supervisor` so all projects update a
 
 ## Quick Start
 
-```sh
-# 1. Clone this repo
-git clone https://github.com/your-username/personal-agentic-claude.git
+Replace `your-username` with your GitHub username, then run from inside the target project root:
 
-# 2. Run from inside the target project root
-GITHUB_USERNAME=your-username sh /path/to/personal-agentic-claude/setup.sh
-GITHUB_USERNAME=your-username sh /path/to/personal-agentic-claude/setup.sh --copy  # copy mode
+```sh
+curl -fsSL https://raw.githubusercontent.com/your-username/personal-agentic-claude/main/setup.sh | GITHUB_USERNAME=your-username sh
 ```
 
-The script builds the clone URL as `https://github.com/<GITHUB_USERNAME>/personal-agentic-claude.git`, clones to `~/.supervisor`, prompts for greenfield/brownfield, then symlinks everything from `MANIFEST` into the current directory.
+That's it. The script clones the framework to `~/.supervisor` and wires everything into the current directory.
 
 ---
 
