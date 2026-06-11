@@ -32,7 +32,14 @@ desktop.ini
 *~
 
 # ============================================================
-# Section 3: Shell / test artifacts
+# Section 3: Python artifacts
+# ============================================================
+__pycache__/
+*.pyc
+*.pyo
+
+# ============================================================
+# Section 4: Shell / test artifacts
 # ============================================================
 # Temp dirs that shell scripts may create during testing
 tmp/
