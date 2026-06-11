@@ -4,8 +4,29 @@
 # SUPERVISOR_PATH overrides the default central clone location (~/.supervisor)
 set -e
 
-SUPERVISOR_REPO="https://github.com/thunderkds/per-agentic-claude.git"
+SUPERVISOR_REPO_TEMPLATE="https://github.com/%s/personal-agentic-claude.git"
 SUPERVISOR_PATH="${SUPERVISOR_PATH:-$HOME/.supervisor}"
+
+# ── Resolve GitHub username → repo URL ───────────────────────────────────────
+resolve_repo_url() {
+  if [ -n "$GITHUB_USERNAME" ]; then
+    SUPERVISOR_REPO="$(printf "$SUPERVISOR_REPO_TEMPLATE" "$GITHUB_USERNAME")"
+    return
+  fi
+  if [ -t 0 ]; then
+    printf "[info]  Enter your GitHub username: "
+    read -r GITHUB_USERNAME
+    if [ -z "$GITHUB_USERNAME" ]; then
+      log_error "GitHub username is required. Set GITHUB_USERNAME env var or enter it at the prompt."
+      exit 1
+    fi
+  else
+    log_error "Non-interactive mode: set GITHUB_USERNAME env var before running setup.sh."
+    exit 1
+  fi
+  SUPERVISOR_REPO="$(printf "$SUPERVISOR_REPO_TEMPLATE" "$GITHUB_USERNAME")"
+  log_info "Using repo: $SUPERVISOR_REPO"
+}
 
 # ── Logging helpers (TTY-aware color, plain-text fallback) ────────────────────
 GREEN=''; YELLOW=''; RED=''; RESET=''
@@ -191,6 +212,7 @@ EOF
 # ── Main ──────────────────────────────────────────────────────────────────────
 main() {
   check_git
+  resolve_repo_url
   clone_or_verify
   prompt_mode
 
