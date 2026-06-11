@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /home/hungnguyenhuu/workspace/pets/per-agentic-claude/.claude/hooks/post_write_register_task.py"
+            "command": "python3 /home/hungnguyenhuu/pets/personal-agentic-claude/.claude/hooks/post_write_register_task.py"
           }
         ]
       },
@@ -17,7 +17,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /home/hungnguyenhuu/workspace/pets/per-agentic-claude/.claude/hooks/post_agent_move_to_review.py"
+            "command": "python3 /home/hungnguyenhuu/pets/personal-agentic-claude/.claude/hooks/post_agent_move_to_review.py"
+          }
+        ]
+      },
+      {
+        "description": "Prompt Supervisor to run diff-driven memory-update pass after git push/merge/pull",
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/hungnguyenhuu/pets/personal-agentic-claude/.claude/hooks/post_bash_memory_update.py"
           }
         ]
       }
@@ -29,7 +39,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /home/hungnguyenhuu/workspace/pets/per-agentic-claude/.claude/hooks/pre_agent_validate_guide.py"
+            "command": "python3 /home/hungnguyenhuu/pets/personal-agentic-claude/.claude/hooks/pre_agent_validate_guide.py"
           }
         ]
       },
@@ -39,7 +49,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /home/hungnguyenhuu/workspace/pets/per-agentic-claude/.claude/hooks/pre_bash_block_unsafe_merge.py"
+            "command": "python3 /home/hungnguyenhuu/pets/personal-agentic-claude/.claude/hooks/pre_bash_block_unsafe_merge.py"
           }
         ]
       }
@@ -50,7 +60,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /home/hungnguyenhuu/workspace/pets/per-agentic-claude/.claude/hooks/stop_review_reminder.py"
+            "command": "python3 /home/hungnguyenhuu/pets/personal-agentic-claude/.claude/hooks/stop_review_reminder.py"
           }
         ]
       }

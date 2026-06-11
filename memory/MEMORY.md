@@ -1,14 +1,20 @@
-# MEMORY.md — Session-Persistent Insights Index
+# MEMORY.md — Hot-Tier Memory Index
 
-> Read this file at the start of every session. Each entry links to a detailed memory file.
-> Write new entries when new patterns, decisions, or feedback are learned.
-> Keep entries under 150 characters. Full details live in the linked files.
+> **Rules**: Supervisor-only writes. Max 200 lines. One-line summaries + links to cold files.
+> Injected in full into every sub-agent spawn prompt.
+> Updated by PostToolUse hook on `git push` / `git merge` (diff-driven), or by `/compact-memory` skill.
+
+---
+
+## Memory Architecture
+
+- [decisions.md](decisions.md) — code + infra architectural decisions (the "why")
+- [glossary.md](glossary.md) — canonical biz domain terms and core domain models
+- [learnings.md](learnings.md) — specs/requirement clarifications, patterns, gotchas
 
 ---
 
 ## Index
 
-<!-- Add entries below as memories are created. Format:
-- [Title](filename.md) — one-line description of what this memory captures
--->
+<!-- Format: - [Title](cold-file.md#section) — one-line summary (≤150 chars) -->
 
