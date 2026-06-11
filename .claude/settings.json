@@ -1,11 +1,56 @@
 {
   "hooks": {
-    "UserPromptSubmit": [
+    "PostToolUse": [
       {
+        "description": "Auto-register new TASK_GUIDE files in PROJECT_KANBAN.md",
+        "matcher": "Write",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 -c \"import json; print(json.dumps({'hookSpecificOutput': {'hookEventName': 'UserPromptSubmit', 'additionalContext': 'SUPERVISOR ROUTING: Analyze this prompt through the Supervisor lens. Decide which sub-agent (common-infrastructure, backend-developer, frontend-developer, qa-expert) to dispatch, or handle inline. Never skip the supervisor role.'}}))\""
+            "command": "python3 /home/hungnguyenhuu/workspace/pets/per-agentic-claude/.claude/hooks/post_write_register_task.py"
+          }
+        ]
+      },
+      {
+        "description": "Move task to Ready for Review after agent finishes",
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/hungnguyenhuu/workspace/pets/per-agentic-claude/.claude/hooks/post_agent_move_to_review.py"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "description": "Block agent spawn if TASK_GUIDE is missing",
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/hungnguyenhuu/workspace/pets/per-agentic-claude/.claude/hooks/pre_agent_validate_guide.py"
+          }
+        ]
+      },
+      {
+        "description": "Block git push/merge if pipeline gates are not satisfied",
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/hungnguyenhuu/workspace/pets/per-agentic-claude/.claude/hooks/pre_bash_block_unsafe_merge.py"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "description": "Remind Supervisor to run Stage 4 review for pending tasks",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/hungnguyenhuu/workspace/pets/per-agentic-claude/.claude/hooks/stop_review_reminder.py"
           }
         ]
       }

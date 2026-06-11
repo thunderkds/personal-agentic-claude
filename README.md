@@ -75,6 +75,8 @@ The following table matches the `MANIFEST`:
 |----------|------|-------------|
 | `.claude/agents/` | Shared (symlinked) | Sub-agent definitions auto-discovered by Claude Code |
 | `.claude/skills/` | Shared (symlinked) | Custom skill definitions auto-discovered by Claude Code |
+| `.claude/hooks/` | Shared (symlinked) | Pipeline enforcement hooks (see Pipeline Enforcement Hooks) |
+| `.claude/settings.json` | Shared (symlinked) | Hook wiring — connects events to hook scripts |
 | `templates/` | Shared (symlinked) | Blank templates for PRD, PROJECT_SPEC, KANBAN, TASK_GUIDE, etc. |
 | `CLAUDE.md` | Shared (symlinked) | Active supervisor instructions (greenfield or brownfield) |
 | `tasks/` | Project-specific (created fresh) | Task guides generated at Stage 2, one per task |
@@ -169,6 +171,45 @@ SUPERVISOR_PATH=/opt/supervisor sh update.sh
 ```
 
 Both `setup.sh` and `update.sh` respect this variable.
+
+---
+
+## Pipeline Enforcement Hooks
+
+The framework ships five Claude Code hooks that enforce the agentic pipeline automatically —
+no prompt injection, no "please remember to…". Each hook does real work: blocking tool calls,
+updating files, or printing actionable output.
+
+| # | Event | File | What it does |
+|---|-------|------|--------------|
+| 1 | `PostToolUse / Write` | `post_write_register_task.py` | When a `TASK_GUIDE_Txxx.md` is written, parses its metadata and auto-inserts the task under `### Todo` in `PROJECT_KANBAN.md`. |
+| 2 | `PreToolUse / Agent` | `pre_agent_validate_guide.py` | Before any agent is spawned, checks that the matching `tasks/TASK_GUIDE_Txxx.md` exists. **Blocks** the spawn if missing, prompting Stage 2 planning first. |
+| 3 | `PostToolUse / Agent` | `post_agent_move_to_review.py` | After an agent finishes, automatically moves its task from `In Progress` → `Ready for Review` in the kanban. |
+| 4 | `Stop` | `stop_review_reminder.py` | After every response, scans the kanban for tasks in `Ready for Review` and prints a reminder with the exact `Skill()` calls needed for Stage 4 review. |
+| 5 | `PreToolUse / Bash` | `pre_bash_block_unsafe_merge.py` | Intercepts `git push`, `git merge`, and `git rebase`. **Blocks** if any task is `In Progress`, or if any `Ready for Review` task is missing Stage 5 verify evidence in its guide. |
+
+Hook scripts live in `.claude/hooks/` and are wired in `.claude/settings.json`. They are shared
+resources (symlinked from the central clone) so all projects receive updates via `update.sh`.
+
+### How the hooks enforce the pipeline
+
+```
+Write TASK_GUIDE  →  [Hook 1] auto-registers in KANBAN (Todo)
+         │
+         ▼
+Spawn Agent (T###)  →  [Hook 2] blocks if TASK_GUIDE missing
+         │
+         ▼
+Agent finishes  →  [Hook 3] moves task to Ready for Review
+         │
+         ▼
+Claude stops  →  [Hook 4] prints Stage 4 review reminder
+         │
+         ▼
+git push/merge  →  [Hook 5] blocks if In Progress tasks or missing verify evidence
+```
+
+No task can ship without passing through every gate.
 
 ---
 
