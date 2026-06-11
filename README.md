@@ -55,7 +55,7 @@ Replace `your-username` with your GitHub username, then run from inside the targ
 
 ```sh
 GITHUB_USERNAME=your-username
-curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-claude/main/setup.sh | GITHUB_USERNAME=$GITHUB_USERNAME sh
+curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-claude/main/setup.sh | sh
 ```
 
 That's it. The script clones the framework to `~/.supervisor` and wires everything into the current directory.
