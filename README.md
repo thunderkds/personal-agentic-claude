@@ -38,7 +38,7 @@ Stage 5: Verify end-to-end → merge → ship
 | `.claude/agents/` | Sub-agent definitions (common-infrastructure, backend, frontend, qa) |
 | `.claude/skills/` | Custom skills (brainstorming, grill-with-docs, tdd, ship, compact-memory, …) |
 | `.claude/hooks/` | Pipeline enforcement hooks (auto-kanban, gate checks, merge blocks, memory updates) |
-| `.claude/settings.json` | Hook wiring |
+| `.claude/settings.json` | Hook wiring *(deployed as a per-project copy — projects append their own permissions)* |
 | `templates/` | Blank templates for PRD, PROJECT_SPEC, KANBAN, TASK_GUIDE, etc. |
 | `CLAUDE.md` | Supervisor instructions (greenfield) |
 | `CLAUDE_LEGACY.md` | Supervisor instructions (brownfield / existing codebase) |
@@ -48,27 +48,40 @@ Stage 5: Verify end-to-end → merge → ship
 | `memory/glossary.md` | *(per project)* Canonical biz-domain terms and core domain models |
 | `memory/learnings.md` | *(per project)* Specs clarifications, patterns, gotchas |
 
-Shared resources are **symlinked** from `~/.supervisor` so all projects update automatically. Project-specific files are created fresh and never overwritten.
+Shared resources (`agents`, `skills`, `hooks`, `templates`) are **symlinked** from `~/.supervisor` so all projects update automatically. `.claude/settings.json` is **copied** (projects add their own permissions to it). Project-specific files are created fresh and never overwritten.
 
 ---
 
 ## Quick Start
 
-Set your GitHub username and run from inside the target project root:
+Run from inside the target project root:
 
 ```sh
-GITHUB_USERNAME=your-username && curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-claude/main/setup.sh | sh
+curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh
 ```
+
+That's it — the script clones the framework to `~/.supervisor` (first run only), symlinks the shared resources into the project, and scaffolds `tasks/` + the two-tier `memory/` files.
+
+Installing from a fork? Export your username first and swap it into the URL:
+
+```sh
+export GITHUB_USERNAME=your-username
+curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-claude/main/setup.sh | sh
+```
+
+> Piped installs are non-interactive: they default to **greenfield** (`CLAUDE.md`) and never overwrite existing files. For a brownfield project, run it interactively instead: `sh ~/.supervisor/setup.sh` and choose option 2.
+
+After installing, restart Claude Code in the project so the deployed hooks in `.claude/settings.json` are picked up.
 
 ---
 
 ## Update
 
 ```sh
-sh update.sh   # pulls latest into ~/.supervisor; symlinked projects update instantly
+sh ~/.supervisor/update.sh   # pulls latest; symlinked projects update instantly
 ```
 
-If `MANIFEST` changed, re-run `setup.sh` to deploy new resources.
+If `MANIFEST` changed, re-run `sh ~/.supervisor/setup.sh` from each project root to deploy new resources.
 
 ---
 
@@ -116,7 +129,8 @@ memory/learnings.md       ← Cold tier: specs clarifications, patterns, gotchas
 ## Prerequisites
 
 - `git`
-- `bash` / POSIX `sh`
+- `curl`
+- POSIX `sh`
 
 ---
 
@@ -125,6 +139,7 @@ memory/learnings.md       ← Cold tier: specs clarifications, patterns, gotchas
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `SUPERVISOR_PATH` | `~/.supervisor` | Override the central clone location |
+| `GITHUB_USERNAME` | `thunderkds` | Install from a fork instead of the canonical repo |
 
 **Greenfield vs Brownfield** — chosen interactively during `setup.sh`. Brownfield uses `CLAUDE_LEGACY.md` which adds legacy-codebase guidance (risk hotspots, strangler-fig patterns).
 

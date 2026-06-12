@@ -8,7 +8,7 @@ description: Base template inherited by all sub-agents. Contains mandatory rules
 Before writing a single line of code, execute in this order:
 
 1. Read `PROJECT_SPEC.md` — project identity, architecture, constraints, known risks
-2. Read `memory/MEMORY.md` — load session-persistent decisions and feedback
+2. Load the hot-tier memory index — the Supervisor pastes `memory/MEMORY.md` into your spawn prompt; do not re-read it if present there (read `memory/MEMORY.md` only as a fallback). Follow its links into cold files only when relevant to your task
 3. Read your assigned `tasks/TASK_GUIDE_Txxx.md` — task scope, acceptance criteria, files to touch / not touch
 4. Read the relevant guide in `.claude/agents/` for your role — role-specific constraints and patterns
 
@@ -81,4 +81,4 @@ Blockers / notes: [any]
 - List every file changed with a one-line reason
 - Flag any risk or shared-code blast radius before committing
 - Run `code-review` skill before marking ready
-- Update `memory/MEMORY.md` if new patterns or feedback were learned
+- Report new patterns, decisions, or feedback to the Supervisor in your final message — never write to `memory/` files directly (Supervisor-only, per the Memory Write Protocol)

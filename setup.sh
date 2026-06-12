@@ -8,22 +8,9 @@ SUPERVISOR_REPO_TEMPLATE="https://github.com/%s/personal-agentic-claude.git"
 SUPERVISOR_PATH="${SUPERVISOR_PATH:-$HOME/.supervisor}"
 
 # ── Resolve GitHub username → repo URL ───────────────────────────────────────
+# Defaults to the canonical repo; set GITHUB_USERNAME to install from a fork.
 resolve_repo_url() {
-  if [ -n "$GITHUB_USERNAME" ]; then
-    SUPERVISOR_REPO="$(printf "$SUPERVISOR_REPO_TEMPLATE" "$GITHUB_USERNAME")"
-    return
-  fi
-  if [ -t 0 ]; then
-    printf "[info]  Enter your GitHub username: "
-    read -r GITHUB_USERNAME
-    if [ -z "$GITHUB_USERNAME" ]; then
-      log_error "GitHub username is required. Set GITHUB_USERNAME env var or enter it at the prompt."
-      exit 1
-    fi
-  else
-    log_error "Non-interactive mode: set GITHUB_USERNAME env var before running setup.sh."
-    exit 1
-  fi
+  GITHUB_USERNAME="${GITHUB_USERNAME:-thunderkds}"
   SUPERVISOR_REPO="$(printf "$SUPERVISOR_REPO_TEMPLATE" "$GITHUB_USERNAME")"
   log_info "Using repo: $SUPERVISOR_REPO"
 }
@@ -105,8 +92,7 @@ prompt_mode() {
 
 # ── Install one path from MANIFEST ───────────────────────────────────────────
 install_path() {
-  # Strip any trailing carriage return (CRLF-safe)
-  entry="${1%$'\r'}"
+  entry="$1"
   src="$SUPERVISOR_PATH/$entry"
   dst="./$entry"
 
@@ -186,25 +172,85 @@ install_claude() {
   fi
 }
 
+# ── Install settings.json (hook wiring) ──────────────────────────────────────
+# Always a copy, never a symlink: projects append their own permissions to it
+# (e.g. fewer-permission-prompts), which must not leak into the central clone.
+install_settings() {
+  src="$SUPERVISOR_PATH/.claude/settings.json"
+  dst="./.claude/settings.json"
+
+  if [ ! -e "$src" ]; then
+    log_warn ".claude/settings.json not found in central clone — hooks will not be wired."
+    return
+  fi
+  if [ -e "$dst" ] || [ -L "$dst" ]; then
+    return  # never overwrite project settings; merge hook changes manually
+  fi
+  [ -d ./.claude ] || mkdir -p ./.claude
+  cp "$src" "$dst"
+  log_info "Installed .claude/settings.json (copy). Restart Claude Code to activate hooks."
+}
+
 # ── Scaffold project-specific folders ────────────────────────────────────────
 scaffold_project() {
   [ -d ./tasks ]  || mkdir ./tasks
   [ -d ./memory ] || mkdir ./memory
   if [ ! -f ./memory/MEMORY.md ]; then
     cat > ./memory/MEMORY.md <<'EOF'
-# MEMORY.md — Session-Persistent Insights Index
+# MEMORY.md — Hot-Tier Memory Index
 
-> Read this file at the start of every session. Each entry links to a detailed memory file.
-> Write new entries when new patterns, decisions, or feedback are learned.
-> Keep entries under 150 characters. Full details live in the linked files.
+> **Rules**: Supervisor-only writes. Max 200 lines. One-line summaries + links to cold files.
+> Injected in full into every sub-agent spawn prompt.
+> Updated by the Supervisor — prompted by the PostToolUse hook on `git push` / `git merge` (diff-driven pass), or via the `/compact-memory` skill.
+
+---
+
+## Memory Architecture
+
+- [decisions.md](decisions.md) — code + infra architectural decisions (the "why")
+- [glossary.md](glossary.md) — canonical biz domain terms and core domain models
+- [learnings.md](learnings.md) — specs/requirement clarifications, patterns, gotchas
 
 ---
 
 ## Index
 
-<!-- Add entries below as memories are created. Format:
-- [Title](filename.md) — one-line description of what this memory captures
--->
+<!-- Format: - [Title](cold-file.md#section) — one-line summary (≤150 chars) -->
+EOF
+  fi
+  if [ ! -f ./memory/decisions.md ]; then
+    cat > ./memory/decisions.md <<'EOF'
+# decisions.md — Cold Tier: Architectural & Infrastructure Decisions
+
+> **Rules**: Supervisor-only writes. Each entry: `### YYYY-MM-DD — Title`, then **Decision**, **Why**, and **Files** (cite paths — the diff-driven pass greps this file by changed file path).
+
+## Architecture
+
+## Infrastructure
+EOF
+  fi
+  if [ ! -f ./memory/glossary.md ]; then
+    cat > ./memory/glossary.md <<'EOF'
+# glossary.md — Cold Tier: Domain Terms & Domain Models
+
+> **Rules**: Supervisor-only writes. One canonical definition per term — update in place, never duplicate. Domain Models section is populated at Stage 1 step 7 (Core Domain Models scan) and confirmed by the user.
+
+## Domain Terms
+
+## Domain Models
+EOF
+  fi
+  if [ ! -f ./memory/learnings.md ]; then
+    cat > ./memory/learnings.md <<'EOF'
+# learnings.md — Cold Tier: Clarifications, Patterns & Gotchas
+
+> **Rules**: Supervisor-only writes. Each entry dated (`YYYY-MM-DD`) and citing the file/task it came from (the diff-driven pass greps this file by changed file path).
+
+## Requirement Clarifications
+
+## Patterns
+
+## Gotchas
 EOF
   fi
 }
@@ -224,13 +270,16 @@ main() {
   fi
 
   while IFS= read -r line; do
+    # Strip carriage returns here (CRLF-safe; $'\r' is a bashism and this runs under sh/dash)
+    line=$(printf '%s' "$line" | tr -d '\r')
     case "$line" in
-      '#'*|''|$'\r') continue ;;  # skip comments, blank lines, bare CRs
+      '#'*|'') continue ;;  # skip comments and blank lines
       *) install_path "$line" ;;
     esac
   done < "$manifest"
 
   install_claude
+  install_settings
   scaffold_project
 
   log_info "Setup complete. Installed from: $SUPERVISOR_PATH"
