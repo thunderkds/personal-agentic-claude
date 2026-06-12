@@ -116,7 +116,10 @@ The project root **must** contain these folders:
    - templates/RUNBOOK_template.md
 
 5. `memory/` folder containing:
-   - memory/MEMORY.md (session-persistent insights index)
+   - memory/MEMORY.md (hot-tier index — ≤200 lines, injected into every sub-agent spawn prompt)
+   - memory/decisions.md (cold tier — architectural/infra decisions)
+   - memory/glossary.md (cold tier — domain terms & domain models)
+   - memory/learnings.md (cold tier — requirement clarifications, patterns, gotchas)
 
 ---
 

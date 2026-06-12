@@ -3,6 +3,9 @@
 # Lines starting with # are comments. Blank lines are ignored.
 # setup.sh reads this file and symlinks (or copies) each path into the target project.
 
+# NOTE: .claude/settings.json is deployed by setup.sh as a per-project COPY
+# (projects append their own permissions to it), not listed here.
 .claude/agents
 .claude/skills
+.claude/hooks
 templates

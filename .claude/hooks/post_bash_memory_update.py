@@ -46,7 +46,15 @@ def main():
     if not any(re.search(p, command) for p in GIT_MEMORY_PATTERNS):
         sys.exit(0)
 
-    print(MEMORY_UPDATE_PROMPT)
+    # Plain stdout from a PostToolUse hook only reaches the debug log.
+    # additionalContext is the documented way to inject the prompt into
+    # the model's context next to the tool result.
+    print(json.dumps({
+        "hookSpecificOutput": {
+            "hookEventName": "PostToolUse",
+            "additionalContext": MEMORY_UPDATE_PROMPT,
+        }
+    }))
 
 
 main()

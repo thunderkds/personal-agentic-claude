@@ -2,7 +2,7 @@
 
 > **Rules**: Supervisor-only writes. Max 200 lines. One-line summaries + links to cold files.
 > Injected in full into every sub-agent spawn prompt.
-> Updated by PostToolUse hook on `git push` / `git merge` (diff-driven), or by `/compact-memory` skill.
+> Updated by the Supervisor — prompted by the PostToolUse hook on `git push` / `git merge` (diff-driven pass), or via the `/compact-memory` skill.
 
 ---
 
