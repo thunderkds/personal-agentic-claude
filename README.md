@@ -36,14 +36,17 @@ Stage 5: Verify end-to-end → merge → ship
 | Path | What it contains |
 |------|-----------------|
 | `.claude/agents/` | Sub-agent definitions (common-infrastructure, backend, frontend, qa) |
-| `.claude/skills/` | Custom skills (brainstorming, grill-with-docs, tdd, ship, …) |
-| `.claude/hooks/` | Pipeline enforcement hooks (auto-kanban, gate checks, merge blocks) |
+| `.claude/skills/` | Custom skills (brainstorming, grill-with-docs, tdd, ship, compact-memory, …) |
+| `.claude/hooks/` | Pipeline enforcement hooks (auto-kanban, gate checks, merge blocks, memory updates) |
 | `.claude/settings.json` | Hook wiring |
 | `templates/` | Blank templates for PRD, PROJECT_SPEC, KANBAN, TASK_GUIDE, etc. |
 | `CLAUDE.md` | Supervisor instructions (greenfield) |
 | `CLAUDE_LEGACY.md` | Supervisor instructions (brownfield / existing codebase) |
 | `tasks/` | *(per project)* Task guides generated at Stage 2 |
-| `memory/MEMORY.md` | *(per project)* Session-persistent insights index |
+| `memory/MEMORY.md` | *(per project)* Hot-tier memory index — ≤200 lines, injected into every sub-agent spawn prompt |
+| `memory/decisions.md` | *(per project)* Architectural + infrastructure decisions |
+| `memory/glossary.md` | *(per project)* Canonical biz-domain terms and core domain models |
+| `memory/learnings.md` | *(per project)* Specs clarifications, patterns, gotchas |
 
 Shared resources are **symlinked** from `~/.supervisor` so all projects update automatically. Project-specific files are created fresh and never overwritten.
 
@@ -71,7 +74,7 @@ If `MANIFEST` changed, re-run `setup.sh` to deploy new resources.
 
 ## Pipeline Enforcement Hooks
 
-Five hooks enforce the pipeline automatically — no prompt reminders needed.
+Six hooks enforce the pipeline automatically — no prompt reminders needed.
 
 | Hook | Event | What it does |
 |------|-------|--------------|
@@ -80,6 +83,33 @@ Five hooks enforce the pipeline automatically — no prompt reminders needed.
 | `post_agent_move_to_review.py` | PostToolUse / Agent | Moves task `In Progress → Ready for Review` after agent finishes |
 | `stop_review_reminder.py` | Stop | Prints Stage 4 review reminder for any `Ready for Review` tasks |
 | `pre_bash_block_unsafe_merge.py` | PreToolUse / Bash | **Blocks** `git push/merge/rebase` if tasks are In Progress or verify evidence is missing |
+| `post_bash_memory_update.py` | PostToolUse / Bash | After `git push/merge/pull` — prompts Supervisor to run the diff-driven memory-update pass |
+
+---
+
+## Memory System
+
+The framework uses a **two-tier hot/cold memory** design to keep agents aligned across sessions.
+
+```
+memory/MEMORY.md          ← Hot tier (≤200 lines, always injected into spawn prompts)
+memory/decisions.md       ← Cold tier: architectural + infrastructure decisions
+memory/glossary.md        ← Cold tier: canonical biz-domain terms + core domain models
+memory/learnings.md       ← Cold tier: specs clarifications, patterns, gotchas
+```
+
+**How it works:**
+- **Supervisor-only writes.** Sub-agents never write to memory directly.
+- **Spawn injection.** The Supervisor pastes the full `memory/MEMORY.md` verbatim into every sub-agent spawn prompt — no extra reads needed.
+- **Auto-update.** The `post_bash_memory_update.py` hook fires after `git push/merge/pull` and prompts a diff-driven update pass: changed files → grep cold files → update matched entries → append new learnings.
+- **Manual compaction.** Type `/compact-memory` any time to run a human-gated compaction: stale entries are flagged, reviewed, then pruned; the hot-tier index is re-synced.
+
+**Cold file routing:**
+| What happened | Write to |
+|---|---|
+| Architectural or infrastructure decision | `memory/decisions.md` |
+| New canonical term or domain model confirmed | `memory/glossary.md` |
+| Spec clarification, pattern, or gotcha discovered | `memory/learnings.md` |
 
 ---
 

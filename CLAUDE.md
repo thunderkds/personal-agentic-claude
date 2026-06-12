@@ -53,6 +53,7 @@ The `subagent_type` is the agent's `name:` field (not the filename). Because Cla
 | `blast-radius` | `.claude/skills/blast-radius/SKILL.md` | Stage 4 (Medium/High Risk): quantify data-breach impact — sensitive-data inventory, exposure scoring, regulatory/financial estimate |
 | `migration-safety` | `.claude/skills/migration-safety/SKILL.md` | Stage 3/4: go/no-go gate for any task touching DB schema/migrations — reversibility, backward-compat, zero-downtime, no silent data loss |
 | `ship` | `.claude/skills/ship/SKILL.md` | Post-Stage-5: turn merged tasks into a runnable deployment plan, rollback plan, and release notes; append a runbook entry (plans, never auto-deploys) |
+| `compact-memory` | `.claude/skills/compact-memory/SKILL.md` | On-demand: compact and prune the two-tier memory system when cold files are bloated or stale — human-invoked, Supervisor executes |
 
 > **Naming note:** the `blast-radius` skill above is about **data-breach** impact (PII/PHI, regulatory cost). It is distinct from the *code-dependency* "blast radius" referenced in Risk assignment and review scoping below (which files a change affects). Don't conflate the two.
 
@@ -275,6 +276,9 @@ Guide the user through this checklist step by step.
    - If the file does not exist yet, use `templates/PROJECT_SPEC_template.md` and fill in the Project Context Document.
    - Ask the user to save it as `PROJECT_SPEC.md` in the project root, or confirm it already exists.
 
+7. **Core Domain Models**
+   Scan the codebase for domain model and interface files (`Glob` for `models/`, `entities/`, `types/`, `schemas/`, `interfaces/`). Present the findings: "These look like core domain models: [list]. Are they correct? Any missing or excluded?" Record the confirmed models in `memory/glossary.md` under the `## Domain Models` section.
+
 After all items are confirmed:
 > "Stage 1: Environment & Provider Setup completed successfully. Moving to Stage 1.5: Sub-Agent Architecture."
 
@@ -342,6 +346,7 @@ For every task moved to In Progress:
 - The TASK_GUIDE_Txxx.md already exists in tasks/ — no need to regenerate it.
 - Tell the user the exact command to spawn the assigned sub-agent in that worktree. Set the spawn model to match the task's **Complexity** (C0→haiku, C1→sonnet, C2→sonnet/opus, C3→opus).
 - The sub-agent must read both its TASK_GUIDE_Txxx.md (from tasks/) and the relevant agent guide from .claude/agents/.
+- **Memory injection**: Always paste the full contents of `memory/MEMORY.md` verbatim into every sub-agent spawn prompt, after the task pointer. This is the hot-tier memory index (≤200 lines) — the agent must not re-read it; it is already in context.
 
 Run the app during implementation to catch regressions early:
 ```
@@ -395,7 +400,12 @@ After all Stage 4 reviews pass:
 
 3. Update `PROJECT_SPEC.md` Memory/Insights section with key learnings.
 
-4. Update `memory/MEMORY.md` if new patterns or decisions were learned.
+4. **Memory update** (diff-driven pass — run before `ship`):
+   - `git diff HEAD~1 --name-only` — identify files changed in this merge
+   - Grep `memory/decisions.md`, `memory/glossary.md`, `memory/learnings.md` for references to those files
+   - Update matched entries in place (fix stale facts, expand with new context)
+   - Append any new decisions or learnings from this session to the appropriate cold file
+   - Summarize new/changed entries as one-liners in `memory/MEMORY.md` (keep hot tier ≤200 lines)
 
 5. Merge the worktree and close the task on PROJECT_KANBAN.md.
 
@@ -420,6 +430,24 @@ Only after all tasks are integrated, announce:
 - Stage 5 verify is mandatory before any merge. After all tasks integrate, Stage 5 `ship` produces the release/rollback plan.
 - The Supervisor must always specify the exact CLI + spawn command for every sub-agent.
 - Never assume the user knows how to run a particular CLI — always give the full command.
+
+---
+
+## Memory Write Protocol
+
+- **Writer**: Supervisor only. Sub-agents never write to memory directly.
+- **Hot tier** (`memory/MEMORY.md`): ≤200 lines. Supervisor-curated index. One-line summaries + links to cold files. Injected verbatim into every sub-agent spawn prompt.
+- **Cold tier routing**:
+  - Architectural or infrastructure decisions → `memory/decisions.md`
+  - Canonical biz-domain terms or core domain models → `memory/glossary.md`
+  - Specs/requirement clarifications, patterns, gotchas → `memory/learnings.md`
+- **Update triggers**: (1) PostToolUse hook on `git push` / `git merge` — diff-driven pass; (2) `/compact-memory` skill — human-invoked.
+- **Diff-driven pass procedure**:
+  1. `git diff HEAD~1 --name-only` — identify changed files
+  2. Grep `memory/decisions.md`, `memory/glossary.md`, `memory/learnings.md` for references to those files
+  3. Update matched entries in place (fix stale facts, expand with new context)
+  4. Append any new decisions or learnings from the session to the appropriate cold file
+  5. Summarize new/changed entries as one-liners in `memory/MEMORY.md` (keep ≤200 lines total)
 
 ---
 

@@ -39,10 +39,12 @@ Claude (Supervisor)                         Codex / Cursor (Implementer)
 | `TASK_GUIDE` / `PROJECT_SPEC` / `PROJECT_KANBAN` (plain markdown) | ✅ | |
 | Skill **content** (the migration checklist, ship workflow, etc.) | ✅ (it's just procedure) | |
 | `git worktree` isolation | ✅ (plain git) | |
+| `memory/MEMORY.md` **reading** (injected into non-Claude spawn prompts) | ✅ (plain markdown) | |
 | `CLAUDE.md` auto-load | | ❌ filename is Claude-specific |
 | `Skill({…})` / `Agent({subagent_type})` invocation | | ❌ Claude Code syntax |
 | Built-in skills: `code-review`, `security-review`, `verify`, `run` | | ❌ no equivalent elsewhere |
-| `settings.json` PreToolUse hooks (git-guardrails) | | ❌ Claude-only |
+| `settings.json` PreToolUse/PostToolUse hooks (guardrails, memory update) | | ❌ Claude-only |
+| Memory **writes** (Supervisor curates hot/cold tier, runs compaction) | | ❌ Claude Supervisor only |
 
 **Implication:** a non-Claude implementer can do **Pillar 2 (implementation)** inside a worktree
 from a `TASK_GUIDE`. Pillars 1 (requirement fidelity) and 3 (evaluation/review) stay with the
@@ -57,6 +59,11 @@ of `Agent({ subagent_type: … })`, the supervisor (or you) runs another CLI **i
 directory**. The verification command is then run by the Claude supervisor at Stage 4/5 as usual.
 
 > Exact flags drift between CLI versions — confirm with `--help` for your installed version.
+
+> **Memory injection for non-Claude implementers:** Before spawning a non-Claude agent, paste the
+> contents of `memory/MEMORY.md` into its prompt manually — the same hot-tier context Claude
+> sub-agents receive automatically. Cold files (`decisions.md`, `glossary.md`, `learnings.md`) are
+> available for the agent to read if it needs depth.
 
 ### Codex CLI
 
