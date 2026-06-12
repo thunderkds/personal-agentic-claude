@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    name: Framework integrity + install smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Shellcheck install scripts
+        run: shellcheck setup.sh update.sh scripts/validate.sh scripts/smoke-install.sh
+
+      - name: Validate framework integrity
+        run: sh scripts/validate.sh
+
+      - name: Install smoke test
+        run: sh scripts/smoke-install.sh
