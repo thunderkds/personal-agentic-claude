@@ -4,14 +4,13 @@
 # SUPERVISOR_PATH overrides the default central clone location (~/.supervisor)
 set -e
 
-SUPERVISOR_REPO_TEMPLATE="https://github.com/%s/personal-agentic-claude.git"
 SUPERVISOR_PATH="${SUPERVISOR_PATH:-$HOME/.supervisor}"
 
 # ── Resolve GitHub username → repo URL ───────────────────────────────────────
 # Defaults to the canonical repo; set GITHUB_USERNAME to install from a fork.
 resolve_repo_url() {
   GITHUB_USERNAME="${GITHUB_USERNAME:-thunderkds}"
-  SUPERVISOR_REPO="$(printf "$SUPERVISOR_REPO_TEMPLATE" "$GITHUB_USERNAME")"
+  SUPERVISOR_REPO="https://github.com/${GITHUB_USERNAME}/personal-agentic-claude.git"
   log_info "Using repo: $SUPERVISOR_REPO"
 }
 

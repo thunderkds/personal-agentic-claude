@@ -78,6 +78,7 @@ skip_path() {
 # or per-project placeholders, not deployable references, so they're skipped.
 # (Subshells can't set FAIL in POSIX sh, so failures are tallied into a file.)
 MISSFILE="$(mktemp)"
+# shellcheck disable=SC2016  # backticks in the regex are literal, not expansion
 grep -oE '`[A-Za-z0-9_./-]+`' CLAUDE.md \
   | tr -d '`' \
   | grep '/' \
