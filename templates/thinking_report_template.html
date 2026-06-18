@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Thinking Report — {{SESSION_TYPE}} — {{BRANCH}}</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 960px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; background: #f9f9f9; }
+  h1 { margin: 0; font-size: 1.3rem; }
+  h2 { font-size: 1rem; color: #374151; margin: 0 0 .75rem; font-weight: 600; }
+
+  /* Header */
+  .header { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+  .header-meta { color: #6b7280; font-size: .875rem; margin-top: .25rem; }
+
+  /* Badge */
+  .badge { display: inline-block; padding: .25rem .75rem; border-radius: 999px; font-weight: 600; font-size: .85rem; }
+  .badge-green  { background: #d1fae5; color: #065f46; }
+  .badge-yellow { background: #fef9c3; color: #92400e; }
+  .badge-blue   { background: #dbeafe; color: #1e40af; }
+
+  /* Section card */
+  .section { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; margin-bottom: 1.5rem; }
+  .section-head { padding: .75rem 1rem; background: #f9fafb; border-bottom: 1px solid #e0e0e0; }
+
+  /* ── DECISION BOX ───────────────────────────────────────── */
+  .decision-box { padding: 1.25rem 1.5rem; }
+  .decision-problem { font-size: .875rem; color: #6b7280; margin-bottom: .5rem; }
+  .decision-statement { font-size: 1.05rem; font-weight: 600; color: #1a1a1a; margin-bottom: .75rem; }
+  .decision-rationale { font-size: .875rem; color: #374151; line-height: 1.65; border-left: 3px solid #22c55e; padding-left: .75rem; }
+
+  /* ── TRADE-OFF MATRIX ───────────────────────────────────── */
+  /*
+    The matrix is a plain <table>. Column headers = option names.
+    The chosen option column gets class "col-chosen".
+    Each criteria row has cells with class: cell-yes / cell-partial / cell-no
+  */
+  .matrix-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th { padding: .65rem 1rem; font-size: .78rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: .04em; text-align: left; background: #f9fafb; border-bottom: 1px solid #e0e0e0; }
+  th.col-chosen { background: #f0fdf4; color: #15803d; }
+  td { padding: .7rem 1rem; font-size: .875rem; border-top: 1px solid #f3f4f6; vertical-align: middle; }
+  td.criteria-label { font-weight: 500; color: #374151; width: 200px; }
+  td.col-chosen { background: #f0fdf4; }
+
+  /* Cell value indicators */
+  .cell-yes     { color: #15803d; font-weight: 600; }   /* ✅  */
+  .cell-partial { color: #92400e; font-weight: 600; }   /* ⚠️  */
+  .cell-no      { color: #991b1b; font-weight: 600; }   /* ❌  */
+
+  /* ── ASSUMPTIONS & OPEN QUESTIONS ──────────────────────── */
+  .item-list { padding: 1rem 1.5rem; }
+  .item-list ul { margin: 0; padding-left: 1.25rem; }
+  .item-list li { font-size: .875rem; line-height: 1.7; color: #374151; }
+  .item-list li + li { margin-top: .25rem; }
+  .tag { display: inline-block; font-size: .72rem; font-weight: 600; padding: .1rem .45rem; border-radius: 4px; margin-right: .35rem; vertical-align: middle; }
+  .tag-assumption { background: #fef9c3; color: #92400e; }
+  .tag-deferred   { background: #ede9fe; color: #5b21b6; }
+  .tag-resolved   { background: #d1fae5; color: #065f46; }
+
+  /* Footer */
+  .footer { font-size: .75rem; color: #9ca3af; text-align: center; padding-bottom: 2rem; }
+  code { font-family: monospace; background: #f3f4f6; padding: .1rem .35rem; border-radius: 3px; font-size: .8rem; }
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══════════════════════════════════════════════════════════ -->
+<!--
+  SESSION_TYPE : e.g. "Brainstorming", "Grilling", "Planning"
+  BRANCH       : git branch name
+  DATE         : e.g. 2026-06-18
+  BADGE_CLASS  : green | yellow | blue
+  BADGE_LABEL  : e.g. "Direction Locked" | "Pending Approval" | "Deferred"
+-->
+<div class="header">
+  <div>
+    <h1>Thinking Report — {{SESSION_TYPE}}</h1>
+    <div class="header-meta">
+      Branch: <code>{{BRANCH}}</code> &nbsp;·&nbsp; {{DATE}}
+    </div>
+  </div>
+  <span class="badge badge-{{BADGE_CLASS}}">{{BADGE_LABEL}}</span>
+</div>
+
+<!-- ═══ DECISION BOX ══════════════════════════════════════════════════════ -->
+<!--
+  PROBLEM_STATEMENT : one sentence — what question was being answered
+  DECISION_STATEMENT: the chosen option / conclusion, one sentence
+  DECISION_RATIONALE: 2–4 sentences explaining WHY this was chosen
+-->
+<div class="section">
+  <div class="section-head"><h2>Decision</h2></div>
+  <div class="decision-box">
+    <div class="decision-problem">Problem: {{PROBLEM_STATEMENT}}</div>
+    <div class="decision-statement">→ {{DECISION_STATEMENT}}</div>
+    <div class="decision-rationale">{{DECISION_RATIONALE}}</div>
+  </div>
+</div>
+
+<!-- ═══ TRADE-OFF MATRIX ══════════════════════════════════════════════════ -->
+<!--
+  Replace {{MATRIX_HEADER_ROW}} with one <th> per option.
+  Mark the chosen option column with class="col-chosen".
+  Replace {{MATRIX_BODY_ROWS}} with one <tr> per criterion.
+
+  Example header row:
+    <th class="criteria-label"></th>
+    <th>Option A — Shell Pipe</th>
+    <th class="col-chosen">Option B — LLM Renderer ✅</th>
+    <th>Option C — Dedicated Skill</th>
+
+  Example body row:
+    <tr>
+      <td class="criteria-label">Offline / no CDN</td>
+      <td class="cell-yes">✅ Yes</td>
+      <td class="col-chosen cell-yes">✅ Yes</td>
+      <td class="cell-yes">✅ Yes</td>
+    </tr>
+
+  Cell classes: cell-yes (green) | cell-partial (amber) | cell-no (red)
+  For the chosen column, always add col-chosen as a second class on <td>.
+-->
+<div class="section">
+  <div class="section-head"><h2>Trade-Off Matrix</h2></div>
+  <div class="matrix-wrap">
+    <table>
+      <thead>
+        <tr>{{MATRIX_HEADER_ROW}}</tr>
+      </thead>
+      <tbody>
+        {{MATRIX_BODY_ROWS}}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══ ASSUMPTIONS & OPEN QUESTIONS ════════════════════════════════════ -->
+<!--
+  Replace {{ASSUMPTION_ITEMS}} with one <li> per item.
+  Use tags to classify: tag-assumption (amber) | tag-deferred (purple) | tag-resolved (green)
+
+  Example items:
+    <li><span class="tag tag-resolved">Resolved</span> Score scale is 0–100% — user confirmed.</li>
+    <li><span class="tag tag-assumption">Assumption</span> No Python runtime guaranteed — POSIX sh only.</li>
+    <li><span class="tag tag-deferred">Deferred</span> Flowchart visualization — revisit after matrix pilot.</li>
+-->
+<div class="section">
+  <div class="section-head"><h2>Assumptions &amp; Open Questions</h2></div>
+  <div class="item-list">
+    <ul>
+      {{ASSUMPTION_ITEMS}}
+    </ul>
+  </div>
+</div>
+
+<!-- ═══ FOOTER ═══════════════════════════════════════════════════════════ -->
+<!--
+  SESSION_REF : path to the source file, e.g. BRAINSTORMING_LOG.md or tasks/TASK_GUIDE_T001.md
+  TASK_ID     : e.g. T001 or —
+  TIMESTAMP   : ISO-8601 e.g. 2026-06-18T14:30:22
+-->
+<div class="footer">
+  Source: <code>{{SESSION_REF}}</code> &nbsp;·&nbsp; Task: {{TASK_ID}} &nbsp;·&nbsp; Generated: {{TIMESTAMP}}
+</div>
+
+</body>
+</html>

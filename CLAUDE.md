@@ -55,6 +55,7 @@ The `subagent_type` is the agent's `name:` field (not the filename). Because Cla
 | `ship` | `.claude/skills/ship/SKILL.md` | Post-Stage-5: turn merged tasks into a runnable deployment plan, rollback plan, and release notes; append a runbook entry (plans, never auto-deploys) |
 | `compact-memory` | `.claude/skills/compact-memory/SKILL.md` | On-demand: compact and prune the two-tier memory system when cold files are bloated or stale — human-invoked, Supervisor executes |
 | `html-report` | `.claude/skills/html-report/SKILL.md` | Stage 4 (after each review skill): render a self-contained HTML report with scored dimensions (Risk %, Quality %, Effort %) from the preceding skill's output. Args: `skill=<name> task=<TASK_ID> branch=<branch>` |
+| `thinking-report` | `.claude/skills/thinking-report/SKILL.md` | Stage 0.5–2 (after brainstorming, grilling, or planning locks a direction): render a Decision box + Trade-Off Matrix + Assumptions list as a self-contained HTML page. Args: `session=<brainstorming\|grilling\|planning> task=<TASK_ID> branch=<branch>` |
 
 > **Naming note:** the `blast-radius` skill above is about **data-breach** impact (PII/PHI, regulatory cost). It is distinct from the *code-dependency* "blast radius" referenced in Risk assignment and review scoping below (which files a change affects). Don't conflate the two.
 
@@ -116,6 +117,7 @@ The project root **must** contain these folders:
    - templates/ADR_template.md
    - templates/RUNBOOK_template.md
    - templates/report_template.html
+   - templates/thinking_report_template.html
 
 5. `memory/` folder containing:
    - memory/MEMORY.md (hot-tier index — ≤200 lines, injected into every sub-agent spawn prompt)
@@ -246,7 +248,11 @@ Skill({ skill: "brainstorming" })
 1. **Divergent Exploration**: The skill analyzes the Phase 0 Context and `PRD.md`, then generates a `BRAINSTORMING_LOG.md` using the template at `templates/BRAINSTORMING_LOG_template.md`.
 2. **User Review**: The user must approve one of the brainstormed directions before proceeding.
 
-Only after the user selects a direction, announce:
+Only after the user selects a direction, invoke:
+```
+Skill({ skill: "thinking-report", args: "session=brainstorming task=— branch=<branch>" })
+```
+Save the emitted HTML to `reports/thinking-report_<branch>_<YYYYMMDDTHHMMSS>.html`, then announce:
 > "Stage 0.5: Requirement grilling passed. Brainstorming complete. Direction locked. Moving to Stage 1: Environment & Provider Setup."
 
 ---
@@ -333,7 +339,11 @@ Use two files:
 
 Ask the user to confirm the tasks/ folder has been populated.
 
-Only after confirmation, announce:
+After confirmation, invoke:
+```
+Skill({ skill: "thinking-report", args: "session=planning task=— branch=<branch>" })
+```
+Save the emitted HTML to `reports/thinking-report_<branch>_<YYYYMMDDTHHMMSS>.html`, then announce:
 > "Stage 2: Planning completed. All task guides generated in tasks/. Moving to Stage 3: Parallel Execution via Isolation."
 
 ---

@@ -113,6 +113,32 @@ Reports are **local-only** (`.gitignore`d) — open directly in any browser, no 
 
 ---
 
+## Thinking Reports (Stage 0.5–2)
+
+After a brainstorming, grilling, or planning session locks a direction, the Supervisor invokes the `thinking-report` skill to capture *how* the decision was reached — not just what was decided.
+
+```
+Skill({ skill: "thinking-report", args: "session=brainstorming task=T001 branch=main" })
+```
+
+Each report contains:
+- **Decision box** — the problem statement, chosen option, and rationale (the "why")
+- **Trade-Off Matrix** — options × criteria table (✅ / ⚠️ / ❌), chosen column highlighted green
+- **Assumptions & Open Questions** — resolved items, tracked assumptions, and deferred decisions tagged by status
+
+Triggered automatically after:
+- Stage 0.5b brainstorming direction is approved
+- Stage 2 planning task breakdown is confirmed
+
+**Filename convention:** `reports/thinking-report_<branch>_<YYYYMMDDTHHMMSS>.html`
+
+| Template | Skill definition |
+|----------|-----------------|
+| `templates/report_template.html` | `.claude/skills/html-report/SKILL.md` |
+| `templates/thinking_report_template.html` | `.claude/skills/thinking-report/SKILL.md` |
+
+---
+
 ## Pipeline Enforcement Hooks
 
 Six hooks enforce the pipeline automatically — no prompt reminders needed.
