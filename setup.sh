@@ -66,8 +66,6 @@ clone_or_verify() {
 }
 
 # ── Prompt pack selection (interactive only, skipped if --pack= flags given) ──
-AVAILABLE_PACKS="mobile data devops ai-agent api"
-
 prompt_packs() {
   # Skip if packs were already specified via --pack= flags
   if [ -n "$PACKS" ]; then
