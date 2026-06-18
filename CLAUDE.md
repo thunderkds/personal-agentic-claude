@@ -103,6 +103,7 @@ The project root **must** contain these folders:
 
 2. `.claude/skills/` folder containing custom project skills (Claude Code auto-discovers skills here):
    - .claude/skills/brainstorming/SKILL.md
+   - *(pack skills are symlinked here when a pack is installed)*
 
 3. `tasks/` folder
    Contains one TASK_GUIDE_Txxx.md file for **every** task after Stage 2 is approved.
@@ -118,8 +119,17 @@ The project root **must** contain these folders:
    - templates/RUNBOOK_template.md
    - templates/report_template.html
    - templates/thinking_report_template.html
+   - templates/PACK_template.md
 
-5. `memory/` folder containing:
+5. `packs/` folder (in the central clone) containing optional domain packs:
+   - packs/mobile/ — Flutter, React Native, Swift, Kotlin
+   - packs/data/ — Pipelines, notebooks, ETL, dbt
+   - packs/devops/ — Terraform, K8s, CI/CD
+   - packs/ai-agent/ — LLM apps, RAG, MCP servers
+   - packs/api/ — REST/gRPC, OpenAPI, auth flows
+   *(Each pack contains agents/ + skills/ + PACK.md. Installed via `setup.sh --pack=<name>`.)*
+
+6. `memory/` folder containing:
    - memory/MEMORY.md (hot-tier index — ≤200 lines, injected into every sub-agent spawn prompt)
    - memory/decisions.md (cold tier — architectural/infra decisions)
    - memory/glossary.md (cold tier — domain terms & domain models)

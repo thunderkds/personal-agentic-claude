@@ -25,10 +25,12 @@ log_error() { printf "${RED}[error]${RESET} %s\n"   "$*" >&2; }
 
 # ── Parse flags ───────────────────────────────────────────────────────────────
 USE_COPY=0
+PACKS=""  # space-separated list of packs to install (e.g. " mobile data")
 for arg in "$@"; do
   case "$arg" in
     --copy) USE_COPY=1 ;;
-    *) log_error "Unknown flag: $arg"; exit 1 ;;
+    --pack=*) pack_val="${arg#--pack=}"; PACKS="$PACKS $pack_val" ;;
+    *) log_error "Unknown flag: $arg. Valid flags: --copy, --pack=<name>"; exit 1 ;;
   esac
 done
 
@@ -61,6 +63,104 @@ clone_or_verify() {
     mkdir -p "$(dirname "$SUPERVISOR_PATH")"
     git clone "$SUPERVISOR_REPO" "$SUPERVISOR_PATH"
   fi
+}
+
+# ── Prompt pack selection (interactive only, skipped if --pack= flags given) ──
+AVAILABLE_PACKS="mobile data devops ai-agent api"
+
+prompt_packs() {
+  # Skip if packs were already specified via --pack= flags
+  if [ -n "$PACKS" ]; then
+    return
+  fi
+  # Skip in non-interactive mode
+  if [ ! -t 0 ]; then
+    log_info "Non-interactive mode: no packs installed. Re-run with --pack=<name> to add packs."
+    return
+  fi
+
+  printf "[info]  Optional packs extend the core with domain-specific agents and skills.\n"
+  printf "        Available packs:\n"
+  printf "          1) mobile   — Flutter, React Native, Swift, Kotlin\n"
+  printf "          2) data     — Pipelines, notebooks, ETL, dbt\n"
+  printf "          3) devops   — Terraform, K8s, CI/CD, Docker\n"
+  printf "          4) ai-agent — LLM apps, RAG, MCP servers, multi-agent\n"
+  printf "          5) api      — REST/gRPC, OpenAPI, auth flows, SDK design\n"
+  printf "        Enter numbers separated by spaces, or press Enter to skip: "
+  read -r pack_choices
+  for choice in $pack_choices; do
+    case "$choice" in
+      1) PACKS="$PACKS mobile" ;;
+      2) PACKS="$PACKS data" ;;
+      3) PACKS="$PACKS devops" ;;
+      4) PACKS="$PACKS ai-agent" ;;
+      5) PACKS="$PACKS api" ;;
+      *) log_warn "Unknown pack choice '$choice' — skipping." ;;
+    esac
+  done
+}
+
+# ── Install a single file using symlink or copy mode ─────────────────────────
+# Takes absolute src and relative dst (from project root)
+install_abs() {
+  src="$1"
+  dst="$2"
+
+  parent="$(dirname "$dst")"
+  [ -d "$parent" ] || mkdir -p "$parent"
+
+  if [ $USE_COPY -eq 1 ]; then
+    if [ -L "$dst" ]; then
+      log_warn "'$dst' is a symlink from a previous install. Remove it manually to switch to --copy mode."
+      return
+    fi
+    if [ -e "$dst" ]; then
+      return
+    fi
+    cp -r "$src" "$dst"
+  else
+    if [ -L "$dst" ] && [ ! -e "$dst" ]; then
+      log_warn "'$dst' is a broken symlink — removing and re-linking."
+      rm "$dst"
+    elif [ -L "$dst" ]; then
+      return
+    elif [ -e "$dst" ]; then
+      log_warn "'$dst' exists as a real path (not a symlink). Skipping — remove manually to allow symlinking."
+      return
+    fi
+    ln -s "$src" "$dst"
+  fi
+}
+
+# ── Install a single pack by name ─────────────────────────────────────────────
+install_pack() {
+  pack_name="$1"
+  pack_dir="$SUPERVISOR_PATH/packs/$pack_name"
+
+  if [ ! -d "$pack_dir" ]; then
+    log_warn "Pack '$pack_name' not found in central clone ($pack_dir) — skipping."
+    return
+  fi
+
+  # Symlink/copy each agent file into .claude/agents/
+  if [ -d "$pack_dir/agents" ]; then
+    for agent_file in "$pack_dir/agents"/*.md; do
+      [ -e "$agent_file" ] || continue
+      agent_name="$(basename "$agent_file")"
+      install_abs "$agent_file" "./.claude/agents/$agent_name"
+    done
+  fi
+
+  # Symlink/copy each skill directory into .claude/skills/
+  if [ -d "$pack_dir/skills" ]; then
+    for skill_dir in "$pack_dir/skills"/*/; do
+      [ -d "$skill_dir" ] || continue
+      skill_name="$(basename "$skill_dir")"
+      install_abs "$skill_dir" "./.claude/skills/$skill_name"
+    done
+  fi
+
+  log_info "Pack '$pack_name' installed."
 }
 
 # ── Prompt greenfield vs brownfield ──────────────────────────────────────────
@@ -260,6 +360,7 @@ main() {
   resolve_repo_url
   clone_or_verify
   prompt_mode
+  prompt_packs
 
   # Read MANIFEST and install each listed path
   manifest="$SUPERVISOR_PATH/MANIFEST"
@@ -281,8 +382,16 @@ main() {
   install_settings
   scaffold_project
 
+  # Install selected packs
+  for pack in $PACKS; do
+    install_pack "$pack"
+  done
+
   log_info "Setup complete. Installed from: $SUPERVISOR_PATH"
   log_info "Mode: $([ $USE_COPY -eq 1 ] && echo 'copy' || echo 'symlink') | CLAUDE: $CLAUDE_SRC"
+  if [ -n "$PACKS" ]; then
+    log_info "Packs installed:$PACKS"
+  fi
 }
 
 main

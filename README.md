@@ -48,7 +48,31 @@ Stage 5: Verify end-to-end → merge → ship
 | `memory/glossary.md` | *(per project)* Canonical biz-domain terms and core domain models |
 | `memory/learnings.md` | *(per project)* Specs clarifications, patterns, gotchas |
 
-Shared resources (`agents`, `skills`, `hooks`, `templates`) are **symlinked** from `~/.supervisor` so all projects update automatically. `.claude/settings.json` is **copied** (projects add their own permissions to it). Project-specific files are created fresh and never overwritten.
+Shared resources (`agents`, `skills`, `hooks`, `templates`, `packs`) are **symlinked** from `~/.supervisor` so all projects update automatically. `.claude/settings.json` is **copied** (projects add their own permissions to it). Project-specific files are created fresh and never overwritten.
+
+---
+
+## Packs (optional domain extensions)
+
+The core framework ships four agents (backend, frontend, common-infrastructure, qa) for every project. **Packs** add domain-specific agents and skills on top — selected at install time, never replacing core resources.
+
+| Pack | Domain | Adds |
+|------|--------|------|
+| `mobile` | Flutter, React Native, Swift, Kotlin | `mobile-developer` agent + `ui-accessibility` + `platform-compatibility` skills |
+| `data` | Pipelines, notebooks, ETL, dbt | `data-engineer` agent + `notebook-review` + `pipeline-safety` skills |
+| `devops` | Terraform, K8s, CI/CD, Docker | `devops-engineer` agent + `infra-safety` + `deployment-checklist` skills |
+| `ai-agent` | LLM apps, RAG, MCP servers | `ai-engineer` agent + `prompt-review` + `eval-design` skills |
+| `api` | REST/gRPC, OpenAPI, auth flows | `api-designer` agent + `contract-review` + `auth-checklist` skills |
+
+**Install packs interactively** — `setup.sh` prompts for pack selection when run from a TTY.
+
+**Install a specific pack** into an existing project:
+```sh
+sh ~/.supervisor/setup.sh --pack=mobile
+sh ~/.supervisor/setup.sh --pack=mobile --pack=api   # multiple packs
+```
+
+Pack agents and skills are symlinked into the project's `.claude/agents/` and `.claude/skills/` alongside the core resources. Each pack ships a `PACK.md` describing when to use it and what it adds.
 
 ---
 
