@@ -19,7 +19,7 @@ Stage 2 (/plan): Generate PROJECT_SPEC + KANBAN + TASK_GUIDEs
     ↓
 Stage 3: Parallel execution — each task in its own worktree (TDD)
     ↓
-Stage 4: Code review (+ security review for Medium/High risk tasks)
+Stage 4: Code review (+ security review for Medium/High risk tasks) → HTML reports
     ↓
 Stage 5: Verify end-to-end → merge → ship
 ```
@@ -39,7 +39,7 @@ Stage 5: Verify end-to-end → merge → ship
 | `.claude/skills/` | Custom skills (brainstorming, grill-with-docs, tdd, ship, compact-memory, …) |
 | `.claude/hooks/` | Pipeline enforcement hooks (auto-kanban, gate checks, merge blocks, memory updates) |
 | `.claude/settings.json` | Hook wiring *(deployed as a per-project copy — projects append their own permissions)* |
-| `templates/` | Blank templates for PRD, PROJECT_SPEC, KANBAN, TASK_GUIDE, etc. |
+| `templates/` | Blank templates for PRD, PROJECT_SPEC, KANBAN, TASK_GUIDE, HTML report, etc. |
 | `CLAUDE.md` | Supervisor instructions (greenfield) |
 | `CLAUDE_LEGACY.md` | Supervisor instructions (brownfield / existing codebase) |
 | `tasks/` | *(per project)* Task guides generated at Stage 2 |
@@ -82,6 +82,34 @@ sh ~/.supervisor/update.sh   # pulls latest; symlinked projects update instantly
 ```
 
 If `MANIFEST` changed, re-run `sh ~/.supervisor/setup.sh` from each project root to deploy new resources.
+
+---
+
+## HTML Reports (Stage 4)
+
+After each Stage 4 review skill completes, the Supervisor invokes the `html-report` skill to produce a self-contained `.html` report saved locally under `reports/`.
+
+```
+Skill({ skill: "html-report", args: "skill=code-review task=T001 branch=main" })
+```
+
+Each report contains:
+- **Scorecard header** — skill name, branch, date, overall health badge (Healthy / Needs Attention / Critical)
+- **Dimension gauges** — Risk %, Code Quality %, Adaptation Effort % as progress bars (0–100)
+- **Findings table** — severity badge (High/Med/Low/Info), file, line range, description
+- **Summary prose** — the skill's narrative, unchanged
+- **Metadata footer** — model, task ID, timestamp
+
+Reports are generated for all three Stage 4 skills: `code-review`, `security-review`, and `blast-radius`.
+
+**Filename convention:** `reports/<skill>_<branch>_<YYYYMMDDTHHMMSS>.html`
+Example: `reports/code-review_main_20260618T143022.html`
+
+Reports are **local-only** (`.gitignore`d) — open directly in any browser, no server needed.
+
+| Template | Skill definition |
+|----------|-----------------|
+| `templates/report_template.html` | `.claude/skills/html-report/SKILL.md` |
 
 ---
 

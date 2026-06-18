@@ -45,3 +45,8 @@ __pycache__/
 tmp/
 .tmp/
 *.tmp
+
+# ============================================================
+# Section 5: Generated HTML reports (local-only, never commit)
+# ============================================================
+reports/
