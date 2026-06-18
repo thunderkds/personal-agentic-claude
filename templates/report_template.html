@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>{{SKILL_NAME}} Report — {{BRANCH}}</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; background: #f9f9f9; }
+  h1 { margin: 0; font-size: 1.3rem; }
+  h2 { font-size: 1rem; color: #374151; margin: 0 0 .75rem; }
+
+  /* Header card */
+  .header { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+  .header-meta { color: #6b7280; font-size: .875rem; margin-top: .25rem; }
+
+  /* Overall health badge */
+  .badge { display: inline-block; padding: .25rem .75rem; border-radius: 999px; font-weight: 600; font-size: .85rem; }
+  .badge-green  { background: #d1fae5; color: #065f46; }
+  .badge-yellow { background: #fef9c3; color: #92400e; }
+  .badge-red    { background: #fee2e2; color: #991b1b; }
+
+  /* Severity badges (findings table) */
+  .sev { display: inline-block; padding: .15rem .55rem; border-radius: 999px; font-weight: 600; font-size: .78rem; white-space: nowrap; }
+  .sev-high { background: #fee2e2; color: #991b1b; }
+  .sev-med  { background: #fef9c3; color: #92400e; }
+  .sev-low  { background: #dbeafe; color: #1e40af; }
+  .sev-info { background: #f3f4f6; color: #374151; }
+
+  /* Dimension gauges */
+  .gauges { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  .gauge-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem; }
+  .gauge-label { font-size: .75rem; font-weight: 600; letter-spacing: .05em; color: #6b7280; text-transform: uppercase; margin-bottom: .4rem; }
+  .gauge-value { font-size: 1.6rem; font-weight: 700; margin-bottom: .5rem; }
+  .bar-bg   { background: #e5e7eb; border-radius: 999px; height: 8px; }
+  .bar-fill { height: 8px; border-radius: 999px; }
+  .bar-risk    { background: #ef4444; }
+  .bar-quality { background: #22c55e; }
+  .bar-effort  { background: #f59e0b; }
+
+  /* Findings table */
+  .section { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; margin-bottom: 1.5rem; }
+  .section-head { padding: .75rem 1rem; background: #f9fafb; border-bottom: 1px solid #e0e0e0; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; padding: .65rem 1rem; font-size: .78rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: .04em; }
+  td { padding: .75rem 1rem; font-size: .875rem; border-top: 1px solid #f3f4f6; vertical-align: top; }
+  td pre { margin: 0; font-family: monospace; font-size: .8rem; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 4px; padding: .4rem .6rem; white-space: pre-wrap; word-break: break-word; }
+  td code { font-family: monospace; background: #f3f4f6; padding: .1rem .35rem; border-radius: 3px; font-size: .8rem; }
+
+  /* Summary prose */
+  .prose { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1.5rem; line-height: 1.75; margin-bottom: 1.5rem; font-size: .9rem; }
+
+  /* Footer */
+  .footer { font-size: .75rem; color: #9ca3af; text-align: center; padding-bottom: 2rem; }
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══════════════════════════════════════════════════════════ -->
+<div class="header">
+  <div>
+    <h1>{{SKILL_NAME}}</h1>
+    <div class="header-meta">
+      Branch: <code>{{BRANCH}}</code> &nbsp;·&nbsp; {{DATE}}
+    </div>
+  </div>
+  <span class="badge badge-{{OVERALL_CLASS}}">{{OVERALL_LABEL}}</span>
+</div>
+
+<!-- ═══ DIMENSION GAUGES ═════════════════════════════════════════════════ -->
+<!--
+  OVERALL_CLASS  : green | yellow | red
+  OVERALL_LABEL  : e.g. "Healthy" | "Needs Attention" | "Critical"
+  RISK_SCORE     : integer 0–100 (higher = more risk)
+  QUALITY_SCORE  : integer 0–100 (higher = better quality)
+  EFFORT_SCORE   : integer 0–100 (higher = more adaptation work needed)
+-->
+<div class="gauges">
+  <div class="gauge-card">
+    <div class="gauge-label">Risk</div>
+    <div class="gauge-value">{{RISK_SCORE}}%</div>
+    <div class="bar-bg"><div class="bar-fill bar-risk" style="width:{{RISK_SCORE}}%"></div></div>
+  </div>
+  <div class="gauge-card">
+    <div class="gauge-label">Code Quality</div>
+    <div class="gauge-value">{{QUALITY_SCORE}}%</div>
+    <div class="bar-bg"><div class="bar-fill bar-quality" style="width:{{QUALITY_SCORE}}%"></div></div>
+  </div>
+  <div class="gauge-card">
+    <div class="gauge-label">Adaptation Effort</div>
+    <div class="gauge-value">{{EFFORT_SCORE}}%</div>
+    <div class="bar-bg"><div class="bar-fill bar-effort" style="width:{{EFFORT_SCORE}}%"></div></div>
+  </div>
+</div>
+
+<!-- ═══ FINDINGS TABLE ═══════════════════════════════════════════════════ -->
+<!--
+  Replace {{FINDINGS_ROWS}} with one <tr> per finding.
+  Severity class: sev-high | sev-med | sev-low | sev-info
+  Finding description goes inside <pre>...</pre> — do NOT HTML-escape manually;
+  wrap the text in <pre> and let the browser handle rendering safely.
+
+  Example row:
+  <tr>
+    <td><span class="sev sev-high">High</span></td>
+    <td><code>scripts/setup.sh</code></td>
+    <td>42–55</td>
+    <td><pre>Unquoted variable $TARGET_DIR in rm call — word-splitting can delete wrong path.</pre></td>
+  </tr>
+-->
+<div class="section">
+  <div class="section-head"><h2>Findings</h2></div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:90px">Severity</th>
+        <th style="width:200px">File</th>
+        <th style="width:80px">Lines</th>
+        <th>Finding</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{FINDINGS_ROWS}}
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══ SUMMARY PROSE ════════════════════════════════════════════════════ -->
+<!--
+  Replace {{SUMMARY_PROSE}} with the LLM's full narrative text.
+  Plain text is safe here; no HTML escaping needed for prose.
+-->
+<div class="prose">
+  {{SUMMARY_PROSE}}
+</div>
+
+<!-- ═══ FOOTER ═══════════════════════════════════════════════════════════ -->
+<!--
+  MODEL     : e.g. claude-sonnet-4-6
+  TASK_ID   : e.g. T001 (or "—" if not task-scoped)
+  TIMESTAMP : ISO-8601, e.g. 2026-06-18T14:30:22
+-->
+<div class="footer">
+  Model: {{MODEL}} &nbsp;·&nbsp; Task: {{TASK_ID}} &nbsp;·&nbsp; Generated: {{TIMESTAMP}}
+</div>
+
+</body>
+</html>

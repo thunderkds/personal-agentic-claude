@@ -54,6 +54,7 @@ The `subagent_type` is the agent's `name:` field (not the filename). Because Cla
 | `migration-safety` | `.claude/skills/migration-safety/SKILL.md` | Stage 3/4: go/no-go gate for any task touching DB schema/migrations — reversibility, backward-compat, zero-downtime, no silent data loss |
 | `ship` | `.claude/skills/ship/SKILL.md` | Post-Stage-5: turn merged tasks into a runnable deployment plan, rollback plan, and release notes; append a runbook entry (plans, never auto-deploys) |
 | `compact-memory` | `.claude/skills/compact-memory/SKILL.md` | On-demand: compact and prune the two-tier memory system when cold files are bloated or stale — human-invoked, Supervisor executes |
+| `html-report` | `.claude/skills/html-report/SKILL.md` | Stage 4 (after each review skill): render a self-contained HTML report with scored dimensions (Risk %, Quality %, Effort %) from the preceding skill's output. Args: `skill=<name> task=<TASK_ID> branch=<branch>` |
 
 > **Naming note:** the `blast-radius` skill above is about **data-breach** impact (PII/PHI, regulatory cost). It is distinct from the *code-dependency* "blast radius" referenced in Risk assignment and review scoping below (which files a change affects). Don't conflate the two.
 
@@ -114,6 +115,7 @@ The project root **must** contain these folders:
    - templates/SKILL_template.md
    - templates/ADR_template.md
    - templates/RUNBOOK_template.md
+   - templates/report_template.html
 
 5. `memory/` folder containing:
    - memory/MEMORY.md (hot-tier index — ≤200 lines, injected into every sub-agent spawn prompt)
@@ -386,7 +388,16 @@ For every task that reaches "Ready for Review":
 
 5. **Evidence Gate** (always): open the task's `TASK_GUIDE_Txxx.md` **Evaluation & Acceptance** block and confirm the reviewer has filled the **Evidence** table — the verification command was actually run and its real output pasted in, negative cases hold, and the full smoke suite is still green. Also confirm every **Requirement Refs** entry (FR/NFR/US IDs) listed in the task's Pillar 1 section maps to at least one passing Acceptance Criterion. A task with empty evidence rows or uncovered Requirement Refs is **not** review-complete, regardless of how the diff looks. The implementing agent must not be the sole author of its own acceptance test — the Supervisor writes or signs off on the oracle.
 
-6. Address all findings before moving to Stage 5. Update PROJECT_KANBAN.md status.
+6. **HTML Report** (after every review skill that produces findings):
+   After each of the above skills completes, invoke:
+   ```
+   Skill({ skill: "html-report", args: "skill=<skill-name> task=<TASK_ID> branch=<branch>" })
+   ```
+   Save the emitted HTML block using the Write tool to:
+   `reports/<skill-name>_<branch>_<YYYYMMDDTHHMMSS>.html`
+   One report per skill per invocation (e.g. `reports/code-review_main_20260618T143022.html`).
+
+7. Address all findings before moving to Stage 5. Update PROJECT_KANBAN.md status.
 
 ---
 
