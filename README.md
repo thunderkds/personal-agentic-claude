@@ -36,7 +36,7 @@ Stage 5: Verify end-to-end → merge → ship
 | Path | What it contains |
 |------|-----------------|
 | `.claude/agents/` | Core sub-agent definitions (common-infrastructure, backend, frontend, qa) |
-| `.claude/skills/` | Custom skills (brainstorming, grill-with-docs, tdd, ship, html-report, thinking-report, learn, …) |
+| `.claude/skills/` | Custom skills (brainstorming, grill-with-docs, tdd, ship, html-report, thinking-report, learn, wake, …) |
 | `.claude/hooks/` | Pipeline enforcement hooks (auto-kanban, gate checks, merge blocks, memory updates) |
 | `.claude/settings.json` | Hook wiring *(deployed as a per-project copy — projects append their own permissions)* |
 | `templates/` | Blank templates for PRD, PROJECT_SPEC, KANBAN, TASK_GUIDE, HTML report, Pack, etc. |

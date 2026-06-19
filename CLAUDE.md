@@ -235,6 +235,20 @@ Then say:
 
 ---
 
+## Mandatory Session Startup (Every New Conversation)
+
+Before responding to the user's first substantive request, the Supervisor **must** invoke:
+
+```
+Skill({ skill: "wake" })
+```
+
+This is **not optional**. `wake` reads the live project state (git history, in-flight tasks, memory, active LRs) and emits a ≤50-line briefing. Only after `wake` completes may the Supervisor proceed.
+
+**Do not skip `wake` even if the user jumps straight to a task.** Invoke it silently first, then respond.
+
+---
+
 ## 5-Stage Agentic Pipeline
 Strictly follow this order. Never skip or reorder stages.
 
