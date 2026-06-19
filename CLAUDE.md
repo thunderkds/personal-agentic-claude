@@ -56,6 +56,7 @@ The `subagent_type` is the agent's `name:` field (not the filename). Because Cla
 | `compact-memory` | `.claude/skills/compact-memory/SKILL.md` | On-demand: compact and prune the two-tier memory system when cold files are bloated or stale — human-invoked, Supervisor executes |
 | `html-report` | `.claude/skills/html-report/SKILL.md` | Stage 4 (after each review skill): render a self-contained HTML report with scored dimensions (Risk %, Quality %, Effort %) from the preceding skill's output. Args: `skill=<name> task=<TASK_ID> branch=<branch>` |
 | `thinking-report` | `.claude/skills/thinking-report/SKILL.md` | Stage 0.5–2 (after brainstorming, grilling, or planning locks a direction): render a Decision box + Trade-Off Matrix + Assumptions list as a self-contained HTML page. Args: `session=<brainstorming\|grilling\|planning> task=<TASK_ID> branch=<branch>` |
+| `learn` | `.claude/skills/learn/SKILL.md` | Use during or after any significant exchange where the Supervisor detects a non-obvious insight, user correction, domain discovery, or pattern confirmation. Also user-invokable as `/learn`. Auto-fires after a significant exchange; writes `memory/learning-records/LR-NNNN-slug.md` files. |
 
 > **Naming note:** the `blast-radius` skill above is about **data-breach** impact (PII/PHI, regulatory cost). It is distinct from the *code-dependency* "blast radius" referenced in Risk assignment and review scoping below (which files a change affects). Don't conflate the two.
 
@@ -475,7 +476,8 @@ Only after all tasks are integrated, announce:
   - Architectural or infrastructure decisions → `memory/decisions.md`
   - Canonical biz-domain terms or core domain models → `memory/glossary.md`
   - Specs/requirement clarifications, patterns, gotchas → `memory/learnings.md`
-- **Update triggers**: (1) PostToolUse hook on `git push` / `git merge` — diff-driven pass; (2) `/compact-memory` skill — human-invoked.
+- **Update triggers**: (1) PostToolUse hook on `git push` / `git merge` — diff-driven pass; (2) `/compact-memory` skill — human-invoked; (3) `learn` skill — fires inline during or after a significant exchange.
+- **`learn` skill trigger rule**: The `learn` skill is the Supervisor's inline "Reflect & Encode" reflex. Fire it after any exchange that meets the materiality gate (see SKILL.md). Do not fire it on every message.
 - **Diff-driven pass procedure**:
   1. `git diff HEAD~1 --name-only` — identify changed files
   2. Grep `memory/decisions.md`, `memory/glossary.md`, `memory/learnings.md` for references to those files
