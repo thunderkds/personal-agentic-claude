@@ -350,6 +350,8 @@ EOF
 ## Gotchas
 EOF
   fi
+  mkdir -p ./memory/learning-records
+  touch ./memory/learning-records/.gitkeep
 }
 
 # ── Main ──────────────────────────────────────────────────────────────────────

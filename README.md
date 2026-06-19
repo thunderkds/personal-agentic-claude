@@ -36,7 +36,7 @@ Stage 5: Verify end-to-end → merge → ship
 | Path | What it contains |
 |------|-----------------|
 | `.claude/agents/` | Core sub-agent definitions (common-infrastructure, backend, frontend, qa) |
-| `.claude/skills/` | Custom skills (brainstorming, grill-with-docs, tdd, ship, html-report, thinking-report, …) |
+| `.claude/skills/` | Custom skills (brainstorming, grill-with-docs, tdd, ship, html-report, thinking-report, learn, …) |
 | `.claude/hooks/` | Pipeline enforcement hooks (auto-kanban, gate checks, merge blocks, memory updates) |
 | `.claude/settings.json` | Hook wiring *(deployed as a per-project copy — projects append their own permissions)* |
 | `templates/` | Blank templates for PRD, PROJECT_SPEC, KANBAN, TASK_GUIDE, HTML report, Pack, etc. |
@@ -48,6 +48,7 @@ Stage 5: Verify end-to-end → merge → ship
 | `memory/decisions.md` | *(per project)* Architectural + infrastructure decisions |
 | `memory/glossary.md` | *(per project)* Canonical biz-domain terms and core domain models |
 | `memory/learnings.md` | *(per project)* Specs clarifications, patterns, gotchas |
+| `memory/learning-records/` | *(per project)* Sequential LR-NNNN-slug.md files written by the `learn` skill at runtime |
 
 Shared resources (`agents`, `skills`, `hooks`, `templates`, `packs`) are **symlinked** from `~/.supervisor` so all projects update automatically. `.claude/settings.json` is **copied** (projects add their own permissions to it). Project-specific files are created fresh and never overwritten.
 
