@@ -24,6 +24,7 @@
 - [thinking-report is separate from html-report](decisions.md) — Stage 0.5–2 decision reasoning vs Stage 4 review findings; different templates, different triggers
 - [thinking-report MVP: matrix only, no flowchart](decisions.md) — CSS flowchart deferred; matrix answers "why this option?" reliably with less implementation risk
 - [Dark neon theme on HTML report templates](decisions.md) — both templates use #0a0a12 bg + cyan/green/purple/amber neon palette with glow effects; matches user's dashboard aesthetic preference
+- [learn skill: Learning Record System](decisions.md) — LR files in memory/learning-records/; supersession archive; skill promotion on ≥2 LRs with user approval; closes passive-memory gap
 
 ### Patterns & Gotchas
 - [html-report findings use `<pre>`](learnings.md) — never manually HTML-escape finding text; wrap in `<pre>` to handle `<`, `>`, `&` safely
@@ -45,6 +46,12 @@
 - [Pack mandatory gates by domain](learnings.md) — mobile→ui-accessibility; data→pipeline-safety; devops→infra-safety; ai-agent→eval-design; api→contract-review
 - [Pack agent boundary from core](learnings.md) — mobile≠frontend (lifecycle/app-store); data≠backend (pipeline idempotency); api≠backend (contract-first)
 - [install_pack() in setup.sh](learnings.md) — iterates agents/*.md and skills/*/ from pack dir; symlinks into .claude/agents/ and .claude/skills/
+
+### Patterns (learn skill)
+- [learn materiality gate](learnings.md) — write LR only for corrections, preference disclosures, confirmed patterns, corrected misconceptions; never for greetings or activity logs
+- [LR numbering at write time](learnings.md) — scan directory for highest LR-NNNN immediately before each Write call; prevents collision in multi-LR invocations
+- [user type → LR only](learnings.md) — user-preference insights never route to cold files; scope-creep guard in routing table
+- [skill promotion: code block only](learnings.md) — never auto-save SKILL.md stub; output fenced block and stop; user saves + registers manually
 
 ### Learning Records
 <!-- One-liner per active LR: - [LR-NNNN slug](memory/learning-records/LR-NNNN-slug.md) — summary -->
