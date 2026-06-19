@@ -4,62 +4,135 @@
 <meta charset="UTF-8">
 <title>Thinking Report — {{SESSION_TYPE}} — {{BRANCH}}</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 960px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; background: #f9f9f9; }
-  h1 { margin: 0; font-size: 1.3rem; }
-  h2 { font-size: 1rem; color: #374151; margin: 0 0 .75rem; font-weight: 600; }
+  :root {
+    --bg:        #0a0a12;
+    --surface:   #111128;
+    --surface2:  #16162e;
+    --border:    #1e1e42;
+    --border-glow: #2a2a6e;
+    --text:      #e2e2f0;
+    --muted:     #6b6b9a;
+    --cyan:      #00d4ff;
+    --green:     #00ff88;
+    --amber:     #ffb800;
+    --red:       #ff3b6b;
+    --purple:    #a855f7;
+    --cyan-dim:  rgba(0,212,255,.12);
+    --green-dim: rgba(0,255,136,.12);
+    --red-dim:   rgba(255,59,107,.12);
+    --amber-dim: rgba(255,184,0,.12);
+    --purple-dim: rgba(168,85,247,.12);
+  }
 
-  /* Header */
-  .header { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
-  .header-meta { color: #6b7280; font-size: .875rem; margin-top: .25rem; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    max-width: 980px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.5;
+  }
+  h1 { margin: 0; font-size: 1.25rem; color: #fff; letter-spacing: .02em; }
+  h2 { font-size: .8rem; color: var(--muted); margin: 0 0 .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; }
 
-  /* Badge */
-  .badge { display: inline-block; padding: .25rem .75rem; border-radius: 999px; font-weight: 600; font-size: .85rem; }
-  .badge-green  { background: #d1fae5; color: #065f46; }
-  .badge-yellow { background: #fef9c3; color: #92400e; }
-  .badge-blue   { background: #dbeafe; color: #1e40af; }
+  /* ── HEADER ── */
+  .header {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--purple);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 0 24px rgba(168,85,247,.08), 0 4px 24px rgba(0,0,0,.5);
+  }
+  .header-meta { color: var(--muted); font-size: .85rem; margin-top: .3rem; }
+  .header-meta code { color: var(--cyan); background: var(--cyan-dim); padding: .1rem .4rem; border-radius: 4px; font-size: .8rem; }
 
-  /* Section card */
-  .section { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; margin-bottom: 1.5rem; }
-  .section-head { padding: .75rem 1rem; background: #f9fafb; border-bottom: 1px solid #e0e0e0; }
+  /* ── BADGE ── */
+  .badge { display: inline-block; padding: .3rem .9rem; border-radius: 999px; font-weight: 700; font-size: .78rem; letter-spacing: .05em; text-transform: uppercase; }
+  .badge-green  { background: var(--green-dim);  color: var(--green);  border: 1px solid rgba(0,255,136,.3); box-shadow: 0 0 8px rgba(0,255,136,.2); }
+  .badge-yellow { background: var(--amber-dim);  color: var(--amber);  border: 1px solid rgba(255,184,0,.3); box-shadow: 0 0 8px rgba(255,184,0,.2); }
+  .badge-blue   { background: var(--cyan-dim);   color: var(--cyan);   border: 1px solid rgba(0,212,255,.3); box-shadow: 0 0 8px rgba(0,212,255,.2); }
 
-  /* ── DECISION BOX ───────────────────────────────────────── */
+  /* ── SECTION CARD ── */
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 16px rgba(0,0,0,.4);
+  }
+  .section-head {
+    padding: .7rem 1.25rem;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── DECISION BOX ── */
   .decision-box { padding: 1.25rem 1.5rem; }
-  .decision-problem { font-size: .875rem; color: #6b7280; margin-bottom: .5rem; }
-  .decision-statement { font-size: 1.05rem; font-weight: 600; color: #1a1a1a; margin-bottom: .75rem; }
-  .decision-rationale { font-size: .875rem; color: #374151; line-height: 1.65; border-left: 3px solid #22c55e; padding-left: .75rem; }
+  .decision-problem { font-size: .82rem; color: var(--muted); margin-bottom: .5rem; letter-spacing: .01em; }
+  .decision-statement { font-size: 1.05rem; font-weight: 600; color: #fff; margin-bottom: .85rem; }
+  .decision-statement::before { content: '→ '; color: var(--cyan); }
+  .decision-rationale {
+    font-size: .875rem;
+    color: #b0b0d0;
+    line-height: 1.75;
+    border-left: 3px solid var(--green);
+    padding-left: .85rem;
+    box-shadow: -6px 0 12px rgba(0,255,136,.08);
+  }
 
-  /* ── TRADE-OFF MATRIX ───────────────────────────────────── */
-  /*
-    The matrix is a plain <table>. Column headers = option names.
-    The chosen option column gets class "col-chosen".
-    Each criteria row has cells with class: cell-yes / cell-partial / cell-no
-  */
+  /* ── TRADE-OFF MATRIX ── */
   .matrix-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; }
-  th { padding: .65rem 1rem; font-size: .78rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: .04em; text-align: left; background: #f9fafb; border-bottom: 1px solid #e0e0e0; }
-  th.col-chosen { background: #f0fdf4; color: #15803d; }
-  td { padding: .7rem 1rem; font-size: .875rem; border-top: 1px solid #f3f4f6; vertical-align: middle; }
-  td.criteria-label { font-weight: 500; color: #374151; width: 200px; }
-  td.col-chosen { background: #f0fdf4; }
+  th {
+    padding: .65rem 1.25rem;
+    font-size: .72rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    text-align: left;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  th.col-chosen { background: rgba(0,255,136,.07); color: var(--green); }
+  td { padding: .72rem 1.25rem; font-size: .875rem; border-top: 1px solid var(--border); vertical-align: middle; color: var(--text); }
+  tr:hover td { background: rgba(255,255,255,.02); }
+  td.criteria-label { font-weight: 500; color: #9090b8; width: 200px; }
+  td.col-chosen { background: rgba(0,255,136,.04); }
 
-  /* Cell value indicators */
-  .cell-yes     { color: #15803d; font-weight: 600; }   /* ✅  */
-  .cell-partial { color: #92400e; font-weight: 600; }   /* ⚠️  */
-  .cell-no      { color: #991b1b; font-weight: 600; }   /* ❌  */
+  .cell-yes     { color: var(--green);  font-weight: 700; }
+  .cell-partial { color: var(--amber);  font-weight: 700; }
+  .cell-no      { color: var(--red);    font-weight: 700; }
 
-  /* ── ASSUMPTIONS & OPEN QUESTIONS ──────────────────────── */
+  /* ── ASSUMPTIONS LIST ── */
   .item-list { padding: 1rem 1.5rem; }
   .item-list ul { margin: 0; padding-left: 1.25rem; }
-  .item-list li { font-size: .875rem; line-height: 1.7; color: #374151; }
-  .item-list li + li { margin-top: .25rem; }
-  .tag { display: inline-block; font-size: .72rem; font-weight: 600; padding: .1rem .45rem; border-radius: 4px; margin-right: .35rem; vertical-align: middle; }
-  .tag-assumption { background: #fef9c3; color: #92400e; }
-  .tag-deferred   { background: #ede9fe; color: #5b21b6; }
-  .tag-resolved   { background: #d1fae5; color: #065f46; }
+  .item-list li { font-size: .875rem; line-height: 1.75; color: #b0b0d0; }
+  .item-list li + li { margin-top: .3rem; }
+  .tag { display: inline-block; font-size: .7rem; font-weight: 700; padding: .1rem .5rem; border-radius: 4px; margin-right: .4rem; vertical-align: middle; letter-spacing: .04em; text-transform: uppercase; }
+  .tag-assumption { background: var(--amber-dim);  color: var(--amber);  border: 1px solid rgba(255,184,0,.25); }
+  .tag-deferred   { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(168,85,247,.25); }
+  .tag-resolved   { background: var(--green-dim);  color: var(--green);  border: 1px solid rgba(0,255,136,.25); }
 
-  /* Footer */
-  .footer { font-size: .75rem; color: #9ca3af; text-align: center; padding-bottom: 2rem; }
-  code { font-family: monospace; background: #f3f4f6; padding: .1rem .35rem; border-radius: 3px; font-size: .8rem; }
+  /* ── FOOTER ── */
+  .footer {
+    font-size: .72rem;
+    color: var(--muted);
+    text-align: center;
+    padding: 1rem 0 2rem;
+    border-top: 1px solid var(--border);
+    margin-top: .5rem;
+  }
+  code { font-family: 'Cascadia Code', 'Fira Code', monospace; background: var(--cyan-dim); color: var(--cyan); padding: .1rem .4rem; border-radius: 3px; font-size: .78rem; }
+  .footer code { background: var(--purple-dim); color: var(--purple); }
 </style>
 </head>
 <body>
@@ -92,7 +165,7 @@
   <div class="section-head"><h2>Decision</h2></div>
   <div class="decision-box">
     <div class="decision-problem">Problem: {{PROBLEM_STATEMENT}}</div>
-    <div class="decision-statement">→ {{DECISION_STATEMENT}}</div>
+    <div class="decision-statement">{{DECISION_STATEMENT}}</div>
     <div class="decision-rationale">{{DECISION_RATIONALE}}</div>
   </div>
 </div>
