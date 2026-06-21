@@ -11,8 +11,9 @@ Before writing a single line of code, execute in this order:
 2. Load the hot-tier memory index — the Supervisor pastes `memory/MEMORY.md` into your spawn prompt; do not re-read it if present there (read `memory/MEMORY.md` only as a fallback). Follow its links into cold files only when relevant to your task
 3. Read your assigned `tasks/TASK_GUIDE_Txxx.md` — task scope, acceptance criteria, files to touch / not touch
 4. Read the relevant guide in `.claude/agents/` for your role — role-specific constraints and patterns
+5. **If your task is C2/C3 or touches multiple files**: read `memory/codebase-map.md` (if it exists) for directory layout, entry points, and blast-radius hotspots — do not re-explore the repo if this file answers your structural question
 
-If any of these files is missing, **stop and notify the Supervisor before proceeding**.
+If any of the first four files is missing, **stop and notify the Supervisor before proceeding**. Missing `codebase-map.md` is not a blocker — run `/map-codebase` to generate it if needed.
 
 ---
 

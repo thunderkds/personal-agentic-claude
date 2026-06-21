@@ -60,6 +60,7 @@ The `subagent_type` is the agent's `name:` field (not the filename). Because Cla
 | `wake` | `.claude/skills/wake/SKILL.md` | Mandatory first action in every new session — invoke before responding to the user's first request. Reads git log, PROJECT_KANBAN.md, memory/MEMORY.md, and active LRs; emits a ≤50-line live briefing. Also user-invokable as `/wake` at any time for a live project snapshot. |
 | `teach` | `.claude/skills/teach/SKILL.md` | Auto-fires when the user asks to write, create, or design a new skill. Consults `write-better-skill` craft principles and emits a ready-to-save SKILL.md draft. Also user-invokable as `/teach <description>`. |
 | `write-better-skill` | `.claude/skills/write-better-skill/SKILL.md` | Authoritative craft reference for writing skills in this framework — invocation choice, leading words, information hierarchy, completion criteria, failure modes. Consulted by `teach`; also invokable directly to audit or refactor an existing SKILL.md. |
+| `map-codebase` | `.claude/skills/map-codebase/SKILL.md` | Stage 1 setup (and on-demand via `/map-codebase`): generate `memory/codebase-map.md` — directory tree, entry points, blast-radius hotspots. Cold-tier only; C2/C3 sub-agents read it for structural orientation. No external deps. |
 
 > **Naming note:** the `blast-radius` skill above is about **data-breach** impact (PII/PHI, regulatory cost). It is distinct from the *code-dependency* "blast radius" referenced in Risk assignment and review scoping below (which files a change affects). Don't conflate the two.
 
@@ -315,7 +316,16 @@ Guide the user through this checklist step by step.
    - If the file does not exist yet, use `templates/PROJECT_SPEC_template.md` and fill in the Project Context Document.
    - Ask the user to save it as `PROJECT_SPEC.md` in the project root, or confirm it already exists.
 
-7. **Core Domain Models**
+7. **Codebase Map**
+   If the project has existing code (not a blank scaffold), run:
+   ```
+   Skill({ skill: "map-codebase" })
+   ```
+   This writes `memory/codebase-map.md` — directory tree, entry points, blast-radius hotspots.
+   C2/C3 sub-agents will read it for structural orientation; C0/C1 agents skip it.
+   Re-run via `/map-codebase` after any major refactor.
+
+8. **Core Domain Models**
    Scan the codebase for domain model and interface files (`Glob` for `models/`, `entities/`, `types/`, `schemas/`, `interfaces/`). Present the findings: "These look like core domain models: [list]. Are they correct? Any missing or excluded?" Record the confirmed models in `memory/glossary.md` under the `## Domain Models` section.
 
 After all items are confirmed:
