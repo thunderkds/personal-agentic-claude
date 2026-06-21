@@ -49,6 +49,7 @@ Stage 5: Verify end-to-end → merge → ship
 | `memory/glossary.md` | *(per project)* Canonical biz-domain terms and core domain models |
 | `memory/learnings.md` | *(per project)* Specs clarifications, patterns, gotchas |
 | `memory/learning-records/` | *(per project)* Sequential LR-NNNN-slug.md files written by the `learn` skill at runtime |
+| `memory/codebase-map.md` | *(per project, generated)* Structural snapshot — directory tree, entry points, blast-radius hotspots. Written by `/map-codebase` at Stage 1; C2/C3 agents read it cold |
 
 Shared resources (`agents`, `skills`, `hooks`, `templates`, `packs`) are **symlinked** from `~/.supervisor` so all projects update automatically. `.claude/settings.json` is **copied** (projects add their own permissions to it). Project-specific files are created fresh and never overwritten.
 
@@ -246,6 +247,35 @@ Triggered automatically after:
 
 ---
 
+## Codebase Map (Structural Memory)
+
+The `map-codebase` skill generates `memory/codebase-map.md` — a structural snapshot of the repo
+that sub-agents can read instead of re-exploring the codebase from scratch on every task.
+
+```
+Skill({ skill: "map-codebase" })
+```
+
+Run it once at Stage 1 setup when joining an existing project. Re-run via `/map-codebase` after
+any major refactor. No external dependencies — uses `find` and `git` only.
+
+**What it produces (`memory/codebase-map.md`):**
+
+| Section | Source | Purpose |
+|---------|--------|---------|
+| Directory Tree (depth 3) | `find`, gitignore-aware | Orients agents to where code lives |
+| Entry Points | `find` by filename pattern (`main.*`, `index.*`, `app.*`, …) | Shows where execution begins |
+| Blast-Radius Hotspots | `git log --name-only` commit frequency | Files changed most often = highest review risk when touched |
+
+**How agents use it:**
+- C2/C3 agents read it at startup to avoid redundant `grep`/`find` discovery chains
+- At Stage 4, reviewers use the Hotspots section to bound review scope to the real blast radius
+- The Supervisor annotates a `## Core Modules` section manually after generation — that intent layer is what the shell can't produce
+
+**Design decision:** cold-tier only (never auto-injected into prompts). C0/C1 agents skip it entirely. Only agents that genuinely need structural context pay the read cost.
+
+---
+
 ## Pipeline Enforcement Hooks
 
 Six hooks enforce the pipeline automatically — no prompt reminders needed.
@@ -263,13 +293,14 @@ Six hooks enforce the pipeline automatically — no prompt reminders needed.
 
 ## Memory System
 
-The framework uses a **two-tier hot/cold memory** design to keep agents aligned across sessions.
+The framework uses a **two-tier hot/cold memory** design to keep agents aligned across sessions, plus a **structural layer** for codebase topology.
 
 ```
 memory/MEMORY.md          ← Hot tier (≤200 lines, always injected into spawn prompts)
 memory/decisions.md       ← Cold tier: architectural + infrastructure decisions
 memory/glossary.md        ← Cold tier: canonical biz-domain terms + core domain models
 memory/learnings.md       ← Cold tier: specs clarifications, patterns, gotchas
+memory/codebase-map.md    ← Structural tier: directory tree, entry points, blast-radius hotspots
 ```
 
 **How it works:**
@@ -284,6 +315,7 @@ memory/learnings.md       ← Cold tier: specs clarifications, patterns, gotchas
 | Architectural or infrastructure decision | `memory/decisions.md` |
 | New canonical term or domain model confirmed | `memory/glossary.md` |
 | Spec clarification, pattern, or gotcha discovered | `memory/learnings.md` |
+| Structural snapshot of the codebase needed | `memory/codebase-map.md` (via `/map-codebase`) |
 
 ---
 

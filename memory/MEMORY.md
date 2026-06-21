@@ -19,6 +19,7 @@
 <!-- Format: - [Title](cold-file.md#section) — one-line summary (≤150 chars) -->
 
 ### Decisions
+- [Codebase Map](codebase-map.md) — structural snapshot (tree, entry points, hotspots) in memory/codebase-map.md; cold-tier; C2/C3 agents read it; refresh via /map-codebase
 - [LLM-as-Renderer for HTML reports](decisions.md) — html-report skill renders Stage 4 output inline; no shell post-processor; built-ins (code-review, security-review) can't be modified
 - [reports/ is local-only](decisions.md) — generated HTML reports excluded from git; local browser viewing only
 - [thinking-report is separate from html-report](decisions.md) — Stage 0.5–2 decision reasoning vs Stage 4 review findings; different templates, different triggers
