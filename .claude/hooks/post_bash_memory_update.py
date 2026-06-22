@@ -29,6 +29,8 @@ Run the diff-driven memory-update pass now:
 5. Summarize new/changed entries as one-liners in memory/MEMORY.md (keep hot tier ≤200 lines total)
 
 Routing: architectural/infra decisions → decisions.md | biz terms/domain models → glossary.md | patterns/gotchas/spec clarifications → learnings.md
+
+NOTE: memory/ writes are local-only (memory/* is gitignored except MEMORY.md). Do NOT commit or push the results of this pass — writing the files to disk is sufficient.
 """.strip()
 
 
