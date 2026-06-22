@@ -151,7 +151,7 @@ Run these **one by one**. After each session, summarize findings, ask for user c
    ```
    Skill({ skill: "verify" })
    ```
-   Confirm smoke tests pass. Update `docs/legacy/` if new insights were gained. Update `memory/` if new patterns were learned.
+   Confirm smoke tests pass. Update `docs/legacy/` if new insights were gained. Flag any new patterns or learnings to the Supervisor — never write to `memory/` directly (Supervisor-only writes).
 
 ### Required Outputs for Every Task
 - Mode + Risk Level declaration
@@ -159,7 +159,7 @@ Run these **one by one**. After each session, summarize findings, ask for user c
 - List of changed files
 - Test results + smoke test confirmation
 - Updated `docs/legacy/` files (if new insights gained)
-- Updated `memory/` files (if new coding feedback, project decisions, or patterns were learned)
+- New patterns/learnings flagged to Supervisor (Supervisor writes to `memory/` — never the sub-agent)
 
 ---
 

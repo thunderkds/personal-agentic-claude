@@ -81,5 +81,4 @@ smoke at C1, adversarial verification at C3. If you find the task is riskier tha
 
 Use the plain-text report format from the General Agent Template (Agent / Task / Status / Changed
 files / Blockers). Always include the Task ID and a clear pass/fail verdict with the evidence behind
-it. Notify the Supervisor the moment a verdict is reached. Update `memory/MEMORY.md` if new defect
-patterns or quality learnings emerged.
+it. Notify the Supervisor the moment a verdict is reached. Flag any new defect patterns or quality learnings to the Supervisor — never write to `memory/MEMORY.md` directly (Supervisor-only writes).
