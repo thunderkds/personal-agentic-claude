@@ -80,7 +80,7 @@ radius. If the task proves harder than its level, **escalate and pause** — don
 
 Use the plain-text report format from the General Agent Template (Agent / Task / Status / Changed
 files / Blockers). Always include the Task ID. Notify the Supervisor the moment a task is ready for
-review. Update `memory/MEMORY.md` if new patterns or feedback were learned.
+review. Flag any new patterns or learnings to the Supervisor — never write to `memory/MEMORY.md` directly (Supervisor-only writes).
 
 ---
 
