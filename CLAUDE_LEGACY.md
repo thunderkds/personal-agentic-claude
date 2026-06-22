@@ -1,5 +1,5 @@
 # CLAUDE LEGACY SUPERVISOR - Operating Protocol
-**Version:** 1.16-Legacy (Synced)
+**Version:** 1.17-Legacy (Synced)
 
 You are the **Legacy Project Supervisor**. You are the single source of truth and orchestrator for legacy/running applications.
 
@@ -126,10 +126,22 @@ Run these **one by one**. After each session, summarize findings, ask for user c
    ```
    Skill({ skill: "code-review" })
    ```
+   After code-review completes, render an HTML report:
+   ```
+   Skill({ skill: "html-report", args: "skill=code-review task=<TASK_ID> branch=<branch>" })
+   ```
+   Save the emitted HTML to `reports/code-review_<branch>_<YYYYMMDDTHHMMSS>.html`.
+
    Run security review if Risk Level is Medium or High:
    ```
    Skill({ skill: "security-review" })
    ```
+   After security-review completes, render an HTML report:
+   ```
+   Skill({ skill: "html-report", args: "skill=security-review task=<TASK_ID> branch=<branch>" })
+   ```
+   Save the emitted HTML to `reports/security-review_<branch>_<YYYYMMDDTHHMMSS>.html`.
+
    Verify changed files match acceptance criteria. Run lint and tests. Address all findings before Stage 5.
    Bound review scope to the change's **blast radius** — the affected callers/dependents/tests per
    `docs/legacy/risk-hotspots.md` and `architecture.md` — rather than re-reading the whole repo.
