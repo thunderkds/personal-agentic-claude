@@ -19,7 +19,8 @@
 <!-- Format: - [Title](cold-file.md#section) — one-line summary (≤150 chars) -->
 
 ### Decisions
-- [CLAUDE_LEGACY.md sync policy](decisions.md) — mirror new skills + session-startup gates from CLAUDE.md into CLAUDE_LEGACY.md on each addition; bump version
+- [CLAUDE_LEGACY.md sync policy](decisions.md) — mirror new skills + session-startup gates + Hard-Stop Gates from CLAUDE.md into CLAUDE_LEGACY.md on each addition; bump version
+- [Hard-stop gates in Permanent Rules](decisions.md) — 4 Supervisor self-checks: no TASK_GUIDE=no work; refactor/QA floors at C2/Medium; KANBAN current before session ends; one project per KANBAN
 - [Codebase Map](codebase-map.md) — structural snapshot (tree, entry points, hotspots) in memory/codebase-map.md; cold-tier; C2/C3 agents read it; refresh via /map-codebase
 - [LLM-as-Renderer for HTML reports](decisions.md) — html-report skill renders Stage 4 output inline; no shell post-processor; built-ins (code-review, security-review) can't be modified
 - [reports/ is local-only](decisions.md) — generated HTML reports excluded from git; local browser viewing only
@@ -61,8 +62,6 @@
 ### Learning Records
 <!-- One-liner per active LR: - [LR-NNNN slug](memory/learning-records/LR-NNNN-slug.md) — summary -->
 <!-- Superseded LRs: ~~old text~~ → see LR-NNNN -->
-- [LR-0001 refactor-task-size-evaluation](memory/learning-records/LR-0001-refactor-task-size-evaluation.md) — "refactor/restructure/clean architecture" = C2+ / Medium Risk; evaluate by blast radius, not request tone
-- [LR-0002 pipeline-compliance-not-enforced-in-practice](memory/learning-records/LR-0002-pipeline-compliance-not-enforced-in-practice.md) — pipeline is non-negotiable regardless of task size; no TASK_GUIDE = hard blocker; Supervisor never implements
 
 ### Glossary
 - [Report / Report Slot / Scoring Dimension / Report Session](glossary.md) — canonical terms for the html-report skill and Stage 4 reporting system
