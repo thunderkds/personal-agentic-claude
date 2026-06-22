@@ -60,6 +60,8 @@
 ### Learning Records
 <!-- One-liner per active LR: - [LR-NNNN slug](memory/learning-records/LR-NNNN-slug.md) — summary -->
 <!-- Superseded LRs: ~~old text~~ → see LR-NNNN -->
+- [LR-0001 refactor-task-size-evaluation](learning-records/LR-0001-refactor-task-size-evaluation.md) — Refactors/restructures are never C0/C1; always C2+/Medium Risk; require TASK_GUIDE before any code
+- [LR-0002 pipeline-compliance-not-enforced-in-practice](learning-records/LR-0002-pipeline-compliance-not-enforced-in-practice.md) — "Feels small" is never valid reason to skip TASK_GUIDE; no TASK_GUIDE = hard blocker; Supervisor must not drift into implementation
 
 ### Glossary
 - [Report / Report Slot / Scoring Dimension / Report Session](glossary.md) — canonical terms for the html-report skill and Stage 4 reporting system

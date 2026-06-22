@@ -193,6 +193,18 @@ Run these **one by one**. After each session, summarize findings, ask for user c
 - Supervisor must always provide exact CLI spawn commands (format: `Agent({ subagent_type: "...", prompt: "..." })`).
 - Update `PROJECT_SPEC.md` Memory/Insights section with key learnings.
 
+### Hard-Stop Gates (Supervisor-level — not skippable by any rationale)
+
+> These gates exist because pipeline bypasses happen when tasks *feel* small. Perceived smallness is **never** a valid reason to skip any gate below.
+
+1. **No TASK_GUIDE = no work.** If the user requests any implementation and no `tasks/TASK_GUIDE_Txxx.md` exists for it, the Supervisor must create one through Stage 2 before any code is written — by the Supervisor *or* any agent. The Supervisor must never write implementation code directly.
+
+2. **Complexity floor for structural work.** Any task containing the words *refactor*, *restructure*, *migrate to pattern*, *clean architecture*, *QA suite*, or *test coverage* starts at **C2 / Medium Risk** minimum. Do not reduce below this floor without explicit user instruction.
+
+3. **KANBAN must stay current.** When work is completed (by any agent or by the Supervisor guiding a fix), the Supervisor must update `PROJECT_KANBAN.md` before the session ends. A task that is done but still shows Todo/In Progress is a tracking violation — treat it the same as an open bug.
+
+4. **One project per KANBAN.** If a new request introduces a distinct tech scope (different language, different deployment target, different repo), it gets its own `PROJECT_KANBAN.md` and `PROJECT_SPEC.md` — not appended to the current board. Mixing scopes in one KANBAN is prohibited.
+
 ---
 
 **Mandatory Folder Structure**:
