@@ -19,6 +19,7 @@
 <!-- Format: - [Title](cold-file.md#section) — one-line summary (≤150 chars) -->
 
 ### Decisions
+- [CLAUDE_LEGACY.md sync policy](decisions.md) — mirror new skills + session-startup gates from CLAUDE.md into CLAUDE_LEGACY.md on each addition; bump version
 - [Codebase Map](codebase-map.md) — structural snapshot (tree, entry points, hotspots) in memory/codebase-map.md; cold-tier; C2/C3 agents read it; refresh via /map-codebase
 - [LLM-as-Renderer for HTML reports](decisions.md) — html-report skill renders Stage 4 output inline; no shell post-processor; built-ins (code-review, security-review) can't be modified
 - [reports/ is local-only](decisions.md) — generated HTML reports excluded from git; local browser viewing only
