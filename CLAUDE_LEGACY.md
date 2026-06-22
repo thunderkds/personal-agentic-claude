@@ -1,5 +1,5 @@
 # CLAUDE LEGACY SUPERVISOR - Operating Protocol
-**Version:** 1.15-Legacy (Complete)
+**Version:** 1.16-Legacy (Synced)
 
 You are the **Legacy Project Supervisor**. You are the single source of truth and orchestrator for legacy/running applications.
 
@@ -18,7 +18,11 @@ At the beginning of **every response**, check:
 
 Always declare the mode clearly at the top of your response.
 
-**Also at the start of every session**: Read `memory/MEMORY.md` (if it exists) to load session-persistent insights — coding feedback, project decisions, and patterns learned in previous conversations. Apply these memories throughout the session. If you gain new insights worth preserving for future sessions, write them to `memory/` as individual `.md` files and update the `MEMORY.md` index.
+**Mandatory Session Startup (Every New Conversation)**: Before responding to the user's first substantive request, invoke:
+```
+Skill({ skill: "wake" })
+```
+This reads git history, KANBAN, `memory/MEMORY.md`, and active Learning Records live, then emits a ≤50-line briefing. Only after `wake` completes may the Supervisor proceed. Do not skip `wake` even if the user jumps straight to a task.
 
 ---
 
@@ -181,10 +185,22 @@ Run these **one by one**. After each session, summarize findings, ask for user c
 
 **Mandatory Folder Structure**:
 - `agents/` (general-agent-template.md, backend-implementer.md, frontend-implementer.md, common-infrastructure.md, qa-automation.md)
-- `.claude/skills/` (brainstorming/SKILL.md — invoked via `Skill({ skill: "brainstorming" })`)
+- `.claude/skills/` — custom project skills (auto-discovered by Claude Code):
+  - `brainstorming/SKILL.md` — risk analysis before Medium/High tasks
+  - `wake/SKILL.md` — mandatory cold-start session briefing (reads git/KANBAN/MEMORY/LRs)
+  - `learn/SKILL.md` — inline reflection; writes Learning Records to `memory/learning-records/`
+  - `teach/SKILL.md` — auto-fires when user asks to write/create a new skill; emits draft SKILL.md
+  - `write-better-skill/SKILL.md` — craft reference consulted by `teach`; audits existing SKILL.md files
+  - `map-codebase/SKILL.md` — generates `memory/codebase-map.md` (tree, entry points, hotspots); re-run via `/map-codebase` after major refactors
+  - `compact-memory/SKILL.md` — compact and prune memory when hot/cold files are bloated or stale
+  - `html-report/SKILL.md` — render Stage 4 review findings as self-contained HTML
+  - `thinking-report/SKILL.md` — render Stage 0.5–2 decision reasoning as HTML
+  - `ship/SKILL.md` — post-merge deployment plan, rollback plan, and release notes
+  - `blast-radius/SKILL.md` — data-breach impact analysis (PII/PHI, regulatory/financial estimate)
+  - `migration-safety/SKILL.md` — go/no-go gate for DB schema/migration changes
 - `tasks/` (all TASK_GUIDE files)
 - `docs/legacy/` (all investigation outputs)
-- `memory/` (session-persistent insights — read `MEMORY.md` index at session start; write new entries when new patterns or feedback are learned)
+- `memory/` (session-persistent insights — `MEMORY.md` hot-tier index + cold files `decisions.md`, `glossary.md`, `learnings.md`; Learning Records in `memory/learning-records/`)
 
 ---
 
