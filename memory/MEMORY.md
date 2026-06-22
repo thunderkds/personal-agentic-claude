@@ -32,6 +32,7 @@
 - [wake skill: mandatory cold-start briefing](decisions.md) — reads git/KANBAN/MEMORY/LRs live; ≤50-line output; hard gate before first Supervisor response each session
 
 ### Patterns & Gotchas
+- [Agent files must not tell sub-agents to write memory](learnings.md) — backend/frontend/qa.md + CLAUDE_LEGACY.md had "Update MEMORY.md" — fixed to "flag to Supervisor"; watch for this on every sync
 - [html-report findings use `<pre>`](learnings.md) — never manually HTML-escape finding text; wrap in `<pre>` to handle `<`, `>`, `&` safely
 - [Report filename: skill_branch_timestamp.html](learnings.md) — `reports/<skill>_<branch>_<YYYYMMDDTHHMMSS>.html`; sortable, collision-free
 - [html-report scoring rubric](learnings.md) — Risk 0–30=green, 31–65=yellow, 66–100=red; all dimension slots are bare integers (no `%`)
@@ -61,8 +62,6 @@
 ### Learning Records
 <!-- One-liner per active LR: - [LR-NNNN slug](memory/learning-records/LR-NNNN-slug.md) — summary -->
 <!-- Superseded LRs: ~~old text~~ → see LR-NNNN -->
-- [LR-0001 refactor-task-size-evaluation](learning-records/LR-0001-refactor-task-size-evaluation.md) — Refactors/restructures are never C0/C1; always C2+/Medium Risk; require TASK_GUIDE before any code
-- [LR-0002 pipeline-compliance-not-enforced-in-practice](learning-records/LR-0002-pipeline-compliance-not-enforced-in-practice.md) — "Feels small" is never valid reason to skip TASK_GUIDE; no TASK_GUIDE = hard blocker; Supervisor must not drift into implementation
 
 ### Glossary
 - [Report / Report Slot / Scoring Dimension / Report Session](glossary.md) — canonical terms for the html-report skill and Stage 4 reporting system
