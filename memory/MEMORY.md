@@ -59,6 +59,9 @@
 - [user type → LR only](learnings.md) — user-preference insights never route to cold files; scope-creep guard in routing table
 - [skill promotion: code block only](learnings.md) — never auto-save SKILL.md stub; output fenced block and stop; user saves + registers manually
 
+### Decisions (slim-skills — 2026-06-24)
+- [slim-skills skill](decisions.md) — on-demand prune of bloated SKILL.md files (>150 lines); behavioral checksum extraction preserves hard constraints + output assertions; human approval gate before any write
+
 ### Decisions (New Skills — 2026-06-24 batch)
 - [strategy skill](decisions.md) — STRATEGY.md north star (problem/approach/audience/metrics); grounds ideate + brainstorming; distinct from PRD
 - [ideate skill](decisions.md) — pre-brainstorm divergent filter; 25–50 raw ideas → adversarial filter → 5–7 survivors; prevents deep brainstorm on weak direction
