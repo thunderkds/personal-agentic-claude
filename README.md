@@ -36,7 +36,7 @@ Stage 5: Verify end-to-end → merge → ship
 | Path | What it contains |
 |------|-----------------|
 | `.claude/agents/` | Core sub-agent definitions (common-infrastructure, backend, frontend, qa) |
-| `.claude/skills/` | Custom skills (brainstorming, grill-with-docs, tdd, ship, html-report, thinking-report, learn, wake, …) |
+| `.claude/skills/` | Custom skills (strategy, ideate, brainstorming, grill-with-docs, tdd, code-review, resolve-pr-feedback, compound, compound-refresh, optimize, ship, learn, wake, …) |
 | `.claude/hooks/` | Pipeline enforcement hooks (auto-kanban, gate checks, merge blocks, memory updates) |
 | `.claude/settings.json` | Hook wiring *(deployed as a per-project copy — projects append their own permissions)* |
 | `templates/` | Blank templates for PRD, PROJECT_SPEC, KANBAN, TASK_GUIDE, HTML report, Pack, etc. |
@@ -273,6 +273,74 @@ any major refactor. No external dependencies — uses `find` and `git` only.
 - The Supervisor annotates a `## Core Modules` section manually after generation — that intent layer is what the shell can't produce
 
 **Design decision:** cold-tier only (never auto-injected into prompts). C0/C1 agents skip it entirely. Only agents that genuinely need structural context pay the read cost.
+
+---
+
+## Custom Skills
+
+All skills live in `.claude/skills/<name>/SKILL.md` and are auto-discovered by Claude Code. Invoke any skill via `Skill({ skill: "<name>" })` or the `/name` slash command.
+
+### Phase 0 — Strategy & Ideation
+
+| Skill | When to use |
+|---|---|
+| `strategy` | Phase 0 before brainstorming: create/update `STRATEGY.md` — product north star covering target problem, approach, audience, and success metrics. Grounds all downstream ideation. |
+| `ideate` | Stage 0.5a before brainstorming: generate 25–50 raw ideas across four divergent frames, adversarially filter to 5–7 survivors, let user select a direction. Prevents investing a deep brainstorm in a weak idea. |
+| `brainstorming` | Stage 0.5b: deep divergent exploration of the selected direction — three architectural paths, adversarial review, scope boundaries. Upgraded with scope tiers (lightweight/standard/deep), one-question-per-turn dialogue, visual probe gate, and codebase claim verification. |
+
+### Stage 0.5–2 — Planning & Grilling
+
+| Skill | When to use |
+|---|---|
+| `grill-with-docs` | Stage 2: convergent grilling — sharpen terminology, lock intent, record ADRs before task breakdown. |
+| `to-issues` | Stage 2: break the plan into tracer-bullet vertical-slice tasks (feeds KANBAN + TASK_GUIDEs). |
+| `thinking-report` | After brainstorming, grilling, or planning locks a direction: render Decision box + Trade-Off Matrix + Assumptions list as HTML. |
+
+### Stage 3 — Implementation
+
+| Skill | When to use |
+|---|---|
+| `tdd` | Red-green-refactor implementation, one vertical slice at a time. |
+| `migration-safety` | Mandatory go/no-go gate for any task touching DB schema/migrations — reversibility, backward-compat, zero-downtime. |
+| `optimize` | When a concrete measurable metric (latency, coverage %, search relevance) needs systematic improvement. Defines a baseline → hypothesis backlog → parallel experiments → converges on best result. Optional — invoke only when a metric target exists. |
+| `run` | Launch the app to observe behavior during development. |
+
+### Stage 4 — Review
+
+| Skill | When to use |
+|---|---|
+| `code-review` | Mandatory for every task (C1+). Project override of built-in: adds P0–P3 severity, 0/25/50/75/100 confidence anchors, cross-reviewer dedup + promotion, always-on + conditional reviewer personas, model tiering, and auto-applies safe P0/P1 fixes. |
+| `security-review` | Task Risk Level is Medium or High — independent of complexity. |
+| `blast-radius` | Risk Medium/High and task touches sensitive data (PII/PHI/credentials/payment): quantifies data-breach impact — inventory, exposure scoring, regulatory/financial estimate. |
+| `html-report` | After each Stage 4 review skill: render findings as a self-contained HTML report. Args: `skill=<name> task=<TASK_ID> branch=<branch>`. |
+
+### Stage 4 → 5 — PR Feedback Loop
+
+| Skill | When to use |
+|---|---|
+| `resolve-pr-feedback` | After Stage 4 when a PR has open reviewer comments: triage validity, implement fixes, commit, reply with context. Full-PR mode (all threads) or targeted mode (single comment URL). |
+
+### Stage 5 — Integration & Knowledge
+
+| Skill | When to use |
+|---|---|
+| `verify` | Confirm the feature works end-to-end in the running app before merge. |
+| `ship` | Post-merge: produce a deployment plan, rollback plan, and release notes; append a runbook entry. |
+| `compound` | Post-Stage-5 after any non-trivial fix or discovery: document the problem→solution into `docs/solutions/[category]/`. Complements `learn` (session LRs) with structured, agent-discoverable artifacts. |
+
+### Maintenance & Meta
+
+| Skill | When to use |
+|---|---|
+| `compound-refresh` | On-demand: audit `docs/solutions/` against the live codebase. Classifies each doc Keep/Update/Consolidate/Replace/Delete; fixes drift; flags ambiguous cases for human review. |
+| `learn` | Inline during/after any significant exchange: detect insights, corrections, or confirmed patterns → write to `memory/learning-records/`. Auto-fires on Supervisor detection; also `/learn`. |
+| `wake` | **Mandatory first action every session**: reads git log, KANBAN, MEMORY.md, and active LRs; emits ≤50-line briefing. Also `/wake` for a live snapshot mid-session. |
+| `map-codebase` | Stage 1 setup (and after major refactors): generate `memory/codebase-map.md` — directory tree, entry points, blast-radius hotspots. |
+| `compact-memory` | On-demand: compact and prune the two-tier memory system when cold files are bloated or stale. Human-invoked, Supervisor executes. |
+| `diagnose` | Stage 3 when something is broken/failing: disciplined reproduce → minimise → hypothesise → instrument → fix → regression-test loop. |
+| `teach` | Auto-fires when user asks to write/create a new skill: consults `write-better-skill` and emits a ready-to-save SKILL.md draft. |
+| `write-better-skill` | Craft reference for writing skills in this framework — invocation choice, leading words, completion criteria, failure modes. Consulted by `teach`; also audits existing skills. |
+| `git-guardrails-claude-code` | Stage 1 one-time setup: install a PreToolUse hook blocking destructive git commands. |
 
 ---
 

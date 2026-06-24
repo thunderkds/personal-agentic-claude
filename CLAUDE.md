@@ -61,6 +61,13 @@ The `subagent_type` is the agent's `name:` field (not the filename). Because Cla
 | `teach` | `.claude/skills/teach/SKILL.md` | Auto-fires when the user asks to write, create, or design a new skill. Consults `write-better-skill` craft principles and emits a ready-to-save SKILL.md draft. Also user-invokable as `/teach <description>`. |
 | `write-better-skill` | `.claude/skills/write-better-skill/SKILL.md` | Authoritative craft reference for writing skills in this framework — invocation choice, leading words, information hierarchy, completion criteria, failure modes. Consulted by `teach`; also invokable directly to audit or refactor an existing SKILL.md. |
 | `map-codebase` | `.claude/skills/map-codebase/SKILL.md` | Stage 1 setup (and on-demand via `/map-codebase`): generate `memory/codebase-map.md` — directory tree, entry points, blast-radius hotspots. Cold-tier only; C2/C3 sub-agents read it for structural orientation. No external deps. |
+| `strategy` | `.claude/skills/strategy/SKILL.md` | Phase 0 (before brainstorming): create or update `STRATEGY.md` — product north star covering target problem, approach, audience, and success metrics. Grounds all downstream ideation. |
+| `ideate` | `.claude/skills/ideate/SKILL.md` | Stage 0.5a (before brainstorming): divergent idea generation — produces 25–50 raw ideas, adversarially filters to 5–7 survivors, lets user select a direction before `brainstorming` begins. |
+| `resolve-pr-feedback` | `.claude/skills/resolve-pr-feedback/SKILL.md` | Post Stage 4: systematically resolve all open PR review threads — triage validity, implement fixes, commit, reply with context. Full-PR mode or targeted single-thread mode. |
+| `compound` | `.claude/skills/compound/SKILL.md` | Post Stage 5: document a solved problem into `docs/solutions/[category]/[file].md` — turns reactive problem-solving into reusable institutional knowledge. |
+| `compound-refresh` | `.claude/skills/compound-refresh/SKILL.md` | On-demand: audit `docs/solutions/` against the live codebase; classify each doc Keep/Update/Consolidate/Replace/Delete; fix drift; flag ambiguous cases for human review. |
+| `optimize` | `.claude/skills/optimize/SKILL.md` | Stage 3/5 (optional): metric-driven iterative optimization — define baseline, generate hypotheses, run experiments, converge on best result. Use only when a concrete measurable target exists. |
+| `code-review` | `.claude/skills/code-review/SKILL.md` | Stage 4: structured multi-reviewer review with P0–P3 severity, confidence anchors, cross-reviewer dedup + promotion, conditional personas, and model tiering. Project override of built-in. |
 
 > **Naming note:** the `blast-radius` skill above is about **data-breach** impact (PII/PHI, regulatory cost). It is distinct from the *code-dependency* "blast radius" referenced in Risk assignment and review scoping below (which files a change affects). Don't conflate the two.
 
@@ -68,7 +75,7 @@ The `subagent_type` is the agent's `name:` field (not the filename). Because Cla
 
 | Skill | When to use |
 |---|---|
-| `code-review` | Stage 4: review all changed files for quality and correctness |
+| `security-review` | Stage 4: run when task Risk Level is Medium or High |
 | `security-review` | Stage 4: run when task Risk Level is Medium or High |
 | `verify` | Stage 5: confirm the feature works end-to-end in the running app |
 | `run` | Stage 3: launch the app to observe behavior during implementation |

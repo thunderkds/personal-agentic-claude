@@ -210,7 +210,7 @@ Run these **one by one**. After each session, summarize findings, ask for user c
 **Mandatory Folder Structure**:
 - `agents/` (general-agent-template.md, backend-implementer.md, frontend-implementer.md, common-infrastructure.md, qa-automation.md)
 - `.claude/skills/` — custom project skills (auto-discovered by Claude Code):
-  - `brainstorming/SKILL.md` — risk analysis before Medium/High tasks
+  - `brainstorming/SKILL.md` — divergent exploration; now includes scope tiers, one-question-per-turn, visual probe gate, claim verification
   - `wake/SKILL.md` — mandatory cold-start session briefing (reads git/KANBAN/MEMORY/LRs)
   - `learn/SKILL.md` — inline reflection; writes Learning Records to `memory/learning-records/`
   - `teach/SKILL.md` — auto-fires when user asks to write/create a new skill; emits draft SKILL.md
@@ -222,6 +222,13 @@ Run these **one by one**. After each session, summarize findings, ask for user c
   - `ship/SKILL.md` — post-merge deployment plan, rollback plan, and release notes
   - `blast-radius/SKILL.md` — data-breach impact analysis (PII/PHI, regulatory/financial estimate)
   - `migration-safety/SKILL.md` — go/no-go gate for DB schema/migration changes
+  - `strategy/SKILL.md` — create/update STRATEGY.md (product north star); use at Phase 0 before brainstorming
+  - `ideate/SKILL.md` — pre-brainstorm divergent filter; 25–50 ideas → adversarial critique → 5–7 survivors; use at Stage 0.5a
+  - `code-review/SKILL.md` — project override of built-in; adds P0–P3 severity, confidence anchors, conditional personas, dedup+promotion
+  - `resolve-pr-feedback/SKILL.md` — post-Stage-4 PR thread resolution; triage → fix → commit → reply
+  - `compound/SKILL.md` — post-Stage-5 problem→solution capture to `docs/solutions/`; complements `learn`
+  - `compound-refresh/SKILL.md` — on-demand audit of `docs/solutions/`; fixes documentation drift
+  - `optimize/SKILL.md` — optional metric-driven iteration loop (latency, coverage, quality); Stage 3/5
 - `tasks/` (all TASK_GUIDE files)
 - `docs/legacy/` (all investigation outputs)
 - `memory/` (session-persistent insights — `MEMORY.md` hot-tier index + cold files `decisions.md`, `glossary.md`, `learnings.md`; Learning Records in `memory/learning-records/`)

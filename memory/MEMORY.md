@@ -59,6 +59,16 @@
 - [user type → LR only](learnings.md) — user-preference insights never route to cold files; scope-creep guard in routing table
 - [skill promotion: code block only](learnings.md) — never auto-save SKILL.md stub; output fenced block and stop; user saves + registers manually
 
+### Decisions (New Skills — 2026-06-24 batch)
+- [strategy skill](decisions.md) — STRATEGY.md north star (problem/approach/audience/metrics); grounds ideate + brainstorming; distinct from PRD
+- [ideate skill](decisions.md) — pre-brainstorm divergent filter; 25–50 raw ideas → adversarial filter → 5–7 survivors; prevents deep brainstorm on weak direction
+- [resolve-pr-feedback skill](decisions.md) — post-Stage-4 PR thread resolution; triage validity → fix → commit → reply; full-PR or single-thread mode
+- [compound skill](decisions.md) — post-Stage-5 problem→solution capture to docs/solutions/; complements learn (LRs) with searchable structured artifacts
+- [compound-refresh skill](decisions.md) — on-demand audit of docs/solutions/; Keep/Update/Consolidate/Replace/Delete classification; fixes documentation drift
+- [optimize skill](decisions.md) — optional metric-driven iteration loop; baseline → hypothesis backlog → experiments → converge; hard + judge metrics
+- [code-review project override](decisions.md) — .claude/skills/code-review/SKILL.md overrides built-in; adds P0–P3 severity, confidence anchors, dedup+promotion, conditional personas, model tiering
+- [brainstorming upgrade](decisions.md) — added scope tiers (lightweight/standard/deep), one-question-per-turn gate, visual probe gate, claim verification before doc-write
+
 ### Learning Records
 <!-- One-liner per active LR: - [LR-NNNN slug](memory/learning-records/LR-NNNN-slug.md) — summary -->
 <!-- Superseded LRs: ~~old text~~ → see LR-NNNN -->
