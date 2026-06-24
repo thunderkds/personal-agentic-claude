@@ -71,10 +71,12 @@ blast radius. If the task proves harder than its level, **escalate and pause** �
 |---|---|---|
 | `brainstorming` | `Skill({ skill: "brainstorming" })` | C2 when >1 viable approach (e.g. before touching shared/core logic); C3 mandatory |
 | `migration-safety` | `Skill({ skill: "migration-safety" })` | **Any** slice that adds/changes DB schema or a migration — pass the gate before code goes green |
-| `code-review` | `Skill({ skill: "code-review" })` | Before marking any task ready for review (C1+) — mandatory |
+| `code-review` | `Skill({ skill: "code-review" })` | Before marking any task ready for review (C1+) — mandatory; adds P0–P3 severity + confidence gating |
 | `security-review` | `Skill({ skill: "security-review" })` | Risk Medium/High (auth, schema, shared services) — independent of complexity |
 | `verify` | `Skill({ skill: "verify" })` | C1+ after implementation — confirm the API works end-to-end; adversarial at C3 |
 | `run` | `Skill({ skill: "run" })` | Launch the app to observe behavior during development |
+| `compound` | `Skill({ skill: "compound" })` | After any non-trivial fix or discovery — document the problem→solution to `docs/solutions/` |
+| `optimize` | `Skill({ skill: "optimize" })` | When a measurable API/DB metric (latency, throughput) needs iterative improvement |
 
 ## Communication Protocol
 

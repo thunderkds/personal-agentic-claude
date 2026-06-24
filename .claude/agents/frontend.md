@@ -71,10 +71,12 @@ radius. If the task proves harder than its level, **escalate and pause** — don
 | Skill | Invoke | When |
 |---|---|---|
 | `brainstorming` | `Skill({ skill: "brainstorming" })` | C2 when >1 viable approach (UI architecture, component or state-management trade-offs); C3 mandatory |
-| `code-review` | `Skill({ skill: "code-review" })` | Before marking any task ready for review (C1+) — mandatory |
+| `code-review` | `Skill({ skill: "code-review" })` | Before marking any task ready for review (C1+) — mandatory; adds P0–P3 severity + confidence gating |
 | `security-review` | `Skill({ skill: "security-review" })` | Auth UI, sensitive-data display, or CSP changes (Risk Med/High) — independent of complexity |
 | `verify` | `Skill({ skill: "verify" })` | C1+ after implementation — confirm the UI works end-to-end in the browser; adversarial at C3 |
 | `run` | `Skill({ skill: "run" })` | Launch the dev server to observe UI behavior during development |
+| `compound` | `Skill({ skill: "compound" })` | After any non-trivial UI fix or pattern discovery — document to `docs/solutions/frontend/` |
+| `optimize` | `Skill({ skill: "optimize" })` | When a measurable UX metric (render time, bundle size, LCP) needs iterative improvement |
 
 ## Communication Protocol
 

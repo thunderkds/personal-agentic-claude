@@ -53,10 +53,12 @@ Trigger thresholds for these skills are set by the Complexity matrix above.
 | Skill | Invoke | When |
 |---|---|---|
 | `brainstorming` | `Skill({ skill: "brainstorming" })` | C2 when >1 viable approach; C3 mandatory |
-| `code-review` | `Skill({ skill: "code-review" })` | Before reporting task ready for review (C1+) |
+| `code-review` | `Skill({ skill: "code-review" })` | Before reporting task ready for review (C1+); project override adds P0–P3 severity + confidence anchors |
 | `security-review` | `Skill({ skill: "security-review" })` | Task Risk Level is Medium or High (independent of complexity) |
 | `verify` | `Skill({ skill: "verify" })` | C1+ if user-facing; adversarial at C3 |
 | `run` | `Skill({ skill: "run" })` | Launch the app to observe behavior during development |
+| `compound` | `Skill({ skill: "compound" })` | After any non-trivial fix or discovery — document the problem→solution to `docs/solutions/` |
+| `optimize` | `Skill({ skill: "optimize" })` | When a concrete measurable metric needs iterative improvement (latency, coverage, quality) |
 
 ---
 
