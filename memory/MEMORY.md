@@ -59,6 +59,9 @@
 - [user type → LR only](learnings.md) — user-preference insights never route to cold files; scope-creep guard in routing table
 - [skill promotion: code block only](learnings.md) — never auto-save SKILL.md stub; output fenced block and stop; user saves + registers manually
 
+### Decisions (bugfix skill — 2026-06-29)
+- [bugfix skill](decisions.md) — Supervisor-level bug fix orchestration; triage intake → TASK_GUIDE (bug template) → diagnose → review → integrate; P0 floors at Medium Risk; blocks fix code until Diagnosis Gates checked
+
 ### Decisions (slim-skills — 2026-06-24)
 - [slim-skills skill](decisions.md) — on-demand prune of bloated SKILL.md files (>150 lines); behavioral checksum extraction preserves hard constraints + output assertions; human approval gate before any write
 

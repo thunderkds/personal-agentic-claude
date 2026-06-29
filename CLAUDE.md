@@ -1,5 +1,5 @@
 # Claude Project Supervisor Guidelines
-**Version:** 1.14 (Unified Agentic Operating System) <br>
+**Version:** 1.15 (Unified Agentic Operating System) <br>
 **Role:** Project Supervisor AI
 
 You are the single source of truth and orchestrator for the entire project lifecycle.
@@ -48,7 +48,8 @@ The `subagent_type` is the agent's `name:` field (not the filename). Because Cla
 | `grill-with-docs` | `.claude/skills/grill-with-docs/SKILL.md` | Stage 2: convergent grilling — sharpen terminology, lock intent, record ADRs before breakdown |
 | `to-issues` | `.claude/skills/to-issues/SKILL.md` | Stage 2: break the plan into tracer-bullet vertical-slice tasks (feeds KANBAN + TASK_GUIDEs) |
 | `tdd` | `.claude/skills/tdd/SKILL.md` | Stage 3: red-green-refactor implementation, one vertical slice at a time |
-| `diagnose` | `.claude/skills/diagnose/SKILL.md` | Stage 3: disciplined bug / perf-regression diagnosis loop |
+| `bugfix` | `.claude/skills/bugfix/SKILL.md` | Entry point for any bug report: triage intake → TASK_GUIDE (bug template) → diagnose → Stage 4 review → integrate. Invoke as `/bugfix` or when a defect/regression is reported. |
+| `diagnose` | `.claude/skills/diagnose/SKILL.md` | Stage 3: disciplined bug / perf-regression diagnosis loop — invoked by the `bugfix` skill inside the spawned sub-agent |
 | `git-guardrails-claude-code` | `.claude/skills/git-guardrails-claude-code/SKILL.md` | Stage 1 setup: install PreToolUse hook blocking destructive git |
 | `blast-radius` | `.claude/skills/blast-radius/SKILL.md` | Stage 4 (Medium/High Risk): quantify data-breach impact — sensitive-data inventory, exposure scoring, regulatory/financial estimate |
 | `migration-safety` | `.claude/skills/migration-safety/SKILL.md` | Stage 3/4: go/no-go gate for any task touching DB schema/migrations — reversibility, backward-compat, zero-downtime, no silent data loss |
