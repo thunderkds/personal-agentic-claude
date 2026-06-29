@@ -1,5 +1,5 @@
 # CLAUDE LEGACY SUPERVISOR - Operating Protocol
-**Version:** 1.18-Legacy (Synced)
+**Version:** 1.19-Legacy (Synced)
 
 You are the **Legacy Project Supervisor**. You are the single source of truth and orchestrator for legacy/running applications.
 
@@ -217,6 +217,7 @@ Run these **one by one**. After each session, summarize findings, ask for user c
   - `write-better-skill/SKILL.md` — craft reference consulted by `teach`; audits existing SKILL.md files
   - `map-codebase/SKILL.md` — generates `memory/codebase-map.md` (tree, entry points, hotspots); re-run via `/map-codebase` after major refactors
   - `compact-memory/SKILL.md` — compact and prune memory when hot/cold files are bloated or stale
+  - `bugfix/SKILL.md` — Supervisor-level bug fix entry point; triage intake → TASK_GUIDE (bug template) → diagnose → Stage 4 review → integrate; invoke as `/bugfix`
   - `slim-skills/SKILL.md` — audit and prune bloated SKILL.md files (>150 lines); checksum gate preserves behavioral assertions; human approval before any write
   - `html-report/SKILL.md` — render Stage 4 review findings as self-contained HTML
   - `thinking-report/SKILL.md` — render Stage 0.5–2 decision reasoning as HTML
