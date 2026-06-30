@@ -84,11 +84,45 @@ If docs/legacy/ exists (legacy mode): also read `docs/legacy/risk-hotspots.md` a
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
 | Verification command run | ☐ pass / ☐ fail | [paste actual output] |
 | Negative cases hold | ☐ pass / ☐ fail | |
 | `verify` skill — works in running app | ☐ pass / ☐ fail | [what was observed] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
 | Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
+| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+
+---
+
+## UI / Design Acceptance Criteria
+
+> **Only fill for tasks with a UI component. Delete this entire section for pure-backend tasks.**
+> Each row must name a verification method and produce pasted evidence before Done (Hard-Stop Gate 6).
+> "Manual" is only acceptable for C0 tasks — C1+ must use an automated tool or LLM-vision screenshot.
+
+### 1. Visual Regression
+
+| Screen / Component | Verification method | Expected result |
+|-------------------|---------------------|-----------------|
+| [screen or component name] | [screenshot diff / LLM vision / Storybook snapshot] | [no diff / "matches spec"] |
+
+### 2. Design-System Compliance
+
+| Criterion | Verification method | Expected result |
+|-----------|---------------------|-----------------|
+| Colors match design tokens | [CSS audit / LLM vision / token lint] | [token names or hex values] |
+| Typography matches spec | [computed style / visual] | [font-family, size, weight] |
+| Spacing / layout matches spec | [computed style / visual] | [margin, padding values] |
+
+### 3. Layout / Responsiveness
+
+| Viewport | Verification method | Expected result |
+|----------|---------------------|-----------------|
+| Mobile (320–480px) | [screenshot / Playwright / Detox / manual] | [expected layout description] |
+| Tablet (768px) | [screenshot / Playwright / Detox / manual] | [expected layout description] |
+| Desktop (1024px+) | [screenshot / Playwright / Detox / manual] | [expected layout description] |
 
 ---
 
@@ -133,7 +167,7 @@ If docs/legacy/ exists (legacy mode): also read `docs/legacy/risk-hotspots.md` a
 - [ ] Self-review: `Skill({ skill: "code-review" })` run
 - [ ] Security review: `Skill({ skill: "security-review" })` run (if Medium/High risk)
 - [ ] Lint passes
-- [ ] Tests pass
+- [ ] Tests written AND pass — output pasted into Evidence table (Hard-Stop Gate 5)
 - [ ] `Skill({ skill: "verify" })` run — feature confirmed working in running app
 - [ ] `docs/legacy/` updated (if new insights, legacy mode only)
 - [ ] `memory/MEMORY.md` updated (if new patterns or feedback learned)
