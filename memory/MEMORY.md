@@ -30,6 +30,7 @@
 - [learn skill: Learning Record System](decisions.md) — LR files in memory/learning-records/; supersession archive; skill promotion on ≥2 LRs with user approval; closes passive-memory gap
 - [teach + write-better-skill: two-skill craft system](decisions.md) — teach auto-fires on skill-writing requests → emits draft SKILL.md; write-better-skill is the consulted craft reference (mattpocock port)
 - [wake skill: mandatory cold-start briefing](decisions.md) — reads git/KANBAN/MEMORY/LRs live; ≤50-line output; hard gate before first Supervisor response each session
+- [ui-test skill (T015+T016, done)](decisions.md) — self-degrading wrapper over local easy-ui-mcp Docker/MCP server; health-checks localhost:8765, skips cleanly if down or task has no UI; drives 8 MCP tools, maps output to Gate 6 + verify Evidence rows; web-only, mobile deferred; wired into qa.md (Stage 5 invocation, UI-AC-conditional) + CLAUDE.md (skills table + Gate 6 note)
 
 ### Patterns & Gotchas
 - [Agent files must not tell sub-agents to write memory](learnings.md) — backend/frontend/qa.md + CLAUDE_LEGACY.md had "Update MEMORY.md" — fixed to "flag to Supervisor"; watch for this on every sync
@@ -47,6 +48,7 @@
 - [Packs are additive-only, core unchanged](decisions.md) — pack agents/skills symlink alongside core; never replace core resources
 - [Pack install: --pack=<name> flag or interactive prompt](decisions.md) — no packs in non-interactive mode by default; users opt in explicitly
 - [Pack structure: agents/ + skills/ + PACK.md](decisions.md) — pack agents use namespaced names (e.g. mobile-developer) to avoid core collisions
+- [setup.sh central-clone guard fixed to check $PWD](decisions.md) — old check used $0 dirname, false-tripped on `sh ~/.supervisor/setup.sh --pack=X`; fixed PR #41. README now documents `sh -c "$(curl ...)" -- --pack=X` for piped+flags
 
 ### Patterns (Packs)
 - [Pack mandatory gates by domain](learnings.md) — mobile→ui-accessibility; data→pipeline-safety; devops→infra-safety; ai-agent→eval-design; api→contract-review
@@ -58,6 +60,7 @@
 - [LR numbering at write time](learnings.md) — scan directory for highest LR-NNNN immediately before each Write call; prevents collision in multi-LR invocations
 - [user type → LR only](learnings.md) — user-preference insights never route to cold files; scope-creep guard in routing table
 - [skill promotion: code block only](learnings.md) — never auto-save SKILL.md stub; output fenced block and stop; user saves + registers manually
+- [model alias vs pinned example IDs](learnings.md) — .claude/agents/*.md use `model: sonnet` alias (auto-resolves to latest); only hardcoded doc examples need manual bump on new model release
 
 ### Decisions (bugfix skill — 2026-06-29)
 - [bugfix skill](decisions.md) — intake → orient (read code + confirm mental model with user, hard gate) → TASK_GUIDE → diagnose → review → integrate; wrong model = wrong path with no way back; P0 floors at Medium Risk
