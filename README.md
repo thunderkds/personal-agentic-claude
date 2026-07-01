@@ -69,10 +69,17 @@ The core framework ships four agents (backend, frontend, common-infrastructure, 
 
 **Install packs interactively** — `setup.sh` prompts for pack selection when run from a TTY.
 
-**Install a specific pack** into an existing project:
+**Install a specific pack** into an existing project — `cd` into the project first, then run `setup.sh` from the central clone (not piped through `curl`, and not from inside `~/.supervisor` itself):
 ```sh
+cd /path/to/your/project
 sh ~/.supervisor/setup.sh --pack=mobile
 sh ~/.supervisor/setup.sh --pack=mobile --pack=api   # multiple packs
+```
+
+If you're bootstrapping a brand-new project and want packs installed on first run, pass the flags through the piped curl install with `sh -s --` (flags after `--pack=` go to `setup.sh`, not `curl`):
+```sh
+cd /path/to/your/project
+curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh -s -- --pack=mobile
 ```
 
 Pack agents and skills are symlinked into the project's `.claude/agents/` and `.claude/skills/` alongside the core resources. Each pack ships a `PACK.md` describing when to use it and what it adds.

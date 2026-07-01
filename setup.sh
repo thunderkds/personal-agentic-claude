@@ -44,11 +44,14 @@ check_git() {
 
 # ── Clone or verify the central clone ────────────────────────────────────────
 clone_or_verify() {
-  # Detect if script is running from inside the central clone itself
-  script_dir="$(cd "$(dirname "$0")" && pwd)"
+  # Detect if setup.sh is being run with the central clone itself as the target
+  # project (i.e. current directory, not the script's own location — the script
+  # always lives inside the central clone once installed, so checking $0 here
+  # would false-positive on the documented `sh ~/.supervisor/setup.sh ...` usage).
+  cwd="$(pwd)"
   central="$(cd "$SUPERVISOR_PATH" 2>/dev/null && pwd)" || true
-  if [ -n "$central" ] && [ "$script_dir" = "$central" ]; then
-    log_error "Cannot run setup.sh from inside the central clone ($SUPERVISOR_PATH). Run it from your target project."
+  if [ -n "$central" ] && [ "$cwd" = "$central" ]; then
+    log_error "Cannot run setup.sh with the central clone ($SUPERVISOR_PATH) as the target project. cd into your target project first."
     exit 1
   fi
 
