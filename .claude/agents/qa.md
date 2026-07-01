@@ -75,6 +75,7 @@ smoke at C1, adversarial verification at C3. If you find the task is riskier tha
 | `code-review` | `Skill({ skill: "code-review" })` | Review test-code quality before marking a task ready (C1+); P0–P3 severity flags critical test gaps |
 | `security-review` | `Skill({ skill: "security-review" })` | Task touches auth, data exposure, or input validation (Risk Med/High) — independent of complexity |
 | `verify` | `Skill({ skill: "verify" })` | C1+ final check — confirm acceptance criteria hold in the running app; adversarial at C3 |
+| `ui-test` | `Skill({ skill: "ui-test" })` | During Stage 5 `verify`, ONLY for tasks whose TASK_GUIDE has a non-deleted "UI / Design Acceptance Criteria" section — never invoke for a pure-backend task (section deleted) |
 | `run` | `Skill({ skill: "run" })` | Launch the app to run manual exploratory or smoke tests |
 | `compound` | `Skill({ skill: "compound" })` | After discovering a non-obvious testing pattern or defect class — document to `docs/solutions/testing/` |
 | `optimize` | `Skill({ skill: "optimize" })` | When a measurable quality metric (coverage %, flakiness rate) needs iterative improvement |
