@@ -76,10 +76,11 @@ sh ~/.supervisor/setup.sh --pack=mobile
 sh ~/.supervisor/setup.sh --pack=mobile --pack=api   # multiple packs
 ```
 
-If you're bootstrapping a brand-new project and want packs installed on first run, pass the flags through the piped curl install with `sh -s --` (flags after `--pack=` go to `setup.sh`, not `curl`):
+If you're bootstrapping a brand-new project and want packs installed on first run, use the `sh -c "$(curl ...)" -- --pack=<name>` form (the same pattern used by rustup/nvm/Homebrew installers). A plain pipe like `curl ... | sh --pack=mobile` cannot work — `sh` parses its own flags before it ever reads the piped script, so `--pack=mobile` is rejected as an unrecognized `sh` option, not passed through to `setup.sh`:
 ```sh
 cd /path/to/your/project
-curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh -s -- --pack=mobile
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh)" -- --pack=mobile
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh)" -- --pack=mobile --pack=api
 ```
 
 Pack agents and skills are symlinked into the project's `.claude/agents/` and `.claude/skills/` alongside the core resources. Each pack ships a `PACK.md` describing when to use it and what it adds.
