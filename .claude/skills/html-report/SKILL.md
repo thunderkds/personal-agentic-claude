@@ -95,7 +95,7 @@ Slot reference:
 | `{{EFFORT_SCORE}}` | Integer 0–100 |
 | `{{FINDINGS_ROWS}}` | All `<tr>` blocks concatenated |
 | `{{SUMMARY_PROSE}}` | The skill's narrative summary, plain text |
-| `{{MODEL}}` | `claude-sonnet-4-6` (or the model in use) |
+| `{{MODEL}}` | `claude-sonnet-5` (or the model in use) |
 | `{{TASK_ID}}` | task value from args, or `—` |
 | `{{TIMESTAMP}}` | ISO-8601 datetime, e.g. `2026-06-18T14:30:22` |
 

@@ -38,7 +38,7 @@ If any file is missing, **stop and notify the Supervisor**.
 
 ## LLM engineering checklist
 
-- **Model pinning**: use a pinned model ID (e.g. `claude-sonnet-4-6`, not an alias like `claude-latest`)
+- **Model pinning**: use a pinned model ID (e.g. `claude-sonnet-5`, not an alias like `claude-latest`)
   — model upgrades are explicit, not silent
 - **Token budget**: track input + output tokens per call; stay within the task's declared cost budget;
   use caching (`cache_control`) for static context blocks
