@@ -30,6 +30,8 @@
 - [learn skill: Learning Record System](decisions.md) — LR files in memory/learning-records/; supersession archive; skill promotion on ≥2 LRs with user approval; closes passive-memory gap
 - [teach + write-better-skill: two-skill craft system](decisions.md) — teach auto-fires on skill-writing requests → emits draft SKILL.md; write-better-skill is the consulted craft reference (mattpocock port)
 - [wake skill: mandatory cold-start briefing](decisions.md) — reads git/KANBAN/MEMORY/LRs live; ≤50-line output; hard gate before first Supervisor response each session
+- [Code Naming Conventions in CLAUDE.md](decisions.md) — code-level only (funcs=verbs, classes=nouns, tests, DB, env vars, etc.); enforced at Stage 4 code-review; branch docs/code-naming-conventions
+- [Deterministic guardrail hooks](decisions.md) — step-limit + event-trace + trace-verified merge gate; context-compaction/auth ideas rejected as N/A; branch feat/deterministic-guardrails-hooks
 
 ### Patterns & Gotchas
 - [Agent files must not tell sub-agents to write memory](learnings.md) — backend/frontend/qa.md + CLAUDE_LEGACY.md had "Update MEMORY.md" — fixed to "flag to Supervisor"; watch for this on every sync
