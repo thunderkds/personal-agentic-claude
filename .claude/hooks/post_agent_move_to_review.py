@@ -13,6 +13,7 @@ from datetime import date
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 KANBAN = os.path.join(ROOT, "PROJECT_KANBAN.md")
+STATE_DIR = os.path.join(ROOT, ".claude", "hooks", ".state")
 
 def main():
     try:
@@ -69,6 +70,12 @@ def main():
         )
         changed = True
         print(f"[hook:post_agent] Moved {task_ref} → Ready for Review", file=sys.stderr)
+
+        # Reset the step-limit counter now that the task reached a gate —
+        # a fresh review/rework cycle starts its own budget.
+        counter_path = os.path.join(STATE_DIR, f"step_count_{task_ref}.txt")
+        if os.path.exists(counter_path):
+            os.remove(counter_path)
 
     if changed:
         today = date.today().isoformat()

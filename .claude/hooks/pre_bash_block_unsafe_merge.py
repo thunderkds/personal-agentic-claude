@@ -17,12 +17,41 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 KANBAN = os.path.join(ROOT, "PROJECT_KANBAN.md")
 TASKS_DIR = os.path.join(ROOT, "tasks")
+TRACE_DIR = os.path.join(ROOT, "memory", "event-trace")
 
 BLOCKED_PATTERNS = [
     r"\bgit\s+push\b",
     r"\bgit\s+merge\b",
     r"\bgit\s+rebase\b",
 ]
+
+TEST_COMMAND_PATTERN = re.compile(
+    r"\b(pytest|npm\s+test|npm\s+run\s+test|yarn\s+test|jest|go\s+test|cargo\s+test|verify)\b",
+    re.IGNORECASE,
+)
+
+
+def trace_shows_verification(task_id):
+    """Check memory/event-trace/<task>.jsonl for a real, non-error tool call
+    that ran tests/verification — not just text in the task guide claiming
+    it passed. Missing/empty trace = not verified (fail closed)."""
+    trace_path = os.path.join(TRACE_DIR, f"{task_id}.jsonl")
+    if not os.path.exists(trace_path):
+        return False
+    try:
+        with open(trace_path) as f:
+            for line in f:
+                try:
+                    record = json.loads(line)
+                except Exception:
+                    continue
+                if record.get("is_error"):
+                    continue
+                if TEST_COMMAND_PATTERN.search(record.get("summary", "")):
+                    return True
+    except Exception:
+        return False
+    return False
 
 def main():
     try:
@@ -69,9 +98,15 @@ def main():
             try:
                 with open(guide_path) as f:
                     guide = f.read()
-                # Look for a filled verify row in the Evidence table
-                if not re.search(r"verify\s*\|[^|\n]+\|[^|\n]*pass", guide, re.IGNORECASE):
-                    unverified.append(tid)
+                # Look for a filled verify row in the Evidence table AND a
+                # matching real tool call in the event trace — the text claim
+                # alone is not trusted (the model can lie about success).
+                has_evidence_row = re.search(r"verify\s*\|[^|\n]+\|[^|\n]*pass", guide, re.IGNORECASE)
+                has_trace = trace_shows_verification(tid)
+                if not has_evidence_row or not has_trace:
+                    unverified.append(tid if has_evidence_row else f"{tid} (no evidence row)")
+                    if has_evidence_row and not has_trace:
+                        unverified[-1] = f"{tid} (evidence row present but no verified tool call in memory/event-trace/{tid}.jsonl)"
             except FileNotFoundError:
                 unverified.append(tid)
 
