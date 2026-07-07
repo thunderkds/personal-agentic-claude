@@ -29,6 +29,8 @@ Stage 5: Verify end-to-end → merge → ship
 2. **Right implementation** — built test-first, touches only predicted files
 3. **Evaluation** — evidence table filled, smoke suite green, reviewer signs off
 
+**Cross-task dependencies & reachability**: each `TASK_GUIDE` also declares `Depends on: Txxx` (another task this one needs as a precondition) and `Entry point: [identifier]` (the literal route/button/caller that reaches this task's output, or `Standalone — N/A`). Both are checked automatically and non-blocking — `Depends on` at Agent-spawn time, `Entry point` at Stage 4 `code-review` — to catch silent precondition gaps and unreachable/dead-code features without adding a heavyweight dependency graph or a new Hard-Stop Gate.
+
 ---
 
 ## Repository layout
@@ -317,7 +319,7 @@ All skills live in `.claude/skills/<name>/SKILL.md` and are auto-discovered by C
 
 | Skill | When to use |
 |---|---|
-| `code-review` | Mandatory for every task (C1+). Project override of built-in: adds P0–P3 severity, 0/25/50/75/100 confidence anchors, cross-reviewer dedup + promotion, always-on + conditional reviewer personas, model tiering, and auto-applies safe P0/P1 fixes. |
+| `code-review` | Mandatory for every task (C1+). Project override of built-in: adds P0–P3 severity, 0/25/50/75/100 confidence anchors, cross-reviewer dedup + promotion, always-on + conditional reviewer personas, model tiering, auto-applies safe P0/P1 fixes, and runs an Entry-Point Reachability Check (Phase 0.5) that greps for a task's declared `Entry point` and raises a P2 finding if it's not found. |
 | `security-review` | Task Risk Level is Medium or High — independent of complexity. |
 | `blast-radius` | Risk Medium/High and task touches sensitive data (PII/PHI/credentials/payment): quantifies data-breach impact — inventory, exposure scoring, regulatory/financial estimate. |
 | `html-report` | After each Stage 4 review skill: render findings as a self-contained HTML report. Args: `skill=<name> task=<TASK_ID> branch=<branch>`. |
@@ -354,16 +356,20 @@ All skills live in `.claude/skills/<name>/SKILL.md` and are auto-discovered by C
 
 ## Pipeline Enforcement Hooks
 
-Six hooks enforce the pipeline automatically — no prompt reminders needed.
+Eight hooks enforce the pipeline automatically — no prompt reminders needed.
 
 | Hook | Event | What it does |
 |------|-------|--------------|
 | `post_write_register_task.py` | PostToolUse / Write | Writes a `TASK_GUIDE_Txxx.md` → auto-inserts task in `PROJECT_KANBAN.md` under Todo |
-| `pre_agent_validate_guide.py` | PreToolUse / Agent | **Blocks** agent spawn if matching `TASK_GUIDE` is missing |
-| `post_agent_move_to_review.py` | PostToolUse / Agent | Moves task `In Progress → Ready for Review` after agent finishes |
+| `pre_agent_validate_guide.py` | PreToolUse / Agent | **Blocks** agent spawn if matching `TASK_GUIDE` is missing. Also reads the target guide's `Depends on: Txxx` field and, if that task isn't `Done` yet on `PROJECT_KANBAN.md` (or doesn't exist), emits a **non-blocking** warning — advisory, never blocks the spawn |
+| `post_agent_move_to_review.py` | PostToolUse / Agent | Moves task `In Progress → Ready for Review` after agent finishes; also resets that task's step-limit counter |
+| `pre_agent_step_limit.py` | PreToolUse / all tools | Deterministic guardrail: counts tool calls per Task ID and **blocks** further calls past `CLAUDE_STEP_LIMIT` (default 40) — kills runaway loops instead of relying on the model to stop itself |
+| `post_tool_trace.py` | PostToolUse / all tools | Appends every tool call to `memory/event-trace/<task>.jsonl` (timestamp, tool, summary, error flag) — a ground-truth history for the Verify step, independent of the model's self-report |
 | `stop_review_reminder.py` | Stop | Prints Stage 4 review reminder for any `Ready for Review` tasks |
-| `pre_bash_block_unsafe_merge.py` | PreToolUse / Bash | **Blocks** `git push/merge/rebase` if tasks are In Progress or verify evidence is missing |
+| `pre_bash_block_unsafe_merge.py` | PreToolUse / Bash | **Blocks** `git push/merge/rebase` if tasks are In Progress, or if a Ready-for-Review task is missing a verify-evidence row **and** a matching real test/verify call in its event trace — fails closed if the trace is missing or empty |
 | `post_bash_memory_update.py` | PostToolUse / Bash | After `git push/merge/pull` — prompts Supervisor to run the diff-driven memory-update pass |
+
+**Advisory vs. blocking**: only `pre_agent_validate_guide.py` (missing TASK_GUIDE), `pre_agent_step_limit.py`, and `pre_bash_block_unsafe_merge.py` can actually block a tool call. The `Depends on` dependency check and the Stage 4 `code-review` entry-point reachability check (below) are deliberately advisory — they warn without blocking, so intentional parallel/stub work is never prevented.
 
 ---
 
