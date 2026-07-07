@@ -413,6 +413,7 @@ Use two files:
 - Generate **all** TASK_GUIDE_Txxx.md files (one for every task) using `templates/TASK_GUIDE_template.md`.
 - Save every file into the `tasks/` folder (e.g. `tasks/TASK_GUIDE_T001.md`).
 - In each TASK_GUIDE file, explicitly instruct the sub-agent to read the relevant guide from `.claude/agents/`.
+- Fill each guide's `## Dependencies & Reachability` section: `Depends on:` names another Task ID this one needs as a precondition (or `None`); `Entry point:` names the literal, grep-able identifier (route, button label, function/consumer name) that reaches this task's output, or `Standalone — N/A` with a one-line reason. This is **advisory, not a Hard-Stop Gate** — `Depends on` is checked (non-blocking warning) by `pre_agent_validate_guide.py` at spawn time; `Entry point` is checked (non-blocking finding) by `code-review` Phase 0.5. It is distinct from `PROJECT_KANBAN.md`'s `## Blocked` table, which remains a manual escape hatch for non-task blockers (external people/APIs/decisions) that can't be checked automatically.
 
 Ask the user to confirm the tasks/ folder has been populated.
 
@@ -454,7 +455,7 @@ For every task that reaches "Ready for Review":
    ```
    Skill({ skill: "code-review" })
    ```
-   Bound the review to the change's **blast radius** — its affected callers, dependents, and tests — rather than re-reading the whole repo. This keeps review focused and token-efficient (the affected set comes from `risk-hotspots.md`/`architecture.md` in legacy mode, or from the predicted files + judgment in greenfield).
+   Bound the review to the change's **blast radius** — its affected callers, dependents, and tests — rather than re-reading the whole repo. This keeps review focused and token-efficient (the affected set comes from `risk-hotspots.md`/`architecture.md` in legacy mode, or from the predicted files + judgment in greenfield). `code-review` also runs the Entry-Point Reachability Check (Phase 0.5) against the task's declared `Entry point:` field.
 
 2. **Security Review** (if task Risk Level is Medium or High):
    ```
