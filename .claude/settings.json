@@ -30,6 +30,16 @@
             "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/post_bash_memory_update.py"
           }
         ]
+      },
+      {
+        "description": "Advanced event tracing — append every tool call to memory/event-trace/<task>.jsonl",
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/post_tool_trace.py"
+          }
+        ]
       }
     ],
     "PreToolUse": [
@@ -50,6 +60,16 @@
           {
             "type": "command",
             "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pre_bash_block_unsafe_merge.py"
+          }
+        ]
+      },
+      {
+        "description": "Deterministic guardrail — kill a task's run after CLAUDE_STEP_LIMIT tool calls to prevent infinite loops / token waste",
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pre_agent_step_limit.py"
           }
         ]
       }
