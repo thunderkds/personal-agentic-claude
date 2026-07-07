@@ -78,6 +78,18 @@ Completion criterion: review scope listed; no file outside the diff + direct cal
 
 ---
 
+#### Phase 0.5 — Entry-Point Reachability Check
+
+Read the task's `TASK_GUIDE_Txxx.md` `## Dependencies & Reachability` section (added per the `Depends on` / `Entry point` convention in `PROJECT_SPEC.md` Glossary). If `Entry point:` is `Standalone — N/A`, skip this check. Otherwise:
+
+- Grep the diff (or repo, if the identifier is expected to live outside the changed files — e.g. a router config) for the literal `Entry point` string.
+- If found: no finding — the feature is reachable.
+- If not found: add a **P2 finding** ("declared entry point `[identifier]` not found — feature may be unreachable/dead code") to the findings set produced in Phase 1, same severity pipeline as any other finding. This is advisory, not a Hard-Stop Gate — it does not block Done on its own, but should be resolved or explicitly waived by the Supervisor before merge.
+
+Completion criterion: reachability check run (or explicitly skipped as N/A) and its result folded into the Phase 1 findings set.
+
+---
+
 #### Phase 1 — Run Always-On Reviewers
 
 For each always-on persona: read the scoped files, produce findings with severity + confidence + one-line action. Return findings as a structured list — do not apply changes yet.
