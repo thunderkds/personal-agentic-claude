@@ -37,6 +37,24 @@ def find_kanban_section(task_ref):
     return None
 
 
+def extract_structural_task_ids(prompt):
+    """Extract task IDs that are *structurally* referenced in the spawn
+    prompt — i.e. this spawn is genuinely about that task — as opposed to
+    a bare Txxx substring appearing anywhere in pasted prose (e.g. a
+    decision-log sentence from memory/MEMORY.md). Two structural markers
+    are recognized:
+      1. A literal TASK_GUIDE_Txxx.md file-path reference.
+      2. An explicit "Task ID:" declaration line (with or without the
+         "**...**" markdown-bold wrapper).
+    Free-text mentions like "confirmed T013/T014 have no guide" or
+    "T019: reconciled ..." are intentionally NOT matched.
+    """
+    ids = set()
+    ids.update(re.findall(r"TASK_GUIDE_T(\d+)(?:_[A-Z0-9_]+)?\.md", prompt, re.IGNORECASE))
+    ids.update(re.findall(r"(?:\*\*Task ID\*\*|Task ID)\s*:\s*T(\d+)\b", prompt, re.IGNORECASE))
+    return sorted(ids)
+
+
 def check_dependency_warnings(task_ids):
     """For each spawned task, read its guide's `Depends on:` field and
     return a list of non-blocking warning strings."""
@@ -90,7 +108,7 @@ def main():
 
     prompt = event.get("tool_input", {}).get("prompt", "")
 
-    task_ids = re.findall(r"\bT(\d+)\b", prompt, re.IGNORECASE)
+    task_ids = extract_structural_task_ids(prompt)
     if not task_ids:
         # No task ID in prompt — allow through; Supervisor will handle
         sys.exit(0)
@@ -127,4 +145,5 @@ def main():
             }
         }))
 
-main()
+if __name__ == "__main__":
+    main()

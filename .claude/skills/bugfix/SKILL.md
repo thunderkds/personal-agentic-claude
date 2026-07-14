@@ -123,18 +123,11 @@ Completion criterion: TASK_GUIDE exists on disk with the confirmed mental model 
 
 ### Step 4 — Spawn sub-agent with diagnose wired in
 
-Tell the user the exact command to spawn the sub-agent in a worktree. Set model by Complexity (C0→haiku, C1→sonnet, C2→sonnet, C3→opus).
-
-Spawn prompt must include:
-1. Pointer to `tasks/TASK_GUIDE_Txxx.md`
-2. The confirmed mental model verbatim (so the sub-agent starts oriented, not blank)
-3. Instruction to invoke `Skill({ skill: "diagnose" })` as the first action
-4. Full contents of `memory/MEMORY.md` verbatim (hot-tier injection)
-5. Pointer to the relevant agent guide in `.claude/agents/`
+Invoke `Skill({ skill: "craft-spawn-prompt" })` with the task's guide path, passing "must invoke `Skill({ skill: "diagnose" })` as the first action" as the required first-action input — the skill detects this guide's Mental Model section, assembles the bugfix-flavored prompt (guide pointer, confirmed mental model verbatim, the diagnose first-action instruction, `memory/MEMORY.md` verbatim, agent-guide pointer), pre-flight-checks it, and recommends the spawn model. Issue the `Agent()` call in a worktree using its output.
 
 The sub-agent must not write any fix code before all Diagnosis Gates in the TASK_GUIDE are checked. If the sub-agent's diagnosis contradicts the confirmed mental model, it must stop and report back to the Supervisor before continuing.
 
-Completion criterion: spawn command given with all five prompt elements; mental model is in the prompt, not just the TASK_GUIDE pointer.
+Completion criterion: `craft-spawn-prompt` output pasted into a live `Agent()` call; mental model is in the prompt, not just the TASK_GUIDE pointer.
 
 ---
 

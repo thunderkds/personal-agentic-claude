@@ -70,6 +70,7 @@ The `subagent_type` is the agent's `name:` field (not the filename). Because Cla
 | `compound-refresh` | `.claude/skills/compound-refresh/SKILL.md` | On-demand: audit `docs/solutions/` against the live codebase; classify each doc Keep/Update/Consolidate/Replace/Delete; fix drift; flag ambiguous cases for human review. |
 | `optimize` | `.claude/skills/optimize/SKILL.md` | Stage 3/5 (optional): metric-driven iterative optimization — define baseline, generate hypotheses, run experiments, converge on best result. Use only when a concrete measurable target exists. |
 | `code-review` | `.claude/skills/code-review/SKILL.md` | Stage 4: structured multi-reviewer review with P0–P3 severity, confidence anchors, cross-reviewer dedup + promotion, conditional personas, and model tiering. Project override of built-in. |
+| `craft-spawn-prompt` | `.claude/skills/craft-spawn-prompt/SKILL.md` | Stage 3 (and `bugfix` Step 4): assemble a sub-agent spawn prompt from a TASK_GUIDE — auto-detects standard vs. bugfix-flavored shape, pre-flight-checks it against the spawn hook, recommends the model. Outputs a prompt block; never calls `Agent` itself. |
 
 > **Naming note:** the `blast-radius` skill above is about **data-breach** impact (PII/PHI, regulatory cost). It is distinct from the *code-dependency* "blast radius" referenced in Risk assignment and review scoping below (which files a change affects). Don't conflate the two.
 
@@ -437,7 +438,7 @@ For every task moved to In Progress:
 - **Pillar 1 gate (before any code):** the spawned agent must confirm the **Requirement Fidelity Gate** in its `TASK_GUIDE_Txxx.md` is checked — restated intent matches the request, terms align with the glossary, and every Acceptance Criterion traces to the requirement. If not, the agent STOPs and asks the Supervisor instead of guessing.
 - **Pillar 2 (implementation):** build the slice test-first (`tdd`), touching only the predicted files. If the slice adds or changes a **DB schema/migration**, run `Skill({ skill: "migration-safety" })` and pass its go/no-go gate **before** the implementation gate goes green.
 - The TASK_GUIDE_Txxx.md already exists in tasks/ — no need to regenerate it.
-- Tell the user the exact command to spawn the assigned sub-agent in that worktree. Set the spawn model to match the task's **Complexity** (C0→haiku, C1→sonnet, C2→sonnet/opus, C3→opus).
+- Invoke `Skill({ skill: "craft-spawn-prompt" })` with the task's guide path first — it assembles the spawn prompt, pre-flight-checks it against the spawn hook, and recommends the model per the task's **Complexity** (C0→haiku, C1→sonnet, C2→sonnet/opus, C3→opus). Then issue the `Agent()` call in that worktree using its output.
 - The sub-agent must read both its TASK_GUIDE_Txxx.md (from tasks/) and the relevant agent guide from .claude/agents/.
 - **Memory injection**: Always paste the full contents of `memory/MEMORY.md` verbatim into every sub-agent spawn prompt, after the task pointer. This is the hot-tier memory index (≤200 lines) — the agent must not re-read it; it is already in context.
 
