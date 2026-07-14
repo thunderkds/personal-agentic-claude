@@ -43,10 +43,10 @@ def main():
         sys.exit(0)
 
     def extract(pattern, default="?"):
-        m = re.search(pattern, guide, re.IGNORECASE)
+        m = re.search(pattern, guide, re.IGNORECASE | re.MULTILINE)
         return m.group(1).strip() if m else default
 
-    title    = extract(r"^#\s+TASK_GUIDE[_\s]+T\d+[:\s—-]+(.+)$", "untitled")
+    title    = extract(r"^#\s+TASK_GUIDE[_\s—-]+T\d+[:\s—-]+(.+)$", "untitled")
     agent    = extract(r"(?:Assigned Agent|Agent)[:\s]+([a-z\-]+)", "backend-developer")
     cx       = extract(r"Complexity[:\s]+(C[0-3])", "C1")
     risk     = extract(r"Risk[:\s]+(Low|Med(?:ium)?|High)", "Low")

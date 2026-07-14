@@ -1,19 +1,9 @@
 # ============================================================
-# Section 1: Project-specific files (never commit to this repo)
+# Section 1: Project-specific files
 # ============================================================
-# Generated per-project at Stage 2 — not part of the framework
-tasks/*
-!tasks/.gitkeep
-
-# Per-project memory contents
-memory/*
-!memory/.gitkeep
-
-# Per-project planning & design documents
-PRD.md
-PROJECT_SPEC.md
-PROJECT_KANBAN.md
-BRAINSTORMING_LOG.md
+# This repo is used as a live dogfood instance, so per-project
+# task guides, memory contents, and planning docs are tracked
+# in git (not treated as framework-distribution-only content).
 
 # Scratchpad
 task.txt

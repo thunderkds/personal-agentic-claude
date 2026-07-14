@@ -33,6 +33,7 @@
 - [Code Naming Conventions in CLAUDE.md](decisions.md) — code-level only (funcs=verbs, classes=nouns, tests, DB, env vars, etc.); enforced at Stage 4 code-review; branch docs/code-naming-conventions
 - [Deterministic guardrail hooks](decisions.md) — step-limit + event-trace + trace-verified merge gate; context-compaction/auth ideas rejected as N/A; branch feat/deterministic-guardrails-hooks
 - [T017: Depends on / Entry point advisory tracking](decisions.md) — TASK_GUIDE dependency+reachability fields; non-blocking warnings at spawn (hook) and review (code-review P2); not a Hard-Stop Gate; merged via feat/task-dependency-tracking
+- [T018/T019/T020: Kanban regex + reconciliation + live-instance gitignore](decisions.md) — extract() needed re.MULTILINE, not just wider char class (caught by code-review, not by unit tests); Kanban T005-T012 re-synced, T013/T014 removed; .gitignore stops ignoring tracked live-instance files
 
 ### Patterns & Gotchas
 - [Agent files must not tell sub-agents to write memory](learnings.md) — backend/frontend/qa.md + CLAUDE_LEGACY.md had "Update MEMORY.md" — fixed to "flag to Supervisor"; watch for this on every sync
