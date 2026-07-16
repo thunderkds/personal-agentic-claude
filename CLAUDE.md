@@ -71,6 +71,7 @@ The `subagent_type` is the agent's `name:` field (not the filename). Because Cla
 | `optimize` | `.claude/skills/optimize/SKILL.md` | Stage 3/5 (optional): metric-driven iterative optimization — define baseline, generate hypotheses, run experiments, converge on best result. Use only when a concrete measurable target exists. |
 | `code-review` | `.claude/skills/code-review/SKILL.md` | Stage 4: structured multi-reviewer review with P0–P3 severity, confidence anchors, cross-reviewer dedup + promotion, conditional personas, and model tiering. Project override of built-in. |
 | `craft-spawn-prompt` | `.claude/skills/craft-spawn-prompt/SKILL.md` | Stage 3 (and `bugfix` Step 4): assemble a sub-agent spawn prompt from a TASK_GUIDE — auto-detects standard vs. bugfix-flavored shape, pre-flight-checks it against the spawn hook, recommends the model. Outputs a prompt block; never calls `Agent` itself. |
+| `craft-agent` | `.claude/skills/craft-agent/SKILL.md` | Stage 1.5 (optional, conditional only): when the requirement implies a role beyond the base team, drafts the whole supplemental roster in one call — fenced Agent Draft blocks + Registration checklist. Never writes `.claude/agents/*.md` directly. Also user-invokable as `/craft-agent`. |
 
 > **Naming note:** the `blast-radius` skill above is about **data-breach** impact (PII/PHI, regulatory cost). It is distinct from the *code-dependency* "blast radius" referenced in Risk assignment and review scoping below (which files a change affects). Don't conflate the two.
 
@@ -377,7 +378,8 @@ After all items are confirmed:
 Using the locked Project Context Document:
 - Reference the **General Agent Template** (`.claude/agents/general-agent-template.md`).
 - Reference the files in the `.claude/agents/` folder.
-- Design the exact sub-agent team needed. Always include **Common-Infrastructure-Agent**, **Backend-Implementer**, **Frontend-Implementer**, and **QA-Automation-Agent** as the default core team for greenfield projects.
+- Design the exact sub-agent team needed. Always include **Common-Infrastructure-Agent**, **Backend-Implementer**, **Frontend-Implementer**, and **QA-Automation-Agent** as the base team for greenfield projects — unconditional and never gated by any skill.
+- If, and only if, the requirement implies a role the base team doesn't cover (e.g. a mobile/data/ML-specific agent), invoke `Skill({ skill: "craft-agent" })` to draft the supplemental roster. This is optional and conditional — do not invoke it as a required step on every pass; skip it entirely when the base team already covers the requirement.
 - For each sub-agent, clearly state:
   - Name
   - Role and responsibilities
