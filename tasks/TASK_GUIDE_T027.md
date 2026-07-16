@@ -90,10 +90,10 @@ grep -n "DDR" CLAUDE.md
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | No automated test suite exists in this doc/skill-framework repo (confirmed precedent: T018, T023, T025). Evidence = manual dry-run walkthroughs pasted below. |
-| verify | ☐ pass / ☐ fail | [paste actual output — Check cell must read exactly "verify" per the T025 gotcha in memory/learnings.md, or the merge gate will block] |
-| Negative cases hold | ☐ pass / ☐ fail | (0-1 criteria case routes to decisions.md-only, not DDR) |
-| Review scope bounded to the change's blast radius | ☐ pass / ☐ fail | Scope: `templates/DDR_template.md` (new), `.claude/skills/grill-with-docs/SKILL.md` (1 section), `CLAUDE.md` (2 edits) |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | No automated test suite exists in this doc/skill-framework repo (confirmed precedent: T018, T023, T025). Substitute evidence = `templates/DDR_template.md` diffed against `templates/ADR_template.md` by the Supervisor directly (not self-graded by the implementing agent): identical section order/headings (Context/Decision/Alternatives Considered/Consequences), differing only in gate (2-of-3 vs 3-of-3), path (`docs/ddr/` vs `docs/adr/`), and prefix terminology. `.claude/skills/grill-with-docs/SKILL.md` lines 46-49 confirmed to contain the DDR-gate-first / ADR-escalation-flag / 0-1-criteria decisions.md-only branches. |
+| verify | ☑ pass | `T027 Stage 5 verify: re-running exact TASK_GUIDE_T027.md verification command` → `DDR template exists` → `gate wording present` → `grill-with-docs wired` → `CLAUDE.md wired` → `T027 verify: PASS`. Re-run by Supervisor against the worktree post Stage-4 fix (commit c105420). Recorded in `memory/event-trace/T027.jsonl`. |
+| Negative cases hold | ☑ pass | `grill-with-docs` SKILL.md:48 confirmed present: "If fewer than two of the three criteria hold, skip both DDR and ADR — note the decision in memory/decisions.md only" |
+| Review scope bounded to the change's blast radius | ☑ pass | Scope: `templates/DDR_template.md` (new), `.claude/skills/grill-with-docs/SKILL.md` (1 section + 1 review-fix line), `CLAUDE.md` (2 edits). `git diff main --stat` on `feat/ddr-decision-record` confirms no other files touched. |
 | Full smoke suite still green (no regression) | ☐ N/A | No smoke suite in this repo |
 | UI rows | ☐ N/A | Not a UI task — no UI/Design AC section below |
 
