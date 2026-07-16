@@ -86,13 +86,13 @@ grep -n "base team\|Base team" CLAUDE.md
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | No automated test suite exists in this doc/skill-framework repo (confirmed precedent: T018, T023). Evidence = manual dry-run walkthroughs pasted below, per those tasks' established substitute. |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | (missing PROJECT_SPEC.md case, duplicate-role case) |
-| `verify` skill — works in running app | ☐ N/A | No running app — this is a Skill/CLAUDE.md doc change, not runtime product code |
-| Review scope bounded to the change's blast radius | ☐ pass / ☐ fail | Scope: `.claude/skills/craft-agent/SKILL.md` (new), `CLAUDE.md` (2 edits), `memory/MEMORY.md` (1 line, post-merge) |
-| Full smoke suite still green (no regression) | ☐ N/A | No smoke suite in this repo |
-| UI rows | ☐ N/A | Not a UI task — no UI/Design AC section below |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | No automated test suite exists in this doc/skill-framework repo (confirmed precedent: T018, T023). Substitute evidence = `.claude/skills/craft-agent/SKILL.md` grepped by the Supervisor directly (not self-graded by the implementing agent), confirming all 4 workflow branches from the Test Plan exist in the shipped text: `grep -n "Require.*PROJECT_SPEC" .../SKILL.md` → line 21 "Require PROJECT_SPEC.md (or PRD.md) to exist and be locked. If missing or not locked, refuse..."; `grep -n "collision" .../SKILL.md` → line 27 "flag the collision explicitly (never silently overwrite)"; `grep -n "no supplemental role needed" .../SKILL.md` → line 28 "If the requirement only needs base-team roles, report 'no supplemental role needed' and stop." |
+| Verification command run | ☑ pass | `test -f .claude/skills/craft-agent/SKILL.md && echo "skill file exists"` → `skill file exists`; `grep -n "craft-agent" CLAUDE.md` → 2 matches (lines 74, 382); `grep -n "base team\|Base team" CLAUDE.md` → 3 matches (lines 74, 381, 382), re-run by Supervisor after Stage 4 P1/P2 fixes landed (commit b787c5d) |
+| Negative cases hold | ☑ pass | Missing-PROJECT_SPEC.md refusal (SKILL.md:21) and collision-flagging (SKILL.md:27) both present in shipped instructions, confirmed above |
+| `verify` skill — works in running app | ☑ N/A | No running app — this is a Skill/CLAUDE.md doc change, not runtime product code |
+| Review scope bounded to the change's blast radius | ☑ pass | Scope: `.claude/skills/craft-agent/SKILL.md` (new), `CLAUDE.md` (2 edits + 2 review-fix edits). `git diff main --stat` on `feat/craft-agent-skill`: 2 files changed, 77 insertions(+), 1 deletion(-) |
+| Full smoke suite still green (no regression) | ☑ N/A | No smoke suite in this repo |
+| UI rows | ☑ N/A | Not a UI task — no UI/Design AC section below |
 
 ---
 
