@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-07-16 — Brainstorming + grill-with-docs locked design for T025: `craft-agent` skill (optional, supplemental agent-drafting, whole-team mode, draft-only) + Stage 1.5 wiring (base team unconditional, craft-agent conditional).
+**Last updated**: 2026-07-16 — T025 done: craft-agent skill (optional, supplemental agent-drafting) merged to main. Flagged T026 (TASK_GUIDE_template.md verify-row gate mismatch, discovered live blocking T025's merge) as follow-up.
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -8,6 +8,7 @@
 ## Board
 
 ### Todo
+- [ ] **T026** — Fix TASK_GUIDE_template.md example `verify` Evidence row to match pre_bash_block_unsafe_merge.py's gate regex | backend-developer | C0 | Risk: Low | P1
 - [ ] **T024** — Fix post_write_register_task.py agent-field regex (matches "Agent guide" before "Assigned agent") | backend-developer | C0 | Risk: Low | P2
 - [ ] **T012** — Registration — CLAUDE.md + MEMORY.md + README | common-infrastructure | C0 | Risk: Low | P1
 - [ ] **T011** — Core `wake` SKILL.md — live 4-section cold-start briefing | backend-developer | C2 | Risk: Low | P0
@@ -21,11 +22,11 @@
 - [ ] **T004** — .gitignore + repo hygiene | backend-developer | C0 | Risk: Low | P2
 
 ### In Progress
-- [ ] **T025** — craft-agent skill (optional, supplemental agent-drafting) + Stage 1.5 wiring | backend-developer | C2 | Risk: Low | P1
 
 ### Ready for Review
 
 ### Done
+- [x] **T025** — craft-agent skill (optional, supplemental agent-drafting) + Stage 1.5 wiring | C2 | Completed: 2026-07-16
 - [x] **T001** — setup.sh + MANIFEST | C1 | Completed: 2026-06-10
 - [x] **T002** — update.sh | C1 | Completed: 2026-06-10
 - [x] **T003** — README.md | C0 | Completed: 2026-06-10
