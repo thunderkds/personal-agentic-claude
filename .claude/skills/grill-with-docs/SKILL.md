@@ -43,12 +43,15 @@ This skill operates in two modes. The active mode is passed via `args: "mode=<mo
 ### Where decisions land (adapted to this framework)
 This project's single source of truth is `PROJECT_SPEC.md` — do **not** introduce a separate `CONTEXT.md`. Instead:
 - **Glossary / sharpened terms** → update the relevant section of `PROJECT_SPEC.md` inline as each term resolves (keep it a glossary, free of implementation detail).
-- **Architecture Decision Records** → offer an ADR in `docs/adr/NNNN-title.md` **only** when all three hold: (1) hard to reverse, (2) surprising without context, (3) the result of a genuine trade-off. If any is missing, skip the ADR and note the decision in `PROJECT_SPEC.md` Memory/Insights instead.
+- **Design decisions** → for every real design decision, check the **DDR gate first** (`templates/DDR_template.md`): offer a DDR at `docs/ddr/NNNN-title.md` when **at least two of three** hold — (1) hard to reverse, (2) surprising without context, (3) the result of a genuine trade-off.
+  - If the decision **also clears all three ADR criteria**, flag it **ADR-eligible** and ask the user whether to escalate to a full ADR (`templates/ADR_template.md`, `docs/adr/NNNN-title.md`) instead — a DDR is **never silently auto-upgraded** to an ADR.
+  - If **fewer than two** of the three criteria hold, skip both DDR and ADR — note the decision in `memory/decisions.md` only.
+  - Whichever tier is written, the corresponding `memory/decisions.md` entry gains a `→ see DDR-NNNN` / `→ see ADR-NNNN` pointer.
 
 Capture as you go — don't batch.
 
 ### Output
-A plan with sharpened terminology, resolved dependencies, updated `PROJECT_SPEC.md`, and (sparingly) ADRs — ready for Stage 2 task breakdown via `to-issues`.
+A plan with sharpened terminology, resolved dependencies, updated `PROJECT_SPEC.md`, and (sparingly) DDRs/ADRs — ready for Stage 2 task breakdown via `to-issues`.
 
 ### Communication Protocol
-- **Default Notification**: "Grilling complete. N terms sharpened, M dependencies resolved, K ADRs recorded. Plan ready for `to-issues` breakdown."
+- **Default Notification**: "Grilling complete. N terms sharpened, M dependencies resolved, K DDRs/L ADRs recorded. Plan ready for `to-issues` breakdown."
