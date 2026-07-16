@@ -36,6 +36,7 @@
 - [T018/T019/T020: Kanban regex + reconciliation + live-instance gitignore](decisions.md) — extract() needed re.MULTILINE, not just wider char class (caught by code-review, not by unit tests); Kanban T005-T012 re-synced, task 013/task 014 removed; .gitignore stops ignoring tracked live-instance files
 - [T021/T022/T023: craft-spawn-prompt skill + hardened spawn-hook](decisions.md) — new skill assembles spawn prompts (standard vs bugfix-flavored); pre_agent_validate_guide.py now matches structural Txxx refs only, not bare prose; closes MEMORY.md-paste landmine at the root; T024 follow-up flagged (post_write_register_task.py agent-field regex)
 - [T025: craft-agent skill (optional, supplemental)](decisions.md) — teach-style drafter for .claude/agents/*.md, whole-team mode, draft-only; base team stays unconditional, craft-agent fires only for uncovered roles (user correction mid-session); glossary gained Base team/Agent Draft; T026 follow-up flagged (template verify-row gate mismatch)
+- [T027: DDR (Design Decision Record)](decisions.md) — new default decision artifact (2-of-3 gate, docs/ddr/NNNN-title.md), ADR now the rare 3-of-3 escalation; grill-with-docs checks DDR first, flags ADR-eligible rather than auto-upgrading; glossary gained DDR/ADR/decisions.md-entry; near-miss merging an incomplete worktree — see gotcha below
 
 ### Patterns & Gotchas
 - [Agent files must not tell sub-agents to write memory](learnings.md) — backend/frontend/qa.md + CLAUDE_LEGACY.md had "Update MEMORY.md" — fixed to "flag to Supervisor"; watch for this on every sync
@@ -44,6 +45,7 @@
 - [html-report scoring rubric](learnings.md) — Risk 0–30=green, 31–65=yellow, 66–100=red; all dimension slots are bare integers (no `%`)
 - [{{RISK_SCORE}} must be bare integer](learnings.md) — no `%` in slot value; `%` is hardcoded in template HTML and CSS width attribute
 - [verify Evidence-row gate regex](learnings.md) — Check cell must be exactly `verify` immediately before the `|`; TASK_GUIDE_template.md's own example text doesn't match (T026 follow-up flagged); gate also cross-checks memory/event-trace/<task>.jsonl for a real non-error command, not just a text claim
+- [Sub-agent "changed" ≠ committed](learnings.md) — always `git status --short` the worktree and check `git diff <base> --stat` against the TASK_GUIDE's predicted files before trusting a merge; a merge command succeeding is not proof it merged everything (T027 near-miss)
 
 ### Patterns & Gotchas (thinking-report)
 - [col-chosen on both th and td](learnings.md) — must apply to header AND body cells in chosen column; omitting on td leaves body unstyled
