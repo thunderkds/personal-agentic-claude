@@ -41,6 +41,9 @@ The supervisor repo (`per-agentic-claude`) is a general framework. A `MANIFEST` 
 | Report Session | One invocation of a Stage 4 skill; produces one report file named `reports/<skill>_<branch>_<ISO-timestamp>.html` |
 | Depends on | A TASK_GUIDE field declaring a task-to-task precondition (`Depends on: Txxx — [artifact]`). Verified automatically at spawn time by `pre_agent_validate_guide.py` (warns if the referenced task isn't Done). Distinct from `## Blocked` on `PROJECT_KANBAN.md`, which stays a manual escape hatch for non-task blockers (external people/APIs/decisions) the hook cannot verify. |
 | Entry point | A TASK_GUIDE field declaring the literal, grep-able identifier (route path, button label, function/consumer name) that reaches a task's output (`Entry point: [identifier]` or `Standalone — N/A` with a one-line reason). Checked at Stage 4 review to catch unreachable/dead-code features. Canonical term — do not use "Reachable via" as a synonym. |
+| Base team | The 4 agents every project starts with unconditionally: Common-Infrastructure-Agent, Backend-Implementer, Frontend-Implementer, QA-Automation-Agent (`.claude/agents/*.md`). Canonical term — supersedes CLAUDE.md Stage 1.5's prior "default core team" wording (same concept, renamed for consistency). |
+| Agent Draft | The fenced `.claude/agents/<name>.md` block emitted by `craft-agent` for a role beyond the base team. Not written to disk automatically — user/Supervisor saves it, then follows a Registration checklist (mirrors the `teach` skill's SKILL.md draft lifecycle: drafted → saved → registered). |
+| craft-agent | Optional, supplemental skill — invoked only when a project's requirement implies a role the base team doesn't cover. Never a required Stage 1.5 step; the base team is always the starting point. |
 
 ---
 

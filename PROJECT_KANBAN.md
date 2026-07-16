@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-07-14 — T021/T022/T023 done: cleaned dangling memory refs, hardened spawn-hook task-ID extraction (structural markers only, not bare prose), added craft-spawn-prompt skill wired into Stage 3 + bugfix Step 4. Flagged T024 (post_write_register_task.py agent-field regex bug) as follow-up.
+**Last updated**: 2026-07-16 — Brainstorming + grill-with-docs locked design for T025: `craft-agent` skill (optional, supplemental agent-drafting, whole-team mode, draft-only) + Stage 1.5 wiring (base team unconditional, craft-agent conditional).
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -21,6 +21,7 @@
 - [ ] **T004** — .gitignore + repo hygiene | backend-developer | C0 | Risk: Low | P2
 
 ### In Progress
+- [ ] **T025** — craft-agent skill (optional, supplemental agent-drafting) + Stage 1.5 wiring | backend-developer | C2 | Risk: Low | P1
 
 ### Ready for Review
 
