@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-07-16 — T025 done: craft-agent skill (optional, supplemental agent-drafting) merged to main. Flagged T026 (TASK_GUIDE_template.md verify-row gate mismatch, discovered live blocking T025's merge) as follow-up.
+**Last updated**: 2026-07-16 — Brainstorming + grill-with-docs locked design for T027: DDR (Design Decision Record) as default decision artifact, ADR as rare escalation.
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -8,6 +8,7 @@
 ## Board
 
 ### Todo
+- [ ] **T027** — DDR (Design Decision Record) — default decision artifact, ADR as rare escalation | backend-developer | C1 | Risk: Low | P1
 - [ ] **T026** — Fix TASK_GUIDE_template.md example `verify` Evidence row to match pre_bash_block_unsafe_merge.py's gate regex | backend-developer | C0 | Risk: Low | P1
 - [ ] **T024** — Fix post_write_register_task.py agent-field regex (matches "Agent guide" before "Assigned agent") | backend-developer | C0 | Risk: Low | P2
 - [ ] **T012** — Registration — CLAUDE.md + MEMORY.md + README | common-infrastructure | C0 | Risk: Low | P1
