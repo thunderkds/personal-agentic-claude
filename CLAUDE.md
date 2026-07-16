@@ -132,6 +132,7 @@ The project root **must** contain these folders:
    - templates/BRAINSTORMING_LOG_template.md
    - templates/SKILL_template.md
    - templates/ADR_template.md
+   - templates/DDR_template.md
    - templates/RUNBOOK_template.md
    - templates/report_template.html
    - templates/thinking_report_template.html
@@ -240,8 +241,9 @@ Draw the line by **user-facing behavior**:
 - **Requirement** (what the user *experiences*) → resolve **now** via forced choice. *e.g. "log in
   with email or SSO?", "does it work offline?"* — the user can feel the difference.
 - **Implementation** (internal *mechanism* the user never sees) → **do NOT resolve here.** Defer to
-  Stage 0.5b brainstorming / an ADR. *e.g. "JWT or server-side sessions?", "REST or gRPC?"* —
-  forcing this now pre-empts divergent exploration.
+  Stage 0.5b brainstorming / a DDR (the default decision artifact; ADR is the rare escalation — see
+  `grill-with-docs`). *e.g. "JWT or server-side sessions?", "REST or gRPC?"* — forcing this now
+  pre-empts divergent exploration.
 
 **3. Resolve via forced choice (for material, bounded, requirement-level ambiguity).**
 Present 2–4 concrete interpretations using `AskUserQuestion`, observing:
