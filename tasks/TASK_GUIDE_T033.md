@@ -36,10 +36,10 @@ The current `update.sh` runs `git pull --ff-only` inside the central `~/.supervi
 
 ### Requirement Fidelity Gate (sign off BEFORE implementation)
 
-- [ ] Restated intent confirmed to match ADR-0001's `update.sh` bullet
-- [ ] Domain terms align with `PROJECT_SPEC.md` glossary ("harness-lock.json")
-- [ ] Every Acceptance Criterion below traces to ADR-0001
-- [ ] Requirement Ref (ADR-0001) is fully covered by the Acceptance Criteria below
+- [x] Restated intent confirmed to match ADR-0001's `update.sh` bullet
+- [x] Domain terms align with `PROJECT_SPEC.md` glossary ("harness-lock.json")
+- [x] Every Acceptance Criterion below traces to ADR-0001
+- [x] Requirement Ref (ADR-0001) is fully covered by the Acceptance Criteria below
 
 > An agent must NOT start implementing until this gate is checked. If anything here is unclear, STOP and ask the Supervisor.
 
@@ -90,12 +90,12 @@ bash tests/test_update.sh
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| `verify` skill — works in running app | ☐ pass / ☐ fail | Run `setup.sh` then `update.sh` against a real scratch repo, edit one file, confirm the interactive prompt behaves as expected |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | New file `tests/test_update.sh` (22 assertions) covers all four Success-Criteria branches. `bash tests/test_update.sh` → `----- summary: 22 passed, 0 failed -----` (exit 0). AC map: T1 non-git refusal (AC#1); T2 symlink refuse+no-convert+no-writes (AC#2); T3 untouched silent overwrite + upstream propagation + lock re-record (AC#3, AC#5); T4 conflict prompt + [s]kip keeps edit & prior lock hash, per-file (AC#4, AC#5); T5 [o]verwrite restores upstream + updates lock hash (AC#4, AC#5); T6 no-input conflict refuses non-zero, file untouched (edge). AC#6 (no `$SUPERVISOR_PATH`) — `update.sh` never references it. |
+| Verification command run | ☑ pass | `bash tests/test_update.sh` → 22 passed, 0 failed, exit 0. Also `dash tests/test_update.sh` → 22 passed, 0 failed (POSIX portability). |
+| Negative cases hold | ☑ pass | Non-git dir (T1) rc=1 no writes; symlink at MANIFEST path (T2) rc=1, symlink NOT converted, lock untouched; conflict with no stdin (T6) rc=2, local edit preserved, "re-run interactively" emitted. |
+| `verify` skill — works in running app | ☑ pass | Manual e2e: real `setup.sh` install into a scratch git repo, edited `.claude/agents/backend.md`, ran `update.sh` interactively feeding `v` (re-view diff), `zzz` (invalid→re-prompt "Please enter o, s, or v."), then `s` → file kept local content `LOCAL`, other files silently overwritten. Prompt/diff legible. |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Only `update.sh` (full rewrite) + new `tests/test_update.sh`. `setup.sh`, `lib/harness-fetch.sh`, `packs/` untouched (`git status --short` = `M update.sh`, `?? tests/test_update.sh`). |
+| Full smoke suite still green (no regression) | ☑ pass | `bash tests/test_setup.sh` → 15 passed, 0 failed; `bash tests/test_harness_fetch.sh` → 9 passed, 0 failed; `bash tests/test_update.sh` → 22 passed, 0 failed. `sh -n`/`bash -n`/`dash -n update.sh` all clean (shellcheck absent in env — substituted per MEMORY.md gotcha). |
 | **UI: Visual regression** | N/A | Pure backend/tooling task — no UI component |
 | **UI: Design-system compliance** | N/A | Pure backend/tooling task — no UI component |
 | **UI: Responsiveness** | N/A | Pure backend/tooling task — no UI component |
@@ -144,11 +144,11 @@ Automated: scratch-repo tests covering all four branches in Success Criteria abo
 
 ## Completion Checklist
 
-- [ ] Implementation done
-- [ ] Self-review: `Skill({ skill: "code-review" })` run
-- [ ] Security review: `Skill({ skill: "security-review" })` run (Medium risk — mandatory)
-- [ ] Lint passes (`shellcheck update.sh`)
-- [ ] Tests written AND pass — output pasted into Evidence table (Hard-Stop Gate 5)
-- [ ] `Skill({ skill: "verify" })` run — feature confirmed working in a real scratch repo
-- [ ] `memory/MEMORY.md` updated (if new patterns or feedback learned)
-- [ ] Supervisor notified: task ready for Stage 4 review
+- [x] Implementation done
+- [ ] Self-review: `Skill({ skill: "code-review" })` run — Stage 4, Supervisor-run
+- [ ] Security review: `Skill({ skill: "security-review" })` run (Medium risk — mandatory) — Stage 4, Supervisor-run
+- [x] Lint passes — shellcheck absent in env (MEMORY.md gotcha); substituted `sh -n` + `bash -n` + `dash -n update.sh`, all clean
+- [x] Tests written AND pass — output pasted into Evidence table (Hard-Stop Gate 5)
+- [x] `verify` — manual e2e in a real scratch repo confirmed (o/s/v + invalid-input paths)
+- [ ] `memory/MEMORY.md` updated (if new patterns or feedback learned) — Supervisor-only write; flagged below
+- [x] Supervisor notified: task ready for Stage 4 review
