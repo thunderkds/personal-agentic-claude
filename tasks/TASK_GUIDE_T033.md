@@ -104,7 +104,9 @@ bash tests/test_update.sh
 
 ## Approach
 
-Reuse `lib/harness-fetch.sh` (T031) for the re-fetch step — identical to `setup.sh`'s own fetch call. For each `MANIFEST` path: compute the current on-disk hash, compare to `.claude/harness-lock.json`'s recorded value for that path (missing entry = treat as "never tracked," prompt same as a conflict, don't assume safe). On match: `cp -r` from the fresh temp fetch, update nothing else. On mismatch: `diff -u` (or equivalent) the working file against the freshly-fetched version, print it, prompt `[o]verwrite / [s]kip / [v]iew diff again`, loop on `v`, act on `o`/`s`. Symlink detection: before the hash-compare loop even starts, check every `MANIFEST` path with `[ -L "$path" ]` and abort the whole run with a migration-instruction message if any are found — don't process files one-by-one past that point (all-or-nothing at the top, not a per-file exception).
+Reuse `lib/harness-fetch.sh` (T031)'s `harness_fetch` for the re-fetch step only — **do not** use T031's `harness_copy_manifest` for the compare/update logic. Stage 4 review of T031 surfaced a real granularity gap: `harness_copy_manifest` operates at whole-`MANIFEST`-entry (directory) level, but conflict detection needs per-**file** hashing to catch a single customized file inside a directory like `.claude/agents/`. Resolution (confirmed with user): **T033 enumerates files itself** — after `harness_fetch` completes, `find` each `MANIFEST` directory entry for its individual files (both in the fresh temp clone and in the target repo), and hash-compare per file against `.claude/harness-lock.json`. `lib/harness-fetch.sh` is not modified for this — T031 stays as reviewed.
+
+For each individual file under each `MANIFEST` path: compute the current on-disk hash, compare to `.claude/harness-lock.json`'s recorded value for that exact file path (missing entry = treat as "never tracked," prompt same as a conflict, don't assume safe). On match: `cp` from the fresh temp fetch, update nothing else. On mismatch: `diff -u` (or equivalent) the working file against the freshly-fetched version, print it, prompt `[o]verwrite / [s]kip / [v]iew diff again`, loop on `v`, act on `o`/`s`. Symlink detection: before the hash-compare loop even starts, check every `MANIFEST` path with `[ -L "$path" ]` and abort the whole run with a migration-instruction message if any are found — don't process files one-by-one past that point (all-or-nothing at the top, not a per-file exception).
 
 ---
 
@@ -114,6 +116,7 @@ Reuse `lib/harness-fetch.sh` (T031) for the re-fetch step — identical to `setu
 - [ ] A `MANIFEST` path present upstream but not yet in `.claude/harness-lock.json` (e.g. a new resource added since last install) — treat as new, install directly, no conflict prompt (nothing to conflict with)
 - [ ] A `MANIFEST` path that existed in the lock but is no longer in the upstream `MANIFEST` (resource removed upstream) — decide and document behavior: leave the local file alone with a warning, don't silently delete user content
 - [ ] Hash comparison must use the same hash algorithm/normalization as T032's writer — cross-check against T032's actual implementation, not just this guide's prose, before finalizing
+- [ ] Per-file enumeration (not directory-level) inside each `MANIFEST` entry — confirmed at T031's Stage 4 review; do not call `lib/harness-fetch.sh`'s `harness_copy_manifest` for the compare/update path, only `harness_fetch` for the re-fetch
 
 ---
 
