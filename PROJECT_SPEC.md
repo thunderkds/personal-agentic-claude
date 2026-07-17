@@ -97,7 +97,7 @@ The supervisor repo (`per-agentic-claude`) is a general framework. A `MANIFEST` 
 | T028 | Token Audit Log — scaffold + entry convention + format test (DDR-0001) | Todo | backend-developer | C1 | Low | P0 |
 | T029 | Prune the 4 oversized SKILL.md files via /slim-skills (HITL) | Todo | Supervisor + user | C1 | Low | P1 |
 | T030 | Post-baseline analysis — pick token refactor from real data (blocked by T028 window close) | Todo | Supervisor + user | C1 | Low | P1 |
-| T031 | lib/harness-fetch.sh — shared temp-clone-copy-discard + MANIFEST parsing (ADR-0001) | Todo | backend-developer | C2 | Medium | P0 |
+| T031 | lib/harness-fetch.sh — shared temp-clone-copy-discard + MANIFEST parsing (ADR-0001) | Done | backend-developer | C2 | Medium | P0 |
 | T032 | Rewrite setup.sh — direct-copy install, git-repo prerequisite check, write .claude/harness-lock.json (ADR-0001) | Todo | backend-developer | C2 | Medium | P0 |
 | T033 | New update.sh — hash-lock compare, per-file conflict prompt, symlink-refusal, git-repo check (ADR-0001) | Todo | backend-developer | C2 | Medium | P0 |
 | T034 | QA — smoke tests: fresh install, untouched-update, conflict-prompt, non-git-dir rejection (ADR-0001) | Todo | qa-expert | C1 | Low | P0 |
