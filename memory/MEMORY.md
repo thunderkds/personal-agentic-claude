@@ -42,6 +42,7 @@
 - [Direct-to-repo install, no central clone → ADR-0001](decisions.md) — temp-clone-copy-discard replaces ~/.supervisor symlink model; setup.sh=full overwrite, new update.sh=hash-lock (.claude/harness-lock.json) + per-file conflict prompt; packs/migration deferred; first ADR ever written
 - [T031 merged: lib/harness-fetch.sh](decisions.md) — shared fetch/copy library for setup.sh(T032)/update.sh(T033); 0 P0/P1 review findings; T033 must enumerate files itself (not harness_copy_manifest) for per-file conflict detection
 - [T032 merged: setup.sh rewritten](decisions.md) — direct-copy install, git-repo check, per-file harness-lock.json; 0 P0/P1; stale-symlink-at-MANIFEST-path correctly overwritten (setup always-overwrite ≠ update's refuse-on-symlink, not a conflict)
+- [T033 merged: update.sh rewritten](decisions.md) — hash-lock compare, per-file conflict prompt (fd0/fd3 split), symlink-refusal all-or-nothing; 0 P0/P1; 3 independent verify scenarios pass incl. two-conflicts-in-one-run
 
 ### Patterns & Gotchas
 - [Agent files must not tell sub-agents to write memory](learnings.md) — backend/frontend/qa.md + CLAUDE_LEGACY.md had "Update MEMORY.md" — fixed to "flag to Supervisor"; watch for this on every sync
@@ -55,6 +56,9 @@
 - [No shellcheck in this env](learnings.md) — shell tasks substitute `sh -n` + bash/dash test runs, noted explicitly rather than silently skipped (T031)
 - [Don't combine isolation:"worktree" with a pre-made worktree](learnings.md) — Agent tool creates its own second worktree/branch, orphaning the manually-created one; omit isolation when a worktree already exists (T032 gotcha)
 - [Check Evidence table is actually filled](learnings.md) — not every implementer fills it (T031 did, T032 didn't); reviewer fills it with own reproduced output if blank
+- [step_limit hook false-positive across sub-agent+review calls](learnings.md) — 40-call counter doesn't reset on "Ready for Review" (T031, T033 recurring); inspect trace via bracket-glob, reset step_count_T<NNN>.txt after confirming not stuck; needs a real fix
+- [VAR=val|pipe only scopes to first command](learnings.md) — use export or a subshell before the whole pipeline, not inline before cmd1 (T033 verify footgun)
+- [fd0-prompt / fd3-filelist shell pattern](learnings.md) — lets a script be both interactively promptable and piped-test-drivable without stdin collision (T033)
 
 ### Patterns & Gotchas (thinking-report)
 - [col-chosen on both th and td](learnings.md) — must apply to header AND body cells in chosen column; omitting on td leaves body unstyled
