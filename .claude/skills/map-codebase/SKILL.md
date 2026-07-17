@@ -5,23 +5,13 @@ description: "Generate a structural snapshot of the codebase into memory/codebas
 
 ## Role: Codebase Structure Indexer
 
-You are the Supervisor running a structural snapshot pass. Your single job is to collect three
-categories of data from the live repo — directory layout, entry points, and blast-radius hotspots
-— and write them to `memory/codebase-map.md`. Sub-agents read this file cold when they need
-structural orientation, eliminating repeated per-agent discovery work.
-
-This skill writes exactly one file (`memory/codebase-map.md`) and updates one line in
-`memory/MEMORY.md`. Nothing else is touched.
+Collect directory layout, entry points, and blast-radius hotspots from the live repo and write them to `memory/codebase-map.md`. Writes exactly one file plus one pointer line in `memory/MEMORY.md` — nothing else.
 
 ### Karpathy Operational Commands
 
-- **Simplicity First**: Three sections, three shell commands. No symbol extraction, no import
-  graph, no JSON. File-level structure only — this is the 80% that matters.
-- **Surgical Changes**: Write only `memory/codebase-map.md` and update one pointer line in
-  `memory/MEMORY.md`. Do not create, edit, or delete any other file.
-- **Goal-Driven Execution**: Success = `memory/codebase-map.md` exists, is stamped with the
-  current commit hash, and contains all three sections with non-empty content (or explicit
-  "none found" notes). The MEMORY.md pointer line is present.
+- **Simplicity First**: Three sections, three shell commands. No symbol extraction, no import graph, no JSON. File-level structure only.
+- **Surgical Changes**: Write only `memory/codebase-map.md` and one pointer line in `memory/MEMORY.md`. Do not create, edit, or delete any other file.
+- **Goal-Driven Execution**: Success = `memory/codebase-map.md` exists, is stamped with the current commit hash, and contains all three sections with non-empty content (or explicit "none found" notes). The MEMORY.md pointer line is present.
 
 ---
 
@@ -29,14 +19,10 @@ This skill writes exactly one file (`memory/codebase-map.md`) and updates one li
 
 #### Step 1 — Prerequisites
 
-Run the following checks via Bash. If any fails, apply the stated fix before continuing:
-
 | Check | Command | Fix if failing |
 |---|---|---|
 | `memory/` folder exists | `ls memory/` | `mkdir -p memory` |
 | Git is available | `git rev-parse --short HEAD` | Emit warning: "Not a git repo — hotspots section will be empty." Continue. |
-
----
 
 #### Step 2 — Gather Data (run all three in parallel)
 
@@ -67,8 +53,7 @@ find . \
   \) | sort
 ```
 
-**C — Blast-radius hotspots** (files changed most frequently in git history — language-agnostic
-hub proxy):
+**C — Blast-radius hotspots** (most-changed files in git history — language-agnostic hub proxy):
 
 ```bash
 git log --name-only --format="" | grep -v '^$' | sort | uniq -c | sort -rn | head -15
@@ -76,13 +61,9 @@ git log --name-only --format="" | grep -v '^$' | sort | uniq -c | sort -rn | hea
 
 If git is unavailable, emit: `"No git history — hotspots not available."` for section C.
 
----
-
 #### Step 3 — Compose `memory/codebase-map.md`
 
-Write the file using the Write tool with this exact structure. Fill each section with the
-corresponding command output. If a section returns no results, write `"None found."` for that
-section — never leave a section blank or omit it.
+Write the file with this exact structure. If a section returns no results, write `"None found."` — never leave a section blank or omit it.
 
 ```markdown
 # Codebase Map
@@ -113,28 +94,17 @@ Generated: <YYYY-MM-DD> | Commit: <git rev-parse --short HEAD> | Branch: <git br
 <output of command C — format: "  N  path/to/file">
 ```
 
-**Supervisor annotation note**: After the file is written, the Supervisor should manually add a
-`## Core Modules` section below the Directory Tree if the project's top-level layout needs
-human-readable descriptions. The skill does not generate this section — it requires intent, not
-just structure.
-
----
+**Supervisor annotation note**: the Supervisor may manually add a `## Core Modules` section afterward if the layout needs human-readable descriptions. The skill does not generate this section — it requires intent, not just structure.
 
 #### Step 4 — Update `memory/MEMORY.md`
 
-Read `memory/MEMORY.md`. Find whether a line containing `codebase-map` already exists.
-
-- **If found**: update that line in-place to reflect the new generation date and commit.
-- **If not found**: append the following line under the `### Decisions` section (or directly
-  under `## Index` if no Decisions section exists):
+If a line containing `codebase-map` already exists, update it in-place (new date and commit); do not duplicate. If not found, append under `### Decisions` (or directly under `## Index` if no Decisions section exists):
 
 ```
 - [Codebase Map](codebase-map.md) — structural snapshot: directory tree, entry points, blast-radius hotspots. Refresh via /map-codebase.
 ```
 
 Do not add more than one line. Do not restructure MEMORY.md.
-
----
 
 #### Step 5 — Staleness Check Pattern (inform the user)
 
@@ -144,18 +114,13 @@ After writing, emit this reminder once:
 > auto-update. Re-run `/map-codebase` after a major refactor or when the directory structure
 > changes significantly.
 
----
-
 ### Edge Cases
 
 | Situation | Behaviour |
 |---|---|
-| `memory/` folder missing | Create it with `mkdir -p memory`, then continue |
-| Not a git repo | Skip commit stamp and hotspots section; emit "Not a git repo" notes in those sections |
 | Git repo with 0 commits | Hotspots section: "No commits yet — hotspots not available." |
 | `find` returns nothing (empty repo) | Each section emits "None found." |
 | `codebase-map.md` already exists | Overwrite it — it is generated, not authored |
-| MEMORY.md already has a `codebase-map` pointer | Update the line in-place; do not duplicate |
 
 ---
 

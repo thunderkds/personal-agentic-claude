@@ -38,6 +38,8 @@
 - [T025: craft-agent skill (optional, supplemental)](decisions.md) — teach-style drafter for .claude/agents/*.md, whole-team mode, draft-only; base team stays unconditional, craft-agent fires only for uncovered roles (user correction mid-session); glossary gained Base team/Agent Draft; T026 follow-up flagged (template verify-row gate mismatch)
 - [T027: DDR (Design Decision Record)](decisions.md) — new default decision artifact (2-of-3 gate, docs/ddr/NNNN-title.md), ADR now the rare 3-of-3 escalation; grill-with-docs checks DDR first, flags ADR-eligible rather than auto-upgrading; glossary gained DDR/ADR/decisions.md-entry; near-miss merging an incomplete worktree — see gotcha below
 - [Token refactor: measure first → DDR-0001](decisions.md) — baseline Token Audit Log (reports/, NOT memory/) over 7-session/14-day window before any trim; slim-skills runs parallel; CLAUDE.md trim deferred until data; ≥20% success / <5% rollback; first DDR ever written
+- [T028 done: Token Audit Log scaffold + test](decisions.md) — reports/token-audit_2026-07-17.md live, window now open; branch feat/token-audit-log pushed, Stage 4 review pending; T029/T030 still Todo
+- [T029 done: slim-skills run](decisions.md) — learn 182→128, map-codebase 165→130, bugfix skipped (already floor), code-review 157→146; checksums verified; line count ≠ bloat signal for template/table-heavy skills
 
 ### Patterns & Gotchas
 - [Agent files must not tell sub-agents to write memory](learnings.md) — backend/frontend/qa.md + CLAUDE_LEGACY.md had "Update MEMORY.md" — fixed to "flag to Supervisor"; watch for this on every sync
@@ -47,6 +49,7 @@
 - [{{RISK_SCORE}} must be bare integer](learnings.md) — no `%` in slot value; `%` is hardcoded in template HTML and CSS width attribute
 - [verify Evidence-row gate regex](learnings.md) — Check cell must be exactly `verify` immediately before the `|`; TASK_GUIDE_template.md's own example text doesn't match (T026 follow-up flagged); gate also cross-checks memory/event-trace/<task>.jsonl for a real non-error command, not just a text claim
 - [Sub-agent "changed" ≠ committed](learnings.md) — always `git status --short` the worktree and check `git diff <base> --stat` against the TASK_GUIDE's predicted files before trusting a merge; a merge command succeeding is not proof it merged everything (T027 near-miss)
+- [Ghostty spawn marker can silently fail](learnings.md) — T028: sub-agent finished correct work but never committed/marked done; wait-loop itself reported `stopped` with no notification; always check worktree `git status` directly before trusting "done" — 2nd occurrence of the T027 uncommitted-work pattern
 
 ### Patterns & Gotchas (thinking-report)
 - [col-chosen on both th and td](learnings.md) — must apply to header AND body cells in chosen column; omitting on td leaves body unstyled
