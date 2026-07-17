@@ -8,6 +8,11 @@
 ## Board
 
 ### Todo
+- [ ] **T035** — README.md — update install/update instructions for direct-repo model (ADR-0001, depends on T033) | backend-developer | C0 | Risk: Low | P1
+- [ ] **T034** — QA — smoke tests: fresh install, untouched-update, conflict-prompt, non-git-dir rejection (ADR-0001, depends on T032/T033) | qa-expert | C1 | Risk: Low | P0
+- [ ] **T033** — New update.sh — hash-lock compare, per-file conflict prompt, symlink-refusal, git-repo check (ADR-0001, depends on T031/T032) | backend-developer | C2 | Risk: Medium | P0
+- [ ] **T032** — Rewrite setup.sh — direct-copy install, git-repo prerequisite check, write .claude/harness-lock.json (ADR-0001, depends on T031) | backend-developer | C2 | Risk: Medium | P0
+- [ ] **T031** — lib/harness-fetch.sh — shared temp-clone-copy-discard + MANIFEST parsing (ADR-0001) | backend-developer | C2 | Risk: Medium | P0
 - [ ] **T030** — Post-baseline analysis — pick the token refactor from real data (blocked: T028 window must close — 7 sessions/14 days, DDR-0001) | Supervisor + user (HITL) | C1 | Risk: Low | P1
 - [ ] **T029** — Prune the 4 oversized SKILL.md files via /slim-skills (HITL, approval-gated) | Supervisor + user (HITL) | C1 | Risk: Low | P1
 - [ ] **T028** — Token Audit Log — scaffold + entry convention + format test (DDR-0001) | backend-developer | C1 | Risk: Low | P0

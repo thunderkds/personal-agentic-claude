@@ -28,10 +28,12 @@ The supervisor repo (`per-agentic-claude`) is a general framework. A `MANIFEST` 
 
 | Term | Definition |
 |------|-----------|
-| Central clone | The single copy of this repo at `~/.supervisor` (or `$SUPERVISOR_PATH`) |
+| Central clone | **Superseded by ADR-0001** — the single copy of this repo formerly kept at `~/.supervisor` (or `$SUPERVISOR_PATH`) that every project symlinked against. No longer used by the base install path; see Temp-clone-copy-discard. |
 | Target project | The user's project where supervisor resources are deployed |
-| Manifest | `MANIFEST` file — one resource path per line, drives what `setup.sh` symlinks |
-| General resources | `.claude/agents/`, `.claude/skills/`, `templates/` — shared, symlinked |
+| Manifest | `MANIFEST` file — one resource path per line, drives what `setup.sh`/`update.sh` copy in |
+| General resources | `.claude/agents/`, `.claude/skills/`, `templates/` — **as of ADR-0001**, copied as real files into each project (not symlinked); packs (`packs/`) still symlink from a central clone until a follow-up revisits them |
+| Temp-clone-copy-discard | ADR-0001's install mechanism: `setup.sh`/`update.sh` `git clone --depth 1` the harness into a `mktemp -d` (EXIT-trap cleaned up), copy `MANIFEST` paths + `CLAUDE.md` into the working repo as real files, then discard the temp clone. No central clone persists anywhere. |
+| harness-lock.json | `.claude/harness-lock.json` — git-tracked lockfile recording the content hash of each installed `MANIFEST` path at install/update time. `update.sh` compares current file hash against the recorded one to distinguish "untouched since install" (safe to overwrite) from "user customized" (prompt per-file). See ADR-0001. |
 | Project-specific files | `tasks/`, `memory/`, `PRD.md`, `PROJECT_SPEC.md` — never symlinked, created fresh |
 | Greenfield | New project — uses `CLAUDE.md` as supervisor rules |
 | Brownfield | Existing/legacy project — uses `CLAUDE_LEGACY.md` as supervisor rules |
@@ -95,6 +97,11 @@ The supervisor repo (`per-agentic-claude`) is a general framework. A `MANIFEST` 
 | T028 | Token Audit Log — scaffold + entry convention + format test (DDR-0001) | Todo | backend-developer | C1 | Low | P0 |
 | T029 | Prune the 4 oversized SKILL.md files via /slim-skills (HITL) | Todo | Supervisor + user | C1 | Low | P1 |
 | T030 | Post-baseline analysis — pick token refactor from real data (blocked by T028 window close) | Todo | Supervisor + user | C1 | Low | P1 |
+| T031 | lib/harness-fetch.sh — shared temp-clone-copy-discard + MANIFEST parsing (ADR-0001) | Todo | backend-developer | C2 | Medium | P0 |
+| T032 | Rewrite setup.sh — direct-copy install, git-repo prerequisite check, write .claude/harness-lock.json (ADR-0001) | Todo | backend-developer | C2 | Medium | P0 |
+| T033 | New update.sh — hash-lock compare, per-file conflict prompt, symlink-refusal, git-repo check (ADR-0001) | Todo | backend-developer | C2 | Medium | P0 |
+| T034 | QA — smoke tests: fresh install, untouched-update, conflict-prompt, non-git-dir rejection (ADR-0001) | Todo | qa-expert | C1 | Low | P0 |
+| T035 | README.md — update install/update instructions for direct-repo model (ADR-0001) | Todo | backend-developer | C0 | Low | P1 |
 
 ---
 
