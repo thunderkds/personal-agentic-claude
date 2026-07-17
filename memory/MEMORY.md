@@ -40,6 +40,8 @@
 - [Token refactor: measure first → DDR-0001](decisions.md) — baseline Token Audit Log (reports/, NOT memory/) over 7-session/14-day window before any trim; slim-skills runs parallel; CLAUDE.md trim deferred until data; ≥20% success / <5% rollback; first DDR ever written
 - [Fidelity Gate: hallucination check in write-better-skill](decisions.md) — teach/craft-agent each gain a pre-Emit step: traceability to PRD/PROJECT_SPEC/user words, Skill()/Agent() ref resolution (unresolved → flagged inline, not blocked), no Permanent-Rules overreach; DDR gate 1-of-3, decisions.md-only
 - [Direct-to-repo install, no central clone → ADR-0001](decisions.md) — temp-clone-copy-discard replaces ~/.supervisor symlink model; setup.sh=full overwrite, new update.sh=hash-lock (.claude/harness-lock.json) + per-file conflict prompt; packs/migration deferred; first ADR ever written
+- [T031 merged: lib/harness-fetch.sh](decisions.md) — shared fetch/copy library for setup.sh(T032)/update.sh(T033); 0 P0/P1 review findings; T033 must enumerate files itself (not harness_copy_manifest) for per-file conflict detection
+- [T032 merged: setup.sh rewritten](decisions.md) — direct-copy install, git-repo check, per-file harness-lock.json; 0 P0/P1; stale-symlink-at-MANIFEST-path correctly overwritten (setup always-overwrite ≠ update's refuse-on-symlink, not a conflict)
 
 ### Patterns & Gotchas
 - [Agent files must not tell sub-agents to write memory](learnings.md) — backend/frontend/qa.md + CLAUDE_LEGACY.md had "Update MEMORY.md" — fixed to "flag to Supervisor"; watch for this on every sync
@@ -49,6 +51,10 @@
 - [{{RISK_SCORE}} must be bare integer](learnings.md) — no `%` in slot value; `%` is hardcoded in template HTML and CSS width attribute
 - [verify Evidence-row gate regex](learnings.md) — Check cell must be exactly `verify` immediately before the `|`; TASK_GUIDE_template.md's own example text doesn't match (T026 follow-up flagged); gate also cross-checks memory/event-trace/<task>.jsonl for a real non-error command, not just a text claim
 - [Sub-agent "changed" ≠ committed](learnings.md) — always `git status --short` the worktree and check `git diff <base> --stat` against the TASK_GUIDE's predicted files before trusting a merge; a merge command succeeding is not proof it merged everything (T027 near-miss)
+- [Temp-dir cleanup: expose via variable, not stdout](learnings.md) — `$(fn)` capture runs trap registration in a subshell, EXIT trap fires in the wrong shell; set a var instead (T031 gotcha)
+- [No shellcheck in this env](learnings.md) — shell tasks substitute `sh -n` + bash/dash test runs, noted explicitly rather than silently skipped (T031)
+- [Don't combine isolation:"worktree" with a pre-made worktree](learnings.md) — Agent tool creates its own second worktree/branch, orphaning the manually-created one; omit isolation when a worktree already exists (T032 gotcha)
+- [Check Evidence table is actually filled](learnings.md) — not every implementer fills it (T031 did, T032 didn't); reviewer fills it with own reproduced output if blank
 
 ### Patterns & Gotchas (thinking-report)
 - [col-chosen on both th and td](learnings.md) — must apply to header AND body cells in chosen column; omitting on td leaves body unstyled
