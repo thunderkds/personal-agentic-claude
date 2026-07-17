@@ -36,10 +36,10 @@ User wants each working repo to be fully self-contained on install — no depend
 
 ### Requirement Fidelity Gate (sign off BEFORE implementation)
 
-- [ ] Restated intent confirmed to match ADR-0001's Decision section
-- [ ] Domain terms align with `PROJECT_SPEC.md` glossary ("Temp-clone-copy-discard")
-- [ ] Every Acceptance Criterion below traces to ADR-0001
-- [ ] Requirement Ref (ADR-0001) is fully covered by the Acceptance Criteria below
+- [x] Restated intent confirmed to match ADR-0001's Decision section
+- [x] Domain terms align with `PROJECT_SPEC.md` glossary ("Temp-clone-copy-discard")
+- [x] Every Acceptance Criterion below traces to ADR-0001
+- [x] Requirement Ref (ADR-0001) is fully covered by the Acceptance Criteria below
 
 > An agent must NOT start implementing until this gate is checked. If anything here is unclear, STOP and ask the Supervisor.
 
@@ -89,12 +89,12 @@ bash tests/test_harness_fetch.sh
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| `verify` skill — works in running app | ☐ pass / ☐ fail | N/A — library has no standalone runtime surface until T032/T033 wire it in; verify at T032/T033 instead |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_harness_fetch.sh` — 9/9 assertions pass under **both bash and dash (POSIX)**. Covers AC1 (fetch), AC2 (MANIFEST copy + absent-entry skip), AC3 (temp removed on normal exit AND on SIGINT), AC4 (bad URL → non-zero + error + untouched target). Output: `----- summary: 9 passed, 0 failed -----` (bash exit=0, dash exit=0) |
+| Verification command run | ☑ pass | `bash tests/test_harness_fetch.sh` → all 9 PASS, exit 0. Real-world smoke: `harness_fetch https://github.com/thunderkds/personal-agentic-claude.git` succeeded, copied `.claude/*` + `templates` as real dirs, temp dir cleaned on process exit. Zero `/tmp/harness-fetch.*` leaks after a fresh run. |
+| Negative cases hold | ☑ pass | Bad `file://` URL → `harness_fetch` returns rc=1, prints `[error] Failed to clone ...`, target dir left empty (no partial copy). Absent MANIFEST entry (`does/not/exist`) warned + skipped, not aborted. |
+| `verify` skill — works in running app | ☑ N/A | Library has no standalone runtime surface until T032/T033 wire it in; verify at T032/T033 instead. |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Diff isolated to new `lib/harness-fetch.sh` + `tests/test_harness_fetch.sh`. `git status --short` shows only `lib/` and `tests/`. `setup.sh`/`update.sh` untouched. |
+| Full smoke suite still green (no regression) | ☑ pass | Existing hook suite `python3 -m pytest .claude/hooks/tests/ -q` → `12 passed in 0.02s`. New shell suite `bash tests/test_harness_fetch.sh` → 9 passed. |
 | **UI: Visual regression** | N/A | Pure backend/tooling task — no UI component |
 | **UI: Design-system compliance** | N/A | Pure backend/tooling task — no UI component |
 | **UI: Responsiveness** | N/A | Pure backend/tooling task — no UI component |
@@ -109,10 +109,10 @@ Model the two core functions closely on the existing logic already in `setup.sh`
 
 ## Edge Case Checklist
 
-- [ ] `mktemp -d` must produce a unique dir per invocation — no collision across concurrent runs
-- [ ] Cleanup trap must fire even if the calling script `exit 1`s early elsewhere (i.e. don't rely on the caller manually invoking cleanup)
-- [ ] MANIFEST parsing must strip `\r` (CRLF-safe) exactly as the current `setup.sh` main loop does (setup.sh:377)
-- [ ] A `MANIFEST` entry that doesn't exist in the fetched clone should warn and skip, not abort the whole fetch (matches current `install_path`'s behavior at setup.sh:199-202)
+- [x] `mktemp -d` must produce a unique dir per invocation — no collision across concurrent runs (uses `mktemp -d "${TMPDIR:-/tmp}/harness-fetch.XXXXXX"`)
+- [x] Cleanup trap must fire even if the calling script `exit 1`s early elsewhere (single `EXIT` trap does the cleanup; `INT`/`TERM`/`HUP` re-exit into it — verified by test3 SIGINT case)
+- [x] MANIFEST parsing must strip `\r` (CRLF-safe) exactly as the current `setup.sh` main loop does (setup.sh:377) — `_line=$(printf '%s' "$_line" | tr -d '\r')`
+- [x] A `MANIFEST` entry that doesn't exist in the fetched clone should warn and skip, not abort the whole fetch (matches current `install_path`'s behavior at setup.sh:199-202) — verified by test1 `does/not/exist` assertion
 
 ---
 
@@ -141,11 +141,11 @@ Shell-level unit tests against a local fixture (a tiny `file://` git repo create
 
 ## Completion Checklist
 
-- [ ] Implementation done
-- [ ] Self-review: `Skill({ skill: "code-review" })` run
-- [ ] Security review: `Skill({ skill: "security-review" })` run (Medium risk — mandatory)
-- [ ] Lint passes (`shellcheck lib/harness-fetch.sh`)
-- [ ] Tests written AND pass — output pasted into Evidence table (Hard-Stop Gate 5)
-- [ ] `Skill({ skill: "verify" })` run — N/A, see Evidence table note; verified via T032
-- [ ] `memory/MEMORY.md` updated (if new patterns or feedback learned)
-- [ ] Supervisor notified: task ready for Stage 4 review
+- [x] Implementation done
+- [ ] Self-review: `Skill({ skill: "code-review" })` run — deferred to Supervisor Stage 4 (sub-agent has no `Skill` tool)
+- [ ] Security review: `Skill({ skill: "security-review" })` run (Medium risk — mandatory) — deferred to Supervisor Stage 4
+- [~] Lint passes — `shellcheck` **not installed** in this environment; fell back to `sh -n lib/harness-fetch.sh` (syntax OK) + full run under both `bash` and `dash` (POSIX). Supervisor to run `shellcheck` at Stage 4 if available.
+- [x] Tests written AND pass — output pasted into Evidence table (Hard-Stop Gate 5)
+- [x] `Skill({ skill: "verify" })` run — N/A, see Evidence table note; verified via T032
+- [ ] `memory/MEMORY.md` updated (if new patterns or feedback learned) — flagged to Supervisor below (Supervisor-only writes)
+- [x] Supervisor notified: task ready for Stage 4 review
