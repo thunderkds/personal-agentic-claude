@@ -90,12 +90,12 @@ bash tests/test_setup.sh
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| `verify` skill — works in running app | ☐ pass / ☐ fail | Run `setup.sh` against a real scratch git repo and confirm files land correctly |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_setup.sh` — 15/15 assertions pass (re-run independently by reviewer, not just cited from the implementer's report). Covers AC1 (real copies, all MANIFEST paths), AC2 (non-git rejection, zero files written), AC3 (harness-lock.json content, permission-independent hash), AC4 (unconditional overwrite on re-run), AC5 (no central-clone dir created), AC7 (settings.json copy-only). |
+| Verification command run | ☑ pass | `bash tests/test_setup.sh` → `----- summary: 15 passed, 0 failed -----` (reviewer's own run, worktree `.claude/worktrees/agent-a60c669423604cff2`). |
+| Negative cases hold | ☑ pass | test2: non-git target → rc=1, zero files written, clear "not a git repository" error. test3: locally-edited file silently restored to upstream content on re-run. |
+| `verify` skill — works in running app | ☐ pass / ☐ fail | Pending — Stage 5 `verify` to be run separately (independent driving of the real CLI, not the author's test suite) |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Diff isolated to `setup.sh` (modified) + `tests/test_setup.sh` (new). `git diff main --stat` confirms no other files touched; `install_pack()`/`packs/` untouched per AC6. |
+| Full smoke suite still green (no regression) | ☑ pass | `bash tests/test_harness_fetch.sh` (T031's suite) → `9 passed, 0 failed` — reviewer's own re-run, confirms no regression from T032's changes. |
 | **UI: Visual regression** | N/A | Pure backend/tooling task — no UI component |
 | **UI: Design-system compliance** | N/A | Pure backend/tooling task — no UI component |
 | **UI: Responsiveness** | N/A | Pure backend/tooling task — no UI component |
