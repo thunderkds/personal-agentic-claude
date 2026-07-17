@@ -38,7 +38,11 @@ For every genuinely uncovered role, draft:
 - CLI & exact spawn command
 - Save path: `.claude/agents/<name>.md`
 
-#### 4. Emit the drafts
+#### 4. Fidelity gate
+
+Run each draft through `write-better-skill`'s **Fidelity Gate (Hallucination Check)**: every claimed responsibility/skill traces to `PROJECT_SPEC.md`/`PRD.md` or the user's literal words this session and is cut otherwise; every internal `Skill()`/`Agent()` reference resolves or is flagged `[UNRESOLVED: ...]`; no claim of authority the Permanent Rules reserve elsewhere (e.g. direct `memory/` writes — Supervisor-only). State "Fidelity gate: PASS" per draft, or list its cuts/flags, before emitting.
+
+#### 5. Emit the drafts
 
 Output one fenced code block per Agent Draft:
 
@@ -66,9 +70,9 @@ Registration:
 [ ] Filename collisions: <none | list flagged names>
 ```
 
-**Completion criterion**: prerequisites confirmed (or refusal issued); role enumeration cross-checked against base team + existing agent files; whole roster drafted in one pass (not one role per invocation); every draft states template inheritance and lists only overrides; registration checklist appended once for the full roster.
+**Completion criterion**: prerequisites confirmed (or refusal issued); role enumeration cross-checked against base team + existing agent files; whole roster drafted in one pass (not one role per invocation); every draft states template inheritance and lists only overrides; Fidelity gate stated PASS or cuts/flags listed per draft; registration checklist appended once for the full roster.
 
 ---
 
 ### Communication Protocol
-- **Default Notification**: "craft-agent complete. Drafted [N] supplemental Agent Draft(s) for roles: <list>. Base team unaffected. Save paths: `.claude/agents/<name>.md`."
+- **Default Notification**: "craft-agent complete. Drafted [N] supplemental Agent Draft(s) for roles: <list>. Fidelity gate: <PASS all|cuts/flags noted>. Base team unaffected. Save paths: `.claude/agents/<name>.md`."

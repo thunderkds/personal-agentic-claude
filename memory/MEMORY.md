@@ -38,6 +38,7 @@
 - [T025: craft-agent skill (optional, supplemental)](decisions.md) — teach-style drafter for .claude/agents/*.md, whole-team mode, draft-only; base team stays unconditional, craft-agent fires only for uncovered roles (user correction mid-session); glossary gained Base team/Agent Draft; T026 follow-up flagged (template verify-row gate mismatch)
 - [T027: DDR (Design Decision Record)](decisions.md) — new default decision artifact (2-of-3 gate, docs/ddr/NNNN-title.md), ADR now the rare 3-of-3 escalation; grill-with-docs checks DDR first, flags ADR-eligible rather than auto-upgrading; glossary gained DDR/ADR/decisions.md-entry; near-miss merging an incomplete worktree — see gotcha below
 - [Token refactor: measure first → DDR-0001](decisions.md) — baseline Token Audit Log (reports/, NOT memory/) over 7-session/14-day window before any trim; slim-skills runs parallel; CLAUDE.md trim deferred until data; ≥20% success / <5% rollback; first DDR ever written
+- [Fidelity Gate: hallucination check in write-better-skill](decisions.md) — teach/craft-agent each gain a pre-Emit step: traceability to PRD/PROJECT_SPEC/user words, Skill()/Agent() ref resolution (unresolved → flagged inline, not blocked), no Permanent-Rules overreach; DDR gate 1-of-3, decisions.md-only
 
 ### Patterns & Gotchas
 - [Agent files must not tell sub-agents to write memory](learnings.md) — backend/frontend/qa.md + CLAUDE_LEGACY.md had "Update MEMORY.md" — fixed to "flag to Supervisor"; watch for this on every sync
