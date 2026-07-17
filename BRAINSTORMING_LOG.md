@@ -1,6 +1,6 @@
 # BRAINSTORMING_LOG.md
-**Generated**: 2026-07-16
-**Task / Context**: Introduce DDR (Design Decision Record) as the primary, low-ceremony decision-record artifact for day-to-day/feature-level design decisions; keep ADR (Architecture Decision Record) as an optional, rare escalation reserved for genuinely hard-to-reverse architectural changes.
+**Generated**: 2026-07-17
+**Task / Context**: Token-efficiency refactor — reducing billing spend across the Supervisor pipeline
 **Skill**: `Skill({ skill: "brainstorming" })`
 **Tier**: Standard (moderate ambiguity, resolved via user Q&A)
 
@@ -8,21 +8,20 @@
 
 ## The Problem Space
 
-Three overlapping decision-capture mechanisms already exist in this repo, verified by reading each:
+The user wants to cut token/billing cost across sessions, inspired by the gRPC-vs-REST framing ("faster connection = less overhead"). That analogy maps loosely: gRPC saves *transport* overhead (binary framing, multiplexed connections), while LLM token cost is driven by *payload size and repetition*, not protocol. The real levers are:
 
-1. **`memory/decisions.md`** — an append-only rolling log (149 lines and growing). Every task this session (T017, T018–T020, T021–T023, T025) wrote an entry here. It has no per-decision addressability — you can't link to "the T025 decision" as a standalone artifact, only grep for a heading inside a long file.
-2. **ADR** (`templates/ADR_template.md`, `docs/adr/NNNN-title.md`) — gated by a strict 3-of-3 test (hard to reverse **AND** surprising without context **AND** a genuine trade-off). Offered by `grill-with-docs` at Stage 2. Verified via `ls docs/adr` → **the folder doesn't exist**; despite ~15+ decisions logged this repo's life, zero have ever cleared the ADR bar. The gate is calibrated for architecture-level stakes this project rarely produces (a doc/skill-authoring framework, not a service with a database/deployment topology to reverse).
-3. **`docs/solutions/`** (via `compound` skill) — a *different* axis entirely: reactive problem→solution capture post-fix, not a decision record.
+- **Always-on fixed cost**: `CLAUDE.md` (580 lines) is injected via system reminder on every turn of every session. `memory/MEMORY.md` (95 lines) similarly. These are cache-friendly *within* a session (1hr TTL) but pay full price on every cold start.
+- **Invocation-triggered cost**: skill files (`learn` 182 lines, `map-codebase` 165, `bugfix` 160, `code-review` 157 — all over the repo's own 150-line bloat threshold enforced by `slim-skills`) and agent guides (76–104 lines each) only cost tokens when actually invoked/spawned.
+- **Unknown**: the user confirmed they do **not** currently know where spend concentrates — cold-start re-reads, long multi-spawn sessions, or verbose report output. No instrumentation exists today.
 
-The user's diagnosis, confirmed through this session's Q&A: ADR's bar is calibrated for architecture that "is hard to cover" and "not required by the time" to change — correctly rare. But that leaves a real gap: decisions like this session's T017 (Depends-on/Entry-point field design), T025 (craft-agent whole-team-mode / draft-only / base-team-optional), or T021–T023 (spawn-hook hardening approach) are genuine **design** decisions — real alternatives were weighed, a specific shape was chosen — but none of them are architecture-level enough to ever clear ADR's 3-of-3 gate. They currently only get a paragraph buried in the ever-growing `decisions.md` stream, with no standalone, linkable, supersede-able record.
-
-**DDR fills that gap**: a mid-tier artifact, structurally identical to ADR (one file per decision, `Context`/`Decision`/`Alternatives`/`Consequences`, supersession-linkable) but gated at 2-of-3 instead of 3-of-3, making it the *default* write-up for real design decisions, while ADR stays the rare escalation for the (currently zero, possibly always zero) cases that hit all three criteria.
+Non-negotiable constraint: whatever is proposed must not weaken the Hard-Stop Gates or the pipeline's correctness guarantees (`CLAUDE.md`, "Hard-Stop Gates" section) — this is a cost optimization, not a scope-cutting exercise.
 
 ---
 
 ## Questions for the User
 
-None outstanding — storage shape, write-gate, decisions.md relationship, and skill-wiring order were all resolved via `AskUserQuestion` before this log was written.
+1. Is there an acceptable window for a one-time "measure current spend" pass before any refactor lands (e.g., instrument the next 5–10 sessions), or does a fix need to ship without that data?
+2. Are sub-agent spawns (Stage 3) currently re-reading the *full* `PROJECT_SPEC.md` + `TASK_GUIDE` + agent guide even when a prior spawn in the same session already paid that cost — i.e., is there any session-level spawn context reuse today, or does every `Agent()` call cold-start its context?
 
 ---
 
@@ -30,80 +29,101 @@ None outstanding — storage shape, write-gate, decisions.md relationship, and s
 
 | Option | Name | Summary | Invasiveness | Code Volume | Regression Risk | Recommended? |
 |--------|------|---------|-------------|------------|----------------|--------------|
-| A | The Simple Path | New `docs/ddr/NNNN-title.md` artifact, `templates/DDR_template.md` cloned from ADR's shape with a 2-of-3 gate; `grill-with-docs` checks DDR first, ADR as escalation; `decisions.md` keeps a one-liner pointer | Low-Medium | ~90 lines template + ~15 lines skill wiring | Low | ✅ Yes |
-| B | The Scalable Path | Same as A, plus a new `ddr-index` skill that maintains `docs/ddr/INDEX.md` (auto-generated table of contents, supersession graph) | Medium | ~90 + ~60 lines | Low-Medium | |
-| C | The Minimalist Path | Don't add a new file type — just add a `### Design Decisions` subsection inside `memory/decisions.md` with per-decision headings addressable by anchor link | Low | ~10 lines (doc convention only) | Low | |
+| A | The Simple Path | Trim + cache-stabilize the two always-on files (CLAUDE.md, MEMORY.md) without touching pipeline logic | Low | ~50–100 lines removed | Low | |
+| B | The Scalable Path | Instrument real per-stage token spend first, then target fixes at measured hotspots | Medium | ~80 lines (logging convention + audit doc) | Medium | ✅ Yes |
+| C | The Minimalist Path | Run `slim-skills` on the 4 oversized skills only; leave CLAUDE.md/MEMORY.md untouched | Low | ~200 lines removed across 4 files | Low | |
 
 ### Option A — The Simple Path
-**Approach**: `templates/DDR_template.md` — near-identical structure to `templates/ADR_template.md` (Status/Date/Deciders/Related, Context, Decision, Alternatives Considered, Consequences), but the header note states the 2-of-3 gate instead of 3-of-3, and files live in `docs/ddr/NNNN-title.md` (independent numbering sequence from ADR's `docs/adr/`). `grill-with-docs` Stage 2 evaluates the DDR gate first; if a decision also clears all 3 ADR criteria, it flags "this is ADR-eligible — escalate?" per the user's chosen wiring. `memory/decisions.md` keeps its existing one-liner-per-decision habit unchanged, just adding a `→ see docs/ddr/NNNN` link when a DDR was written (mirrors the existing `MEMORY.md → decisions.md` link pattern already in use).
-**Pros**: Structurally proven (literally copies ADR's already-designed shape); zero disruption to the existing diff-driven memory-update habit; immediately usable — every decision this session (T017, T021–T023, T025) would have qualified and can be retro-filed as an example.
-**Cons**: Two near-identical templates (ADR and DDR) sitting side by side — someone unfamiliar with the distinction has to read the header note on both to know which one applies.
-**Why it might fail**: If the 2-of-3 gate isn't meaningfully different from "just write one for anything," DDR becomes the new decisions.md-equivalent flood, defeating its own purpose of being more selective than the rolling log. Mitigated by keeping the gate an explicit 2-of-3 check rather than "any decision with alternatives" (the rejected alternative gate from Q&A).
+**Approach**: Audit `CLAUDE.md` for content that's stable-but-verbose (e.g., the full skill table, repeated agent-template detail) and move rarely-changed detail into a referenced file loaded on-demand rather than always-injected. Keep `CLAUDE.md` itself lean and byte-stable turn-to-turn to maximize cache hits.
+**Pros**: Directly attacks the single largest fixed per-turn cost; no new tooling; fast to do.
+**Cons**: Purely structural — no evidence yet that CLAUDE.md size is actually the dominant cost vs. spawn overhead; risks silently dropping a rule that's load-bearing (Hard-Stop Gates live in this file).
+**Why it might fail**: Without measurement, "the biggest file" isn't proven to be "the biggest cost" — sessions may be short enough that cold-start CLAUDE.md cost is negligible next to a handful of C3 spawns each re-reading 400+ lines of context.
 
 ### Option B — The Scalable Path
-**Approach**: All of Option A, plus a maintained `docs/ddr/INDEX.md` auto-generated by a new `ddr-index` skill that lists every DDR with status/date/one-liner and renders the supersession chain.
-**Pros**: Solves discoverability at scale — useful once dozens of DDRs exist.
-**Cons**: No such scale problem exists yet (zero DDRs, zero ADRs currently). Adding an index-maintenance skill before there's anything to index is exactly the kind of premature abstraction Simplicity First rejects.
-**Why it might fail**: Violates the 50% Rule outright — this is solving a discoverability problem for a future state 20+ DDRs from now, not the problem in front of us.
+**Approach**: Add lightweight instrumentation — a per-stage-transition and per-`Agent()`-spawn note (approximate context size, cache-hit vs. cache-miss) written to a scratch audit doc for the next several sessions. Then run a follow-up brainstorm against real numbers to pick the actual fix (could turn out to be Option A, C, or something else — e.g. spawn-prompt dedup).
+**Pros**: Matches the user's own answer ("unknown — measure first"); avoids optimizing the wrong thing; produces a defensible before/after comparison.
+**Cons**: Slower to show savings; requires a second pass once data comes in; instrumentation itself has a small token cost.
+**Why it might fail**: If instrumentation is too coarse (e.g. only total session cost from billing) it won't localize *which* stage/file is the driver — needs to be granular enough per-stage/per-spawn to be actionable, which adds real design work.
 
 ### Option C — The Minimalist Path
-**Approach**: No new folder/template — add a `### Design Decisions` heading convention inside the existing `memory/decisions.md`, using markdown anchors for linkability.
-**Pros**: Zero new files, minimal code volume.
-**Cons**: Directly contradicts the user's own resolved answer ("one file per decision... mirrors ADR's addressable, linkable, supersede-able shape") — a heading inside a single growing file is not truly addressable/supersede-able the way a standalone file with a stable path is; `git log --follow docs/ddr/0003-....md` gives per-decision history that a heading inside a monolithic file cannot.
-**Why it might fail**: Rejected by the user's explicit answer in Q&A, not just theoretically weaker — surfaced here for completeness per the divergent-thinking requirement, not as a live contender.
+**Approach**: Run `Skill({ skill: "slim-skills" })` against the four skills already over the repo's own 150-line threshold (`learn`, `map-codebase`, `bugfix`, `code-review`). Ship it as a self-contained cleanup with the checksum gate the skill already provides.
+**Pros**: Cheapest to execute — tooling already exists, no new design; zero risk to CLAUDE.md's Hard-Stop Gates; immediately actionable today.
+**Cons**: These skills are invocation-triggered, not always-on — trimming them saves tokens only on the (relatively rare) turns they're actually loaded, likely a small fraction of total session spend versus the CLAUDE.md/MEMORY.md fixed cost paid every turn.
+**Why it might fail**: Solves a real but probably minor problem while leaving the two suspected larger cost drivers (CLAUDE.md fixed injection, spawn-prompt redundancy) completely unaddressed — cleans the small pile, ignores the big one.
 
 ---
 
 ## 50% Rule Check
 
-Option A is already the minimal viable shape: it reuses ADR's proven template structure wholesale (no new document design work) and reuses the existing `grill-with-docs`/`decisions.md` wiring points rather than inventing new pipeline stages. The only further cut considered — skipping the `decisions.md` one-liner pointer — was rejected: without it, the diff-driven memory-update pass (which greps `decisions.md` for changed-file references) would have no way to discover that a DDR exists for a given file, silently breaking the existing memory-sync habit.
+For Option B: instrumentation doesn't need a new dashboard or persistent service. It can piggyback on the existing Memory Write Protocol's diff-driven pass — append one line per stage transition to a scratch log noting approximate context size at that point, using data already visible in the conversation (no new API calls, no new skill scaffolding). That's the ~50%-less-code version: reuse existing memory-write plumbing instead of building a separate telemetry skill.
 
 ---
 
 ## Recommended Path
 
-**Option A — The Simple Path**
+**Option B — The Scalable Path**
 
-Directly matches every constraint resolved in Q&A (one-file-per-decision shape, 2-of-3 gate, one-liner pointer in `decisions.md`, DDR-default/ADR-escalation wiring in `grill-with-docs`), reuses a proven template structure instead of designing a new one, and doesn't build discoverability tooling (Option B) for a scale problem that doesn't exist yet.
+The user explicitly said they don't yet know where spend concentrates and chose "measure first" over guessing between cold-start cost and spawn-repetition cost. Shipping Option A or C now would be optimizing against a hypothesis, not a measurement — directly against this project's own Karpathy "Ask vs. Guess" principle. Option B is also cheap to de-risk: it's additive-only, doesn't touch CLAUDE.md's Hard-Stop Gates, and produces the evidence needed to make Option A/C (or a different fix entirely) a well-founded follow-up rather than a guess.
 
 ---
 
 ## Surgical Scope
 
 Files that **should** be touched:
-- `templates/DDR_template.md` — new, cloned from `templates/ADR_template.md`'s shape with the 2-of-3 gate header
-- `.claude/skills/grill-with-docs/SKILL.md` — Stage 2 section: evaluate DDR gate first, ADR as escalation when all 3 criteria also hold
-- `CLAUDE.md` — folder-structure requirements list (add `templates/DDR_template.md`); update the ADR-related sentence in Step 1.5 Ambiguity Resolution Protocol to mention DDR as the default
-- `PROJECT_SPEC.md` — glossary: add DDR term, distinguish from ADR and from `memory/decisions.md`
-- `memory/decisions.md` — no structural change; future entries gain an optional `→ see docs/ddr/NNNN` pointer when applicable
+- `memory/learnings.md` — record the instrumentation approach as a new pattern once decided
+- A new ephemeral audit doc (e.g. `memory/token-audit-<date>.md`) — per-stage size notes, not a permanent artifact
 
 Files that **must not** be touched:
-- `templates/ADR_template.md` — stays as-is; ADR's 3-of-3 gate is explicitly not being loosened, only supplemented
-- `.claude/skills/compound/SKILL.md`, `docs/solutions/` — different axis (reactive problem→solution), out of scope
-- `memory/MEMORY.md` hot-tier structure — unchanged; DDR entries follow the same one-liner-with-link pattern already used for `decisions.md`/`glossary.md`/`learnings.md`
+- `CLAUDE.md` — no trims/edits until data justifies a specific cut; premature edits risk dropping a Hard-Stop Gate
+- `.claude/agents/*.md`, `.claude/skills/*/SKILL.md` — no slimming until measurement shows these are actually cost-material relative to CLAUDE.md/spawn overhead
 
 ---
 
 ## Edge Case Checklist for TASK_GUIDE
 
-- [ ] A decision meets DDR's 2-of-3 gate AND all 3 ADR criteria simultaneously — `grill-with-docs` must flag it as ADR-eligible and ask before defaulting to DDR-only, not silently downgrade an architecture-level decision
-- [ ] Numbering collision — `docs/ddr/` and `docs/adr/` use independent sequences (both starting at `0001`); a Related-decisions cross-reference between a DDR and an ADR must disambiguate (`DDR-0003` vs `ADR-0003`, not bare `0003`)
-- [ ] Retro-filing existing decisions.md history — this task drafts the mechanism only; retroactively splitting the 149-line `decisions.md` into individual DDR files is explicitly out of scope unless the user asks for it separately
-- [ ] A DDR is later superseded — the template's `Related` field must support `supersedes DDR-000X` / `superseded by DDR-000Y`, mirroring ADR's existing supersession field, so status tracking doesn't silently rot
-- [ ] `grill-with-docs` currently runs in two modes (`requirement`, `terminology`) — the DDR/ADR gate check belongs in terminology mode's "Where decisions land" section, not requirement mode; must not blur the two modes' distinct responsibilities
+- [ ] Instrumentation itself must stay cheap — don't let the audit log grow unbounded across sessions (rotate/cap it)
+- [ ] Must distinguish cache-hit reads (near-zero marginal cost) from cache-miss reads (full price) when estimating spend — a naive line-count proxy will overstate cost for cached content
+- [ ] Spawn-prompt cost must be measured per sub-agent type (C0 haiku vs C3 opus) since price-per-token differs — raw token count alone won't reflect billing dollars
+- [ ] Don't let the measurement pass itself become a recurring manual chore — define a clear stop condition (e.g. "after 5–10 sessions, review and decide")
 
 ---
 
 ## Next Actions
 
-1. Run `grill-with-docs` (terminology mode) to sharpen DDR's canonical definition against the glossary — distinguish DDR from ADR and from a plain `decisions.md` entry in `PROJECT_SPEC.md`'s glossary, same as done for `craft-agent`/T025.
-2. Proceed to Stage 2 (`/plan`): generate a `TASK_GUIDE_Txxx.md` for this work (Hard-Stop Gate 1 — no template/skill edits without a guide).
-3. Draft `templates/DDR_template.md` cloned from `templates/ADR_template.md`'s shape, with the 2-of-3 gate header per the Edge Case Checklist above.
-4. Update `.claude/skills/grill-with-docs/SKILL.md` and `CLAUDE.md` per Surgical Scope.
+1. Answer the two open questions above (spawn-reuse behavior today; acceptable measurement window) before Stage 2 planning.
+2. If approved, define a lightweight instrumentation task (likely C1, Low risk — no schema/migration, no user-facing surface) and run it through Stage 2 `/plan` as a proper TASK_GUIDE per Hard-Stop Gate 1 (no implementation without a guide).
+3. After the measurement window, re-run this brainstorm (or a follow-up) with real numbers to pick between trimming CLAUDE.md, deduping spawn prompts, or slimming oversized skills — possibly a combination.
+
+---
+
+## Evaluation Protocol (approved with direction)
+
+Before/after comparison using the same instrument on both sides:
+
+```
+Phase 1: BASELINE   — B's measurement window (5–10 sessions), untouched pipeline
+Phase 2: REFACTOR   — whatever the data says (A, spawn-dedup, output trimming…)
+Phase 3: VALIDATION — same audit convention, 5–10 more sessions, compare
+```
+
+**Metrics (normalized, never raw totals):**
+- Tokens per session cold-start (tests CLAUDE.md trim)
+- Tokens per sub-agent spawn, grouped by C-level (tests spawn dedup)
+- Tokens per Stage 4 review cycle (tests report trimming)
+- Cache-hit ratio per session (tests cache stabilization)
+- **$ per completed task by C-level** — the bottom-line number
+
+**Data sources:** `/cost` output logged at end of each session (ground truth) + the per-stage audit-log entries (localization). OpenTelemetry export available but deemed overkill for this project.
+
+**Success criterion (set before refactoring):** ≥20% reduction in $ per completed task at the same C-level, no Hard-Stop Gate regressions, measured over 5 sessions post-refactor.
+
+**Rollback trigger:** <5% measured savings in the validation window → revert/stop iterating; guards against endless micro-optimization.
+
+**Known noise:** usage pattern varies per week, cache behavior depends on session timing (1hr TTL), pricing may shift mid-window. 5–10 sessions per side reliably detects a big win (20%+), not a marginal one — acceptable, since an unmeasurable win wasn't worth the refactor.
 
 ---
 
 ## User Selection
 
-> **Approved direction**: Option A — The Simple Path
-> Approved by user on 2026-07-16.
+> **Approved direction**: Option B — The Scalable Path (measure first), with Option C (`slim-skills` on the 4 oversized skills) running in parallel during the baseline window as a free rider — safe because skills are invocation-triggered and don't contaminate the always-on cost measurement. Option A deferred until baseline data justifies it.
+> Approved by user on 2026-07-17.

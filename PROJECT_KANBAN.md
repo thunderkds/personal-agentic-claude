@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-07-16 — T027 done: DDR (Design Decision Record) merged to main as the default decision artifact (2-of-3 gate); ADR now the rare 3-of-3 escalation.
+**Last updated**: 2026-07-17
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -8,6 +8,9 @@
 ## Board
 
 ### Todo
+- [ ] **T030** — Post-baseline analysis — pick the token refactor from real data (blocked: T028 window must close — 7 sessions/14 days, DDR-0001) | Supervisor + user (HITL) | C1 | Risk: Low | P1
+- [ ] **T029** — Prune the 4 oversized SKILL.md files via /slim-skills (HITL, approval-gated) | Supervisor + user (HITL) | C1 | Risk: Low | P1
+- [ ] **T028** — Token Audit Log — scaffold + entry convention + format test (DDR-0001) | backend-developer | C1 | Risk: Low | P0
 - [ ] **T026** — Fix TASK_GUIDE_template.md example `verify` Evidence row to match pre_bash_block_unsafe_merge.py's gate regex | backend-developer | C0 | Risk: Low | P1
 - [ ] **T024** — Fix post_write_register_task.py agent-field regex (matches "Agent guide" before "Assigned agent") | backend-developer | C0 | Risk: Low | P2
 - [ ] **T012** — Registration — CLAUDE.md + MEMORY.md + README | common-infrastructure | C0 | Risk: Low | P1

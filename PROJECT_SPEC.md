@@ -47,6 +47,10 @@ The supervisor repo (`per-agentic-claude`) is a general framework. A `MANIFEST` 
 | DDR (Design Decision Record) | The **default** decision-record artifact for real design decisions: one file per decision at `docs/ddr/NNNN-title.md`, referenced in cross-links as `DDR-NNNN`. Write-gated at **2-of-3** of the ADR criteria (hard to reverse / surprising without context / genuine trade-off) — looser than ADR's 3-of-3, so it captures the design decisions this project actually produces (e.g. T017's Depends-on/Entry-point field shape, T025's craft-agent scope), which rarely clear ADR's architecture-level bar. |
 | ADR (Architecture Decision Record) | The **optional, rare escalation** above DDR — write-gated at **3-of-3** (all of: hard to reverse, surprising without context, genuine trade-off). One file per decision at `docs/adr/NNNN-title.md`, referenced as `ADR-NNNN`. `grill-with-docs` checks the DDR gate first; if a decision also clears all 3 ADR criteria, it is flagged ADR-eligible and the user is asked whether to escalate — DDR is not automatically upgraded. |
 | decisions.md entry | The lowest tier: a one-liner (or short paragraph) appended to `memory/decisions.md`'s rolling log for every decision, regardless of DDR/ADR eligibility. When a decision also gets a DDR or ADR file, the `decisions.md` entry adds a `→ see DDR-NNNN` / `→ see ADR-NNNN` pointer — mirrors the existing `MEMORY.md → decisions.md` link pattern. |
+| Token Audit Log | The measurement artifact at `reports/token-audit_<window>.md` (lives in `reports/`, **not** `memory/` — it is a generated, window-scoped artifact, not curated memory). One-line entries at session cold-start, each stage transition, and each `Agent()` spawn; every entry tagged with a Task ID (or `overhead`), cache-hit vs. cache-miss, and model tier. Session `/cost` output appended at session end as ground truth. See DDR-0001. |
+| Measurement Window | The bounded data-collection period for the Token Audit Log: closes at **7 logged sessions or 14 calendar days, whichever comes first**. A *session* = one conversation that ran `wake`. The identical rule governs both the baseline window (before refactor) and the validation window (after). See DDR-0001. |
+| Cold-start cost | The uncached prompt cost paid on the first turn of a new session — chiefly `CLAUDE.md` + `memory/MEMORY.md` + system prompt, billed at full price before the 1hr prompt cache warms. Distinct from within-session turns (cache hits ≈ 10% price) and from sub-agent spawns, which never inherit the parent session's cache. |
+| $ per completed task | The bottom-line evaluation metric: a session's `/cost` spend split proportionally across that session's Task-ID-tagged audit entries, grouped by Complexity level (C0–C3) so like compares with like. Success criterion: ≥20% reduction at the same C-level; rollback trigger: <5%. See DDR-0001. |
 
 ---
 
@@ -87,6 +91,9 @@ The supervisor repo (`per-agentic-claude`) is a general framework. A `MANIFEST` 
 | T002 | update.sh | Todo | backend-developer | C1 | Low | P0 |
 | T003 | README.md | Todo | backend-developer | C0 | Low | P1 |
 | T004 | .gitignore + repo hygiene | Todo | backend-developer | C0 | Low | P2 |
+| T028 | Token Audit Log — scaffold + entry convention + format test (DDR-0001) | Todo | backend-developer | C1 | Low | P0 |
+| T029 | Prune the 4 oversized SKILL.md files via /slim-skills (HITL) | Todo | Supervisor + user | C1 | Low | P1 |
+| T030 | Post-baseline analysis — pick token refactor from real data (blocked by T028 window close) | Todo | Supervisor + user | C1 | Low | P1 |
 
 ---
 
