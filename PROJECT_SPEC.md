@@ -105,7 +105,7 @@ The supervisor repo (`per-agentic-claude`) is a general framework. A `MANIFEST` 
 | T024 | Fix post_write_register_task.py agent-field regex | Done | backend-developer | C0 | Low | P0 |
 | T026 | Fix TASK_GUIDE_template.md example verify Evidence row | Done | backend-developer | C0 | Low | P0 |
 | T028 | Token Audit Log — scaffold + entry convention + format test (DDR-0001) | Done | backend-developer | C1 | Low | P0 |
-| T029 | Prune the 4 oversized SKILL.md files via /slim-skills (HITL) | Todo — redo, earlier prune lost to session drift | Supervisor + user | C1 | Low | P1 |
+| T029 | Prune the 4 oversized SKILL.md files via /slim-skills (HITL) | Done | Supervisor + user | C1 | Low | P1 |
 | T030 | Post-baseline analysis — pick token refactor from real data (blocked by T028 window close) | Todo | Supervisor + user | C1 | Low | P1 |
 | T031 | lib/harness-fetch.sh — shared temp-clone-copy-discard + MANIFEST parsing (ADR-0001) | Done | backend-developer | C2 | Medium | P0 |
 | T032 | Rewrite setup.sh — direct-copy install, git-repo prerequisite check, write .claude/harness-lock.json (ADR-0001) | Done | backend-developer | C2 | Medium | P0 |

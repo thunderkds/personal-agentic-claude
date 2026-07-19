@@ -8,7 +8,6 @@
 ## Board
 
 ### Todo
-- [ ] **T029** — Prune the 4 oversized SKILL.md files via /slim-skills (HITL, approval-gated) — RE-DO: earlier approved prune (learn 182→128, map-codebase 165→130) was never committed and was lost to session drift; files are back at original line counts | Supervisor + user (HITL) | C1 | Risk: Low | P1
 - [ ] **T030** — Post-baseline analysis — pick the token refactor from real data (blocked: T028 window must close — 7 sessions/14 days, DDR-0001) | Supervisor + user (HITL) | C1 | Risk: Low | P1
 
 ### In Progress
@@ -16,6 +15,7 @@
 ### Ready for Review
 
 ### Done
+- [x] **T029** — Prune 4 oversized SKILL.md files: learn 182→128, map-codebase 165→130 pruned; bugfix + code-review skipped at safe floor. Recovered from a stale branch after the original prune was lost to a failed /compact | C1 | Completed: 2026-07-19
 - [x] **T034** — QA — independent smoke suite for install/update (9/9 pass, incl. negative-control sabotage self-check on update.sh's conflict detection) | C1 | Completed: 2026-07-19
 - [x] **T035** — README.md — install/update sections rewritten for direct-repo model (2 stale-doc gaps found beyond original scope: pack ~/.supervisor no-longer-auto-created, obsolete git-submodule note removed) | C0 | Completed: 2026-07-19
 - [x] **T026** — Fix TASK_GUIDE_template.md example verify Evidence row (2 compounding gate bugs found + fixed) | C0 | Completed: 2026-07-19
