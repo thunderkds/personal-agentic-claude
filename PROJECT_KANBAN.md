@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-07-19 (T028 merged; full Todo audit — T003/T004 deduped, T005-T012 closed, T024/T026 reprioritized to P0)
+**Last updated**: 2026-07-19
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -15,6 +15,7 @@
 ### Ready for Review
 
 ### Done
+- [x] **T036** — Fix scripts/smoke-install.sh for direct-repo model — CI was broken (red) since T031-T033 landed, never caught until this review; 1 P1 code-review fix (vacuous assertion) | C1 | Completed: 2026-07-19
 - [x] **T029** — Prune 4 oversized SKILL.md files: learn 182→128, map-codebase 165→130 pruned; bugfix + code-review skipped at safe floor. Recovered from a stale branch after the original prune was lost to a failed /compact | C1 | Completed: 2026-07-19
 - [x] **T034** — QA — independent smoke suite for install/update (9/9 pass, incl. negative-control sabotage self-check on update.sh's conflict detection) | C1 | Completed: 2026-07-19
 - [x] **T035** — README.md — install/update sections rewritten for direct-repo model (2 stale-doc gaps found beyond original scope: pack ~/.supervisor no-longer-auto-created, obsolete git-submodule note removed) | C0 | Completed: 2026-07-19

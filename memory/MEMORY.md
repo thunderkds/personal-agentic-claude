@@ -51,6 +51,7 @@
 - [T024/T026 merged: two merge-gate regex fixes](decisions.md) — agent-field extraction (matched wrong line); template's example verify row (2 compounding bugs: check-column text, AND "pass" must be in the Notes column not Result column — undocumented until now)
 - [T034 merged: independent QA install/update smoke suite](decisions.md) — recovered real work from a pre-existing worktree post-/compact, independently re-verified (9/9 + 55/55 across all 4 suites), fixed a stale pre-T026-fix verify row before merging
 - [T035 merged: README rewritten for direct-repo model](decisions.md) — a prior uncommitted edit FALSELY claimed this was done (Evidence checkmarks, no real changes) — discarded, redone for real; 2 gaps found beyond original scope (packs need pre-existing ~/.supervisor, obsolete submodule note removed)
+- [T036 merged: fixed scripts/smoke-install.sh — CI was broken since T031-T033](decisions.md) — silently red for 3 days across 5+ merged PRs, never caught; ADR-0001 migration didn't update every CI entry point; 1 P1 self-review fix (vacuous assertion)
 - [Full Todo audit + reprioritization, 2026-07-19](decisions.md) — T003/T004 deduped (already Done), T005-T007 closed as superseded (dead Typer-CLI scope), T008-T012 closed as already-built-but-mislabeled; T024/T026 raised to P0
 
 ### Patterns & Gotchas
