@@ -42,6 +42,8 @@ Confirmed live twice during T021/T022's Kanban auto-registration (2026-07-14): `
 ## Evidence
 | Check | Command / observation | Result |
 |---|---|---|
-| Repro loop | | |
-| Regression test | | |
-| Smoke suite | | |
+| Repro loop | `re.search(r'(?:Assigned Agent\|Agent)[:\s]+([a-z\-]+)', open('tasks/TASK_GUIDE_T021.md').read(), re.I\|re.M).group(1)` (old regex) | Confirmed buggy: returned `"guide"` |
+| Fix | Changed to `Assigned\s+Agent\*{0,2}[:\s]+([a-z\-]+)` — anchors on the literal "Assigned Agent" label, tolerates 0-2 `**` markdown-bold markers before the colon, drops the ambiguous bare-`Agent` fallback alternative entirely | `.claude/hooks/post_write_register_task.py` |
+| Regression test | `.claude/hooks/tests/test_post_write_register_task.py` — 3 new cases: line-order-sensitive repro, reversed-line-order, no-Assigned-Agent-line fallback | `python3 -m pytest .claude/hooks/tests/ -q` → `20 passed in 0.03s` |
+| Verify against T021/T022/T023 | Fixed regex re-run against all three real guide files | All three now extract `backend-developer` correctly (previously manually corrected on Kanban as a workaround) |
+| Smoke suite | `python3 -m pytest .claude/hooks/tests/ -q` | `20 passed in 0.03s` (17 pre-existing + 3 new, zero regressions) |

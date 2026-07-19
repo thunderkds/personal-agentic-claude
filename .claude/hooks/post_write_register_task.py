@@ -47,7 +47,7 @@ def main():
         return m.group(1).strip() if m else default
 
     title    = extract(r"^#\s+TASK_GUIDE[_\s—-]+T\d+[:\s—-]+(.+)$", "untitled")
-    agent    = extract(r"(?:Assigned Agent|Agent)[:\s]+([a-z\-]+)", "backend-developer")
+    agent    = extract(r"Assigned\s+Agent\*{0,2}[:\s]+([a-z\-]+)", "backend-developer")
     cx       = extract(r"Complexity[:\s]+(C[0-3])", "C1")
     risk     = extract(r"Risk[:\s]+(Low|Med(?:ium)?|High)", "Low")
     priority = extract(r"Priority[:\s]+(P[0-2])", "P1")

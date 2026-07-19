@@ -46,3 +46,45 @@ def test_extracts_title_from_multiline_file_content():
         "**Complexity Level**: C1\n"
     )
     assert extract_title(guide) == "CLI Wiring — Typer Entrypoint"
+
+
+# ---------------------------------------------------------------------------
+# Regression test for the agent-extraction regex (T024).
+#
+# Bug: `(?:Assigned Agent|Agent)[:\s]+([a-z\-]+)` matched the substring
+# "Agent guide" (from the `**Agent guide**: ...` line) instead of "Assigned
+# agent", because the markdown bold markers (`**`) sit between "agent" and
+# its colon on the intended line, breaking that match attempt and letting
+# `re.search` fall through to the next "Agent" occurrence in the file —
+# same boundary-matching bug class as the T018 title regex.
+# ---------------------------------------------------------------------------
+AGENT_PATTERN = r"Assigned\s+Agent\*{0,2}[:\s]+([a-z\-]+)"
+
+
+def extract_agent(guide: str) -> str:
+    m = re.search(AGENT_PATTERN, guide, re.IGNORECASE | re.MULTILINE)
+    return m.group(1).strip() if m else "backend-developer"
+
+
+def test_extracts_agent_when_agent_guide_line_precedes_in_scan_order():
+    # Real guides list "Agent guide" immediately after "Assigned agent", and
+    # both start with the word "Agent" — the old pattern's bare "Agent"
+    # alternative could latch onto the wrong line.
+    guide = (
+        "**Assigned agent**: backend-developer\n"
+        "**Agent guide**: `.claude/agents/backend.md`\n"
+    )
+    assert extract_agent(guide) == "backend-developer"
+
+
+def test_extracts_agent_regardless_of_line_order():
+    guide = (
+        "**Agent guide**: `.claude/agents/backend.md`\n"
+        "**Assigned agent**: qa-expert\n"
+    )
+    assert extract_agent(guide) == "qa-expert"
+
+
+def test_falls_back_to_default_when_no_assigned_agent_line_present():
+    guide = "**Agent guide**: `.claude/agents/backend.md`\n"
+    assert extract_agent(guide) == "backend-developer"
