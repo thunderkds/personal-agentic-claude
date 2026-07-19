@@ -34,8 +34,32 @@ log_error() { printf "${RED}[error]${RESET} %s\n"   "$*" >&2; }
 # ── Source the shared temp-clone-copy-discard fetch library (T031) ───────────
 HARNESS_LIB="$SCRIPT_DIR/lib/harness-fetch.sh"
 if [ ! -f "$HARNESS_LIB" ]; then
-  log_error "Required library not found: $HARNESS_LIB. Run setup.sh from a full checkout of the harness repo."
-  exit 1
+  # Piped install (curl | sh): $0 has no real file location, so SCRIPT_DIR
+  # above resolved to the caller's cwd, not anywhere lib/harness-fetch.sh
+  # exists (T038). Bootstrap: clone a full checkout with plain git (the
+  # library that would normally do this isn't sourced yet), then re-invoke
+  # the REAL setup.sh from that checkout with all original args. Not `exec`
+  # — a regular call, so we can clean up the bootstrap dir afterward and
+  # propagate the real invocation's exit code.
+  log_info "No local checkout detected (likely a piped 'curl | sh' install) — bootstrapping a full checkout first."
+  BOOTSTRAP_REPO="${SUPERVISOR_REPO:-https://github.com/${GITHUB_USERNAME:-thunderkds}/personal-agentic-claude.git}"
+  BOOTSTRAP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/harness-bootstrap.XXXXXX") || {
+    log_error "Failed to create a temp directory for the bootstrap clone."
+    exit 1
+  }
+  if ! git clone --depth 1 "$BOOTSTRAP_REPO" "$BOOTSTRAP_DIR" >/dev/null 2>&1; then
+    log_error "Bootstrap clone of '$BOOTSTRAP_REPO' failed. Check network connectivity and the URL."
+    rm -rf "$BOOTSTRAP_DIR"
+    exit 1
+  fi
+  # `|| _bootstrap_rc=$?` is required (not just `; _bootstrap_rc=$?` on the next
+  # line) — under `set -e`, a plain failing command exits the script
+  # immediately, before the next line ever runs, which would skip both the
+  # exit-code capture AND the rm -rf cleanup below.
+  _bootstrap_rc=0
+  SUPERVISOR_REPO="$BOOTSTRAP_REPO" sh "$BOOTSTRAP_DIR/setup.sh" "$@" || _bootstrap_rc=$?
+  rm -rf "$BOOTSTRAP_DIR"
+  exit "$_bootstrap_rc"
 fi
 # shellcheck source=lib/harness-fetch.sh
 . "$HARNESS_LIB"
