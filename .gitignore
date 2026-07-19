@@ -39,7 +39,12 @@ tmp/
 # ============================================================
 # Section 5: Generated HTML reports (local-only, never commit)
 # ============================================================
-reports/
+# Exception: the Token Audit Log (DDR-0001) must survive across worktrees/spawns via git,
+# unlike ephemeral HTML reports — so it is tracked despite the reports/ blanket ignore.
+# (Excluding directory contents with reports/* rather than reports/ itself is required for
+# the negation below to take effect — git won't descend into a fully-excluded directory.)
+reports/*
+!reports/token-audit_*.md
 
 # ============================================================
 # Section 6: Hook runtime state (step counters, event traces)
