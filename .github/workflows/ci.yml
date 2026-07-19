@@ -16,7 +16,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y shellcheck
 
       - name: Shellcheck install scripts
-        run: shellcheck setup.sh update.sh scripts/validate.sh scripts/smoke-install.sh
+        run: shellcheck -x setup.sh update.sh scripts/validate.sh scripts/smoke-install.sh
 
       - name: Validate framework integrity
         run: sh scripts/validate.sh
