@@ -4,6 +4,8 @@
 > Injected in full into every sub-agent spawn prompt.
 > Updated by the Supervisor — prompted by the PostToolUse hook on `git push` / `git merge` (diff-driven pass), or via the `/compact-memory` skill.
 
+> **token-audit**: DDR-0001 baseline window is open — log a `reports/token-audit_2026-07-17.md` entry at cold-start, each Stage transition, and each spawn; paste `/cost` at session end.
+
 ---
 
 ## Memory Architecture
