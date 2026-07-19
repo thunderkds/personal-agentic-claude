@@ -4,6 +4,8 @@
 > Injected in full into every sub-agent spawn prompt.
 > Updated by the Supervisor — prompted by the PostToolUse hook on `git push` / `git merge` (diff-driven pass), or via the `/compact-memory` skill.
 
+> **token-audit**: DDR-0001 baseline window is open — log a `reports/token-audit_2026-07-17.md` entry at cold-start, each Stage transition, and each spawn; paste `/cost` at session end.
+
 ---
 
 ## Memory Architecture
@@ -40,6 +42,11 @@
 - [Token refactor: measure first → DDR-0001](decisions.md) — baseline Token Audit Log (reports/, NOT memory/) over 7-session/14-day window before any trim; slim-skills runs parallel; CLAUDE.md trim deferred until data; ≥20% success / <5% rollback; first DDR ever written
 - [T028 done: Token Audit Log scaffold + test](decisions.md) — reports/token-audit_2026-07-17.md live, window now open; branch feat/token-audit-log pushed, Stage 4 review pending; T029/T030 still Todo
 - [T029 done: slim-skills run](decisions.md) — learn 182→128, map-codebase 165→130, bugfix skipped (already floor), code-review 157→146; checksums verified; line count ≠ bloat signal for template/table-heavy skills
+- [Fidelity Gate: hallucination check in write-better-skill](decisions.md) — teach/craft-agent each gain a pre-Emit step: traceability to PRD/PROJECT_SPEC/user words, Skill()/Agent() ref resolution (unresolved → flagged inline, not blocked), no Permanent-Rules overreach; DDR gate 1-of-3, decisions.md-only
+- [Direct-to-repo install, no central clone → ADR-0001](decisions.md) — temp-clone-copy-discard replaces ~/.supervisor symlink model; setup.sh=full overwrite, new update.sh=hash-lock (.claude/harness-lock.json) + per-file conflict prompt; packs/migration deferred; first ADR ever written
+- [T031 merged: lib/harness-fetch.sh](decisions.md) — shared fetch/copy library for setup.sh(T032)/update.sh(T033); 0 P0/P1 review findings; T033 must enumerate files itself (not harness_copy_manifest) for per-file conflict detection
+- [T032 merged: setup.sh rewritten](decisions.md) — direct-copy install, git-repo check, per-file harness-lock.json; 0 P0/P1; stale-symlink-at-MANIFEST-path correctly overwritten (setup always-overwrite ≠ update's refuse-on-symlink, not a conflict)
+- [T033 merged: update.sh rewritten](decisions.md) — hash-lock compare, per-file conflict prompt (fd0/fd3 split), symlink-refusal all-or-nothing; 0 P0/P1; 3 independent verify scenarios pass incl. two-conflicts-in-one-run
 
 ### Patterns & Gotchas
 - [Agent files must not tell sub-agents to write memory](learnings.md) — backend/frontend/qa.md + CLAUDE_LEGACY.md had "Update MEMORY.md" — fixed to "flag to Supervisor"; watch for this on every sync
@@ -50,6 +57,13 @@
 - [verify Evidence-row gate regex](learnings.md) — Check cell must be exactly `verify` immediately before the `|`; TASK_GUIDE_template.md's own example text doesn't match (T026 follow-up flagged); gate also cross-checks memory/event-trace/<task>.jsonl for a real non-error command, not just a text claim
 - [Sub-agent "changed" ≠ committed](learnings.md) — always `git status --short` the worktree and check `git diff <base> --stat` against the TASK_GUIDE's predicted files before trusting a merge; a merge command succeeding is not proof it merged everything (T027 near-miss)
 - [Ghostty spawn marker can silently fail](learnings.md) — T028: sub-agent finished correct work but never committed/marked done; wait-loop itself reported `stopped` with no notification; always check worktree `git status` directly before trusting "done" — 2nd occurrence of the T027 uncommitted-work pattern
+- [Temp-dir cleanup: expose via variable, not stdout](learnings.md) — `$(fn)` capture runs trap registration in a subshell, EXIT trap fires in the wrong shell; set a var instead (T031 gotcha)
+- [No shellcheck in this env](learnings.md) — shell tasks substitute `sh -n` + bash/dash test runs, noted explicitly rather than silently skipped (T031)
+- [Don't combine isolation:"worktree" with a pre-made worktree](learnings.md) — Agent tool creates its own second worktree/branch, orphaning the manually-created one; omit isolation when a worktree already exists (T032 gotcha)
+- [Check Evidence table is actually filled](learnings.md) — not every implementer fills it (T031 did, T032 didn't); reviewer fills it with own reproduced output if blank
+- [step_limit hook false-positive across sub-agent+review calls](learnings.md) — 40-call counter doesn't reset on "Ready for Review" (T031, T033 recurring); inspect trace via bracket-glob, reset step_count_T<NNN>.txt after confirming not stuck; needs a real fix
+- [VAR=val|pipe only scopes to first command](learnings.md) — use export or a subshell before the whole pipeline, not inline before cmd1 (T033 verify footgun)
+- [fd0-prompt / fd3-filelist shell pattern](learnings.md) — lets a script be both interactively promptable and piped-test-drivable without stdin collision (T033)
 
 ### Patterns & Gotchas (thinking-report)
 - [col-chosen on both th and td](learnings.md) — must apply to header AND body cells in chosen column; omitting on td leaves body unstyled

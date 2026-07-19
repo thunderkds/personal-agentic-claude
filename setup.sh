@@ -1,18 +1,26 @@
 #!/bin/sh
-# setup.sh — Supervisor Agent Deployment System installer
-# Usage: bash setup.sh [--copy]
-# SUPERVISOR_PATH overrides the default central clone location (~/.supervisor)
+# setup.sh — Supervisor Agent Deployment System installer (direct-to-repo, ADR-0001)
+# Usage: bash setup.sh [--copy] [--pack=<name>]
+#
+# Fresh-install model (ADR-0001): fetch the harness into a temp clone via
+# lib/harness-fetch.sh, copy every MANIFEST path + CLAUDE.md/CLAUDE_LEGACY.md into
+# the CURRENT git repository as real files (always overwriting), discard the temp
+# clone, and record installed-file content hashes to .claude/harness-lock.json so
+# update.sh can later distinguish "untouched" from "user-customized" files.
+#
+# Env overrides:
+#   SUPERVISOR_REPO   — full git URL to fetch (defaults to the GITHUB_USERNAME repo)
+#   GITHUB_USERNAME   — install from a fork (default: thunderkds)
+#   SUPERVISOR_PATH   — legacy central-clone location, still used ONLY by packs
+#                       (install_pack), which stay out of scope per ADR-0001
 set -e
 
+# Legacy central-clone path — referenced only by the (unchanged, out-of-scope)
+# pack installer. The base install never creates or requires this directory.
 SUPERVISOR_PATH="${SUPERVISOR_PATH:-$HOME/.supervisor}"
 
-# ── Resolve GitHub username → repo URL ───────────────────────────────────────
-# Defaults to the canonical repo; set GITHUB_USERNAME to install from a fork.
-resolve_repo_url() {
-  GITHUB_USERNAME="${GITHUB_USERNAME:-thunderkds}"
-  SUPERVISOR_REPO="https://github.com/${GITHUB_USERNAME}/personal-agentic-claude.git"
-  log_info "Using repo: $SUPERVISOR_REPO"
-}
+# ── Locate this script so we can source its co-located fetch library ─────────
+SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 
 # ── Logging helpers (TTY-aware color, plain-text fallback) ────────────────────
 GREEN=''; YELLOW=''; RED=''; RESET=''
@@ -23,7 +31,30 @@ log_info()  { printf "${GREEN}[info]${RESET}  %s\n"  "$*"; }
 log_warn()  { printf "${YELLOW}[warn]${RESET}  %s\n" "$*" >&2; }
 log_error() { printf "${RED}[error]${RESET} %s\n"   "$*" >&2; }
 
+# ── Source the shared temp-clone-copy-discard fetch library (T031) ───────────
+HARNESS_LIB="$SCRIPT_DIR/lib/harness-fetch.sh"
+if [ ! -f "$HARNESS_LIB" ]; then
+  log_error "Required library not found: $HARNESS_LIB. Run setup.sh from a full checkout of the harness repo."
+  exit 1
+fi
+# shellcheck source=lib/harness-fetch.sh
+. "$HARNESS_LIB"
+
+# ── Resolve GitHub username → repo URL ───────────────────────────────────────
+# Honors a pre-set SUPERVISOR_REPO (fork installs and offline/file:// testing);
+# otherwise builds the canonical URL from GITHUB_USERNAME.
+resolve_repo_url() {
+  if [ -z "${SUPERVISOR_REPO:-}" ]; then
+    GITHUB_USERNAME="${GITHUB_USERNAME:-thunderkds}"
+    SUPERVISOR_REPO="https://github.com/${GITHUB_USERNAME}/personal-agentic-claude.git"
+  fi
+  log_info "Using repo: $SUPERVISOR_REPO"
+}
+
 # ── Parse flags ───────────────────────────────────────────────────────────────
+# --copy is retained for backward-compat: the base install is ALWAYS a real copy
+# now (no symlink mode), so --copy is a no-op there. It still selects copy-vs-
+# symlink for out-of-scope packs (install_pack), whose behavior is unchanged.
 USE_COPY=0
 PACKS=""  # space-separated list of packs to install (e.g. " mobile data")
 for arg in "$@"; do
@@ -34,7 +65,7 @@ for arg in "$@"; do
   esac
 done
 
-# ── Pillar: check_git (before any filesystem change) ─────────────────────────
+# ── Prerequisite: git installed ──────────────────────────────────────────────
 check_git() {
   if ! command -v git >/dev/null 2>&1; then
     log_error "Git is required but not installed. Install Git and re-run setup.sh."
@@ -42,30 +73,21 @@ check_git() {
   fi
 }
 
-# ── Clone or verify the central clone ────────────────────────────────────────
-clone_or_verify() {
-  # Detect if setup.sh is being run with the central clone itself as the target
-  # project (i.e. current directory, not the script's own location — the script
-  # always lives inside the central clone once installed, so checking $0 here
-  # would false-positive on the documented `sh ~/.supervisor/setup.sh ...` usage).
-  cwd="$(pwd)"
-  central="$(cd "$SUPERVISOR_PATH" 2>/dev/null && pwd)" || true
-  if [ -n "$central" ] && [ "$cwd" = "$central" ]; then
-    log_error "Cannot run setup.sh with the central clone ($SUPERVISOR_PATH) as the target project. cd into your target project first."
+# ── Prerequisite: the target (current) directory must be a git repository ─────
+# Under the direct-install model, the working repo's own git history is the only
+# undo mechanism (no symlink is left untouched), so this check is load-bearing.
+# Run BEFORE any file is written.
+check_target_is_git_repo() {
+  if ! git -C . rev-parse --git-dir >/dev/null 2>&1; then
+    log_error "The current directory is not a git repository. Run 'git init' first — setup.sh copies real files in, and git history is your only undo path."
     exit 1
   fi
+}
 
-  if [ -d "$SUPERVISOR_PATH" ]; then
-    if ! git -C "$SUPERVISOR_PATH" rev-parse --git-dir >/dev/null 2>&1; then
-      log_error "$SUPERVISOR_PATH exists but is not a git repository. Remove it and re-run, or set SUPERVISOR_PATH to a different location."
-      exit 1
-    fi
-    # Already a valid repo — nothing to do
-  else
-    # Create parent directories only; git clone creates the leaf itself
-    mkdir -p "$(dirname "$SUPERVISOR_PATH")"
-    git clone "$SUPERVISOR_REPO" "$SUPERVISOR_PATH"
-  fi
+# ── Fetch the harness into a temp clone (discarded on exit by the fetch lib) ──
+fetch_harness() {
+  harness_make_temp_dir              # sets $HARNESS_TEMP_DIR, registers cleanup traps
+  harness_fetch "$SUPERVISOR_REPO" "$HARNESS_TEMP_DIR"
 }
 
 # ── Prompt pack selection (interactive only, skipped if --pack= flags given) ──
@@ -102,7 +124,9 @@ prompt_packs() {
 }
 
 # ── Install a single file using symlink or copy mode ─────────────────────────
-# Takes absolute src and relative dst (from project root)
+# Takes absolute src and relative dst (from project root). Used only by packs
+# (install_pack), which stay out of scope per ADR-0001 — do not repurpose for
+# the base install, which always copies via harness_copy_manifest.
 install_abs() {
   src="$1"
   dst="$2"
@@ -134,6 +158,8 @@ install_abs() {
 }
 
 # ── Install a single pack by name ─────────────────────────────────────────────
+# OUT OF SCOPE per ADR-0001: packs keep their symlink-from-central-clone behavior
+# until a follow-up revisits them. Unchanged from the pre-ADR-0001 file.
 install_pack() {
   pack_name="$1"
   pack_dir="$SUPERVISOR_PATH/packs/$pack_name"
@@ -167,11 +193,6 @@ install_pack() {
 # ── Prompt greenfield vs brownfield ──────────────────────────────────────────
 # Defaults to greenfield when stdin is not a TTY (e.g. curl | sh)
 prompt_mode() {
-  # Detect WSL for informational note
-  if uname -r 2>/dev/null | grep -qi microsoft; then
-    log_warn "WSL detected. Symlinks work in the Linux filesystem. Avoid placing the project on a Windows NTFS mount (/mnt/c/...) — use --copy there instead."
-  fi
-
   if [ -t 0 ]; then
     printf "[info]  Is this a greenfield (new) or brownfield (existing/legacy) project?\n"
     printf "        1) greenfield — use CLAUDE.md\n"
@@ -190,97 +211,33 @@ prompt_mode() {
   esac
 }
 
-# ── Install one path from MANIFEST ───────────────────────────────────────────
-install_path() {
-  entry="$1"
-  src="$SUPERVISOR_PATH/$entry"
-  dst="./$entry"
-
-  if [ ! -e "$src" ]; then
-    log_warn "MANIFEST entry '$entry' not found in central clone — skipping."
-    return
-  fi
-
-  # Hoist parent-dir creation (shared by both modes)
-  parent="$(dirname "$dst")"
-  [ -d "$parent" ] || mkdir -p "$parent"
-
-  if [ $USE_COPY -eq 1 ]; then
-    # --copy mode: warn if it's a symlink; skip silently if already a real copy
-    if [ -L "$dst" ]; then
-      log_warn "'$dst' is a symlink from a previous install. Remove it manually to switch to --copy mode."
-      return
-    fi
-    if [ -e "$dst" ]; then
-      return  # already copied, idempotent
-    fi
-    cp -r "$src" "$dst"
-  else
-    # Symlink mode: warn on broken or real-file conflicts
-    if [ -L "$dst" ] && [ ! -e "$dst" ]; then
-      log_warn "'$dst' is a broken symlink — removing and re-linking."
-      rm "$dst"
-    elif [ -L "$dst" ]; then
-      return  # already a valid symlink, idempotent
-    elif [ -e "$dst" ]; then
-      log_warn "'$dst' exists as a real path (not a symlink). Skipping — remove it manually to allow symlinking."
-      return
-    fi
-    ln -s "$src" "$dst"
-  fi
-}
-
-# ── Install CLAUDE.md symlink/copy ────────────────────────────────────────────
+# ── Install CLAUDE.md as a real copy (always overwrite — fresh install) ───────
 install_claude() {
-  src="$SUPERVISOR_PATH/$CLAUDE_SRC"
+  src="$HARNESS_TEMP_DIR/$CLAUDE_SRC"
   dst="./CLAUDE.md"
 
   if [ ! -e "$src" ]; then
-    log_error "Source '$CLAUDE_SRC' not found in central clone ($SUPERVISOR_PATH). Aborting."
+    log_error "Source '$CLAUDE_SRC' not found in fetched harness. Aborting."
     exit 1
   fi
 
-  # Handle broken symlink: remove and re-link
-  if [ -L "$dst" ] && [ ! -e "$dst" ]; then
-    log_warn "'$dst' is a broken symlink — removing and re-linking."
-    rm "$dst"
-  fi
-
-  # Existing real file: prompt (interactive only) or skip (non-interactive)
-  if [ -e "$dst" ] && [ ! -L "$dst" ]; then
-    if [ -t 0 ]; then
-      log_warn "'./CLAUDE.md' already exists as a real file. Overwrite? [y/N]: "
-      read -r overwrite
-      case "$overwrite" in
-        [Yy]*) rm "$dst" ;;
-        *) log_warn "Skipping CLAUDE.md — remove it manually if you want supervisor rules installed."; return ;;
-      esac
-    else
-      log_warn "'./CLAUDE.md' already exists. Skipping in non-interactive mode — remove it manually to allow install."
-      return
-    fi
-  fi
-
-  if [ -L "$dst" ]; then
-    return  # already a valid symlink, idempotent
-  fi
-
-  if [ $USE_COPY -eq 1 ]; then
-    cp "$src" "$dst"
-  else
-    ln -s "$src" "$dst"
-  fi
+  parent="$(dirname "$dst")"
+  [ -d "$parent" ] || mkdir -p "$parent"
+  [ -e "$dst" ] && rm -rf "$dst"
+  cp "$src" "$dst"
 }
 
 # ── Install settings.json (hook wiring) ──────────────────────────────────────
-# Always a copy, never a symlink: projects append their own permissions to it
-# (e.g. fewer-permission-prompts), which must not leak into the central clone.
+# Copy-only, never overwrite an existing one: projects append their own
+# permissions to it (e.g. fewer-permission-prompts), which must not be clobbered.
+# Behavior preserved from the pre-ADR-0001 file; only the source is now the temp
+# clone instead of a persistent central clone.
 install_settings() {
-  src="$SUPERVISOR_PATH/.claude/settings.json"
+  src="$HARNESS_TEMP_DIR/.claude/settings.json"
   dst="./.claude/settings.json"
 
   if [ ! -e "$src" ]; then
-    log_warn ".claude/settings.json not found in central clone — hooks will not be wired."
+    log_warn ".claude/settings.json not found in fetched harness — hooks will not be wired."
     return
   fi
   if [ -e "$dst" ] || [ -L "$dst" ]; then
@@ -289,6 +246,71 @@ install_settings() {
   [ -d ./.claude ] || mkdir -p ./.claude
   cp "$src" "$dst"
   log_info "Installed .claude/settings.json (copy). Restart Claude Code to activate hooks."
+}
+
+# ── Content hash of a single file (permission-independent: content only) ──────
+compute_file_hash() {
+  _f="$1"
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$_f" | awk '{print $1}'
+  elif command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "$_f" | awk '{print $1}'
+  else
+    log_error "Neither sha256sum nor shasum is available; cannot write harness-lock.json."
+    exit 1
+  fi
+}
+
+# ── Write .claude/harness-lock.json ──────────────────────────────────────────
+# Records one content-hash entry per installed file, keyed by repo-relative path.
+# Directories listed in MANIFEST are expanded to their files so update.sh (T033)
+# can compare and prompt per-file. Hashes are content-only (chmod-safe).
+# Arg $1: path to the MANIFEST in the temp clone.
+write_harness_lock() {
+  _manifest="$1"
+  _lock="./.claude/harness-lock.json"
+  [ -d ./.claude ] || mkdir -p ./.claude
+
+  _files_list="$(mktemp "${TMPDIR:-/tmp}/harness-lock-files.XXXXXX")"
+
+  # Enumerate every installed file: expand each MANIFEST dir to its files, add
+  # the installed CLAUDE.md. Strip the leading ./, sort stably, de-duplicate.
+  {
+    while IFS= read -r _line; do
+      _line=$(printf '%s' "$_line" | tr -d '\r')
+      case "$_line" in '#'*|'') continue ;; esac
+      [ -e "./$_line" ] || continue
+      if [ -d "./$_line" ]; then
+        find "./$_line" -type f
+      elif [ -f "./$_line" ]; then
+        printf '%s\n' "./$_line"
+      fi
+    done < "$_manifest"
+    [ -f ./CLAUDE.md ] && printf '%s\n' ./CLAUDE.md
+  } | sed 's|^\./||' | LC_ALL=C sort -u > "$_files_list"
+
+  _count=$(wc -l < "$_files_list" | tr -d ' ')
+
+  {
+    printf '{\n  "files": {\n'
+    _first=1
+    while IFS= read -r _rel; do
+      [ -n "$_rel" ] || continue
+      _hash=$(compute_file_hash "./$_rel")
+      # JSON-escape backslash then double-quote in the path key.
+      _esc=$(printf '%s' "$_rel" | sed 's/\\/\\\\/g; s/"/\\"/g')
+      if [ "$_first" -eq 1 ]; then
+        _first=0
+      else
+        printf ',\n'
+      fi
+      printf '    "%s": "%s"' "$_esc" "$_hash"
+    done < "$_files_list"
+    printf '\n  }\n}\n'
+  } > "$_lock"
+
+  rm -f "$_files_list"
+  log_info "Wrote $_lock ($_count file hashes)."
 }
 
 # ── Scaffold project-specific folders ────────────────────────────────────────
@@ -360,40 +382,36 @@ EOF
 # ── Main ──────────────────────────────────────────────────────────────────────
 main() {
   check_git
+  check_target_is_git_repo   # BEFORE any file write (fetch writes only to temp)
   resolve_repo_url
-  clone_or_verify
   prompt_mode
   prompt_packs
 
-  # Read MANIFEST and install each listed path
-  manifest="$SUPERVISOR_PATH/MANIFEST"
+  fetch_harness
+
+  manifest="$HARNESS_TEMP_DIR/MANIFEST"
   if [ ! -f "$manifest" ]; then
-    log_error "MANIFEST not found in central clone ($SUPERVISOR_PATH). The repo may be corrupt."
+    log_error "MANIFEST not found in fetched harness. The repo may be corrupt."
     exit 1
   fi
 
-  while IFS= read -r line; do
-    # Strip carriage returns here (CRLF-safe; $'\r' is a bashism and this runs under sh/dash)
-    line=$(printf '%s' "$line" | tr -d '\r')
-    case "$line" in
-      '#'*|'') continue ;;  # skip comments and blank lines
-      *) install_path "$line" ;;
-    esac
-  done < "$manifest"
+  # Copy every MANIFEST path as real files (always overwrite — fresh install).
+  harness_copy_manifest "$HARNESS_TEMP_DIR" "." "$manifest"
 
   install_claude
   install_settings
   scaffold_project
+  write_harness_lock "$manifest"
 
-  # Install selected packs
+  # Install selected packs (out of scope per ADR-0001 — unchanged behavior).
   for pack in $PACKS; do
     install_pack "$pack"
   done
 
-  log_info "Setup complete. Installed from: $SUPERVISOR_PATH"
-  log_info "Mode: $([ $USE_COPY -eq 1 ] && echo 'copy' || echo 'symlink') | CLAUDE: $CLAUDE_SRC"
+  log_info "Setup complete. Harness copied into $(pwd)"
+  log_info "CLAUDE source: $CLAUDE_SRC | lock: .claude/harness-lock.json"
   if [ -n "$PACKS" ]; then
-    log_info "Packs installed:$PACKS"
+    log_info "Packs requested:$PACKS"
   fi
 }
 

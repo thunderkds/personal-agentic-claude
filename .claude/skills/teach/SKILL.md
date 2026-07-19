@@ -48,7 +48,11 @@ Apply all `write-better-skill` principles while drafting:
 
 Run the no-op test on every sentence before including it.
 
-#### 5. Emit the draft
+#### 5. Fidelity gate
+
+Run the draft through `write-better-skill`'s **Fidelity Gate (Hallucination Check)**: every claim traces to the request or is cut; every internal `Skill()`/`Agent()` reference resolves or is flagged `[UNRESOLVED: ...]`; no Permanent-Rules overreach. State "Fidelity gate: PASS" or list the cuts/flags before emitting.
+
+#### 6. Emit the draft
 
 Output a single fenced code block:
 
@@ -75,9 +79,9 @@ Registration:
 [ ] Verify folder name matches `name:` frontmatter
 ```
 
-**Completion criterion**: draft is emitted; description has trigger phrasing not identity prose; leading word identified (or absence noted); every step has a checkable criterion; no-op test passed on all lines; registration checklist appended.
+**Completion criterion**: draft is emitted; description has trigger phrasing not identity prose; leading word identified (or absence noted); every step has a checkable criterion; no-op test passed on all lines; Fidelity gate stated PASS or cuts/flags listed; registration checklist appended.
 
 ---
 
 ### Communication Protocol
-- **Default Notification**: "teach complete. Draft SKILL.md for `<name>` emitted ([N] lines). Invocation: <model|user>-invoked. Leading word: <word|none identified>. Save path: `.claude/skills/<name>/SKILL.md`."
+- **Default Notification**: "teach complete. Draft SKILL.md for `<name>` emitted ([N] lines). Invocation: <model|user>-invoked. Leading word: <word|none identified>. Fidelity gate: <PASS|cuts/flags>. Save path: `.claude/skills/<name>/SKILL.md`."

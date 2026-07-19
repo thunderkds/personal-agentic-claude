@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-07-17
+**Last updated**: 2026-07-17 (T033 merged)
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -8,6 +8,8 @@
 ## Board
 
 ### Todo
+- [ ] **T035** — README.md — update install/update instructions for direct-repo model (ADR-0001, depends on T033) | backend-developer | C0 | Risk: Low | P1
+- [ ] **T034** — QA — smoke tests: fresh install, untouched-update, conflict-prompt, non-git-dir rejection (ADR-0001, depends on T032/T033) | qa-expert | C1 | Risk: Low | P0
 - [ ] **T030** — Post-baseline analysis — pick the token refactor from real data (blocked: T028 window must close — 7 sessions/14 days, DDR-0001) | Supervisor + user (HITL) | C1 | Risk: Low | P1
 - [ ] **T029** — Prune the 4 oversized SKILL.md files via /slim-skills (HITL, approval-gated) | Supervisor + user (HITL) | C1 | Risk: Low | P1
 - [ ] **T028** — Token Audit Log — scaffold + entry convention + format test (DDR-0001) | backend-developer | C1 | Risk: Low | P0
@@ -29,6 +31,9 @@
 ### Ready for Review
 
 ### Done
+- [x] **T033** — New update.sh — hash-lock compare, per-file conflict prompt, symlink-refusal, git-repo check (ADR-0001) | C2 | Completed: 2026-07-17
+- [x] **T032** — Rewrite setup.sh — direct-copy install, git-repo prerequisite check, write .claude/harness-lock.json (ADR-0001) | C2 | Completed: 2026-07-17
+- [x] **T031** — lib/harness-fetch.sh — shared temp-clone-copy-discard + MANIFEST parsing (ADR-0001) | C2 | Completed: 2026-07-17
 - [x] **T027** — DDR (Design Decision Record) — default decision artifact, ADR as rare escalation | C1 | Completed: 2026-07-16
 - [x] **T025** — craft-agent skill (optional, supplemental agent-drafting) + Stage 1.5 wiring | C2 | Completed: 2026-07-16
 - [x] **T001** — setup.sh + MANIFEST | C1 | Completed: 2026-06-10
