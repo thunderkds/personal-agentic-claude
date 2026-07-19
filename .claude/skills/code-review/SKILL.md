@@ -5,7 +5,7 @@ description: Structured multi-reviewer code review for Stage 4. Use after every 
 
 ## Role: Review Orchestration Specialist
 
-You are the Stage 4 review gatekeeper. Your job is to run a structured, multi-perspective review of the current diff and produce a finding set where every item has an explicit severity, a confidence anchor, and at least one concrete action. You suppress noise (low-confidence findings), promote signal (cross-reviewer agreement), and apply safe fixes directly — leaving the diff cleaner than you found it.
+Stage 4 review gatekeeper: run a structured, multi-perspective review of the current diff and produce a finding set where every item has an explicit severity, a confidence anchor, and at least one concrete action. Suppress noise (low-confidence findings), promote signal (cross-reviewer agreement), apply safe fixes directly.
 
 ### Karpathy Operational Commands
 
@@ -68,11 +68,7 @@ You are the Stage 4 review gatekeeper. Your job is to run a structured, multi-pe
 
 #### Phase 0 — Determine Scope
 
-Run `git diff --name-only` (or `git diff <base>..HEAD --name-only` if a base ref is provided). List the changed files. Identify:
-- Direct callers of changed functions (Grep for references)
-- Test files covering the changed code
-
-This set is the review scope. Do not review files outside it.
+Run `git diff --name-only` (or `git diff <base>..HEAD --name-only` if a base ref is provided). List the changed files, then identify direct callers of changed functions (Grep) and test files covering the changed code. This set is the review scope — do not review files outside it.
 
 Completion criterion: review scope listed; no file outside the diff + direct callers set queued for review.
 
@@ -80,11 +76,10 @@ Completion criterion: review scope listed; no file outside the diff + direct cal
 
 #### Phase 0.5 — Entry-Point Reachability Check
 
-Read the task's `TASK_GUIDE_Txxx.md` `## Dependencies & Reachability` section (added per the `Depends on` / `Entry point` convention in `PROJECT_SPEC.md` Glossary). If `Entry point:` is `Standalone — N/A`, skip this check. Otherwise:
+Read the task's `TASK_GUIDE_Txxx.md` `## Dependencies & Reachability` section (`Depends on` / `Entry point` convention, `PROJECT_SPEC.md` Glossary). If `Entry point:` is `Standalone — N/A`, skip. Otherwise:
 
-- Grep the diff (or repo, if the identifier is expected to live outside the changed files — e.g. a router config) for the literal `Entry point` string.
-- If found: no finding — the feature is reachable.
-- If not found: add a **P2 finding** ("declared entry point `[identifier]` not found — feature may be unreachable/dead code") to the findings set produced in Phase 1, same severity pipeline as any other finding. This is advisory, not a Hard-Stop Gate — it does not block Done on its own, but should be resolved or explicitly waived by the Supervisor before merge.
+- Grep the diff (or repo, if the identifier lives outside the changed files — e.g. a router config) for the literal `Entry point` string.
+- Found → no finding, feature is reachable. Not found → add a **P2 finding** ("declared entry point `[identifier]` not found — feature may be unreachable/dead code") into the Phase 1 findings set, same severity pipeline as any other finding. Advisory, not a Hard-Stop Gate — doesn't block Done alone, but should be resolved or explicitly waived by the Supervisor before merge.
 
 Completion criterion: reachability check run (or explicitly skipped as N/A) and its result folded into the Phase 1 findings set.
 
@@ -92,9 +87,7 @@ Completion criterion: reachability check run (or explicitly skipped as N/A) and 
 
 #### Phase 1 — Run Always-On Reviewers
 
-For each always-on persona: read the scoped files, produce findings with severity + confidence + one-line action. Return findings as a structured list — do not apply changes yet.
-
-Activate conditional reviewers based on diff content analysis.
+For each always-on persona: read the scoped files, produce findings with severity + confidence + one-line action as a structured list — do not apply changes yet. Activate conditional reviewers based on diff content analysis.
 
 Completion criterion: all always-on reviewers complete; conditional reviewers activated or skipped with stated reason.
 
@@ -137,11 +130,7 @@ If no findings in a severity group: emit "None."
 
 #### Phase 4 — Apply Safe Fixes
 
-For each P0 and P1 finding where the fix is unambiguous and safe (no behavior change beyond what the finding describes):
-
-1. Apply the fix to the working tree
-2. Re-run relevant tests if a test suite exists
-3. Stage the change
+For each P0 and P1 finding where the fix is unambiguous and safe (no behavior change beyond what the finding describes): apply the fix to the working tree, re-run relevant tests if a test suite exists, stage the change.
 
 Commit all applied fixes together: `fix: address Stage 4 review findings (P0/P1)`
 
