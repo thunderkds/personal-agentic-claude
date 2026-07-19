@@ -8,8 +8,6 @@
 ## Board
 
 ### Todo
-- [ ] **T034** — QA — smoke tests: fresh install, untouched-update, conflict-prompt, non-git-dir rejection (ADR-0001, depends on T032/T033) | qa-expert | C1 | Risk: Low | P0
-- [ ] **T035** — README.md — update install/update instructions for direct-repo model (ADR-0001, depends on T033) | backend-developer | C0 | Risk: Low | P1
 - [ ] **T029** — Prune the 4 oversized SKILL.md files via /slim-skills (HITL, approval-gated) — RE-DO: earlier approved prune (learn 182→128, map-codebase 165→130) was never committed and was lost to session drift; files are back at original line counts | Supervisor + user (HITL) | C1 | Risk: Low | P1
 - [ ] **T030** — Post-baseline analysis — pick the token refactor from real data (blocked: T028 window must close — 7 sessions/14 days, DDR-0001) | Supervisor + user (HITL) | C1 | Risk: Low | P1
 
@@ -18,6 +16,8 @@
 ### Ready for Review
 
 ### Done
+- [x] **T034** — QA — independent smoke suite for install/update (9/9 pass, incl. negative-control sabotage self-check on update.sh's conflict detection) | C1 | Completed: 2026-07-19
+- [x] **T035** — README.md — install/update sections rewritten for direct-repo model (2 stale-doc gaps found beyond original scope: pack ~/.supervisor no-longer-auto-created, obsolete git-submodule note removed) | C0 | Completed: 2026-07-19
 - [x] **T026** — Fix TASK_GUIDE_template.md example verify Evidence row (2 compounding gate bugs found + fixed) | C0 | Completed: 2026-07-19
 - [x] **T024** — Fix post_write_register_task.py agent-field regex | C0 | Completed: 2026-07-19
 - [x] **T012** — Registration — CLAUDE.md + MEMORY.md + README | C0 | Completed: 2026-07-19 (audit-confirmed: skills deploy via MANIFEST's blanket `.claude/skills` line, documented in CLAUDE.md/README.md/MEMORY.md — no separate registration work remained)

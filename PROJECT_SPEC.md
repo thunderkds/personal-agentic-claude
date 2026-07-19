@@ -110,8 +110,8 @@ The supervisor repo (`per-agentic-claude`) is a general framework. A `MANIFEST` 
 | T031 | lib/harness-fetch.sh — shared temp-clone-copy-discard + MANIFEST parsing (ADR-0001) | Done | backend-developer | C2 | Medium | P0 |
 | T032 | Rewrite setup.sh — direct-copy install, git-repo prerequisite check, write .claude/harness-lock.json (ADR-0001) | Done | backend-developer | C2 | Medium | P0 |
 | T033 | New update.sh — hash-lock compare, per-file conflict prompt, symlink-refusal, git-repo check (ADR-0001) | Done | backend-developer | C2 | Medium | P0 |
-| T034 | QA — smoke tests: fresh install, untouched-update, conflict-prompt, non-git-dir rejection (ADR-0001) | Todo | qa-expert | C1 | Low | P0 |
-| T035 | README.md — update install/update instructions for direct-repo model (ADR-0001) | Todo | backend-developer | C0 | Low | P1 |
+| T034 | QA — smoke tests: fresh install, untouched-update, conflict-prompt, non-git-dir rejection (ADR-0001) | Done | qa-expert | C1 | Low | P0 |
+| T035 | README.md — update install/update instructions for direct-repo model (ADR-0001) | Done | backend-developer | C0 | Low | P1 |
 
 ---
 

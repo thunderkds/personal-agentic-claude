@@ -47,7 +47,11 @@
 - [T031 merged: lib/harness-fetch.sh](decisions.md) — shared fetch/copy library for setup.sh(T032)/update.sh(T033); 0 P0/P1 review findings; T033 must enumerate files itself (not harness_copy_manifest) for per-file conflict detection
 - [T032 merged: setup.sh rewritten](decisions.md) — direct-copy install, git-repo check, per-file harness-lock.json; 0 P0/P1; stale-symlink-at-MANIFEST-path correctly overwritten (setup always-overwrite ≠ update's refuse-on-symlink, not a conflict)
 - [T033 merged: update.sh rewritten](decisions.md) — hash-lock compare, per-file conflict prompt (fd0/fd3 split), symlink-refusal all-or-nothing; 0 P0/P1; 3 independent verify scenarios pass incl. two-conflicts-in-one-run
-- [T028 merged: Token Audit Log scaffold](decisions.md) — reports/token-audit_2026-07-17.md + format test; rebased past T031-T033 drift after a failed /compact; reports/ gitignore amended (see below) since worktree-isolated spawns need the file to survive merge; T029 (slim-skills prune) lost to the same drift, must be redone
+- [T028 merged: Token Audit Log scaffold](decisions.md) — reports/token-audit_2026-07-17.md + format test; rebased past T031-T033 drift after a failed /compact; reports/ gitignore amended (see below) since worktree-isolated spawns need the file to survive merge
+- [T024/T026 merged: two merge-gate regex fixes](decisions.md) — agent-field extraction (matched wrong line); template's example verify row (2 compounding bugs: check-column text, AND "pass" must be in the Notes column not Result column — undocumented until now)
+- [T034 merged: independent QA install/update smoke suite](decisions.md) — recovered real work from a pre-existing worktree post-/compact, independently re-verified (9/9 + 55/55 across all 4 suites), fixed a stale pre-T026-fix verify row before merging
+- [T035 merged: README rewritten for direct-repo model](decisions.md) — a prior uncommitted edit FALSELY claimed this was done (Evidence checkmarks, no real changes) — discarded, redone for real; 2 gaps found beyond original scope (packs need pre-existing ~/.supervisor, obsolete submodule note removed)
+- [Full Todo audit + reprioritization, 2026-07-19](decisions.md) — T003/T004 deduped (already Done), T005-T007 closed as superseded (dead Typer-CLI scope), T008-T012 closed as already-built-but-mislabeled; T024/T026 raised to P0
 
 ### Patterns & Gotchas
 - [Agent files must not tell sub-agents to write memory](learnings.md) — backend/frontend/qa.md + CLAUDE_LEGACY.md had "Update MEMORY.md" — fixed to "flag to Supervisor"; watch for this on every sync
@@ -62,8 +66,9 @@
 - [No shellcheck in this env](learnings.md) — shell tasks substitute `sh -n` + bash/dash test runs, noted explicitly rather than silently skipped (T031)
 - [Don't combine isolation:"worktree" with a pre-made worktree](learnings.md) — Agent tool creates its own second worktree/branch, orphaning the manually-created one; omit isolation when a worktree already exists (T032 gotcha)
 - [Check Evidence table is actually filled](learnings.md) — not every implementer fills it (T031 did, T032 didn't); reviewer fills it with own reproduced output if blank
-- [step_limit hook false-positive across sub-agent+review calls](learnings.md) — 40-call counter doesn't reset on "Ready for Review" (3rd occurrence: T031, T033, T028); inspect trace via bracket-glob, reset step_count_T<NNN>.txt after confirming not stuck; needs a real fix, now overdue
+- [step_limit hook false-positive, now scans ALL tool inputs not just Bash](learnings.md) — 25+ stale counter files never reset on completion; blocks even Edit calls whose *text* mentions an old task ID; escape valve = bracket-glob the ID; fix is overdue, no longer occasional
 - [Worktree-isolated files silently die if gitignored](learnings.md) — a Stage-3 spawn's gitignored output never leaves its worktree, even after merge; before gitignoring any spawn-produced artifact, check whether a future worktree/session needs to read it (T028 gotcha, reports/token-audit exception)
+- [Post-/compact recovery: a checkmark is a claim, not a fact](learnings.md) — 3 different failure modes hit in one session (fully lost work / real work sitting in a forgotten worktree / FALSE Evidence claims with no real changes) — always `git worktree list` + independently re-verify claimed-passing Evidence against real file content before trusting it
 - [VAR=val|pipe only scopes to first command](learnings.md) — use export or a subshell before the whole pipeline, not inline before cmd1 (T033 verify footgun)
 - [fd0-prompt / fd3-filelist shell pattern](learnings.md) — lets a script be both interactively promptable and piped-test-drivable without stdin collision (T033)
 
