@@ -90,12 +90,22 @@ The supervisor repo (`per-agentic-claude`) is a general framework. A `MANIFEST` 
 
 | ID | Title | Status | Assigned Agent | Complexity | Risk | Priority |
 |----|-------|--------|---------------|-----------|------|----------|
-| T001 | setup.sh + MANIFEST | Todo | backend-developer | C1 | Medium | P0 |
-| T002 | update.sh | Todo | backend-developer | C1 | Low | P0 |
-| T003 | README.md | Todo | backend-developer | C0 | Low | P1 |
-| T004 | .gitignore + repo hygiene | Todo | backend-developer | C0 | Low | P2 |
-| T028 | Token Audit Log — scaffold + entry convention + format test (DDR-0001) | Todo | backend-developer | C1 | Low | P0 |
-| T029 | Prune the 4 oversized SKILL.md files via /slim-skills (HITL) | Todo | Supervisor + user | C1 | Low | P1 |
+| T001 | setup.sh + MANIFEST | Done | backend-developer | C1 | Medium | P0 |
+| T002 | update.sh | Done | backend-developer | C1 | Low | P0 |
+| T003 | README.md | Done | backend-developer | C0 | Low | P1 |
+| T004 | .gitignore + repo hygiene | Done | backend-developer | C0 | Low | P2 |
+| T005 | CLI Wiring — Typer Entrypoint | Done (superseded — no code ever existed, original scope closed 2026-07-19) | Backend-Implementer | C1 | Low | P0 |
+| T006 | Mermaid Export (Stretch Goal) | Done (superseded — closed 2026-07-19) | Backend-Implementer | C1 | Low | P1 |
+| T007 | QA — Unit Tests + Sample Traces + Smoke Suite | Done (superseded — closed 2026-07-19) | QA-Automation-Agent | C2 | Low | P0 |
+| T008 | Infrastructure — memory/learning-records/ folder + LR format template | Done | common-infrastructure | C0 | Low | P0 |
+| T009 | Core learn SKILL.md — detection, LR writing, supersession, skill promotion | Done | backend-developer | C2 | Low | P0 |
+| T010 | Registration — CLAUDE.md + MEMORY.md + README + setup.sh | Done | common-infrastructure | C0 | Low | P1 |
+| T011 | Core wake SKILL.md — live 4-section cold-start briefing | Done | backend-developer | C2 | Low | P0 |
+| T012 | Registration — CLAUDE.md + MEMORY.md + README | Done | common-infrastructure | C0 | Low | P1 |
+| T024 | Fix post_write_register_task.py agent-field regex | Done | backend-developer | C0 | Low | P0 |
+| T026 | Fix TASK_GUIDE_template.md example verify Evidence row | Done | backend-developer | C0 | Low | P0 |
+| T028 | Token Audit Log — scaffold + entry convention + format test (DDR-0001) | Done | backend-developer | C1 | Low | P0 |
+| T029 | Prune the 4 oversized SKILL.md files via /slim-skills (HITL) | Todo — redo, earlier prune lost to session drift | Supervisor + user | C1 | Low | P1 |
 | T030 | Post-baseline analysis — pick token refactor from real data (blocked by T028 window close) | Todo | Supervisor + user | C1 | Low | P1 |
 | T031 | lib/harness-fetch.sh — shared temp-clone-copy-discard + MANIFEST parsing (ADR-0001) | Done | backend-developer | C2 | Medium | P0 |
 | T032 | Rewrite setup.sh — direct-copy install, git-repo prerequisite check, write .claude/harness-lock.json (ADR-0001) | Done | backend-developer | C2 | Medium | P0 |

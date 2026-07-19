@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-07-17 (T033 merged)
+**Last updated**: 2026-07-19 (T028 merged; full Todo audit — T003/T004 deduped, T005-T012 closed, T024/T026 reprioritized to P0)
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -8,28 +8,26 @@
 ## Board
 
 ### Todo
-- [ ] **T035** — README.md — update install/update instructions for direct-repo model (ADR-0001, depends on T033) | backend-developer | C0 | Risk: Low | P1
 - [ ] **T034** — QA — smoke tests: fresh install, untouched-update, conflict-prompt, non-git-dir rejection (ADR-0001, depends on T032/T033) | qa-expert | C1 | Risk: Low | P0
-- [ ] **T030** — Post-baseline analysis — pick the token refactor from real data (blocked: T028 window must close — 7 sessions/14 days, DDR-0001) | Supervisor + user (HITL) | C1 | Risk: Low | P1
+- [ ] **T035** — README.md — update install/update instructions for direct-repo model (ADR-0001, depends on T033) | backend-developer | C0 | Risk: Low | P1
 - [ ] **T029** — Prune the 4 oversized SKILL.md files via /slim-skills (HITL, approval-gated) — RE-DO: earlier approved prune (learn 182→128, map-codebase 165→130) was never committed and was lost to session drift; files are back at original line counts | Supervisor + user (HITL) | C1 | Risk: Low | P1
-- [ ] **T026** — Fix TASK_GUIDE_template.md example `verify` Evidence row to match pre_bash_block_unsafe_merge.py's gate regex | backend-developer | C0 | Risk: Low | P1
-- [ ] **T024** — Fix post_write_register_task.py agent-field regex (matches "Agent guide" before "Assigned agent") | backend-developer | C0 | Risk: Low | P2
-- [ ] **T012** — Registration — CLAUDE.md + MEMORY.md + README | common-infrastructure | C0 | Risk: Low | P1
-- [ ] **T011** — Core `wake` SKILL.md — live 4-section cold-start briefing | backend-developer | C2 | Risk: Low | P0
-- [ ] **T010** — Registration — CLAUDE.md + MEMORY.md + README + setup.sh | common-infrastructure | C0 | Risk: Low | P1
-- [ ] **T009** — Core `learn` SKILL.md — detection, LR writing, supersession, skill promotion | backend-developer | C2 | Risk: Low | P0
-- [ ] **T008** — Infrastructure — `memory/learning-records/` folder + LR format template | common-infrastructure | C0 | Risk: Low | P0
-- [ ] **T007** — QA — Unit Tests + Sample Traces + Smoke Suite | QA-Automation-Agent | C2 | Risk: Low | P0
-- [ ] **T006** — Mermaid Export (Stretch Goal) | Backend-Implementer | C1 | Risk: Low | P1
-- [ ] **T005** — CLI Wiring — Typer Entrypoint | Backend-Implementer | C1 | Risk: Low | P0
-- [ ] **T003** — README.md | backend-developer | C0 | Risk: Low | P1
-- [ ] **T004** — .gitignore + repo hygiene | backend-developer | C0 | Risk: Low | P2
+- [ ] **T030** — Post-baseline analysis — pick the token refactor from real data (blocked: T028 window must close — 7 sessions/14 days, DDR-0001) | Supervisor + user (HITL) | C1 | Risk: Low | P1
 
 ### In Progress
 
 ### Ready for Review
 
 ### Done
+- [x] **T026** — Fix TASK_GUIDE_template.md example verify Evidence row (2 compounding gate bugs found + fixed) | C0 | Completed: 2026-07-19
+- [x] **T024** — Fix post_write_register_task.py agent-field regex | C0 | Completed: 2026-07-19
+- [x] **T012** — Registration — CLAUDE.md + MEMORY.md + README | C0 | Completed: 2026-07-19 (audit-confirmed: skills deploy via MANIFEST's blanket `.claude/skills` line, documented in CLAUDE.md/README.md/MEMORY.md — no separate registration work remained)
+- [x] **T011** — Core `wake` SKILL.md — live 4-section cold-start briefing | C2 | Completed: 2026-07-19 (audit-confirmed: `.claude/skills/wake/SKILL.md` exists, mandatory-invoked every session per CLAUDE.md)
+- [x] **T010** — Registration — CLAUDE.md + MEMORY.md + README + setup.sh | C0 | Completed: 2026-07-19 (audit-confirmed, same basis as T012)
+- [x] **T009** — Core `learn` SKILL.md — detection, LR writing, supersession, skill promotion | C2 | Completed: 2026-07-19 (audit-confirmed: `.claude/skills/learn/SKILL.md` exists, actively used — LR-0001/LR-0002 on disk)
+- [x] **T008** — Infrastructure — `memory/learning-records/` folder + LR format template | C0 | Completed: 2026-07-19 (audit-confirmed: folder exists with LR-0001, LR-0002)
+- [x] **T007** — QA — Unit Tests + Sample Traces + Smoke Suite | C2 | Completed: 2026-07-19 (closed per user confirmation — original Typer-CLI-project scope, superseded when repo pivoted to the Supervisor framework; no code ever existed to test)
+- [x] **T006** — Mermaid Export (Stretch Goal) | C1 | Completed: 2026-07-19 (closed per user confirmation — same superseded original scope as T005/T007)
+- [x] **T005** — CLI Wiring — Typer Entrypoint | C1 | Completed: 2026-07-19 (closed per user confirmation — no Typer/Python CLI code ever existed in this repo; original scope superseded by the Supervisor framework direction)
 - [x] **T028** — Token Audit Log — scaffold + entry convention + format test (DDR-0001) | C1 | Completed: 2026-07-19
 - [x] **T033** — New update.sh — hash-lock compare, per-file conflict prompt, symlink-refusal, git-repo check (ADR-0001) | C2 | Completed: 2026-07-17
 - [x] **T032** — Rewrite setup.sh — direct-copy install, git-repo prerequisite check, write .claude/harness-lock.json (ADR-0001) | C2 | Completed: 2026-07-17
