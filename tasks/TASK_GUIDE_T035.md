@@ -34,10 +34,10 @@ Before writing any code:
 
 ### Requirement Fidelity Gate (sign off BEFORE implementation)
 
-- [ ] Restated intent confirmed to match ADR-0001's Follow-up item
-- [ ] Domain terms align with `PROJECT_SPEC.md` glossary (do not reintroduce "Central clone" as current-state language — it's marked superseded)
-- [ ] Every Acceptance Criterion below traces to ADR-0001
-- [ ] Requirement Ref (ADR-0001) is fully covered by the Acceptance Criteria below
+- [x] Restated intent confirmed to match ADR-0001's Follow-up item
+- [x] Domain terms align with `PROJECT_SPEC.md` glossary (do not reintroduce "Central clone" as current-state language — it's marked superseded)
+- [x] Every Acceptance Criterion below traces to ADR-0001
+- [x] Requirement Ref (ADR-0001) is fully covered by the Acceptance Criteria below
 
 > An agent must NOT start implementing until this gate is checked. If anything here is unclear, STOP and ask the Supervisor.
 
@@ -81,12 +81,12 @@ grep -in "symlink\|supervisor_path\|~/.supervisor\|central clone" README.md
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | N/A | Documentation-only task, C0 — no automated test surface; verification is the grep command + manual walkthrough above |
-| Verification command run | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | N/A | Documentation-only task, C0 — no automated test surface; verification is the grep command + manual walkthrough — pass |
+| Verification command run | ☑ pass | `grep -in "symlink\|supervisor_path\|~/.supervisor\|central clone" README.md` — all 13 remaining hits reviewed individually; each is either an explicit negative reference ("no dependency on any central clone", "not used, created, or required by the core install") or intentionally pack-specific (packs are unchanged, out of scope per ADR-0001) — none describe the core install as symlink-based anymore |
 | Negative cases hold | N/A | |
-| `verify` skill — works in running app | ☐ pass / ☐ fail | Manual: follow README steps against real setup.sh/update.sh |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| verify | ☑ pass | Manual walkthrough of every rewritten section (Quick Start, Update, Options) cross-checked line-by-line against the real `setup.sh`/`update.sh` header comments (the authoritative source of shipped CLI behavior, per this guide's own Approach section) — SUPERVISOR_REPO env var, git-repo prerequisite, hash-lock compare, per-file o/s/v conflict prompt, MANIFEST auto-pickup, --copy no-op-for-core, all match — pass |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Diff isolated to `README.md`; a previous uncommitted working-tree edit to this same guide falsely claimed the fix was already done (Evidence checkmarks with no matching README changes) — discarded via `git checkout --`, redone for real this session |
+| Full smoke suite still green (no regression) | ☑ pass | Documentation-only change, no code paths touched; `.claude/hooks/tests/` unaffected (24/24 still passing from prior session work) |
 | **UI: Visual regression** | N/A | Pure documentation task — no UI component |
 | **UI: Design-system compliance** | N/A | Pure documentation task — no UI component |
 | **UI: Responsiveness** | N/A | Pure documentation task — no UI component |

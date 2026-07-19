@@ -53,7 +53,9 @@ Stage 5: Verify end-to-end → merge → ship
 | `memory/learning-records/` | *(per project)* Sequential LR-NNNN-slug.md files written by the `learn` skill at runtime |
 | `memory/codebase-map.md` | *(per project, generated)* Structural snapshot — directory tree, entry points, blast-radius hotspots. Written by `/map-codebase` at Stage 1; C2/C3 agents read it cold |
 
-Shared resources (`agents`, `skills`, `hooks`, `templates`, `packs`) are **symlinked** from `~/.supervisor` so all projects update automatically. `.claude/settings.json` is **copied** (projects add their own permissions to it). Project-specific files are created fresh and never overwritten.
+**Core resources** (`.claude/agents/`, `.claude/skills/`, `.claude/hooks/`, `templates/`, `CLAUDE.md`) are **copied as real files** directly into your project by `setup.sh` — no dependency on any central clone. `.claude/settings.json` is copied too (projects add their own permissions to it). Project-specific files (`tasks/`, `memory/`) are created fresh and never overwritten. Run `update.sh` to refresh core resources later — see [Update](#update).
+
+**Pack resources** (`packs/`) are a separate, unchanged mechanism: they remain **symlinked** from a persistent `~/.supervisor` clone — see [Packs](#packs-optional-domain-extensions) below.
 
 ---
 
@@ -70,6 +72,8 @@ The core framework ships four agents (backend, frontend, common-infrastructure, 
 | `api` | REST/gRPC, OpenAPI, auth flows | `api-designer` | `contract-review`, `auth-checklist` |
 
 **Install packs interactively** — `setup.sh` prompts for pack selection when run from a TTY.
+
+> **Note:** packs still require a persistent local clone at `~/.supervisor` (or `$SUPERVISOR_PATH`) — unlike core resources, `setup.sh` no longer creates this directory automatically. If you don't already have one from before, clone it yourself first: `git clone https://github.com/thunderkds/personal-agentic-claude.git ~/.supervisor`. Unifying packs onto the same self-contained model is a tracked follow-up, not yet done.
 
 **Install a specific pack** into an existing project — `cd` into the project first, then run `setup.sh` from the central clone (not piped through `curl`, and not from inside `~/.supervisor` itself):
 ```sh
@@ -173,13 +177,15 @@ The Supervisor picks the right agent per task at Stage 1.5 — list your pack ag
 
 ## Quick Start
 
+**Prerequisite:** the target directory must already be a git repository (`git init` first if it isn't — this is required because your project's own git history is the undo mechanism now that nothing is symlinked from a shared location).
+
 Run from inside the target project root:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh
 ```
 
-That's it — the script clones the framework to `~/.supervisor` (first run only), symlinks the shared resources into the project, and scaffolds `tasks/` + the two-tier `memory/` files.
+That's it — the script fetches the framework into a temporary clone, copies every `MANIFEST`-listed path plus `CLAUDE.md`/`CLAUDE_LEGACY.md` into your project as real files (always overwriting on first install), records each installed file's content hash to `.claude/harness-lock.json` (so `update.sh` can later tell "untouched" from "you customized this" — see [Update](#update)), discards the temporary clone, and scaffolds `tasks/` + the two-tier `memory/` files. No `~/.supervisor` directory or other persistent central clone is created or required for this.
 
 Installing from a fork? Export your username first and swap it into the URL:
 
@@ -188,7 +194,7 @@ export GITHUB_USERNAME=your-username
 curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-claude/main/setup.sh | sh
 ```
 
-> Piped installs are non-interactive: they default to **greenfield** (`CLAUDE.md`) and never overwrite existing files. For a brownfield project, run it interactively instead: `sh ~/.supervisor/setup.sh` and choose option 2.
+> Piped installs are non-interactive: they default to **greenfield** (`CLAUDE.md`) and never overwrite existing files. For a brownfield project, run it interactively instead: clone this repo somewhere (or reuse an existing checkout), `cd` into your target project, then invoke that checkout's `setup.sh` by path (e.g. `cd /path/to/your/project && sh /path/to/personal-agentic-claude/setup.sh`) and choose option 2. The script locates its own `lib/harness-fetch.sh` relative to itself, but always installs into your current directory.
 
 After installing, restart Claude Code in the project so the deployed hooks in `.claude/settings.json` are picked up.
 
@@ -196,11 +202,18 @@ After installing, restart Claude Code in the project so the deployed hooks in `.
 
 ## Update
 
+`update.sh` is a separate script from `setup.sh` — run it from inside your already-installed project (which must still be a git repository):
+
 ```sh
-sh ~/.supervisor/update.sh   # pulls latest; symlinked projects update instantly
+sh /path/to/personal-agentic-claude/update.sh
 ```
 
-If `MANIFEST` changed, re-run `sh ~/.supervisor/setup.sh` from each project root to deploy new resources.
+There's no more `git pull`-and-everyone-gets-it — each project updates itself explicitly. Under the hood, `update.sh` re-fetches the framework fresh into a temporary clone, then for every `MANIFEST` file compares your project's current copy against the content hash recorded at the last install/update (`.claude/harness-lock.json`):
+
+- **Untouched since install** → silently overwritten with the latest upstream version.
+- **You customized it** → shown a diff and prompted per file: **o**verwrite / **s**kip / **v**iew diff again.
+
+`MANIFEST` additions are picked up automatically on the next `update.sh` run — no separate re-run of `setup.sh` needed. `update.sh` refuses to run against a non-git directory, and refuses (rather than silently converting) if it finds a symlink at a `MANIFEST` path from an old pre-direct-install version — migrating an existing symlink-based install to this model is a deferred follow-up, not yet available.
 
 ---
 
@@ -413,13 +426,10 @@ memory/codebase-map.md    ← Structural tier: directory tree, entry points, bla
 
 | Variable / Flag | Default | Purpose |
 |-----------------|---------|---------|
-| `SUPERVISOR_PATH` | `~/.supervisor` | Override the central clone location |
-| `GITHUB_USERNAME` | `thunderkds` | Install from a fork instead of the canonical repo |
-| `--pack=<name>` | *(none)* | Install one or more domain packs (repeatable; see Packs section) |
-| `--copy` | *(symlink)* | Copy instead of symlinking — files do not auto-update |
+| `SUPERVISOR_REPO` | *(built from `GITHUB_USERNAME`)* | Full git URL to fetch — set directly for a non-GitHub fork, private remote, or local `file://` testing fixture |
+| `GITHUB_USERNAME` | `thunderkds` | Install/update from a fork instead of the canonical repo |
+| `SUPERVISOR_PATH` | `~/.supervisor` | **Packs only** — location of the persistent clone `install_pack` reads from. Not used, created, or required by the core install |
+| `--pack=<name>` | *(none)* | Install one or more domain packs (repeatable; see [Packs](#packs-optional-domain-extensions) section) |
+| `--copy` | *(no-op for core)* | No effect on core resources — those are always copied as real files now. Retained only for backward-compatibility with pack installs, which still choose copy-vs-symlink |
 
 **Greenfield vs Brownfield** — chosen interactively during `setup.sh`. Brownfield uses `CLAUDE_LEGACY.md` which adds legacy-codebase guidance (risk hotspots, strangler-fig patterns).
-
-**`--copy` mode** — copies instead of symlinking. Files do not auto-update; merge upstream changes manually from `~/.supervisor/<path>`.
-
-**Git submodule alternative** — add as `.supervisor` submodule for pinned versioning; symlink resources manually; update with `git submodule update --remote`.
