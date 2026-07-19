@@ -25,7 +25,7 @@
 - [Hard-stop gates in Permanent Rules](decisions.md) — 4 Supervisor self-checks: no TASK_GUIDE=no work; refactor/QA floors at C2/Medium; KANBAN current before session ends; one project per KANBAN
 - [Codebase Map](codebase-map.md) — structural snapshot (tree, entry points, hotspots) in memory/codebase-map.md; cold-tier; C2/C3 agents read it; refresh via /map-codebase
 - [LLM-as-Renderer for HTML reports](decisions.md) — html-report skill renders Stage 4 output inline; no shell post-processor; built-ins (code-review, security-review) can't be modified
-- [reports/ is local-only](decisions.md) — generated HTML reports excluded from git; local browser viewing only
+- [reports/ is local-only](decisions.md) — generated HTML reports excluded from git; local browser viewing only; **amended 2026-07-19**: `reports/token-audit_*.md` is a tracked exception (must survive across worktrees)
 - [thinking-report is separate from html-report](decisions.md) — Stage 0.5–2 decision reasoning vs Stage 4 review findings; different templates, different triggers
 - [thinking-report MVP: matrix only, no flowchart](decisions.md) — CSS flowchart deferred; matrix answers "why this option?" reliably with less implementation risk
 - [Dark neon theme on HTML report templates](decisions.md) — both templates use #0a0a12 bg + cyan/green/purple/amber neon palette with glow effects; matches user's dashboard aesthetic preference
@@ -47,6 +47,7 @@
 - [T031 merged: lib/harness-fetch.sh](decisions.md) — shared fetch/copy library for setup.sh(T032)/update.sh(T033); 0 P0/P1 review findings; T033 must enumerate files itself (not harness_copy_manifest) for per-file conflict detection
 - [T032 merged: setup.sh rewritten](decisions.md) — direct-copy install, git-repo check, per-file harness-lock.json; 0 P0/P1; stale-symlink-at-MANIFEST-path correctly overwritten (setup always-overwrite ≠ update's refuse-on-symlink, not a conflict)
 - [T033 merged: update.sh rewritten](decisions.md) — hash-lock compare, per-file conflict prompt (fd0/fd3 split), symlink-refusal all-or-nothing; 0 P0/P1; 3 independent verify scenarios pass incl. two-conflicts-in-one-run
+- [T028 merged: Token Audit Log scaffold](decisions.md) — reports/token-audit_2026-07-17.md + format test; rebased past T031-T033 drift after a failed /compact; reports/ gitignore amended (see below) since worktree-isolated spawns need the file to survive merge; T029 (slim-skills prune) lost to the same drift, must be redone
 
 ### Patterns & Gotchas
 - [Agent files must not tell sub-agents to write memory](learnings.md) — backend/frontend/qa.md + CLAUDE_LEGACY.md had "Update MEMORY.md" — fixed to "flag to Supervisor"; watch for this on every sync
@@ -61,7 +62,8 @@
 - [No shellcheck in this env](learnings.md) — shell tasks substitute `sh -n` + bash/dash test runs, noted explicitly rather than silently skipped (T031)
 - [Don't combine isolation:"worktree" with a pre-made worktree](learnings.md) — Agent tool creates its own second worktree/branch, orphaning the manually-created one; omit isolation when a worktree already exists (T032 gotcha)
 - [Check Evidence table is actually filled](learnings.md) — not every implementer fills it (T031 did, T032 didn't); reviewer fills it with own reproduced output if blank
-- [step_limit hook false-positive across sub-agent+review calls](learnings.md) — 40-call counter doesn't reset on "Ready for Review" (T031, T033 recurring); inspect trace via bracket-glob, reset step_count_T<NNN>.txt after confirming not stuck; needs a real fix
+- [step_limit hook false-positive across sub-agent+review calls](learnings.md) — 40-call counter doesn't reset on "Ready for Review" (3rd occurrence: T031, T033, T028); inspect trace via bracket-glob, reset step_count_T<NNN>.txt after confirming not stuck; needs a real fix, now overdue
+- [Worktree-isolated files silently die if gitignored](learnings.md) — a Stage-3 spawn's gitignored output never leaves its worktree, even after merge; before gitignoring any spawn-produced artifact, check whether a future worktree/session needs to read it (T028 gotcha, reports/token-audit exception)
 - [VAR=val|pipe only scopes to first command](learnings.md) — use export or a subshell before the whole pipeline, not inline before cmd1 (T033 verify footgun)
 - [fd0-prompt / fd3-filelist shell pattern](learnings.md) — lets a script be both interactively promptable and piped-test-drivable without stdin collision (T033)
 

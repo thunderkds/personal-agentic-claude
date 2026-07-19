@@ -53,6 +53,8 @@
 **Decision**: Generated HTML reports are saved to `reports/` and excluded from git via `.gitignore`. Reports are not attached to PRs or CI artifacts.
 **Why**: User confirmed local browser viewing only. Committing binary-ish generated files adds noise to git history without value.
 **Files**: .gitignore
+**Amended 2026-07-19**: one exception carved out — `reports/token-audit_*.md` (the DDR-0001 Token Audit Log) IS tracked. Discovered live: each Stage-3 spawn runs in an isolated worktree, so a fully-gitignored `reports/` meant the audit log never propagated across spawns/worktrees, defeating its purpose as an accumulating cross-session instrument. `.gitignore` changed from `reports/` to `reports/*` + `!reports/token-audit_*.md` (the blanket form blocks git from evaluating negations on its contents — must exclude contents, not the directory, for a file-level exception to work). HTML reports remain fully local-only; only this one file pattern is the exception.
+**Files**: .gitignore
 
 ### 2026-06-19 — wake skill: mandatory cold-start briefing (Option B — Live Skill)
 **Decision**: The `wake` skill is a mandatory hard gate at the start of every new Supervisor session. It reads four live sources (git log, PROJECT_KANBAN.md, memory/MEMORY.md, active LRs) and emits a ≤50-line structured briefing inline. Placement in CLAUDE.md is before the 5-Stage Pipeline section so the Supervisor encounters it first. Language is mandatory ("must", "not optional", "Do not skip") — never a soft suggestion.
