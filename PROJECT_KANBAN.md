@@ -11,8 +11,7 @@
 - [ ] **T035** — README.md — update install/update instructions for direct-repo model (ADR-0001, depends on T033) | backend-developer | C0 | Risk: Low | P1
 - [ ] **T034** — QA — smoke tests: fresh install, untouched-update, conflict-prompt, non-git-dir rejection (ADR-0001, depends on T032/T033) | qa-expert | C1 | Risk: Low | P0
 - [ ] **T030** — Post-baseline analysis — pick the token refactor from real data (blocked: T028 window must close — 7 sessions/14 days, DDR-0001) | Supervisor + user (HITL) | C1 | Risk: Low | P1
-- [ ] **T029** — Prune the 4 oversized SKILL.md files via /slim-skills (HITL, approval-gated) | Supervisor + user (HITL) | C1 | Risk: Low | P1
-- [ ] **T028** — Token Audit Log — scaffold + entry convention + format test (DDR-0001) | backend-developer | C1 | Risk: Low | P0
+- [ ] **T029** — Prune the 4 oversized SKILL.md files via /slim-skills (HITL, approval-gated) — RE-DO: earlier approved prune (learn 182→128, map-codebase 165→130) was never committed and was lost to session drift; files are back at original line counts | Supervisor + user (HITL) | C1 | Risk: Low | P1
 - [ ] **T026** — Fix TASK_GUIDE_template.md example `verify` Evidence row to match pre_bash_block_unsafe_merge.py's gate regex | backend-developer | C0 | Risk: Low | P1
 - [ ] **T024** — Fix post_write_register_task.py agent-field regex (matches "Agent guide" before "Assigned agent") | backend-developer | C0 | Risk: Low | P2
 - [ ] **T012** — Registration — CLAUDE.md + MEMORY.md + README | common-infrastructure | C0 | Risk: Low | P1
@@ -31,6 +30,7 @@
 ### Ready for Review
 
 ### Done
+- [x] **T028** — Token Audit Log — scaffold + entry convention + format test (DDR-0001) | C1 | Completed: 2026-07-19
 - [x] **T033** — New update.sh — hash-lock compare, per-file conflict prompt, symlink-refusal, git-repo check (ADR-0001) | C2 | Completed: 2026-07-17
 - [x] **T032** — Rewrite setup.sh — direct-copy install, git-repo prerequisite check, write .claude/harness-lock.json (ADR-0001) | C2 | Completed: 2026-07-17
 - [x] **T031** — lib/harness-fetch.sh — shared temp-clone-copy-discard + MANIFEST parsing (ADR-0001) | C2 | Completed: 2026-07-17
