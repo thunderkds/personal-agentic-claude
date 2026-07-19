@@ -114,6 +114,7 @@ The supervisor repo (`per-agentic-claude`) is a general framework. A `MANIFEST` 
 | T035 | README.md — update install/update instructions for direct-repo model (ADR-0001) | Done | backend-developer | C0 | Low | P1 |
 | T036 | Fix scripts/smoke-install.sh for direct-repo install model (CI was broken since T031-T033) | Done | backend-developer | C1 | Low | P1 |
 | T037 | Fix CI shellcheck SC1091 — missing -x flag for lib/harness-fetch.sh source | Done | backend-developer | C0 | Low | P0 |
+| T038 | Fix setup.sh piped curl\|sh install (primary Quick Start command broken since T031) | Done | backend-developer | C2 | Medium | P0 |
 
 ---
 

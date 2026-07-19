@@ -53,6 +53,7 @@
 - [T035 merged: README rewritten for direct-repo model](decisions.md) — a prior uncommitted edit FALSELY claimed this was done (Evidence checkmarks, no real changes) — discarded, redone for real; 2 gaps found beyond original scope (packs need pre-existing ~/.supervisor, obsolete submodule note removed)
 - [T036 merged: fixed scripts/smoke-install.sh — CI was broken since T031-T033](decisions.md) — silently red for 3 days across 5+ merged PRs, never caught; ADR-0001 migration didn't update every CI entry point; 1 P1 self-review fix (vacuous assertion)
 - [T037 merged: fixed CI shellcheck SC1091](decisions.md) — missing -x flag, not a missing source= directive (that was already correct since T031); shellcheck exits non-zero on info-level findings with no severity filter
+- [T038 merged: fixed setup.sh piped curl\|sh install](decisions.md) — primary documented install command was completely broken since T031 (2 days, undetected by all prior testing); $0 has no real path when piped, so SCRIPT_DIR silently resolved wrong; fixed via bootstrap-clone-then-reinvoke; caught a real set -e cleanup bug in self-review before any test ran
 - [Full Todo audit + reprioritization, 2026-07-19](decisions.md) — T003/T004 deduped (already Done), T005-T007 closed as superseded (dead Typer-CLI scope), T008-T012 closed as already-built-but-mislabeled; T024/T026 raised to P0
 
 ### Patterns & Gotchas
