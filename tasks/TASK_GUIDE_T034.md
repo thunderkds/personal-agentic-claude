@@ -34,10 +34,10 @@ T032/T033 each ship their own per-task automated tests (Hard-Stop Gate 5 require
 
 ### Requirement Fidelity Gate (sign off BEFORE implementation)
 
-- [ ] Restated intent confirmed to match ADR-0001 and the Stage 4 Evidence Gate rule
-- [ ] Domain terms align with `PROJECT_SPEC.md` glossary
-- [ ] Every Acceptance Criterion below traces to ADR-0001
-- [ ] Requirement Ref (ADR-0001) is fully covered by the Acceptance Criteria below
+- [x] Restated intent confirmed to match ADR-0001 and the Stage 4 Evidence Gate rule
+- [x] Domain terms align with `PROJECT_SPEC.md` glossary
+- [x] Every Acceptance Criterion below traces to ADR-0001
+- [x] Requirement Ref (ADR-0001) is fully covered by the Acceptance Criteria below
 
 > An agent must NOT start implementing until this gate is checked. If anything here is unclear, STOP and ask the Supervisor.
 
@@ -82,12 +82,12 @@ bash tests/test_install_update_smoke.sh
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| `verify` skill — works in running app | ☐ pass / ☐ fail | |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_install_update_smoke.sh` (new, written independently by QA — not copy-pasted from `tests/test_harness_fetch.sh`/`tests/test_setup.sh`/`tests/test_update.sh`). Maps 1:1 to AC1-AC4: AC1 (real-file/no-symlink check), AC2 (silent no-op update), AC3a/AC3b (conflict prompt overwrite + skip sub-cases), AC4 (non-git rejection, both scripts, no writes). Run output: `bash tests/test_install_update_smoke.sh` → `PASS: setup.sh exits 0 on a fresh git repo` / `PASS: AC1: fresh install lands every MANIFEST path + CLAUDE.md as real files (no symlinks)` / `PASS: AC2: no-op update.sh run is silent (exit 0, no conflict prompts)` / `PASS: AC3a: conflict prompt reached, 'o' (overwrite) restores upstream content` / `PASS: AC3b: conflict prompt reached, 's' (skip) leaves the file byte-identical to the user's edit` / `PASS: AC4: setup.sh rejects a non-git target directory (exit 1)` / `PASS: AC4: setup.sh wrote nothing into the non-git target before rejecting it` / `PASS: AC4: update.sh rejects a non-git target directory (exit 1)` / `PASS: AC4: update.sh wrote nothing into the non-git target before rejecting it` / `9 passed, 0 failed` / exit=0 |
+| Verification command run | ☑ pass | `bash tests/test_install_update_smoke.sh` — exit 0, `9 passed, 0 failed` (run twice in a row, both green, see Success Criterion #2 below) |
+| Negative cases hold | ☑ pass | (a) AC4 non-git-dir rejection asserted with 0 entries written before exit, for both scripts. (b) Regression-detection self-check: sabotaged `update.sh`'s conflict-warning line (`sed` no-op'd the `log_warn "conflict: ..."` call), re-ran the suite — it correctly went red: `FAIL: AC3a: update.sh did not report a conflict for a locally-edited file` / `FAIL: AC3b: update.sh did not report a conflict for a locally-edited file` / `7 passed, 2 failed` / exit=1. Reverted `update.sh` immediately after (confirmed via `git diff --stat update.sh` → no changes); this proves the suite is not a rubber stamp. |
+| verify | ☑ pass | Ran the actual `setup.sh`/`update.sh` (not mocks) end-to-end against real scratch git repos via the suite above — this is the verify for a CLI tool: fresh install → real files land, no-op update → silent, edited file → real conflict prompt with real diff output and real stdin-driven choices, non-git dir → real rejection before any write. Also independently re-ran the existing per-task unit suites in the same worktree state to confirm no cross-task regression: `test_harness_fetch.sh` → `9 passed, 0 failed`; `test_setup.sh` → `15 passed, 0 failed`; `test_update.sh` → `22 passed, 0 failed` — pass |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Only `tests/test_install_update_smoke.sh` added (new file). Read `setup.sh`, `update.sh`, `lib/harness-fetch.sh`, `MANIFEST` to understand behavior for oracle design — none of them modified (confirmed via `git status --short` / `git diff --stat` showing only the new test file, no residual diff on the implementation files after the negative-control experiment above) |
+| Full smoke suite still green (no regression) | ☑ pass | `test_harness_fetch.sh`: 9/9 pass; `test_setup.sh`: 15/15 pass; `test_update.sh`: 22/22 pass; new `test_install_update_smoke.sh`: 9/9 pass. Total 55/55 across the four suites, 0 failures |
 | **UI: Visual regression** | N/A | Pure backend/tooling task — no UI component |
 | **UI: Design-system compliance** | N/A | Pure backend/tooling task — no UI component |
 | **UI: Responsiveness** | N/A | Pure backend/tooling task — no UI component |
@@ -102,9 +102,9 @@ Write `tests/test_install_update_smoke.sh` as a single end-to-end shell script t
 
 ## Edge Case Checklist
 
-- [ ] Test must clean up all scratch directories on both pass and fail (trap-based, matching T031's own cleanup discipline)
-- [ ] If network fetch is used (real GitHub URL) rather than a local fixture, the suite must tolerate/report network unavailability distinctly from an actual regression
-- [ ] Confirm the "skip" branch in the conflict prompt genuinely leaves the file byte-identical to the user's edit (not just "didn't crash")
+- [x] Test must clean up all scratch directories on both pass and fail (trap-based, matching T031's own cleanup discipline) — `trap cleanup EXIT INT TERM HUP`; verified no leftover `/tmp/t034-smoke.*` dirs after two consecutive runs, and no leftovers even mid-debugging (caught and fixed a subshell-scoping bug during self-test — see Files to Change note)
+- [x] If network fetch is used (real GitHub URL) rather than a local fixture, the suite must tolerate/report network unavailability distinctly from an actual regression — resolved by design: `SUPERVISOR_REPO` is pointed at this worktree's own local path, so `git clone --depth 1` never touches the network at all; no network-flakiness handling needed
+- [x] Confirm the "skip" branch in the conflict prompt genuinely leaves the file byte-identical to the user's edit (not just "didn't crash") — AC3b captures the edited content into `$EXPECTED_SKIP_CONTENT` before running update.sh, then string-compares against the post-run file content
 
 ---
 
@@ -130,11 +130,11 @@ The smoke suite itself is the test plan for this task — see Verification Comma
 
 ## Completion Checklist
 
-- [ ] Implementation done
-- [ ] Self-review: `Skill({ skill: "code-review" })` run
-- [ ] Security review: N/A — Low risk
-- [ ] Lint passes (`shellcheck tests/test_install_update_smoke.sh`)
-- [ ] Tests written AND pass — output pasted into Evidence table (Hard-Stop Gate 5)
-- [ ] `Skill({ skill: "verify" })` run — feature confirmed working in a real scratch repo
-- [ ] `memory/MEMORY.md` updated (if new patterns or feedback learned)
-- [ ] Supervisor notified: task ready for Stage 4 review
+- [x] Implementation done
+- [ ] Self-review: `Skill({ skill: "code-review" })` run — deferred to Supervisor/Stage 4 (QA role does not review its own oracle per independence rule)
+- [x] Security review: N/A — Low risk
+- [ ] Lint passes (`shellcheck tests/test_install_update_smoke.sh`) — shellcheck not available in this environment (same gotcha noted for T031); substituted `sh -n tests/test_install_update_smoke.sh` (syntax OK) plus real execution under both `bash` and `dash` (both pass, 9/9), matching this repo's documented no-shellcheck fallback
+- [x] Tests written AND pass — output pasted into Evidence table (Hard-Stop Gate 5)
+- [x] `Skill({ skill: "verify" })` run — feature confirmed working in a real scratch repo (see Evidence row above)
+- [ ] `memory/MEMORY.md` updated (if new patterns or feedback learned) — Supervisor-only write; flagged below for the Supervisor to add
+- [x] Supervisor notified: task ready for Stage 4 review
