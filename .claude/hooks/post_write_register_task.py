@@ -48,12 +48,14 @@ def main():
 
     title    = extract(r"^#\s+TASK_GUIDE[_\s—-]+T\d+[:\s—-]+(.+)$", "untitled")
     agent    = extract(r"Assigned\s+Agent\*{0,2}[:\s]+([a-z\-]+)", "backend-developer")
-    cx       = extract(r"Complexity[:\s]+(C[0-3])", "C1")
-    risk     = extract(r"Risk[:\s]+(Low|Med(?:ium)?|High)", "Low")
-    priority = extract(r"Priority[:\s]+(P[0-2])", "P1")
+    cx       = extract(r"Complexity(?:\s+Level)?\*{0,2}[:\s]+\*{0,2}(C[0-3])", "?")
+    risk     = extract(r"Risk(?:\s+Level)?\*{0,2}[:\s]+\*{0,2}(Low|Med(?:ium)?|High)", "?")
+    priority = extract(r"Priority\*{0,2}[:\s]+\*{0,2}(P[0-2])", "?")
 
-    # Normalise risk label
-    risk = "Med" if risk.lower().startswith("med") else risk
+    # Normalise risk label to the canonical "Medium" spelling (matches the
+    # template's field value and the hand-corrected Todo rows on the board).
+    if risk.lower().startswith("med"):
+        risk = "Medium"
 
     entry = f"- [ ] **{task_id}** — {title} | {agent} | {cx} | Risk: {risk} | {priority}"
 
