@@ -105,12 +105,12 @@ python3 -m pytest .claude/hooks/tests/ -q
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [required before Done — expect a test file under `.claude/hooks/tests/`] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | [AC4 `?` fallback, AC6 duplicate guard, AC7 no title/agent regression] |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [must literally state "pass" or "fail" in this Notes column] |
-| Review scope bounded to the change's blast radius | ☐ pass / ☐ fail | [hook fires on every Write — name what else was checked] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_post_write_register_task_metadata.py` (311 lines, 7 tests, new in commit `e35f987`). Re-run independently by the reviewer: `31 passed in 0.24s` (7 new + 24 pre-existing) |
+| Verification command run | ☑ pass | `python3 -m pytest .claude/hooks/tests/ -q` → `...............................  [100%]` / `31 passed in 0.24s` |
+| Negative cases hold | ☑ pass | AC4 `?` fallback (`test_missing_field_registers_as_visible_unknown_not_a_default`, asserts `"C1" not in row`); AC6 duplicate guard (`test_duplicate_task_id_is_a_no_op`, byte-compares Kanban before/after + `count("**T900**") == 1`); AC7 title/agent regression (`test_title_and_agent_extraction_unaffected_by_the_fix`); bare-format AC4 anti-regression (`test_bare_format_still_matches_widened_pattern`, `Complexity: C3`); adversarial prose (`test_regex_widening_does_not_match_prose_mentions_elsewhere`) |
+| verify | ☑ pass | End-to-end run of the committed hook against **real** guides + a real copy of the live Kanban (not synthetic fixtures): fed `TASK_GUIDE_T039.md` and `TASK_GUIDE_T041.md` through `post_write_register_task.py` at `e35f987`, both produced `C2 \| Risk: Medium \| P1`, matching their guide headers exactly — the same values the pre-fix hook silently rendered as `C1 \| Risk: Low \| P1`. Confirmed working — pass |
+| Review scope bounded to the change's blast radius | ☑ pass | Reviewed: the 2 changed files. Consumers traced by grep — `.claude/settings.json` (PostToolUse `Write` matcher) is the only registrant, and no code parses the hook's Kanban output. Verified the `Med`→`Medium` label change breaks nothing downstream: the only other `"Med"` reference in `.claude/hooks`, `.claude/skills`, `scripts`, `templates` was the hook's own normalizer line, which this diff replaces. Repo not re-read beyond that set |
+| Full smoke suite still green (no regression) | ☑ pass | `bash scripts/smoke-install.sh` → `smoke-install.sh: PASS` |
 | **UI: Visual regression** | ☐ N/A | Hook script, no UI component |
 | **UI: Design-system compliance** | ☐ N/A | Hook script, no UI component |
 | **UI: Responsiveness** | ☐ N/A | Hook script, no UI component |
