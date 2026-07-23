@@ -8,12 +8,12 @@
 ## Board
 
 ### Todo
-- [ ] **T043** — Fix trace/step-limit task attribution — stop inferring the Task ID from arbitrary tool text | Common-Infrastructure-Agent | C2 | Risk: Medium | P0
 - [ ] **T040** — Derive the Token Audit Log from event-trace instead of manual entry; restart the DDR-0001 window | Common-Infrastructure-Agent | C1 | Risk: Medium | P1
 - [ ] **T041** — Make engineering principles reachable by sub-agents + add the Search-Before-You-Build ladder | Common-Infrastructure-Agent | C2 | Risk: Medium | P1
 - [ ] **T030** — Post-baseline analysis — pick the token refactor from real data (blocked: T028 window must close — 7 sessions/14 days, DDR-0001) | Supervisor + user (HITL) | C1 | Risk: Low | P1
 
 ### In Progress
+- [ ] **T043** — Fix trace/step-limit task attribution — stop inferring the Task ID from arbitrary tool text | Common-Infrastructure-Agent | C2 | Risk: Medium | P0 | Started: 2026-07-23
 
 ### Ready for Review
 
