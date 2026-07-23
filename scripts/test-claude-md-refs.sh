@@ -9,19 +9,35 @@
 #         documented built-in
 #   AC3 — every `subagent_type` value resolves to a `.claude/agents/*.md` whose `name:`
 #         field matches
-#   AC5 — `## Hard-Stop Gates` and `## Permanent Rules` sections are byte-identical to HEAD
-#   AC6 — total CLAUDE.md line count decreased by >=40 and <=80 vs HEAD
+#
+# AC4 (the four preserved "keep" items) is intentionally NOT automated here — it asserts the
+# *presence of specific prose content* (mechanism table, subagent_type mapping, spawn-prompt
+# note, blast-radius disambiguation), which is a manual editorial judgment call, not a
+# structural invariant grep can reliably distinguish from paraphrase. Checked manually at
+# Stage 4 review instead.
+#   AC5 — `### Hard-Stop Gates` and `## Permanent Rules` sections are byte-identical to BASELINE_REF
+#   AC6 — total CLAUDE.md line count decreased by >=40 and <=80 vs BASELINE_REF
+#
+# AC1/AC2/AC3 are permanent invariants: they hold for CLAUDE.md at any commit, forever, and
+# always run. AC5/AC6 are a one-shot scope guard for this specific dedup (T039) — they compare
+# the working tree against BASELINE_REF, the commit immediately before the dedup landed
+# (99940b8). Once T039 is merged, HEAD == BASELINE_REF's descendant, not "the dedup itself",
+# so these two checks stay meaningful only relative to that fixed pre-change commit, not a
+# floating HEAD. Override via `BASELINE_REF=<sha> sh scripts/test-claude-md-refs.sh` if this
+# script is ever reused for a future CLAUDE.md scope guard.
 #
 # No shellcheck available in this environment (memory/learnings.md) — substituted with
 # `sh -n CLAUDE.md`-equivalent static check (N/A, this is a Markdown file, not shell) plus
 # a real `sh` execution of this script itself; see Completion Checklist in the TASK_GUIDE.
 #
 # Usage: sh scripts/test-claude-md-refs.sh
+#        BASELINE_REF=<sha> sh scripts/test-claude-md-refs.sh
 
 set -eu
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CLAUDE_MD="$ROOT/CLAUDE.md"
+BASELINE_REF="${BASELINE_REF:-99940b8}"
 FAIL=0
 
 fail() {
@@ -43,12 +59,11 @@ fi
 BUILTINS="security-review verify run update-config fewer-permission-prompts"
 
 # --- AC2: every Skill({ skill: "X" }) reference resolves ---------------------------
-# Exclude literal placeholder tokens used in mechanism/syntax examples (not real refs).
-PLACEHOLDERS="name X"
-skill_refs="$(grep -oE 'skill: "[a-zA-Z0-9_-]+"' "$CLAUDE_MD" | sed -E 's/skill: "(.*)"/\1/' | sort -u)"
-for p in $PLACEHOLDERS; do
-  skill_refs="$(printf '%s\n' "$skill_refs" | grep -vx "$p" || true)"
-done
+# Exclude only the literal mechanism/syntax-example line itself (Skill({ skill: "name" })),
+# not any token named "name" or "X" wherever it appears — a real broken ref that happens to
+# be literally named "name" or "X" must still be caught.
+skill_refs="$(grep -v 'Skill({ skill: "name" })' "$CLAUDE_MD" \
+  | grep -oE 'skill: "[a-zA-Z0-9_-]+"' | sed -E 's/skill: "(.*)"/\1/' | sort -u)"
 if [ -z "$skill_refs" ]; then
   fail "AC2: no Skill({ skill: \"X\" }) references found — extraction regex may be broken"
 else
@@ -113,45 +128,52 @@ else
   fail "AC1: ## Skills vs Agents section is $section_lines lines (expected <=30)"
 fi
 
-# --- AC5: Hard-Stop Gates and Permanent Rules unchanged vs HEAD ---------------------
-if git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1 && git -C "$ROOT" cat-file -e HEAD:CLAUDE.md 2>/dev/null; then
+# --- AC5: Hard-Stop Gates and Permanent Rules unchanged vs BASELINE_REF -------------
+# Note the real heading levels in CLAUDE.md: "### Hard-Stop Gates (...)" is H3 with a
+# parenthetical (not the bare H2 "## Hard-Stop Gates" the original TASK_GUIDE AC5 text
+# assumed); "## Permanent Rules" is a plain H2. Each extraction anchors on its own level.
+if git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1 && git -C "$ROOT" cat-file -e "$BASELINE_REF:CLAUDE.md" 2>/dev/null; then
   extract_section() {
-    # $1 = file (path or "HEAD:CLAUDE.md" via git show), $2 = heading regex
-    awk -v heading="$2" '
-      $0 ~ "^## " heading "$" { capture=1; print; next }
-      capture && /^## / { capture=0 }
+    # $1 = heading-line regex (anchored, e.g. '^### Hard-Stop Gates'), reads stdin.
+    awk -v heading="$1" '
+      $0 ~ heading { capture=1; print; next }
+      capture && /^#{1,3} / { capture=0 }
       capture { print }
     '
   }
 
-  cur_hardstop="$(extract_section "$CLAUDE_MD" "Hard-Stop Gates.*" < "$CLAUDE_MD")"
-  head_hardstop="$(git -C "$ROOT" show HEAD:CLAUDE.md | extract_section "-" "Hard-Stop Gates.*")"
-  cur_permanent="$(extract_section "$CLAUDE_MD" "Permanent Rules" < "$CLAUDE_MD")"
-  head_permanent="$(git -C "$ROOT" show HEAD:CLAUDE.md | extract_section "-" "Permanent Rules")"
+  cur_hardstop="$(extract_section '^### Hard-Stop Gates' < "$CLAUDE_MD")"
+  base_hardstop="$(git -C "$ROOT" show "$BASELINE_REF:CLAUDE.md" | extract_section '^### Hard-Stop Gates')"
+  cur_permanent="$(extract_section '^## Permanent Rules$' < "$CLAUDE_MD")"
+  base_permanent="$(git -C "$ROOT" show "$BASELINE_REF:CLAUDE.md" | extract_section '^## Permanent Rules$')"
 
-  if [ "$cur_hardstop" = "$head_hardstop" ]; then
-    pass "AC5: ## Hard-Stop Gates byte-identical to HEAD"
+  if [ -z "$cur_hardstop" ] || [ -z "$base_hardstop" ]; then
+    fail "AC5: ### Hard-Stop Gates extraction returned empty — heading regex is broken, not a pass"
+  elif [ "$cur_hardstop" = "$base_hardstop" ]; then
+    pass "AC5: ### Hard-Stop Gates byte-identical to $BASELINE_REF"
   else
-    fail "AC5: ## Hard-Stop Gates differs from HEAD"
+    fail "AC5: ### Hard-Stop Gates differs from $BASELINE_REF"
   fi
 
-  if [ "$cur_permanent" = "$head_permanent" ]; then
-    pass "AC5: ## Permanent Rules byte-identical to HEAD"
+  if [ -z "$cur_permanent" ] || [ -z "$base_permanent" ]; then
+    fail "AC5: ## Permanent Rules extraction returned empty — heading regex is broken, not a pass"
+  elif [ "$cur_permanent" = "$base_permanent" ]; then
+    pass "AC5: ## Permanent Rules byte-identical to $BASELINE_REF"
   else
-    fail "AC5: ## Permanent Rules differs from HEAD"
+    fail "AC5: ## Permanent Rules differs from $BASELINE_REF"
   fi
 
-  # --- AC6: total line count decreased by >=40 and <=80 vs HEAD --------------------
-  head_lines="$(git -C "$ROOT" show HEAD:CLAUDE.md | wc -l | tr -d ' ')"
+  # --- AC6: total line count decreased by >=40 and <=80 vs BASELINE_REF ------------
+  base_lines="$(git -C "$ROOT" show "$BASELINE_REF:CLAUDE.md" | wc -l | tr -d ' ')"
   cur_lines="$(wc -l < "$CLAUDE_MD" | tr -d ' ')"
-  delta=$((head_lines - cur_lines))
+  delta=$((base_lines - cur_lines))
   if [ "$delta" -ge 40 ] && [ "$delta" -le 80 ]; then
-    pass "AC6: line count decreased by $delta (was $head_lines, now $cur_lines; expected 40-80)"
+    pass "AC6: line count decreased by $delta (was $base_lines at $BASELINE_REF, now $cur_lines; expected 40-80)"
   else
-    fail "AC6: line count decreased by $delta (was $head_lines, now $cur_lines; expected 40-80)"
+    fail "AC6: line count decreased by $delta (was $base_lines at $BASELINE_REF, now $cur_lines; expected 40-80)"
   fi
 else
-  fail "AC5/AC6: cannot read HEAD:CLAUDE.md via git — is this a git repo with a committed CLAUDE.md?"
+  fail "AC5/AC6: cannot read $BASELINE_REF:CLAUDE.md via git — is this a git repo with that commit?"
 fi
 
 if [ "$FAIL" -ne 0 ]; then
