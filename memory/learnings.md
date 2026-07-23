@@ -179,3 +179,15 @@ Fixed with user consent: `git remote add origin <same-url>` + `git remote set-he
 is the first task in this project's history where the built-in Medium/High gate executed as designed
 instead of being performed by hand. Note the built-in diffs against `origin/HEAD`, so it reviews the
 whole branch vs main, not just the newest commit — scope the analysis yourself.
+
+## A defect can reproduce itself during its own Stage 2 write-up (2026-07-23, T045)
+
+Writing `tasks/TASK_GUIDE_T045.md` — the guide that documents the unanchored `(?=###|\Z)` Kanban
+lookahead — auto-registered a board row whose *title* contained a literal `###`, which truncated the
+Todo section and made T044, T040 and T041 resolve to `None`. The bug bit while being documented, via
+the auto-registration hook, roughly two minutes after being written down.
+
+**How to apply**: when a defect is about how text is parsed, assume the artifact describing it is
+also parsed by the same code. After any Stage 2 write-up that quotes a delimiter, re-run the parser
+over the live board/file before committing. More generally: a mitigation that depends on humans
+avoiding a character in prose is not a fix — it is a trap with a note attached.
