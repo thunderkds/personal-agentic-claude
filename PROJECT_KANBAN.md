@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-07-21
+**Last updated**: 2026-07-23
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -8,6 +8,7 @@
 ## Board
 
 ### Todo
+- [ ] **T043** — Fix trace/step-limit task attribution — stop inferring the Task ID from arbitrary tool text | Common-Infrastructure-Agent | C2 | Risk: Medium | P0
 - [ ] **T039** — Dedup the `## Skills vs Agents` section in CLAUDE.md | Common-Infrastructure-Agent | C2 | Risk: Medium | P1
 - [ ] **T040** — Derive the Token Audit Log from event-trace instead of manual entry; restart the DDR-0001 window | Common-Infrastructure-Agent | C1 | Risk: Medium | P1
 - [ ] **T041** — Make engineering principles reachable by sub-agents + add the Search-Before-You-Build ladder | Common-Infrastructure-Agent | C2 | Risk: Medium | P1
@@ -61,6 +62,8 @@
 
 | Task | Reason | Waiting on |
 |------|--------|-----------|
+| T040 | Event-trace task-attribution is unreliable — records are filed under whichever Txxx appears first in a read file's text, so a log derived from it would be confidently wrong (see `tasks/TASK_GUIDE_T040.md` → Dependencies) | T043 |
+| T030 | DDR-0001 baseline window has no usable data (1 of 7 sessions logged, `/cost` never captured); window reopens once T040 lands | T040 → T043 |
 
 ---
 
