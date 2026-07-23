@@ -126,15 +126,15 @@ python3 -m pytest .claude/hooks/tests/ -q && \
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [required before Done — expect a new file under `.claude/hooks/tests/`] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | [AC2 prose-mention, AC4 prose-mention, AC8 schema compat, AC9 validate-guide untouched] |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [must literally state "pass" or "fail" in this Notes column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | [`scripts/smoke-install.sh`] |
-| **UI: Visual regression** | ☐ N/A | Python hooks, no UI component |
-| **UI: Design-system compliance** | ☐ N/A | Python hooks, no UI component |
-| **UI: Responsiveness** | ☐ N/A | Python hooks, no UI component |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_task_context.py` (29 tests — 18 hook-level via subprocess from a foreign cwd, 11 `resolve_task_id` unit). Run at commit `de7f571`, clean tree: `python3 -m pytest .claude/hooks/tests/ -q` → `............................................................ [100%]` / `60 passed in 0.60s` (31 pre-existing + 29 new). See the RED-before-GREEN and mutation runs below. |
+| Verification command run | ☑ pass | Guide's exact command at `de7f571`: `60 passed in 0.60s`, then trace dir listing `_untagged.jsonl` (no `T001.jsonl` created), `tail -1` → `{"timestamp": "2026-07-23T04:22:29.791662+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"PROJECT_KANBAN.md\"}", "is_error": false}` |
+| Negative cases hold | ☑ pass | **RED first** (tests written against the unfixed hooks): 8 failed / 10 passed — `expected only _untagged.jsonl, got ['T001.jsonl']` (AC2), `AssertionError: ['step_count_T028.txt'] == []` (AC4 step counter), `got ['T028.jsonl']` (AC4 trace). **Then 6 mutations of the fixed source, each observed RED and reverted**: M1 reinstate whole-payload regex → `got ['T001.jsonl']`; M2 drop fail-open try/except → hook exits 1 with `JSONDecodeError`; M3 drop `is_error` key → `{'summary','timestamp','tool_name'} != {'is_error',...}` (AC8); M4 drop Agent-prompt branch → `['_untagged.jsonl'] != ['T099.jsonl']` (AC7); M5 make the lib import cwd-relative → same RED, proving the foreign-cwd subprocess test has teeth; M6 trust `CLAUDE_ACTIVE_TASK` blindly → real path traversal `memory/event-trace/../../etc/passwd.jsonl`. Post-restore `60 passed`. AC9: `git diff` shows `pre_agent_validate_guide.py` untouched; its 7 tests pass inside the 60. |
+| verify | ☑ pass | pass — end-to-end in the real deployment shape, not just in-repo. `setup.sh` install into a fresh temp git repo ships `.claude/hooks/lib/task_context.py` via the MANIFEST `.claude/hooks` line; running the installed hook from `cwd=/` gave `T099.jsonl` for an Agent spawn prompt whose pasted MEMORY text also mentions T001, `_untagged.jsonl` for an Edit whose prose mentions T028, and the installed step-limit hook exited 0 with zero counter files for that same Edit. (Run manually — a sub-agent has no `Skill` tool.) |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Reviewed the 2 changed hooks + the new lib + every consumer of what they produce: `pre_bash_block_unsafe_merge.py` (reads `event-trace/<task>.jsonl`), `post_agent_move_to_review.py` (writes/deletes `step_count_<task>.txt`), `post_write_register_task.py`, `pre_agent_validate_guide.py`. Two consumer-side findings reported to the Supervisor, neither fixed here (both files are out of scope). |
+| Full smoke suite still green (no regression) | ☑ pass | `bash scripts/smoke-install.sh` at `de7f571` → all 15 `[ok]` assertions, final line `smoke-install.sh: PASS` |
+| **UI: Visual regression** | ☑ N/A | Python hooks, no UI component |
+| **UI: Design-system compliance** | ☑ N/A | Python hooks, no UI component |
+| **UI: Responsiveness** | ☑ N/A | Python hooks, no UI component |
 
 ---
 
@@ -195,21 +195,30 @@ would be scope creep.
 
 ## Edge Case Checklist
 
-- [ ] `tool_input` field names vary by tool (`file_path`, `notebook_path`, `path`, `command`,
+- [x] `tool_input` field names vary by tool (`file_path`, `notebook_path`, `path`, `command`,
       `prompt`). Enumerate the path-valued ones explicitly; never fall back to scanning all values.
-- [ ] A `Write` creating `tasks/TASK_GUIDE_T044.md` **should** attribute to T044 — that is a genuine
+      → `task_context.PATH_FIELDS = ("file_path", "notebook_path", "path")`, scanned in that fixed
+      order; `test_only_path_valued_fields_are_scanned` asserts both directions (each path field
+      attributes; `command`/`content`/`new_string`/`old_string`/`description`/`pattern` never do).
+- [x] A `Write` creating `tasks/TASK_GUIDE_T044.md` **should** attribute to T044 — that is a genuine
       structural signal via `file_path`, and it is how new guides get traced. Don't break it.
-- [ ] `Bash` commands that legitimately contain a guide path (e.g. `cat tasks/TASK_GUIDE_T012.md`)
-      are ambiguous. Decide one way, write the decision in the docstring, and test it — the failure
-      mode to avoid is an undocumented accident.
-- [ ] Case sensitivity: today's regex uses `re.IGNORECASE` and upper-cases the result. Keep behavior
-      explicit and tested; `t043` in a path should not silently become a different bucket.
-- [ ] Concurrent worktree runs append to the same `.jsonl`. Line-buffered append is already the
-      existing behavior — do not introduce read-modify-write.
-- [ ] This guide names `T001`, `T017`, `T028`, `T040`, `T042` in prose. Under the *current* hooks
-      that is exactly the false-positive trigger — if the step-limit hook fires on this task, that is
-      the bug itself, not an obstacle: note it and bracket-glob the ID (`memory/learnings.md`).
-- [ ] Do not "improve" adjacent hook code while in these files (Surgical Changes).
+      → `test_write_of_a_new_task_guide_attributes_via_file_path` (the `content` in that fixture also
+      mentions T001/T017, and is correctly ignored).
+- [x] `Bash` commands that legitimately contain a guide path (e.g. `cat tasks/TASK_GUIDE_T012.md`)
+      are ambiguous. Decided: **never scanned → unattributed.** Command text is free text that can
+      quote arbitrary file content, and scanning it is the same class of guess being removed.
+      Documented in the `task_context` module docstring; `test_bash_command_containing_a_guide_path_is_not_attributed`.
+- [x] Case sensitivity: matched with `re.IGNORECASE` and normalized to upper case + 3 digits.
+      `test_lowercase_guide_path_normalizes_to_the_same_bucket` (`tasks/task_guide_t044.md` → `T044.jsonl`)
+      and `test_task_ids_are_normalized_to_three_digits_upper_case` (`t44` and `T044` are one bucket).
+- [x] Concurrent worktree runs append to the same `.jsonl`. Unchanged — still a single
+      `open(path, "a")` + one `write()`; no read-modify-write introduced.
+- [x] This guide names `T001`, `T017`, `T028`, `T040`, `T042` in prose. Confirmed live during this
+      task under the *pre-fix* hooks: reading `.claude/agents/general-agent-template.md` (which only
+      *mentions* T001) appended to `memory/event-trace/T001.jsonl` — the defect reproducing itself
+      while being fixed. No bracket-globbing was needed; the step limit was never hit.
+- [x] Do not "improve" adjacent hook code while in these files (Surgical Changes). → diff is
+      attribution only; `STATE_DIR`/`TRACE_DIR`/record shape/block message all left as-is.
 
 ---
 
@@ -258,13 +267,29 @@ would be scope creep.
 
 ## Completion Checklist
 
-- [ ] Implementation done
-- [ ] Self-review: `Skill({ skill: "code-review" })` run
-- [ ] Security review: `Skill({ skill: "security-review" })` run — **mandatory, Risk=Medium**.
-      Note: the built-in hardcodes `origin/HEAD` and this repo's remote is named `github`, so it may
-      not run — if it fails, perform the review manually and say so explicitly (`memory/learnings.md`)
-- [ ] Tests written AND pass — output pasted into Evidence table (Hard-Stop Gate 5)
-- [ ] `Skill({ skill: "verify" })` run
-- [ ] Report to the Supervisor for `memory/`: whether any other hook still infers a Task ID from
-      free text (do not write memory yourself)
-- [ ] Supervisor notified: task ready for Stage 4 review
+- [x] Implementation done — commit `de7f571`
+- [x] Self-review run **manually** (a sub-agent's tool set is Read/Write/Edit/Bash/Glob/Grep — no
+      `Skill` tool, so `code-review` could not be invoked as a skill). Reviewed the full diff plus
+      every consumer of the trace files and step counters. Findings are in the completion report.
+- [x] Security review performed **manually** — the built-in was not invocable here for two reasons
+      (no `Skill` tool in a sub-agent, and the known `origin/HEAD` hardcoding vs this repo's `github`
+      remote). Attack surface reviewed: `CLAUDE_ACTIVE_TASK` is the one externally-supplied value
+      that reaches a filename; it is validated with an anchored `T\d{3}\Z` match, and mutation M6
+      demonstrated a real path traversal (`memory/event-trace/../../etc/passwd.jsonl`) the moment
+      that validation is removed — so the check is load-bearing and covered by a test. All other IDs
+      come from `T(\d+)` digit captures and are filename-safe. `sys.path.insert` adds only the
+      repo's own `.claude/hooks/lib` (writable only by someone who could already edit the hook);
+      stdlib imports complete before it. No new subprocess/eval/network, no secret logging;
+      attribution now reads *less* of the payload than before (`tool_response` is no longer read).
+      No findings.
+- [x] Tests written AND pass — output pasted into Evidence table (Hard-Stop Gate 5)
+- [x] `verify` performed manually (no `Skill` tool) — see the `verify` Evidence row: a real
+      `setup.sh` install into a fresh temp repo, hooks driven from `cwd=/` in the deployed shape
+- [x] Report to the Supervisor for `memory/`: **yes — one other hook still infers a Task ID from
+      free text.** `post_agent_move_to_review.py:28` does `re.findall(r"\bT(\d{3})\b", prompt)` over
+      the whole Agent spawn prompt, which always contains a verbatim `memory/MEMORY.md` paste full of
+      prose task IDs. Bounded (it only acts on rows currently in `### In Progress`) but real: it can
+      move an unrelated in-progress task to Ready for Review and delete its step counter. Left
+      untouched — it is on this task's *Files Must NOT Touch* list. Details + a second, unrelated
+      finding are in the completion report. No memory file was written by this agent.
+- [x] Supervisor notified: task ready for Stage 4 review

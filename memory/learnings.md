@@ -138,3 +138,56 @@ every Medium/High task has likely never executed. Done manually on T042 and T039
 **How to apply**: keep doing it manually and label it as manual in the Kanban row and Evidence. The real
 fix (`git remote add origin <url>` as an alias, or setting `origin/HEAD`) mutates the user's git config
 and needs explicit consent — raised with the user 2026-07-23, not yet approved.
+
+---
+
+## The step-limit / trace false-positive is FIXED (2026-07-23, T043)
+
+Supersedes the standing "bracket-glob the task ID in prose to avoid tripping the hook" workaround —
+that contortion is no longer needed. Both hooks now attribute structurally (see the T043 entry in
+decisions.md). Prose mentions of a Task ID in an Edit, a Bash command, or a file you merely read no
+longer count a step or file a trace record against that task.
+
+**Consequence to watch**: a `Bash` command is now *never* attributed. `pre_bash_block_unsafe_merge.py`
+requires a non-error trace record in `memory/event-trace/<task>.jsonl` whose summary matches
+`pytest|npm test|jest|go test|cargo test|verify`, so real test runs will only be recorded against a
+task if `CLAUDE_ACTIVE_TASK=Txxx` is exported when they run. Set it in the spawn wrapper.
+
+## The merge gate's own evidence is a substring match (2026-07-23)
+
+`pre_bash_block_unsafe_merge.py:trace_shows_verification` accepts any non-error trace record whose
+`summary` merely *contains* `pytest`/`verify`/etc. Verified on T043: the only two qualifying records
+were Supervisor inspection commands that happened to contain those words in their text — no test had
+run under that tag at all, yet the gate would have passed the merge. The gate designed to stop "the
+agent claims it ran tests" is itself satisfied by a claim-shaped string. Same vacuous-evidence family
+as the T039 AC5 checksum.
+
+## Don't quote a `###` heading inside a PROJECT_KANBAN.md row (2026-07-23)
+
+`pre_agent_validate_guide.py:find_kanban_section` and `pre_bash_block_unsafe_merge.py:tasks_in_section`
+both slice sections with `re.search(rf'### {section}\n(.*?)(?=###|\Z)', ...)`. A row whose *text*
+contains a literal `###` terminates the section early. Writing "`### Hard-Stop Gates`" into T039's Done
+row made T042/T038/T022 resolve to `None`, so any task depending on them drew a false "unknown
+dependency, check for a typo" advisory. Reworded the row; the regex fragility itself is unfixed — it
+needs a lookahead anchored to line-start (`(?=^###|\Z)` with re.MULTILINE). 5th defect in this hook
+family (T018/T022/T024/T042/this).
+
+## security-review now actually runs (2026-07-23)
+
+Fixed with user consent: `git remote add origin <same-url>` + `git remote set-head origin main`, so
+`origin/HEAD` resolves. The `github` remote is untouched and nothing referenced the remote name. T043
+is the first task in this project's history where the built-in Medium/High gate executed as designed
+instead of being performed by hand. Note the built-in diffs against `origin/HEAD`, so it reviews the
+whole branch vs main, not just the newest commit — scope the analysis yourself.
+
+## A defect can reproduce itself during its own Stage 2 write-up (2026-07-23, T045)
+
+Writing `tasks/TASK_GUIDE_T045.md` — the guide that documents the unanchored `(?=###|\Z)` Kanban
+lookahead — auto-registered a board row whose *title* contained a literal `###`, which truncated the
+Todo section and made T044, T040 and T041 resolve to `None`. The bug bit while being documented, via
+the auto-registration hook, roughly two minutes after being written down.
+
+**How to apply**: when a defect is about how text is parsed, assume the artifact describing it is
+also parsed by the same code. After any Stage 2 write-up that quotes a delimiter, re-run the parser
+over the live board/file before committing. More generally: a mitigation that depends on humans
+avoiding a character in prose is not a fix — it is a trap with a note attached.

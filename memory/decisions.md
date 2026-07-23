@@ -118,7 +118,7 @@
 **Branch**: docs/code-naming-conventions — merged to main via PR #44
 
 ### 2026-07-07 — Deterministic guardrail hooks: step limit, event trace, verified merge gate
-**Decision**: Added three hook-layer guardrails moving reliability enforcement from model self-report to harness code, per an external "deterministic harness" framework the user brought in (max-steps, verify-step, event-tracing, multi-attempt ideas — auth-handling and context-compaction ideas from the same framework were rejected as inapplicable/uncontrollable in this environment, see below). New: `pre_agent_step_limit.py` (PreToolUse, matcher `.*`) counts tool calls per Task ID (regex `T\d{3}` found anywhere in `tool_input`) into `.claude/hooks/.state/step_count_<task>.txt` and blocks once `CLAUDE_STEP_LIMIT` (default 40) is exceeded, telling the Supervisor to stop and escalate rather than let a stuck task loop. New: `post_tool_trace.py` (PostToolUse, matcher `.*`) appends `{timestamp, tool_name, summary, is_error}` for every tool call to `memory/event-trace/<task>.jsonl` (untagged calls go to `_untagged.jsonl`) — a ground-truth history the Verify step can inspect instead of trusting the model's claim. Modified `pre_bash_block_unsafe_merge.py`: the push/merge gate now requires **both** a filled verify Evidence row in the TASK_GUIDE **and** a matching non-error trace record containing a real test/verify command (`pytest|npm test|jest|go test|cargo test|verify`, see `TEST_COMMAND_PATTERN`) — fails closed if the trace file is missing or empty, closing the "agent lies about running tests" gap. Modified `post_agent_move_to_review.py` to delete the task's step counter once it reaches Ready for Review, so a rework cycle gets a fresh budget. Both new hooks registered in `.claude/settings.json`. Runtime state (`.claude/hooks/.state/`, `memory/event-trace/`) is gitignored — local-only, not committed.
+**Decision**: Added three hook-layer guardrails moving reliability enforcement from model self-report to harness code, per an external "deterministic harness" framework the user brought in (max-steps, verify-step, event-tracing, multi-attempt ideas — auth-handling and context-compaction ideas from the same framework were rejected as inapplicable/uncontrollable in this environment, see below). New: `pre_agent_step_limit.py` (PreToolUse, matcher `.*`) counts tool calls per Task ID (**superseded by T043, 2026-07-23**: attribution was a bare `T\d{3}` scan of `tool_input`; it now comes from the shared `lib/task_context.py:resolve_task_id()`) into `.claude/hooks/.state/step_count_<task>.txt` and blocks once `CLAUDE_STEP_LIMIT` (default 40) is exceeded, telling the Supervisor to stop and escalate rather than let a stuck task loop. New: `post_tool_trace.py` (PostToolUse, matcher `.*`) appends `{timestamp, tool_name, summary, is_error}` for every tool call to `memory/event-trace/<task>.jsonl` (untagged calls go to `_untagged.jsonl`) — **T043 note**: this hook originally scanned `tool_input`+`tool_response` combined for the Task ID, so reading any file that mentioned one mis-filed the record; attribution is now structural — a ground-truth history the Verify step can inspect instead of trusting the model's claim. Modified `pre_bash_block_unsafe_merge.py`: the push/merge gate now requires **both** a filled verify Evidence row in the TASK_GUIDE **and** a matching non-error trace record containing a real test/verify command (`pytest|npm test|jest|go test|cargo test|verify`, see `TEST_COMMAND_PATTERN`) — fails closed if the trace file is missing or empty, closing the "agent lies about running tests" gap. Modified `post_agent_move_to_review.py` to delete the task's step counter once it reaches Ready for Review, so a rework cycle gets a fresh budget. Both new hooks registered in `.claude/settings.json`. Runtime state (`.claude/hooks/.state/`, `memory/event-trace/`) is gitignored — local-only, not committed.
 **Why**: Two of the five framework ideas were explicitly rejected as not applicable here: (1) context-window compression — Claude Code manages its own context/auto-compaction; there is no hook point to override it. (2) programmatic login/auth handling — this harness orchestrates Claude Code sub-agents, not a browser/UI agent that hits login pages, so there's no credential/URL-state surface to intercept. The other three ideas mapped cleanly onto the existing hook architecture and closed a real gap: the prior verify gate (`pre_bash_block_unsafe_merge.py`) only regex-matched text in the TASK_GUIDE claiming "verify...pass" — it trusted the sub-agent's self-report with no independent evidence.
 **Files**: .claude/hooks/pre_agent_step_limit.py (new), .claude/hooks/post_tool_trace.py (new), .claude/hooks/pre_bash_block_unsafe_merge.py, .claude/hooks/post_agent_move_to_review.py, .claude/settings.json, .gitignore
 **Branch**: feat/deterministic-guardrails-hooks — merged to main via PR #45
@@ -260,3 +260,27 @@ than a missing one — same principle as T042).
 across that session's tagged entries — with wrong tags the derived audit log is *confidently wrong*.
 
 **Files**: tasks/TASK_GUIDE_T043.md (Stage 2 artifact only; implementation not started)
+
+---
+
+## T043 merged: structural task attribution for the always-on hooks (2026-07-23)
+
+**Decision**: `post_tool_trace.py` and `pre_agent_step_limit.py` no longer infer the Task ID from
+free text. Both call `.claude/hooks/lib/task_context.py:resolve_task_id(event)`, which lifts the
+structural-reference pattern `pre_agent_validate_guide.py` has used since T022. Precedence, first
+match wins: validated `CLAUDE_ACTIVE_TASK` env var (`^T\d{3}$`, anything else ignored rather than
+trusted) → a `TASK_GUIDE_Txxx.md` reference in a **path-valued** `tool_input` field
+(`file_path`/`notebook_path`/`path`) → for `Agent` calls only, a structural ref in the spawn prompt
+→ unattributed. `tool_response` is never an attribution source; a `Bash` command string is never
+scanned. Fail-open preserved end to end — a failed lib import or any unexpected input degrades to
+unattributed, never a traceback, because these hooks fire on every tool call in the repo.
+
+**Rejected**: inferring from the worktree path (they are named `agent-<hash>`, no Task ID in them —
+would silently resolve to nothing while looking like it works) and keeping the whole-payload regex
+as a last-resort fallback (reintroduces the defect; a wrong tag is worse than a missing one, same
+principle as T042's `?` defaults).
+
+**Unblocks** T040, and through it T030.
+
+**Files**: .claude/hooks/lib/task_context.py (new), post_tool_trace.py, pre_agent_step_limit.py,
+tests/test_task_context.py (new, 29 tests incl. 18 subprocess-from-foreign-cwd)

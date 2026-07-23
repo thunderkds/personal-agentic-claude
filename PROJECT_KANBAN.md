@@ -8,7 +8,8 @@
 ## Board
 
 ### Todo
-- [ ] **T043** — Fix trace/step-limit task attribution — stop inferring the Task ID from arbitrary tool text | Common-Infrastructure-Agent | C2 | Risk: Medium | P0
+- [ ] **T045** — Kanban section parsing breaks when a row quotes a markdown heading marker (unanchored lookahead) | Common-Infrastructure-Agent | C1 | Risk: Medium | P1
+- [ ] **T044** — Hook lifecycle & evidence integrity — make the merge gate mean something | Common-Infrastructure-Agent | C2 | Risk: Medium | P0
 - [ ] **T040** — Derive the Token Audit Log from event-trace instead of manual entry; restart the DDR-0001 window | Common-Infrastructure-Agent | C1 | Risk: Medium | P1
 - [ ] **T041** — Make engineering principles reachable by sub-agents + add the Search-Before-You-Build ladder | Common-Infrastructure-Agent | C2 | Risk: Medium | P1
 - [ ] **T030** — Post-baseline analysis — pick the token refactor from real data (blocked: T028 window must close — 7 sessions/14 days, DDR-0001) | Supervisor + user (HITL) | C1 | Risk: Low | P1
@@ -17,8 +18,10 @@
 
 ### Ready for Review
 
+
 ### Done
-- [x] **T039** — Dedup the `## Skills vs Agents` section in CLAUDE.md — 580→536 lines; kept only what the harness does not auto-inject (mechanism, subagent_type→file mapping, spawn-pointer note, blast-radius disambiguation, names-only stage index). Stage 4: 1 P0 (false `verify` Evidence claim — post-commit run actually failed) + 2 P1 (test compared against floating HEAD so it could never pass once committed; AC5 checksum was vacuous — `^## ` couldn't match the real `### Hard-Stop Gates` H3, so both sides extracted empty strings and compared equal). All fixed, negative control independently reproduced by Supervisor. security-review manual (built-in unrunnable: hardcodes `origin/HEAD`, remote is `github`) — no findings | C2 | Completed: 2026-07-23
+- [x] **T043** — Fix trace/step-limit task attribution — both hooks took the first `T\d{3}` substring in the tool payload (the trace hook scanning `tool_response` too), so merely *reading* a file whose body mentions a task ID filed the record under it, and an Edit whose prose mentioned an old task ID counted a step against it. Now a shared `lib/task_context.py:resolve_task_id()` resolves structurally: validated `CLAUDE_ACTIVE_TASK` → guide path in a path-valued field → `Agent` spawn prompt → unattributed. Fail-open preserved. 29 new tests (18 subprocess from a foreign cwd); all 6 negative controls observed RED; Supervisor independently reproduced the defect fix and one mutation. Stage 4: 0 P0/P1, 3 P2 (2 out-of-scope, 1 mine), 1 P3. **security-review ran for the first time in project history** — no findings | C2 | Completed: 2026-07-23
+- [x] **T039** — Dedup the `## Skills vs Agents` section in CLAUDE.md — 580→536 lines; kept only what the harness does not auto-inject (mechanism, subagent_type→file mapping, spawn-pointer note, blast-radius disambiguation, names-only stage index). Stage 4: 1 P0 (false `verify` Evidence claim — post-commit run actually failed) + 2 P1 (test compared against floating HEAD so it could never pass once committed; AC5 checksum was vacuous — the matcher anchored on an H2 prefix but the real heading is H3, so both sides extracted empty strings and compared equal). All fixed, negative control independently reproduced by Supervisor. security-review manual (built-in unrunnable: hardcodes `origin/HEAD`, remote is `github`) — no findings | C2 | Completed: 2026-07-23
 - [x] **T042** — Fix post_write_register_task.py Complexity/Risk/Priority extraction — regexes never matched the template's own `**X Level**:` format, so every auto-registered row silently defaulted to C1/Low/P1; defaults now `?`; 4th regex defect in this hook family. Stage 4: 0 P0/P1, 1 P2 fixed, 3 P3 accepted. security-review unrunnable (built-in hardcodes `origin/HEAD`, remote is `github`) — done manually, no findings | C1 | Completed: 2026-07-21
 - [x] **T038** — Fix setup.sh piped `curl \| sh` install — primary documented install command was completely broken since T031 (2 days, undetected until a real user hit it); verified against the real live pushed repo | C2 | Completed: 2026-07-19
 - [x] **T037** — Fix CI shellcheck SC1091 — missing `-x` flag meant shellcheck refused to follow the already-correctly-annotated lib/harness-fetch.sh source, failing CI on an info-level finding | C0 | Completed: 2026-07-19
@@ -62,8 +65,8 @@
 
 | Task | Reason | Waiting on |
 |------|--------|-----------|
-| T040 | Event-trace task-attribution is unreliable — records are filed under whichever Txxx appears first in a read file's text, so a log derived from it would be confidently wrong (see `tasks/TASK_GUIDE_T040.md` → Dependencies) | T043 |
-| T030 | DDR-0001 baseline window has no usable data (1 of 7 sessions logged, `/cost` never captured); window reopens once T040 lands | T040 → T043 |
+| T040 | ~~Blocked on T043~~ — **unblocked 2026-07-23**, attribution is now structural. Note before starting: a `Bash` command is never attributed, so `CLAUDE_ACTIVE_TASK=T040` must be exported when running tests, or the merge gate finds no trace record | — (ready) |
+| T030 | DDR-0001 window still has no data; reopens once T040 lands | T040 |
 
 ---
 
