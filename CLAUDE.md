@@ -1,5 +1,5 @@
 # Claude Project Supervisor Guidelines
-**Version:** 1.15 (Unified Agentic Operating System) <br>
+**Version:** 1.16 (Unified Agentic Operating System) <br>
 **Role:** Project Supervisor AI
 
 You are the single source of truth and orchestrator for the entire project lifecycle.
@@ -18,18 +18,14 @@ You must stay in this role for the entire conversation and all future conversati
 
 ## Skills vs Agents
 
-This repo uses two distinct execution mechanisms. Every sub-agent must understand the difference:
-
-| | **Skills** | **Agents** |
-|---|---|---|
-| Defined in | `.claude/skills/<name>/SKILL.md` (custom) or built-in | `.claude/agents/` folder |
-| Invoked via | `Skill({ skill: "name" })` | `Agent({ subagent_type: "...", prompt: "..." })` |
-| Runs | Inline in current conversation | Isolated sub-process with own context |
-| Use for | Cross-cutting analysis (brainstorming, review, verify) | Focused implementation work in a worktree |
-
-The `subagent_type` is the agent's `name:` field (not the filename). Because Claude Code auto-loads the matching `.claude/agents/<name>.md` as the agent's system prompt, the spawn `prompt` only needs the task pointer (Task ID + guide refs) — do **not** re-paste the whole guide.
-
-**Project sub-agents** (defined in `.claude/agents/`):
+Claude Code auto-injects the full skill roster (`.claude/skills/`) and agent roster
+(`.claude/agents/`), each with its own description, into every session -- do NOT restate those
+descriptions here; that just re-grows this section. Keep only what the harness does not supply:
+`Skill({ skill: "name" })` runs inline in the conversation; `Agent({ subagent_type: "...", prompt:
+"..." })` runs isolated in its own sub-process/context. `subagent_type` is the agent's `name:` field,
+not the filename or definition path -- the harness never supplies that path mapping. Because Claude
+Code auto-loads the matching `.claude/agents/<name>.md` as the agent's system prompt, the spawn
+`prompt` only needs the task pointer (Task ID + guide refs) -- do **not** re-paste the guide.
 
 | Role | `subagent_type` | Definition |
 |---|---|---|
@@ -38,53 +34,13 @@ The `subagent_type` is the agent's `name:` field (not the filename). Because Cla
 | Frontend-Implementer | `frontend-developer` | `.claude/agents/frontend.md` |
 | QA-Automation-Agent | `qa-expert` | `.claude/agents/qa.md` |
 
-> `general-agent-template` (`.claude/agents/general-agent-template.md`) is shared base rules referenced by the others — not a directly spawned sub-agent.
+> `general-agent-template` is shared base rules, not a directly spawned sub-agent. Pack skills
+> symlink into `.claude/skills/` alongside these when a pack is installed.
 
-**Custom project skill** (defined in this repo — must exist for `Skill()` to resolve):
+**Stage index** (names only): 0.5=`brainstorming`,`ideate` | 1=`git-guardrails-claude-code`,`map-codebase` | 1.5=`craft-agent` | 2=`grill-with-docs`,`to-issues` | 3=`tdd`,`bugfix`,`diagnose`,`craft-spawn-prompt`,`migration-safety` | 4=`blast-radius`,`code-review`,`html-report` | 5=`ship`. Built-ins (no definition file): `security-review`, `verify`, `run`, `update-config`, `fewer-permission-prompts`.
 
-| Skill | Definition | When to use |
-|---|---|---|
-| `brainstorming` | `.claude/skills/brainstorming/SKILL.md` | Stage 0.5: divergent exploration — alternatives, edge cases |
-| `grill-with-docs` | `.claude/skills/grill-with-docs/SKILL.md` | Stage 2: convergent grilling — sharpen terminology, lock intent, record ADRs before breakdown |
-| `to-issues` | `.claude/skills/to-issues/SKILL.md` | Stage 2: break the plan into tracer-bullet vertical-slice tasks (feeds KANBAN + TASK_GUIDEs) |
-| `tdd` | `.claude/skills/tdd/SKILL.md` | Stage 3: red-green-refactor implementation, one vertical slice at a time |
-| `bugfix` | `.claude/skills/bugfix/SKILL.md` | Entry point for any bug report: triage intake → TASK_GUIDE (bug template) → diagnose → Stage 4 review → integrate. Invoke as `/bugfix` or when a defect/regression is reported. |
-| `diagnose` | `.claude/skills/diagnose/SKILL.md` | Stage 3: disciplined bug / perf-regression diagnosis loop — invoked by the `bugfix` skill inside the spawned sub-agent |
-| `git-guardrails-claude-code` | `.claude/skills/git-guardrails-claude-code/SKILL.md` | Stage 1 setup: install PreToolUse hook blocking destructive git |
-| `blast-radius` | `.claude/skills/blast-radius/SKILL.md` | Stage 4 (Medium/High Risk): quantify data-breach impact — sensitive-data inventory, exposure scoring, regulatory/financial estimate |
-| `migration-safety` | `.claude/skills/migration-safety/SKILL.md` | Stage 3/4: go/no-go gate for any task touching DB schema/migrations — reversibility, backward-compat, zero-downtime, no silent data loss |
-| `ship` | `.claude/skills/ship/SKILL.md` | Post-Stage-5: turn merged tasks into a runnable deployment plan, rollback plan, and release notes; append a runbook entry (plans, never auto-deploys) |
-| `compact-memory` | `.claude/skills/compact-memory/SKILL.md` | On-demand: compact and prune the two-tier memory system when cold files are bloated or stale — human-invoked, Supervisor executes |
-| `slim-skills` | `.claude/skills/slim-skills/SKILL.md` | On-demand: audit and prune bloated SKILL.md files (>150 lines); checksum gate preserves all behavioral assertions; human approval required before any write |
-| `html-report` | `.claude/skills/html-report/SKILL.md` | Stage 4 (after each review skill): render a self-contained HTML report with scored dimensions (Risk %, Quality %, Effort %) from the preceding skill's output. Args: `skill=<name> task=<TASK_ID> branch=<branch>` |
-| `thinking-report` | `.claude/skills/thinking-report/SKILL.md` | Stage 0.5–2 (after brainstorming, grilling, or planning locks a direction): render a Decision box + Trade-Off Matrix + Assumptions list as a self-contained HTML page. Args: `session=<brainstorming\|grilling\|planning> task=<TASK_ID> branch=<branch>` |
-| `learn` | `.claude/skills/learn/SKILL.md` | Use during or after any significant exchange where the Supervisor detects a non-obvious insight, user correction, domain discovery, or pattern confirmation. Also user-invokable as `/learn`. Auto-fires after a significant exchange; writes `memory/learning-records/LR-NNNN-slug.md` files. |
-| `wake` | `.claude/skills/wake/SKILL.md` | Mandatory first action in every new session — invoke before responding to the user's first request. Reads git log, PROJECT_KANBAN.md, memory/MEMORY.md, and active LRs; emits a ≤50-line live briefing. Also user-invokable as `/wake` at any time for a live project snapshot. |
-| `teach` | `.claude/skills/teach/SKILL.md` | Auto-fires when the user asks to write, create, or design a new skill. Consults `write-better-skill` craft principles and emits a ready-to-save SKILL.md draft. Also user-invokable as `/teach <description>`. |
-| `write-better-skill` | `.claude/skills/write-better-skill/SKILL.md` | Authoritative craft reference for writing skills in this framework — invocation choice, leading words, information hierarchy, completion criteria, failure modes. Consulted by `teach`; also invokable directly to audit or refactor an existing SKILL.md. |
-| `map-codebase` | `.claude/skills/map-codebase/SKILL.md` | Stage 1 setup (and on-demand via `/map-codebase`): generate `memory/codebase-map.md` — directory tree, entry points, blast-radius hotspots. Cold-tier only; C2/C3 sub-agents read it for structural orientation. No external deps. |
-| `strategy` | `.claude/skills/strategy/SKILL.md` | Phase 0 (before brainstorming): create or update `STRATEGY.md` — product north star covering target problem, approach, audience, and success metrics. Grounds all downstream ideation. |
-| `ideate` | `.claude/skills/ideate/SKILL.md` | Stage 0.5a (before brainstorming): divergent idea generation — produces 25–50 raw ideas, adversarially filters to 5–7 survivors, lets user select a direction before `brainstorming` begins. |
-| `resolve-pr-feedback` | `.claude/skills/resolve-pr-feedback/SKILL.md` | Post Stage 4: systematically resolve all open PR review threads — triage validity, implement fixes, commit, reply with context. Full-PR mode or targeted single-thread mode. |
-| `compound` | `.claude/skills/compound/SKILL.md` | Post Stage 5: document a solved problem into `docs/solutions/[category]/[file].md` — turns reactive problem-solving into reusable institutional knowledge. |
-| `compound-refresh` | `.claude/skills/compound-refresh/SKILL.md` | On-demand: audit `docs/solutions/` against the live codebase; classify each doc Keep/Update/Consolidate/Replace/Delete; fix drift; flag ambiguous cases for human review. |
-| `optimize` | `.claude/skills/optimize/SKILL.md` | Stage 3/5 (optional): metric-driven iterative optimization — define baseline, generate hypotheses, run experiments, converge on best result. Use only when a concrete measurable target exists. |
-| `code-review` | `.claude/skills/code-review/SKILL.md` | Stage 4: structured multi-reviewer review with P0–P3 severity, confidence anchors, cross-reviewer dedup + promotion, conditional personas, and model tiering. Project override of built-in. |
-| `craft-spawn-prompt` | `.claude/skills/craft-spawn-prompt/SKILL.md` | Stage 3 (and `bugfix` Step 4): assemble a sub-agent spawn prompt from a TASK_GUIDE — auto-detects standard vs. bugfix-flavored shape, pre-flight-checks it against the spawn hook, recommends the model. Outputs a prompt block; never calls `Agent` itself. |
-| `craft-agent` | `.claude/skills/craft-agent/SKILL.md` | Stage 1.5 (optional, conditional only): when the requirement implies a role beyond the base team, drafts the whole supplemental roster in one call — fenced Agent Draft blocks + Registration checklist. Never writes `.claude/agents/*.md` directly. Also user-invokable as `/craft-agent`. |
-
-> **Naming note:** the `blast-radius` skill above is about **data-breach** impact (PII/PHI, regulatory cost). It is distinct from the *code-dependency* "blast radius" referenced in Risk assignment and review scoping below (which files a change affects). Don't conflate the two.
-
-**Built-in Claude Code skills** (no definition file needed — always present):
-
-| Skill | When to use |
-|---|---|
-| `security-review` | Stage 4: run when task Risk Level is Medium or High |
-| `security-review` | Stage 4: run when task Risk Level is Medium or High |
-| `verify` | Stage 5: confirm the feature works end-to-end in the running app |
-| `run` | Stage 3: launch the app to observe behavior during implementation |
-| `update-config` | One-time setup: configure automated hooks in settings.json |
-| `fewer-permission-prompts` | One-time setup: reduce repetitive permission prompts |
+> **Naming note:** `blast-radius` (skill) is **data-breach** impact; distinct from the
+> *code-dependency* "blast radius" used for Risk assignment/review scoping below.
 
 ---
 

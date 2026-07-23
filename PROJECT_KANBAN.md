@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-07-19
+**Last updated**: 2026-07-23
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -8,6 +8,9 @@
 ## Board
 
 ### Todo
+- [ ] **T043** — Fix trace/step-limit task attribution — stop inferring the Task ID from arbitrary tool text | Common-Infrastructure-Agent | C2 | Risk: Medium | P0
+- [ ] **T040** — Derive the Token Audit Log from event-trace instead of manual entry; restart the DDR-0001 window | Common-Infrastructure-Agent | C1 | Risk: Medium | P1
+- [ ] **T041** — Make engineering principles reachable by sub-agents + add the Search-Before-You-Build ladder | Common-Infrastructure-Agent | C2 | Risk: Medium | P1
 - [ ] **T030** — Post-baseline analysis — pick the token refactor from real data (blocked: T028 window must close — 7 sessions/14 days, DDR-0001) | Supervisor + user (HITL) | C1 | Risk: Low | P1
 
 ### In Progress
@@ -15,6 +18,8 @@
 ### Ready for Review
 
 ### Done
+- [x] **T039** — Dedup the `## Skills vs Agents` section in CLAUDE.md — 580→536 lines; kept only what the harness does not auto-inject (mechanism, subagent_type→file mapping, spawn-pointer note, blast-radius disambiguation, names-only stage index). Stage 4: 1 P0 (false `verify` Evidence claim — post-commit run actually failed) + 2 P1 (test compared against floating HEAD so it could never pass once committed; AC5 checksum was vacuous — `^## ` couldn't match the real `### Hard-Stop Gates` H3, so both sides extracted empty strings and compared equal). All fixed, negative control independently reproduced by Supervisor. security-review manual (built-in unrunnable: hardcodes `origin/HEAD`, remote is `github`) — no findings | C2 | Completed: 2026-07-23
+- [x] **T042** — Fix post_write_register_task.py Complexity/Risk/Priority extraction — regexes never matched the template's own `**X Level**:` format, so every auto-registered row silently defaulted to C1/Low/P1; defaults now `?`; 4th regex defect in this hook family. Stage 4: 0 P0/P1, 1 P2 fixed, 3 P3 accepted. security-review unrunnable (built-in hardcodes `origin/HEAD`, remote is `github`) — done manually, no findings | C1 | Completed: 2026-07-21
 - [x] **T038** — Fix setup.sh piped `curl \| sh` install — primary documented install command was completely broken since T031 (2 days, undetected until a real user hit it); verified against the real live pushed repo | C2 | Completed: 2026-07-19
 - [x] **T037** — Fix CI shellcheck SC1091 — missing `-x` flag meant shellcheck refused to follow the already-correctly-annotated lib/harness-fetch.sh source, failing CI on an info-level finding | C0 | Completed: 2026-07-19
 - [x] **T036** — Fix scripts/smoke-install.sh for direct-repo model — CI was broken (red) since T031-T033 landed, never caught until this review; 1 P1 code-review fix (vacuous assertion) | C1 | Completed: 2026-07-19
@@ -57,6 +62,8 @@
 
 | Task | Reason | Waiting on |
 |------|--------|-----------|
+| T040 | Event-trace task-attribution is unreliable — records are filed under whichever Txxx appears first in a read file's text, so a log derived from it would be confidently wrong (see `tasks/TASK_GUIDE_T040.md` → Dependencies) | T043 |
+| T030 | DDR-0001 baseline window has no usable data (1 of 7 sessions logged, `/cost` never captured); window reopens once T040 lands | T040 → T043 |
 
 ---
 

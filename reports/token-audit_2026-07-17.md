@@ -1,4 +1,17 @@
-# Token Audit Log — Window opened 2026-07-17
+# Token Audit Log — Window opened 2026-07-17 — **CLOSED INCONCLUSIVE 2026-07-21**
+
+> **Status: closed inconclusive at 1 of 7 required sessions.** Logging stopped after
+> 2026-07-17. T029/T034/T035/T036/T037/T038 all merged on 2026-07-19 across multiple
+> sessions with zero entries, and `/cost` was never logged once — so no ground-truth
+> number exists to check the tagged entries against.
+>
+> The manual per-session convention had no failure signal, so its collapse went
+> unnoticed for 4 days. See DDR-0001 Amendment 1. The window reopens at
+> `reports/token-audit_2026-07-21.md`, derived from `memory/event-trace/` by
+> `scripts/token-audit.sh` (T040) instead of typed by hand.
+>
+> **Retained, not deleted** — the entries below are real, and the failure itself is the
+> finding that justified T040. Do not append to this file.
 
 > **What this is**: baseline measurement instrument per DDR-0001. One line per
 > logged event, appended manually during Supervisor sessions. This is a

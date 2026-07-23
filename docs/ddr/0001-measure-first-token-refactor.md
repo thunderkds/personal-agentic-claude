@@ -52,6 +52,48 @@ Operational terms (canonical — see PROJECT_SPEC.md glossary):
 - With 7 sessions/side, only large wins (≈20%+) are reliably detectable — a marginal win is indistinguishable from noise, and is accepted as not worth a refactor
 
 ### Follow-up
-- [ ] Stage 2: generate TASK_GUIDEs for the audit convention (Option B) and the slim-skills run (Option C)
+- [x] Stage 2: generate TASK_GUIDEs for the audit convention (Option B) and the slim-skills run (Option C)
 - [ ] After baseline window closes: follow-up brainstorm against real numbers to select the refactor
 - [ ] After validation window: apply success criterion / rollback trigger; record outcome in this DDR's Status or a superseding DDR
+
+---
+
+## Amendment 1 — 2026-07-21: the manual instrument failed; window restarted
+
+**Status**: Accepted · **Decider**: hungnguyenhuu (user) · **Task**: T040
+
+The decision above is **unchanged** — measure before refactoring still stands. What failed is the
+*instrument*, exactly where this record predicted it might.
+
+Measured on 2026-07-21, day 4 of the 14-day window:
+
+| Required | Actual |
+|---|---|
+| 7 logged sessions, or 14 days | 1 session logged |
+| Entry at each cold-start / stage transition / spawn | last entry dated 2026-07-17 |
+| `/cost` at session end as ground truth | never logged, not once |
+
+T029, T034, T035, T036, T037 and T038 all merged on 2026-07-19 across multiple sessions and produced
+zero entries. This is precisely the accepted trade-off recorded above — *"audit-entry discipline is a
+per-session manual convention (deliberately no hook — Simplicity First); forgotten entries degrade
+the data"* — and it degraded to nothing within 48 hours. The Simplicity First call to avoid tooling
+was wrong here: the convention had no failure signal, so nobody noticed it had stopped.
+
+**Amended terms:**
+- The baseline window reopens at **2026-07-21** in `reports/token-audit_2026-07-21.md`.
+  `reports/token-audit_2026-07-17.md` is closed **inconclusive at 1 of 7 sessions** and retained —
+  the failure is itself the finding.
+- Entries are **derived from `memory/event-trace/*.jsonl`** by `scripts/token-audit.sh` (T040)
+  rather than typed by hand. The trace hook already captures every required event; no new always-on
+  hook is added.
+- **Known ceiling, accepted:** hooks cannot observe token counts and no hook can capture `/cost`.
+  Only the event stream is automated; the `/cost` ground-truth line remains a manual paste at
+  session end. Token counts must never be estimated or synthesised — a fabricated number is worse
+  than a missing one.
+- Window-close condition, cost mapping, success criterion (≥20%) and rollback trigger (<5%) are
+  **unchanged**.
+
+**Consequence for T030**: it stays blocked, but now on an instrument that records without anyone
+remembering to. If the reopened window also comes up short, the honest conclusion is that
+measure-first is not viable in this workflow — and that conclusion belongs in a superseding DDR,
+not another amendment.

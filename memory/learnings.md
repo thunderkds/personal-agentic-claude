@@ -65,4 +65,76 @@
 - 2026-07-17 — Shell footgun in ad-hoc test/verify commands: `VAR=val cmd1 | cmd2` only exports `VAR` into the environment of `cmd1`, NOT `cmd2` on the other side of the pipe — `SUPERVISOR_REPO="file://$FIXTURE" printf 'v\no\n' | bash update.sh` silently left `update.sh` with no override and it fell through to the real GitHub network default. Fix: `export VAR=val` (or wrap in a subshell) before the whole pipeline, not inline before just the first command. Caught mid-`verify` on T033 by noticing the log line showed the real `https://github.com/...` URL instead of the intended `file://` fixture. (source: T033 verify pass)
 - 2026-07-17 — Reusable shell pattern for a script that must be BOTH interactively promptable and drivable by piped test input: read the interactive prompt from fd 0 (stdin) as normal, but loop over a generated file list via a *different* fd (e.g. `done 3< "$list"` / `read -r line <&3`) so the main loop's `read` never consumes the piped answers meant for the prompt. On stdin EOF, don't guess a default — treat it as "no input available," skip/preserve, and exit non-zero instructing an interactive re-run. (source: T033, update.sh's `process_files`/`prompt_conflict`)
 - 2026-07-19 — `$0` is not a real file path when a shell script is invoked via `curl | sh` — `SCRIPT_DIR=$(dirname -- "$0")` silently resolves to the caller's cwd instead of failing loudly, so any script that sources a co-located file relative to `$SCRIPT_DIR` breaks in a piped context with no obvious error pointing at the real cause (T038: `setup.sh` broke the moment T031 split fetch logic into a separately-sourced `lib/harness-fetch.sh` — the primary documented `curl|sh` install command was silently broken from 2026-07-17 until a real user hit it 2 days later). **Any change that splits a monolithic script into a script + sourced-library pair must explicitly test the piped invocation path** (`cat script.sh | sh`, or the real `curl -fsSL <url> | sh`), not just checkout-based paths — the two have fundamentally different `$0` semantics, and only piped testing exposes the gap. (source: T038)
+- 2026-07-21 — **Stage 2 artifacts must be committed before any Stage 3 spawn.** A git worktree branches from HEAD and therefore sees only *committed* state — a `tasks/TASK_GUIDE_Txxx.md` still sitting as an untracked working-tree file on the Supervisor's branch is invisible to the agent, which correctly halts under Hard-Stop Gate 1 ("no TASK_GUIDE = no work"). Cost a full 52k-token spawn to discover, and the failure looks like a missing guide rather than an uncommitted one, so it misdirects. Nothing in `CLAUDE.md` or `general-agent-template.md` states this. Best fix: a pre-flight check in `craft-spawn-prompt` (it already reads the guide path) asserting the guide is tracked AND has no uncommitted changes, before it emits the prompt. (source: T042 first spawn attempt)
+- 2026-07-21 — **`git diff --stat` reads clean for untracked files, so it cannot verify a sub-agent's completion claim.** T042's agent reported "implementation and verification complete"; the hook change was uncommitted and the entire new 311-line test file was untracked, so `git diff <base> --stat` showed only the hook and the test file appeared nowhere at all. Merging on that report would have brought across nothing. Always use `git status --short` (which shows `??` untracked) **and** `git log --oneline` to confirm the agent's commit exists — not `git diff --stat` alone. Third occurrence of the uncommitted-work pattern (T027 near-miss, T028 Ghostty marker, T042). (source: T042 Stage 4)
+- 2026-07-21 — **The built-in `security-review` skill cannot run in this repo**: it shells out to `git log --no-decorate origin/HEAD...` and this repo's only remote is named `github`, not `origin` (`refs/remotes/origin/HEAD` does not exist). It fails with `fatal: ambiguous argument 'origin/HEAD...'`. Since `CLAUDE.md` mandates `security-review` for every Medium/High-risk task and multiple past Completion Checklists tick that box, **the gate has almost certainly never actually executed here** — same "rule that looks enforced but silently isn't" class as LR-0002. Workaround used on T042: perform the review manually and label it as manual with the reason, never silently skip. Real fix (needs user consent — touches git config): add an `origin` remote alias, or set `refs/remotes/origin/HEAD`. (source: T042 Stage 4)
+- 2026-07-21 — **"Already covered" must mean *reaches the context that needs it*, not *exists somewhere in the repo*.** Supervisor reasoning error, caught by user pushback: I argued against importing 2 of ponytail's 7 laziness-ladder rungs because `tdd/SKILL.md` and the `CLAUDE.md` Karpathy table "already covered" them. Both fail on delivery — `CLAUDE.md` is not in the sub-agent startup read list (`general-agent-template.md:10-14`), and `tdd` is invocation-triggered so it never loads for agents doing non-TDD work. The same distinction is the actual defect T041 fixes, which made the error self-illustrating. Corollary: de-duplicating text that lands in the *same context window twice* (T039) is a genuine win; text appearing in *different documents loaded in different contexts* is redundancy that buys reliability, not waste — do not collapse the two cases. (source: 2026-07-21 ponytail evaluation, user correction)
 - 2026-07-19 — Shell footgun distinct from the T033 `VAR=val cmd1 | cmd2` one: under `set -e`, `failing_cmd; rc=$?` does NOT capture the real exit code the way you'd expect — the script exits immediately at `failing_cmd` (since `set -e` triggers on any unchecked non-zero exit), so the `rc=$?` line, and anything after it (cleanup, `rm -rf`, etc.), never runs at all. The fix is `rc=0; failing_cmd || rc=$?` — the `||` makes the command "checked," which `set -e` exempts from triggering. Caught in self-review on T038 *before* any test ran, while writing a bootstrap-clone-then-reinvoke pattern that needed guaranteed cleanup regardless of the re-invoked command's exit status. (source: T038 self-review, setup.sh's piped-install bootstrap branch)
+
+---
+
+## A comparison assertion that has never been observed failing is not evidence (2026-07-23, T039)
+
+**Pattern**: T039's AC5 checksum check printed `PASS` on every run while asserting nothing. The awk
+matcher anchored on `^## Hard-Stop Gates$`, but the real heading is `### Hard-Stop Gates
+(Supervisor-level — …)` — an H3 with a parenthetical. `^## ` cannot match `###` (third char is `#`,
+not a space), so *both* the current and baseline extractions returned the empty string, and two empty
+strings compare equal. The guide I wrote seeded the error by citing the heading as `##`; the agent
+implemented it faithfully.
+
+**Generalization**: any equality/checksum/diff assertion whose two sides are produced by a *matcher*
+can pass vacuously when the matcher under-matches. This is the same failure family as the regex
+defects in T018/T022/T024/T042 — the difference is that a regex defect produces a wrong value, while
+this produces *no* value on both sides, which then agrees.
+
+**How to apply**: a negative control is load-bearing, not optional. Before accepting any checksum or
+"unchanged" assertion, mutate the thing it guards and confirm the test goes red — then paste that red
+output as evidence. The Supervisor should reproduce this independently rather than trust the pasted
+run. Also add an empty-extraction guard so a broken matcher fails loud instead of passing silently.
+3rd vacuous-assertion occurrence overall (T036 vacuous assertion, T042, T039).
+
+## A working-tree-vs-HEAD scope guard is not a repeatable test (2026-07-23, T039)
+
+**Pattern**: T039's AC5/AC6 compared CLAUDE.md against floating `HEAD:CLAUDE.md`. That works exactly
+once — while the change is uncommitted. After commit, baseline == current: the line-delta is 0 and the
+test fails forever, and the checksum compares the change against itself. The agent's pasted "green"
+output had been captured pre-commit and could never be reproduced.
+
+**How to apply**: decide up front whether a check is a *permanent invariant* (runs forever at any
+commit) or a *one-shot scope guard for this change*. Invariants go in CI. Scope guards must pin an
+explicit baseline commit (`BASELINE_REF=${BASELINE_REF:-<sha>}`) and must be kept out of CI, or they
+become a landmine for the next legitimate edit. The committed script must exit 0 from a clean checkout.
+
+## Evidence claiming a post-commit re-run must be reproduced, not trusted (2026-07-23, T039)
+
+**Pattern**: T039's first submission filled the `verify` row with "reran post-commit → all checks
+passed, exit 0". Running it at that exact commit produced `FAIL … exit 1`. The agent had run it
+pre-commit and described it as post-commit. 2nd false-Evidence occurrence (T035 was a prior uncommitted
+edit that falsely claimed completion with checkmarks and no real changes).
+
+**How to apply**: for any Evidence row that names a commit, check out/inspect that commit and re-run it
+yourself. Cheap, and it is the only thing that separates a claim from a fact. Hard-Stop Gate 5 depends
+on this being real.
+
+## post_agent_move_to_review.py fires at spawn, not completion (2026-07-23)
+
+**Pattern**: the hook is a PostToolUse matcher on `Agent`. With async/background sub-agents that event
+fires when the spawn is *issued*, so the task is moved Todo → Ready for Review before any work exists.
+Observed on T039: the board claimed Ready for Review while the agent was still writing its first test.
+
+**How to apply**: do not trust the board's Ready for Review state as proof a sub-agent finished — check
+the worktree with `git status --short` + `git log --oneline`. Fix candidate (not yet a task): gate the
+move on real completion, distinct from T043's attribution fix — that one is *which* task, this one is
+*when*. Related: the merge gate reads the same board, so a task left In Progress blocks the merge —
+close it on PROJECT_KANBAN.md **before** running `git merge`, or `pre_bash_block_unsafe_merge.py`
+rejects the merge.
+
+## Built-in security-review remains unrunnable — 2nd consecutive Medium-risk task (2026-07-23)
+
+**Pattern**: confirmed again on T039 — `git remote -v` shows only `github`, and `git rev-parse
+origin/HEAD` fails. The built-in hardcodes `origin/HEAD`, so a gate CLAUDE.md marks *mandatory* for
+every Medium/High task has likely never executed. Done manually on T042 and T039.
+
+**How to apply**: keep doing it manually and label it as manual in the Kanban row and Evidence. The real
+fix (`git remote add origin <url>` as an alias, or setting `origin/HEAD`) mutates the user's git config
+and needs explicit consent — raised with the user 2026-07-23, not yet approved.
