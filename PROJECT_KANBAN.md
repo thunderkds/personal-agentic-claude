@@ -63,8 +63,8 @@
 
 | Task | Reason | Waiting on |
 |------|--------|-----------|
-| T040 | Event-trace task-attribution is unreliable — records are filed under whichever Txxx appears first in a read file's text, so a log derived from it would be confidently wrong (see `tasks/TASK_GUIDE_T040.md` → Dependencies) | T043 |
-| T030 | DDR-0001 baseline window has no usable data (1 of 7 sessions logged, `/cost` never captured); window reopens once T040 lands | T040 → T043 |
+| T040 | ~~Blocked on T043~~ — **unblocked 2026-07-23**, attribution is now structural. Note before starting: a `Bash` command is never attributed, so `CLAUDE_ACTIVE_TASK=T040` must be exported when running tests, or the merge gate finds no trace record | — (ready) |
+| T030 | DDR-0001 window still has no data; reopens once T040 lands | T040 |
 
 ---
 
