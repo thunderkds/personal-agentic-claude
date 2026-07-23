@@ -211,3 +211,52 @@ User approved (via `AskUserQuestion`) the "self re-exec via fresh clone" fix ove
 **Files**: .claude/hooks/post_write_register_task.py, .claude/hooks/tests/test_post_write_register_task_metadata.py (new, 7 tests), tasks/TASK_GUIDE_T042.md
 
 ## Infrastructure
+
+---
+
+## T039 merged: CLAUDE.md `## Skills vs Agents` dedup (2026-07-23)
+
+**Decision**: Collapsed CLAUDE.md's largest section (72 → 27 body lines; file 580 → 536) by deleting
+everything the Claude Code harness already auto-injects each session — the ~30-row custom-skill
+catalog with descriptions, and the per-row prose in the project sub-agent table. Kept exactly what
+the harness does **not** supply: the Skills-vs-Agents mechanism (inline vs isolated sub-process), the
+`subagent_type` → `.claude/agents/<file>.md` path mapping, the note that the spawn prompt needs only
+a task pointer because the harness auto-loads the agent file as its system prompt, the data-breach
+vs code-dependency `blast-radius` naming disambiguation, the `general-agent-template`
+not-directly-spawnable caveat, and the pack-symlink note. The catalog was replaced by a names-only
+stage index plus an explicit "do NOT restate the auto-injected descriptions here" line, so the
+section cannot silently re-grow. Version bumped 1.15 → 1.16.
+
+**Why**: justification is *verifiable duplication*, not a spend hypothesis — so it does not conflict
+with DDR-0001's deferral of CLAUDE.md trims pending token data. `CLAUDE_LEGACY.md` deliberately NOT
+mirrored: the sync policy covers *additions*, not removals. That divergence is tracked, not accidental.
+
+**Guard**: `scripts/test-claude-md-refs.sh` — AC1 (section ≤30 lines), AC2 (every `Skill({ skill:
+"X" })` ref resolves to a SKILL.md or a documented built-in), AC3 (every `subagent_type` resolves to
+an agent file whose `name:` matches) are permanent invariants; AC5/AC6 (untouched-sections checksum,
+line-delta bounds) are a one-shot scope guard pinned to `BASELINE_REF=99940b8`. **Not wired into
+CI** — `.github/workflows/ci.yml` runs only validate.sh + smoke-install.sh + shellcheck on 4 named
+scripts. AC1/AC2/AC3 are worth adding to CI; AC5/AC6 must not be, they'd break on the next
+legitimate CLAUDE.md edit.
+
+**Files**: CLAUDE.md, scripts/test-claude-md-refs.sh (new), tasks/TASK_GUIDE_T039.md
+
+---
+
+## T043 planned: fix trace/step-limit task attribution (2026-07-23)
+
+**Decision**: Both `post_tool_trace.py` and `pre_agent_step_limit.py` resolve "which task is this?"
+via a bare `re.search(r"\bT\d{3}\b")` over the tool payload — and the trace hook searches
+`tool_response` too, so *reading* PROJECT_KANBAN.md files the record under whichever Task ID appears
+first in that file's text. Fix is a shared `.claude/hooks/lib/task_context.py:resolve_task_id()`
+reusing the structural-reference pattern already proven in `pre_agent_validate_guide.py`
+(`extract_structural_task_ids`, T022), with documented precedence: `CLAUDE_ACTIVE_TASK` env →
+`TASK_GUIDE_Txxx.md` in a *path-valued* input field → structural ref in an `Agent` spawn prompt →
+unattributed. Explicitly rejected: inferring from the worktree path (worktrees are named
+`agent-<hash>`, no Task ID) and keeping the whole-payload regex as a fallback (a wrong tag is worse
+than a missing one — same principle as T042).
+
+**Why it is P0**: it blocks T040, which blocks T030. DDR-0001 maps spend as session `/cost` split
+across that session's tagged entries — with wrong tags the derived audit log is *confidently wrong*.
+
+**Files**: tasks/TASK_GUIDE_T043.md (Stage 2 artifact only; implementation not started)

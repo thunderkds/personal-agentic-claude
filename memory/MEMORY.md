@@ -4,7 +4,11 @@
 > Injected in full into every sub-agent spawn prompt.
 > Updated by the Supervisor — prompted by the PostToolUse hook on `git push` / `git merge` (diff-driven pass), or via the `/compact-memory` skill.
 
-> **token-audit**: DDR-0001 baseline window is open — log a `reports/token-audit_2026-07-17.md` entry at cold-start, each Stage transition, and each spawn; paste `/cost` at session end.
+> **token-audit**: NO window is currently open. DDR-0001 Amendment 1 (2026-07-21) closed the
+> `reports/token-audit_2026-07-17.md` window as inconclusive — the manual convention collected 1 of 7
+> sessions and never once captured `/cost`. Do **not** log entries there. The replacement window is
+> derived from event-trace by T040, which is blocked on T043. Until T043 → T040 land, there is
+> nothing to log and T030 stays blocked.
 
 ---
 
@@ -58,8 +62,15 @@
 - [T042 merged: register-hook metadata regexes](decisions.md) — Complexity/Risk/Priority never matched the template's own `**X Level**:` format, silently defaulting to C1/Low/P1 so the board understated the process a task requires; defaults now `?`; 4th regex defect in this hook family (T018/T022/T024/T042) — shared `extract_labeled_field()` helper flagged as follow-up
 - [DDR-0001 Amendment 1, 2026-07-21](../docs/ddr/0001-measure-first-token-refactor.md) — measure-first decision STANDS; the manual logging instrument failed (1 of 7 sessions, `/cost` never once); window reopens 2026-07-21 derived from event-trace via T040. If the reopened window also comes up short, that conclusion belongs in a superseding DDR, not another amendment
 - [Stage 2 planning T039-T042, 2026-07-21](decisions.md) — CLAUDE.md `## Skills vs Agents` dedup (T039, the harness already auto-injects both rosters); ponytail 7-rung ladder + Karpathy-reachability fix in general-agent-template.md (T041); T040 blocked on T043 (trace task-attribution is wrong — files records under whatever Txxx appears first in a read file's text)
+- [T039 merged: CLAUDE.md Skills-vs-Agents dedup](decisions.md) — 580→536 lines, section 72→27; kept only what the harness doesn't inject (mechanism, subagent_type→file map, spawn-pointer note, blast-radius disambiguation, names-only stage index); CLAUDE_LEGACY deliberately NOT mirrored (sync policy covers additions, not removals); guard script not in CI
+- [T043 planned: shared resolve_task_id() for trace + step-limit hooks](decisions.md) — P0, blocks T040→T030; reuses T022's structural-ref pattern; precedence env→path-field→Agent-prompt→unattributed; worktree-path inference and whole-payload fallback both explicitly rejected
 
 ### Patterns & Gotchas
+- [An assertion never observed failing is not evidence](learnings.md) — T039's AC5 checksum passed while asserting nothing: `^## ` couldn't match the real `### Hard-Stop Gates` H3, both sides extracted empty, empties compare equal. Mutate what a checksum guards and confirm RED before accepting it. 3rd vacuous-assertion (T036/T042/T039)
+- [Working-tree-vs-HEAD is a scope guard, not a repeatable test](learnings.md) — works exactly once, pre-commit; after commit baseline==current so delta 0 fails forever. Decide invariant (→CI) vs one-shot guard (→pin `BASELINE_REF=<sha>`, keep OUT of CI); committed script must exit 0 from a clean checkout
+- [Evidence naming a commit must be re-run, not trusted](learnings.md) — T039 claimed "post-commit → passed, exit 0"; at that commit it actually FAILED exit 1 (run was pre-commit). 2nd false-Evidence occurrence (T035). Re-run it yourself; Hard-Stop Gate 5 depends on it
+- [post_agent_move_to_review.py fires at spawn, not completion](learnings.md) — PostToolUse/`Agent` fires when the async spawn is *issued*, so the board says Ready for Review before work exists; verify the worktree directly. Also: close the task on the Kanban BEFORE `git merge`, or the merge gate rejects it as still In Progress
+- [security-review unrunnable — 2nd consecutive Medium task](learnings.md) — confirmed again T039: only remote is `github`, `origin/HEAD` fails. Do it manually and label it; real fix needs a git-config change awaiting user consent (raised 2026-07-23)
 - [Commit Stage 2 artifacts BEFORE any Stage 3 spawn](learnings.md) — a worktree branches from HEAD and sees only committed state; an untracked TASK_GUIDE is invisible and the agent correctly halts under Hard-Stop Gate 1; belongs as a `craft-spawn-prompt` pre-flight check
 - [`git diff --stat` can't verify a sub-agent's claim](learnings.md) — untracked files show nowhere in it; use `git status --short` (shows `??`) + `git log --oneline` for the agent's commit. 3rd occurrence of uncommitted-work (T027/T028/T042)
 - [Built-in `security-review` cannot run in this repo](learnings.md) — hardcodes `origin/HEAD`; this repo's remote is named `github`, no `origin` exists, so the mandated Medium/High gate has likely never executed. Do it manually and label it; real fix needs a git-config change (user consent)
