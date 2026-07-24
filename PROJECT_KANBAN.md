@@ -8,7 +8,6 @@
 ## Board
 
 ### Todo
-- [ ] **T046** — Pattern reference field in TASK_GUIDE_template.md | Common-Infrastructure-Agent | C1 | Risk: Medium | P1
 - [ ] **T045** — Kanban section parsing breaks when a row quotes a markdown heading marker (unanchored lookahead) | Common-Infrastructure-Agent | C1 | Risk: Medium | P1
 - [ ] **T044** — Hook lifecycle & evidence integrity — make the merge gate mean something | Common-Infrastructure-Agent | C2 | Risk: Medium | P0
 - [ ] **T040** — Derive the Token Audit Log from event-trace instead of manual entry; restart the DDR-0001 window | Common-Infrastructure-Agent | C1 | Risk: Medium | P1
@@ -18,7 +17,7 @@
 ### In Progress
 
 ### Ready for Review
-
+- [ ] **T046** — Pattern reference field in TASK_GUIDE_template.md | Common-Infrastructure-Agent | C1 | Risk: Medium | P1
 
 ### Done
 - [x] **T043** — Fix trace/step-limit task attribution — both hooks took the first `T\d{3}` substring in the tool payload (the trace hook scanning `tool_response` too), so merely *reading* a file whose body mentions a task ID filed the record under it, and an Edit whose prose mentioned an old task ID counted a step against it. Now a shared `lib/task_context.py:resolve_task_id()` resolves structurally: validated `CLAUDE_ACTIVE_TASK` → guide path in a path-valued field → `Agent` spawn prompt → unattributed. Fail-open preserved. 29 new tests (18 subprocess from a foreign cwd); all 6 negative controls observed RED; Supervisor independently reproduced the defect fix and one mutation. Stage 4: 0 P0/P1, 3 P2 (2 out-of-scope, 1 mine), 1 P3. **security-review ran for the first time in project history** — no findings | C2 | Completed: 2026-07-23
