@@ -145,6 +145,11 @@ If docs/legacy/ exists (legacy mode): also read `docs/legacy/risk-hotspots.md` a
 
 ## Approach
 
+**Pattern reference**: [path/to/existing/file.ext — what to imitate about it] or `None — no comparable prior art in this repo` (with a one-line reason)
+> Example: `Pattern reference: .claude/hooks/pre_agent_validate_guide.py — structural ID extraction, fail-open error handling`
+> Point at code that already works and should be imitated. Without one, the agent falls back to
+> generic best practice instead of this repo's conventions (Karpathy: Surgical Changes).
+
 [Recommended approach from brainstorming skill output, or Supervisor's decision for Low-risk tasks. Include the reasoning.]
 
 ---

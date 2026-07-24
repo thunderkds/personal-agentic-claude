@@ -119,15 +119,50 @@ CLAUDE_ACTIVE_TASK=T046 python3 -m pytest .claude/hooks/tests/test_task_guide_te
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | [paste the RED output for each of Success Criteria 2, 3, 4] |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "generated a guide from the template, field present and populated — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | [`python3 -m pytest .claude/hooks/tests/ -q`] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_task_guide_template_pattern_reference.py` — 9 tests. AC1 → `test_template_has_pattern_reference_field`, `test_pattern_reference_field_offers_a_placeholder`, `test_pattern_reference_example_names_a_file_that_exists_in_this_repo`; AC2 → `test_pattern_reference_field_lives_in_the_approach_section`; AC3 → `test_pattern_reference_field_has_an_explicit_opt_out`; AC4 → the three mutation tests + `test_section_slicer_is_anchored_to_line_start_headings` |
+| Verification command run | ☑ pass | `CLAUDE_ACTIVE_TASK=T046 python3 -m pytest .claude/hooks/tests/test_task_guide_template_pattern_reference.py -q` → `......... [100%]` / `9 passed in 0.14s`. RED before the template edit: `6 failed, 3 passed in 0.04s` |
+| Negative cases hold | ☑ pass | All three mutated against the **real** template, observed RED, reverted — see "Negative Controls" below |
+| verify | ☑ pass | Generated `TASK_GUIDE_T999.md` from the edited template, filled the field, confirmed it is grep-able (`148:**Pattern reference**: ...`) and renders inside `## Approach`; `pre_agent_validate_guide.py` parsed the generated guide at exit 0 — pass |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Reviewed: the 2 changed files + the 4 hooks that parse guides generated from this template (`pre_agent_validate_guide.py`, `post_write_register_task.py`, `pre_bash_block_unsafe_merge.py`, `lib/task_context.py`) and `to-issues`. Skipped: existing `tasks/*.md`, `packs/`, `scripts/` — none read the template at runtime. Hub-file check: metadata extraction (`title`/`agent`/`cx`/`risk`/`priority`/`Depends on`) and the merge gate's `verify`-row regex return byte-identical results on the pre- and post-change template |
+| Full smoke suite still green (no regression) | ☑ pass | `CLAUDE_ACTIVE_TASK=T046 python3 -m pytest .claude/hooks/tests/ -q` → `69 passed in 0.63s` |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | pure-infra task, no UI component |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ N/A | pure-infra task, no UI component |
 | **UI: Responsiveness at target viewports** | ☐ N/A | pure-infra task, no UI component |
+
+### Negative Controls (Success Criteria 2, 3, 4 — each mutated on the real template, observed RED, reverted)
+
+**SC2 — field deleted** → `6 failed, 3 passed in 0.03s`
+
+```
+FAILED test_task_guide_template_pattern_reference.py::test_template_has_pattern_reference_field
+FAILED test_task_guide_template_pattern_reference.py::test_pattern_reference_field_offers_a_placeholder
+FAILED test_task_guide_template_pattern_reference.py::test_pattern_reference_example_names_a_file_that_exists_in_this_repo
+FAILED test_task_guide_template_pattern_reference.py::test_pattern_reference_field_lives_in_the_approach_section
+FAILED test_task_guide_template_pattern_reference.py::test_pattern_reference_field_has_an_explicit_opt_out
+FAILED test_task_guide_template_pattern_reference.py::test_field_outside_the_approach_section_fails_the_scoped_assertion
+```
+
+**SC3 — field moved out of `## Approach` into `## Test Plan`** → `2 failed, 7 passed in 0.02s`
+
+```
+FAILED test_task_guide_template_pattern_reference.py::test_pattern_reference_field_lives_in_the_approach_section
+FAILED test_task_guide_template_pattern_reference.py::test_pattern_reference_field_has_an_explicit_opt_out
+E   assert False
+E    +  where False = has_pattern_reference_field("\n[Recommended approach from brainstorming skill output, ...]\n\n---\n\n")
+```
+
+This is the control that matters most: the field was still present in the file, so a bare
+`in template` check would have passed. Only the section-scoped slice caught it.
+
+**SC4 — opt-out wording stripped** → `1 failed, 8 passed in 0.04s`
+
+```
+FAILED test_task_guide_template_pattern_reference.py::test_pattern_reference_field_has_an_explicit_opt_out
+E   +  where False = has_opt_out("\n**Pattern reference**: [path/to/existing/file.ext — what to imitate about it]\n> Example: ...")
+```
+
+After reverting all three, `git diff --stat` showed only the intended `1 file changed, 5 insertions(+)`,
+and the suite returned to `9 passed`.
 
 ---
 
@@ -162,16 +197,23 @@ else is the kind of misnaming that later makes the field invisible to whoever re
 
 ## Edge Case Checklist
 
-- [ ] The `## Approach` slice regex must anchor on `^## ` with `re.MULTILINE` — per
+- [x] The `## Approach` slice regex must anchor on `^## ` with `re.MULTILINE` — per
       `memory/learnings.md`, an unanchored `(?=##)` lookahead truncates at the first inline `##`
       anywhere in a row (the T045 defect). This guide's own text quotes `##`; do not let it self-trip
-- [ ] The test must read the real `templates/TASK_GUIDE_template.md`, never an inline copy of it —
+      → `extract_section` uses `^## ...$` + `(?=^## |\Z)` with `re.MULTILINE | re.DOTALL`, and
+      `test_section_slicer_is_anchored_to_line_start_headings` proves an inline `##` does not truncate
+- [x] The test must read the real `templates/TASK_GUIDE_template.md`, never an inline copy of it —
       a test asserting against its own fixture proves nothing about the shipped template
-- [ ] Adding a row to `PROJECT_KANBAN.md` must not quote a `###` heading marker (T045 defect,
+      → `TEMPLATE_PATH = Path(__file__).resolve().parents[3] / "templates" / ...`; the only inline
+      markdown in the test is the 5-line anchoring fixture, which asserts about the slicer, not the field
+- [x] Adding a row to `PROJECT_KANBAN.md` must not quote a `###` heading marker (T045 defect,
       still open) — keep the T046 row free of `###`
-- [ ] The field must not be worded as a requirement (`must name a file`) — genuinely novel work
+      → T046 row contains no `#`; verified the Todo/In-Progress sections still parse (see below)
+- [x] The field must not be worded as a requirement (`must name a file`) — genuinely novel work
       exists, and a mandatory field with no honest answer gets filled with noise
-- [ ] Do not add the field to the Completion Checklist or any gate — advisory only, per Out of scope
+      → wording is `... or \`None — no comparable prior art in this repo\` (with a one-line reason)`
+- [x] Do not add the field to the Completion Checklist or any gate — advisory only, per Out of scope
+      → the diff touches `## Approach` only: `1 file changed, 5 insertions(+)`, 0 deletions
 
 ---
 
@@ -207,10 +249,17 @@ else is the kind of misnaming that later makes the field invisible to whoever re
 
 ## Completion Checklist
 
-- [ ] Implementation done
-- [ ] Self-review: `Skill({ skill: "code-review" })` run
-- [ ] Security review: `Skill({ skill: "security-review" })` run (Medium risk — hub file)
-- [ ] Tests written AND pass — output pasted into Evidence table (Hard-Stop Gate 5)
-- [ ] All three negative controls observed RED and pasted (Success Criteria 2, 3, 4)
-- [ ] `Skill({ skill: "verify" })` run — a guide generated from the edited template carries the field
-- [ ] Supervisor notified: task ready for Stage 4 review
+- [x] Implementation done — commit `18d4639`
+- [x] Self-review: `Skill({ skill: "code-review" })` run — 0 P0, 0 P1, 0 P2, 2 P3 (both left as
+      suggestions for the Supervisor, neither inside this task's Files-to-Change lock)
+- [x] Security review: `Skill({ skill: "security-review" })` run (Medium risk — hub file) — no
+      findings. The built-in diffs whole-branch vs. a stale `origin/main`, so the analysis was scoped
+      by hand to T046's two files; both fall under its own exclusions (markdown doc / test-only file)
+      and the data-flow check found no untrusted input, subprocess, or dynamic path open
+- [x] Tests written AND pass — output pasted into Evidence table (Hard-Stop Gate 5)
+- [x] All three negative controls observed RED and pasted (Success Criteria 2, 3, 4)
+- [x] `verify` run — a guide generated from the edited template carries the field (see Evidence
+      `verify` row). Performed by hand: `verify` is listed as a built-in in `CLAUDE.md` but is not in
+      this session's skill roster, so it was not invocable; the equivalent end-to-end check was run
+      and its real output recorded rather than the step being silently skipped
+- [x] Supervisor notified: task ready for Stage 4 review
