@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-07-23
+**Last updated**: 2026-07-24
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -18,8 +18,8 @@
 
 ### Ready for Review
 
-
 ### Done
+- [x] **T046** — Add advisory `**Pattern reference**:` field to `templates/TASK_GUIDE_template.md` `## Approach` — "match the existing style" now reaches a sub-agent as a concrete grep-able file pointer instead of a `CLAUDE.md` principle it never sees (the "already-covered must reach-the-context" learning). Sourced from a prompt-library scan (52 prompts; gap #1 of 3, gaps #2 UI self-check + #3 steering rejected as speculative). Advisory only — no hook/gate/backfill; mirrors `Depends on`/`Entry point` shape with an opt-out. Stage 4: 0 P0/P1/P2, 3 P3 (all test-file). security-review ran (2nd success in project history) — no findings. Hub-file claim verified by differential test: all 6 guide regexes + merge gate byte-identical pre/post. All 4 negative controls independently reproduced RED by Supervisor. 9 new tests, 69/69 suite green | C1 | Completed: 2026-07-24
 - [x] **T043** — Fix trace/step-limit task attribution — both hooks took the first `T\d{3}` substring in the tool payload (the trace hook scanning `tool_response` too), so merely *reading* a file whose body mentions a task ID filed the record under it, and an Edit whose prose mentioned an old task ID counted a step against it. Now a shared `lib/task_context.py:resolve_task_id()` resolves structurally: validated `CLAUDE_ACTIVE_TASK` → guide path in a path-valued field → `Agent` spawn prompt → unattributed. Fail-open preserved. 29 new tests (18 subprocess from a foreign cwd); all 6 negative controls observed RED; Supervisor independently reproduced the defect fix and one mutation. Stage 4: 0 P0/P1, 3 P2 (2 out-of-scope, 1 mine), 1 P3. **security-review ran for the first time in project history** — no findings | C2 | Completed: 2026-07-23
 - [x] **T039** — Dedup the `## Skills vs Agents` section in CLAUDE.md — 580→536 lines; kept only what the harness does not auto-inject (mechanism, subagent_type→file mapping, spawn-pointer note, blast-radius disambiguation, names-only stage index). Stage 4: 1 P0 (false `verify` Evidence claim — post-commit run actually failed) + 2 P1 (test compared against floating HEAD so it could never pass once committed; AC5 checksum was vacuous — the matcher anchored on an H2 prefix but the real heading is H3, so both sides extracted empty strings and compared equal). All fixed, negative control independently reproduced by Supervisor. security-review manual (built-in unrunnable: hardcodes `origin/HEAD`, remote is `github`) — no findings | C2 | Completed: 2026-07-23
 - [x] **T042** — Fix post_write_register_task.py Complexity/Risk/Priority extraction — regexes never matched the template's own `**X Level**:` format, so every auto-registered row silently defaulted to C1/Low/P1; defaults now `?`; 4th regex defect in this hook family. Stage 4: 0 P0/P1, 1 P2 fixed, 3 P3 accepted. security-review unrunnable (built-in hardcodes `origin/HEAD`, remote is `github`) — done manually, no findings | C1 | Completed: 2026-07-21
