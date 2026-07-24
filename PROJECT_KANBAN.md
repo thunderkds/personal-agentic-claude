@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-07-23
+**Last updated**: 2026-07-24
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -8,6 +8,7 @@
 ## Board
 
 ### Todo
+- [ ] **T046** — Pattern reference field in TASK_GUIDE_template.md | Common-Infrastructure-Agent | C1 | Risk: Medium | P1
 - [ ] **T045** — Kanban section parsing breaks when a row quotes a markdown heading marker (unanchored lookahead) | Common-Infrastructure-Agent | C1 | Risk: Medium | P1
 - [ ] **T044** — Hook lifecycle & evidence integrity — make the merge gate mean something | Common-Infrastructure-Agent | C2 | Risk: Medium | P0
 - [ ] **T040** — Derive the Token Audit Log from event-trace instead of manual entry; restart the DDR-0001 window | Common-Infrastructure-Agent | C1 | Risk: Medium | P1
