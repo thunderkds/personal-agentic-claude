@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-07-24
+**Last updated**: 2026-07-30
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -9,12 +9,12 @@
 
 ### Todo
 - [ ] **T045** — Kanban section parsing breaks when a row quotes a markdown heading marker (unanchored lookahead) | Common-Infrastructure-Agent | C1 | Risk: Medium | P1
-- [ ] **T044** — Hook lifecycle & evidence integrity — make the merge gate mean something | Common-Infrastructure-Agent | C2 | Risk: Medium | P0
 - [ ] **T040** — Derive the Token Audit Log from event-trace instead of manual entry; restart the DDR-0001 window | Common-Infrastructure-Agent | C1 | Risk: Medium | P1
 - [ ] **T041** — Make engineering principles reachable by sub-agents + add the Search-Before-You-Build ladder | Common-Infrastructure-Agent | C2 | Risk: Medium | P1
 - [ ] **T030** — Post-baseline analysis — pick the token refactor from real data (blocked: T028 window must close — 7 sessions/14 days, DDR-0001) | Supervisor + user (HITL) | C1 | Risk: Low | P1
 
 ### In Progress
+- [ ] **T044** — Hook lifecycle & evidence integrity — make the merge gate mean something | Common-Infrastructure-Agent | C2 | Risk: Medium | P0 | Branch: `feat/hook-lifecycle-evidence` | Started: 2026-07-30
 
 ### Ready for Review
 
