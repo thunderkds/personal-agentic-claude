@@ -32,8 +32,15 @@ Both shapes reuse the same 5-element checklist proven in `bugfix` Step 4; only e
 | 3 | First-action skill invocation | Only if the task explicitly requires one (e.g. `migration-safety` for schema work) — otherwise omit | `Skill({ skill: "diagnose" })` as the first action — always present |
 | 4 | Memory injection | Full contents of `memory/MEMORY.md`, verbatim | same |
 | 5 | Agent-guide pointer | `.claude/agents/<role>.md` from the guide's `**Agent guide**` field | same |
+| 6 | Trace-attribution instruction | The `CLAUDE_ACTIVE_TASK` export line below, verbatim | same |
 
 Any caller-supplied inputs (e.g. bugfix's fixed "invoke diagnose first" instruction) are accepted as parameters to this step, not re-derived.
+
+**Element 6 — why the export is mandatory, not decorative.** Hook trace attribution is structural only (`.claude/hooks/lib/task_context.py`), and a `Bash` `command` string is deliberately never scanned — command text can quote arbitrary file content, so scanning it is the guessing this design removes. The consequence: **a test run produces no trace record under any task unless `CLAUDE_ACTIVE_TASK` is set in the shell that runs it.** `pre_bash_block_unsafe_merge.py:trace_shows_verification` fails closed on a missing record, so an honest task whose tests ran without the export is blocked from merging with no way to prove otherwise. Include this line in every assembled prompt, with `Txxx` substituted:
+
+> **Trace attribution**: run every test and verification command with `CLAUDE_ACTIVE_TASK=Txxx` set — e.g. `CLAUDE_ACTIVE_TASK=Txxx python3 -m pytest -q`, or `export CLAUDE_ACTIVE_TASK=Txxx` once at the start of your shell. Without it no trace record is filed under this task and the merge gate will (correctly) refuse to accept your evidence.
+
+Note the shell footgun when composing the example: `VAR=val cmd1 | cmd2` scopes `VAR` to `cmd1` only. For a pipeline, use `export` first or wrap the whole pipeline in a subshell.
 
 #### 4. Pre-flight structural-reference check
 Read `extract_structural_task_ids()` directly from `.claude/hooks/pre_agent_validate_guide.py` — do not re-derive or approximate the pattern, it must stay byte-for-byte in sync with what the hook enforces. Run it against the assembled prompt text:

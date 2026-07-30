@@ -25,16 +25,131 @@ BLOCKED_PATTERNS = [
     r"\bgit\s+rebase\b",
 ]
 
-TEST_COMMAND_PATTERN = re.compile(
-    r"\b(pytest|npm\s+test|npm\s+run\s+test|yarn\s+test|jest|go\s+test|cargo\s+test|verify)\b",
+# --- Evidence matching: "invoked" vs "merely mentioned" (T044 defect C) ------
+#
+# This used to be a single `\b(pytest|npm test|jest|…|verify)\b` substring search
+# over the trace record's `summary`. That made the gate satisfiable by a *claim*:
+# a Supervisor inspection command such as `grep -c "pytest" …T043.jsonl`, or a
+# `python3 -c "…re.compile(r'\b(pytest|jest|verify)\b')…"`, both qualified — and
+# on T043 those were the only two qualifying records, so the gate would have
+# passed a merge on which no test had ever run. A check that has never rejected
+# anything is not a check.
+#
+# The rule now is structural: a runner token counts only where a shell would
+# actually *execute* it — at the head of a command, after stripping leading
+# environment assignments and benign wrappers. Two consequences follow:
+#   * A token inside a quoted string is data (an `echo` argument, a `grep`
+#     pattern, a regex literal), so quoted spans are removed before matching.
+#   * Only a `Bash` record can invoke anything; a `Read` of a file named after a
+#     test runner is not evidence.
+#
+# Residual limit, stated plainly: this still trusts that a recorded command
+# *ran*. `is_error: false` supports that but does not prove it, and the trace
+# records the command, not its exit status of the tests themselves. The goal is
+# to close the gap between "a string looked like a test" and "a test command was
+# invoked" — not certainty this design cannot deliver.
+#
+# Deliberately not a shell parser (Simplicity First). Boundary anchoring is
+# enough to reject both real false-positive records while accepting every
+# genuine invocation the project uses.
+#
+# Two known limits, both erring toward fail-closed:
+#   * An invocation wrapped entirely in quotes (`bash -c "python3 -m pytest"`)
+#     is treated as a mention and rejected. Run the runner directly, or export
+#     CLAUDE_ACTIVE_TASK and run it unwrapped.
+#   * The gate proves a runner was *invoked*, not that a test suite *passed*
+#     (`pytest --version` would qualify). `is_error: false` excludes a failing
+#     run, which is the strongest signal the trace carries.
+
+# Quoted spans are data, not commands. Replaced with a space, not deleted, so
+# removal cannot glue two separate words into a spurious invocation.
+QUOTED_SPAN_PATTERN = re.compile(r"\"[^\"]*\"|'[^']*'")
+
+# Where a shell starts a new command.
+COMMAND_SEPARATOR_PATTERN = re.compile(r"[;&|\n]+|\$\(|`")
+
+# `CLAUDE_ACTIVE_TASK=T044 python3 -m pytest …` — the assignment is not the command.
+ENV_ASSIGNMENT_PREFIX = re.compile(r"^(?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)+")
+
+# Wrappers that pass through to the real command.
+BENIGN_COMMAND_PREFIX = re.compile(
+    r"^(?:(?:sudo|env|time|nohup|npx|uv\s+run|poetry\s+run|pipenv\s+run|"
+    r"pnpm\s+exec|yarn\s+exec)\s+)+",
+    re.IGNORECASE,
+)
+
+# Anchored at the head of a command — `match`, never `search`.
+TEST_INVOCATION_PATTERN = re.compile(
+    r"^(?:"
+    r"(?:python3?|py)\s+-m\s+(?:pytest|unittest)\b"
+    r"|pytest\b"
+    r"|jest\b"
+    r"|tox\b"
+    r"|(?:npm|yarn|pnpm)\s+(?:run\s+)?test\b"
+    r"|go\s+test\b"
+    r"|cargo\s+test\b"
+    r"|(?:bash|sh|zsh)\s+\S*(?:test|verify|smoke)\S*"
+    r"|\.{0,2}/\S*(?:test|verify|smoke)\S*"
+    r")",
     re.IGNORECASE,
 )
 
 
+def strip_command_prefixes(candidate):
+    """Peel leading env assignments and benign wrappers until nothing changes."""
+    while True:
+        shorter = BENIGN_COMMAND_PREFIX.sub("", ENV_ASSIGNMENT_PREFIX.sub("", candidate))
+        if shorter == candidate:
+            return candidate
+        candidate = shorter
+
+
+# A trace record's `summary` is the JSON-serialized `tool_input`, truncated by
+# post_tool_trace.py to 300 chars — so the command arrives JSON-escaped, and
+# often as invalid JSON. Both layers must be peeled before shell quoting means
+# anything: `{"command": "echo \"pytest\""}` is a quoted mention, not a run.
+COMMAND_FIELD_PATTERN = re.compile(r'"command"\s*:\s*"')
+JSON_ESCAPE_PATTERN = re.compile(r"\\(.)")
+JSON_ESCAPES = {"n": "\n", "t": "\t", "r": "\r", "b": "\b", "f": "\f"}
+
+
+def extract_command(summary):
+    """Recover the Bash command from a trace record's `summary`, or None."""
+    if not isinstance(summary, str):
+        return None
+    try:
+        payload = json.loads(summary)
+    except Exception:
+        payload = None
+    if isinstance(payload, dict) and isinstance(payload.get("command"), str):
+        return payload["command"]
+    match = COMMAND_FIELD_PATTERN.search(summary)
+    if not match:
+        return None
+    # Truncated record: unescape the fragment in one left-to-right pass, so a
+    # literal `\\` can never be re-read as the start of another escape.
+    return JSON_ESCAPE_PATTERN.sub(
+        lambda m: JSON_ESCAPES.get(m.group(1), m.group(1)), summary[match.end():]
+    )
+
+
+def invokes_test_runner(command):
+    """True only if `command` contains a test-runner invocation at a command
+    boundary — not merely a mention of one inside a quoted string or argument."""
+    if not isinstance(command, str):
+        return False
+    unquoted = QUOTED_SPAN_PATTERN.sub(" ", command)
+    for part in COMMAND_SEPARATOR_PATTERN.split(unquoted):
+        if TEST_INVOCATION_PATTERN.match(strip_command_prefixes(part.strip())):
+            return True
+    return False
+
+
 def trace_shows_verification(task_id):
-    """Check memory/event-trace/<task>.jsonl for a real, non-error tool call
-    that ran tests/verification — not just text in the task guide claiming
-    it passed. Missing/empty trace = not verified (fail closed)."""
+    """Check memory/event-trace/<task>.jsonl for a real, non-error `Bash` call
+    that *invoked* a test runner — not text in the task guide claiming it
+    passed, and not a command that merely mentions a runner's name.
+    Missing/empty/malformed trace = not verified (fail closed)."""
     trace_path = os.path.join(TRACE_DIR, f"{task_id}.jsonl")
     if not os.path.exists(trace_path):
         return False
@@ -45,9 +160,13 @@ def trace_shows_verification(task_id):
                     record = json.loads(line)
                 except Exception:
                     continue
+                if not isinstance(record, dict):
+                    continue
                 if record.get("is_error"):
                     continue
-                if TEST_COMMAND_PATTERN.search(record.get("summary", "")):
+                if record.get("tool_name") != "Bash":
+                    continue
+                if invokes_test_runner(extract_command(record.get("summary"))):
                     return True
     except Exception:
         return False
@@ -59,10 +178,17 @@ def main():
     except Exception:
         sys.exit(0)
 
-    if event.get("tool_name") != "Bash":
+    # Fail open on any payload shape this hook doesn't understand — it runs
+    # before every Bash call, so a traceback here breaks all work.
+    if not isinstance(event, dict) or event.get("tool_name") != "Bash":
         sys.exit(0)
 
-    command = event.get("tool_input", {}).get("command", "")
+    tool_input = event.get("tool_input")
+    if not isinstance(tool_input, dict):
+        sys.exit(0)
+    command = tool_input.get("command", "")
+    if not isinstance(command, str):
+        sys.exit(0)
 
     if not any(re.search(p, command) for p in BLOCKED_PATTERNS):
         sys.exit(0)
@@ -123,6 +249,10 @@ def main():
                 "[hook:pre_bash] Pipeline gate failed — cannot push/merge:\n  • "
                 + "\n  • ".join(blockers)
                 + "\nComplete Stage 4 review and Stage 5 verify first."
+                + "\n  Note: a Bash command is attributed to a task only via"
+                + " CLAUDE_ACTIVE_TASK — run the task's verification command as"
+                + " `CLAUDE_ACTIVE_TASK=Txxx <command>` or no trace record is"
+                + " filed under it."
             )
         }
         print(json.dumps(result))

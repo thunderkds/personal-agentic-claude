@@ -119,12 +119,12 @@ CLAUDE_ACTIVE_TASK=T044 python3 -m pytest .claude/hooks/tests/ -q && bash script
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | [AC2, AC5 — **each mutation observed RED**, AC8, AC9, AC10] |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [must literally state "pass" or "fail" in this Notes column] |
-| Review scope bounded to the change's blast radius | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | [`scripts/smoke-install.sh`] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_merge_gate_evidence.py` (27 tests — AC4/AC5/AC6/AC8/AC9) + `.claude/hooks/tests/test_move_to_review.py` (11 tests — AC1/AC2/AC3/AC9). `python3 -m pytest .claude/hooks/tests/test_merge_gate_evidence.py .claude/hooks/tests/test_move_to_review.py -q` → `38 passed in 0.40s` |
+| Verification command run | ☑ pass | `CLAUDE_ACTIVE_TASK=T044 python3 -m pytest .claude/hooks/tests/ -q && bash scripts/smoke-install.sh` → `107 passed in 1.03s` then `smoke-install.sh: PASS` |
+| Negative cases hold | ☑ pass | **RED before fix**: merge gate `9 failed, 18 passed` (incl. both real-record tests); move-to-review `7 failed, 4 passed` — the reproduction: one spawn emptied `### In Progress` entirely (T001+T028+T099 all moved) and deleted 3 counters, leaving `['step_count_T040.txt']`. **Mutation controls, each observed RED then reverted**: (1) substring match reinstated → `9 failed, 18 passed`; (2) free-text `\bT(\d{3})\b` scan reinstated → `3 failed, 8 passed`; (3) `isinstance(event, dict)` fail-open guard removed → `1 failed, 26 passed` (`AttributeError: 'list' object has no attribute 'get'`). Post-revert `107 passed`. **AC8** missing/empty/malformed/non-string-summary trace → all fail closed. **AC10** `git diff --name-only main` on `pre_agent_validate_guide.py`, `lib/task_context.py`, `post_write_register_task.py`, `CLAUDE.md` → empty |
+| verify | ☑ pass | pass — full verification command run post-revert from the committed worktree state; 107 unit tests + install/update smoke suite both green |
+| Review scope bounded to the change's blast radius | ☑ pass | 3 files modified + 2 new test files. `git diff --stat`: `194 insertions(+), 71 deletions(-)`. No adjacent-code "improvements"; `find_kanban_section`'s `###` truncation left for T045 |
+| Full smoke suite still green (no regression) | ☑ pass | `bash scripts/smoke-install.sh` → all 15 `[ok]` assertions, `smoke-install.sh: PASS` |
 | **UI: Visual regression** | ☐ N/A | Python hooks, no UI component |
 | **UI: Design-system compliance** | ☐ N/A | Python hooks, no UI component |
 | **UI: Responsiveness** | ☐ N/A | Python hooks, no UI component |
@@ -155,6 +155,41 @@ certainty this design cannot deliver.
 **Write the tests first** (`tdd`), following `.claude/hooks/tests/` conventions. Use **real records
 copied from `memory/event-trace/T043.jsonl`** as fixtures for AC5 — synthetic strings would be a
 weaker oracle than the actual data that fooled the gate.
+
+### Outcome as built (filled by the implementer)
+
+**AC3 — no reliable background-completion signal exists.** The harness does expose `SubagentStop`
+and `TaskCompleted`, which fire on genuine completion, but their payloads carry only `session_id` /
+`transcript_path` / `agent_id` / `agent_type` — no `tool_input`, no spawn prompt, no task
+identifier. `SubagentStop` matchers filter on *agent type*, and one type (`common-infrastructure`)
+serves many tasks, so the event can say *that* something finished, never *which task*.
+`resolve_task_id` has nothing structural to work from. Per the sanctioned outcome,
+`post_agent_move_to_review.py` no longer writes to `PROJECT_KANBAN.md` at all; it resolves the task
+structurally and prints a stderr reminder. The docstring states this and what re-enabling would
+require.
+
+**Consequence to know:** the step-limit counter is no longer reset when a task reaches a gate (that
+reset lived inside the buggy spawn-time move, and it deleted *unrelated* tasks' counters). Reset by
+hand when a rework cycle needs a fresh budget: `rm .claude/hooks/.state/step_count_Txxx.txt`. This
+fired during T044's own implementation. An automatic reset on a *correct* trigger is a follow-up
+task, not in this scope.
+
+**AC7 — the mechanism, documented in `.claude/skills/craft-spawn-prompt/SKILL.md`** as spawn-prompt
+element 6: every assembled prompt now instructs the sub-agent to run tests as
+`CLAUDE_ACTIVE_TASK=Txxx <command>` (or `export` once), because a `Bash` `command` is never
+attributed structurally and the merge gate fails closed on a missing record. The block reason in
+`pre_bash_block_unsafe_merge.py` also names the export, so an operator hitting the closed gate is
+told how to satisfy it.
+
+**Defect C had a layer the guide didn't anticipate:** a trace record's `summary` is the
+JSON-serialized `tool_input`, truncated to 300 chars — so the command arrives JSON-escaped and
+usually as *invalid* JSON. `extract_command` peels that layer (strict parse, then a single-pass
+unescape of the truncated fragment) before shell quoting means anything. Only then: strip quoted
+spans (a token inside quotes is data), split on shell separators, peel env assignments and benign
+wrappers, match **anchored** at the command head, and consider `Bash` records only. Quote-stripping
+is what kills the second real fixture specifically — its runner alternation is a single-quoted regex
+literal, and without it the bare `jest` chunk still matches an anchored pattern after splitting on
+`|`.
 
 **Mutation-test every negative control** (the T043 standard, now the project norm): after the fix,
 break each guard in turn, confirm the relevant test goes RED, revert, and paste that red output into
