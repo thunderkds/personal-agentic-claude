@@ -119,11 +119,11 @@ CLAUDE_ACTIVE_TASK=T044 python3 -m pytest .claude/hooks/tests/ -q && bash script
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_merge_gate_evidence.py` (27 tests — AC4/AC5/AC6/AC8/AC9) + `.claude/hooks/tests/test_move_to_review.py` (11 tests — AC1/AC2/AC3/AC9). `python3 -m pytest .claude/hooks/tests/test_merge_gate_evidence.py .claude/hooks/tests/test_move_to_review.py -q` → `38 passed in 0.40s` |
-| Verification command run | ☑ pass | `CLAUDE_ACTIVE_TASK=T044 python3 -m pytest .claude/hooks/tests/ -q && bash scripts/smoke-install.sh` → `107 passed in 1.03s` then `smoke-install.sh: PASS` |
-| Negative cases hold | ☑ pass | **RED before fix**: merge gate `9 failed, 18 passed` (incl. both real-record tests); move-to-review `7 failed, 4 passed` — the reproduction: one spawn emptied `### In Progress` entirely (T001+T028+T099 all moved) and deleted 3 counters, leaving `['step_count_T040.txt']`. **Mutation controls, each observed RED then reverted**: (1) substring match reinstated → `9 failed, 18 passed`; (2) free-text `\bT(\d{3})\b` scan reinstated → `3 failed, 8 passed`; (3) `isinstance(event, dict)` fail-open guard removed → `1 failed, 26 passed` (`AttributeError: 'list' object has no attribute 'get'`). Post-revert `107 passed`. **AC8** missing/empty/malformed/non-string-summary trace → all fail closed. **AC10** `git diff --name-only main` on `pre_agent_validate_guide.py`, `lib/task_context.py`, `post_write_register_task.py`, `CLAUDE.md` → empty |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_merge_gate_evidence.py` (29 tests — AC4/AC5/AC6/AC8/AC9) + `.claude/hooks/tests/test_move_to_review.py` (11 tests — AC1/AC2/AC3/AC9). `python3 -m pytest .claude/hooks/tests/test_merge_gate_evidence.py .claude/hooks/tests/test_move_to_review.py -q` → `40 passed`. **+2 added at Stage 4 review by the Supervisor** (`test_runner_named_in_the_description_of_a_truncated_record_is_rejected`, `test_truncated_record_still_reads_its_own_command`) — the implementer was not the sole author of its own oracle |
+| Verification command run | ☑ pass | **Independently re-run by the Supervisor**, not trusted from the implementer's claim. `CLAUDE_ACTIVE_TASK=T044 python3 -m pytest .claude/hooks/tests/ -q && bash scripts/smoke-install.sh` → `107 passed in 0.98s` + `smoke-install.sh: PASS` at `1565cd1`; `109 passed in 0.95s` + `smoke-install.sh: PASS` at `832231d` (post-review-fix) |
+| Negative cases hold | ☑ pass | **RED before fix**: merge gate `9 failed, 18 passed` (incl. both real-record tests); move-to-review `7 failed, 4 passed` — the reproduction: one spawn emptied `### In Progress` entirely (T001+T028+T099 all moved) and deleted 3 counters, leaving `['step_count_T040.txt']`. **Mutation controls, each observed RED then reverted**: (1) substring match reinstated → `9 failed, 18 passed`; (2) free-text `\bT(\d{3})\b` scan reinstated → `3 failed, 8 passed`; (3) `isinstance(event, dict)` fail-open guard removed → `1 failed, 26 passed` (`AttributeError: 'list' object has no attribute 'get'`). Post-revert `107 passed`. **AC8** missing/empty/malformed/non-string-summary trace → all fail closed. **AC10** `git diff --name-only main` on `pre_agent_validate_guide.py`, `lib/task_context.py`, `post_write_register_task.py`, `CLAUDE.md` → empty. **Supervisor independently reproduced** mutation (1): substring match reinstated → `9 failed, 18 passed`, matching the implementer's claim exactly, then reverted → `107 passed`. **Stage-4 P1 fix mutated too**: bound fragment reverted to `summary[match.end():]` → `1 failed, 108 passed` (only the new description-leak test), reverted → `109 passed` |
 | verify | ☑ pass | pass — full verification command run post-revert from the committed worktree state; 107 unit tests + install/update smoke suite both green |
-| Review scope bounded to the change's blast radius | ☑ pass | 3 files modified + 2 new test files. `git diff --stat`: `194 insertions(+), 71 deletions(-)`. No adjacent-code "improvements"; `find_kanban_section`'s `###` truncation left for T045 |
+| Review scope bounded to the change's blast radius | ☑ pass | 3 files modified + 2 new test files. No adjacent-code "improvements"; `find_kanban_section`'s `###` truncation left for T045. **Stage 4 code-review** (Supervisor, 2026-07-30): scope = 3 changed source files + 2 test files; Phase 0.5 entry point `trace_shows_verification` found at `pre_bash_block_unsafe_merge.py:148` ✅ reachable. Result: **0 P0, 1 P1 (found + fixed at `832231d`), 0 P2, 2 P3 accepted** |
 | Full smoke suite still green (no regression) | ☑ pass | `bash scripts/smoke-install.sh` → all 15 `[ok]` assertions, `smoke-install.sh: PASS` |
 | **UI: Visual regression** | ☐ N/A | Python hooks, no UI component |
 | **UI: Design-system compliance** | ☐ N/A | Python hooks, no UI component |
@@ -241,6 +241,36 @@ Evidence. A negative control that has never been observed failing is not evidenc
    match; reinstate the free-text task scan; remove a fail-open guard.
 4. **Regression**: full `.claude/hooks/tests/` suite, then `bash scripts/smoke-install.sh`.
 5. Paste real command output into every Evidence row — never a claim of output.
+
+---
+
+## Stage 4 Review Findings (Supervisor, 2026-07-30)
+
+**P0**: none. **P2**: none surviving the confidence gate.
+
+**P1 — fixed at `832231d`.** `extract_command`'s truncated-JSON fallback returned
+`summary[match.end():]` — everything after `"command": "` — without stopping at the command value's
+closing quote, so every sibling field leaked into the string that `invokes_test_runner` then parsed.
+A Bash `tool_input` always carries an agent-authored `description`, and once the record exceeds
+`post_tool_trace.py`'s 300-char cut the summary stops being valid JSON and this fallback is the only
+path. A separator inside that prose (`"inspect the trace records; pytest was already run earlier"`)
+promoted the next word to a command head and the gate returned True — defect C reinstated through a
+side door, one layer *below* the boundary-matching logic that was written to close it. Fixed by
+bounding the fallback to the command value's own body (`COMMAND_VALUE_BODY_PATTERN`, stops at the
+first unescaped quote). Two regression tests: the leak case, and a guard that a genuine invocation
+which is itself truncated is still accepted (so the fix cannot over-correct into a false negative).
+
+**P3 — accepted, not fixed:**
+1. `post_agent_move_to_review.py` is now deliberately inert, so its filename no longer describes it.
+   Renaming requires a `settings.json` hook-config change — out of this task's scope. The docstring
+   states the situation prominently.
+2. `pre_bash_block_unsafe_merge.py` has one blank line before `def main()`; the file uses two
+   elsewhere. Cosmetic.
+
+**Follow-ups to schedule (not in this task's scope):**
+- Automatic step-counter reset on a *correct* trigger — the reset died with the buggy spawn-time
+  move. Manual workaround: `rm .claude/hooks/.state/step_count_Txxx.txt`.
+- Renaming `post_agent_move_to_review.py` + its `settings.json` entry.
 
 ---
 
