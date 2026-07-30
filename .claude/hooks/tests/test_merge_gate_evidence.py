@@ -170,6 +170,53 @@ def test_verification_written_as_prose_is_rejected():
     assert _gate([_record("echo 'tests verify the acceptance criteria'")]) is False
 
 
+def _truncated_record_with_description(command, description):
+    """A record long enough that post_tool_trace.py's 300-char cut lands inside
+    the `description` value, so `summary` is no longer parseable JSON and
+    extract_command() must fall back to its regex path."""
+    summary = json.dumps({"command": command, "description": description})[:300]
+    try:
+        json.loads(summary)
+    except Exception:
+        pass
+    else:  # pragma: no cover - the fixture must actually be truncated
+        raise AssertionError("fixture is not truncated; the fallback is untested")
+    return json.dumps(
+        {
+            "timestamp": "2026-07-30T00:00:00+00:00",
+            "tool_name": "Bash",
+            "summary": summary,
+            "is_error": False,
+        }
+    )
+
+
+def test_runner_named_in_the_description_of_a_truncated_record_is_rejected():
+    """A `description` is agent-authored prose — a claim, never an invocation.
+
+    When the record is truncated the summary stops being valid JSON, so
+    extract_command falls back to a regex. That fallback must stop at the
+    command value's closing quote; otherwise a sibling field leaks in and a
+    separator inside the prose ("...records; pytest was run") promotes the
+    next word to a command head — reinstating defect C through a side door.
+    """
+    record = _truncated_record_with_description(
+        "grep -rn evidence memory/event-trace/T043.jsonl " + "x" * 100,
+        "inspect the trace records; pytest was already run earlier " + "y" * 150,
+    )
+    assert _gate([record]) is False
+
+
+def test_truncated_record_still_reads_its_own_command():
+    """The stop-at-closing-quote fix must not blind the fallback to a genuine
+    invocation that is itself the thing being truncated."""
+    record = _truncated_record_with_description(
+        "python3 -m pytest .claude/hooks/tests/ -q " + "-x " * 40,
+        "run the suite " + "z" * 200,
+    )
+    assert _gate([record]) is True
+
+
 # ---------------------------------------------------------------------------
 # AC6 — no false-negative regression: real invocations are still accepted
 # ---------------------------------------------------------------------------

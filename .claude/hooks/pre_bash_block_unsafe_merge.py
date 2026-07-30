@@ -112,6 +112,13 @@ COMMAND_FIELD_PATTERN = re.compile(r'"command"\s*:\s*"')
 JSON_ESCAPE_PATTERN = re.compile(r"\\(.)")
 JSON_ESCAPES = {"n": "\n", "t": "\t", "r": "\r", "b": "\b", "f": "\f"}
 
+# The command value's body, stopping at its first *unescaped* closing quote.
+# Without this bound the fallback swallowed every sibling field, and a
+# `description` is agent-authored prose — a separator inside it ("...records;
+# pytest was run") would promote the next word to a command head, reinstating
+# defect C through a side door.
+COMMAND_VALUE_BODY_PATTERN = re.compile(r'(?:[^"\\]|\\.)*')
+
 
 def extract_command(summary):
     """Recover the Bash command from a trace record's `summary`, or None."""
@@ -126,10 +133,12 @@ def extract_command(summary):
     match = COMMAND_FIELD_PATTERN.search(summary)
     if not match:
         return None
-    # Truncated record: unescape the fragment in one left-to-right pass, so a
-    # literal `\\` can never be re-read as the start of another escape.
+    # Truncated record: take only the command value's own body, then unescape it
+    # in one left-to-right pass, so a literal `\\` can never be re-read as the
+    # start of another escape.
+    fragment = COMMAND_VALUE_BODY_PATTERN.match(summary, match.end()).group(0)
     return JSON_ESCAPE_PATTERN.sub(
-        lambda m: JSON_ESCAPES.get(m.group(1), m.group(1)), summary[match.end():]
+        lambda m: JSON_ESCAPES.get(m.group(1), m.group(1)), fragment
     )
 
 
