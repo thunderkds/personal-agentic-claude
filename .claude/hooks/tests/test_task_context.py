@@ -811,6 +811,60 @@ def test_end_to_end_no_state_file_and_no_test_run_stays_untagged_and_fails_gate(
         sandbox.cleanup()
 
 
+def test_malformed_max_age_env_var_does_not_disable_attribution():
+    """T047 Stage 4 P1 regression guard.
+
+    `ACTIVE_TASK_MAX_AGE_S` is resolved at *import* time — one layer below
+    `resolve_task_id`'s never-raises contract. A bare `int(os.environ[...])`
+    raises `ValueError` on a non-numeric value, and because both callers wrap
+    `from task_context import ...` in `except Exception`, that would silently
+    disable attribution repo-wide — including the path-field precedence that
+    has nothing to do with this setting. Import must survive and fall back to
+    the default.
+
+    Runs as a real subprocess so the env var is present at genuine import
+    time; setting it inside this process would be too late, the module is
+    already imported.
+    """
+    root = _tempfile.mkdtemp(prefix="t047_maxage_")
+    try:
+        state_dir = os.path.join(root, ".claude", "hooks", ".state")
+        os.makedirs(state_dir)
+        with open(os.path.join(state_dir, "active_task"), "w") as f:
+            f.write(_fresh_state_content("T047"))
+
+        script = (
+            "import sys; sys.path.insert(0, %r)\n"
+            "import task_context\n"
+            "print(task_context.ACTIVE_TASK_MAX_AGE_S)\n"
+            "print(task_context.resolve_task_id({'tool_name': 'Bash', "
+            "'tool_input': {'command': 'python3 -m pytest -q'}}))\n"
+        ) % os.path.join(HOOKS_DIR, "lib")
+
+        for bad_value in ("6h", "", "not-a-number", "-1", "0"):
+            env = dict(os.environ)
+            env.pop("CLAUDE_ACTIVE_TASK", None)
+            env["CLAUDE_PROJECT_DIR"] = root
+            env["CLAUDE_ACTIVE_TASK_STATE_MAX_AGE_S"] = bad_value
+
+            result = subprocess.run(
+                [sys.executable, "-c", script],
+                capture_output=True, text=True, env=env,
+            )
+            assert result.returncode == 0, (
+                f"import raised for {bad_value!r}: {result.stderr}"
+            )
+            lines = result.stdout.strip().splitlines()
+            assert lines[0] == "21600", (
+                f"{bad_value!r} should fall back to the default, got {lines[0]}"
+            )
+            assert lines[1] == "T047", (
+                f"attribution broke for {bad_value!r}: {lines[1]}"
+            )
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
 if __name__ == "__main__":
     tests = [obj for name, obj in list(globals().items()) if name.startswith("test_")]
     failures = 0

@@ -134,9 +134,32 @@ def _resolve_root():
 # never-raises contract for what happens if the resolved path is bogus.
 STATE_DIR = os.path.join(_resolve_root(), ".claude", "hooks", ".state")
 ACTIVE_TASK_FILE = os.path.join(STATE_DIR, "active_task")
-ACTIVE_TASK_MAX_AGE_S = int(
-    os.environ.get("CLAUDE_ACTIVE_TASK_STATE_MAX_AGE_S", "21600")  # 6h
-)
+ACTIVE_TASK_MAX_AGE_DEFAULT_S = 21600  # 6h
+
+
+def _resolve_max_age_s():
+    """Staleness window for the state file, overridable by env.
+
+    Parsed defensively because this runs at **import** time, one layer below
+    `resolve_task_id`'s never-raises contract. A bare `int(os.environ[...])`
+    raises `ValueError` on any non-numeric value (`"6h"`), and both callers
+    wrap their `from task_context import ...` in `except Exception` — so a
+    single malformed env var would silently disable attribution *repo-wide*,
+    including the path-field precedence that has nothing to do with this
+    setting. Fail to the default rather than taking the whole module down
+    (T047 Stage 4 review).
+    """
+    raw = os.environ.get("CLAUDE_ACTIVE_TASK_STATE_MAX_AGE_S", "").strip()
+    if not raw:
+        return ACTIVE_TASK_MAX_AGE_DEFAULT_S
+    try:
+        parsed = int(raw)
+    except ValueError:
+        return ACTIVE_TASK_MAX_AGE_DEFAULT_S
+    return parsed if parsed > 0 else ACTIVE_TASK_MAX_AGE_DEFAULT_S
+
+
+ACTIVE_TASK_MAX_AGE_S = _resolve_max_age_s()
 
 
 def normalize_task_id(digits):
