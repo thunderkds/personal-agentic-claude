@@ -274,12 +274,50 @@ which is itself truncated is still accepted (so the fix cannot over-correct into
 
 ---
 
+## Stage 4 Security Review (Supervisor, manual — 2026-07-31)
+
+**Verdict: PASS — 0 actionable findings. P0/P1/P2: none. 2 informational (P3).**
+
+Risk=Medium makes this gate mandatory. The built-in `security-review` was **not** used: it diffs the
+current branch against main, and this repo is checked out on `main`, so it would have seen an empty
+diff and reported a false clean. (This is a *different* failure from the pre-2026-07-23 one — the
+`origin/HEAD` fix landed and the built-in does run now; it is simply the wrong instrument when the
+branch under review is not the checked-out one.) Reviewed the real diff instead:
+`main...feat/hook-lifecycle-evidence`, 3 source files.
+
+- **Authority reduced, not expanded.** `post_agent_move_to_review.py` no longer writes
+  `PROJECT_KANBAN.md` and no longer calls `os.remove()` on a path built from untrusted spawn-prompt
+  text. The diff strictly *removes* filesystem write authority from a hook firing on every `Agent`
+  call.
+- **No new execution surface.** No `subprocess`, `eval`, `os.system`, or shell interpolation. All new
+  code is regex parsing over a 300-char-bounded `summary`.
+- **ReDoS: clear.** `COMMAND_VALUE_BODY_PATTERN` `(?:[^"\\]|\\.)*` has disjoint branch-leading char
+  classes → linear. `ENV_ASSIGNMENT_PREFIX` / `BENIGN_COMMAND_PREFIX` nest `+` over `\S*\s+` and
+  distinct literal wrappers — also disjoint. `strip_command_prefixes`'s loop provably terminates
+  (each pass strictly shortens or returns).
+
+**P3 — informational, accepted:**
+1. `QUOTED_SPAN_PATTERN` doesn't track quoting context, so an apostrophe inside a double-quoted
+   string (`echo "don't"; pytest`) opens a spurious single-quote span that swallows a following real
+   invocation. Fails **closed** — consistent with the gate's contract, same family as the two limits
+   the docstring already states.
+2. The gate proves *invocation*, not *passing* (`pytest --version` qualifies). Explicitly documented
+   as a residual limit; this is an honesty guardrail, not an adversarial boundary.
+
+**Reports** (Stage 4 item 6, both saved 2026-07-31):
+- `reports/code-review_feat-hook-lifecycle-evidence_20260731T093433.html` — Risk 10%, Quality 90%, Effort 15%
+- `reports/security-review_feat-hook-lifecycle-evidence_20260731T093433.html` — Risk 4%, Quality 100%, Effort 5%
+
+**Stage 4 is complete for T044.** No findings remain open.
+
+---
+
 ## Completion Checklist
 
-- [ ] Implementation done
-- [ ] Self-review run (note: a sub-agent has no `Skill` tool — perform code-review/security-review manually and label them as manual)
-- [ ] Security review — **mandatory, Risk=Medium**. `origin/HEAD` was fixed 2026-07-23, so the built-in now runs for the Supervisor; a sub-agent must still do it by hand
-- [ ] Tests written AND pass — output pasted into Evidence (Hard-Stop Gate 5)
-- [ ] Every negative control observed RED, with pasted output
-- [ ] Report to the Supervisor for `memory/`: whether a reliable background-agent completion signal exists (do not write memory yourself)
-- [ ] Supervisor notified: task ready for Stage 4 review
+- [x] Implementation done
+- [x] Self-review run (note: a sub-agent has no `Skill` tool — perform code-review/security-review manually and label them as manual)
+- [x] Security review — **mandatory, Risk=Medium**. Done manually 2026-07-31 (built-in is the wrong instrument for a branch that is not checked out — see the Security Review section above). PASS, 0 actionable findings
+- [x] Tests written AND pass — output pasted into Evidence (Hard-Stop Gate 5)
+- [x] Every negative control observed RED, with pasted output
+- [x] Report to the Supervisor for `memory/`: whether a reliable background-agent completion signal exists (do not write memory yourself) — **no**, `SubagentStop`/`TaskCompleted` carry no task identity
+- [x] Supervisor notified: task ready for Stage 4 review
