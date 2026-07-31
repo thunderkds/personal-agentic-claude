@@ -8,6 +8,7 @@
 ## Board
 
 ### Todo
+- [ ] **T047** — CLAUDE_ACTIVE_TASK never reaches the trace hook, so the merge gate fails closed on honest tasks | Common-Infrastructure-Agent | C1 | Risk: Medium | P0
 - [ ] **T045** — Kanban section parsing breaks when a row quotes a markdown heading marker (unanchored lookahead) | Common-Infrastructure-Agent | C1 | Risk: Medium | P1
 - [ ] **T040** — Derive the Token Audit Log from event-trace instead of manual entry; restart the DDR-0001 window | Common-Infrastructure-Agent | C1 | Risk: Medium | P1
 - [ ] **T041** — Make engineering principles reachable by sub-agents + add the Search-Before-You-Build ladder | Common-Infrastructure-Agent | C2 | Risk: Medium | P1
@@ -65,7 +66,7 @@
 
 | Task | Reason | Waiting on |
 |------|--------|-----------|
-| T040 | ~~Blocked on T043~~ — **unblocked 2026-07-23**, attribution is now structural. Note before starting: a `Bash` command is never attributed, so `CLAUDE_ACTIVE_TASK=T040` must be exported when running tests, or the merge gate finds no trace record | — (ready) |
+| T040 | ~~Blocked on T043~~ ~~unblocked 2026-07-23~~ — **re-blocked 2026-07-31 on T047**. Attribution is structural, but `CLAUDE_ACTIVE_TASK` never reaches the hook process, so every `Bash` record lands in `_untagged.jsonl`. T040 would build its token-audit window on records that are silently all unattributed | T047 |
 | T030 | DDR-0001 window still has no data; reopens once T040 lands | T040 |
 
 ---
