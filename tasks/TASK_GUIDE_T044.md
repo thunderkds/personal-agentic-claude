@@ -119,12 +119,12 @@ CLAUDE_ACTIVE_TASK=T044 python3 -m pytest .claude/hooks/tests/ -q && bash script
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | [AC2, AC5 — **each mutation observed RED**, AC8, AC9, AC10] |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [must literally state "pass" or "fail" in this Notes column] |
-| Review scope bounded to the change's blast radius | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | [`scripts/smoke-install.sh`] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_merge_gate_evidence.py` (29 tests — AC4/AC5/AC6/AC8/AC9) + `.claude/hooks/tests/test_move_to_review.py` (11 tests — AC1/AC2/AC3/AC9). `python3 -m pytest .claude/hooks/tests/test_merge_gate_evidence.py .claude/hooks/tests/test_move_to_review.py -q` → `40 passed`. **+2 added at Stage 4 review by the Supervisor** (`test_runner_named_in_the_description_of_a_truncated_record_is_rejected`, `test_truncated_record_still_reads_its_own_command`) — the implementer was not the sole author of its own oracle |
+| Verification command run | ☑ pass | **Independently re-run by the Supervisor**, not trusted from the implementer's claim. `CLAUDE_ACTIVE_TASK=T044 python3 -m pytest .claude/hooks/tests/ -q && bash scripts/smoke-install.sh` → `107 passed in 0.98s` + `smoke-install.sh: PASS` at `1565cd1`; `109 passed in 0.95s` + `smoke-install.sh: PASS` at `832231d` (post-review-fix) |
+| Negative cases hold | ☑ pass | **RED before fix**: merge gate `9 failed, 18 passed` (incl. both real-record tests); move-to-review `7 failed, 4 passed` — the reproduction: one spawn emptied `### In Progress` entirely (T001+T028+T099 all moved) and deleted 3 counters, leaving `['step_count_T040.txt']`. **Mutation controls, each observed RED then reverted**: (1) substring match reinstated → `9 failed, 18 passed`; (2) free-text `\bT(\d{3})\b` scan reinstated → `3 failed, 8 passed`; (3) `isinstance(event, dict)` fail-open guard removed → `1 failed, 26 passed` (`AttributeError: 'list' object has no attribute 'get'`). Post-revert `107 passed`. **AC8** missing/empty/malformed/non-string-summary trace → all fail closed. **AC10** `git diff --name-only main` on `pre_agent_validate_guide.py`, `lib/task_context.py`, `post_write_register_task.py`, `CLAUDE.md` → empty. **Supervisor independently reproduced** mutation (1): substring match reinstated → `9 failed, 18 passed`, matching the implementer's claim exactly, then reverted → `107 passed`. **Stage-4 P1 fix mutated too**: bound fragment reverted to `summary[match.end():]` → `1 failed, 108 passed` (only the new description-leak test), reverted → `109 passed` |
+| verify | ☑ pass | pass — full verification command run post-revert from the committed worktree state; 107 unit tests + install/update smoke suite both green |
+| Review scope bounded to the change's blast radius | ☑ pass | 3 files modified + 2 new test files. No adjacent-code "improvements"; `find_kanban_section`'s `###` truncation left for T045. **Stage 4 code-review** (Supervisor, 2026-07-30): scope = 3 changed source files + 2 test files; Phase 0.5 entry point `trace_shows_verification` found at `pre_bash_block_unsafe_merge.py:148` ✅ reachable. Result: **0 P0, 1 P1 (found + fixed at `832231d`), 0 P2, 2 P3 accepted** |
+| Full smoke suite still green (no regression) | ☑ pass | `bash scripts/smoke-install.sh` → all 15 `[ok]` assertions, `smoke-install.sh: PASS` |
 | **UI: Visual regression** | ☐ N/A | Python hooks, no UI component |
 | **UI: Design-system compliance** | ☐ N/A | Python hooks, no UI component |
 | **UI: Responsiveness** | ☐ N/A | Python hooks, no UI component |
@@ -155,6 +155,41 @@ certainty this design cannot deliver.
 **Write the tests first** (`tdd`), following `.claude/hooks/tests/` conventions. Use **real records
 copied from `memory/event-trace/T043.jsonl`** as fixtures for AC5 — synthetic strings would be a
 weaker oracle than the actual data that fooled the gate.
+
+### Outcome as built (filled by the implementer)
+
+**AC3 — no reliable background-completion signal exists.** The harness does expose `SubagentStop`
+and `TaskCompleted`, which fire on genuine completion, but their payloads carry only `session_id` /
+`transcript_path` / `agent_id` / `agent_type` — no `tool_input`, no spawn prompt, no task
+identifier. `SubagentStop` matchers filter on *agent type*, and one type (`common-infrastructure`)
+serves many tasks, so the event can say *that* something finished, never *which task*.
+`resolve_task_id` has nothing structural to work from. Per the sanctioned outcome,
+`post_agent_move_to_review.py` no longer writes to `PROJECT_KANBAN.md` at all; it resolves the task
+structurally and prints a stderr reminder. The docstring states this and what re-enabling would
+require.
+
+**Consequence to know:** the step-limit counter is no longer reset when a task reaches a gate (that
+reset lived inside the buggy spawn-time move, and it deleted *unrelated* tasks' counters). Reset by
+hand when a rework cycle needs a fresh budget: `rm .claude/hooks/.state/step_count_Txxx.txt`. This
+fired during T044's own implementation. An automatic reset on a *correct* trigger is a follow-up
+task, not in this scope.
+
+**AC7 — the mechanism, documented in `.claude/skills/craft-spawn-prompt/SKILL.md`** as spawn-prompt
+element 6: every assembled prompt now instructs the sub-agent to run tests as
+`CLAUDE_ACTIVE_TASK=Txxx <command>` (or `export` once), because a `Bash` `command` is never
+attributed structurally and the merge gate fails closed on a missing record. The block reason in
+`pre_bash_block_unsafe_merge.py` also names the export, so an operator hitting the closed gate is
+told how to satisfy it.
+
+**Defect C had a layer the guide didn't anticipate:** a trace record's `summary` is the
+JSON-serialized `tool_input`, truncated to 300 chars — so the command arrives JSON-escaped and
+usually as *invalid* JSON. `extract_command` peels that layer (strict parse, then a single-pass
+unescape of the truncated fragment) before shell quoting means anything. Only then: strip quoted
+spans (a token inside quotes is data), split on shell separators, peel env assignments and benign
+wrappers, match **anchored** at the command head, and consider `Bash` records only. Quote-stripping
+is what kills the second real fixture specifically — its runner alternation is a single-quoted regex
+literal, and without it the bare `jest` chunk still matches an anchored pattern after splitting on
+`|`.
 
 **Mutation-test every negative control** (the T043 standard, now the project norm): after the fix,
 break each guard in turn, confirm the relevant test goes RED, revert, and paste that red output into
@@ -209,12 +244,80 @@ Evidence. A negative control that has never been observed failing is not evidenc
 
 ---
 
+## Stage 4 Review Findings (Supervisor, 2026-07-30)
+
+**P0**: none. **P2**: none surviving the confidence gate.
+
+**P1 — fixed at `832231d`.** `extract_command`'s truncated-JSON fallback returned
+`summary[match.end():]` — everything after `"command": "` — without stopping at the command value's
+closing quote, so every sibling field leaked into the string that `invokes_test_runner` then parsed.
+A Bash `tool_input` always carries an agent-authored `description`, and once the record exceeds
+`post_tool_trace.py`'s 300-char cut the summary stops being valid JSON and this fallback is the only
+path. A separator inside that prose (`"inspect the trace records; pytest was already run earlier"`)
+promoted the next word to a command head and the gate returned True — defect C reinstated through a
+side door, one layer *below* the boundary-matching logic that was written to close it. Fixed by
+bounding the fallback to the command value's own body (`COMMAND_VALUE_BODY_PATTERN`, stops at the
+first unescaped quote). Two regression tests: the leak case, and a guard that a genuine invocation
+which is itself truncated is still accepted (so the fix cannot over-correct into a false negative).
+
+**P3 — accepted, not fixed:**
+1. `post_agent_move_to_review.py` is now deliberately inert, so its filename no longer describes it.
+   Renaming requires a `settings.json` hook-config change — out of this task's scope. The docstring
+   states the situation prominently.
+2. `pre_bash_block_unsafe_merge.py` has one blank line before `def main()`; the file uses two
+   elsewhere. Cosmetic.
+
+**Follow-ups to schedule (not in this task's scope):**
+- Automatic step-counter reset on a *correct* trigger — the reset died with the buggy spawn-time
+  move. Manual workaround: `rm .claude/hooks/.state/step_count_Txxx.txt`.
+- Renaming `post_agent_move_to_review.py` + its `settings.json` entry.
+
+---
+
+## Stage 4 Security Review (Supervisor, manual — 2026-07-31)
+
+**Verdict: PASS — 0 actionable findings. P0/P1/P2: none. 2 informational (P3).**
+
+Risk=Medium makes this gate mandatory. The built-in `security-review` was **not** used: it diffs the
+current branch against main, and this repo is checked out on `main`, so it would have seen an empty
+diff and reported a false clean. (This is a *different* failure from the pre-2026-07-23 one — the
+`origin/HEAD` fix landed and the built-in does run now; it is simply the wrong instrument when the
+branch under review is not the checked-out one.) Reviewed the real diff instead:
+`main...feat/hook-lifecycle-evidence`, 3 source files.
+
+- **Authority reduced, not expanded.** `post_agent_move_to_review.py` no longer writes
+  `PROJECT_KANBAN.md` and no longer calls `os.remove()` on a path built from untrusted spawn-prompt
+  text. The diff strictly *removes* filesystem write authority from a hook firing on every `Agent`
+  call.
+- **No new execution surface.** No `subprocess`, `eval`, `os.system`, or shell interpolation. All new
+  code is regex parsing over a 300-char-bounded `summary`.
+- **ReDoS: clear.** `COMMAND_VALUE_BODY_PATTERN` `(?:[^"\\]|\\.)*` has disjoint branch-leading char
+  classes → linear. `ENV_ASSIGNMENT_PREFIX` / `BENIGN_COMMAND_PREFIX` nest `+` over `\S*\s+` and
+  distinct literal wrappers — also disjoint. `strip_command_prefixes`'s loop provably terminates
+  (each pass strictly shortens or returns).
+
+**P3 — informational, accepted:**
+1. `QUOTED_SPAN_PATTERN` doesn't track quoting context, so an apostrophe inside a double-quoted
+   string (`echo "don't"; pytest`) opens a spurious single-quote span that swallows a following real
+   invocation. Fails **closed** — consistent with the gate's contract, same family as the two limits
+   the docstring already states.
+2. The gate proves *invocation*, not *passing* (`pytest --version` qualifies). Explicitly documented
+   as a residual limit; this is an honesty guardrail, not an adversarial boundary.
+
+**Reports** (Stage 4 item 6, both saved 2026-07-31):
+- `reports/code-review_feat-hook-lifecycle-evidence_20260731T093433.html` — Risk 10%, Quality 90%, Effort 15%
+- `reports/security-review_feat-hook-lifecycle-evidence_20260731T093433.html` — Risk 4%, Quality 100%, Effort 5%
+
+**Stage 4 is complete for T044.** No findings remain open.
+
+---
+
 ## Completion Checklist
 
-- [ ] Implementation done
-- [ ] Self-review run (note: a sub-agent has no `Skill` tool — perform code-review/security-review manually and label them as manual)
-- [ ] Security review — **mandatory, Risk=Medium**. `origin/HEAD` was fixed 2026-07-23, so the built-in now runs for the Supervisor; a sub-agent must still do it by hand
-- [ ] Tests written AND pass — output pasted into Evidence (Hard-Stop Gate 5)
-- [ ] Every negative control observed RED, with pasted output
-- [ ] Report to the Supervisor for `memory/`: whether a reliable background-agent completion signal exists (do not write memory yourself)
-- [ ] Supervisor notified: task ready for Stage 4 review
+- [x] Implementation done
+- [x] Self-review run (note: a sub-agent has no `Skill` tool — perform code-review/security-review manually and label them as manual)
+- [x] Security review — **mandatory, Risk=Medium**. Done manually 2026-07-31 (built-in is the wrong instrument for a branch that is not checked out — see the Security Review section above). PASS, 0 actionable findings
+- [x] Tests written AND pass — output pasted into Evidence (Hard-Stop Gate 5)
+- [x] Every negative control observed RED, with pasted output
+- [x] Report to the Supervisor for `memory/`: whether a reliable background-agent completion signal exists (do not write memory yourself) — **no**, `SubagentStop`/`TaskCompleted` carry no task identity
+- [x] Supervisor notified: task ready for Stage 4 review
