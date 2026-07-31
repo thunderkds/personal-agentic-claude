@@ -152,7 +152,19 @@ python3 -m pytest .claude/hooks/tests/ -q && bash scripts/smoke-install.sh
 
 > Deliberately written **without** a `CLAUDE_ACTIVE_TASK=` prefix — prefixing it is the thing that
 > does not work, and this guide must not repeat T044's mistake of documenting an inert mechanism.
-> Once this task lands, restate the correct invocation here and in `craft-spawn-prompt`.
+>
+> **T047 landed.** The correct invocation, when a trace record filed under this task is required
+> (i.e. running the command above as evidence toward the merge gate), is to write the active-task
+> state file first, then run the command exactly as shown above — unprefixed:
+>
+> ```bash
+> mkdir -p .claude/hooks/.state && printf '%s\n%s\n' "T047" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > .claude/hooks/.state/active_task
+> python3 -m pytest .claude/hooks/tests/ -q && bash scripts/smoke-install.sh
+> ```
+>
+> See `.claude/hooks/lib/task_context.py` (precedence slot 2) and `craft-spawn-prompt`'s Element 6
+> for why. `CLAUDE_ACTIVE_TASK=Txxx` still works, but only when set in the process that launches the
+> whole session — never inside a `Bash` tool call.
 
 ### Evidence (filled by reviewer at Stage 4/5)
 
