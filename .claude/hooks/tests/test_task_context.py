@@ -626,6 +626,47 @@ class StateFileOverride:
         return False
 
 
+# ---------------------------------------------------------------------------
+# T048 — ambient-state isolation, applied by default to the whole suite.
+#
+# Without this, every in-process call to resolve_task_id() (via the
+# `resolve()` helper above) reads the *real* module-level
+# `task_context.ACTIVE_TASK_FILE`, which is exactly the path
+# `craft-spawn-prompt` Element 6 now instructs every agent to arm. A test's
+# outcome must not depend on whether that ambient file happens to exist on
+# the machine running the suite (see module precedence slot 2 and the T048
+# task guide). The nine pre-T047 tests below assert what the *lower*
+# precedence slots resolve to; they were written before slot 2 existed and
+# never isolated it, so a real armed file made slot 2 short-circuit them.
+#
+# Fix: wrap each *test function*, not each `resolve()` call, in a fresh
+# `StateFileOverride()` (content=None -> points ACTIVE_TASK_FILE at an
+# empty throwaway path). Tests that want to genuinely exercise slot 2 keep
+# nesting their own `StateFileOverride(content=...)` *inside* this default
+# — the innermost context wins for the duration of its `with` block, so
+# explicit arming (and AC5's mutation control) is unaffected. This is the
+# same mechanism T047 already proved correct for its own new tests, now
+# applied suite-wide instead of opt-in per test (AC4) — not a second,
+# competing isolation mechanism.
+#
+# Applied at two levels so both entry points documented in the module
+# docstring behave identically:
+#   - pytest: an autouse fixture, scoped to this module, wraps every test.
+#   - `python3 test_task_context.py` direct execution: the __main__ runner
+#     below wraps each manual test call with the identical StateFileOverride.
+# ---------------------------------------------------------------------------
+
+try:
+    import pytest as _pytest
+
+    @_pytest.fixture(autouse=True)
+    def _isolate_ambient_active_task_state():
+        with StateFileOverride():
+            yield
+except ImportError:
+    _pytest = None
+
+
 def _fresh_state_content(task_id, age_seconds=0):
     written_at = datetime.now(timezone.utc) - timedelta(seconds=age_seconds)
     return f"{task_id}\n{written_at.isoformat()}\n"
@@ -870,7 +911,11 @@ if __name__ == "__main__":
     failures = 0
     for t in tests:
         try:
-            t()
+            # T048: same default isolation the pytest autouse fixture
+            # applies, so this manual runner matches pytest's result
+            # regardless of ambient .claude/hooks/.state/active_task.
+            with StateFileOverride():
+                t()
             print(f"PASS {t.__name__}")
         except AssertionError as e:
             failures += 1
