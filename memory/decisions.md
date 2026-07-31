@@ -284,3 +284,50 @@ principle as T042's `?` defaults).
 
 **Files**: .claude/hooks/lib/task_context.py (new), post_tool_trace.py, pre_agent_step_limit.py,
 tests/test_task_context.py (new, 29 tests incl. 18 subprocess-from-foreign-cwd)
+
+---
+
+## T044 — Hook lifecycle & evidence integrity (Stage 4 reviewed 2026-07-30, not yet integrated)
+
+Three defects in one subsystem, all observed live on 2026-07-23.
+
+**A — wrong task.** `post_agent_move_to_review.py` scanned the whole spawn prompt with
+`\bT(\d{3})\b`, and Stage 3 mandates pasting `memory/MEMORY.md` verbatim into every spawn prompt.
+One spawn emptied `### In Progress` and deleted three unrelated step counters. Now resolves via
+T043's `lib/task_context.py:resolve_task_id`.
+
+**B — wrong time.** `PostToolUse`/`Agent` fires at spawn *issuance* for background sub-agents.
+**Decision: the hook no longer writes to the board at all** — it prints a stderr reminder and the
+Supervisor moves the row by hand (Hard-Stop Gate 3 already required this). `SubagentStop` and
+`TaskCompleted` do fire on genuine completion but carry only `session_id`/`transcript_path`/
+`agent_id`/`agent_type` — no task identity, and one agent type serves many tasks. A board that is
+confidently wrong is worse than one a human keeps current. Reinstating the automatic move requires a
+completion event carrying task identity, not a transcript heuristic.
+*Consequence*: the step-counter reset died with the buggy move. Manual: `rm
+.claude/hooks/.state/step_count_Txxx.txt`. Automatic reset on a correct trigger = follow-up task.
+
+**C — vacuous evidence.** `trace_shows_verification` accepted any record whose summary *contained*
+`pytest|npm test|jest|verify`. On T043 the only two qualifying records were Supervisor *inspection*
+commands. Now structural: only `Bash` records, quoted spans stripped (a token in quotes is data),
+split on shell separators, env-assignments and benign wrappers peeled, matched **anchored** at the
+command head. Deliberately not a shell parser (Simplicity First).
+Stated residual limits: proves a runner was *invoked*, not that tests *passed*; an invocation wrapped
+entirely in quotes (`bash -c "pytest"`) is rejected — both err fail-closed.
+
+**AC7 — the other half.** T043 made `Bash` commands unattributed unless `CLAUDE_ACTIVE_TASK` is
+exported, so tightening C alone would fail the gate closed on every honest task.
+`craft-spawn-prompt` now emits the `CLAUDE_ACTIVE_TASK=Txxx <command>` instruction, and the block
+reason names the export so an operator hitting the closed gate is told how to satisfy it.
+
+**Stage 4 (Supervisor)**: 0 P0, **1 P1 found + fixed** (`extract_command` truncated-JSON fallback
+leaked sibling fields — see learnings.md), 0 P2, 2 P3 accepted. Supervisor independently re-ran the
+verification and reproduced the implementer's headline mutation rather than trusting the Evidence
+table, and authored the 2 regression tests for its own finding (the implementer must not be the sole
+author of its oracle). 109 tests green, smoke PASS.
+
+**Still open before integration**: `security-review` (Risk=Medium, mandatory), `html-report`,
+Kanban → Ready for Review → Done *before* the integration step (the gate rejects an In-Progress row).
+
+**Files**: .claude/hooks/post_agent_move_to_review.py, pre_bash_block_unsafe_merge.py,
+tests/test_merge_gate_evidence.py (new, 29), tests/test_move_to_review.py (new, 11),
+.claude/skills/craft-spawn-prompt/SKILL.md

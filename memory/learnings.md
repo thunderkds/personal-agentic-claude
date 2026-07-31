@@ -191,3 +191,52 @@ the auto-registration hook, roughly two minutes after being written down.
 also parsed by the same code. After any Stage 2 write-up that quotes a delimiter, re-run the parser
 over the live board/file before committing. More generally: a mitigation that depends on humans
 avoiding a character in prose is not a fix — it is a trap with a note attached.
+
+---
+
+## A guard is only as strong as the layer that feeds it (2026-07-30, T044 Stage 4)
+
+T044's `invokes_test_runner` was correct: anchored at a command head, quoted spans stripped,
+separators split. Stage 4 review still found the gate accepting a claim — because the *bug was one
+layer below the guard*. `extract_command` handed it a string that was never a command: on any record
+past `post_tool_trace.py`'s 300-char truncation the summary stops being valid JSON, and the regex
+fallback took everything after `"command": "` without stopping at the value's closing quote. The
+`description` field — agent-authored prose — leaked in, a `;` inside it created a command boundary,
+and `pytest` in that prose became a command head. Defect C, reinstated through a side door.
+
+**How to apply**: when reviewing a validator, do not stop at whether the matching logic is right.
+Ask what constructs its input, and whether that construction can ever be wrong. A hardened matcher
+fed a corrupted string is a hardened matcher that passes garbage. Concretely: any hand-rolled
+`field": "` extraction over possibly-truncated JSON must bound itself to that field's value —
+`(?:[^"\\]|\\.)*` — or it silently concatenates siblings. This is the 4th time this project shipped
+a guard whose *unexercised path* was the hole (T036/T042/T039 were vacuous assertions; this one was
+a real assertion over a wrongly-built input).
+
+## Reverting a mutation with `git checkout` also reverts your fix (2026-07-30, T044)
+
+Mutation-testing a Stage-4 fix means editing the file you just fixed. `git checkout <file>` to undo
+the mutation restores the *committed* state — which does not contain the uncommitted fix. The suite
+went green again and looked correct, but the fix was gone. Caught only because the diff was
+re-checked before commit.
+
+**How to apply**: commit the fix *before* mutating it, and revert the mutation with `git checkout`
+against that commit — or save/restore a copy (`cp file /tmp/x.bak`) instead of using git. Always
+re-run the full suite AND re-read the diff after a mutation cycle; "tests pass" is exactly what a
+silently-reverted fix looks like.
+
+## The merge gate blocks on prose, not just commands (2026-07-30, hit live)
+
+`pre_bash_block_unsafe_merge.py` tests `BLOCKED_PATTERNS` against the *entire* `command` string. A
+heredoc that writes documentation is still one Bash command, so appending a memory entry whose prose
+contained the literal words "before `git merge`" was blocked by the pipeline gate — while T044 was
+legitimately In Progress. The gate was working exactly as written; the input was never a merge.
+
+This is the same family as "never quote a `###` heading inside a KANBAN row": a tool that pattern-
+matches text will match the text that *describes* it. Documentation about a guarded operation trips
+the guard.
+
+**How to apply**: write file content with the Write tool, or stage it to a scratchpad file and
+`cat tmp >> target` — the command string then contains only paths. Do not reword the documentation to
+dodge the pattern; the prose should stay accurate and the writing method should change. Worth
+considering whether `BLOCKED_PATTERNS` should ignore text inside a heredoc body, but that means shell
+parsing — the same complexity T044 deliberately refused, and fail-closed here costs only a retry.
