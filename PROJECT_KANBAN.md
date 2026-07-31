@@ -8,6 +8,7 @@
 ## Board
 
 ### Todo
+- [ ] **T048** — The hook test suite fails whenever the active-task channel is armed | Common-Infrastructure-Agent | C1 | Risk: Medium | P0
 - [ ] **T045** — Kanban section parsing breaks when a row quotes a markdown heading marker (unanchored lookahead) | Common-Infrastructure-Agent | C1 | Risk: Medium | P1
 - [ ] **T040** — Derive the Token Audit Log from event-trace instead of manual entry; restart the DDR-0001 window | Common-Infrastructure-Agent | C1 | Risk: Medium | P1
 - [ ] **T041** — Make engineering principles reachable by sub-agents + add the Search-Before-You-Build ladder | Common-Infrastructure-Agent | C2 | Risk: Medium | P1
