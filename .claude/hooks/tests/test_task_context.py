@@ -575,6 +575,296 @@ def test_neither_hook_defines_its_own_task_id_regex_any_more():
         assert "from task_context import resolve_task_id" in source, hook_name
 
 
+# ---------------------------------------------------------------------------
+# T047 — active-task state file: the channel a Bash tool call can actually
+# write to from inside a running session. See task_context.py precedence
+# slot 2 and the T047 report for the empirical probe this is grounded in.
+# ---------------------------------------------------------------------------
+
+import tempfile as _tempfile
+import types as _types
+from datetime import datetime, timedelta, timezone
+
+
+def _load_merge_gate_module():
+    """Load pre_bash_block_unsafe_merge.py without running its bottom-of-file
+    `main()` (same technique as test_merge_gate_evidence.py's
+    `load_hook_module`, duplicated here rather than imported to keep this
+    file runnable standalone via its own __main__ block)."""
+    path = os.path.join(HOOKS_DIR, "pre_bash_block_unsafe_merge.py")
+    source = open(path).read()
+    marker = "\nmain()"
+    assert marker in source, f"{path} no longer ends in a bare main() call"
+    module = _types.ModuleType("pre_bash_block_unsafe_merge")
+    module.__file__ = path
+    exec(compile(source.replace(marker, "\n"), path, "exec"), module.__dict__)
+    return module
+
+
+class StateFileOverride:
+    """Point task_context.ACTIVE_TASK_FILE at a throwaway path for the
+    duration of a block, restoring it after. Unit-level equivalent of
+    EnvOverride for the new state-file channel."""
+
+    def __init__(self, content=None):
+        self.content = content
+        self.dir = None
+        self.previous = None
+
+    def __enter__(self):
+        self.dir = _tempfile.mkdtemp(prefix="t047_state_")
+        self.previous = task_context.ACTIVE_TASK_FILE
+        task_context.ACTIVE_TASK_FILE = os.path.join(self.dir, "active_task")
+        if self.content is not None:
+            with open(task_context.ACTIVE_TASK_FILE, "w") as f:
+                f.write(self.content)
+        return self
+
+    def __exit__(self, *exc):
+        task_context.ACTIVE_TASK_FILE = self.previous
+        shutil.rmtree(self.dir, ignore_errors=True)
+        return False
+
+
+def _fresh_state_content(task_id, age_seconds=0):
+    written_at = datetime.now(timezone.utc) - timedelta(seconds=age_seconds)
+    return f"{task_id}\n{written_at.isoformat()}\n"
+
+
+def test_state_file_attributes_when_env_and_payload_are_silent():
+    event = {"tool_name": "Bash", "tool_input": {"command": "python3 -m pytest -q"}}
+    with StateFileOverride(_fresh_state_content("T047")):
+        assert resolve(event) == "T047"
+
+
+def test_env_var_still_wins_over_state_file():
+    event = {"tool_name": "Bash", "tool_input": {"command": "python3 -m pytest -q"}}
+    with StateFileOverride(_fresh_state_content("T047")):
+        assert resolve(event, "T099") == "T099"
+
+
+def test_state_file_wins_over_path_field_and_agent_prompt():
+    event = {"tool_name": "Read", "tool_input": {"file_path": "tasks/TASK_GUIDE_T044.md"}}
+    with StateFileOverride(_fresh_state_content("T047")):
+        assert resolve(event) == "T047"
+
+
+def test_missing_state_file_falls_through_to_next_slot():
+    event = {"tool_name": "Read", "tool_input": {"file_path": "tasks/TASK_GUIDE_T044.md"}}
+    with StateFileOverride(None):
+        assert resolve(event) == "T044"
+
+
+def test_malformed_state_file_content_is_ignored_not_trusted():
+    """Negative control: junk task ID text must degrade to absent, exactly
+    like a malformed CLAUDE_ACTIVE_TASK — never trusted as a literal path
+    component."""
+    event = {"tool_name": "Bash", "tool_input": {"command": "python3 -m pytest -q"}}
+    for junk in ("", "not-a-task\n2026-07-31T00:00:00+00:00\n", "T99\n2026-07-31T00:00:00+00:00\n",
+                 "../../etc/passwd\n2026-07-31T00:00:00+00:00\n", "T047\n"):
+        with StateFileOverride(junk):
+            assert resolve(event) is None, repr(junk)
+
+
+def test_stale_state_file_is_rejected():
+    """The T043 mis-attribution class: a pointer left over from a finished
+    task must not silently attribute a new task's work to the old one."""
+    event = {"tool_name": "Bash", "tool_input": {"command": "python3 -m pytest -q"}}
+    with StateFileOverride(_fresh_state_content("T047", age_seconds=task_context.ACTIVE_TASK_MAX_AGE_S + 1)):
+        assert resolve(event) is None
+
+
+def test_state_file_at_exactly_the_age_boundary_is_still_fresh():
+    event = {"tool_name": "Bash", "tool_input": {"command": "python3 -m pytest -q"}}
+    with StateFileOverride(_fresh_state_content("T047", age_seconds=task_context.ACTIVE_TASK_MAX_AGE_S - 1)):
+        assert resolve(event) == "T047"
+
+
+def test_state_file_corrupt_timestamp_degrades_to_absent():
+    event = {"tool_name": "Bash", "tool_input": {"command": "python3 -m pytest -q"}}
+    with StateFileOverride("T047\nnot-a-timestamp\n"):
+        assert resolve(event) is None
+
+
+# ---------------------------------------------------------------------------
+# T047 AC1/AC2 — real end-to-end path: a Bash tool call the way an agent
+# actually issues one (structural signal on disk, never CLAUDE_ACTIVE_TASK
+# passed inline), through the real hook subprocess, then a real
+# trace_shows_verification check.
+# ---------------------------------------------------------------------------
+
+def test_end_to_end_bash_test_run_via_state_file_is_traced_and_verifies():
+    """AC1 + AC2. Mirrors exactly how an agent issues a test command — the
+    state file is written first (as craft-spawn-prompt now instructs), then
+    a real `Bash` tool call event (no CLAUDE_ACTIVE_TASK on it at all) is
+    fed through the real post_tool_trace.py subprocess."""
+    sandbox = HookSandbox()
+    try:
+        os.makedirs(sandbox.state_dir, exist_ok=True)
+        with open(os.path.join(sandbox.state_dir, "active_task"), "w") as f:
+            f.write(_fresh_state_content("T047"))
+
+        event = {
+            "tool_name": "Bash",
+            "tool_input": {"command": "python3 -m pytest .claude/hooks/tests/ -q"},
+            "tool_response": {"is_error": False},
+        }
+        result = sandbox.run_hook("post_tool_trace.py", event)
+        assert result.returncode == 0, result.stderr
+        assert sandbox.trace_files() == ["T047.jsonl"], sandbox.trace_files()
+
+        merge_gate = _load_merge_gate_module()
+        merge_gate.TRACE_DIR = sandbox.trace_dir  # point the gate at the sandbox
+
+        assert merge_gate.trace_shows_verification("T047") is True
+    finally:
+        sandbox.cleanup()
+
+
+def test_state_file_resolves_off_claude_project_dir_not_the_executing_copy():
+    """T047 Stage 4 P1 regression guard.
+
+    The original fix resolved STATE_DIR off `__file__` arithmetic alone —
+    correct only because, in production, the harness always execs the hook
+    at exactly `$CLAUDE_PROJECT_DIR/.claude/hooks/*.py` (see settings.json),
+    so `__file__` and `$CLAUDE_PROJECT_DIR` always happened to coincide. A
+    Stage-3 sub-agent's cwd is its own *worktree*, and the corrected
+    craft-spawn-prompt instruction writes the state file to an absolute
+    path under the *main checkout* — a genuinely different directory from
+    wherever `task_context.py`'s own `__file__` happens to sit if a copy is
+    ever invoked from elsewhere (e.g. a worktree's own hook copy, run
+    directly, or any subprocess context where `__file__` and
+    `$CLAUDE_PROJECT_DIR` diverge). A test where both roots are the same
+    directory (the original `HookSandbox` shape) cannot distinguish 'reads
+    off $CLAUDE_PROJECT_DIR' from 'reads off __file__' — this test makes
+    them two genuinely different directories so only the fixed code passes.
+
+    Runs `task_context.py` itself as a subprocess (not through
+    `post_tool_trace.py`, whose own `TRACE_DIR` is a separate, unrelated
+    __file__-anchored constant this task did not touch) so it isolates
+    exactly the STATE_DIR resolution this Stage-4 fix changed.
+    """
+    executing_copy_dir = _tempfile.mkdtemp(prefix="t047_executing_copy_")
+    main_checkout_root = _tempfile.mkdtemp(prefix="t047_main_checkout_")
+    try:
+        assert executing_copy_dir != main_checkout_root
+
+        # task_context.py physically lives 3 dirs below its own __file__'s
+        # notion of ROOT: <root>/.claude/hooks/lib/task_context.py
+        copy_lib_dir = os.path.join(executing_copy_dir, ".claude", "hooks", "lib")
+        os.makedirs(copy_lib_dir)
+        shutil.copy(LIB_PATH, os.path.join(copy_lib_dir, "task_context.py"))
+
+        # The state file exists only under main_checkout_root — where the
+        # corrected craft-spawn-prompt instruction actually writes it.
+        main_state_dir = os.path.join(main_checkout_root, ".claude", "hooks", ".state")
+        os.makedirs(main_state_dir)
+        with open(os.path.join(main_state_dir, "active_task"), "w") as f:
+            f.write(_fresh_state_content("T047"))
+
+        script = (
+            "import sys; sys.path.insert(0, %r)\n"
+            "import task_context\n"
+            "print(task_context.resolve_task_id({'tool_name': 'Bash', "
+            "'tool_input': {'command': 'python3 -m pytest -q'}}))\n"
+        ) % copy_lib_dir
+
+        env = dict(os.environ)
+        env.pop("CLAUDE_ACTIVE_TASK", None)
+        env["CLAUDE_PROJECT_DIR"] = main_checkout_root
+
+        result = subprocess.run(
+            [sys.executable, "-c", script],
+            cwd=executing_copy_dir,  # a third, unrelated cwd — not the answer either
+            env=env,
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0, result.stderr
+        assert result.stdout.strip() == "T047", (
+            "resolve_task_id must read the state file from $CLAUDE_PROJECT_DIR "
+            f"(main_checkout_root), not from __file__'s own directory. "
+            f"stdout={result.stdout!r} stderr={result.stderr!r}"
+        )
+    finally:
+        shutil.rmtree(executing_copy_dir, ignore_errors=True)
+        shutil.rmtree(main_checkout_root, ignore_errors=True)
+
+
+def test_end_to_end_no_state_file_and_no_test_run_stays_untagged_and_fails_gate():
+    """AC4 negative: a task with no state file set and no qualifying record
+    still gets no verification credit."""
+    sandbox = HookSandbox()
+    try:
+        event = {
+            "tool_name": "Bash",
+            "tool_input": {"command": "ls tasks/"},
+            "tool_response": {"is_error": False},
+        }
+        result = sandbox.run_hook("post_tool_trace.py", event)
+        assert result.returncode == 0, result.stderr
+        assert sandbox.trace_files() == ["_untagged.jsonl"], sandbox.trace_files()
+
+        trace_path = os.path.join(sandbox.trace_dir, "T047.jsonl")
+        assert not os.path.exists(trace_path)
+    finally:
+        sandbox.cleanup()
+
+
+def test_malformed_max_age_env_var_does_not_disable_attribution():
+    """T047 Stage 4 P1 regression guard.
+
+    `ACTIVE_TASK_MAX_AGE_S` is resolved at *import* time — one layer below
+    `resolve_task_id`'s never-raises contract. A bare `int(os.environ[...])`
+    raises `ValueError` on a non-numeric value, and because both callers wrap
+    `from task_context import ...` in `except Exception`, that would silently
+    disable attribution repo-wide — including the path-field precedence that
+    has nothing to do with this setting. Import must survive and fall back to
+    the default.
+
+    Runs as a real subprocess so the env var is present at genuine import
+    time; setting it inside this process would be too late, the module is
+    already imported.
+    """
+    root = _tempfile.mkdtemp(prefix="t047_maxage_")
+    try:
+        state_dir = os.path.join(root, ".claude", "hooks", ".state")
+        os.makedirs(state_dir)
+        with open(os.path.join(state_dir, "active_task"), "w") as f:
+            f.write(_fresh_state_content("T047"))
+
+        script = (
+            "import sys; sys.path.insert(0, %r)\n"
+            "import task_context\n"
+            "print(task_context.ACTIVE_TASK_MAX_AGE_S)\n"
+            "print(task_context.resolve_task_id({'tool_name': 'Bash', "
+            "'tool_input': {'command': 'python3 -m pytest -q'}}))\n"
+        ) % os.path.join(HOOKS_DIR, "lib")
+
+        for bad_value in ("6h", "", "not-a-number", "-1", "0"):
+            env = dict(os.environ)
+            env.pop("CLAUDE_ACTIVE_TASK", None)
+            env["CLAUDE_PROJECT_DIR"] = root
+            env["CLAUDE_ACTIVE_TASK_STATE_MAX_AGE_S"] = bad_value
+
+            result = subprocess.run(
+                [sys.executable, "-c", script],
+                capture_output=True, text=True, env=env,
+            )
+            assert result.returncode == 0, (
+                f"import raised for {bad_value!r}: {result.stderr}"
+            )
+            lines = result.stdout.strip().splitlines()
+            assert lines[0] == "21600", (
+                f"{bad_value!r} should fall back to the default, got {lines[0]}"
+            )
+            assert lines[1] == "T047", (
+                f"attribution broke for {bad_value!r}: {lines[1]}"
+            )
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
 if __name__ == "__main__":
     tests = [obj for name, obj in list(globals().items()) if name.startswith("test_")]
     failures = 0
