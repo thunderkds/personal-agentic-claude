@@ -38,11 +38,23 @@ Precedence — first match wins:
      to absent rather than trusting it forever. There is no automated
      completion signal that clears it (see `post_agent_move_to_review.py`'s
      docstring for why); clearing is manual, same as the step-limit counters.
-     **Known limitation, not solved here:** every hook invocation resolves
-     this file off the *same* ``$CLAUDE_PROJECT_DIR``-relative path regardless
-     of which worktree's tool call triggered it (confirmed empirically —
-     see T047's report), so two tasks whose Bash calls are in flight at the
-     same time against the same checkout can race and mis-attribute each
+
+     **Path resolution (T047 Stage 4 fix — see `_resolve_root`).** The state
+     file's root is ``$CLAUDE_PROJECT_DIR`` when set, never ``__file__``
+     arithmetic alone. The harness always invokes hooks as
+     ``$CLAUDE_PROJECT_DIR/.claude/hooks/*.py`` (see `settings.json`) — the
+     *main checkout*, regardless of which worktree's cwd triggered the tool
+     call. A Stage-3 sub-agent's cwd is its own worktree, so a naive
+     ``__file__``-relative path written a level below (as the first cut of
+     this fix did) resolves to two *different* files: the agent writes
+     ``<worktree>/.claude/hooks/.state/active_task``, the live hook reads
+     ``<main-checkout>/.claude/hooks/.state/active_task``. Anchoring to
+     ``$CLAUDE_PROJECT_DIR`` closes that gap — both agent-side shell
+     redirects (`craft-spawn-prompt`'s instruction) and this module resolve
+     the same root the harness already uses for hook wiring itself.
+     **Known limitation, not solved here:** because the root is shared by
+     every worktree using the same checkout, two tasks whose Bash calls are
+     in flight at the same time can still race and mis-attribute each
      other's calls. Safe for the common case this task was scoped to fix (one
      task's verification run at a time); not a fix for true concurrent
      Stage 3 execution. Flagged to the Supervisor rather than solved here.
@@ -88,11 +100,39 @@ TASK_ID_DECLARATION_PATTERN = re.compile(
 
 _LIB_DIR = os.path.dirname(os.path.abspath(__file__))
 _HOOKS_DIR = os.path.dirname(_LIB_DIR)
-_ROOT = os.path.dirname(os.path.dirname(_HOOKS_DIR))
+_FILE_ROOT = os.path.dirname(os.path.dirname(_HOOKS_DIR))
+
+
+def _resolve_root():
+    """Where the active-task state file lives. Prefer $CLAUDE_PROJECT_DIR —
+    the harness sets it to the main checkout for every hook invocation
+    (settings.json already relies on it for every hook command), regardless
+    of which worktree's cwd triggered the tool call. Falling back to
+    __file__ arithmetic would silently resolve to whichever copy of this
+    module happens to execute (the worktree's, in a subprocess-sandboxed
+    test) — which is exactly the split that made the state file unreadable
+    by the real hook (T047 Stage 4 review): an agent's `mkdir -p
+    .claude/hooks/.state && ... > .claude/hooks/.state/active_task`, run
+    from a worktree cwd, wrote to `<worktree>/.claude/hooks/.state/`, while
+    the live hook — always invoked as `$CLAUDE_PROJECT_DIR/.claude/hooks/*.py`
+    — read `<main-checkout>/.claude/hooks/.state/`. Different files, so the
+    agent's own writes were invisible to the hook it was trying to satisfy.
+    Env var wins when set (even to a bogus/missing path — `os.path.join` and
+    a later `open()` failure both degrade to "file not found", handled by
+    `_task_id_from_state_file`'s own never-raises contract); otherwise fall
+    back to __file__ arithmetic so the module still works when
+    $CLAUDE_PROJECT_DIR is unset (e.g. this module invoked directly in a
+    test or a checkout with no harness wrapping it)."""
+    env_root = os.environ.get("CLAUDE_PROJECT_DIR", "").strip()
+    return env_root if env_root else _FILE_ROOT
+
 
 # Structural, writable-from-a-Bash-tool-call channel (T047). See module
 # docstring, precedence slot 2, for why this exists and its known limits.
-STATE_DIR = os.path.join(_ROOT, ".claude", "hooks", ".state")
+# Resolved once at import time — matches every other module-level constant
+# here (PATH_FIELDS, the compiled patterns); see resolve_task_id's
+# never-raises contract for what happens if the resolved path is bogus.
+STATE_DIR = os.path.join(_resolve_root(), ".claude", "hooks", ".state")
 ACTIVE_TASK_FILE = os.path.join(STATE_DIR, "active_task")
 ACTIVE_TASK_MAX_AGE_S = int(
     os.environ.get("CLAUDE_ACTIVE_TASK_STATE_MAX_AGE_S", "21600")  # 6h

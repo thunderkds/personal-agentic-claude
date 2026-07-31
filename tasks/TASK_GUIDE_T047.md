@@ -153,29 +153,35 @@ python3 -m pytest .claude/hooks/tests/ -q && bash scripts/smoke-install.sh
 > Deliberately written **without** a `CLAUDE_ACTIVE_TASK=` prefix — prefixing it is the thing that
 > does not work, and this guide must not repeat T044's mistake of documenting an inert mechanism.
 >
-> **T047 landed.** The correct invocation, when a trace record filed under this task is required
+> **T047 landed** (with a Stage 4 fix: the state-file path must be an **absolute path to the main
+> checkout**, not a bare relative path or `$CLAUDE_PROJECT_DIR` — that var is real inside a hook's own
+> spawned process but empty inside a `Bash` tool call's own shell, confirmed empirically; a relative
+> path resolves against your cwd, which for a worktree agent is the worktree, not the checkout the
+> live hook reads). The correct invocation, when a trace record filed under this task is required
 > (i.e. running the command above as evidence toward the merge gate), is to write the active-task
-> state file first, then run the command exactly as shown above — unprefixed:
+> state file first, using the real absolute path of the main checkout, then run the command exactly
+> as shown above — unprefixed:
 >
 > ```bash
-> mkdir -p .claude/hooks/.state && printf '%s\n%s\n' "T047" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > .claude/hooks/.state/active_task
+> MAIN_CHECKOUT="/absolute/path/to/main/checkout"   # substitute the real path; do not use a variable
+> mkdir -p "$MAIN_CHECKOUT/.claude/hooks/.state" && printf '%s\n%s\n' "T047" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$MAIN_CHECKOUT/.claude/hooks/.state/active_task"
 > python3 -m pytest .claude/hooks/tests/ -q && bash scripts/smoke-install.sh
 > ```
 >
-> See `.claude/hooks/lib/task_context.py` (precedence slot 2) and `craft-spawn-prompt`'s Element 6
-> for why. `CLAUDE_ACTIVE_TASK=Txxx` still works, but only when set in the process that launches the
-> whole session — never inside a `Bash` tool call.
+> See `.claude/hooks/lib/task_context.py` (precedence slot 2, `_resolve_root`) and
+> `craft-spawn-prompt`'s Element 6 for why. `CLAUDE_ACTIVE_TASK=Txxx` still works, but only when set
+> in the process that launches the whole session — never inside a `Bash` tool call.
 
 ### Evidence (filled by reviewer at Stage 4/5)
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | [AC4, AC5, AC8, AC9 — **each mutation observed RED**] |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [must literally state "pass" or "fail" in this Notes column] |
-| Review scope bounded to the change's blast radius | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | [`scripts/smoke-install.sh`] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ✅ pass | `.claude/hooks/tests/test_task_context.py` — 16 new tests added for T047 (8 unit-level `StateFileOverride` cases, 2 real-subprocess end-to-end cases, 1 `_load_merge_gate_module`/gate-integration case, plus the Stage-4 P1 regression guard `test_state_file_resolves_off_claude_project_dir_not_the_executing_copy`). `python3 -m pytest .claude/hooks/tests/ -q` → `120 passed in ~1.1s` (was 109 pre-T047). |
+| Verification command run | ✅ pass | `python3 -m pytest .claude/hooks/tests/ -q && bash scripts/smoke-install.sh` → `120 passed in 1.07s` then `smoke-install.sh: PASS`, run from inside the T047 worktree with the corrected (absolute-path) state-file instruction. |
+| Negative cases hold | ✅ pass | AC4/AC5/AC8/AC9 covered by pre-existing suite (unchanged, still green) plus new negative controls `test_missing_state_file_falls_through_to_next_slot`, `test_malformed_state_file_content_is_ignored_not_trusted`, `test_stale_state_file_is_rejected`, `test_state_file_corrupt_timestamp_degrades_to_absent`. **Mutation-tested, each observed RED then reverted**: (1) disabling the staleness check → `test_stale_state_file_is_rejected` FAILED (`assert 'T047' is None`); (2) removing task-id format validation → `test_malformed_state_file_content_is_ignored_not_trusted` FAILED; (3) reordering precedence so the state file beat env → `test_env_var_still_wins_over_state_file` FAILED; (4) **Stage-4 P1 fix** — reverting `_resolve_root()` to always fall back to `__file__` arithmetic (the original defect) → `test_state_file_resolves_off_claude_project_dir_not_the_executing_copy` FAILED (`stdout='None'`, expected `'T047'`). All four reverted; suite back to 120 passed each time. |
+| verify | ✅ pass | Real end-to-end run **within the worktree's own root** (agent write path and hook read path shared a single directory tree in this manual check — see caveat below): wrote `.claude/hooks/.state/active_task` with a plain shell redirect (no `CLAUDE_ACTIVE_TASK` anywhere), piped a real `Bash` event with no env prefix into the real `post_tool_trace.py`, got `memory/event-trace/T900.jsonl` (not `_untagged.jsonl`), and the real `pre_bash_block_unsafe_merge.py:trace_shows_verification("T900")` returned `True`. **This validated the state-file mechanism only within one shared root — it did not, by itself, cross the worktree→main-checkout boundary the live hook actually crosses; that boundary is what the Stage-4 P1 fix (`_resolve_root` reading `$CLAUDE_PROJECT_DIR`) addresses, and it is covered separately by the new regression test above** (`test_state_file_resolves_off_claude_project_dir_not_the_executing_copy`, run as a real subprocess against a genuinely different `__file__`-directory and `$CLAUDE_PROJECT_DIR`, not a shared-root shape). |
+| Review scope bounded to the change's blast radius | ✅ pass | Diff touches only `.claude/hooks/lib/task_context.py`, `.claude/hooks/tests/test_task_context.py`, `.claude/skills/craft-spawn-prompt/SKILL.md`, `tasks/TASK_GUIDE_T047.md`. `git diff --stat -- .claude/hooks/pre_bash_block_unsafe_merge.py .claude/hooks/pre_agent_validate_guide.py` is empty (AC9 held). |
+| Full smoke suite still green (no regression) | ✅ pass | `bash scripts/smoke-install.sh` → `smoke-install.sh: PASS`, all artifact checks `[ok]`. |
 | **UI: Visual regression** | ☐ N/A | Python hooks, no UI component |
 | **UI: Design-system compliance** | ☐ N/A | Python hooks, no UI component |
 | **UI: Responsiveness** | ☐ N/A | Python hooks, no UI component |

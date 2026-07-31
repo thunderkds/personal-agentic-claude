@@ -721,6 +721,76 @@ def test_end_to_end_bash_test_run_via_state_file_is_traced_and_verifies():
         sandbox.cleanup()
 
 
+def test_state_file_resolves_off_claude_project_dir_not_the_executing_copy():
+    """T047 Stage 4 P1 regression guard.
+
+    The original fix resolved STATE_DIR off `__file__` arithmetic alone —
+    correct only because, in production, the harness always execs the hook
+    at exactly `$CLAUDE_PROJECT_DIR/.claude/hooks/*.py` (see settings.json),
+    so `__file__` and `$CLAUDE_PROJECT_DIR` always happened to coincide. A
+    Stage-3 sub-agent's cwd is its own *worktree*, and the corrected
+    craft-spawn-prompt instruction writes the state file to an absolute
+    path under the *main checkout* — a genuinely different directory from
+    wherever `task_context.py`'s own `__file__` happens to sit if a copy is
+    ever invoked from elsewhere (e.g. a worktree's own hook copy, run
+    directly, or any subprocess context where `__file__` and
+    `$CLAUDE_PROJECT_DIR` diverge). A test where both roots are the same
+    directory (the original `HookSandbox` shape) cannot distinguish 'reads
+    off $CLAUDE_PROJECT_DIR' from 'reads off __file__' — this test makes
+    them two genuinely different directories so only the fixed code passes.
+
+    Runs `task_context.py` itself as a subprocess (not through
+    `post_tool_trace.py`, whose own `TRACE_DIR` is a separate, unrelated
+    __file__-anchored constant this task did not touch) so it isolates
+    exactly the STATE_DIR resolution this Stage-4 fix changed.
+    """
+    executing_copy_dir = _tempfile.mkdtemp(prefix="t047_executing_copy_")
+    main_checkout_root = _tempfile.mkdtemp(prefix="t047_main_checkout_")
+    try:
+        assert executing_copy_dir != main_checkout_root
+
+        # task_context.py physically lives 3 dirs below its own __file__'s
+        # notion of ROOT: <root>/.claude/hooks/lib/task_context.py
+        copy_lib_dir = os.path.join(executing_copy_dir, ".claude", "hooks", "lib")
+        os.makedirs(copy_lib_dir)
+        shutil.copy(LIB_PATH, os.path.join(copy_lib_dir, "task_context.py"))
+
+        # The state file exists only under main_checkout_root — where the
+        # corrected craft-spawn-prompt instruction actually writes it.
+        main_state_dir = os.path.join(main_checkout_root, ".claude", "hooks", ".state")
+        os.makedirs(main_state_dir)
+        with open(os.path.join(main_state_dir, "active_task"), "w") as f:
+            f.write(_fresh_state_content("T047"))
+
+        script = (
+            "import sys; sys.path.insert(0, %r)\n"
+            "import task_context\n"
+            "print(task_context.resolve_task_id({'tool_name': 'Bash', "
+            "'tool_input': {'command': 'python3 -m pytest -q'}}))\n"
+        ) % copy_lib_dir
+
+        env = dict(os.environ)
+        env.pop("CLAUDE_ACTIVE_TASK", None)
+        env["CLAUDE_PROJECT_DIR"] = main_checkout_root
+
+        result = subprocess.run(
+            [sys.executable, "-c", script],
+            cwd=executing_copy_dir,  # a third, unrelated cwd — not the answer either
+            env=env,
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0, result.stderr
+        assert result.stdout.strip() == "T047", (
+            "resolve_task_id must read the state file from $CLAUDE_PROJECT_DIR "
+            f"(main_checkout_root), not from __file__'s own directory. "
+            f"stdout={result.stdout!r} stderr={result.stderr!r}"
+        )
+    finally:
+        shutil.rmtree(executing_copy_dir, ignore_errors=True)
+        shutil.rmtree(main_checkout_root, ignore_errors=True)
+
+
 def test_end_to_end_no_state_file_and_no_test_run_stays_untagged_and_fails_gate():
     """AC4 negative: a task with no state file set and no qualifying record
     still gets no verification credit."""
