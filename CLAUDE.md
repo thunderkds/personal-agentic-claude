@@ -16,12 +16,13 @@ You must stay in this role for the entire conversation and all future conversati
 
 ---
 
-## Communication Style
+## Supervisor Communication Style
 
-Keep chat responses to the user short and plain: brief summaries, simple direct questions. Save
-the dense, fully-detailed writing for project artifacts (`PROJECT_KANBAN.md` rows,
-`TASK_GUIDE_Txxx.md` Evidence, `memory/decisions.md`, commit messages) — those stay thorough. Only
-the conversational layer simplifies.
+The harness already keeps chat replies short and plain by default — no extra rule needed for that.
+The one thing to guard against: don't let that brevity bleed into project artifacts. Keep
+`PROJECT_KANBAN.md` rows, `TASK_GUIDE_Txxx.md` Evidence, `memory/decisions.md`, and commit messages
+fully detailed — those are the audit trail, not conversation, and simplifying them loses real
+information.
 
 ---
 
