@@ -1,6 +1,6 @@
 ---
-name: context-check
-description: Dual-triggered self-assessment of session context health — invoked automatically by the Supervisor when it notices signs of overwhelm (losing track of an earlier decision, repeated same-kind corrections, a very long session), or manually by the user via /context-check at any time. Reports a plain verdict and, if compaction is warranted, which mechanism it needs — /compact (live conversation) or compact-memory (cold memory files) — never both conflated.
+name: compact-advisor
+description: Dual-triggered self-assessment of session context health — invoked automatically by the Supervisor when it notices signs of overwhelm (losing track of an earlier decision, repeated same-kind corrections, a very long session), or manually by the user via /compact-advisor at any time. Reports a plain verdict and, if compaction is warranted, which mechanism it needs — /compact (live conversation) or compact-memory (cold memory files) — never both conflated.
 ---
 
 ## Role: Context Health Self-Assessor
@@ -30,7 +30,7 @@ form the user can invoke directly instead of waiting for you to notice.
 - **Automatic**: you invoked this yourself because you noticed one of the signs in `CLAUDE.md`'s
   self-monitoring rule. Name which sign, concretely (e.g. "I had to re-read an earlier decision I
   should have already had in hand" — not just "context feels long").
-- **Manual**: the user ran `/context-check`. No sign is assumed — assess fresh, and it's fine to
+- **Manual**: the user ran `/compact-advisor`. No sign is assumed — assess fresh, and it's fine to
   conclude "looks fine, no action needed."
 
 #### 2. Assess — Two Separate Questions
@@ -67,4 +67,4 @@ Never run either compaction yourself — state the recommendation and let the us
 - **Default Notification** (automatic trigger): use CLAUDE.md's exact phrasing — "I'm noticing this
   session's context is getting large / harder to track — want me to compact before continuing?" —
   followed by the one concrete sign from Step 1 that triggered it. Do not invent a variant wording.
-- **Default Notification** (manual trigger): "context-check: [verdict] — [one-line reason]."
+- **Default Notification** (manual trigger): "compact-advisor: [verdict] — [one-line reason]."

@@ -360,7 +360,7 @@ All skills live in `.claude/skills/<name>/SKILL.md` and are auto-discovered by C
 | `wake` | **Mandatory first action every session**: reads git log, KANBAN, MEMORY.md, and active LRs; emits ≤50-line briefing. Also `/wake` for a live snapshot mid-session. |
 | `map-codebase` | Stage 1 setup (and after major refactors): generate `memory/codebase-map.md` — directory tree, entry points, blast-radius hotspots. |
 | `compact-memory` | On-demand: compact and prune the two-tier memory system when cold files are bloated or stale. Human-invoked, Supervisor executes. |
-| `context-check` | Dual-triggered: Supervisor invokes it on noticing signs of context overwhelm (losing track of a decision, repeated corrections, long session), or run `/context-check` any time. Reports a plain verdict and, if warranted, whether `/compact` (live conversation) or `compact-memory` (cold files) is the fit — never both blended. |
+| `compact-advisor` | Dual-triggered: Supervisor invokes it on noticing signs of context overwhelm (losing track of a decision, repeated corrections, long session), or run `/compact-advisor` any time. Reports a plain verdict and, if warranted, whether `/compact` (live conversation) or `compact-memory` (cold files) is the fit — never both blended. |
 | `diagnose` | Stage 3 when something is broken/failing: disciplined reproduce → minimise → hypothesise → instrument → fix → regression-test loop. |
 | `teach` | Auto-fires when user asks to write/create a new skill: consults `write-better-skill` and emits a ready-to-save SKILL.md draft. |
 | `write-better-skill` | Craft reference for writing skills in this framework — invocation choice, leading words, completion criteria, failure modes. Consulted by `teach`; also audits existing skills. |
