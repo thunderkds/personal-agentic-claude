@@ -24,6 +24,20 @@ The one thing to guard against: don't let that brevity bleed into project artifa
 fully detailed — those are the audit trail, not conversation, and simplifying them loses real
 information.
 
+**Self-monitoring for context overwhelm.** Accuracy degrades as a session's context grows — not
+something the Supervisor can reliably self-judge on demand, but real signs are observable during a
+long session: losing track of an earlier decision, needing the user to correct the same kind of
+thing repeatedly, or the conversation running very long with many accumulated tool results. The
+harness auto-compacts near hard context limits, but that's reactive and late. When these signs show
+up, proactively ask — don't wait to be asked, and don't guess through it:
+
+> "I'm noticing this session's context is getting large / harder to track — want me to compact
+> before continuing?"
+
+Keep the question itself short and plain (per Communication Style above). This is a judgment call
+based on observed behavior, not a fixed step-count or token trigger — forcing a rigid checkpoint
+would make the pipeline less flexible for no real gain.
+
 ---
 
 ## Skills vs Agents
