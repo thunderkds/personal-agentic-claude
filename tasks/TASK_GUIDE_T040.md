@@ -119,15 +119,49 @@ bash scripts/token-audit.sh && \
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | [AC5 idempotency, AC6 no synthetic counts, AC7 old file intact, AC8 not gitignored] |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [must literally state "pass" or "fail" in this Notes column] |
-| Review scope bounded to the change's blast radius | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | [`scripts/smoke-install.sh`] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | pass | `.claude/hooks/tests/test_token_audit_generator.py` — 10 tests covering AC1-AC8. `python3 -m pytest .claude/hooks/tests/test_token_audit_generator.py -q` → `10 passed in 0.02s` |
+| Verification command run | pass | `bash scripts/token-audit.sh && git check-ignore -q reports/token-audit_2026-07-21.md && echo "IGNORED (AC8 FAIL)" \|\| echo "tracked (AC8 pass)"` → `token-audit: no trace data found at .../memory/event-trace — writing an empty-window report and exiting 0` / `token-audit: wrote 0 entries to .../reports/token-audit_2026-07-21.md` / `tracked (AC8 pass)` (repo has no real `memory/event-trace/` yet — that directory is itself gitignored working state, so 0 entries on this checkout is expected, not a bug; the generator logic that turns real trace records into entries is exercised by the fixture tests) |
+| Negative cases hold | pass | AC5 idempotency: `test_generator_is_idempotent` (byte-identical on 2nd run); AC6 no synthetic token counts: `test_no_token_counts_ever_appear_in_output`; AC7 old file intact/closed-inconclusive: `test_old_window_file_intact_and_closed_inconclusive`; AC8 not gitignored: `test_real_report_generation_and_gitignore` — all pass |
+| verify | pass | Ran `bash scripts/token-audit.sh` directly against the real repo tree; report regenerated with correct DDR-0001 header and 0 entries (no trace data present in this checkout); re-ran a second time — byte-identical output confirmed manually with `diff` |
+| Review scope bounded to the change's blast radius | pass | New, additive files only (`scripts/token_audit.py`, `scripts/token-audit.sh`, 1 new test file, 1 new report file); `.claude/hooks/post_tool_trace.py` read-only (not modified, per Files Must NOT Touch); reviewed the 3 new/changed files plus the existing `reports/token-audit_2026-07-17.md` for the AC7 intact-check, not the wider repo |
+| Full smoke suite still green (no regression) | pass | `bash scripts/smoke-install.sh` → `smoke-install.sh: PASS` |
 | **UI: Visual regression** | ☐ N/A | Script + markdown, no UI component |
 | **UI: Design-system compliance** | ☐ N/A | Script + markdown, no UI component |
 | **UI: Responsiveness** | ☐ N/A | Script + markdown, no UI component |
+
+**Manual code-review (no `Skill` tool available to a sub-agent)**: PASS, 0 findings. Generator is
+pure-function-testable (`build_entries`/`render_report`/`generate_report` take explicit
+`trace_dir`/`report_path` args, no hidden global mutation), overwrite-not-append gives idempotency
+by construction, `.claude/hooks/post_tool_trace.py` left untouched as required.
+
+**Manual security-review (Risk=Medium, mandatory)**: PASS, 0 findings. No subprocess/exec, no
+network I/O, no secrets; only file reads under `memory/event-trace/` (repo-local) and a file write
+under `reports/` (repo-local, already the tracked exception in `.gitignore`). Env-var override
+(`TOKEN_AUDIT_TRACE_DIR`/`TOKEN_AUDIT_REPORT_PATH`) only changes *which local path* is read/written,
+never what commands run.
+
+**`sh -n` + real run substitution for shellcheck** (`memory/learnings.md` — no shellcheck in this
+environment): `sh -n scripts/token-audit.sh` → clean, no output; `bash scripts/token-audit.sh` real
+run → `token-audit: wrote 0 entries to .../reports/token-audit_2026-07-21.md` (see verify row).
+
+**Mutation control** (`classify_event`'s `"Agent" -> "spawn"` branch mutated to return `None`,
+confirmed RED, then restored):
+```
+FAILED .claude/hooks/tests/test_token_audit_generator.py::test_fixture_trace_produces_spawn_cold_start_and_overhead_entries
+FAILED .claude/hooks/tests/test_token_audit_generator.py::test_malformed_jsonl_line_is_skipped_not_crashed
+FAILED .claude/hooks/tests/test_token_audit_generator.py::test_model_tier_extracted_when_present_else_question_mark
+3 failed, 7 passed in 0.04s
+```
+After restoring: `10 passed in 0.03s`.
+
+**Deviation from the guide's literal "New Real entries split" assumption**: the guide's Files to
+Change table listed `reports/token-audit_2026-07-17.md` as something this task must edit
+(prepend the closed-inconclusive header). Inspecting the file at task start showed that header was
+**already present** — it was written by a prior Stage 2 planning commit
+(`629d4e2 docs: Stage 2 planning for T039-T042 + DDR-0001 Amendment 1`), ahead of this task's actual
+implementation. AC7 only requires the file be left intact with that header present, which it already
+was, so no further edit was made to it (Surgical Changes — do not touch a file that already meets
+its acceptance criterion). Reported to the Supervisor below.
 
 ---
 
