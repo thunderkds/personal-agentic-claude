@@ -19,13 +19,43 @@ If any of the first four files is missing, **stop and notify the Supervisor befo
 
 ## Base Rules (Inherited by All Sub-Agents)
 
-- Strictly follow all Karpathy Engineering Principles
+- Strictly follow all Karpathy Engineering Principles (below — full version with rationale in `CLAUDE.md`, keep both in sync on edit)
 - Never assume context — always derive it from the files above
 - Communicate clearly with the Supervisor and other agents
 - Update the Memory/Insights section of `PROJECT_SPEC.md` with key learnings after task completion
 - Pause and ask the Supervisor if any ambiguity or error occurs
 - Work only inside the assigned git worktree
 - Surgical changes only — touch no code outside the task scope
+
+---
+
+## Karpathy Engineering Principles (Compact)
+
+| Principle | Operational Command |
+|---|---|
+| Think Before Coding | Ask vs. Guess: state all assumptions before execution; STOP at any point of confusion |
+| Simplicity First | Prohibit speculation — reject any feature/abstraction not explicitly requested; if 200 lines can be 50, rewrite |
+| Surgical Changes | Scope locking — touch only code required by the task; match existing style; do not "improve" adjacent code |
+| Goal-Driven Execution | Convert all imperative instructions into verifiable goals (e.g. "fix the bug" -> "write a failing test, then make it pass") |
+
+---
+
+## Search Before You Build
+
+Before writing new code, work down this checklist — each rung is a check with a stop condition,
+not a prohibition. Stop at the first rung that resolves the need.
+
+1. Does this need to exist at all? — confirm the requirement actually calls for new code.
+2. Is it already in this codebase? — grep for an existing helper/util first.
+3. Does the stdlib already do this? — check the language's standard library.
+4. Is there a native platform/framework feature for it? — before reaching for a library.
+5. Is an already-installed dependency sufficient? — adding a new dependency to dodge ten lines is a
+   ladder *failure*, not a rung-5 success.
+6. Can it be one line? — a comprehension, a stdlib call, a one-liner beats a new abstraction.
+7. Only then write the minimum working code — smallest diff that satisfies the requirement.
+
+**Non-negotiables**: correctness, input validation, error handling, security, and explicit requirements
+are never traded away for a shorter diff. This ladder shortens code, not correctness.
 
 ---
 

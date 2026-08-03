@@ -209,7 +209,10 @@ def main():
         sys.exit(0)
 
     def tasks_in_section(section_title):
-        m = re.search(rf"### {re.escape(section_title)}\n(.*?)(?=###|\Z)", kanban, re.DOTALL)
+        m = re.search(
+            rf"### {re.escape(section_title)}\n(.*?)(?=^###|\Z)", kanban,
+            re.DOTALL | re.MULTILINE,
+        )
         if not m:
             return []
         block = m.group(1).strip()

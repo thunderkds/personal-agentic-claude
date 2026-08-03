@@ -124,15 +124,40 @@ CLAUDE_ACTIVE_TASK=T045 python3 -m pytest .claude/hooks/tests/ -q && bash script
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | [AC2 and AC3 **observed RED before the fix**, AC6, AC7] |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [must literally state "pass" or "fail" in this Notes column] |
-| Review scope bounded to the change's blast radius | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | [`scripts/smoke-install.sh`] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | pass | `.claude/hooks/tests/test_kanban_section_parsing.py` — 8 tests covering AC2-AC7. Ran alone: `python3 -m pytest .claude/hooks/tests/test_kanban_section_parsing.py -q` → `8 passed in 0.04s` |
+| Verification command run | pass | `CLAUDE_ACTIVE_TASK=T045 python3 -m pytest .claude/hooks/tests/ -q && bash scripts/smoke-install.sh` → pytest: `139 passed in 1.25s` (T043's 60+ pre-existing tests included, no regression); smoke-install: `smoke-install.sh: PASS` |
+| Negative cases hold | pass | AC2/AC3 **observed RED before the fix** (see mutation-control row below — same reproduction); AC6 (empty/missing/malformed board) — `test_find_kanban_section_missing_file`, `test_find_kanban_section_empty_file` pass |
+| verify | pass | Manually re-ran `find_kanban_section` against the real live `PROJECT_KANBAN.md` — every Done task (`test_find_kanban_section_on_real_current_board`) resolves correctly; board today has no inline `###` so this is a non-regression check, not a reproduction |
+| Review scope bounded to the change's blast radius | pass | Diff is 2 files, 6 lines total (both hooks' `find_kanban_section`/`tasks_in_section` regex only); reviewed both hooks in full plus their existing test suites (139 tests) for regression, not the wider repo |
+| Full smoke suite still green (no regression) | pass | `bash scripts/smoke-install.sh` → `smoke-install.sh: PASS` (all 15 asserted artifacts ok) |
 | **UI: Visual regression** | ☐ N/A | Python hooks, no UI component |
 | **UI: Design-system compliance** | ☐ N/A | Python hooks, no UI component |
 | **UI: Responsiveness** | ☐ N/A | Python hooks, no UI component |
+
+**Manual code-review (no `Skill` tool available to a sub-agent)**: PASS, 0 findings. 2-file, 6-line
+diff, purely additive regex flags on an existing call site; no control-flow change, fail-open
+try/except blocks untouched, both call sites now share the identical anchored pattern.
+
+**Manual security-review (Risk=Medium, mandatory)**: PASS, 0 findings. No new external input, no
+subprocess/exec, no secrets; change is confined to local-file regex parsing.
+
+**RED before fix** (fixture reproduction, run against the pre-fix hooks):
+```
+FAILED .claude/hooks/tests/test_kanban_section_parsing.py::test_find_kanban_section_survives_inline_hash_quote
+FAILED .claude/hooks/tests/test_kanban_section_parsing.py::test_find_kanban_section_survives_various_inline_hash_counts
+FAILED .claude/hooks/tests/test_kanban_section_parsing.py::test_tasks_in_section_on_real_pre_bash_block_unsafe_merge_module
+3 failed, 5 passed in 0.05s
+```
+
+**Mutation control** (fix reverted to the original unanchored `(?=###|\Z)` pattern in both hooks,
+confirmed RED, then restored):
+```
+FAILED .claude/hooks/tests/test_kanban_section_parsing.py::test_find_kanban_section_survives_inline_hash_quote
+FAILED .claude/hooks/tests/test_kanban_section_parsing.py::test_find_kanban_section_survives_various_inline_hash_counts
+FAILED .claude/hooks/tests/test_kanban_section_parsing.py::test_tasks_in_section_on_real_pre_bash_block_unsafe_merge_module
+3 failed, 5 passed in 0.04s
+```
+After restoring the fix: `8 passed in 0.03s`.
 
 ---
 

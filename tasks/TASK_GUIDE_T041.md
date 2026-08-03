@@ -118,15 +118,80 @@ bash scripts/test-agent-template.sh && \
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [required before Done — expect `scripts/test-agent-template.sh`] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | [AC5 + AC6 + AC7 + AC8, each with pasted output] |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [must literally state "pass" or "fail" in this Notes column] |
-| Review scope bounded to the change's blast radius | ☐ pass / ☐ fail | [hub file — inherited by all 4 agents] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | [`scripts/smoke-install.sh`] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | pass | `scripts/test-agent-template.sh` — content assertions for AC1-AC3, negative controls for AC5/AC6/AC7/AC8. `sh scripts/test-agent-template.sh` → 29 `PASS:` lines, `test-agent-template: all checks passed`, exit 0 |
+| Verification command run | pass | `bash scripts/test-agent-template.sh && echo "template lines: $(wc -l < .claude/agents/general-agent-template.md) (was 87, budget 132)"` → all checks passed, then `template lines: 117 (was 87, budget 132)` |
+| Negative cases hold | pass | AC5 (`CLAUDE.md` added to startup list) → `FAIL: AC5: ...cost guard violated`; AC6 (`ponytail` inserted) → `FAIL: AC6: the string 'ponytail' appears somewhere...`; AC7 (budget, verified at 117/132 — real growth 30 lines, within the 45-line cap, no separate mutation needed since it's a live measurement not a boolean flip); AC8 (`backend.md` touched) → `FAIL: AC8: backend.md differs from HEAD (checksum mismatch)`. All 4 pasted below the table under "Negative controls (full output)". |
+| verify | pass | Re-ran `sh scripts/test-agent-template.sh` standalone after all 4 negative controls were reverted — clean pass, exit 0, confirming the working tree is back to the intended state |
+| Review scope bounded to the change's blast radius | pass | Hub file — inherited by all 4 role guides (`backend.md`, `frontend.md`, `qa.md`, `common-infrastructure.md`); reviewed the template's full diff plus checksum-verified (AC8) that none of the 4 role guides changed, rather than re-reading each role guide's full content |
+| Full smoke suite still green (no regression) | pass | `bash scripts/smoke-install.sh` → `smoke-install.sh: PASS` |
 | **UI: Visual regression** | ☐ N/A | Docs-only task, no UI component |
 | **UI: Design-system compliance** | ☐ N/A | Docs-only task, no UI component |
 | **UI: Responsiveness** | ☐ N/A | Docs-only task, no UI component |
+
+**Manual code-review (no `Skill` tool available to a sub-agent)**: PASS, 0 findings. Additive-only
+diff to `general-agent-template.md` (new `## Karpathy Engineering Principles (Compact)` table + new
+`## Search Before You Build` section + a 1-line pointer edit to the existing bullet); frontmatter
+`name:`/`description:` untouched; no other section renumbered or reworded (Surgical Changes,
+confirmed by the AC8 checksum on the 4 role guides that inherit this file).
+
+**Manual security-review (Risk=Medium, mandatory — hub file inherited by all sub-agents)**: PASS, 0
+findings, as expected for a docs-only change. No code, no executable content, no secrets.
+
+**`sh -n` + real run substitution for shellcheck** (`memory/learnings.md` — no shellcheck in this
+environment): `sh -n scripts/test-agent-template.sh` → clean, no output; `sh scripts/test-agent-template.sh`
+real run → see Verification Command output above.
+
+**Negative controls (full output, each reverted immediately after)**:
+
+a. Deleted rung 4 (`Is there a native platform/framework feature for it?`):
+```
+PASS: AC2: ## Search Before You Build section present
+FAIL: AC2: expected exactly 7 numbered rungs, found 6
+PASS: AC2: rung 1 present
+PASS: AC2: rung 2 present
+PASS: AC2: rung 3 present
+FAIL: AC2: rung 4 missing
+PASS: AC2: rung 5 present
+PASS: AC2: rung 6 present
+PASS: AC2: rung 7 present
+test-agent-template: FAILED
+```
+
+b. Added `CLAUDE.md` to the Mandatory Startup Sequence read list:
+```
+FAIL: AC5: CLAUDE.md was added to the Mandatory Startup Sequence read list (cost guard violated)
+test-agent-template: FAILED
+```
+
+c. Inserted the word `ponytail` into the `## Search Before You Build` heading:
+```
+FAIL: AC2: expected exactly 7 numbered rungs, found 0
+FAIL: AC2: rung 1 missing
+FAIL: AC2: rung 2 missing
+FAIL: AC2: rung 3 missing
+FAIL: AC2: rung 4 missing
+FAIL: AC2: rung 5 missing
+FAIL: AC2: rung 6 missing
+FAIL: AC2: rung 7 missing
+FAIL: AC6: the string 'ponytail' appears somewhere in .claude/agents/**
+test-agent-template: FAILED
+```
+(AC2 also fails here as a side effect — the mutated heading no longer matches the exact awk anchor,
+which is itself evidence the test isn't matching loosely.)
+
+d. Appended a blank line to `backend.md`:
+```
+FAIL: AC8: backend.md differs from HEAD (checksum mismatch)
+test-agent-template: FAILED
+```
+
+All 4 reverted via `cp` from a pre-mutation backup immediately after capturing output; final state
+re-verified clean (see `verify` row above).
+
+**Deviation from the guide**: none. Implemented per the Approach section as written — compact
+Karpathy table (name + operational command only, no "Problem Addressed" column), all 7 ladder rungs
+in ponytail's original order, non-negotiables block, `ponytail:` source-comment convention rejected
+as directed. Net growth: 87 → 117 lines (+30), within the ≤45-line budget.
 
 ---
 
