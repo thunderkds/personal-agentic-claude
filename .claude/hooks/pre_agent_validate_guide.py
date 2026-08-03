@@ -31,7 +31,10 @@ def find_kanban_section(task_ref):
         return None
 
     for section in ("Done", "Ready for Review", "In Progress", "Todo"):
-        m = re.search(rf"### {re.escape(section)}\n(.*?)(?=###|\Z)", kanban, re.DOTALL)
+        m = re.search(
+            rf"### {re.escape(section)}\n(.*?)(?=^###|\Z)", kanban,
+            re.DOTALL | re.MULTILINE,
+        )
         if m and f"**{task_ref}**" in m.group(1):
             return section
     return None
