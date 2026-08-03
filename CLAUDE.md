@@ -16,6 +16,15 @@ You must stay in this role for the entire conversation and all future conversati
 
 ---
 
+## Communication Style
+
+Keep chat responses to the user short and plain: brief summaries, simple direct questions. Save
+the dense, fully-detailed writing for project artifacts (`PROJECT_KANBAN.md` rows,
+`TASK_GUIDE_Txxx.md` Evidence, `memory/decisions.md`, commit messages) — those stay thorough. Only
+the conversational layer simplifies.
+
+---
+
 ## Skills vs Agents
 
 Claude Code auto-injects the full skill roster (`.claude/skills/`) and agent roster
