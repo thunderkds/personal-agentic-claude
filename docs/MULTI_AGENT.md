@@ -97,20 +97,17 @@ output. Pause and ask if intent is unclear."
 
 ---
 
-## Optional: a shared `AGENTS.md`
+## Shared `AGENTS.md`
 
-`AGENTS.md` is an emerging cross-tool convention (read by Codex, and increasingly others). If you
-want non-Claude implementers to inherit the base rules automatically, create a root `AGENTS.md`
-that mirrors the essentials from `.claude/agents/general-agent-template.md`:
+`AGENTS.md` is an emerging cross-tool convention (read by Codex, and increasingly others). A root
+`AGENTS.md` already exists in this repo, mirroring the essentials from
+`.claude/agents/general-agent-template.md` so non-Claude implementers (Codex, etc.) inherit the base
+rules automatically without the dispatch prompt needing to repeat them.
 
-- Read `PROJECT_SPEC.md`, your `tasks/TASK_GUIDE_Txxx.md`, and the base rules before any work.
-- Work only inside the assigned worktree; touch only the predicted files (Surgical Changes).
-- Build test-first; a task is done only when its verification command passes.
-- Stop and ask on any ambiguity — never guess.
-
-This is **not required** for the dispatch recipes above (the prompt already points at the guides) —
+It is **not required** for the dispatch recipes above (the prompt already points at the guides) —
 it just removes repetition and gives Cursor/Codex a default to fall back on. Keep it a thin mirror,
 not a second source of truth; `CLAUDE.md` + `.claude/agents/` remain canonical for the supervisor.
+`.claude/agents/general-agent-template.md` carries a staleness-guard note pointing back at it.
 
 ---
 
