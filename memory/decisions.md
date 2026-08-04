@@ -331,3 +331,268 @@ Kanban → Ready for Review → Done *before* the integration step (the gate rej
 **Files**: .claude/hooks/post_agent_move_to_review.py, pre_bash_block_unsafe_merge.py,
 tests/test_merge_gate_evidence.py (new, 29), tests/test_move_to_review.py (new, 11),
 .claude/skills/craft-spawn-prompt/SKILL.md
+
+## Stage 2 planning: T047 — repair trace attribution's channel (2026-07-31)
+
+**Decision**: Plan the AC7 defect as its own P0 task rather than patching it inside T044's already-merged
+work. T044's *logic* (structural precedence, boundary-anchored runner matching) is correct and reviewed;
+what failed is the **channel** — `CLAUDE_ACTIVE_TASK` is read from the hook process's `os.environ`, and a
+hook is spawned by the harness as a sibling of the tool call, so an `export` inside a Bash tool call can
+never reach it. Separating channel from logic keeps T044's reviewed matching untouched (T047 AC9) and
+makes the regression guard explicit (T047 AC5 re-runs the two real `T043.jsonl` records).
+
+**Deliberately left open for the implementing agent**: which channel to use. Three candidates recorded in
+the guide (state file under `.claude/hooks/.state/`, `settings.json` env injection, cwd/worktree-derived)
+with trade-offs — works-from-a-tool-call, stays structural, staleness risk, machinery cost — and none
+pre-selected. This follows the Ambiguity Protocol's requirement-vs-implementation split: the user-facing
+requirement ("honest tasks must not be blocked") is fixed; the mechanism is an implementation decision
+that belongs to the task. "No channel can carry per-task identity" is sanctioned as a valid documented
+outcome, mirroring T044's AC3 conclusion about the completion signal.
+
+**Two guide-authoring choices worth keeping**: (1) T047's Verification Command is written *without* a
+`CLAUDE_ACTIVE_TASK=` prefix, with a note saying why — copying T044's prefix would have propagated the
+inert mechanism into the guide meant to fix it; (2) the Test Plan mandates a real end-to-end run, because
+T044's suite is green while patching `os.environ`, which never crosses the process boundary where the
+defect lives.
+
+**Knock-on**: T040 re-blocked on T047 (it would build the DDR-0001 replacement token-audit window on
+records that are silently all `_untagged`), so T030 stays blocked behind it. DDR-0001's second measurement
+window cannot open until T047 lands.
+
+## T047 Stage 4 closed: active-task state file as the attribution channel (2026-07-31)
+
+**Decision**: trace attribution's per-task signal travels through `.claude/hooks/.state/active_task`
+(task ID + ISO-8601 UTC timestamp), slotted into `resolve_task_id`'s precedence directly after the env
+var, rejected when malformed, unreadable, or older than `CLAUDE_ACTIVE_TASK_STATE_MAX_AGE_S`
+(default 6h). The env-var slot is kept — it still works when set in the process that *launches* the
+session — but is documented as unreachable from inside a running one. `_resolve_root()` resolves the
+file off `$CLAUDE_PROJECT_DIR` when set, falling back to `__file__` arithmetic.
+
+**Why a state file** (agent's call, not pre-selected by the Supervisor): it is the only candidate
+writable from inside a tool call, it is structural rather than free-text (preserving T043's rule that
+a Bash `command` string is never scanned), and `.claude/hooks/.state/` was already proven infra from
+the step-limit counters. `settings.json` env injection was rejected as static; cwd-derived attribution
+was rejected because the Supervisor usually runs from `main`, not a worktree.
+
+**Open, deliberately not solved**: all worktrees share one physical `.state` root, so two tasks
+verifying at the same instant can race and mis-attribute each other's `Bash` calls. Safe for one-task-
+at-a-time verification (the case this task was scoped to fix); a real gap if genuinely concurrent
+Stage 3 verification is expected. Flagged by the agent, left as a Supervisor decision — candidate
+follow-up task.
+
+**Also open**: the guardrail chain has now produced four consecutive defects sitting one layer below
+the logic under review (see learnings.md). Candidate follow-up: a test that exercises the whole chain
+end-to-end through the real harness path, instead of patching seams individually.
+
+## T044 → T047 → T048 chain closed (2026-07-31)
+
+**Outcome**: the deterministic merge gate now has working evidence. Verified from `main` with the
+channel armed: `121 passed` + `smoke-install.sh: PASS`, a real `Bash` tool call attributed to
+`T048.jsonl`, `trace_shows_verification('T048') = True`, and `T999` (no trace) still `False` — so the
+gate accepts honest evidence and still fails closed on absent evidence. Both properties hold at the
+same time for the first time.
+
+**The chain**: T044 tightened the gate so only an *invoked* runner counts, and shipped AC7 to keep
+honest work passing — but AC7 was inert (env vars can't cross the harness→hook process boundary).
+T047 replaced the channel with a state file — but wrote it cwd-relative while the hook read it
+absolute, then resolved that and left a module-import parse below the never-raises contract. T048
+fixed the resulting test-isolation defect, where the suite was green only while the feature was
+unused.
+
+**The pattern worth remembering**: five consecutive defects in this subsystem sat one layer *below*
+the logic under review — the validator's input, the channel, the channel's path, the import-time
+parse, the test's ambient state. Every individual fix was correct. What repeatedly failed was the
+layer feeding the thing being reviewed. Three of the five were found only by running the real thing
+in the real place (Stage 5 verify from `main`) rather than re-trusting a green worktree run.
+
+**Candidate follow-up, not yet a task**: an end-to-end exercise of the whole guardrail chain through
+the real harness path, instead of continuing to patch seams individually. Also still open: the
+shared-`.state`-root race across concurrent worktrees (T047 entry).
+
+---
+
+### T045/T040/T041 batch (2026-08-03) — single-branch bundle, three disjoint-file tasks
+
+**Decision**: All three P1 Todo tasks were implemented in one worktree/branch
+(`feat/T045-T040-T041-batch`) by a single Common-Infrastructure-Agent spawn, then reviewed and
+pushed as one PR, rather than three separate worktrees/PRs. Justified because each task's "Files to
+Change" / "Files Must NOT Touch" tables were pre-verified disjoint at planning time — no file-level
+conflict risk. T045 fixed the same unanchored-`###`-lookahead defect class as T018/T022/T024/T042
+(6th occurrence) by anchoring `(?=^###|\Z)` + `re.MULTILINE` in both `find_kanban_section` and
+`tasks_in_section`. T040 replaced the DDR-0001 manual Token Audit Log convention (which collapsed
+after 1 of 7 sessions) with `scripts/token_audit.py`/`token-audit.sh`, a generator — not a new hook —
+deriving entries from existing `memory/event-trace/*.jsonl`; never synthesizes token counts, `?` for
+unknown model tier. T041 inlined the 4 Karpathy principles into `general-agent-template.md` (fixing
+the "commanded but never delivered" gap — `CLAUDE.md` deliberately excluded from spawn cost) and
+added the 7-rung `## Search Before You Build` ladder + non-negotiables block; file grew 87→117 lines
+(within 45-line budget).
+
+Second spawn attempt required: the first crashed because `isolation: "worktree"` was combined with a
+worktree the Supervisor had already created manually — the harness enforces one worktree per agent
+process and refuses to `cd` into a sibling one. Confirms the existing learning ("Don't combine
+isolation:'worktree' with a pre-made worktree") generalizes to background/async Agent() calls too,
+not just synchronous ones.
+
+Stage 4: all three code-review + security-review PASS 0 findings (security-review run manually by
+the Supervisor from the feature branch with `origin` configured — worked this time since the branch
+was actually checked out, unlike the T039/T042/T044 `origin/HEAD`-on-`main` false-clean cases). Full
+suite 139 passed + `test-agent-template.sh` + smoke-install all independently re-run by the
+Supervisor post-rebase before push. T030 (post-baseline token-refactor decision) stays blocked — its
+gate is 7 real sessions or 14 real days of data, which no code change or single session can produce;
+the window reopened 2026-08-03.
+
+---
+
+### CLAUDE.md gains a Supervisor Communication Style section (2026-08-03)
+
+**Decision**: User asked to simplify chat responses (short, plain summaries/questions). First
+attempt saved this as a machine-level `~/.claude/CLAUDE.md` preference — wrong scope, since that
+file only affects this user's machine, not the harness other repos install. Corrected: added a
+section directly to this repo's `CLAUDE.md` (right after the role intro), since `setup.sh` copies
+this exact file into every repo that installs the harness — this is the only way the rule
+propagates to *other* repos, not just this one.
+
+**Second pass, same day**: on user request to "investigate deeper" whether the addition was sound,
+found two problems and fixed both. (1) Naming collision risk: `## Communication Style` sat ~50 lines
+from the pre-existing `**Default Communication Protocol**` (sub-agent→Supervisor status-reporting
+format) — different audience, confusable heading. Renamed to `## Supervisor Communication Style` to
+make the audience explicit. (2) Redundancy: the harness's own system prompt already enforces short,
+plain chat replies by default — restating that in CLAUDE.md added nothing. Cut it down to the one
+rule that actually wasn't already covered: don't let that default brevity bleed into audit-trail
+artifacts (`PROJECT_KANBAN.md` rows, `TASK_GUIDE_Txxx.md` Evidence, `memory/decisions.md`, commit
+messages) — those must stay fully detailed.
+
+---
+
+### CLAUDE.md gains a context-overwhelm self-monitoring rule (2026-08-03)
+
+**Decision**: Brainstormed with the user (Standard tier) starting from "agents hallucinate more on
+long-context tasks." No concrete repro existed, so this couldn't follow the project's usual
+reproduce-first pattern. Converged through three questions: (1) ruled out a rigid step/token-count
+trigger — user pushed back that it would make the pipeline less flexible; (2) reframed scope — this
+is about the **Supervisor's own** long-session accuracy, not sub-agent context (which the Supervisor
+can't observe mid-flight anyway); (3) landed on judgment-based detection off observable session
+behavior (losing track of an earlier decision, repeated same-kind corrections, very long sessions)
+rather than asking the Supervisor to self-rate its own confusion, which is circular. Added right
+after `## Supervisor Communication Style` in `CLAUDE.md` — the question it asks when triggered is
+worded plainly per that same section. Deliberately does not duplicate the harness's own reactive
+auto-compact-near-limit behavior; this is meant to catch degradation earlier and proactively, by
+asking rather than waiting.
+
+---
+
+### New skill: compact-advisor (2026-08-03)
+
+**Decision**: Operationalized the context-overwhelm self-monitoring rule (added earlier this session
+to `CLAUDE.md`) as a concrete, dual-triggered skill rather than leaving it as free-floating prose.
+Explored via `brainstorming` (Standard tier) and sharpened via `grill-with-docs` — caught one real
+issue at the grill step: the draft's automatic-trigger notification invented a slightly different
+wording of the exact phrase CLAUDE.md already specifies, which is the same "restate instead of
+reuse" duplication `learn`'s materiality gate warns against; fixed to quote CLAUDE.md's phrasing
+directly. Deliberately does not call `/compact` or `compact-memory` itself — neither is
+programmatically invokable (confirmed via `ToolSearch`, same class as `/verify`) — it only assesses
+and names which mechanism fits, so the two concerns (live conversation vs. cold memory files) never
+get blended into one recommendation. Registered as **cross-cutting** in `CLAUDE.md`'s Stage index
+(same category as `compact-memory` — neither belongs to one of the 5 pipeline stages) and in
+README's skill table.
+
+### T049 merged: CLAUDE.md split into docs/claude-md/*.md, 565→198 lines (2026-08-04)
+
+User asked for CLAUDE.md under 200 lines, with any large section moved to a linked resource file
+rather than trimmed/reworded. Flagged as a structural refactor (LR-0001: "refactor" tasks are never
+small) — floored at C2/Medium per Hard-Stop Gate 2, run through the full TASK_GUIDE→spawn→review
+pipeline (T049) rather than edited inline, extending the T039 precedent (dedup-in-place) to
+extract-and-link.
+
+Five new files under `docs/claude-md/`: `folder-structure.md`, `code-naming-conventions.md`,
+`phase0-project-initiation.md`, `pipeline-stages.md` (the biggest single cut, ~234 lines — full
+Stage 0.5–5 detail), `memory-write-protocol.md`. Each extraction point in CLAUDE.md keeps a short
+pointer *with* the stage's `Skill({...})`/`Agent({...})` invocations inline, not just a bare "see
+docs" link — a reader skimming CLAUDE.md alone still knows the pipeline shape. Deliberately kept
+inline (not extracted): Hard-Stop Gates, Karpathy Engineering Principles table, Mandatory Session
+Startup (`wake`) — highest read-frequency, safety-critical content that must not cost an extra
+file hop. `CLAUDE_LEGACY.md` explicitly out of scope (separate follow-up; its own sync policy only
+mirrors *additions*, not restructures).
+
+**Deployment correctness was the real risk here, not the split itself**: `setup.sh`/`update.sh`
+only ever copied `CLAUDE.md`/`CLAUDE_LEGACY.md` directly plus whatever `MANIFEST` lists — a
+downstream project installing via `setup.sh` would get a CLAUDE.md full of dead links unless the
+new directory was added to `MANIFEST`. Added `docs/claude-md` as a directory entry (same pattern as
+the existing `.claude/skills` line); `lib/harness-fetch.sh`'s `harness_copy_manifest` is already
+generic over MANIFEST-listed paths, so no script change was needed beyond the one line.
+
+Stage 4: code-review 0 P0/P1/P2/P3 (Supervisor-run, docs-only diff; content-preservation verified
+section-by-section against the pre-task 565-line file, not just line-count). security-review PASS 0
+findings (pure Markdown/MANIFEST diff, no executable surface — built-in's own doc-file exclusion
+rule applies). Evidence independently reproduced by Supervisor from the worktree: `wc -l
+CLAUDE.md`=198, all 5 `docs/claude-md/*.md` links resolve, `git diff --stat CLAUDE_LEGACY.md`
+empty, 139/139 hook smoke suite green (unaffected — no hook code touched).
+
+**Gotcha reproduced again**: the spawned worktree branched from `74e61f2`, one commit behind the
+`f39a1ec` that added `tasks/TASK_GUIDE_T049.md` to main — same "worktree sees only committed state
+at spawn time" class as the existing learning, this time the *spawn* itself raced the commit rather
+than an agent starting mid-session. The agent worked around it by reading the guide directly off
+the main checkout path (its content was also pasted into the spawn prompt, so no information was
+actually lost) — but the near-miss argues `craft-spawn-prompt`'s pre-flight check should confirm the
+guide file is committed on the branch the worktree will fork from, not just that it exists on disk.
+
+### T030 unblocked, token-audit window 1 closed via 14-day condition (2026-08-04)
+
+Window opened 2026-07-21 (T040's automated re-derivation, per DDR-0001 Amendment 1) closed on
+2026-08-04 — exactly 14 calendar days, the day-based half of the "7 sessions or 14 days, whichever
+first" OR condition. Only 4 of 7 sessions logged a `cold-start` (`wake`) entry in that span
+(2026-07-21, 07-23, 07-24, 08-04), so the session-count half never fired. This is a **legitimate
+OR-condition close with real automatically-derived data (95 entries)** — not a repeat of the
+original manual-logging instrument failure DDR-0001 Amendment 1 describes (zero `/cost` entries
+ever hand-logged). Amendment 1's clause ("if the reopened window also comes up short, write a
+superseding DDR, not another amendment") does not apply here: the automated generator worked
+correctly this time, it just closed on the day-limit with fewer sessions than the cap allows.
+`reports/token-audit_2026-07-21.md` is annotated CLOSED and must not be hand-edited further. T030
+("pick the token refactor from real data", Supervisor+user HITL) is unblocked, with the caveat that
+the sample is 4 sessions, not 7.
+
+### T050 merged: token-audit generator gains window-start scoping (2026-08-04)
+
+Closing window 1 surfaced a real gap: `scripts/token_audit.py` had `WINDOW_DATE` and
+`DEFAULT_REPORT_PATH` hardcoded to `2026-07-21`, and `build_entries()` derived from **every**
+record in `memory/event-trace/*.jsonl` with no lower-bound filter — rerunning it for "a new window"
+would have either kept overwriting the closed window's file with the same 95 historical entries, or
+(if pointed at a new path) dumped the entire trace history, including window 1's data, into window
+2. Fixed with an optional `window_start` parameter on `build_entries()`/`generate_report()`
+(`None` preserves the original unfiltered single-window behavior exactly — verified byte-identical,
+AC1) plus `argparse` CLI flags (`--window-start`/`--report-path`/`--trace-dir`) on both
+`token_audit.py` and the `token-audit.sh` wrapper (`"$@"` passthrough); the pre-existing
+`TOKEN_AUDIT_*` env vars still work as the flags' defaults. A record whose date can't be parsed
+(`_date_from_timestamp` returns `"?"`) is excluded with a stderr warning whenever a window filter
+is active — never silently included, never silently dropped without a signal.
+
+`reports/token-audit_2026-08-04.md` is window 2's file, generated via
+`python3 scripts/token_audit.py --window-start 2026-08-04 --report-path reports/token-audit_2026-08-04.md`
+— 7 entries, all correctly `>= 2026-08-04` (the merged worktree's own committed copy showed 0
+entries because its local `memory/event-trace/` is gitignored and empty; the Supervisor regenerated
+the real one from main's trace data post-merge, same class as the "Worktree-isolated files silently
+die if gitignored" learning). Stage 4: code-review 0 findings (diff scoped exactly to
+`scripts/token_audit.py` + `scripts/token-audit.sh` + the new test file); security-review not
+mandated (Low risk) — manual check found no injection surface, `report_path`/`window_start` are
+trusted CLI/env inputs per existing project precedent. 7 new tests in
+`.claude/hooks/tests/test_token_audit_window_filter.py`, full suite 146 passed.
+
+### Root AGENTS.md — create it for real (2026-08-04)
+
+`docs/MULTI_AGENT.md`'s "Optional: a shared AGENTS.md" section sketched this but never shipped it,
+framed as not-required. User confirmed real friction: Codex CLI does not auto-generate `AGENTS.md`
+on its own — every session needs a manual prompt to create one, or its base rules are never
+inherited automatically. Brainstorming (2026-08-04) surfaced 3 paths — static hand-written thin
+mirror, a generated file (script-derived from `general-agent-template.md`, same pattern as
+`token_audit.py`), or skip it — converged on **static thin mirror**, since a ~15-line file doesn't
+justify generator machinery (Simplicity First), and the drift risk is small enough for a footer
+staleness-guard note rather than automation.
+
+**DDR/ADR check**: not hard to reverse (delete the file), not genuinely surprising, so it clears
+0-1 of the 3-criteria bar — recorded here in `decisions.md` only, no DDR/ADR.
+
+**Scope, confirmed by user**: create `AGENTS.md` at this repo's own root, AND add it to `MANIFEST`
+so `setup.sh`/`update.sh` deploy it to every downstream project — not repo-local only. Rationale:
+harmless for projects that never touch Codex, closes the same gap for anyone else using this
+framework with Codex, consistent with `docs/MULTI_AGENT.md` already treating multi-CLI as
+first-class rather than a one-off accommodation. → tracked as T051.

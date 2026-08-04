@@ -11,6 +11,7 @@
 - [ ] **T030** — Post-baseline analysis — pick the token refactor from real data. **Unblocked 2026-08-04**: window closed via 14-day condition (4/7 sessions, `reports/token-audit_2026-07-21.md`) — ready for Supervisor+user HITL analysis | Supervisor + user (HITL) | C1 | Risk: Low | P1
 
 ### In Progress
+- [ ] **T051** — Create root AGENTS.md for Codex/cross-CLI auto-read — thin mirror of `general-agent-template.md` essentials, `docs/MULTI_AGENT.md`'s existing "Optional: AGENTS.md" section shipped for real; `MANIFEST` gains `AGENTS.md` so it deploys to downstream projects too | Common-Infrastructure-Agent | C1 | Risk: Low | P1
 
 ### Ready for Review
 
