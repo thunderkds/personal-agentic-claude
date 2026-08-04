@@ -15,6 +15,7 @@ Hard constraint (DDR-0001 Amendment 1): token counts are never estimated,
 inferred, or synthesized. Only real trace-derived event/task/model-tier data is
 emitted; `?` marks anything the trace does not carry.
 """
+import argparse
 import glob
 import json
 import os
@@ -143,13 +144,23 @@ def _date_from_timestamp(timestamp):
         return "?"
 
 
-def build_entries(trace_dir):
+def build_entries(trace_dir, window_start=None):
     """Return a list of DDR-0001-format entry tuples, sorted by timestamp.
 
     `cache` reproduces the manual convention's own documented heuristic —
     "not a real cache-hit measurement" (DDR-0001): the first entry emitted
     for a given task-tag is scored `miss`, every subsequent entry for that
     same tag is scored `hit`.
+
+    `window_start` (T050): when given (a `YYYY-MM-DD` string), only records
+    whose derived date is `>= window_start` are included — this is what lets
+    a fresh window file start clean instead of re-deriving the entire trace
+    history. `None` (the default) preserves the original, unfiltered
+    behavior for backward compatibility (AC1). A record whose date cannot be
+    parsed (`_date_from_timestamp` returns `"?"`) is excluded, with a stderr
+    warning, whenever a window filter is active — it can never be compared
+    against `window_start`, so silently including it would be a correctness
+    bug, and silently dropping it without a signal would hide data loss.
     """
     records = []
     for task_tag, record in iter_trace_records(trace_dir):
@@ -167,16 +178,27 @@ def build_entries(trace_dir):
         seen_tags.add(task_tag)
         model_tier = _extract_model_tier(record.get("summary"))
         date = _date_from_timestamp(timestamp)
+        if window_start is not None:
+            if date == "?":
+                print(
+                    "token-audit: WARNING excluding a record with an "
+                    "unparseable date from the window-filtered output "
+                    f"(task_tag={task_tag!r})",
+                    file=sys.stderr,
+                )
+                continue
+            if date < window_start:
+                continue
         notes = f"derived from {record.get('tool_name', '?')} trace record"
         entries.append((date, event, task_tag, cache, model_tier, notes))
     return entries
 
 
-def render_report(entries):
-    header = f"""# Token Audit Log — Window opened {WINDOW_DATE}
+def render_report(entries, window_date=WINDOW_DATE):
+    header = f"""# Token Audit Log — Window opened {window_date}
 
 > **What this is**: baseline measurement instrument per DDR-0001 (see Amendment 1,
-> {WINDOW_DATE}). Entries below are **derived automatically** from
+> {window_date}). Entries below are **derived automatically** from
 > `memory/event-trace/*.jsonl` by `scripts/token-audit.sh` (T040) — not typed by
 > hand. Re-running the script regenerates the entries table from current trace
 > data each time; running it twice with unchanged trace data produces byte-identical
@@ -186,7 +208,7 @@ def render_report(entries):
 ## Window-close condition
 
 This window closes at **7 logged sessions or 14 calendar days, whichever comes
-first** (from {WINDOW_DATE}). A session = one conversation that ran `wake`. When
+first** (from {window_date}). A session = one conversation that ran `wake`. When
 the window closes, start a new file
 (`reports/token-audit_<next-window-date>.md`) rather than appending further.
 
@@ -225,20 +247,58 @@ estimated or synthesized by this generator.
     return header + "```\n" + "\n".join(lines) + "\n```\n"
 
 
-def generate_report(trace_dir=DEFAULT_TRACE_DIR, report_path=DEFAULT_REPORT_PATH):
+def generate_report(
+    trace_dir=DEFAULT_TRACE_DIR,
+    report_path=DEFAULT_REPORT_PATH,
+    window_start=None,
+):
     """Regenerate report_path from trace_dir. Returns the entry count.
     Never raises on missing/empty trace_dir — that is a valid "no data yet"
-    state, not an error."""
-    entries = build_entries(trace_dir)
+    state, not an error.
+
+    `window_start` (T050): forwarded to `build_entries` to scope the entries
+    to a fresh window, and used as the report header's "Window opened" date
+    when given. `None` preserves the original unfiltered behavior and keeps
+    the module-level `WINDOW_DATE` as the header date (AC1)."""
+    entries = build_entries(trace_dir, window_start=window_start)
     os.makedirs(os.path.dirname(report_path), exist_ok=True)
+    header_date = window_start if window_start is not None else WINDOW_DATE
     with open(report_path, "w", encoding="utf-8") as f:
-        f.write(render_report(entries))
+        f.write(render_report(entries, window_date=header_date))
     return len(entries)
 
 
+def _parse_args(argv):
+    parser = argparse.ArgumentParser(
+        description="Regenerate the Token Audit Log from memory/event-trace/*.jsonl."
+    )
+    parser.add_argument(
+        "--window-start",
+        default=os.environ.get("TOKEN_AUDIT_WINDOW_START"),
+        help=(
+            "YYYY-MM-DD lower bound (inclusive) — only records derived to this "
+            "date or later are emitted. Omit to preserve the original "
+            "unfiltered, single-window behavior (T050)."
+        ),
+    )
+    parser.add_argument(
+        "--report-path",
+        default=os.environ.get("TOKEN_AUDIT_REPORT_PATH", DEFAULT_REPORT_PATH),
+        help="Output report path. Defaults to the closed 2026-07-21 window's file.",
+    )
+    parser.add_argument(
+        "--trace-dir",
+        default=os.environ.get("TOKEN_AUDIT_TRACE_DIR", DEFAULT_TRACE_DIR),
+        help="Directory of memory/event-trace/*.jsonl files to derive from.",
+    )
+    return parser.parse_args(argv)
+
+
 def main():
-    trace_dir = os.environ.get("TOKEN_AUDIT_TRACE_DIR", DEFAULT_TRACE_DIR)
-    report_path = os.environ.get("TOKEN_AUDIT_REPORT_PATH", DEFAULT_REPORT_PATH)
+    args = _parse_args(sys.argv[1:])
+    trace_dir = args.trace_dir
+    report_path = args.report_path
+    window_start = args.window_start
 
     if not os.path.isdir(trace_dir):
         print(
@@ -246,7 +306,7 @@ def main():
             f"empty-window report and exiting 0"
         )
 
-    count = generate_report(trace_dir, report_path)
+    count = generate_report(trace_dir, report_path, window_start=window_start)
     print(f"token-audit: wrote {count} entries to {report_path}")
     return 0
 

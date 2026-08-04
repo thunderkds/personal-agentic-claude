@@ -10,7 +10,11 @@
 # No shellcheck available in this environment (memory/learnings.md) —
 # substituted with `sh -n` plus a real run of this script.
 #
-# Usage: sh scripts/token-audit.sh
+# Usage: sh scripts/token-audit.sh [--window-start YYYY-MM-DD] [--report-path PATH] [--trace-dir DIR]
+#
+# T050: flags are passed straight through to scripts/token_audit.py, which
+# defaults to the original single-window, unfiltered behavior when no flags
+# are given (AC1). Pass --window-start to scope a fresh window's report.
 
 set -eu
 
@@ -21,4 +25,4 @@ if ! command -v python3 >/dev/null 2>&1; then
   exit 1
 fi
 
-exec python3 "$ROOT/scripts/token_audit.py"
+exec python3 "$ROOT/scripts/token_audit.py" "$@"
