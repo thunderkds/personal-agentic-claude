@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-07-31
+**Last updated**: 2026-08-04
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -11,6 +11,7 @@
 - [ ] **T030** — Post-baseline analysis — pick the token refactor from real data (blocked: new window opened by T040 must close — 7 sessions/14 days, DDR-0001) | Supervisor + user (HITL) | C1 | Risk: Low | P1
 
 ### In Progress
+- [ ] **T049** — Refactor CLAUDE.md to under 200 lines via extracted `docs/claude-md/*` resource files, linked from CLAUDE.md; CLAUDE_LEGACY.md untouched (separate follow-up); `MANIFEST` gains `docs/claude-md` so extracted files deploy via setup.sh/update.sh | Common-Infrastructure-Agent | C2 | Risk: Medium | P1
 
 ### Ready for Review
 
