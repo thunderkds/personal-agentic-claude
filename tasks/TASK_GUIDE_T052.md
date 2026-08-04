@@ -100,12 +100,12 @@ wc -l .claude/skills/diagnose/SKILL.md .claude/skills/bugfix/SKILL.md
 
 | Check | Result | Notes |
 |-------|--------|-------|
-| **New test(s) cover Acceptance Criteria** | ☐ pass / ☐ fail | docs/skill-instruction task — verification script above is the accepted oracle, no unit-test framework applies |
-| Verification command run | ☐ pass / ☐ fail | paste real output |
-| Negative cases hold | ☐ pass / ☐ fail | confirm Phases 1/2/5/6 of `diagnose` are untouched (git diff scoped check) |
-| verify | ☐ pass / ☐ fail / ☐ N/A | Supervisor reads both skill files end-to-end, confirms the checkpoint reads naturally in Phase 3/4's flow and the Attempts Log table is usable |
-| Review scope bounded to blast radius | ☐ pass / ☐ fail | `.claude/skills/diagnose/SKILL.md`, `.claude/skills/bugfix/SKILL.md` only |
-| Full smoke suite still green | ☐ pass / ☐ fail | `pytest .claude/hooks/tests/` — no hook code touched, expect unchanged |
+| **New test(s) cover Acceptance Criteria** | ☑ N/A | docs/skill-instruction task, no unit-test framework applies; verification script below is the accepted oracle |
+| Verification command run | ☑ pass | Supervisor independently re-ran with `-i`: all 4 phrases matched (`2 consecutive hypotheses`, `widen scope`, `abandon and escalate`); `Attempts Log` found at line 98 of bugfix.md, positioned after Diagnosis Gates and before Fix Gates; `wc -l` → diagnose 58, bugfix 169 |
+| Negative cases hold | ☑ pass | `git diff d2d756d~1 d2d756d --stat` confirms pure insertion in both files (24 lines total added, 0 removed) — diagnose Phases 1/2/5/6 byte-identical, no hook files touched |
+| verify | ☑ pass | Supervisor read both files end-to-end: checkpoint reads naturally between Phase 4 and Phase 5, explicitly handles consecutive-vs-total and standalone-diagnose edge cases; Attempts Log table is usable and correctly positioned |
+| Review scope bounded to blast radius | ☑ pass | Only `.claude/skills/diagnose/SKILL.md` and `.claude/skills/bugfix/SKILL.md` touched, exactly as predicted |
+| Full smoke suite still green | ☑ pass | `python3 -m pytest .claude/hooks/tests/ -q` → `139 passed` (independently re-run by Supervisor) |
 | UI rows | ☑ N/A | no UI |
 
 ---
