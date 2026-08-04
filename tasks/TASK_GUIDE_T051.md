@@ -97,12 +97,12 @@ grep -qi "canonical" AGENTS.md && echo "non-second-source-of-truth statement pre
 
 | Check | Result | Notes |
 |-------|--------|-------|
-| **New test(s) cover Acceptance Criteria** | ☐ pass / ☐ fail | docs-only task — verification script above is the "test"; no unit-test framework applies |
-| Verification command run | ☐ pass / ☐ fail | paste real output |
-| Negative cases hold | ☐ pass / ☐ fail | confirm `AGENTS.md` does NOT duplicate the full Karpathy Principles table or Hard-Stop Gates — thin mirror only, per non-negotiable |
-| verify | ☐ pass / ☐ fail / ☐ N/A | |
-| Review scope bounded to blast radius | ☐ pass / ☐ fail | `AGENTS.md`, `MANIFEST`, `general-agent-template.md`, `docs/MULTI_AGENT.md` only |
-| Full smoke suite still green | ☐ pass / ☐ fail | `pytest .claude/hooks/tests/` — no hook code touched |
+| **New test(s) cover Acceptance Criteria** | ☑ N/A | docs-only task, no unit-test framework applies; verification script below is the accepted oracle |
+| Verification command run | ☑ pass | Supervisor independently re-ran all 4 checks from the worktree: `AGENTS.md exists` / `MANIFEST updated` / `template footer present` / `non-second-source-of-truth statement present` — all 4 confirmed |
+| Negative cases hold | ☑ pass | Supervisor confirmed: `AGENTS.md` contains no Karpathy Principles table, no Hard-Stop Gates text — thin mirror only (12 lines, 4 bullets + canonical pointer) |
+| verify | ☑ pass | Supervisor read `AGENTS.md`, `MANIFEST`, `general-agent-template.md`'s new Staleness Guard footer, and `docs/MULTI_AGENT.md`'s updated section end-to-end — content matches Approach exactly, no scope creep |
+| Review scope bounded to blast radius | ☑ pass | Diff touched exactly the 4 predicted files, nothing else |
+| Full smoke suite still green | ☑ pass | Agent: `pytest .claude/hooks/tests/` → `139 passed` (docs-only, no hook code touched) |
 | UI rows | ☑ N/A | no UI |
 
 ---
