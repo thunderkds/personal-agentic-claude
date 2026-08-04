@@ -39,4 +39,12 @@ estimated or synthesized by this generator.
 
 ## Entries (derived — do not hand-edit; re-run `scripts/token-audit.sh` instead)
 
-_(no trace data found under `memory/event-trace/` yet)_
+```
+2026-08-04 | cold-start | overhead | hit | ? | derived from Skill trace record
+2026-08-04 | stage-3 | overhead | hit | ? | derived from Skill trace record
+2026-08-04 | spawn | T049 | miss | ? | derived from Agent trace record
+2026-08-04 | stage-4 | overhead | hit | ? | derived from Skill trace record
+2026-08-04 | stage-4 | overhead | hit | ? | derived from Skill trace record
+2026-08-04 | stage-3 | overhead | hit | ? | derived from Skill trace record
+2026-08-04 | spawn | T050 | miss | ? | derived from Agent trace record
+```
