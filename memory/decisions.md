@@ -596,3 +596,44 @@ so `setup.sh`/`update.sh` deploy it to every downstream project — not repo-loc
 harmless for projects that never touch Codex, closes the same gap for anyone else using this
 framework with Codex, consistent with `docs/MULTI_AGENT.md` already treating multi-CLI as
 first-class rather than a one-off accommodation. → tracked as T051.
+
+**T051 merged (2026-08-04)**: `AGENTS.md` (12 lines, 4 base-rule bullets + explicit canonical
+pointer), `MANIFEST` gained the line, `general-agent-template.md` gained a Staleness Guard footer,
+`docs/MULTI_AGENT.md`'s section renamed "Optional" → "Shared". Stage 4: code-review 0 findings
+(diff scoped to exactly 4 predicted files); security-review not mandated (Low risk). Merge hit a
+real `MANIFEST` conflict — T049 (main) and T051 (this branch) both appended a new line after
+`templates` from the same stale pre-fork base (`74e61f2`), a textbook append-only-file conflict.
+Resolved by keeping both lines (`docs/claude-md`, `AGENTS.md`). Worth a `learnings.md` entry: two
+tasks that each add one MANIFEST line, spawned from worktrees forked before either merged, will
+conflict even though neither's *intent* actually collides — not a defect, just the shape of
+sequential single-line appends to a shared tail.
+
+### Stuck-Loop Escalation checkpoint in `diagnose` (2026-08-04)
+
+User's real pain point: bugfix sessions where the agent tries hypothesis after hypothesis with no
+option ever surfaced — "this way, that way, another way," a long flow, no stopping point, no
+warning. Brainstorming reframed an initially generic "risk acknowledgment gate" idea down to this
+concrete, signal-triggered case (not an always-on pre-request gate — user confirmed: fires at
+task-intake/requirement-analysis for new requests/bugs, not every message). Checked existing
+mechanisms first: `diagnose` Phase 3 generates 3–5 ranked hypotheses but never stops between
+testing them; `pre_agent_step_limit.py` is a blunt 40-tool-call cap unrelated to failed *fix*
+attempts specifically — neither covers this.
+
+Three paths considered: (1) skill-level soft checkpoint in `diagnose` — relies on the agent
+noticing it's stuck, same self-monitoring failure the user is complaining about; (2) hard
+trace-based hook counting consecutive failed verification runs — rejected, "was this Bash call a
+failed fix attempt or intentional exploration" is a shaky heuristic from trace data, false
+positives would block honest debugging; (3) Attempts Log as a required TASK_GUIDE field, only
+fires inside the formal `bugfix` path — same blind spot for ad hoc fixes. **Chosen: 1 + 3
+combined** — the checkpoint lives in `diagnose` where the thrashing actually happens, its output is
+captured in the bugfix-flavored TASK_GUIDE's new `### Attempts Log` section so it's auditable, not
+just a chat aside.
+
+**Threshold, user deferred ("have no idea"), Supervisor default chosen**: a **hard number, 2
+consecutive disproven hypotheses**, not a judgment call — because a judgment call repeats the exact
+self-monitoring failure that's the whole complaint. Tracked as a reversible default (tune the
+number later if it proves too twitchy or too loose in practice), not a permanent decision.
+
+**DDR/ADR check**: hard-number-vs-judgment is a genuine trade-off (1 of 3 criteria), but not hard
+to reverse (change one number in skill text) and only mildly surprising — doesn't clear 2-of-3,
+recorded here only. → tracked as T052.

@@ -11,6 +11,7 @@
 - [ ] **T030** — Post-baseline analysis — pick the token refactor from real data. **Unblocked 2026-08-04**: window closed via 14-day condition (4/7 sessions, `reports/token-audit_2026-07-21.md`) — ready for Supervisor+user HITL analysis | Supervisor + user (HITL) | C1 | Risk: Low | P1
 
 ### In Progress
+- [ ] **T052** — Stuck-Loop Escalation checkpoint in diagnose + Attempts Log — after 2 consecutive disproven hypotheses, `diagnose` STOPs and presents 3 explicit options instead of silently trying the next one; `bugfix`'s TASK_GUIDE template gains an `### Attempts Log` section so it's auditable | Common-Infrastructure-Agent | C1 | Risk: Low | P1
 
 ### Ready for Review
 
