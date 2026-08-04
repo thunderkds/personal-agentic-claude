@@ -10,3 +10,4 @@
 .claude/hooks
 templates
 docs/claude-md
+AGENTS.md

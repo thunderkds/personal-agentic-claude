@@ -115,3 +115,11 @@ Blockers / notes: [any]
 - Flag any risk or shared-code blast radius before committing
 - Run `code-review` skill before marking ready
 - Report new patterns, decisions, or feedback to the Supervisor in your final message — never write to `memory/` files directly (Supervisor-only, per the Memory Write Protocol)
+
+---
+
+## Staleness Guard
+
+Root `AGENTS.md` is a thin mirror of this file's Base Rules for non-Claude CLIs (Codex, etc.). If
+you edit Base Rules or the Karpathy Engineering Principles above, check `AGENTS.md` is still an
+accurate mirror and update it if not.
