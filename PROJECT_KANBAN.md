@@ -8,9 +8,10 @@
 ## Board
 
 ### Todo
-- [ ] **T030** — Post-baseline analysis — pick the token refactor from real data (blocked: new window opened by T040 must close — 7 sessions/14 days, DDR-0001) | Supervisor + user (HITL) | C1 | Risk: Low | P1
+- [ ] **T030** — Post-baseline analysis — pick the token refactor from real data. **Unblocked 2026-08-04**: window closed via 14-day condition (4/7 sessions, `reports/token-audit_2026-07-21.md`) — ready for Supervisor+user HITL analysis | Supervisor + user (HITL) | C1 | Risk: Low | P1
 
 ### In Progress
+- [ ] **T050** — Scope token-audit generator to its window's start date — `scripts/token_audit.py` has `WINDOW_DATE`/`DEFAULT_REPORT_PATH` hardcoded and no lower-bound date filter, so re-running it for the new 2026-08-04 window would re-derive the entire trace history instead of starting fresh | Common-Infrastructure-Agent | C1 | Risk: Low | P1
 
 ### Ready for Review
 
