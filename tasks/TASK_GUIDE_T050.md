@@ -96,12 +96,12 @@ grep "2026-07" reports/token-audit_2026-08-04.md    # expect: no output (negativ
 
 | Check | Result | Notes |
 |-------|--------|-------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | if `scripts/` has no existing test suite, a small standalone script asserting the two scenarios above is acceptable — state where it lives |
-| Verification command run | ☐ pass / ☐ fail | paste real output |
-| Negative cases hold | ☐ pass / ☐ fail | pre-window-start record correctly excluded |
-| verify | ☐ pass / ☐ fail / ☐ N/A | |
-| Review scope bounded to blast radius | ☐ pass / ☐ fail | `scripts/token_audit.py`, `scripts/token-audit.sh` only |
-| Full smoke suite still green | ☐ pass / ☐ fail | `pytest .claude/hooks/tests/` — this task touches no hook code |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_token_audit_window_filter.py` — 7 new tests (AC1-4, boundary inclusion, unparseable-date exclusion, idempotency). Supervisor re-ran: `python3 -m pytest .claude/hooks/tests/test_token_audit_window_filter.py -q` → `7 passed` |
+| Verification command run | ☑ pass | Agent: `git diff --stat reports/token-audit_2026-07-21.md` empty (AC1); `--window-start 2026-08-04` run wrote `reports/token-audit_2026-08-04.md`; negative-case grep for `2026-07` → exit 1, no leakage. Real-data check (read-only, pointed `--trace-dir` at main's `memory/event-trace`): 7 entries, all `>= 2026-08-04` |
+| Negative cases hold | ☑ pass | Unparseable-date record excluded with a stderr WARNING, not crashed, not silently included (per Edge Case Checklist) |
+| verify | ☑ pass | Supervisor read the diff (`scripts/token_audit.py`/`token-audit.sh` only, matches Files-to-Change exactly); default no-arg behavior byte-identical to pre-task (AC1); `--window-start` filter correct at the boundary |
+| Review scope bounded to blast radius | ☑ pass | `scripts/token_audit.py`, `scripts/token-audit.sh`, new test file — nothing else touched |
+| Full smoke suite still green | ☑ pass | Agent: `pytest .claude/hooks/tests/` → `146 passed` |
 | UI rows | ☑ N/A | no UI |
 
 ---
