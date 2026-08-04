@@ -27,6 +27,21 @@ Generate **3–5 ranked, falsifiable** hypotheses before testing any. Format: "I
 ### Phase 4 — Instrument
 Each probe maps to a specific prediction. Change one variable at a time. Prefer debugger/REPL > targeted boundary logs > never "log everything and grep". Tag logs `[DEBUG-xxxx]`. For perf: measure a baseline first (profiler/timing/query plan), then bisect.
 
+### Stuck-Loop Checkpoint (mandatory)
+Track each hypothesis's outcome from Phase 4. If **2 consecutive hypotheses are disproven**
+(instrumentation contradicts the prediction), STOP before testing hypothesis 3 — do not silently
+continue to "this way, that way, another way." This does not fire before any hypothesis has been
+tested, and the count is **consecutive**, not total-ever — a disproof followed by a partial
+confirmation that gets refined and re-tested successfully resets the streak. Present exactly these
+3 named options and wait for a choice before proceeding:
+1. Try the next ranked hypothesis (or generate new ones if the list is exhausted).
+2. Widen scope — reconsider the mental model itself, not just the next guess.
+3. Abandon and escalate this diagnosis approach to the Supervisor.
+Record the two disproven hypotheses and the chosen option in the TASK_GUIDE's `### Attempts Log`
+(bugfix-flavored guides). For standalone `diagnose` calls with no bugfix-shaped TASK_GUIDE, report
+the attempts log directly to the Supervisor instead — never skip the checkpoint just because there
+is no field to write it into.
+
 ### Phase 5 — Fix + regression test
 Write the regression test **before the fix** — but only if a **correct seam** exists (one that exercises the real bug pattern at the call site). If no correct seam exists, that itself is the finding — note it. With a seam: minimised repro → failing test → fix → passing → re-run the Phase 1 loop against the original scenario.
 

@@ -95,6 +95,15 @@ Generate `tasks/TASK_GUIDE_Txxx.md` using this bug-specific structure:
 - [ ] 3–5 ranked falsifiable hypotheses listed (consistent with confirmed mental model)
 - [ ] Correct hypothesis identified via Phase 4 instrumentation
 
+### Attempts Log (filled live during diagnosis — required if >1 hypothesis tested)
+| # | Hypothesis | Predicted signal | Actual result | Verdict |
+|---|---|---|---|---|
+
+**Stuck checkpoint** (if 2 consecutive hypotheses disproven):
+- [ ] 3 options presented (next hypothesis / widen scope / abandon+escalate)
+- [ ] Chosen option: ___
+- [ ] User's explicit go-ahead: ___
+
 ### Fix Gates (Pillar 2)
 - [ ] Regression test written before the fix (or no-seam documented)
 - [ ] Fix applied; regression test passes
