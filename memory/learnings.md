@@ -66,6 +66,7 @@
 - 2026-07-17 — Reusable shell pattern for a script that must be BOTH interactively promptable and drivable by piped test input: read the interactive prompt from fd 0 (stdin) as normal, but loop over a generated file list via a *different* fd (e.g. `done 3< "$list"` / `read -r line <&3`) so the main loop's `read` never consumes the piped answers meant for the prompt. On stdin EOF, don't guess a default — treat it as "no input available," skip/preserve, and exit non-zero instructing an interactive re-run. (source: T033, update.sh's `process_files`/`prompt_conflict`)
 - 2026-07-19 — `$0` is not a real file path when a shell script is invoked via `curl | sh` — `SCRIPT_DIR=$(dirname -- "$0")` silently resolves to the caller's cwd instead of failing loudly, so any script that sources a co-located file relative to `$SCRIPT_DIR` breaks in a piped context with no obvious error pointing at the real cause (T038: `setup.sh` broke the moment T031 split fetch logic into a separately-sourced `lib/harness-fetch.sh` — the primary documented `curl|sh` install command was silently broken from 2026-07-17 until a real user hit it 2 days later). **Any change that splits a monolithic script into a script + sourced-library pair must explicitly test the piped invocation path** (`cat script.sh | sh`, or the real `curl -fsSL <url> | sh`), not just checkout-based paths — the two have fundamentally different `$0` semantics, and only piped testing exposes the gap. (source: T038)
 - 2026-07-21 — **Stage 2 artifacts must be committed before any Stage 3 spawn.** A git worktree branches from HEAD and therefore sees only *committed* state — a `tasks/TASK_GUIDE_Txxx.md` still sitting as an untracked working-tree file on the Supervisor's branch is invisible to the agent, which correctly halts under Hard-Stop Gate 1 ("no TASK_GUIDE = no work"). Cost a full 52k-token spawn to discover, and the failure looks like a missing guide rather than an uncommitted one, so it misdirects. Nothing in `CLAUDE.md` or `general-agent-template.md` states this. Best fix: a pre-flight check in `craft-spawn-prompt` (it already reads the guide path) asserting the guide is tracked AND has no uncommitted changes, before it emits the prompt. (source: T042 first spawn attempt)
+- 2026-08-04 (T049) — **Committing the guide first isn't sufficient by itself.** `TASK_GUIDE_T049.md` was committed to `main` (`f39a1ec`) *before* the `Agent({ isolation: "worktree" })` spawn — yet the worktree still forked one commit behind, from `74e61f2`. The guide's content had also been pasted verbatim into the spawn prompt (per the mandatory element-2 requirement), so the agent worked around it by reading the file directly and no work was lost — but a task whose guide is only referenced by path, not pasted, would have hit Hard-Stop Gate 1 despite the Supervisor having done everything the existing 2026-07-21 learning recommends. The isolation mechanism's worktree-creation timing relative to the Supervisor's own commit is not fully synchronous. Treat "I committed it" as necessary, not sufficient — the guide's orienting content should still be pasted into the spawn prompt (already standard practice) as the actual belt-and-suspenders fix, independent of commit timing.
 - 2026-07-21 — **`git diff --stat` reads clean for untracked files, so it cannot verify a sub-agent's completion claim.** T042's agent reported "implementation and verification complete"; the hook change was uncommitted and the entire new 311-line test file was untracked, so `git diff <base> --stat` showed only the hook and the test file appeared nowhere at all. Merging on that report would have brought across nothing. Always use `git status --short` (which shows `??` untracked) **and** `git log --oneline` to confirm the agent's commit exists — not `git diff --stat` alone. Third occurrence of the uncommitted-work pattern (T027 near-miss, T028 Ghostty marker, T042). (source: T042 Stage 4)
 - 2026-07-21 — **The built-in `security-review` skill cannot run in this repo**: it shells out to `git log --no-decorate origin/HEAD...` and this repo's only remote is named `github`, not `origin` (`refs/remotes/origin/HEAD` does not exist). It fails with `fatal: ambiguous argument 'origin/HEAD...'`. Since `CLAUDE.md` mandates `security-review` for every Medium/High-risk task and multiple past Completion Checklists tick that box, **the gate has almost certainly never actually executed here** — same "rule that looks enforced but silently isn't" class as LR-0002. Workaround used on T042: perform the review manually and label it as manual with the reason, never silently skip. Real fix (needs user consent — touches git config): add an `origin` remote alias, or set `refs/remotes/origin/HEAD`. (source: T042 Stage 4)
 - 2026-07-21 — **"Already covered" must mean *reaches the context that needs it*, not *exists somewhere in the repo*.** Supervisor reasoning error, caught by user pushback: I argued against importing 2 of ponytail's 7 laziness-ladder rungs because `tdd/SKILL.md` and the `CLAUDE.md` Karpathy table "already covered" them. Both fail on delivery — `CLAUDE.md` is not in the sub-agent startup read list (`general-agent-template.md:10-14`), and `tdd` is invocation-triggered so it never loads for agents doing non-TDD work. The same distinction is the actual defect T041 fixes, which made the error self-illustrating. Corollary: de-duplicating text that lands in the *same context window twice* (T039) is a genuine win; text appearing in *different documents loaded in different contexts* is redundancy that buys reliability, not waste — do not collapse the two cases. (source: 2026-07-21 ponytail evaluation, user correction)
@@ -180,6 +181,19 @@ is the first task in this project's history where the built-in Medium/High gate 
 instead of being performed by hand. Note the built-in diffs against `origin/HEAD`, so it reviews the
 whole branch vs main, not just the newest commit — scope the analysis yourself.
 
+**Amendment (2026-07-31, T044) — "it runs now" is not "it applies now".** The built-in diffs *the
+checked-out branch* against `origin/HEAD`. T044's work lived on `feat/hook-lifecycle-evidence` while
+the repo sat on `main`, so invoking it would have diffed main-vs-main, found nothing, and reported a
+clean result — a **false PASS on a mandatory gate**, which is strictly worse than the old failure
+mode: the `origin/HEAD` breakage at least errored loudly, this one succeeds quietly. This is the
+third distinct way this gate has failed to actually gate (never ran → ran → ran against nothing).
+
+Rule: before invoking the built-in `security-review`, confirm `git branch --show-current` is the
+branch under review. If it is not — the normal case when the Supervisor reviews from `main` while
+work sits in a worktree — either check the branch out, or review the real `main...<branch>` diff by
+hand and label it manual with the reason. Same discipline as "an assertion never observed failing is
+not evidence": a gate that reports PASS over an empty diff has not been observed rejecting anything.
+
 ## A defect can reproduce itself during its own Stage 2 write-up (2026-07-23, T045)
 
 Writing `tasks/TASK_GUIDE_T045.md` — the guide that documents the unanchored `(?=###|\Z)` Kanban
@@ -240,3 +254,175 @@ the guard.
 dodge the pattern; the prose should stay accurate and the writing method should change. Worth
 considering whether `BLOCKED_PATTERNS` should ignore text inside a heredoc body, but that means shell
 parsing — the same complexity T044 deliberately refused, and fail-closed here costs only a retry.
+
+## An env var set inside a Bash tool call is invisible to hooks (2026-07-31, T044 → T047)
+
+Claude Code spawns hook processes as **siblings** of the tool call, so a hook inherits the *harness's*
+environment — not the environment the Bash tool builds for the command it runs. Both documented forms
+therefore do nothing for attribution:
+
+    CLAUDE_ACTIVE_TASK=T044 python3 -m pytest -q     # scoped to pytest's process
+    export CLAUDE_ACTIVE_TASK=T044                   # scoped to that tool call's subshell
+
+`task_context.py:resolve_task_id` reads `os.environ` in the hook process, sees nothing, and every
+`Bash` record lands in `_untagged.jsonl`. Observed 2026-07-31 running T044's own verification command
+from main at `de120da`: `T044.jsonl` mtime unchanged, the command visible in `_untagged.jsonl`,
+`trace_shows_verification('T044') = False`.
+
+Consequence: T044 tightened the merge gate *and* shipped the mechanism meant to keep it from failing
+closed on honest work — but that mechanism is inert, so the gate now blocks every honest local merge.
+T044 itself merged only via the GitHub UI, which never invokes the local PreToolUse hook, so the
+tightened gate went unexercised on a real merge for a week. **Update 2026-07-31**: it finally ran, on
+the local `git merge docs/stage2-t047` that consolidated T047's branches — and **allowed** it, having
+found T047 closed on the Kanban plus a qualifying trace record. First real exercise of the T044 gate
+in either direction. Note it ran from the worktree, so it read the *worktree's* `memory/event-trace/`;
+a merge run from the main checkout reads a different trace dir. → T047 (C1/Medium/**P0**). T040
+re-blocked on it: it would otherwise build a token-audit window on records that are all untagged.
+
+The general rule: **an agent cannot set environment state for a hook from inside a tool call.** Any
+per-task signal a hook must read has to travel through a channel the agent can actually write —
+a file, or harness configuration — not process environment.
+
+## Patching a channel in a test does not prove the channel works (2026-07-31, T047)
+
+T044's 42 tests are green and its mutation controls were all observed RED, yet AC7 shipped inert. The
+tests exercise `resolve_task_id` with a **patched `os.environ`**, which validates the precedence
+logic but never crosses the real harness→hook *process* boundary — and the boundary is exactly where
+the defect lives. Every layer of the project's evidence discipline held; none of it was pointed at
+the failing seam.
+
+Rule: when a mechanism spans two processes, a unit test that patches the channel proves the logic,
+not the plumbing. At least one acceptance check must be a **real end-to-end run** through the actual
+path an agent uses. Same family as "a guard is only as strong as the layer that feeds it" — and note
+this is the second consecutive T044-related defect found *below* the logic under review, not in it.
+
+## A test that shares a root cannot detect a root-split defect (2026-07-31, T047 Stage 4)
+
+T047 fixed trace attribution with a state file at `.claude/hooks/.state/active_task`, and shipped an
+instruction telling agents to write it with a **cwd-relative** redirect. But `ACTIVE_TASK_FILE` is
+absolute, resolved off `__file__` of the copy that executes, and the harness runs hooks from
+`$CLAUDE_PROJECT_DIR` — the **main checkout**. A Stage 3 sub-agent's cwd is its **worktree**. So the
+agent writes one file and the live hook reads another, and every honest task still lands in
+`_untagged.jsonl`.
+
+It survived implementation *and* the implementer's own end-to-end check because both ran **inside the
+worktree**, where the two paths collapse to the same root. The check was real — it just could not
+distinguish the passing case from the failing one, because the split it needed to exercise was
+flattened by where it ran.
+
+Rule: when a mechanism spans two roots (worktree vs main checkout, container vs host, test tmpdir vs
+real path), a test executed inside one root proves nothing about the split. The regression test must
+straddle the boundary. This is the vacuous-assertion family again (T036/T042/T039) and the third
+consecutive defect in this subsystem found *below* the logic under review — after T044's
+`extract_command` and T044's own AC7. **The feeding layer keeps being the defect, and the reviewer's
+own test setup can itself be the feeding layer.**
+
+Corollary for the Supervisor, learned the hard way in this same review: verifying a not-yet-merged
+fix by running the **main checkout's** hook tests the OLD code and proves nothing. Run the worktree's
+copy, or state plainly that the check was inconclusive. Two of my own "confirmed" results in this
+review were invalid for exactly that reason, and a third was contaminated by a pre-existing trace
+file I assumed I had created.
+
+## $CLAUDE_PROJECT_DIR exists for hooks but is EMPTY in an agent's Bash tool call (2026-07-31, T047)
+
+Two different environments, easily conflated. `settings.json` invokes every hook as
+`python3 "$CLAUDE_PROJECT_DIR"/.claude/hooks/x.py`, and the harness expands it there — so a hook
+process reliably sees it. An agent's own `Bash` tool call does **not**: `echo $CLAUDE_PROJECT_DIR`
+prints empty. Confirmed independently by the Supervisor and the implementing agent.
+
+Consequence for any read/write pair spanning that boundary: the **hook** side can resolve paths from
+the variable, but the **agent** side cannot. Instructing an agent to write to
+`$CLAUDE_PROJECT_DIR/...` verbatim ships a defect symmetric to the one being fixed. The working shape
+is: hook resolves via the env var; the Supervisor embeds a **literal absolute path** into the spawn
+prompt at assembly time (its own session already runs from the main checkout).
+
+## A "never raises" contract does not cover module import (2026-07-31, T047 Stage 4)
+
+`task_context.py` documents that `resolve_task_id` never raises — and it doesn't. But
+`ACTIVE_TASK_MAX_AGE_S = int(os.environ.get(...))` ran at **import**, one layer below the contract.
+A value of `6h` raised `ValueError` before any function was reached, and because both callers wrap
+`from task_context import ...` in `except Exception` (correct fail-open), attribution silently died
+**repo-wide** — including the path-field precedence that has nothing to do with that setting. A
+narrow, opt-in env var could disable a whole subsystem, silently, with a green test suite.
+
+Rule: when a module advertises a never-raises contract, the module-level statements are part of that
+contract's surface. Parse env vars and other external input defensively at import, or move the work
+into the function the contract actually covers. Corollary: a caller's fail-open `except Exception`
+around an import converts a loud crash into a silent capability loss — good for stability, bad for
+detection, so the thing being imported must not rely on it.
+
+**Fourth consecutive defect in this subsystem found one layer below the logic under review**
+(T044 `extract_command`'s input → T044 AC7's channel → T047's channel path → T047's import-time
+parse). Every fix was correct; the feeding layer was wrong each time. Worth a task that exercises the
+guardrail chain end-to-end through the real harness path rather than patching one seam at a time.
+
+## A feature whose test suite only passes while the feature is unused (2026-07-31, T047 → T048)
+
+T047's state-file channel works — verified end-to-end on `main`: a real `Bash` tool call was
+attributed to `T047.jsonl` and `trace_shows_verification('T047')` returned True, the first correct
+attribution of a Bash tool call in this project's history. But arming the channel *as the shipped
+instruction requires* turns the hook suite red:
+
+    no state file   -> 121 passed
+    armed           ->   9 failed, 112 passed
+    removed again   -> 121 passed
+
+Cause: T047 added a `StateFileOverride` isolation helper and used it **only in its own new tests**.
+Nine pre-existing T043-era tests read the real `ACTIVE_TASK_FILE` and assert what the *lower*
+precedence slots resolve to; once slot 2 has a real file it short-circuits them all. Production logic
+is correct — slot 2 winning is the design. The damage is to the workflow: `pytest .claude/hooks/tests/`
+is the verification command in the TASK_GUIDE template, what Hard-Stop Gate 5 needs pasted output
+from, and part of what the merge gate looks for. So T047's two halves conflict for every future task.
+→ T048 (C1/Medium/**P0**).
+
+Rules this yields:
+1. **When a change adds global/ambient state, the suite must be run in both states before calling it
+   green.** A suite proven only in the state where the new feature is *off* has not been proven.
+2. **An isolation helper added for new tests is a signal that existing tests need it too.** Adding
+   `StateFileOverride` and applying it to only the new cases is the tell — if the new code needs
+   isolating from ambient state, everything sharing that module does.
+3. Ambient repo state is not a clean-machine assumption any more: the workflow now *instructs* agents
+   to create this file, so tests must assume it exists.
+
+Fifth consecutive defect in this subsystem sitting one layer below the logic under review, and the
+first found only because Stage 5 verify was run in the real post-merge environment rather than
+re-trusting the worktree's green run.
+
+## An importlib-loaded module is a different object from the imported one (2026-07-31, T048)
+
+`test_task_context.py` loads the module under test via
+`importlib.util.spec_from_file_location(...)` rather than a plain `import`, so the resulting module
+object is **not** the one a plain `import task_context` elsewhere would produce and is not shared via
+`sys.modules`. Consequence for test isolation: a `conftest.py` fixture that imports the module
+normally and mutates a module-level constant (`ACTIVE_TASK_FILE`) would be patching a *different
+copy* — the fixture runs, reports success, and the test still reads the real value. Silently inert,
+and it would look like the isolation worked.
+
+This is why T048 put its autouse fixture in the test module itself rather than `conftest.py`. Rule:
+when patching module-level state for a module loaded by `spec_from_file_location`, the patch must
+target the same object the test holds. Check module identity before trusting a fixture that appears
+to do nothing wrong.
+
+## Nest isolation at the test-function level, not inside the shared helper (2026-07-31, T048)
+
+The tempting fix for ambient state is to wrap the shared `resolve()` helper so every call is
+isolated. That breaks the tests that *want* the state armed: their explicitly-armed override would be
+clobbered by the helper's internal default, and every real slot-2 assertion would silently start
+reading nothing — coverage deleted while the suite goes green. Wrapping each **test function**
+instead makes isolation the default for anything written tomorrow (the goal) while letting a test's
+own explicit `with` block nest inside and win for its duration.
+
+Generalizes: default isolation belongs at the outermost boundary of a test, where an explicit opt-in
+can still override it — never inside a helper the tests share, where it competes with their intent.
+
+## Two single-line MANIFEST additions will conflict even with zero real overlap (2026-08-04, T051)
+
+T049 added `docs/claude-md` to `MANIFEST`; T051 (spawned from a worktree forked before T049 merged)
+independently added `AGENTS.md`. Both inserted their line right after the same `templates` line —
+git's merge sees two different additions at the identical position and conflicts, even though the
+two lines don't touch each other's content at all. Not a defect in either task, not something
+`craft-spawn-prompt`'s pre-flight check would catch (both guides were valid, both diffs were
+correctly scoped) — it's the structural shape of append-only files edited by concurrent
+worktree-isolated tasks. Resolution is trivial (keep both lines) but expect it whenever two Stage-3
+tasks in flight at once both touch `MANIFEST`, `PROJECT_KANBAN.md`'s own section boundaries, or any
+other single shared append point.

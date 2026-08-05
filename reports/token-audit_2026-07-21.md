@@ -1,13 +1,4 @@
-# Token Audit Log — Window opened 2026-07-21 — **CLOSED 2026-08-04**
-
-> **Closure**: closed by the **14-calendar-day** condition (2026-07-21 → 2026-08-04, exactly 14
-> days), not the 7-session cap — only 4 qualifying sessions (`cold-start`/`wake`) were logged in
-> this window: 2026-07-21, 2026-07-23, 2026-07-24, 2026-08-04. This is a legitimate OR-condition
-> close with real automatically-derived data (95 entries), not a repeat of the original instrument
-> failure DDR-0001 Amendment 1 describes (zero manual `/cost` entries ever logged) — so this does
-> not trigger Amendment 1's "if the reopened window also comes up short, write a superseding DDR"
-> clause. T030 may proceed with Supervisor+user (HITL) analysis of this window's data, noting the
-> lighter sample (4, not 7, sessions). Next window: `reports/token-audit_2026-08-04.md`.
+# Token Audit Log — Window opened 2026-07-21
 
 > **What this is**: baseline measurement instrument per DDR-0001 (see Amendment 1,
 > 2026-07-21). Entries below are **derived automatically** from
@@ -144,4 +135,14 @@ estimated or synthesized by this generator.
 2026-08-04 | spawn | T049 | miss | ? | derived from Agent trace record
 2026-08-04 | stage-4 | overhead | hit | ? | derived from Skill trace record
 2026-08-04 | stage-4 | overhead | hit | ? | derived from Skill trace record
+2026-08-04 | stage-3 | overhead | hit | ? | derived from Skill trace record
+2026-08-04 | spawn | T050 | miss | ? | derived from Agent trace record
+2026-08-04 | stage-0.5 | overhead | hit | ? | derived from Skill trace record
+2026-08-04 | stage-2 | overhead | hit | ? | derived from Skill trace record
+2026-08-04 | stage-3 | overhead | hit | ? | derived from Skill trace record
+2026-08-04 | spawn | T051 | miss | ? | derived from Agent trace record
+2026-08-04 | stage-0.5 | overhead | hit | ? | derived from Skill trace record
+2026-08-04 | stage-2 | overhead | hit | ? | derived from Skill trace record
+2026-08-04 | stage-3 | overhead | hit | ? | derived from Skill trace record
+2026-08-04 | spawn | T052 | miss | ? | derived from Agent trace record
 ```

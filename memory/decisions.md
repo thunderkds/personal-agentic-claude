@@ -637,3 +637,22 @@ number later if it proves too twitchy or too loose in practice), not a permanent
 **DDR/ADR check**: hard-number-vs-judgment is a genuine trade-off (1 of 3 criteria), but not hard
 to reverse (change one number in skill text) and only mildly surprising — doesn't clear 2-of-3,
 recorded here only. → tracked as T052.
+
+**T052 merged (2026-08-04)**: `diagnose` gained `### Stuck-Loop Checkpoint (mandatory)` between
+Phase 4 and Phase 5 — pure insertion, Phases 1/2/5/6 byte-identical. `bugfix` gained `### Attempts
+Log` in its Step 3 TASK_GUIDE template, positioned after `Diagnosis Gates` before `Fix Gates`. Both
+edits explicitly handle the two edge cases flagged at Stage 2: the counter is **consecutive**
+disproven hypotheses (a disproof followed by a successful re-test resets the streak), and
+standalone `diagnose` calls with no bugfix-shaped TASK_GUIDE report the attempts log directly to
+the Supervisor rather than silently skipping the checkpoint. Stage 4: code-review 0 findings (24
+lines added, 0 removed across both files); security-review not mandated (Low risk, pure
+skill-instruction text, no executable surface). 1 P3 advisory: `bugfix.md` was already 160 lines
+before this task (past the ~150-line `slim-skills` convention baseline) — the 9-line addition to
+169 is a necessary increase for a real feature, not new bloat from this task; not blocking, noted
+for a future `slim-skills` pass if the file keeps growing. Merged with zero conflicts (unlike T051,
+which hit a real `MANIFEST` append conflict) — this task touched no shared append-only file.
+
+### 2026-08-05 — T030: DDR-0002 retires the measure-first token instrument; DDR-0001 superseded
+**Decision**: `T030`'s HITL analysis found the token-audit instrument failed a second time — no `/cost` ground-truth line was ever pasted into either window's report, so DDR-0001's ≥20%/<5% $/task criteria were unanswerable from any data collected. Independently, both refactors DDR-0001 gatekept had already shipped for unrelated reasons (T049 CLAUDE.md 565→198, T029 slim-skills). Wrote `docs/ddr/0002-retire-measure-first-token-instrument.md`, superseding DDR-0001 (Status line updated to point at it). Chose retire-don't-re-instrument over a 3rd measurement attempt: the manual per-session step has now failed twice for the same underlying reason (nothing enforces it happens), and there's no live decision left to inform even with real numbers.
+**Why**: A hypothesis with no data and no remaining decision to inform isn't worth a third instrumentation attempt — that would be process-fixing for a question nobody needs answered anymore. If token cost resurfaces as a concern, the right fix is a structural/automatic cost source, not another manual convention.
+**Files**: docs/ddr/0002-retire-measure-first-token-instrument.md, docs/ddr/0001-measure-first-token-refactor.md, PROJECT_KANBAN.md

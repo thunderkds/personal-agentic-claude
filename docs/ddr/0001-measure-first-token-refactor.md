@@ -5,7 +5,7 @@
 
 ---
 
-**Status**: Accepted
+**Status**: Superseded by [DDR-0002](0002-retire-measure-first-token-instrument.md) (2026-08-05)
 **Date**: 2026-07-17
 **Deciders**: hungnguyenhuu (user) · Supervisor
 **Related**: BRAINSTORMING_LOG.md (2026-07-17 session) · task IDs assigned at Stage 2
