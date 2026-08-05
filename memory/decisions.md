@@ -106,6 +106,7 @@
 **Why**: Wrong mental model at intake = wrong fix direction with no way back. Surface intake alone (symptom + repro steps) is insufficient — it captures what the user observes but not what the code is supposed to do or where the divergence actually occurs. The orient gate forces investigation before theory formation, and user confirmation locks the shared understanding before any sub-agent work begins.
 **Files**: .claude/skills/bugfix/SKILL.md, CLAUDE.md, CLAUDE_LEGACY.md, memory/MEMORY.md
 
+<!-- STALE: branch never merged to main (verified 2026-08-05 compact-memory pass) — .claude/skills/ui-test/SKILL.md, the qa.md row, and the CLAUDE.md skills-table row this entry describes all exist only on the unmerged branch feat/ui-test-mcp-integration (commit 6f08d4a); none are present on main despite Kanban marking T015/T016 Done. Entry kept as history of the decision; do not treat as reflecting current main state. -->
 ### 2026-07-01 — ui-test skill: self-degrading easy-ui-mcp orchestration (T015 + T016)
 **Decision**: Add `ui-test` skill wrapping the external `easy-ui-mcp` (github.com/thunderkds/easy-ui-mcp) local Docker/MCP server for web UI testing. Health-checks `http://localhost:8765/health` first; if down, or the calling task has no UI/Design AC section, emits a one-line skip note and exits cleanly — never blocks the pipeline. When healthy, drives the 8 MCP tools in sequence (`ui_start_session` → `ui_navigate` → `ui_click`/`ui_fill` → `ui_assert` → `ui_get_page_state` → `ui_take_screenshot` → `ui_end_session`) and maps the output directly into TASK_GUIDE Evidence rows — the same run satisfies both Stage 4 Hard-Stop Gate 6 (UI Evidence) and the Stage 5 `verify` row. Selected over (a) a hard-wired mandatory Stage 4/5 gate (breaks on machines without Docker) and (b) folding MCP calls directly into `qa.md` with no skill file (breaks Skills-vs-Agents separation, not reusable). Chosen via `BRAINSTORMING_LOG.md` (approved 2026-07-01) as "Option B — Self-Degrading Optional Skill". Web-only in v1; mobile explicitly deferred. **T016 (done, 2026-07-01)** wired the skill in: `.claude/agents/qa.md` gained a `ui-test` row (invoked only when the TASK_GUIDE has a non-deleted UI/Design AC section); `CLAUDE.md` gained a skills-table row plus one added sentence on Hard-Stop Gate 6 clarifying that `ui-test`'s MCP evidence satisfies the three UI Evidence rows when available, without waiving the requirement when it isn't (manual/other verification remains acceptable).
 **Why**: UI Evidence today is manual/observational. `easy-ui-mcp` gives real Chromium-backed verification, but it's local-only infra that may not be running on every machine — a hard gate would create pipeline friction for tasks that "feel small" (exactly the anti-pattern the Hard-Stop Gates otherwise guard against), so the skill must degrade gracefully rather than block.
@@ -656,3 +657,49 @@ which hit a real `MANIFEST` append conflict) — this task touched no shared app
 **Decision**: `T030`'s HITL analysis found the token-audit instrument failed a second time — no `/cost` ground-truth line was ever pasted into either window's report, so DDR-0001's ≥20%/<5% $/task criteria were unanswerable from any data collected. Independently, both refactors DDR-0001 gatekept had already shipped for unrelated reasons (T049 CLAUDE.md 565→198, T029 slim-skills). Wrote `docs/ddr/0002-retire-measure-first-token-instrument.md`, superseding DDR-0001 (Status line updated to point at it). Chose retire-don't-re-instrument over a 3rd measurement attempt: the manual per-session step has now failed twice for the same underlying reason (nothing enforces it happens), and there's no live decision left to inform even with real numbers.
 **Why**: A hypothesis with no data and no remaining decision to inform isn't worth a third instrumentation attempt — that would be process-fixing for a question nobody needs answered anymore. If token cost resurfaces as a concern, the right fix is a structural/automatic cost source, not another manual convention.
 **Files**: docs/ddr/0002-retire-measure-first-token-instrument.md, docs/ddr/0001-measure-first-token-refactor.md, PROJECT_KANBAN.md
+
+### 2026-08-05 — Demonstration block + Delivery Report: grilling decisions (pre-Stage-2)
+**Decision**: Three decisions locked during `grill-with-docs` (terminology mode) over the
+`BRAINSTORMING_LOG.md` direction (Option c: Demonstration block feeding a rendered report, applied to
+**both** implementation and bugfix guide flavors).
+
+1. **Format conforms to the canonical `Report` term — HTML, not Markdown.** The glossary defines
+   `Report` as "a self-contained `.html` file... containing scored dimensions and a findings table".
+   The Supervisor's 50%-cut had proposed Markdown, which violated the term on format, stage, and
+   content. Three resolutions were offered: new `Delivery Record` term (Markdown), widen `Report`, or
+   conform. User chose **conform**. Cost accepted: the HTML template was the largest single chunk of
+   the 50% reduction, so the estimate returns from ~180 to ~300 lines. Rejected widening `Report`
+   because four skills (`html-report`, `code-review`, `security-review`, `blast-radius`) depend on its
+   discriminating power; rejected the Markdown term because the artifact's actual purpose is to be
+   shown to someone, and a browsable page serves that better than a file in `reports/`.
+   New terms added to `PROJECT_SPEC.md` + `memory/glossary.md`: **Delivery Report**, **Demonstration**,
+   **BEFORE capture**. `Report` left untouched.
+
+2. **Fires at Stage 5, after `verify` passes, before merge** (option B of three). Rejected Stage 4
+   (Evidence table is still being filled — the completion count would render half-blank, and the
+   report would publish a claim the system hasn't checked yet, which is the exact failure this work
+   exists to close) and post-merge (`reports/` is gitignored and the worktree is gone by then — the
+   recorded "Worktree-isolated files silently die if gitignored" gotcha). Accepted cost: `Delivery
+   Report` becomes the first `reports/` artifact that is not Stage 4, so "everything in `reports/`
+   comes from Stage 4" stops being true. `Report`/`Report Session` keep their Stage 4 clauses.
+
+3. **Invocation is a reminder hook plus a spawn-time warning — not automatic, not blocking.** The
+   user asked whether "after verify" meant automatic; it does not, and cannot. Nothing in this system
+   auto-invokes a skill: `html-report` and `thinking-report` are both "Invoked by the Supervisor",
+   i.e. discipline. Hooks can only print to stderr or block a Bash command. Chosen: extend the
+   `stop_review_reminder.py` pattern to print `Run: Skill({ skill: 'delivery-report' })` for a
+   verified task with no delivery report, **plus** a non-blocking blank-BEFORE warning in
+   `pre_agent_validate_guide.py` at spawn time. The spawn-time half is the substantive one — a
+   reminder at verify fires long after the only moment a BEFORE could have been captured truthfully,
+   so it protects the report but protects nothing about the capture. Blocking the merge gate
+   (`pre_bash_block_unsafe_merge.py`) deferred to a separately-tracked follow-up: that hook family has
+   6 recorded parsing defects (T018/T022/T024/T042/T045 + Kanban `###` truncation), and the reminder
+   first produces the evidence for whether blocking is needed at all.
+
+**Why**: The originating request was "a number or checklist to validate output after implementation
+or bugfix." Investigation found 22 checkable items already exist in each flavor — the gap is not
+counting but demonstration: ~4 of 22 (implementation) and ~3 of 22 (bugfix) rows carry content a
+reader couldn't predict before the task began, and only the bugfix repro loop demonstrates a delta at
+all. A score over conformance rows would have produced a confident number measuring the wrong thing.
+**Files**: BRAINSTORMING_LOG.md, PROJECT_SPEC.md, memory/glossary.md, docs/ddr/0003-demonstration-block-and-delivery-report.md
+**Record**: DDR gate scored 3-of-3 (ADR-eligible). User asked, chose DDR over ADR escalation — "hard to reverse" is the weak leg; this is a process-artifact change, not an architectural commitment like ADR-0001. -> see DDR-0003

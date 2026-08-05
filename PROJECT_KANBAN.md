@@ -8,6 +8,9 @@
 ## Board
 
 ### Todo
+- [ ] **T055** — bugfix Evidence-table parity with the gate-visible implementation shape | common-infrastructure | C1 | Risk: Medium | P1
+- [ ] **T054** — delivery-report skill + HTML template + reminder hook + harness sync | common-infrastructure | C2 | Risk: Medium | P1
+- [ ] **T053** — Demonstration block in both guide flavors + spawn-time blank-BEFORE warning | common-infrastructure | C2 | Risk: Medium | P1
 
 ### In Progress
 
