@@ -98,8 +98,8 @@ class HookSandbox:
             return []
         return sorted(os.listdir(self.state_dir))
 
-    def counter_value(self, task_id):
-        with open(os.path.join(self.state_dir, f"step_count_{task_id}.txt")) as f:
+    def counter_value(self, task_id, session="nosession"):
+        with open(os.path.join(self.state_dir, f"step_count_{session}_{task_id}.txt")) as f:
             return f.read().strip()
 
     def cleanup(self):
@@ -232,7 +232,7 @@ def test_agent_spawn_prompt_guide_path_attributes_in_both_hooks():
 
         limit = sandbox.run_hook("pre_agent_step_limit.py", AGENT_SPAWN_EVENT)
         assert limit.returncode == 0, limit.stderr
-        assert sandbox.counter_files() == ["step_count_T099.txt"], sandbox.counter_files()
+        assert sandbox.counter_files() == ["step_count_nosession_T099.txt"], sandbox.counter_files()
         assert sandbox.counter_value("T099") == "1"
     finally:
         sandbox.cleanup()
@@ -274,7 +274,7 @@ def test_env_override_wins_over_payload_text():
             "pre_agent_step_limit.py", EDIT_PROSE_EVENT, {"CLAUDE_ACTIVE_TASK": "T099"}
         )
         assert limit.returncode == 0, limit.stderr
-        assert sandbox.counter_files() == ["step_count_T099.txt"], sandbox.counter_files()
+        assert sandbox.counter_files() == ["step_count_nosession_T099.txt"], sandbox.counter_files()
     finally:
         sandbox.cleanup()
 
