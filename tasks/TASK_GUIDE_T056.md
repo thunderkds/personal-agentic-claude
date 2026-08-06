@@ -118,12 +118,12 @@ python3 -m pytest .claude/hooks/tests -q
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | [SC4, SC5 and SC6 specifically] |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [must literally state "pass" or "fail" in this Notes column — the merge gate scans here] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_step_limit_session_scope.py` (new, AC1-AC9) + 2 pre-existing assertions in `.claude/hooks/tests/test_task_context.py` updated to the new session-scoped filename (`step_count_nosession_T099.txt`) |
+| Verification command run | ☑ pass | `python3 -m pytest .claude/hooks/tests -q` → `169 passed in 5.97s` |
+| Negative cases hold | ☑ pass | SC4 (`test_sc4_malformed_ttl_env_falls_back_to_default_no_import_raise`): `CLAUDE_STEP_COUNT_TTL_S=not-a-number` → returncode 0, no traceback. SC5 (`test_sc5_missing_session_id_still_counts_and_blocks`): no `session_id` key → still counted, still blocked at call 41, file `step_count_nosession_T914.txt`. SC6 (`test_sc6_malformed_stdin_fails_open`, `test_sc6_unwritable_state_dir_fails_open`): malformed stdin → returncode 0, empty stdout; unreadable counter content → degrades to count 0, no raise. |
+| verify | pass | `python3 -m pytest .claude/hooks/tests -q` → `169 passed in 5.97s`, no regressions. Mutation check on both load-bearing assertions (session key, TTL comparison) went RED then GREEN on restore (see Test Plan section / commit history). |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Diff touches only `.claude/hooks/pre_agent_step_limit.py` (the guide's declared entry point) and `.claude/hooks/tests/` (new test file + 2 filename-literal updates in an existing test). No change to `task_context.py`, `post_agent_move_to_review.py`, or `pre_bash_block_unsafe_merge.py`, per the guide's "Files Must NOT Touch". |
+| Full smoke suite still green (no regression) | ☑ pass | Same run: `169 passed in 5.97s`, includes the 10 new tests in `test_step_limit_session_scope.py` and all pre-existing hook tests, 0 failures. |
 | **UI: Visual regression** | ☐ N/A | Pure hook task — no UI component |
 | **UI: Design-system compliance** | ☐ N/A | Pure hook task — no UI component |
 | **UI: Responsiveness** | ☐ N/A | Pure hook task — no UI component |
@@ -132,17 +132,49 @@ python3 -m pytest .claude/hooks/tests -q
 
 ## Demonstration
 
-**BEFORE** (executable — capture before the first implementation commit): drive
+**BEFORE** (executable — captured 2026-08-06, before the first implementation commit): drove
 `pre_agent_step_limit.py` with 41 events for task `T900` under `session_id: "A"`, then a single event
-for `T900` under `session_id: "B"`. Paste the real output. Session B is blocked despite having spent
-one call — that is the incident, reproduced on demand.
+for `T900` under `session_id: "B"`. Real output, 41st call for session A:
+
+```
+{"decision": "block", "reason": "[hook:pre_agent_step_limit] T900 has exceeded 40 tool calls without
+reaching Ready for Review. Killing the run to prevent an infinite loop / token waste. Supervisor:
+stop, inspect memory/event-trace/T900.jsonl, and either escalate to the user or manually reset
+.claude/hooks/.state/step_count_T900.txt after confirming the task isn't actually stuck."}
+```
+
+Session B's single event (its very first call for the task):
+
+```
+{"decision": "block", "reason": "[hook:pre_agent_step_limit] T900 has exceeded 40 tool calls without
+reaching Ready for Review. ... .claude/hooks/.state/step_count_T900.txt ..."}
+```
+
+Session B is blocked despite having spent one call — the incident, reproduced on demand.
 
 **BEFORE** (verbatim prior content): `counter_path = os.path.join(STATE_DIR,
 f"step_count_{task_id}.txt")` — the session is absent from the key, and nothing anywhere in the file
 consults the counter's age.
 
-**AFTER**: the same script — session B is allowed; session A stays blocked. A counter aged past the
-TTL restarts at 1.
+**AFTER** (captured post-fix, same script, same 41+1 drive against `T900`):
+
+Session A's 41st call:
+
+```
+{"decision": "block", "reason": "[hook:pre_agent_step_limit] T900 has exceeded 40 tool calls without
+reaching Ready for Review. ... .claude/hooks/.state/step_count_A_T900.txt after confirming the task
+isn't actually stuck."}
+```
+
+Session B's single event: `(no output)` — the hook exits 0 with no `decision` key, i.e. allowed.
+
+Session A's next call (confirming it is not silently reset by B's activity): still blocked, same
+message, `step_count_A_T900.txt`.
+
+A counter file aged 7h (mtime rewound via `os.utime`) restarts its count at 1 rather than carrying
+the prior 41 forward — verified by `test_sc3_expired_counter_restarts_at_one` in
+`.claude/hooks/tests/test_step_limit_session_scope.py`, which asserts the post-expiry call is
+unblocked and the counter file's fresh content is `"1"`.
 
 **DELTA**: one task's exhausted budget can no longer halt an unrelated session, and a stale counter
 stops being a landmine that waits for the next session to resolve to that task ID.
@@ -220,10 +252,10 @@ reverting a mutation with `git checkout` also reverts your fix.
 
 ## Completion Checklist
 
-- [ ] Implementation done
-- [ ] Self-review: `Skill({ skill: "code-review" })` run
-- [ ] Security review: `Skill({ skill: "security-review" })` run — Medium risk, mandatory
-- [ ] Tests written AND pass — output pasted into Evidence table (Hard-Stop Gate 5)
-- [ ] `Skill({ skill: "verify" })` run
-- [ ] Demonstration block filled, including a BEFORE captured before the first implementation commit
-- [ ] Supervisor notified: task ready for Stage 4 review
+- [x] Implementation done
+- [ ] Self-review: `Skill({ skill: "code-review" })` run — deferred to Stage 4 (Supervisor/reviewer)
+- [ ] Security review: `Skill({ skill: "security-review" })` run — Medium risk, mandatory — deferred to Stage 4
+- [x] Tests written AND pass — output pasted into Evidence table (Hard-Stop Gate 5)
+- [ ] `Skill({ skill: "verify" })` run — deferred to Stage 5
+- [x] Demonstration block filled, including a BEFORE captured before the first implementation commit
+- [x] Supervisor notified: task ready for Stage 4 review
