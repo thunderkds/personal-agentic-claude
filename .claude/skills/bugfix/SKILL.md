@@ -116,13 +116,26 @@ Generate `tasks/TASK_GUIDE_Txxx.md` using this bug-specific structure:
 - [ ] Correct hypothesis stated in commit message
 - [ ] Post-mortem: what would have prevented this?
 
-### Evidence
-| Check | Command / observation | Result |
-|---|---|---|
-| Repro loop | | |
-| Regression test | | |
-| Smoke suite | | |
+### Evidence (filled by reviewer at Stage 4/5)
+| Check | Result | Notes / output snippet |
+|-------|--------|------------------------|
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
+| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
+| Negative cases hold | ☐ pass / ☐ fail | |
+| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
+| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI-affecting bugfixes, Hard-Stop Gate 6] |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
+| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| Repro loop | ☐ pass / ☐ fail | [command/observation that reproduced the bug before the fix] |
+| Regression test | ☐ pass / ☐ fail | [test file path(s) added to lock the fix in] |
+| Smoke suite | ☐ pass / ☐ fail | [bug-specific smoke check beyond the full suite row above] |
 ```
+
+The three UI rows default to `☐ N/A` for a pure-backend bugfix — but a bugfix that touches a UI
+component must fill them with real evidence before Hard-Stop Gate 6 is satisfied; defaulting to N/A
+on a UI-affecting bugfix is not a valid shortcut.
 
 Add the row to `PROJECT_KANBAN.md`.
 
@@ -147,7 +160,11 @@ When the sub-agent marks the task Ready for Review:
 1. `Skill({ skill: "code-review" })` — always
 2. `Skill({ skill: "security-review" })` — if Risk is Medium or High
 3. Confirm the fix matches the "correct behaviour" definition from the mental model — not just that tests pass
-4. Verify the Evidence table has repro loop, regression test, and smoke suite rows filled with real output
+4. Verify every row of the expanded Evidence table is filled with real output — new tests, verification
+   command, negative cases, the `verify` row (Notes column must literally say "pass" or "fail" — the
+   merge gate scans Notes, not Result), review scope, full smoke suite, the three UI rows (`☐ N/A` is
+   only valid for a non-UI bugfix), and the bugfix-specific repro loop / regression test / smoke suite
+   rows
 
 A task with blank evidence rows or a fix that diverges from the confirmed mental model is **not** review-complete.
 
