@@ -90,6 +90,7 @@ and to the T047 known-limitation note in `task_context.py`'s docstring.
 | 6 | The block message names the exact counter file to reset, including the session component | the old message named a path that was correct but insufficient |
 | 7 | Fail-open is preserved end to end: malformed stdin, unreadable counter, or unwritable state dir never raise and never block | `.claude/agents/general-agent-template.md` |
 | 8 | Existing step-limit tests still pass unmodified — the guard still blocks a genuine runaway within a single session | no regression on the guard's actual purpose |
+| 9 | A counter belonging to a task that has already reached Done/Ready for Review on `PROJECT_KANBAN.md` never blocks a later session — the TTL (AC3) is sufficient on its own, but confirm this case explicitly | 2026-08-06 second incident: a *completed* task's counter kept claiming victims |
 
 ---
 
@@ -180,6 +181,7 @@ the harm that actually stopped a session.
 - [ ] The state dir does not exist yet on first run — `makedirs(exist_ok=True)` already handles it; confirm it still does when the path is unwritable
 - [ ] Old `step_count_<task>.txt` files from before this change linger in `.state/` — they must simply be ignored, not misread as a session-keyed file
 - [ ] The block message must not leak a full absolute path containing anything sensitive; keep it repo-relative as it is today
+- [ ] **The escape hatch must not depend on a file being absent.** Observed 2026-08-06: once blocked, `Bash` and `Read` are both killed, and `Write` only worked because the counter file did not yet exist — `Write` on an *existing* file requires a prior `Read`, which the same hook blocks. The first lockout was escapable by luck; the second was not, and needed the user. Whatever this task leaves in place, a blocked session must retain at least one reliable way to clear its own counter
 
 ---
 
