@@ -131,6 +131,19 @@ Generate `tasks/TASK_GUIDE_Txxx.md` using this bug-specific structure:
 | Repro loop | ☐ pass / ☐ fail | [command/observation that reproduced the bug before the fix] |
 | Regression test | ☐ pass / ☐ fail | [test file path(s) added to lock the fix in] |
 | Smoke suite | ☐ pass / ☐ fail | [bug-specific smoke check beyond the full suite row above] |
+
+## Demonstration
+
+**BEFORE**: same command as the Phase 1 repro loop above, captured before any fix commit exists —
+do not restate it here as a second copy; point at it by name (e.g. "see Phase 1 repro loop") so
+the two cannot drift out of sync.
+
+**AFTER**: the same Phase 1 repro loop, re-run post-fix, showing the bug no longer reproduces.
+
+**DELTA**: <one sentence — what now behaves correctly that did not before>
+
+**WITNESS**: <who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
+implementing agent alone>
 ```
 
 The three UI rows default to `☐ N/A` for a pure-backend bugfix — but a bugfix that touches a UI

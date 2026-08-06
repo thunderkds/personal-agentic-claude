@@ -113,6 +113,25 @@ If docs/legacy/ exists (legacy mode): also read `docs/legacy/risk-hotspots.md` a
 
 ---
 
+## Demonstration
+
+> Anchors what this task delivered to an observable before/after pair. BEFORE has no `N/A` path:
+> if the task changes executable code, BEFORE is a pasted, timestamped terminal capture taken
+> **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
+> text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
+
+**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
+first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+
+**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+
+**DELTA**: [one sentence — what a user can now do that they could not before]
+
+**WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
+implementing agent alone]
+
+---
+
 ## UI / Design Acceptance Criteria
 
 > **Only fill for tasks with a UI component. Delete this entire section for pure-backend tasks.**
