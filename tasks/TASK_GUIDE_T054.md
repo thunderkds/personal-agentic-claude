@@ -169,6 +169,7 @@ as a typed field. The attribution chain T043 → T047 → T048 exists and works;
 - [ ] Bugfix flavor's BEFORE points at the Phase 1 repro loop rather than containing it — parser must resolve the reference, not print it raw
 - [ ] Event trace exists but contains no record for this task — WITNESS underived, must not fall back to a guessed name
 - [ ] Template slot left unfilled renders a literal `{{SLOT}}` into the page — assert none remain after rendering
+- [ ] **A filled-looking BEFORE is not proof a capture happened.** Verified 2026-08-06 against T053's shipped advisory: `before_field_is_blank` only detects an empty field or an unfilled `[...]`/`<...>` placeholder, so *any* prose — including a sentence describing what the author intends to capture later — satisfies it. This task must not present BEFORE as verified evidence; render what the field contains, and treat "the spawn hook didn't warn" as no signal at all
 
 ---
 

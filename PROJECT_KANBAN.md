@@ -8,9 +8,9 @@
 ## Board
 
 ### Todo
-- [ ] **T054** — delivery-report skill + HTML template + reminder hook + harness sync | common-infrastructure | C2 | Risk: Medium | P1 — **blocked on T053** (nothing to render until the Demonstration block exists in both guide flavors)
 
 ### In Progress
+- [ ] **T054** — delivery-report skill + HTML template + reminder hook + harness sync | common-infrastructure | C2 | Risk: Medium | P1 | Unblocked 2026-08-06 (T053 merged). Stage 3 spawned 2026-08-06 in a pre-made worktree off the branch tip. Note: this is the first task this session with live UI Evidence rows — Hard-Stop Gate 6 applies, and the Supervisor signs off the visual verdict, not the implementer
 
 ### Ready for Review
 - [ ] **T053** — Demonstration block in both guide flavors + spawn-time blank-BEFORE warning. Adds a 4-field `Demonstration` section (BEFORE / AFTER / DELTA / WITNESS, no N/A path on BEFORE) to `templates/TASK_GUIDE_template.md` and to the bugfix Step 3 skeleton, wires the BEFORE-capture-before-implementation instruction into `craft-spawn-prompt`, and adds a non-blocking blank-BEFORE warning to `pre_agent_validate_guide.py` in the same shape as its existing `Depends on` advisory. Implements DDR-0003 decisions 1, 2, 5. AC8 explicitly re-confirms the new H2 doesn't perturb any existing field-anchored guide parse — the 7th guard against this hook family's recorded parsing-defect pattern | common-infrastructure | C2 | Risk: Medium | P1 | Stage 3 spawned 2026-08-06 (worktree-isolated). **Stage 3 run killed by the step-limit hook after 40 calls**, having completed only the 3 markdown changes; the Supervisor implemented the remaining AC6/AC7 hook advisory and all 8 tests. Stage 4: 1 self-review defect found and fixed before commit (`value.replace("OR","")` stripped those letters from any word, e.g. "ERROR"→"ERR" — narrowed to `\bOR\b`); security-review PASS, 0 actionable. Mutation-verified: missing-section branch `True`→`False` → RED `1 failed, 158 passed`, restore → GREEN `159 passed`
