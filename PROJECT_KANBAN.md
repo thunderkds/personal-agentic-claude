@@ -10,6 +10,7 @@
 ### Todo
 
 ### In Progress
+- [ ] **T058** — diagnose Phase 4 — turn "instrument" from a preference into an evidence loop. Phase 4 is currently one line ranking instrument types by preference; it never says where to place the first probe, how to narrow after reading one, or when to stop. Rewritten into a ≥5-step procedure: boundary-first probes, actual-vs-expected values, locate the good-in/bad-out boundary, halve the remaining range, stop when a single function or expression is isolated. Direction locked with the user 2026-08-06 after brainstorming and grilling: no new skill, no hard-bug/easy-bug split, and the earlier C0–C3 phase-gating idea explicitly **dropped, not deferred** (a second scaling mechanism would compete with the Complexity matrix, and complexity is not knowable before the bug is diagnosed). Debug logs are the agent's own temporary instrumentation and must never be routed to `memory/event-trace/` — the user ruled that channel out as serving the merge gate and token-audit generator, and it records tool calls rather than program values. AC9/AC10 are negative criteria pinning line 8 and every non-Phase-4 heading byte-identical, so the dropped direction cannot re-enter through the implementation | common-infrastructure | C1 | Risk: Medium | P1 | Stage 2 planned 2026-08-06
 
 ### Ready for Review
 
