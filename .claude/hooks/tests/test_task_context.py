@@ -99,8 +99,11 @@ class HookSandbox:
         return sorted(os.listdir(self.state_dir))
 
     def counter_value(self, task_id, session="nosession"):
+        """T057: the counter file is now two lines (count\nblock_count).
+        These tests are about attribution, not file format, so return the
+        count only — line 2 is asserted by the T057 suite itself."""
         with open(os.path.join(self.state_dir, f"step_count_{session}_{task_id}.txt")) as f:
-            return f.read().strip()
+            return f.read().strip().splitlines()[0]
 
     def cleanup(self):
         shutil.rmtree(self.root, ignore_errors=True)
@@ -441,7 +444,11 @@ def test_step_limit_still_blocks_once_an_attributed_task_exceeds_the_limit():
         decision = json.loads(third.stdout)
         assert decision["decision"] == "block", decision
         assert "T099" in decision["reason"], decision
-        assert sandbox.counter_value("T099") == "3"
+        # T057: the blocking call now resets the counter in the same
+        # invocation, so it reads 0 rather than continuing to climb. The
+        # property this test protects -- that an attributed task IS blocked
+        # once it exceeds the limit -- is asserted just above and still holds.
+        assert sandbox.counter_value("T099") == "0"
     finally:
         sandbox.cleanup()
 
