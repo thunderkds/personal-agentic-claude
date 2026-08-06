@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Delivery Report — {{TASK_ID}} — {{BRANCH}}</title>
+<style>
+  :root {
+    --bg:        #0a0a12;
+    --surface:   #111128;
+    --surface2:  #16162e;
+    --border:    #1e1e42;
+    --text:      #e2e2f0;
+    --muted:     #6b6b9a;
+    --cyan:      #00d4ff;
+    --green:     #00ff88;
+    --amber:     #ffb800;
+    --purple:    #a855f7;
+    --cyan-dim:  rgba(0,212,255,.12);
+    --green-dim: rgba(0,255,136,.12);
+    --amber-dim: rgba(255,184,0,.12);
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    max-width: 980px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.5;
+  }
+  h1 { margin: 0; font-size: 1.25rem; color: #fff; letter-spacing: .02em; }
+  h2 { font-size: .8rem; color: var(--muted); margin: 0 0 .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; }
+
+  .header {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--cyan);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 0 24px rgba(0,212,255,.08), 0 4px 24px rgba(0,0,0,.5);
+  }
+  .header-meta { color: var(--muted); font-size: .85rem; margin-top: .3rem; }
+  .header-meta code { color: var(--cyan); background: var(--cyan-dim); padding: .1rem .4rem; border-radius: 4px; font-size: .8rem; }
+
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 16px rgba(0,0,0,.4);
+  }
+  .section-head { padding: .7rem 1.25rem; background: var(--surface2); border-bottom: 1px solid var(--border); }
+
+  /* ── BEFORE/AFTER SIDE BY SIDE ── */
+  .ba-wrap { display: flex; flex-wrap: wrap; gap: 1rem; padding: 1.25rem 1.5rem; }
+  .ba-col { flex: 1 1 320px; min-width: 0; }
+  .ba-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-bottom: .5rem; }
+  .ba-before .ba-label { color: var(--amber); }
+  .ba-after  .ba-label  { color: var(--green); }
+  .ba-col pre {
+    background: #06060c; border: 1px solid var(--border); border-radius: 6px;
+    padding: .85rem; font-size: .8rem; white-space: pre-wrap; word-break: break-word;
+    margin: 0; max-height: 320px; overflow-y: auto; font-family: 'Cascadia Code', 'Fira Code', monospace;
+  }
+
+  .delta-box {
+    padding: 1.1rem 1.5rem; font-size: 1.05rem; font-weight: 600; color: #fff;
+    border-left: 3px solid var(--cyan); box-shadow: -6px 0 12px rgba(0,212,255,.08);
+  }
+  .delta-box::before { content: 'DELTA → '; color: var(--cyan); font-size: .78rem; letter-spacing: .05em; }
+
+  .witness-box { padding: 1rem 1.5rem; font-size: .85rem; color: #b0b0d0; }
+  .witness-box pre { white-space: pre-wrap; word-break: break-word; margin: 0; font-family: 'Cascadia Code', 'Fira Code', monospace; }
+
+  .no-demo-warning {
+    margin: 0 1.5rem 1rem; padding: .75rem 1rem; background: var(--amber-dim);
+    border: 1px solid rgba(255,184,0,.3); border-radius: 6px; color: var(--amber); font-size: .82rem;
+  }
+
+  /* ── EVIDENCE TABLE ── */
+  .evidence-summary {
+    padding: .9rem 1.5rem; font-size: 1rem; font-weight: 700; color: var(--green);
+    background: var(--green-dim); border-bottom: 1px solid var(--border);
+  }
+  .matrix-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  td { padding: .6rem 1.25rem; font-size: .82rem; border-top: 1px solid var(--border); vertical-align: top; }
+  td pre { margin: 0; white-space: pre-wrap; word-break: break-word; font-family: inherit; font-size: inherit; color: inherit; }
+  .ev-check pre { color: #cfcfe8; font-weight: 500; }
+  .ev-filled  { color: var(--green); }
+  .ev-blank   { color: var(--amber); }
+  .ev-n-a     { color: var(--muted); }
+  .ev-notes pre { color: #9090b8; }
+
+  .footer {
+    font-size: .72rem; color: var(--muted); text-align: center;
+    padding: 1rem 0 2rem; border-top: 1px solid var(--border); margin-top: .5rem;
+  }
+  code { font-family: 'Cascadia Code', 'Fira Code', monospace; background: var(--cyan-dim); color: var(--cyan); padding: .1rem .4rem; border-radius: 3px; font-size: .78rem; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Delivery Report — {{TASK_ID}}</h1>
+  <div class="header-meta">Branch: <code>{{BRANCH}}</code> &nbsp;·&nbsp; {{DATE}}</div>
+</div>
+
+{{NO_DEMO_WARNING}}
+
+<div class="section">
+  <div class="section-head"><h2>Before / After</h2></div>
+  <div class="ba-wrap">
+    <div class="ba-col ba-before">
+      <div class="ba-label">Before</div>
+      <pre>{{BEFORE}}</pre>
+    </div>
+    <div class="ba-col ba-after">
+      <div class="ba-label">After</div>
+      <pre>{{AFTER}}</pre>
+    </div>
+  </div>
+  <div class="delta-box">{{DELTA}}</div>
+</div>
+
+<div class="section">
+  <div class="section-head"><h2>Witness</h2></div>
+  <div class="witness-box"><pre>{{WITNESS}}</pre></div>
+</div>
+
+<div class="section">
+  <div class="section-head"><h2>Evidence Completion</h2></div>
+  <div class="evidence-summary">{{EVIDENCE_COUNT_SUMMARY}}</div>
+  <div class="matrix-wrap">
+    <table>
+      <tbody>
+        {{EVIDENCE_ROWS}}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="footer">
+  Task: {{TASK_ID}} &nbsp;·&nbsp; Branch: <code>{{BRANCH}}</code> &nbsp;·&nbsp; Generated: {{TIMESTAMP}}
+</div>
+
+</body>
+</html>
