@@ -1,6 +1,6 @@
-# TASK_GUIDE — T058: diagnose Phase 4 — turn "instrument" from a preference into an evidence loop
+# TASK_GUIDE — T058: diagnose — evidence-driven instrumentation loop (NDJSON logs, hypothesis-tagged)
 **Date**: 2026-08-06
-**Complexity Level**: C1
+**Complexity Level**: C2
 **Risk Level**: Medium
 **Priority**: P1
 **Assigned agent**: common-infrastructure
@@ -16,7 +16,7 @@ Before writing any code:
 3. Read this file completely
 4. Read `.claude/agents/common-infrastructure.md`
 5. Note the **Complexity Level** above and apply the matching process (brainstorm / decompose / verify depth / model) from the Complexity matrix in `.claude/agents/general-agent-template.md`
-6. C1 single-file task — `memory/codebase-map.md` read is not required
+6. C2 task — read `memory/codebase-map.md` for directory layout and blast-radius hotspots
 
 ---
 
@@ -30,28 +30,38 @@ Original user request, verbatim across the session:
 
 > "agent should logs for debug purpose the event trace is served for another purpose"
 
+> "I have a repos for you related, let take a look if any update https://github.com/millionco/debug-agent"
+
 **Restated intent** (Supervisor's interpretation, in the project's domain language):
 > A sub-agent running `diagnose` must locate a bug from evidence it collects by instrumenting the
-> program — inserting its own debug log statements, running the Phase 1 feedback loop, reading the
-> actual emitted values, and narrowing the suspect range against them — rather than from reasoning
-> alone. `diagnose` Phase 4 currently states a *preference* between instrument types but gives no
-> procedure for where to place the first probe, how to narrow after reading its output, or when to
-> stop. This task replaces that preference with a concrete, followable loop.
+> program — inserting its own structured debug logs, running the Phase 1 feedback loop, reading the
+> emitted values, and resolving each hypothesis against them — rather than from reasoning over
+> source code alone. `diagnose` Phase 4 currently states a one-line *preference* between instrument
+> types and gives no procedure. This task replaces it with a concrete evidence loop, and closes the
+> three downstream holes that loop exposes in Phases 5 and 6 and in the Stuck-Loop Checkpoint.
+
+**Prior art consulted**: `https://github.com/millionco/debug-agent` (MIT), reviewed 2026-08-06 at the
+Supervisor's request. Its `packages/debug-agent/skill/SKILL.md` is a mature implementation of this
+exact idea. Eight of its mechanisms are adopted below; its transport layer is explicitly rejected.
+Where our `diagnose` is stronger — the Phase 1 feedback-loop ladder, and the T052 Stuck-Loop
+Checkpoint, neither of which it has — ours is kept unchanged.
 
 **Out of scope** (what this task explicitly does NOT do):
-- Any Complexity-gating of `diagnose` phases (the C0–C3 ladder explored earlier this session). Dropped by user redirect, not deferred. `diagnose` line 8's `"Skip phases only when explicitly justified"` clause stays exactly as-is.
-- Any change to `memory/event-trace/*.jsonl` or the hooks that write it. User ruled this out explicitly: the event-trace records *tool calls*, serves the merge gate and the token-audit generator, and cannot answer "what was this variable at that point." Debug logs are the agent's own, added and removed inside the task.
-- Any new skill, and any split of `diagnose` into hard-bug/easy-bug variants. Rejected during brainstorming: the project has exactly one scaling control (the C0–C3 matrix in `general-agent-template.md`) and a second skill would compete with it.
-- Any change to `.claude/skills/bugfix/SKILL.md`. Its Step 4 already wires `diagnose` in as mandatory first action; nothing about that wiring changes.
-- Adding `diagnose` to the trigger-threshold table in `general-agent-template.md`. That was part of the dropped gating direction.
+- The `npx debug-agent` daemon, its HTTP ingest server, session IDs, ports, and the hosted remote-relay mode. Rejected for three reasons: it introduces a Node runtime dependency into a Python/shell repo; it routes program values through an external network hop; and it duplicates, over HTTP, what an append-to-file NDJSON write already achieves. The log sink is a plain local file.
+- Any Complexity-gating of `diagnose` phases (the C0–C3 phase ladder explored earlier this session). Dropped by user redirect, not deferred. Line 8's `"Skip phases only when explicitly justified"` clause stays byte-identical.
+- Any change to `memory/event-trace/*.jsonl` or the hooks that write it. Ruled out explicitly by the user: the event-trace records *tool calls*, serves the merge gate and the token-audit generator, and cannot carry program values. Debug logs are the agent's own, written to their own file.
+- Any change to `.claude/skills/bugfix/SKILL.md`. Its Step 4 already wires `diagnose` in as mandatory first action; that wiring is correct and unchanged.
+- Adding `diagnose` to the trigger-threshold table in `general-agent-template.md` — part of the dropped gating direction.
+- Any new skill, and any hard-bug/easy-bug split of `diagnose`. Rejected at brainstorming: a second scaling mechanism would compete with the Complexity matrix.
+- Replacing Phase 1's repro ladder with the prior art's "ask the user to reproduce" step. Ours is strictly stronger (10 automated rungs before HITL) and stays first.
 
 **Requirement Refs** (FR/NFR/US IDs from `PRD.md` this task satisfies):
-- None — this is framework-internal skill authoring, not a PRD-tracked product requirement. Traceability runs to the verbatim user requests quoted above instead.
+- None — framework-internal skill authoring, not a PRD-tracked product requirement. Traceability runs to the verbatim user requests quoted above.
 
 ### Requirement Fidelity Gate (sign off BEFORE implementation)
 
-- [x] Restated intent confirmed to match the user's request — confirmed by the user on 2026-08-06 ("agent should logs for debug purpose the event trace is served for another purpose" locked the last open question)
-- [x] Domain terms align with `PROJECT_SPEC.md` glossary — `grill-with-docs` run this session; the one term needing sharpening was *debug log* vs *event trace*, resolved by the user and recorded under Out of scope
+- [x] Restated intent confirmed to match the user's request — confirmed by the user 2026-08-06, including the explicit approval to fold in the prior-art mechanisms and bump C1→C2
+- [x] Domain terms align with `PROJECT_SPEC.md` glossary — `grill-with-docs` run this session; terms needing sharpening were *debug log* vs *event trace* (resolved: separate channels, see Out of scope) and *disproven* vs *REJECTED/INCONCLUSIVE* (resolved: see AC8)
 - [x] Every Acceptance Criterion below traces to a line in the Requirement
 - [x] All Requirement Refs exist — N/A, see above
 
@@ -70,18 +80,25 @@ Original user request, verbatim across the session:
 
 ## Acceptance Criteria
 
+> Numbering note: AC1–AC7 rewrite Phase 4. AC8 fixes the Stuck-Loop Checkpoint. AC9–AC11 close the
+> Phase 5/6 holes. AC12–AC14 are negative criteria locking scope.
+
 | # | Criterion (testable) | Traces to requirement |
 |---|----------------------|-----------------------|
-| 1 | `.claude/skills/diagnose/SKILL.md` retains a section whose heading is exactly `### Phase 4 — Instrument`, and its body is a numbered/bulleted procedure of at least 5 discrete steps, not a single preference sentence | "how can the agent depend on the data to proceduce" |
-| 2 | The Phase 4 body instructs placing the first probes at **boundaries** (function entry/exit, module or process edges) before narrowing inward | "insert logs, trace them" |
-| 3 | The Phase 4 body instructs logging **actual values** and comparing each against a stated expected value | "analyze to focus on the bugs" |
-| 4 | The Phase 4 body states an explicit narrowing rule: the boundary showing correct-input/incorrect-output localises the defect, then halve the remaining range and repeat | "focus on the bugs" |
-| 5 | The Phase 4 body states an explicit stop condition (a single function/expression isolated, or the loop's failing value explained) | "focus on the bugs" |
-| 6 | The `[DEBUG-xxxx]` unique-prefix tagging requirement survives the rewrite, and Phase 6's `grep`-the-prefix cleanup checkbox still refers to it | Surgical Changes — existing cleanup contract must not break |
-| 7 | Phase 4 explicitly states that debug logs are the agent's own temporary instrumentation and must NOT be written to `memory/event-trace/` | "the event trace is served for another purpose" |
-| 8 | The existing Stuck-Loop Checkpoint's dependency on Phase 4 still holds: the rewritten Phase 4 still produces a per-hypothesis confirmed/disproven outcome that the checkpoint can count | Existing T052 contract must not silently break |
-| 9 | `diagnose/SKILL.md` line 8's `"Skip phases only when explicitly justified"` sentence is byte-identical to its pre-change form (negative criterion — proves the dropped gating direction was not smuggled in) | Out of scope |
-| 10 | Every other `### Phase N` heading in the file is byte-identical to its pre-change form (negative criterion — scope lock) | Surgical Changes |
+| 1 | `### Phase 4 — Instrument` survives as a heading, and its body is a procedure of at least 5 discrete enumerated steps, not a preference sentence | "how can the agent depend on the data to proceduce" |
+| 2 | Phase 4 specifies the log format as **NDJSON** — one JSON object per line appended to a single local log file — and gives a concrete payload field list including at minimum `hypothesisId`, `location`, `message`, `data`, `timestamp` | prior art STEP 1; "analyze to focus on the bugs" |
+| 3 | Phase 4 states that **every probe must carry the `hypothesisId` of the Phase 3 hypothesis it tests**, and that a probe mapping to no hypothesis must not be inserted | prior art STEP 2; makes T052's counting mechanical |
+| 4 | Phase 4 names the placement categories to choose from — at minimum: function entry with parameters, function exit with return values, values before/after a critical operation, which branch executed, and state mutations | "insert logs, trace them" |
+| 5 | Phase 4 states an explicit log budget: at least 1, never more than 10, typical 2–6 — and instructs narrowing the hypothesis set rather than exceeding the ceiling | prior art STEP 2; supersedes the vague "never log everything and grep" |
+| 6 | Phase 4 requires each probe be wrapped in `#region debug log` / `#endregion` markers using language-appropriate comment syntax | prior art Cleanup; deterministic removal |
+| 7 | Phase 4 forbids logging secrets, tokens, API keys, and PII, and requires clearing the log file before each run so runs do not mix | prior art STEP 3 + FORBIDDEN list |
+| 8 | The Stuck-Loop Checkpoint resolves each hypothesis as exactly one of **CONFIRMED / REJECTED / INCONCLUSIVE**, each citing specific log lines; and it states that only **REJECTED** increments the consecutive-disproof counter — INCONCLUSIVE neither increments nor resets it, and instead calls for better instrumentation of the same hypothesis | prior art STEP 4; preserves T052's contract under the new vocabulary |
+| 9 | Phase 5 states that instrumentation is **kept active through the fix** and must not be removed until a post-fix verification run's logs prove success | prior art STEP 5; closes a real hole |
+| 10 | Phase 5 requires reverting code changes made for any hypothesis that came back REJECTED, so speculative guards do not accumulate | prior art Critical Reminders |
+| 11 | Phase 6's cleanup step removes instrumentation by the `#region debug log` marker (delete through the matching `#endregion`), then re-greps to confirm zero markers remain, then reviews `git diff` to confirm only the intended fix is left | prior art Cleanup steps 1–4 |
+| 12 | `diagnose/SKILL.md` line 8's `"Skip phases only when explicitly justified"` sentence is byte-identical to its pre-change form (negative — proves the dropped gating direction did not re-enter) | Out of scope |
+| 13 | The ordered list of `### Phase` headings is unchanged in text, count, and order — no phase added, removed, renamed, or reordered (negative — scope lock) | Surgical Changes |
+| 14 | Phase 1, Phase 2, and Phase 3 bodies are byte-identical to their pre-change form (negative — the repro ladder and hypothesis-generation rules are explicitly out of scope) | Out of scope |
 
 ---
 
@@ -91,17 +108,22 @@ Original user request, verbatim across the session:
 
 | # | Given (input/state) | Expect (output/behavior) | How it's checked |
 |---|---------------------|--------------------------|------------------|
-| 1 | The shipped `.claude/skills/diagnose/SKILL.md` | A `### Phase 4 — Instrument` section parses out with ≥5 procedure steps | automated test |
-| 2 | The shipped Phase 4 body | Contains a boundary-first instruction, an expected-vs-actual instruction, a halving/narrowing rule, and a stop condition | automated test |
-| 3 | The shipped Phase 4 body | Contains `[DEBUG-` and an explicit prohibition naming `event-trace` | automated test |
-| 4 | The shipped file, line 8 | Byte-identical to the pre-change sentence (negative case — a violation must FAIL the suite) | automated test |
-| 5 | The shipped file's `### Phase` heading list | Exactly the pre-change set, unchanged in text and order (negative case) | automated test |
-| 6 | A Phase 4 body rewritten as prose with no enumerated steps (mutation) | Test for SC1 goes RED | mutation check, observed then reverted |
+| 1 | The shipped `.claude/skills/diagnose/SKILL.md` | `### Phase 4 — Instrument` extracts with ≥5 enumerated steps | automated test |
+| 2 | The extracted Phase 4 block | Contains `NDJSON`, `hypothesisId`, the five placement categories, the numeric budget bounds (1/10), `#region debug log`, and a secrets/PII prohibition | automated test |
+| 3 | The extracted Stuck-Loop Checkpoint block | Contains all three of `CONFIRMED`, `REJECTED`, `INCONCLUSIVE`, and states that INCONCLUSIVE does not increment the counter | automated test |
+| 4 | The extracted Phase 5 block | States instrumentation is retained until post-fix verification, and requires reverting REJECTED-hypothesis changes | automated test |
+| 5 | The extracted Phase 6 block | Cleanup is marker-driven (`#region debug log`), followed by a re-grep and a `git diff` review | automated test |
+| 6 | The shipped file, line 8 | Byte-identical to the pre-change sentence (negative — a violation must FAIL) | automated test |
+| 7 | The shipped file's `### Phase` heading list | Exactly the pre-change list, same text and order (negative) | automated test |
+| 8 | Phase 1/2/3 bodies | Byte-identical to pre-change (negative) | automated test |
+| 9 | Phase 4 body collapsed to a single prose sentence (mutation) | SC1 goes RED | mutation check, observed then reverted |
+| 10 | `INCONCLUSIVE` deleted from the checkpoint (mutation) | SC3 goes RED | mutation check, observed then reverted |
+| 11 | A word altered inside Phase 3's body (mutation) | SC8 goes RED | mutation check, observed then reverted |
 
 ### Verification Command (exact, runnable)
 
 ```bash
-python3 -m pytest .claude/hooks/tests/test_diagnose_phase4_procedure.py -q && \
+python3 -m pytest .claude/hooks/tests/test_diagnose_evidence_loop.py -q && \
 python3 -m pytest .claude/hooks/tests -q
 ```
 
@@ -111,7 +133,7 @@ python3 -m pytest .claude/hooks/tests -q
 |-------|--------|------------------------|
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
 | Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | [SC4/SC5 must be observed RED under mutation, then reverted] |
+| Negative cases hold | ☐ pass / ☐ fail | [SC9/SC10/SC11 must each be observed RED under mutation, then reverted] |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
 | Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
@@ -132,9 +154,13 @@ python3 -m pytest .claude/hooks/tests -q
 Each probe maps to a specific prediction. Change one variable at a time. Prefer debugger/REPL > targeted boundary logs > never "log everything and grep". Tag logs `[DEBUG-xxxx]`. For perf: measure a baseline first (profiler/timing/query plan), then bisect.
 ```
 
-That is the entire section: one heading and one line. It ranks instrument types by preference and never says where to place a probe, how to narrow after reading one, or when to stop.
+That is the entire section: one heading, one line. It ranks instrument types by preference and never
+says what to log, in what format, how many probes, how to tie a probe to a hypothesis, or when to
+stop. The corresponding Phase 6 cleanup checkbox reads only
+`All [DEBUG-...] instrumentation removed (grep the prefix)`, and neither Phase 5 nor Phase 6 says
+anything about *when* removal is allowed.
 
-**AFTER**: [verbatim excerpt of the rewritten `### Phase 4 — Instrument` section]
+**AFTER**: [verbatim excerpt of the rewritten Phase 4, the amended Stuck-Loop Checkpoint, and the amended Phase 5 / Phase 6 sections]
 
 **DELTA**: [one sentence — what a sub-agent running `diagnose` can now follow that it could not before]
 
@@ -144,36 +170,47 @@ That is the entire section: one heading and one line. It ranks instrument types 
 
 ## Approach
 
-**Pattern reference**: `.claude/hooks/tests/test_bugfix_evidence_parity.py` — structural assertions over a SKILL.md's markdown (section extraction by heading, then content assertions on the extracted block), including negative cases that must be observed RED. Imitate its section-extraction helper rather than writing new regex from scratch.
+**Pattern reference**: `.claude/hooks/tests/test_bugfix_evidence_parity.py` — structural assertions over a SKILL.md's markdown (extract a section by heading, then assert on the extracted block), including negative cases observed RED. Imitate its section-extraction helper; do not write fresh regex.
 
-Rewrite `### Phase 4 — Instrument` as an ordered procedure. The shape agreed with the user:
+**Secondary reference (external, read-only)**: `https://github.com/millionco/debug-agent`, file `packages/debug-agent/skill/SKILL.md`. Adopt the *mechanisms* listed in the AC table. Do **not** copy its text wholesale — `diagnose` is 59 lines and terse by design, the prior art is 233 lines and carries a product's install instructions. Do not vendor any of its code; MIT-licensed prior art consulted for design, not imported.
 
-1. Place the first probes at **boundaries** — function entry/exit, module edges, process edges — not adjacent to where the bug is suspected. A probe next to the suspicion only confirms the suspicion.
-2. Log **actual values**, and state the expected value alongside each. A log line with no expectation attached cannot disprove anything.
-3. Run the Phase 1 feedback loop, read the emitted values, and find the boundary where **input is correct and output is not**. The defect is between that boundary and the previous good one.
-4. Halve the remaining range with the next probe and repeat.
-5. Stop when a single function or expression is isolated, or when the loop's failing value is fully explained.
+Rewrite `### Phase 4 — Instrument` as an ordered procedure:
+
+1. Choose a log path — a single local file, e.g. under the system temp dir, one per diagnosis session. Not `memory/event-trace/`.
+2. Pick probe placements from the named categories, one probe per hypothesis minimum, budget 1–10 (typical 2–6). If more than 10 seem necessary, the hypothesis set is too broad — narrow it first.
+3. Append one NDJSON object per probe hit: `{hypothesisId, location, message, data, timestamp}`. Machine-parseable so the log can be analysed programmatically rather than by eye.
+4. Wrap every probe in `#region debug log` / `#endregion` with language-appropriate comment syntax.
+5. Clear the log file, run the Phase 1 feedback loop, then read the file back.
+6. Resolve each hypothesis CONFIRMED / REJECTED / INCONCLUSIVE, citing the specific log lines that decided it.
 
 Constraints that must survive the rewrite:
-- One variable at a time (existing Surgical Changes override at line 13).
-- Every probe tagged `[DEBUG-xxxx]` with a unique prefix so Phase 6 cleanup is one `grep`.
-- Each probe still maps to a specific prediction, so the Stuck-Loop Checkpoint can count confirmed/disproven per hypothesis.
+- One variable at a time (existing Surgical Changes override, line 13).
+- Each probe still maps to a specific prediction — now enforced structurally via `hypothesisId`.
 - The perf sub-case (baseline first via profiler/timing/query plan, then bisect) is retained.
-- Debug logs are temporary and agent-owned; they must not be routed to `memory/event-trace/`.
+- Never log secrets, tokens, keys, or PII.
 
-The section will grow from 2 lines to roughly 12–15. `diagnose` is currently 59 lines, well under the 150-line slim-skills threshold, so the growth needs no offsetting trim.
+The `[DEBUG-xxxx]` prefix convention is **superseded** by the region markers, which make cleanup
+deterministic (delete a bounded block) rather than line-by-line. Phase 6's checkbox must be updated
+in the same change — leaving it pointing at the retired prefix would break the cleanup contract.
+
+`diagnose` is currently 59 lines and will land around 90–100. That is under the 150-line
+`slim-skills` threshold, so no offsetting trim is needed.
 
 ---
 
 ## Edge Case Checklist
 
-- [ ] The rewrite makes Phase 4 longer than every other phase and unbalances the skill — keep it tight; procedure steps, not prose paragraphs
-- [ ] "Boundary-first" is misread as "log every boundary in the program" — the skill already forbids "log everything and grep"; that prohibition must survive explicitly
-- [ ] A bug with no reachable seam for a log statement (compiled dependency, third-party binary) — the procedure must not dead-end; fall back to the Phase 1 ladder's differential/bisection loops
-- [ ] Non-deterministic bugs where a probe's own timing changes the outcome (heisenbug) — Phase 1 already covers raising reproduction rate; Phase 4 must not contradict it
-- [ ] The `[DEBUG-` literal appears in the test as a substring assertion and would pass on a mere mention in prose — assert it inside the extracted Phase 4 block, not file-wide
-- [ ] Section-extraction regex truncating early on a nested heading — this repo has 6 recorded defects in that exact family (`find_kanban_section`, `extract`, register-hook metadata); anchor the terminator with `^###` under `re.MULTILINE`
-- [ ] Writing this guide or the new Phase 4 text with a heredoc containing a guarded command trips the merge gate's `BLOCKED_PATTERNS` prose scan — use the Write tool for file content
+- [ ] Phase 4 balloons and unbalances a deliberately terse skill — procedure steps, not prose paragraphs; hold the whole file under ~100 lines
+- [ ] Region-marker syntax differs by language (`//` vs `#` vs `--` vs `/* */`) — say "language-appropriate comment syntax", do not hardcode `//`
+- [ ] A language with no block-comment or region convention — the marker is a plain comment string, not an IDE feature; it only needs to be greppable
+- [ ] Retiring `[DEBUG-xxxx]` without updating Phase 6's checkbox leaves a dangling contract — AC11 covers this; verify both moved together
+- [ ] INCONCLUSIVE becomes an escape hatch that never terminates — the checkpoint must say it calls for *better instrumentation of the same hypothesis*, not for moving on
+- [ ] A bug with no reachable seam for a log statement (compiled dependency, third-party binary) — must not dead-end; fall back to the Phase 1 ladder's differential/bisection rungs
+- [ ] Heisenbugs where a probe's own timing changes the outcome — Phase 1 already covers raising reproduction rate; Phase 4 must not contradict it
+- [ ] Logs that would capture secrets/PII in `data` — AC7's prohibition must be inside the extracted Phase 4 block, not merely elsewhere in the file
+- [ ] Substring assertions passing on a mere prose mention — assert every literal inside its *extracted section block*, never file-wide
+- [ ] Section-extraction regex truncating early on a nested heading — this repo has six recorded defects in that exact family; anchor the terminator with `^###` under `re.MULTILINE`
+- [ ] Writing file content via a heredoc containing a guarded command trips the merge gate's prose scan — use the Write/Edit tools
 
 ---
 
@@ -181,8 +218,8 @@ The section will grow from 2 lines to roughly 12–15. `diagnose` is currently 5
 
 | File | Change |
 |------|--------|
-| `.claude/skills/diagnose/SKILL.md` | Rewrite the `### Phase 4 — Instrument` section only (currently lines 27–28) into a ≥5-step procedure. No other line changes. |
-| `.claude/hooks/tests/test_diagnose_phase4_procedure.py` | New. Structural tests for AC1–AC10, modelled on `test_bugfix_evidence_parity.py`. |
+| `.claude/skills/diagnose/SKILL.md` | Rewrite `### Phase 4 — Instrument` (currently lines 27–28) into a ≥5-step procedure; amend the Stuck-Loop Checkpoint with the three-verdict vocabulary; amend Phase 5 (retain instrumentation, revert REJECTED changes); amend Phase 6 (marker-driven cleanup). No other section changes. |
+| `.claude/hooks/tests/test_diagnose_evidence_loop.py` | New. Structural tests for AC1–AC14, modelled on `test_bugfix_evidence_parity.py`. |
 
 ## Files Must NOT Touch
 
@@ -190,24 +227,28 @@ The section will grow from 2 lines to roughly 12–15. `diagnose` is currently 5
 |------|--------|
 | `.claude/skills/bugfix/SKILL.md` | Step 4's `diagnose` wiring is already correct and unconditional; out of scope |
 | `.claude/agents/general-agent-template.md` | The trigger-table row was part of the dropped Complexity-gating direction |
-| `.claude/hooks/post_tool_trace.py` and anything under `memory/event-trace/` | User ruled the event-trace out explicitly; it serves the merge gate and token-audit generator |
-| `.claude/skills/diagnose/SKILL.md` line 8 and all `### Phase` headings other than Phase 4 | Scope lock, asserted by AC9/AC10 |
+| `.claude/hooks/post_tool_trace.py`, `.claude/hooks/lib/task_context.py`, anything under `memory/event-trace/` | The user ruled the event-trace out explicitly; it serves the merge gate and token-audit generator |
+| `.claude/skills/diagnose/SKILL.md` line 8, all `### Phase` headings, and the Phase 1/2/3 bodies | Scope lock, asserted by AC12/AC13/AC14 |
+| Anything under `packages/` or `apps/` from the prior-art repo | Not vendored; consulted for design only |
 
 ---
 
 ## Test Plan
 
-New file `.claude/hooks/tests/test_diagnose_phase4_procedure.py`, following `test_bugfix_evidence_parity.py`:
+New file `.claude/hooks/tests/test_diagnose_evidence_loop.py`, following `test_bugfix_evidence_parity.py`:
 
-1. A section-extraction helper reading the real shipped `.claude/skills/diagnose/SKILL.md`, terminating on `^###` under `re.MULTILINE` (see Edge Case Checklist — this repo has a recorded defect family here).
+1. A section-extraction helper reading the real shipped `.claude/skills/diagnose/SKILL.md`, terminating on `^###` under `re.MULTILINE` (see Edge Case Checklist — recorded defect family).
 2. AC1 — extracted Phase 4 block contains ≥5 enumerated steps.
-3. AC2–AC5 — one test each for the boundary-first, expected-vs-actual, narrowing, and stop-condition instructions.
-4. AC6/AC7 — `[DEBUG-` present inside the extracted block; an explicit `event-trace` prohibition present inside the extracted block.
-5. AC9 — line 8's sentence asserted byte-identical.
-6. AC10 — the full ordered list of `### Phase` headings asserted against the known pre-change list.
-7. Mutation controls, each observed RED then reverted, per SC6 and the Negative-cases Evidence row: (a) collapse the Phase 4 body to a single prose sentence → AC1 test RED; (b) alter line 8 → AC9 test RED; (c) rename a non-Phase-4 heading → AC10 test RED.
+3. AC2–AC7 — one test each: NDJSON + payload fields; `hypothesisId` per probe; the five placement categories; the 1/10 budget bounds; `#region debug log` markers; secrets-PII prohibition + clear-between-runs.
+4. AC8 — extracted checkpoint block contains all three verdicts and the INCONCLUSIVE-does-not-increment rule.
+5. AC9/AC10 — extracted Phase 5 block: retain-until-verified, and revert-REJECTED-changes.
+6. AC11 — extracted Phase 6 block: marker-driven removal, re-grep, `git diff` review.
+7. AC12 — line 8 asserted byte-identical.
+8. AC13 — full ordered `### Phase` heading list asserted against the known pre-change list.
+9. AC14 — Phase 1/2/3 bodies asserted byte-identical against fixtures captured before the change.
+10. Mutation controls, each observed RED then reverted, per SC9–SC11 and the Negative-cases Evidence row: (a) collapse Phase 4 to one prose sentence → SC1 RED; (b) delete `INCONCLUSIVE` from the checkpoint → SC3 RED; (c) alter a word in Phase 3's body → SC8 RED.
 
-Then the full hook suite (`188 passed` at HEAD, `dbef7ca`) must remain green.
+Then the full hook suite (`188 passed` at `1aa04dc`) must remain green.
 
 ---
 
