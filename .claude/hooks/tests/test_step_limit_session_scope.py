@@ -22,6 +22,10 @@ def _cleanup(task_id):
 
 
 def _run_hook(task_id, session_id=None, env_extra=None, stdin_text=None):
+    """T057: these tests assert behaviour at a limit of 40, the default when
+    they were written. The default is now 90, so the limit is pinned here
+    explicitly — the tests are about session keying and TTL, not about what
+    the default happens to be. An explicit env_extra still overrides."""
     event = {
         "tool_name": "Bash",
         "tool_input": {"prompt": f"Task ID: {task_id}"},
@@ -31,6 +35,7 @@ def _run_hook(task_id, session_id=None, env_extra=None, stdin_text=None):
     payload = stdin_text if stdin_text is not None else json.dumps(event)
     env = dict(os.environ)
     env["CLAUDE_ACTIVE_TASK"] = task_id
+    env.setdefault("CLAUDE_STEP_LIMIT", "40")
     if env_extra:
         env.update(env_extra)
     return subprocess.run(
@@ -67,10 +72,16 @@ def test_sc2_different_session_not_blocked_by_exhausted_session():
         assert b_proc.stdout.strip() == "", (
             f"session B must not be blocked, got: {b_proc.stdout}"
         )
-        # session A itself must still be blocked (not silently reset)
+        # T057 SUPERSEDED: this previously asserted session A must STILL be
+        # blocked. Self-clearing reverses that deliberately -- A's block already
+        # reset A's counter, so A's next call is allowed. The property this test
+        # actually exists to protect (B is unaffected by A) is asserted above and
+        # still holds. See tasks/TASK_GUIDE_T057.md AC1/AC2.
         a_proc = _run_hook(task_id, session_id="A")
-        a_payload = json.loads(a_proc.stdout)
-        assert a_payload["decision"] == "block"
+        assert a_proc.stdout.strip() == "", (
+            "T057: A's own block already reset A's counter, so A recovers on the "
+            f"next call rather than staying locked out. Got: {a_proc.stdout}"
+        )
     finally:
         _cleanup(task_id)
 
@@ -91,7 +102,7 @@ def test_sc3_expired_counter_restarts_at_one():
             "an expired counter must restart at 1, not carry the old count forward"
         )
         with open(cpath) as f:
-            assert f.read().strip() == "1"
+            assert f.read().strip().splitlines()[0] == "1"
     finally:
         _cleanup(task_id)
 
@@ -146,7 +157,7 @@ def test_sc6_unwritable_state_dir_fails_open(monkeypatch=None):
         assert proc.returncode == 0
         assert proc.stdout.strip() == "", "unreadable counter must fail open, count as 0"
         with open(cpath) as f:
-            assert f.read().strip() == "1"
+            assert f.read().strip().splitlines()[0] == "1"
     finally:
         _cleanup(task_id)
 
@@ -155,12 +166,20 @@ def test_ac1_ac6_counter_name_includes_session_and_block_message_names_it():
     task_id = "T916"
     _cleanup(task_id)
     try:
-        for _ in range(41):
+        # T057: the 41st call is the one that blocks, and it now also resets
+        # the counter -- so the block must be captured here, not on a 42nd call
+        # (which is deliberately allowed).
+        for _ in range(40):
             _run_hook(task_id, session_id="XY")
         proc = _run_hook(task_id, session_id="XY")
         payload = json.loads(proc.stdout)
-        assert f"step_count_XY_{task_id}.txt" in payload["reason"]
+        assert payload["decision"] == "block", payload
+        # AC1 (session in the counter name) is asserted on the file itself; the
+        # message no longer names it, because T057 AC5 removed the manual-reset
+        # instruction that referenced it -- telling a blocked reader to run a
+        # command it is blocked from running was the original defect.
         assert os.path.exists(_counter_path("XY", task_id))
+        assert "manually reset" not in payload["reason"], payload["reason"]
     finally:
         _cleanup(task_id)
 
