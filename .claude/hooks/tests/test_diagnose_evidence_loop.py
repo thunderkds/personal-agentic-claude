@@ -209,6 +209,44 @@ def test_sc2_phase4_forbids_secrets_and_requires_clearing_the_log():
 
 
 # ---------------------------------------------------------------------------
+# Stage 4 P2 — constraints the guide's Approach lists as "must survive the rewrite".
+# These are present in the shipped file but were unpinned: nothing failed if a future
+# edit dropped them. Same class as the repo's recorded "an assertion never observed
+# failing is not evidence" incidents, one step earlier — an assertion never written.
+# ---------------------------------------------------------------------------
+
+def test_p2_phase4_retains_the_perf_sub_case():
+    body = phase4()
+    assert re.search(r"measure a baseline first", body), (
+        "Phase 4 must retain the perf sub-case: measure a baseline before bisecting"
+    )
+    assert re.search(r"profiler/timing/query\s+plan", body), (
+        "Phase 4 must retain the named baseline instruments (profiler/timing/query plan)"
+    )
+    assert re.search(r"then bisect", body), "Phase 4 must retain 'then bisect' for the perf path"
+
+
+def test_p2_phase4_has_a_no_seam_fallback():
+    body = phase4()
+    assert re.search(r"[Ii]f no seam exists", body), (
+        "Phase 4 must not dead-end when no seam exists for a probe"
+    )
+    assert re.search(r"Phase 1", body), (
+        "the no-seam fallback must route back to the Phase 1 ladder"
+    )
+    assert re.search(r"differential and bisection", body), (
+        "the no-seam fallback must name the differential and bisection rungs"
+    )
+
+
+def test_p2_phase4_retains_one_variable_at_a_time():
+    body = phase4()
+    assert re.search(r"change one variable at a time", body, re.IGNORECASE), (
+        "Phase 4 must retain the Surgical-Changes constraint: one variable at a time"
+    )
+
+
+# ---------------------------------------------------------------------------
 # SC3 / AC8 — three-verdict vocabulary; only REJECTED increments the counter
 # ---------------------------------------------------------------------------
 
