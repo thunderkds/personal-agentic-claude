@@ -125,7 +125,9 @@ def before_field_is_blank(guide):
     # whether any real captured content is left.
     value = re.sub(r"^\s*>.*$", "", value, flags=re.MULTILINE)
     value = re.sub(r"\[[^\]]*\]|<[^>]*>", "", value)
-    value = value.replace("OR", "")
+    # Only the standalone template separator, not the letters inside a word
+    # such as "ERROR" — a substring replace here would corrupt real content.
+    value = re.sub(r"\bOR\b", "", value)
     return not value.strip()
 
 

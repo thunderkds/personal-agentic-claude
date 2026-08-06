@@ -104,12 +104,12 @@ python3 -m pytest .claude/hooks/tests -q
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | [SC2, SC3 and SC4 specifically — SC3 is the T026 regression] |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [must literally state "pass" or "fail" in this Notes column — the merge gate scans here] |
-| Review scope bounded to the change's blast radius | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_bugfix_evidence_parity.py` — 5 tests driving the real `pre_bash_block_unsafe_merge` gate end-to-end, not a re-implemented regex: SC1–SC4 plus AC7 against the literal SKILL.md skeleton text |
+| Verification command run | ☑ pass | `python3 -m pytest .claude/hooks/tests -q` → `159 passed in 1.38s`, re-run by the Supervisor from the main checkout after integration (the agent's own `151 passed` predates T053's 8 tests) |
+| Negative cases hold | ☑ pass | SC2 blank `verify` Notes → blocked. SC3 (the T026 regression — "pass" in the Result column but not Notes) → blocked. SC4 old 3-row guide → still blocked, no silent retro-pass |
+| verify | ☑ pass | Independently mutation-tested by the Supervisor rather than trusting the agent's report: renaming the `verify` Check cell to `verifyX` in the skeleton produced `1 failed, 158 passed` (RED at test_bugfix_evidence_parity.py:228), restore → `159 passed` — pass |
+| Review scope bounded to the change's blast radius | ☑ pass | 2 files: `.claude/skills/bugfix/SKILL.md` (Evidence table + Step 5 wording) and the new test file. `pre_bash_block_unsafe_merge.py` untouched — this task makes the guide match the gate, not the reverse |
+| Full smoke suite still green (no regression) | ☑ pass | `159 passed`, no pre-existing test modified |
 | **UI: Visual regression** | ☐ N/A | Pure process/text task — no UI component |
 | **UI: Design-system compliance** | ☐ N/A | Pure process/text task — no UI component |
 | **UI: Responsiveness** | ☐ N/A | Pure process/text task — no UI component |
@@ -136,13 +136,32 @@ Confirm with: `grep -c '| verify |' .claude/skills/bugfix/SKILL.md` → expect `
 **BEFORE** (executable half): run the gate's Evidence check against a bugfix guide generated from the
 current skeleton and capture the `False` result before any change.
 
+**BEFORE captured by the Stage 3 agent, pre-implementation** (2026-08-06):
+```
+$ grep -c '| verify |' .claude/skills/bugfix/SKILL.md
+0
+```
+The gate's Evidence check therefore could not resolve True for any bugfix task — structurally absent,
+not failing.
+
 **AFTER**: same `grep` returns `1`; the gate's check resolves True for a properly-filled bugfix guide
 (SC1) and still False for the three negative cases (SC2–SC4).
+```
+$ grep -c '| verify |' .claude/skills/bugfix/SKILL.md
+1
+$ python3 -m pytest .claude/hooks/tests -q
+159 passed in 1.38s
+```
+The bugfix Evidence table went from 3 free-text rows to 12 gate-visible rows: the 9-row implementation
+shape plus the 3 preserved bugfix-specific rows (Repro loop / Regression test / Smoke suite).
 
 **DELTA**: a bugfix task is now subject to the same merge gate as an implementation task — the gate
 stops being structurally absent on half of all work.
 
-**WITNESS**: [filled at Stage 4/5 — derive from `memory/event-trace/T055.jsonl`, not typed.]
+**WITNESS**: Not the implementing agent alone — the Stage 3 agent wrote the table and tests but was
+killed by the step-limit hook before filling any evidence. The Supervisor independently re-ran the
+suite and the RED-then-GREEN mutation cycle from the main checkout on branch
+`docs/stage2-demonstration-block-t053-t055`. Trace: `memory/event-trace/T055.jsonl`.
 
 ---
 

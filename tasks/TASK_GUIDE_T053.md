@@ -106,12 +106,12 @@ python3 -m pytest .claude/hooks/tests -q
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | [SC3 fail-open and SC4 legacy-guide cases specifically] |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [must literally state "pass" or "fail" in this Notes column — the merge gate scans here] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_demonstration_before_warning.py` — 8 tests covering SC1–SC4, the prose false-positive edge case, non-blocking behaviour, malformed-input fail-open, and AC8 field-extraction stability |
+| Verification command run | ☑ pass | `python3 -m pytest .claude/hooks/tests -q` → `159 passed in 1.38s` (baseline before this task was `146 passed`; +8 T053, +5 T055) |
+| Negative cases hold | ☑ pass | SC3 fail-open: `check_demonstration_warnings(["999"])` → `[]` for a nonexistent guide. SC4 legacy guide with no Demonstration section → warns, does not raise. Malformed stdin → exit 0, no `decision` key |
+| verify | ☑ pass | Mutation-tested, not asserted: flipping `before_field_is_blank`'s missing-section branch `True`→`False` produced `1 failed, 158 passed` (RED at test_demonstration_before_warning.py:97), restore → `159 passed` — pass |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | 4 files: the two guide flavors, `craft-spawn-prompt/SKILL.md`, `pre_agent_validate_guide.py`, plus the new test file. `pre_bash_block_unsafe_merge.py` and the report templates untouched, per Files Must NOT Touch |
+| Full smoke suite still green (no regression) | ☑ pass | `159 passed`, zero pre-existing tests modified |
 | **UI: Visual regression** | ☐ N/A | Pure process/hook task — no UI component |
 | **UI: Design-system compliance** | ☐ N/A | Pure process/hook task — no UI component |
 | **UI: Responsiveness** | ☐ N/A | Pure process/hook task — no UI component |
@@ -132,13 +132,35 @@ Confirm with: `grep -c '^## Demonstration' templates/TASK_GUIDE_template.md .cla
 only the existing `Depends on` warning, never a blank-BEFORE one. Capture the stderr of the hook run
 against `tasks/TASK_GUIDE_T052.md` before any change.
 
+**BEFORE captured by the Stage 3 agent, pre-implementation** (2026-08-06, before its first commit):
+```
+$ grep -c '^## Demonstration' templates/TASK_GUIDE_template.md .claude/skills/bugfix/SKILL.md
+templates/TASK_GUIDE_template.md:0
+.claude/skills/bugfix/SKILL.md:0
+$ python3 -m pytest .claude/hooks/tests -q
+146 passed in 1.38s
+```
+Hook baseline: an `Agent` event referencing `TASK_GUIDE_T052.md` produced no output at all — no
+blank-BEFORE warning existed to emit.
+
 **AFTER**: same `grep` returns `1` for both files; the hook run against a blank-BEFORE guide prints the
 new warning and still exits 0.
+```
+$ grep -c '^## Demonstration' templates/TASK_GUIDE_template.md .claude/skills/bugfix/SKILL.md
+templates/TASK_GUIDE_template.md:1
+.claude/skills/bugfix/SKILL.md:1
+$ python3 -m pytest .claude/hooks/tests -q
+159 passed in 1.38s
+```
 
 **DELTA**: every task guide generated from this point forward — implementation or bugfix — carries a
 before/after anchor, and an agent is warned at spawn time if it is about to start work without one.
 
-**WITNESS**: [filled at Stage 4/5 — derive from `memory/event-trace/T053.jsonl`, not typed. Must not be the implementing agent alone.]
+**WITNESS**: Not the implementing agent alone — the Stage 3 agent captured BEFORE and wrote the three
+markdown changes, but was killed by the step-limit hook before implementing AC6/AC7. The Supervisor
+independently implemented the hook warning and all 8 tests, and re-ran every verification from the
+main checkout on branch `docs/stage2-demonstration-block-t053-t055`, including the RED-then-GREEN
+mutation cycle. Trace: `memory/event-trace/T053.jsonl`.
 
 ---
 
