@@ -10,7 +10,7 @@ A discipline for hard bugs. Skip phases only when explicitly justified. When exp
 ### Karpathy Operational Commands (Specific Overrides)
 - **Think Before Coding**: Do not hypothesise without a feedback loop (Phase 1). Generate 3–5 ranked, falsifiable hypotheses before testing any.
 - **Goal-Driven Execution**: Turn the repro into a failing regression test *before* the fix, when a correct seam exists.
-- **Surgical Changes**: Change one variable at a time. Tag every debug log with a unique prefix so cleanup is one `grep`.
+- **Surgical Changes**: Change one variable at a time. Wrap every debug log in `#region debug log` markers so cleanup is one `grep`.
 
 ### Phase 1 — Build a feedback loop *(this is the skill)*
 A fast, deterministic, agent-runnable pass/fail signal for the bug. Everything else just consumes it. Be aggressive; refuse to give up. Try in roughly this order:
@@ -25,10 +25,35 @@ Run the loop; watch the bug appear. Confirm it's the **user's** failure mode (no
 Generate **3–5 ranked, falsifiable** hypotheses before testing any. Format: "If X is the cause, then changing Y makes the bug disappear." Show the ranked list to the user (cheap checkpoint — they may re-rank instantly); don't block if they're AFK.
 
 ### Phase 4 — Instrument
-Each probe maps to a specific prediction. Change one variable at a time. Prefer debugger/REPL > targeted boundary logs > never "log everything and grep". Tag logs `[DEBUG-xxxx]`. For perf: measure a baseline first (profiler/timing/query plan), then bisect.
+Locate the bug from evidence the program emits, not from re-reading source. Each probe maps to a
+specific prediction; change one variable at a time.
+1. **Sink** — write to one local NDJSON log file (e.g. under the system temp dir), one per diagnosis
+   session. Never `memory/event-trace/` — that channel records tool calls, not program values.
+2. **Budget** — at least 1 probe, never more than 10, typically 2–6. If more than 10 seem necessary
+   the hypothesis set is too broad: narrow it in Phase 3 rather than exceeding the ceiling.
+3. **Tag** — every probe carries the `hypothesisId` of the Phase 3 hypothesis it tests. A probe that
+   maps to no hypothesis is not inserted.
+4. **Placement** — choose from: function entry with parameters; function exit with return values;
+   values immediately before/after a critical operation; which branch executed; state mutations.
+5. **Payload** — append one JSON object per line (NDJSON), fields
+   `hypothesisId`, `location`, `message`, `data`, `timestamp` — so the log is parsed
+   programmatically, not read by eye. Never log secrets, tokens, API keys, or PII in `data`.
+6. **Wrap** — every probe sits between `#region debug log` and `#endregion` markers in
+   language-appropriate comment syntax (`//`, `#`, `--`, `/* */`); they need only be greppable.
+7. **Run** — clear the log file first so runs do not mix, run the Phase 1 feedback loop, then read
+   the file back and resolve each hypothesis at the Checkpoint below.
+
+If no seam exists for a probe (compiled dependency, third-party binary), fall back to the Phase 1
+ladder's differential and bisection rungs. For perf: measure a baseline first (profiler/timing/query
+plan), then bisect.
 
 ### Stuck-Loop Checkpoint (mandatory)
-Track each hypothesis's outcome from Phase 4. If **2 consecutive hypotheses are disproven**
+Resolve each hypothesis from Phase 4's logs as exactly one of **CONFIRMED** (logs match the
+prediction), **REJECTED** (logs contradict it), or **INCONCLUSIVE** (the logs do not decide it),
+citing the specific log lines that decided it. Only **REJECTED** increments the consecutive-disproof
+counter. **INCONCLUSIVE** neither increments nor resets it — it means the instrumentation was too
+weak, so return to Phase 4 and instrument the *same* hypothesis better; it is not licence to move on.
+If **2 consecutive hypotheses are REJECTED**
 (instrumentation contradicts the prediction), STOP before testing hypothesis 3 — do not silently
 continue to "this way, that way, another way." This does not fire before any hypothesis has been
 tested, and the count is **consecutive**, not total-ever — a disproof followed by a partial
@@ -45,10 +70,17 @@ is no field to write it into.
 ### Phase 5 — Fix + regression test
 Write the regression test **before the fix** — but only if a **correct seam** exists (one that exercises the real bug pattern at the call site). If no correct seam exists, that itself is the finding — note it. With a seam: minimised repro → failing test → fix → passing → re-run the Phase 1 loop against the original scenario.
 
+Keep Phase 4's instrumentation **active through the fix** — do not remove any probe until a post-fix
+verification run has been made and its logs show the expected values. Logs proving success are the
+exit condition; a passing test alone is not. Before that run, revert every code change made while
+chasing a hypothesis that came back **REJECTED** — speculative guards must not accumulate into the fix.
+
 ### Phase 6 — Cleanup + post-mortem
 - [ ] Original repro no longer reproduces
 - [ ] Regression test passes (or absence of seam documented)
-- [ ] All `[DEBUG-...]` instrumentation removed (`grep` the prefix)
+- [ ] All instrumentation removed by marker: for each `#region debug log`, delete through its
+      matching `#endregion`; then re-`grep` for `#region debug log` and confirm zero remain; then
+      review `git diff` to confirm only the intended fix is left
 - [ ] Throwaway prototypes deleted
 - [ ] The correct hypothesis stated in the commit/PR message
 
