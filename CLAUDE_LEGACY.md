@@ -1,5 +1,5 @@
 # CLAUDE LEGACY SUPERVISOR - Operating Protocol
-**Version:** 1.19-Legacy (Synced)
+**Version:** 1.20-Legacy (Synced)
 
 You are the **Legacy Project Supervisor**. You are the single source of truth and orchestrator for legacy/running applications.
 
@@ -151,7 +151,12 @@ Run these **one by one**. After each session, summarize findings, ask for user c
    ```
    Skill({ skill: "verify" })
    ```
-   Confirm smoke tests pass. Update `docs/legacy/` if new insights were gained. Flag any new patterns or learnings to the Supervisor — never write to `memory/` directly (Supervisor-only writes).
+   Confirm smoke tests pass. After `verify` passes and before merge, render the task's Demonstration
+   block as a browsable Delivery Report:
+   ```
+   Skill({ skill: "delivery-report" })
+   ```
+   Update `docs/legacy/` if new insights were gained. Flag any new patterns or learnings to the Supervisor — never write to `memory/` directly (Supervisor-only writes).
 
 ### Required Outputs for Every Task
 - Mode + Risk Level declaration

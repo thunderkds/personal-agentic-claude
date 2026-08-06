@@ -11,6 +11,17 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 KANBAN = os.path.join(ROOT, "PROJECT_KANBAN.md")
+REPORTS_DIR = os.path.join(ROOT, "reports")
+
+
+def has_any_delivery_report():
+    """DDR-0003 decision 5: a non-blocking reminder, not a per-task check —
+    the reminder can only detect that no delivery report exists at all, since
+    reports/ filenames key on branch, not Task ID."""
+    if not os.path.isdir(REPORTS_DIR):
+        return False
+    return any(name.startswith("delivery-report_") for name in os.listdir(REPORTS_DIR))
+
 
 def main():
     try:

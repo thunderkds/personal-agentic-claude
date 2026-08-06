@@ -1,27 +1,88 @@
 # BRAINSTORMING_LOG.md
-**Generated**: 2026-07-17
-**Task / Context**: Token-efficiency refactor — reducing billing spend across the Supervisor pipeline
+**Generated**: 2026-08-05
+**Task / Context**: Post-implementation / post-bugfix output validation — a Demonstration block in both TASK_GUIDE flavors, feeding a rendered per-task delivery report
 **Skill**: `Skill({ skill: "brainstorming" })`
-**Tier**: Standard (moderate ambiguity, resolved via user Q&A)
+**Tier**: Standard (moderate ambiguity, resolved via user Q&A across 4 turns)
+
+> Supersedes the 2026-07-17 token-efficiency log (commit `96539ef`), whose subject was retired
+> 2026-08-05 by DDR-0002. Recoverable from git history.
 
 ---
 
 ## The Problem Space
 
-The user wants to cut token/billing cost across sessions, inspired by the gRPC-vs-REST framing ("faster connection = less overhead"). That analogy maps loosely: gRPC saves *transport* overhead (binary framing, multiplexed connections), while LLM token cost is driven by *payload size and repetition*, not protocol. The real levers are:
+The user's opening instinct was "we should have a number or checklist to validate the output after
+implementation or bugfix." Investigation showed the checklists already exist — and that a count over
+them would measure the wrong thing.
 
-- **Always-on fixed cost**: `CLAUDE.md` (580 lines) is injected via system reminder on every turn of every session. `memory/MEMORY.md` (95 lines) similarly. These are cache-friendly *within* a session (1hr TTL) but pay full price on every cold start.
-- **Invocation-triggered cost**: skill files (`learn` 182 lines, `map-codebase` 165, `bugfix` 160, `code-review` 157 — all over the repo's own 150-line bloat threshold enforced by `slim-skills`) and agent guides (76–104 lines each) only cost tokens when actually invoked/spawned.
-- **Unknown**: the user confirmed they do **not** currently know where spend concentrates — cold-start re-reads, long multi-spawn sessions, or verbose report output. No instrumentation exists today.
+**What exists today** (verified against the files, not recalled):
 
-Non-negotiable constraint: whatever is proposed must not weaken the Hard-Stop Gates or the pipeline's correctness guarantees (`CLAUDE.md`, "Hard-Stop Gates" section) — this is a cost optimization, not a scope-cutting exercise.
+| Flavor | Source | Blocks | Checkable items |
+|---|---|---|---|
+| Implementation | `templates/TASK_GUIDE_template.md` | Requirement Fidelity Gate (4), Evidence table (9), Completion Checklist (9) | 22 |
+| Bugfix | `.claude/skills/bugfix/SKILL.md:92-133` | Diagnosis Gates (4), Attempts Log (table), Stuck checkpoint (3), Fix Gates (4), Cleanup (4), Evidence (3), Step-5 review gate (4) | 22 + 1 conditional table |
+
+**The three real defects, in priority order:**
+
+1. **These are conformance checklists, not demonstration artifacts.** Ticking all 22 proves the
+   *process ran*. It shows no reader what the implementation does or what the bug did. Only ~4 of 22
+   rows on the implementation path (`New test(s) cover AC` file paths, `Verification command run`
+   pasted output, plus the Success Criteria table and Verification Command above the Evidence table)
+   and ~3 of 22 on the bugfix path (Attempts Log, repro loop, regression test) carry content a reader
+   could not predict before the task began. The remainder is a compliance signature.
+
+2. **The implementation path has no before/after anchor.** The bugfix repro loop is the single place
+   in the entire system that demonstrates a *delta* — run it, see it broken; apply the fix; run it,
+   see it fixed. The implementation path has no equivalent. `Verification command run` pastes output
+   proving the new thing passes, but never establishes the contrast that makes a pass meaningful.
+   This is the same failure shape as the recorded gotcha *"An assertion never observed failing is not
+   evidence"* (3 vacuous-assertion occurrences: T036/T042/T039) — a pass with no observed RED state is
+   indistinguishable from a vacuous one.
+
+3. **The bugfix Evidence table is not wired to the merge gate.** The implementation Evidence table
+   carries a row whose Check cell is literally `verify` and whose Notes column
+   `pre_bash_block_unsafe_merge.py` greps for the word "pass". The bugfix Evidence table has three
+   rows — Repro loop / Regression test / Smoke suite — with a free-text `Result` column, no
+   `☐ pass / ☐ fail` shape, and **no `verify` row at all**. The mandated gate is therefore not
+   failing on a bugfix; it is structurally absent. Same shape as the recorded gotchas
+   *"security-review unrunnable"* and *"'It runs now' is not 'it applies now'"*. The bugfix table also
+   lacks negative-cases, blast-radius-scope, and the three UI rows, so Hard-Stop Gates 5 and 6 have
+   nothing to bind to on a bugfix task.
+
+**Non-negotiable constraints:**
+
+- Whatever is added must apply to **both** flavors — implementation and bugfix. (Explicit user
+  instruction, 2026-08-05.)
+- It must not become another row that can be ticked by claim. Recorded precedent: *"Post-/compact
+  recovery: a checkmark is a claim, not a fact"*, *"Evidence naming a commit must be re-run, not
+  trusted"* (2 false-Evidence occurrences, T035/T039), *"The merge gate's own evidence is a substring
+  match"*.
+- `html-report` is scoped to Stage 4 *review findings* (code-review / security-review /
+  blast-radius) and renders `templates/report_template.html`. A delivery report is a different
+  artifact with a different trigger; per the recorded decision *"thinking-report is separate from
+  html-report"*, this repo's precedent is a separate skill + separate template, not an overloaded one.
 
 ---
 
 ## Questions for the User
 
-1. Is there an acceptable window for a one-time "measure current spend" pass before any refactor lands (e.g., instrument the next 5–10 sessions), or does a fix need to ship without that data?
-2. Are sub-agent spawns (Stage 3) currently re-reading the *full* `PROJECT_SPEC.md` + `TASK_GUIDE` + agent guide even when a prior spawn in the same session already paid that cost — i.e., is there any session-level spawn context reuse today, or does every `Agent()` call cold-start its context?
+Resolved during the session:
+
+1. ~~Summary score over existing checks, or genuinely new checks?~~ → Neither alone; the gap is
+   demonstration, not counting.
+2. ~~Demonstration block (a), rendered report (b), or both (c)?~~ → **(c), with the block feeding the
+   report.** Confirmed 2026-08-05.
+3. ~~Implementation only, or bugfix too?~~ → **Both.** Confirmed 2026-08-05.
+
+Still open (must be answered at Stage 2, before TASK_GUIDE generation):
+
+1. Should the delivery report be **gate-blocking** (merge refused when the Demonstration block is
+   incomplete) or **advisory** (rendered, surfaced, but never blocks)? This decides whether the work
+   touches `pre_bash_block_unsafe_merge.py` — which changes the Risk level and pulls in the hook test
+   suite. Note the recorded history: this hook family has produced 6 regex/parsing defects
+   (T018/T022/T024/T042/T045 + the Kanban `###` truncation).
+2. Does the BEFORE state need to be a **pasted terminal capture** (agent-run, timestamped) or is a
+   written statement of prior behavior acceptable for C0/C1 tasks?
 
 ---
 
@@ -29,101 +90,257 @@ Non-negotiable constraint: whatever is proposed must not weaken the Hard-Stop Ga
 
 | Option | Name | Summary | Invasiveness | Code Volume | Regression Risk | Recommended? |
 |--------|------|---------|-------------|------------|----------------|--------------|
-| A | The Simple Path | Trim + cache-stabilize the two always-on files (CLAUDE.md, MEMORY.md) without touching pipeline logic | Low | ~50–100 lines removed | Low | |
-| B | The Scalable Path | Instrument real per-stage token spend first, then target fixes at measured hotspots | Medium | ~80 lines (logging convention + audit doc) | Medium | ✅ Yes |
-| C | The Minimalist Path | Run `slim-skills` on the 4 oversized skills only; leave CLAUDE.md/MEMORY.md untouched | Low | ~200 lines removed across 4 files | Low | |
+| A | The Simple Path | Demonstration block added to both guides; existing `html-report` gains a `mode=delivery` arg | Low | ~120 lines | Low | |
+| B | The Scalable Path | Demonstration block in both guides + new `delivery-report` skill + new template + Evidence parity | Medium | ~400 lines | Medium | ✅ Yes (reduced form) |
+| C | The Minimalist Path | Demonstration block only, in both guides; no report, no rendering | Low | ~60 lines | Very Low | |
 
 ### Option A — The Simple Path
-**Approach**: Audit `CLAUDE.md` for content that's stable-but-verbose (e.g., the full skill table, repeated agent-template detail) and move rarely-changed detail into a referenced file loaded on-demand rather than always-injected. Keep `CLAUDE.md` itself lean and byte-stable turn-to-turn to maximize cache hits.
-**Pros**: Directly attacks the single largest fixed per-turn cost; no new tooling; fast to do.
-**Cons**: Purely structural — no evidence yet that CLAUDE.md size is actually the dominant cost vs. spawn overhead; risks silently dropping a rule that's load-bearing (Hard-Stop Gates live in this file).
-**Why it might fail**: Without measurement, "the biggest file" isn't proven to be "the biggest cost" — sessions may be short enough that cold-start CLAUDE.md cost is negligible next to a handful of C3 spawns each re-reading 400+ lines of context.
+
+**Approach**: Add a `## Demonstration` section to `templates/TASK_GUIDE_template.md` and to the guide
+skeleton the `bugfix` skill emits (`.claude/skills/bugfix/SKILL.md` Step 3). Extend the existing
+`html-report` skill with a `mode=delivery` argument that reads the Demonstration block instead of
+Stage 4 findings and fills the same `templates/report_template.html`.
+
+**Pros**:
+- Smallest diff; one new template section, one new arg.
+- Reuses a template already proven to render (dark-neon theme, `<pre>`-wrapped findings).
+- No new skill to register, no MANIFEST change.
+
+**Cons**:
+- `report_template.html`'s slots are review-shaped: `{{RISK_SCORE}}`, `{{QUALITY_SCORE}}`,
+  `{{EFFORT_SCORE}}`, `{{FINDINGS_ROWS}}`. A delivery report has no risk score and no findings — those
+  slots would need dummy values or conditional suppression, which the template does not support.
+- Overloads a skill whose description says "from the immediately preceding Stage 4 skill output".
+  Directly contradicts the recorded decision *"thinking-report is separate from html-report"*, whose
+  stated reason was different templates and different triggers — exactly this situation.
+
+**Why it might fail**: The slot mismatch forces either fake scores (a number that measures nothing —
+reintroducing the original problem in rendered form) or template surgery that breaks the existing
+Stage 4 reports. The recorded gotcha *"{{RISK_SCORE}} must be bare integer"* shows the template's
+slots are load-bearing in both HTML and CSS width attributes; conditional suppression is not the
+low-risk edit it appears to be.
 
 ### Option B — The Scalable Path
-**Approach**: Add lightweight instrumentation — a per-stage-transition and per-`Agent()`-spawn note (approximate context size, cache-hit vs. cache-miss) written to a scratch audit doc for the next several sessions. Then run a follow-up brainstorm against real numbers to pick the actual fix (could turn out to be Option A, C, or something else — e.g. spawn-prompt dedup).
-**Pros**: Matches the user's own answer ("unknown — measure first"); avoids optimizing the wrong thing; produces a defensible before/after comparison.
-**Cons**: Slower to show savings; requires a second pass once data comes in; instrumentation itself has a small token cost.
-**Why it might fail**: If instrumentation is too coarse (e.g. only total session cost from billing) it won't localize *which* stage/file is the driver — needs to be granular enough per-stage/per-spawn to be actionable, which adds real design work.
+
+**Approach**: Three coordinated pieces.
+
+1. **`## Demonstration` block** added to both guide flavors, with an identical structure so one
+   renderer reads both:
+
+   | Field | Implementation flavor | Bugfix flavor |
+   |---|---|---|
+   | BEFORE | What did not exist / did not work, with the command that shows it (expect: fail/absent) | The Phase 1 repro loop (expect: bug reproduces) |
+   | AFTER | The same command, post-change (expect: pass/present) | The same repro loop (expect: bug gone) |
+   | DELTA | One sentence: what a user can now do that they could not before | One sentence: what now behaves correctly |
+   | WITNESS | Who ran it and when — Supervisor or QA agent, never the implementing agent alone | same |
+
+   The BEFORE/AFTER pairing is what makes this non-tickable: a RED state must be captured before the
+   fix exists, which cannot be back-filled from a finished branch.
+
+2. **New `delivery-report` skill** + **new delivery template**, following the `thinking-report`
+   precedent exactly (own skill, own template, own trigger). Renders BEFORE/AFTER side by side, the
+   DELTA sentence as the headline, the Evidence table as a supporting grid, and a completion count
+   (`filled / total / N-A`) — a count that is now over demonstration content, not conformance
+   boilerplate.
+
+3. **Bugfix Evidence-table parity**: extend the bugfix Evidence table from 3 rows to match the
+   implementation flavor's gate-visible shape, including the `verify` row the merge gate greps. This
+   fixes defect #3 independently of the report.
+
+**Pros**:
+- Fixes all three defects, not just the presentation one.
+- Applies to both flavors by construction — the shared block structure is what lets one renderer serve
+  both.
+- Follows this repo's own established precedent for a second report type.
+- The count the user originally asked for exists, and now counts something meaningful.
+
+**Cons**:
+- Largest surface: 2 guide flavors + 1 new skill + 1 new template + 1 Evidence-table extension + a
+  MANIFEST line + possibly the merge-gate hook.
+- Should be split into 2–3 tasks at Stage 2 (C2 minimum under Hard-Stop Gate 2 — process-structure work).
+
+**Why it might fail**:
+- **The WITNESS field is the weak point.** It is a name and a date — the most claim-shaped field in
+  the design, and the exact pattern memory warns about. Mitigation: derive the witness from the
+  event trace (`memory/event-trace/<task>.jsonl`) rather than accepting a typed name, now that
+  T043/T047/T048 made attribution actually work. Unmitigated, this reintroduces false Evidence in a
+  new location.
+- **BEFORE is capturable only at the right moment.** An agent that starts implementing and then
+  back-fills BEFORE has produced fiction. The block must be filled at spawn time, before code exists —
+  which means `craft-spawn-prompt` needs to carry that instruction, or the requirement is silently
+  optional.
+- **Not every task has a runnable BEFORE.** Documentation tasks, template edits, and this repo's own
+  process work (T049, T051, T052) have no command that fails beforehand. Without an explicit,
+  justified N/A path, the block becomes noise on a large fraction of this repo's actual tasks — and
+  noise gets ticked without reading.
+- Touching `pre_bash_block_unsafe_merge.py` enters a hook family with 6 recorded parsing defects.
 
 ### Option C — The Minimalist Path
-**Approach**: Run `Skill({ skill: "slim-skills" })` against the four skills already over the repo's own 150-line threshold (`learn`, `map-codebase`, `bugfix`, `code-review`). Ship it as a self-contained cleanup with the checksum gate the skill already provides.
-**Pros**: Cheapest to execute — tooling already exists, no new design; zero risk to CLAUDE.md's Hard-Stop Gates; immediately actionable today.
-**Cons**: These skills are invocation-triggered, not always-on — trimming them saves tokens only on the (relatively rare) turns they're actually loaded, likely a small fraction of total session spend versus the CLAUDE.md/MEMORY.md fixed cost paid every turn.
-**Why it might fail**: Solves a real but probably minor problem while leaving the two suspected larger cost drivers (CLAUDE.md fixed injection, spawn-prompt redundancy) completely unaddressed — cleans the small pile, ignores the big one.
+
+**Approach**: Add the `## Demonstration` block to both guide flavors. Stop there. No skill, no
+template, no rendering — the block is read directly in the TASK_GUIDE.
+
+**Pros**:
+- Fixes the substantive defect (no before/after anchor) at ~15% of Option B's cost.
+- Zero new machinery to maintain; nothing to keep in sync with `report_template.html`.
+- Could ship in one C1 task and start producing value immediately, informing whether the report is
+  actually wanted.
+
+**Cons**:
+- Does not satisfy the user's stated choice (c) — no rendered artifact.
+- "Show off the work" means handing someone a link, not a markdown section inside a guide file they
+  would have to know how to find.
+- Leaves defect #3 (bugfix Evidence table not wired to the merge gate) untouched.
+
+**Why it might fail**: A markdown block inside a TASK_GUIDE has no reader. The guides are read by
+agents at spawn time and by the Supervisor at review; nobody opens one to see what shipped. The block
+would be correctly filled and never looked at — real work, zero delivered value against the actual
+goal.
 
 ---
 
 ## 50% Rule Check
 
-For Option B: instrumentation doesn't need a new dashboard or persistent service. It can piggyback on the existing Memory Write Protocol's diff-driven pass — append one line per stage transition to a scratch log noting approximate context size at that point, using data already visible in the conversation (no new API calls, no new skill scaffolding). That's the ~50%-less-code version: reuse existing memory-write plumbing instead of building a separate telemetry skill.
+> **Superseded in part by grilling, 2026-08-05.** The first bullet below was **rejected by the user**
+> — see "Grilling Outcome" section at the end of this log. Retained for the reasoning trail.
+
+For the recommended Option B, the same business goal at roughly half the code:
+
+- ~~**Drop the new HTML template; render Markdown instead.**~~ **REJECTED.** Violated the canonical
+  `Report` glossary term on format, stage, and content. The artifact's purpose is to be *shown to
+  someone*, and a browsable page serves that better than a Markdown file in a gitignored directory.
+  Estimate returns from ~180 to ~300 lines.
+- **Do not touch the merge-gate hook.** Make the delivery report advisory. Removes the hook change,
+  its test-suite updates, and the 6-defect-history risk entirely. **CONFIRMED** — reminder hook +
+  spawn-time warning instead; blocking deferred to a follow-up.
+- **Do not extend the bugfix Evidence table in the same task.** It is an independent defect with an
+  independent fix; splitting it out lets the Demonstration work land without waiting on gate wiring.
+  **CONFIRMED.**
+
+Surviving reduction: ~300 lines against Option B's ~400.
+
+---
+
+## Grilling Outcome (`grill-with-docs`, terminology mode — 2026-08-05)
+
+Three questions asked, three decisions locked. Full rationale in `memory/decisions.md`
+(2026-08-05 entry).
+
+| # | Question | Resolution |
+|---|---|---|
+| 1 | `Report` glossary collision — new term, widen, or conform? | **Conform.** HTML, not Markdown. 3 new terms added (`Delivery Report`, `Demonstration`, `BEFORE capture`); `Report` untouched. |
+| 2 | Which stage does it fire at? | **Stage 5, after `verify`, before merge.** Rejected Stage 4 (Evidence still being filled) and post-merge (gitignore/worktree trap). |
+| 3 | Is it automatic? | **No — nothing here can auto-invoke a skill.** Reminder hook (`stop_review_reminder.py` pattern) + non-blocking blank-BEFORE warning in `pre_agent_validate_guide.py` at spawn. Merge-gate blocking deferred. |
+| 4 | What counts as a valid BEFORE, and what if there isn't one? | **Option C — no N/A path.** Pasted capture when the task changes executable code; verbatim prior-content excerpt for non-executable changes (docs/templates/skill text). |
+
+**Grounding for Q4**: of the last four completed tasks, only T050 has a runnable BEFORE. T049, T051,
+and T052 are template/skill-instruction edits. On this repo's real task mix the non-executable path is
+the *majority*, not an edge case — which is why the `N/A` option was rejected as the escape hatch it
+would have become (the three UI Evidence rows are the control experiment already running).
+
+**Known weakness, accepted with eyes open**: a non-executable BEFORE *is* reconstructible from
+`git show HEAD~1` after the fact, so for the dominant task type BEFORE degrades from un-forgeable
+proof to documentation. Partial mitigations: WITNESS derived from the event trace rather than typed,
+and the spawn-time warning fires before code exists — making back-fill *detectable*, not impossible.
+No full fix exists inside option C.
 
 ---
 
 ## Recommended Path
 
-**Option B — The Scalable Path**
+**Option B — The Scalable Path, in its 50%-reduced form.**
 
-The user explicitly said they don't yet know where spend concentrates and chose "measure first" over guessing between cold-start cost and spawn-repetition cost. Shipping Option A or C now would be optimizing against a hypothesis, not a measurement — directly against this project's own Karpathy "Ask vs. Guess" principle. Option B is also cheap to de-risk: it's additive-only, doesn't touch CLAUDE.md's Hard-Stop Gates, and produces the evidence needed to make Option A/C (or a different fix entirely) a well-founded follow-up rather than a guess.
+Justification: Option C fixes the right defect but produces an artifact nobody opens, which fails the
+user's actual goal. Option A collides with `report_template.html`'s review-shaped slots and
+contradicts a recorded decision made for precisely this situation. Option B is the only path that
+addresses all three verified defects and applies to both flavors by construction.
+
+The reduction matters: rendering Markdown instead of HTML and leaving the merge gate advisory removes
+both of Option B's genuinely risky components (template surgery, hook family with 6 recorded parsing
+defects) while keeping everything that makes the block non-tickable — the BEFORE state must be
+captured before the code exists.
+
+The single most important design property to preserve through Stage 2: **the BEFORE capture is what
+makes this different from every checklist row already in the system.** If BEFORE becomes back-fillable,
+this is another compliance signature with nicer formatting.
 
 ---
 
 ## Surgical Scope
 
 Files that **should** be touched:
-- `memory/learnings.md` — record the instrumentation approach as a new pattern once decided
-- A new ephemeral audit doc (e.g. `memory/token-audit-<date>.md`) — per-stage size notes, not a permanent artifact
+
+- `templates/TASK_GUIDE_template.md` — add `## Demonstration` section (implementation flavor)
+- `.claude/skills/bugfix/SKILL.md` — add the same block to the Step 3 guide skeleton; extend the
+  3-row Evidence table to gate-visible parity (separate task)
+- `.claude/skills/craft-spawn-prompt/SKILL.md` — instruct agents to capture BEFORE prior to any
+  implementation
+- `.claude/skills/delivery-report/SKILL.md` — new
+- `MANIFEST` — register the new skill so `setup.sh` / `update.sh` deploy it downstream
+- `CLAUDE.md` stage index + `CLAUDE_LEGACY.md` — per the recorded sync policy, mirror new skills and
+  bump the version
+- `PROJECT_KANBAN.md`, `tasks/TASK_GUIDE_T053*.md` … — Stage 2 registration
 
 Files that **must not** be touched:
-- `CLAUDE.md` — no trims/edits until data justifies a specific cut; premature edits risk dropping a Hard-Stop Gate
-- `.claude/agents/*.md`, `.claude/skills/*/SKILL.md` — no slimming until measurement shows these are actually cost-material relative to CLAUDE.md/spawn overhead
+
+- `templates/report_template.html` — Stage 4 review reports render from it; its slots are load-bearing
+  in both HTML and CSS width attributes
+- `.claude/skills/html-report/SKILL.md` — separate trigger, separate artifact, per recorded decision
+- `.claude/hooks/pre_bash_block_unsafe_merge.py` — advisory-first decision keeps this out of scope;
+  revisit only if the user chooses the blocking variant (open question 1)
+- `memory/MEMORY.md` — Supervisor-only writes, and only via the diff-driven pass
 
 ---
 
 ## Edge Case Checklist for TASK_GUIDE
 
-- [ ] Instrumentation itself must stay cheap — don't let the audit log grow unbounded across sessions (rotate/cap it)
-- [ ] Must distinguish cache-hit reads (near-zero marginal cost) from cache-miss reads (full price) when estimating spend — a naive line-count proxy will overstate cost for cached content
-- [ ] Spawn-prompt cost must be measured per sub-agent type (C0 haiku vs C3 opus) since price-per-token differs — raw token count alone won't reflect billing dollars
-- [ ] Don't let the measurement pass itself become a recurring manual chore — define a clear stop condition (e.g. "after 5–10 sessions, review and decide")
+- [ ] Task has no runnable BEFORE (docs, templates, process work — e.g. T049/T051/T052): explicit
+      `N/A` with a written one-line justification, never a blank
+- [ ] Agent back-fills BEFORE after implementing — the capture must be timestamped and precede the
+      first implementation commit
+- [ ] BEFORE command is not deterministic (flaky test, network dependency): must be stated, and the
+      loop re-run to confirm reproducibility before it counts
+- [ ] Bugfix flavor: Demonstration BEFORE duplicates the existing repro loop row — resolve to one
+      source of truth, do not maintain two copies that can disagree
+- [ ] WITNESS names the implementing agent as sole witness — violates the guide's own rule that the
+      implementer must not be its own sole oracle
+- [ ] Delivery report generated for a task whose Evidence table is still blank — report must show the
+      gap, not silently omit those rows
+- [ ] `reports/` is gitignored except the token-audit exception — confirm whether delivery reports
+      need to survive a worktree merge before choosing their path (recorded gotcha:
+      *"Worktree-isolated files silently die if gitignored"*)
+- [ ] Report filename collision on two tasks completing in the same second — follow the recorded
+      `<skill>_<branch>_<YYYYMMDDTHHMMSS>` convention
+- [ ] Adding a `## Demonstration` H2 to the template: confirm no hook regex depends on the current
+      section ordering (`post_write_register_task.py`, `pre_agent_validate_guide.py`) — 6 recorded
+      defects in this family, and the recorded gotcha *"A defect can reproduce itself during its own
+      write-up"*
 
 ---
 
 ## Next Actions
 
-1. Answer the two open questions above (spawn-reuse behavior today; acceptable measurement window) before Stage 2 planning.
-2. If approved, define a lightweight instrumentation task (likely C1, Low risk — no schema/migration, no user-facing surface) and run it through Stage 2 `/plan` as a proper TASK_GUIDE per Hard-Stop Gate 1 (no implementation without a guide).
-3. After the measurement window, re-run this brainstorm (or a follow-up) with real numbers to pick between trimming CLAUDE.md, deduping spawn prompts, or slimming oversized skills — possibly a combination.
-
----
-
-## Evaluation Protocol (approved with direction)
-
-Before/after comparison using the same instrument on both sides:
-
-```
-Phase 1: BASELINE   — B's measurement window (5–10 sessions), untouched pipeline
-Phase 2: REFACTOR   — whatever the data says (A, spawn-dedup, output trimming…)
-Phase 3: VALIDATION — same audit convention, 5–10 more sessions, compare
-```
-
-**Metrics (normalized, never raw totals):**
-- Tokens per session cold-start (tests CLAUDE.md trim)
-- Tokens per sub-agent spawn, grouped by C-level (tests spawn dedup)
-- Tokens per Stage 4 review cycle (tests report trimming)
-- Cache-hit ratio per session (tests cache stabilization)
-- **$ per completed task by C-level** — the bottom-line number
-
-**Data sources:** `/cost` output logged at end of each session (ground truth) + the per-stage audit-log entries (localization). OpenTelemetry export available but deemed overkill for this project.
-
-**Success criterion (set before refactoring):** ≥20% reduction in $ per completed task at the same C-level, no Hard-Stop Gate regressions, measured over 5 sessions post-refactor.
-
-**Rollback trigger:** <5% measured savings in the validation window → revert/stop iterating; guards against endless micro-optimization.
-
-**Known noise:** usage pattern varies per week, cache behavior depends on session timing (1hr TTL), pricing may shift mid-window. 5–10 sessions per side reliably detects a big win (20%+), not a marginal one — acceptable, since an unmeasurable win wasn't worth the refactor.
+1. Run `Skill({ skill: "grill-with-docs", args: "mode=plan" })` against this log — pending, requested
+   by the user in the opening message.
+2. Answer the two open questions above (gate-blocking vs advisory; pasted capture vs written
+   statement for C0/C1).
+3. Assess whether this warrants a **DDR** — it changes a default process artifact for every future
+   task, which is the 2-of-3 gate's territory.
+4. Stage 2 split, C2 / Medium minimum (Hard-Stop Gate 2 — process-structure work):
+   - **T053** — `## Demonstration` block in both guide flavors + `craft-spawn-prompt` BEFORE-capture
+     instruction
+   - **T054** — `delivery-report` skill (Markdown output) + MANIFEST + CLAUDE.md/CLAUDE_LEGACY.md sync
+   - **T055** — bugfix Evidence-table parity with the gate-visible implementation shape (independent
+     defect, independently valuable)
+5. Verify at Stage 2 that no hook regex depends on TASK_GUIDE section ordering before the template
+   edit lands.
 
 ---
 
 ## User Selection
 
-> **Approved direction**: Option B — The Scalable Path (measure first), with Option C (`slim-skills` on the 4 oversized skills) running in parallel during the baseline window as a free rider — safe because skills are invocation-triggered and don't contaminate the always-on cost measurement. Option A deferred until baseline data justifies it.
-> Approved by user on 2026-07-17.
+> **Approved direction**: Option (c) — Demonstration block feeding a rendered report, applied to
+> **both** implementation and bugfix flavors.
+> Approved by user on 2026-08-05. **Grilling complete 2026-08-05** — see Grilling Outcome above.
+> Final form: HTML Delivery Report (Markdown rejected), Stage 5 post-`verify` trigger, reminder hook
+> + spawn-time warning (no merge blocking), BEFORE with no N/A path. ~300 lines, split across 3 tasks.

@@ -100,6 +100,64 @@ def check_dependency_warnings(task_ids):
     return warnings
 
 
+def before_field_is_blank(guide):
+    """True if the guide's `## Demonstration` BEFORE field carries no real
+    captured content — i.e. the section is missing entirely, the BEFORE
+    field is absent, or its value is only whitespace/template placeholder.
+
+    A placeholder is the unfilled template text the field ships with:
+    `[...]` or `<...>`. Prose that merely *contains* the word BEFORE
+    elsewhere is never matched, because the field is anchored to the
+    literal `**BEFORE**:` marker inside the Demonstration section only.
+    """
+    sect = re.search(r"^## Demonstration\s*$(.*?)(?=^## |\Z)", guide,
+                     re.DOTALL | re.MULTILINE)
+    if not sect:
+        return True
+
+    m = re.search(r"\*\*BEFORE\*\*[^:]*:\s*(.*?)(?=^\s*\*\*(?:AFTER|DELTA|WITNESS)\*\*|\Z)",
+                  sect.group(1), re.DOTALL | re.MULTILINE)
+    if not m:
+        return True
+
+    value = m.group(1)
+    # Strip blockquote guidance lines and template placeholders, then see
+    # whether any real captured content is left.
+    value = re.sub(r"^\s*>.*$", "", value, flags=re.MULTILINE)
+    value = re.sub(r"\[[^\]]*\]|<[^>]*>", "", value)
+    # Only the standalone template separator, not the letters inside a word
+    # such as "ERROR" — a substring replace here would corrupt real content.
+    value = re.sub(r"\bOR\b", "", value)
+    return not value.strip()
+
+
+def check_demonstration_warnings(task_ids):
+    """Non-blocking warnings for guides whose Demonstration BEFORE field is
+    still blank at spawn time. A BEFORE cannot be back-filled once an
+    implementation commit exists (DDR-0003), so the agent is told now.
+    Never blocks: this hook cannot verify *when* a capture was taken, only
+    that one is absent."""
+    warnings = []
+    for tid in task_ids:
+        task_ref = f"T{tid.zfill(3)}"
+        guide_path = os.path.join(TASKS_DIR, f"TASK_GUIDE_{task_ref}.md")
+        if not os.path.exists(guide_path):
+            guide_path = os.path.join(TASKS_DIR, f"TASK_GUIDE_T{tid}.md")
+        try:
+            with open(guide_path) as f:
+                guide = f.read()
+        except (FileNotFoundError, OSError, UnicodeDecodeError):
+            continue
+
+        if before_field_is_blank(guide):
+            warnings.append(
+                f"{task_ref}'s Demonstration BEFORE field is blank. Capture it "
+                f"BEFORE your first implementation commit — a BEFORE taken after "
+                f"the change is not a BEFORE, and there is no N/A path."
+            )
+    return warnings
+
+
 def main():
     try:
         event = json.load(sys.stdin)
@@ -136,13 +194,19 @@ def main():
         print(json.dumps(result))
         sys.exit(0)
 
-    warnings = check_dependency_warnings(task_ids)
+    try:
+        warnings = check_dependency_warnings(task_ids)
+        warnings += check_demonstration_warnings(task_ids)
+    except Exception:
+        # Fail-open: an advisory path must never block a spawn.
+        sys.exit(0)
+
     if warnings:
         print(json.dumps({
             "hookSpecificOutput": {
                 "hookEventName": "PreToolUse",
                 "additionalContext": (
-                    "[hook:pre_agent] Dependency warning (advisory, not blocking):\n  • "
+                    "[hook:pre_agent] Advisory warning (not blocking):\n  • "
                     + "\n  • ".join(warnings)
                 ),
             }

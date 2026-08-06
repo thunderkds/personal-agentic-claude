@@ -23,7 +23,7 @@ Search the guide for a `### Mental Model` (or `## Mental Model`) heading.
 - **Absent → standard Stage-3-style.** Use the standard shape.
 
 #### 3. Assemble the prompt
-Both shapes reuse the same 5-element checklist proven in `bugfix` Step 4; only element 2 and the presence of element 3 change:
+Both shapes reuse the same checklist proven in `bugfix` Step 4; only element 2 and the presence of element 3 change:
 
 | # | Element | Standard guide | Bugfix-flavored guide |
 |---|---|---|---|
@@ -33,6 +33,7 @@ Both shapes reuse the same 5-element checklist proven in `bugfix` Step 4; only e
 | 4 | Memory injection | Full contents of `memory/MEMORY.md`, verbatim | same |
 | 5 | Agent-guide pointer | `.claude/agents/<role>.md` from the guide's `**Agent guide**` field | same |
 | 6 | Trace-attribution instruction | The active-task state-file line below, verbatim | same |
+| 7 | Demonstration BEFORE-capture instruction | The BEFORE-capture line below, verbatim | same — for a bugfix guide, this is naturally satisfied by the Phase 1 repro loop the `diagnose` first action already builds; the instruction still restates the rule so the agent doesn't skip it under time pressure |
 
 Any caller-supplied inputs (e.g. bugfix's fixed "invoke diagnose first" instruction) are accepted as parameters to this step, not re-derived.
 
@@ -43,6 +44,10 @@ The fix is a channel `task_context.py` can actually observe: a plain state file,
 > **Trace attribution**: before running any test or verification command, write the active-task state file so the trace hook can attribute your `Bash` calls: `mkdir -p <absolute-path-to-main-checkout>/.claude/hooks/.state && printf '%s\n%s\n' "Txxx" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > <absolute-path-to-main-checkout>/.claude/hooks/.state/active_task` — substituting the real absolute path of the main checkout (not a variable, not a relative path) and `Txxx`. Do this once at the start of your session — it stays valid for `CLAUDE_ACTIVE_TASK_STATE_MAX_AGE_S` seconds (default 6h). Do **not** try `CLAUDE_ACTIVE_TASK=Txxx <cmd>` inside a `Bash` tool call, and do **not** write a cwd-relative path — neither reaches the hook, and both will leave your evidence unattributed.
 
 Known limitation, not solved by this element: the state file is shared by every worktree using this checkout's hooks, so two tasks running verification at the same moment can race and mis-attribute each other's `Bash` calls. Safe for the common case (one task verifying at a time); flag genuinely concurrent Stage 3 verification to the Supervisor rather than trusting the file blindly.
+
+**Element 7 — why this must be said before, not after (DDR-0003).** The guide's `## Demonstration` BEFORE field cannot be back-filled once an implementation commit exists — it is the one field in the whole checklist that isn't satisfiable by assertion after the fact. `pre_agent_validate_guide.py` only warns (non-blocking) when a referenced guide's BEFORE field is still blank at spawn time; it cannot verify a capture was taken at the *right* moment. The instruction is the substantive half of the mechanism, not the reminder — put it first in the spawn prompt, before any other implementation instruction:
+
+> **Demonstration BEFORE capture**: before your first implementation commit, fill this guide's `## Demonstration` BEFORE field. If this task changes executable code, run the exact command(s) named in the guide's Demonstration section and paste the real, timestamped output — a BEFORE captured after the change is not a BEFORE, there is no `N/A` path. If it does not change executable code (docs/templates/skill-instruction text), BEFORE is the verbatim prior content of what you are about to change, quoted from the file as it exists right now.
 
 #### 4. Pre-flight structural-reference check
 Read `extract_structural_task_ids()` directly from `.claude/hooks/pre_agent_validate_guide.py` — do not re-derive or approximate the pattern, it must stay byte-for-byte in sync with what the hook enforces. Run it against the assembled prompt text:

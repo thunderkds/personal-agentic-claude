@@ -98,9 +98,12 @@ class HookSandbox:
             return []
         return sorted(os.listdir(self.state_dir))
 
-    def counter_value(self, task_id):
-        with open(os.path.join(self.state_dir, f"step_count_{task_id}.txt")) as f:
-            return f.read().strip()
+    def counter_value(self, task_id, session="nosession"):
+        """T057: the counter file is now two lines (count\nblock_count).
+        These tests are about attribution, not file format, so return the
+        count only — line 2 is asserted by the T057 suite itself."""
+        with open(os.path.join(self.state_dir, f"step_count_{session}_{task_id}.txt")) as f:
+            return f.read().strip().splitlines()[0]
 
     def cleanup(self):
         shutil.rmtree(self.root, ignore_errors=True)
@@ -232,7 +235,7 @@ def test_agent_spawn_prompt_guide_path_attributes_in_both_hooks():
 
         limit = sandbox.run_hook("pre_agent_step_limit.py", AGENT_SPAWN_EVENT)
         assert limit.returncode == 0, limit.stderr
-        assert sandbox.counter_files() == ["step_count_T099.txt"], sandbox.counter_files()
+        assert sandbox.counter_files() == ["step_count_nosession_T099.txt"], sandbox.counter_files()
         assert sandbox.counter_value("T099") == "1"
     finally:
         sandbox.cleanup()
@@ -274,7 +277,7 @@ def test_env_override_wins_over_payload_text():
             "pre_agent_step_limit.py", EDIT_PROSE_EVENT, {"CLAUDE_ACTIVE_TASK": "T099"}
         )
         assert limit.returncode == 0, limit.stderr
-        assert sandbox.counter_files() == ["step_count_T099.txt"], sandbox.counter_files()
+        assert sandbox.counter_files() == ["step_count_nosession_T099.txt"], sandbox.counter_files()
     finally:
         sandbox.cleanup()
 
@@ -441,7 +444,11 @@ def test_step_limit_still_blocks_once_an_attributed_task_exceeds_the_limit():
         decision = json.loads(third.stdout)
         assert decision["decision"] == "block", decision
         assert "T099" in decision["reason"], decision
-        assert sandbox.counter_value("T099") == "3"
+        # T057: the blocking call now resets the counter in the same
+        # invocation, so it reads 0 rather than continuing to climb. The
+        # property this test protects -- that an attributed task IS blocked
+        # once it exceeds the limit -- is asserted just above and still holds.
+        assert sandbox.counter_value("T099") == "0"
     finally:
         sandbox.cleanup()
 

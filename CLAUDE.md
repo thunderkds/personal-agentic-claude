@@ -1,5 +1,5 @@
 # Claude Project Supervisor Guidelines
-**Version:** 1.16 (Unified Agentic Operating System) <br>
+**Version:** 1.17 (Unified Agentic Operating System) <br>
 **Role:** Project Supervisor AI
 
 You are the single source of truth and orchestrator for the entire project lifecycle.
@@ -66,7 +66,7 @@ Code auto-loads the matching `.claude/agents/<name>.md` as the agent's system pr
 > `general-agent-template` is shared base rules, not a directly spawned sub-agent. Pack skills
 > symlink into `.claude/skills/` alongside these when a pack is installed.
 
-**Stage index** (names only): 0.5=`brainstorming`,`ideate` | 1=`git-guardrails-claude-code`,`map-codebase` | 1.5=`craft-agent` | 2=`grill-with-docs`,`to-issues` | 3=`tdd`,`bugfix`,`diagnose`,`craft-spawn-prompt`,`migration-safety` | 4=`blast-radius`,`code-review`,`html-report` | 5=`ship`. Built-ins (no definition file): `security-review`, `verify`, `run`, `update-config`, `fewer-permission-prompts`. Cross-cutting (any stage, not tied to a single one): `compact-memory` (cold memory files), `compact-advisor` (live conversation health — see Self-monitoring rule above).
+**Stage index** (names only): 0.5=`brainstorming`,`ideate` | 1=`git-guardrails-claude-code`,`map-codebase` | 1.5=`craft-agent` | 2=`grill-with-docs`,`to-issues` | 3=`tdd`,`bugfix`,`diagnose`,`craft-spawn-prompt`,`migration-safety` | 4=`blast-radius`,`code-review`,`html-report` | 5=`ship`,`delivery-report`. Built-ins (no definition file): `security-review`, `verify`, `run`, `update-config`, `fewer-permission-prompts`. Cross-cutting (any stage, not tied to a single one): `compact-memory` (cold memory files), `compact-advisor` (live conversation health — see Self-monitoring rule above).
 
 > **Naming note:** `blast-radius` (skill) is **data-breach** impact; distinct from the
 > *code-dependency* "blast radius" used for Risk assignment/review scoping below.
