@@ -115,12 +115,12 @@ python3 -m pytest .claude/hooks/tests -q
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | [SC4 env override, SC6 fail-open specifically] |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [must literally state "pass" or "fail" in this Notes column — the merge gate scans here] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_step_limit_self_clearing.py` — 11 tests, all pass: `python3 -m pytest .claude/hooks/tests/test_step_limit_self_clearing.py -q` → `11 passed in 1.56s` |
+| Verification command run | ☑ **fail** (see Blockers below) | `python3 -m pytest .claude/hooks/tests -q` → `8 failed, 180 passed in 7.53s`. New suite (11/11) and the rest of the repo suite (169) all pass; the 8 failures are pre-existing tests in `test_step_limit_session_scope.py` (6) and `test_task_context.py` (2) that assert behaviour this task's approved design deliberately changes — see "Flagged pre-existing test conflicts (AC9)" below. Not silently edited per the guide's explicit instruction. |
+| Negative cases hold | ☑ pass | SC4 (`test_sc4_env_override_still_wins_over_raised_default`): env override `CLAUDE_STEP_LIMIT=5` blocks on the 6th call, not the raised default — pass. SC6/AC7 fail-open (`test_sc6_malformed_stdin_fails_open_no_decision`, `test_ac7_unwritable_counter_still_fails_open`): malformed stdin and an unparseable counter file both `returncode == 0` with no `decision` emitted — pass. |
+| verify | fail | ran `python3 -m pytest .claude/hooks/tests -q` per the Verification Command — result is 8 failed / 180 passed, so this row literally states **fail**, pending Supervisor resolution of the AC9 conflict below (not an implementation defect: the new/changed behaviour itself is proven correct and mutation-checked). |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Changed: `.claude/hooks/pre_agent_step_limit.py` (the one file the guide's Entry Point names) + new test file. No other file touched; `reports/token-audit_2026-07-21.md` was incidentally modified by running the hooks during testing and was reverted with `git checkout --` before commit (confirmed clean `git status --short`). |
+| Full smoke suite still green (no regression) | ☑ **fail** | See Verification command row — 8 pre-existing failures, flagged per AC9, not a silent regression. |
 | **UI: Visual regression** | ☐ N/A | Pure hook task — no UI component |
 | **UI: Design-system compliance** | ☐ N/A | Pure hook task — no UI component |
 | **UI: Responsiveness** | ☐ N/A | Pure hook task — no UI component |
@@ -129,20 +129,41 @@ python3 -m pytest .claude/hooks/tests -q
 
 ## Demonstration
 
-**BEFORE** (executable — capture before the first implementation commit): drive
-`pre_agent_step_limit.py` with `LIMIT + 2` events for one task under one `session_id` and paste the
-real output. Both the 41st **and** the 42nd calls are blocked — the session never recovers on its own.
-That is the lockout, reproduced on demand.
+**BEFORE** (executable — captured before the first implementation commit, via `git stash` to run the
+original T056 hook): drove `pre_agent_step_limit.py` with 42 events (`LIMIT + 2`, default limit 40) for
+task `T057DEMO` under one `session_id` (`DEMO`). Real captured stdout:
 
-**BEFORE** (verbatim prior content): the `count > STEP_LIMIT` branch prints a block whose message ends
-`"manually reset .claude/hooks/.state/<counter> after confirming the task isn't actually stuck"` — an
-instruction the blocked reader cannot carry out.
+```
+call 41: '{"decision": "block", "reason": "[hook:pre_agent_step_limit] T057 has exceeded 40 tool calls
+without reaching Ready for Review. Killing the run to prevent an infinite loop / token waste.
+Supervisor: stop, inspect memory/event-trace/T057.jsonl, and either escalate to the user or manually
+reset .claude/hooks/.state/step_count_DEMO_T057.txt after confirming the task isn\'t actually stuck."}'
+call 42: '{"decision": "block", "reason": "[hook:pre_agent_step_limit] T057 has exceeded 40 tool calls
+without reaching Ready for Review. Killing the run to prevent an infinite loop / token waste.
+Supervisor: stop, inspect memory/event-trace/T057.jsonl, and either escalate to the user or manually
+reset .claude/hooks/.state/step_count_DEMO_T057.txt after confirming the task isn\'t actually stuck."}'
+```
 
-**AFTER**: the same run — the 41st call is blocked, the 42nd is **allowed**. The counter reads 0 after
-the block. The message no longer names a manual reset.
+Both the 41st and the 42nd calls are blocked — the session never recovers on its own, and the message
+names a manual `rm`-style reset the blocked reader cannot carry out (`Bash`/`Read` are both blocked by
+this same hook). That is the lockout, reproduced on demand. (Note: `task_id` resolved to `T057` rather
+than the literal string `T057DEMO` because `task_context.py`'s structural resolution used this session's
+real `.claude/hooks/.state/active_task` file, set to `T057` per the spawn prompt's Trace Attribution
+step, ahead of the event's own text — the counter filename and lockout behaviour demonstrated are
+unaffected by this.)
 
-**DELTA**: a runaway is still interrupted, but no session can be left unable to act, and no human ever
-has to run a shell command to recover one.
+**AFTER**: covered by `test_sc1_block_fires_with_env_limit` + `test_sc2_call_after_block_is_allowed` in
+`.claude/hooks/tests/test_step_limit_self_clearing.py` (mutation-checked both directions — see Test Plan
+section, GREEN restored and reverted before commit): the call at the limit is blocked
+(`decision: block`), the counter file's first line reads `0` immediately after
+(`test_sc3_counter_reads_zero_after_block`), and the very next call for the same session/task is
+allowed (empty stdout, no `decision`). The block message no longer contains "manually reset" or a
+`.state/step_count_` path (`test_ac5_block_message_no_longer_instructs_manual_reset`).
+
+**DELTA**: a runaway is still interrupted (the over-limit call itself still dies with `decision: block`),
+but no session can be left unable to act, and no human ever has to run a shell command to recover one.
+AC6's escalating message (`test_sc5_third_block_escalates_message`) preserves visibility into a truly
+stuck loop across repeated blocks, mitigating the accepted trade-off.
 
 **WITNESS**: [filled at Stage 4/5 — derive from `memory/event-trace/T057.jsonl`, not typed. Must not
 be the implementing agent alone.]
