@@ -28,19 +28,41 @@ Generate **3–5 ranked, falsifiable** hypotheses before testing any. Format: "I
 Locate the bug from evidence the program emits, not from re-reading source. Each probe maps to a
 specific prediction; change one variable at a time.
 1. **Sink** — write to one local NDJSON log file (e.g. under the system temp dir), one per diagnosis
-   session. Never `memory/event-trace/` — that channel records tool calls, not program values.
+   session. Never *write* debug output to `memory/event-trace/` — that channel records tool calls,
+   not program values. *Reading* `memory/event-trace/*.jsonl` at analysis time, as a correlation
+   source for the sub-agent tier, is permitted; writing to it is not.
 2. **Budget** — at least 1 probe, never more than 10, typically 2–6. If more than 10 seem necessary
-   the hypothesis set is too broad: narrow it in Phase 3 rather than exceeding the ceiling.
+   the hypothesis set is too broad: narrow it in Phase 3 rather than exceeding the ceiling. The
+   ceiling is global: no boundary, and no inventory entry below, earns a probe budget of its own.
 3. **Tag** — every probe carries the `hypothesisId` of the Phase 3 hypothesis it tests. A probe that
    maps to no hypothesis is not inserted.
-4. **Placement** — choose from: function entry with parameters; function exit with return values;
-   values immediately before/after a critical operation; which branch executed; state mutations.
-5. **Payload** — append one JSON object per line (NDJSON), fields
-   `hypothesisId`, `location`, `message`, `data`, `timestamp` — so the log is parsed
-   programmatically, not read by eye. Never log secrets, tokens, API keys, or PII in `data`.
-6. **Wrap** — every probe sits between `#region debug log` and `#endregion` markers in
+4. **Boundary inventory** — when the suspect data crosses a tier, first list the boundaries it could
+   cross: HTTP route/handler definitions; outbound HTTP client call sites (`fetch`/`axios`/`requests`
+   or the language's equivalent); queue or job publish/consume points; sub-agent spawn sites. This
+   step is **discovery-only**: it answers *where could I probe*, never *where do I probe*. Building
+   the inventory does not authorise a probe — step 3's hypothesis gate still decides which inventory
+   entries get instrumented, and an entry no hypothesis reaches stays uninstrumented. A module shared
+   by both sides of one tree is one boundary, not two. An empty inventory (single-process project) is
+   a normal result: proceed through the steps below unchanged.
+5. **Placement** — choose from: function entry with parameters; function exit with return values;
+   values immediately before/after a critical operation; which branch executed; state mutations. At a
+   boundary the hypothesis gate did select, probe both sides of the hop — sending and receiving.
+6. **Correlate** — probes on either side of a hop must be provably about the same request. Carry a
+   W3C Trace Context `traceparent`-shaped value: one **trace-id** shared by every probe belonging to
+   one request, and a **span-id** unique to each probe. This is a naming and shape convention only —
+   adopt the `traceparent` header name and the ID shape, never an SDK, library, or dependency. Where
+   the hop carries headers, propagate it as the `traceparent` header; where it cannot — a queue
+   message, a background job, a sub-agent spawn — the correlation value must ride **in the payload**
+   instead. A hop that drops the value produces a **fragmented trace**: the downstream side starts a
+   new trace-id and the two sides no longer join. A probe pair with mismatched trace-ids is evidence
+   about that hop, not about the hypothesis.
+7. **Payload** — append one JSON object per line (NDJSON), fields
+   `hypothesisId`, `location`, `message`, `data`, `timestamp`, `traceparent` — so the log is parsed
+   programmatically, not read by eye. Never log secrets, tokens, API keys, or PII in `data`; the
+   correlation value is not `data` for that rule's purposes, but must never embed a session token.
+8. **Wrap** — every probe sits between `#region debug log` and `#endregion` markers in
    language-appropriate comment syntax (`//`, `#`, `--`, `/* */`); they need only be greppable.
-7. **Run** — clear the log file first so runs do not mix, run the Phase 1 feedback loop, then read
+9. **Run** — clear the log file first so runs do not mix, run the Phase 1 feedback loop, then read
    the file back and resolve each hypothesis at the Checkpoint below.
 
 If no seam exists for a probe (compiled dependency, third-party binary), fall back to the Phase 1
@@ -48,6 +70,16 @@ ladder's differential and bisection rungs. For perf: measure a baseline first (p
 plan), then bisect.
 
 ### Stuck-Loop Checkpoint (mandatory)
+**Path reconstruction — before assigning any verdict.** Group Phase 4's probes by trace-id, order
+each group by timestamp, and walk it comparing the observed value at each boundary against the value
+Phase 3 predicted. Report the **first boundary at which the observed value diverged from the
+predicted value** — that boundary, not the end-of-path symptom, is where diagnosis continues. Group
+by trace-id; never merge two trace-ids into one path. Two spans at the same location within one
+trace (a retry or a redirect) are distinct spans, not a contradiction. If a trace-id has probes on
+only one side of a boundary, report `path incomplete` for that boundary and name the missing side —
+never infer what the missing side saw. `path incomplete` is a finding about the instrumentation,
+exactly as INCONCLUSIVE is below; it is not licence to conclude.
+
 Resolve each hypothesis from Phase 4's logs as exactly one of **CONFIRMED** (logs match the
 prediction), **REJECTED** (logs contradict it), or **INCONCLUSIVE** (the logs do not decide it),
 citing the specific log lines that decided it. Only **REJECTED** increments the consecutive-disproof

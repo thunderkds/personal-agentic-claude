@@ -106,12 +106,13 @@ python3 -m pytest .claude/hooks/tests/test_diagnose_evidence_loop.py -q && pytho
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | 12 new tests appended to `.claude/hooks/tests/test_diagnose_evidence_loop.py` (AC1→`test_t060_boundary_inventory_names_the_four_artifact_classes`, AC2→`..._is_discovery_only` + `..._empty_inventory_does_not_stall_phase4`, AC3→`..._correlation_uses_a_traceparent_shaped_value` + `..._convention_not_dependency`, AC4→`..._headerless_hops_carry_correlation_in_the_payload`, AC5→`..._dropped_correlation_is_a_fragmented_trace`, AC6→`..._checkpoint_reconstructs_the_path_before_verdicts`, AC7→`..._one_sided_probes_report_path_incomplete`, AC8→`..._event_trace_is_readable_but_never_writable`, AC9→`..._probe_budget_ceiling_is_global`, AC12→`..._rejected_transport_layer_did_not_re_enter`). AC10/AC11 are carried by the pre-existing `test_sc8_*`/`test_sc7_*`; AC13 by the 19 pre-existing tests, all unmodified. Result: `31 passed in 0.03s` (19 pre-existing + 12 new). **These are fixture/text assertions against the skill file, not end-to-end** — see the caveat row below. |
+| Verification command run | ☑ pass | `python3 -m pytest .claude/hooks/tests/test_diagnose_evidence_loop.py -q` → `31 passed in 0.03s`; `python3 -m pytest .claude/hooks/tests -q` → `219 passed in 7.05s` (baseline before this task: 19 and 207 — +12, no regression) |
+| Negative cases hold | ☑ pass | All 12 new assertions mutation-verified RED→GREEN, plus AC10/AC11's inherited guards re-verified against the *edited* file (4 further controls: Phase 1 body edit, Phase 3 body edit, Phase heading renamed, Phase heading added — each `1 failed` then `1 passed`). AC12's file-wide negative was injected **three times separately** (`daemon`, `ingest server`, `relay`), each RED, because it otherwise passes trivially on a file that never mentioned the token. SKILL.md asserted byte-identical to the original after every cycle (restored from an in-memory copy, not `git checkout` — recorded learning). |
+| verify | ☑ pass | Verification command above re-run from the worktree post-commit; `219 passed` + `smoke-install.sh: PASS`. Scope limited to the two predicted files (`git status --short` shows only `.claude/skills/diagnose/SKILL.md` and `.claude/hooks/tests/test_diagnose_evidence_loop.py`); `reports/token-audit_*.md` untouched. |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | 2 files changed, both predicted by the guide's Files-to-Change table. `diagnose/SKILL.md` is instruction text with no importer; the only automated consumer is this test file. No hook, script, or `MANIFEST` entry references either changed region. |
+| Full smoke suite still green (no regression) | ☑ pass | `python3 -m pytest .claude/hooks/tests -q` → `219 passed in 7.05s`; `bash scripts/smoke-install.sh` → `smoke-install.sh: PASS` |
+| **Caveat — no end-to-end exercise is possible in this repo** | ☑ recorded | Per the guide's second recorded risk: this is a Python/shell repo with no frontend and no backend, so the boundary-discovery logic has no real target here and was **not** dogfooded. Every check above asserts against the skill's instruction text. The first genuine exercise of this feature happens in a downstream project. |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | pure-instruction change, no UI component |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ N/A | pure-instruction change, no UI component |
 | **UI: Responsiveness at target viewports** | ☐ N/A | pure-instruction change, no UI component |
@@ -133,9 +134,57 @@ python3 -m pytest .claude/hooks/tests/test_diagnose_evidence_loop.py -q && pytho
    programmatically, not read by eye. Never log secrets, tokens, API keys, or PII in `data`.
 ```
 
-**AFTER**: [verbatim excerpt of the new Placement / Boundary inventory / Payload steps]
+BEFORE verified byte-for-byte against the worktree file at `823d414` (which carries `1ac8cfa`'s
+`diagnose/SKILL.md` unchanged) before any edit was made.
 
-**DELTA**: [one sentence]
+**AFTER**: verbatim new steps 4-7 of `### Phase 4 — Instrument` (Boundary inventory / Placement /
+Correlate / Payload):
+
+```
+4. **Boundary inventory** — when the suspect data crosses a tier, first list the boundaries it could
+   cross: HTTP route/handler definitions; outbound HTTP client call sites (`fetch`/`axios`/`requests`
+   or the language's equivalent); queue or job publish/consume points; sub-agent spawn sites. This
+   step is **discovery-only**: it answers *where could I probe*, never *where do I probe*. Building
+   the inventory does not authorise a probe — step 3's hypothesis gate still decides which inventory
+   entries get instrumented, and an entry no hypothesis reaches stays uninstrumented. A module shared
+   by both sides of one tree is one boundary, not two. An empty inventory (single-process project) is
+   a normal result: proceed through the steps below unchanged.
+5. **Placement** — choose from: function entry with parameters; function exit with return values;
+   values immediately before/after a critical operation; which branch executed; state mutations. At a
+   boundary the hypothesis gate did select, probe both sides of the hop — sending and receiving.
+6. **Correlate** — probes on either side of a hop must be provably about the same request. Carry a
+   W3C Trace Context `traceparent`-shaped value: one **trace-id** shared by every probe belonging to
+   one request, and a **span-id** unique to each probe. This is a naming and shape convention only —
+   adopt the `traceparent` header name and the ID shape, never an SDK, library, or dependency. Where
+   the hop carries headers, propagate it as the `traceparent` header; where it cannot — a queue
+   message, a background job, a sub-agent spawn — the correlation value must ride **in the payload**
+   instead. A hop that drops the value produces a **fragmented trace**: the downstream side starts a
+   new trace-id and the two sides no longer join. A probe pair with mismatched trace-ids is evidence
+   about that hop, not about the hypothesis.
+7. **Payload** — append one JSON object per line (NDJSON), fields
+   `hypothesisId`, `location`, `message`, `data`, `timestamp`, `traceparent` — so the log is parsed
+   programmatically, not read by eye. Never log secrets, tokens, API keys, or PII in `data`; the
+   correlation value is not `data` for that rule's purposes, but must never embed a session token.
+```
+
+Plus the new Checkpoint opening (path reconstruction, ordered before the verdict vocabulary):
+
+```
+**Path reconstruction — before assigning any verdict.** Group Phase 4's probes by trace-id, order
+each group by timestamp, and walk it comparing the observed value at each boundary against the value
+Phase 3 predicted. Report the **first boundary at which the observed value diverged from the
+predicted value** — that boundary, not the end-of-path symptom, is where diagnosis continues. Group
+by trace-id; never merge two trace-ids into one path. Two spans at the same location within one
+trace (a retry or a redirect) are distinct spans, not a contradiction. If a trace-id has probes on
+only one side of a boundary, report `path incomplete` for that boundary and name the missing side —
+never infer what the missing side saw. `path incomplete` is a finding about the instrumentation,
+exactly as INCONCLUSIVE is below; it is not licence to conclude.
+```
+
+**DELTA**: Phase 4 went from a flat 7-step per-hypothesis procedure to a 9-step cross-tier one — a
+discovery-only boundary inventory and a `traceparent` correlation step were inserted, the payload
+gained a `traceparent` field, and the Checkpoint now reconstructs the data path (reporting `path
+incomplete` rather than inferring) before any hypothesis verdict is assigned.
 
 **WITNESS**: [derived from `memory/event-trace/T060.jsonl`, never the implementing agent alone]
 
@@ -176,13 +225,13 @@ The user selected codebase auto-discovery with this counter-evidence stated, and
 
 ## Edge Case Checklist
 
-- [ ] A monorepo where frontend and backend live in one tree — the inventory must not double-count a shared client module
-- [ ] A boundary with no seam (third-party binary, compiled dependency) — falls through to the existing Phase 1 differential/bisection fallback, which must remain reachable
-- [ ] A single-process project with zero boundaries — the inventory is empty and Phase 4 must proceed exactly as it does today, not stall
-- [ ] Repeated requests in one run producing many trace-ids — path reconstruction must group by trace-id, not merge them
-- [ ] A retry or redirect producing two spans at the same location within one trace
-- [ ] Correlation values must not be treated as `data` for the secrets/PII rule's purposes, but must still never embed a session token
-- [ ] A sub-agent spawn whose `memory/event-trace/` records are absent because the trace dir is gitignored in a worktree — must report `path incomplete`, not infer
+- [x] A monorepo where frontend and backend live in one tree — the inventory must not double-count a shared client module — step 4: "A module shared by both sides of one tree is one boundary, not two."
+- [x] A boundary with no seam (third-party binary, compiled dependency) — falls through to the existing Phase 1 differential/bisection fallback, which must remain reachable — the "If no seam exists" paragraph is untouched and still covered by the pre-existing `test_p2_phase4_has_a_no_seam_fallback`
+- [x] A single-process project with zero boundaries — the inventory is empty and Phase 4 must proceed exactly as it does today, not stall — step 4: "An empty inventory (single-process project) is a normal result: proceed through the steps below unchanged"; pinned by `test_t060_empty_inventory_does_not_stall_phase4`
+- [x] Repeated requests in one run producing many trace-ids — path reconstruction must group by trace-id, not merge them — Checkpoint: "Group by trace-id; never merge two trace-ids into one path"; asserted
+- [x] A retry or redirect producing two spans at the same location within one trace — Checkpoint: "Two spans at the same location within one trace (a retry or a redirect) are distinct spans, not a contradiction"
+- [x] Correlation values must not be treated as `data` for the secrets/PII rule's purposes, but must still never embed a session token — step 7, verbatim
+- [x] A sub-agent spawn whose `memory/event-trace/` records are absent because the trace dir is gitignored in a worktree — must report `path incomplete`, not infer — absent records make the probe set one-sided, which the Checkpoint's `path incomplete` rule covers by construction; asserted by `test_t060_one_sided_probes_report_path_incomplete`
 
 ---
 
@@ -216,11 +265,11 @@ The implementing agent must not be the sole oracle for its own tests; the Superv
 
 ## Completion Checklist
 
-- [ ] Implementation done
-- [ ] Self-review: `Skill({ skill: "code-review" })` run
-- [ ] Security review: `Skill({ skill: "security-review" })` run (Medium risk) — run manually and label it if the checked-out branch is not the task branch
-- [ ] Lint passes
-- [ ] Tests written AND pass — output pasted into Evidence table (Hard-Stop Gate 5)
-- [ ] `Skill({ skill: "verify" })` run
-- [ ] `memory/MEMORY.md` updated (flag to Supervisor; sub-agents do not write memory)
-- [ ] Supervisor notified: task ready for Stage 4 review
+- [x] Implementation done
+- [ ] Self-review: `Skill({ skill: "code-review" })` run — Stage 4, Supervisor
+- [ ] Security review: `Skill({ skill: "security-review" })` run (Medium risk) — Stage 4, Supervisor; **must be run manually and labelled**, the checked-out branch here is `t060-work`, not `main`
+- [x] Lint passes — `python3 -m py_compile` on the changed test file clean; no shellcheck in this env and no shell files changed
+- [x] Tests written AND pass — output pasted into Evidence table (Hard-Stop Gate 5)
+- [x] `Skill({ skill: "verify" })` run — verification command + smoke suite, both green
+- [ ] `memory/MEMORY.md` updated (flag to Supervisor; sub-agents do not write memory) — **flagged**, not written by this agent
+- [x] Supervisor notified: task ready for Stage 4 review
