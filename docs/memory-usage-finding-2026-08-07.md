@@ -269,8 +269,13 @@ Reasoning, in the order the evidence supports it:
    should it be amended to match the path practice already in use (making size cheap, and the
    200-line cap the only thing worth tuning)? The mandate and the practice currently disagree, and
    T065 cannot be scoped until one of them is chosen. Recommend amending the mandate to the path
-   channel: it is ~500x cheaper per spawn, it is what 4 of 4 evidenced prompts already do, and 5 of
+   channel: it is ~500x cheaper *in the prompt*, it is what 4 of 4 evidenced prompts already do, and 5 of
    5 agents under it did open the file.
+   **Caveat on that 500x, added at Stage 4 review**: it is a prompt-side saving, not a spawn-side one.
+   Since 5 of 5 agents opened the file anyway, total spawn cost under the path channel is close to the
+   verbatim channel — the agent pays for the same 200 lines, just via `Read` instead of injection. The
+   path channel's real advantage is that the cost becomes *optional* (an agent that does not need memory
+   does not pay), not that it is eliminated. T065 should be scoped on that, not on the 500x figure.
 4. **Shrinking the hot tier is safe under either branch** and independently justified: at 200 lines
    the file is at its own documented cap, and every agent that opens it pays for all 200 lines to
    learn the handful relevant to its task.
