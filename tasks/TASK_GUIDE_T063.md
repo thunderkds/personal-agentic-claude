@@ -205,8 +205,26 @@ trace dir: ABSENT — 0 records.  (exit 0)
 use; attribution and prompt-channel are established from evidence, and "does an agent draw on it" is
 recorded as **not established** with the smallest settling experiment and its cost named.
 
-**WITNESS**: [derived from `memory/event-trace/T063.jsonl`, never the implementing agent alone]
+**WITNESS**: derived by the Supervisor from `memory/event-trace/T063.jsonl` (58 records,
+`2026-08-07T13:42:28Z` to `14:36:51Z`), first attributed test run at `14:26:35Z`. Spawn telemetry
+captured automatically by T061: 111,056 total tokens, 108,590 cache_read (97.8%), 47 tool uses,
++947/−46 lines, opus-5.
 
+Independently re-verified rather than accepted:
+
+- **AC9** — snapshotted `git status --short` before and after a real script run: identical.
+- **Claim (b)**, the load-bearing one, checked from scratch: across **49** `Agent` records, **zero**
+  contain `MEMORY.md`'s H1 (`# MEMORY.md — Hot-Tier Memory Index`); 4 name the path. 48 of 49
+  summaries sit at exactly `MAX_SUMMARY_LEN` 300, so the report's hedge that a later paste cannot be
+  ruled out is correct and properly stated rather than an excuse.
+- **Claim (a)** corroborated: 30 `MEMORY.md` reads sit in `_untagged`, consistent with startup reads
+  landing there before the active-task pointer is armed.
+- **AC9 mutation re-run by the Supervisor.** The first attempt stayed GREEN and looked like a real
+  gap — but the mutation was inert: it appended a write *after* `sys.exit(main())`, so it never
+  executed. Re-done inside `main()`, it turned **both** guards RED
+  (`test_script_writes_nothing_anywhere`, `test_script_does_not_touch_the_real_repository`). A
+  mutation that does not take effect proves nothing; confirm the mutation actually mutated before
+  trusting a GREEN.
 ---
 
 ## Approach
