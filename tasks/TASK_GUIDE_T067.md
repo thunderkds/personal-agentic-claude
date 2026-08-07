@@ -215,8 +215,25 @@ behaviours that route the agent back to Phase 1 before the Stuck-Loop Checkpoint
 derives hypotheses from a working reference — in +31 lines, with the 1–10 budget, the 2-consecutive-
 REJECTED trigger and the 3–5 hypothesis requirement all unchanged and defense-in-depth absent.
 
-**WITNESS**: [derived from `memory/event-trace/T067.jsonl`, never the implementing agent alone]
+**WITNESS**: derived by the Supervisor from `memory/event-trace/T067.jsonl` (29 records,
+`2026-08-07T09:54:44Z` to `10:27:10Z`), first attributed test run at `10:19:37Z` — not from the
+implementing agent's report.
 
+Independently re-verified rather than accepted: Phase 1/2 bodies recomputed against `d374cb1` and
+confirmed byte-identical (1052/157 chars); the `###` heading list diffed identical; the forbidden
+token absent under both spellings; the T058/T060 numbers (budget ceiling 10, 2-consecutive-REJECTED,
+3–5 hypotheses) all still present; file at **155 lines**, under the 165 cap.
+
+**This task is also the first real production reading from T061's telemetry** — its own spawn was
+captured automatically:
+
+```
+total 83,802 | cache_read 81,781 (97.6%) | cache_creation_5m 265 | output 1,754
+tool_uses 33 | bash 14 | edit 15 | read 4 | +464/−31 lines | opus-5 | 498s
+```
+
+That corroborates the n=3 synthetic finding on a real C2 task: 97.6% of the spawn is cache reads,
+and `cache_creation` is 265 tokens against 83,802 total. Volume is not cost.
 ---
 
 ## Approach
