@@ -996,3 +996,38 @@ Agent records predating the merge carry no `spawn` key, so all analysis data acc
 forward; there is no retrospective corpus.
 
 **Files**: .claude/hooks/post_tool_trace.py, .claude/hooks/tests/test_post_tool_trace_spawn.py
+
+## T067 merged: diagnose gains a root-cause rule, backward tracing, and red flags, 2026-08-07
+
+**Decision**: From a prior-art comparison against `obra/superpowers/skills/systematic-debugging`
+(consulted at the user's pointer, **not vendored**). Before this, `root cause` occurred exactly once
+in 124 lines — in the notification template. The skill asked the agent to *report* a root cause and
+never required the fix to be *at* one.
+
+Six additions, 124 → **155 lines** (cap 165): the root-cause rule in the Karpathy block **and**
+restated in Phase 5 at the point of action, because a rule stated only at the top is forgotten by the
+time the fix is written; five-step backward tracing in Phase 4, scoped to the value-wrong-on-arrival
+shape rather than replacing Placement; a red-flag block before the Stuck-Loop Checkpoint as its
+earlier-firing sibling; working-reference comparison in Phase 3 as a hypothesis source; stack capture
+and test-visible probe output in the payload; the architectural tell on the widen-scope option.
+
+**Rejected outright, pinned absent under both spellings**: defense-in-depth. Its source adds four
+redundant guards for one bug, contradicting Simplicity First — and Phase 5 already reverts
+REJECTED-hypothesis changes to stop exactly that accumulation.
+
+**Deliberately not replaced, ours being stronger**: their one-line "reproduce reliably" vs our
+ten-rung ladder; their single hypothesis vs our 3–5 ranked falsifiable; their ad-hoc `console.error`
+vs our NDJSON loop with `hypothesisId`, 1–10 budget and T060's cross-tier correlation; their
+3-failed-fix-attempts escalation vs T052's earlier 2-consecutive-disproof trigger.
+
+**Stage 4**: 0 P0/P1/P2, 1 P3 fixed. 21 mutation controls (18 implementer, 3 Supervisor).
+security-review PASS, 0 actionable, manual. **Stage 5**: 258 passed + smoke PASS from main.
+
+**Guide defect, the Supervisor's**: AC7 mandated changing Phase 3 while AC16 required all pre-existing
+tests unmodified — but an existing test pinned Phase 3's body, so both could not hold. The agent
+escalated rather than papering over it and re-captured the hash instead of deleting the pin (min-len
+also raised 150→600, so Phase 3 is pinned harder than before). AC16's count was also wrong: 32
+pre-existing tests, not 31. Second instance of the T054 learning that an AC can be written against a
+file's older shape.
+
+**Files**: .claude/skills/diagnose/SKILL.md, .claude/hooks/tests/test_diagnose_evidence_loop.py

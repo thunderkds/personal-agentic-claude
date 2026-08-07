@@ -713,3 +713,28 @@ row, and that gap makes the board silently overstate completeness.
 **Rule**: when an ideation or planning session ends with a selected direction, register its items on
 the board in the same session, even when every one of them is blocked or gated. A blocked row is
 information; an absent row is a false all-clear.
+
+## An assertion can be non-vacuous against one mutation and vacuous against another (2026-08-07, T067 Stage 4)
+
+T067's line-cap assertion computed `read_skill().rstrip("\n").split("\n")`, which strips **all**
+trailing newlines. The implementer mutation-controlled it by appending 20 *non-blank* padding lines —
+RED, control passes, assertion looks sound. The Supervisor appended 12 *blank* lines, taking the file
+to 167 by `grep -c ''`, and the suite stayed **green**: the padding was stripped before counting,
+while the docstring claimed the whole file was counted.
+
+A single mutation proves an assertion is not *entirely* vacuous. It does not prove the assertion
+measures what it says. Choose mutations that attack the *stated* metric from more than one direction,
+especially for cheap guards like counts and substring checks — and this is a concrete reason the
+implementer must not be its own sole oracle, since it will naturally pick the mutation its own mental
+model suggests. Sixth entry in the vacuous-assertion family.
+
+## The merge gate evaluates the whole Bash command string before any of it runs (2026-08-07)
+
+Closing the Kanban and merging were chained in one `Bash` call (`python3 ... && git add && git commit
+&& git merge`). `pre_bash_block_unsafe_merge.py` inspects the command string *before* execution, so
+it saw the board as it still was on disk — T067 In Progress — and blocked the entire call. Nothing
+ran, including the board edit that would have satisfied it.
+
+The recorded rule "close the task on the Kanban BEFORE `git merge`" means **in a separate tool call**,
+not merely earlier in the same command. Same family as the gate blocking on prose in a heredoc: the
+guard reads the string, not the intent.
