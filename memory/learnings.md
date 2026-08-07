@@ -635,3 +635,24 @@ The three recorded uncommitted-work gotchas all concern *implementation* left in
 the same failure applied to the audit trail, and it is harder to notice because nothing downstream
 fails when memory is missing. Audit `git stash list` during any recovery pass, and treat a memory
 write as part of the task, not as bookkeeping that can trail it.
+
+## A review fix can be as unpinned as the defect it fixes (2026-08-07, T060 Stage 4)
+
+The P2 fix scoping `traceparent` out of the empty-inventory case passed the entire suite while
+asserting nothing — mutating the new sentence to its opposite stayed **GREEN**. The reviewer had
+reproduced, at the moment of fixing, the exact gap the review had just found: T058's own Stage 4 P2
+was three constraints the guide called load-bearing with no assertion pinning them.
+
+Mutation-test the *fix*, not only the original implementation. A Stage 4 fix ships with no test of
+its own unless someone writes one, and the suite going green after a review fix means nothing about
+whether the fix is guarded. Fifth instance of the vacuous-assertion family.
+
+## When a test pins prose, fix the prose around it, not the test (2026-08-07, T060 Stage 4)
+
+The first attempt at the P2 fix reworded the NDJSON payload field list and broke a test asserting
+that exact comma-separated string. The tempting move — loosen the regex — would have deleted the
+coverage that made the list stable in the first place. The right move was to leave the pinned string
+byte-identical and add the scoping as a following sentence.
+
+A failing assertion after a review fix is a question about the fix, not a defect in the test. Same
+family as "don't reword the docs to dodge the merge gate."

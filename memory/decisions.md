@@ -932,3 +932,35 @@ were restored to HEAD via `git show HEAD:<path> > <path>` — `git checkout -- <
 guardrail-blocked — and the suite was re-run twice to confirm the file stays clean.
 
 **Files**: .claude/hooks/tests/test_token_audit_generator.py, tasks/TASK_GUIDE_T059.md
+
+## T060 merged: diagnose gains cross-tier boundary instrumentation, 2026-08-07
+
+**Decision**: Phase 4 goes from 7 steps to 9. A **discovery-only boundary inventory** (HTTP
+route/handler definitions, outbound HTTP client call sites, queue publish/consume points, sub-agent
+spawn sites) lists where a probe *could* go; step 3's no-orphan-probe hypothesis gate still decides
+where one *does* go, so the 1–10 ceiling stays global and no boundary earns a budget of its own. A
+**correlate** step carries a W3C Trace Context `traceparent`-shaped value — one trace-id per request,
+a span-id per probe — as a naming and shape convention only, never an SDK or dependency, with the
+payload-carried variant for queues, background jobs and agent spawns, and the fragmented-trace case
+where a hop drops the value. The Checkpoint gains **path reconstruction ahead of any verdict**: group
+by trace-id, order by timestamp, name the first boundary where observed diverged from predicted, and
+report `path incomplete` on one-sided probe sets rather than inferring the missing side.
+
+**Amendment to T058, stated in step 1 of the skill itself**: writing debug output to
+`memory/event-trace/` stays forbidden; *reading* it at analysis time as a correlation source for the
+sub-agent tier is permitted.
+
+**Stage 4**: 0 P0 / 0 P1 / 1 P2 fixed / 1 P3 accepted. The P2: `traceparent` was added to the NDJSON
+payload field list unconditionally while step 4 tells the empty-inventory single-process case to
+proceed "unchanged", which would require a degenerate correlation field on every probe of a run with
+no hop. security-review PASS, 0 actionable, manual (fifth occurrence of the built-in diffing the
+checked-out branch). 15 mutation controls RED→GREEN, AC12 injected three times separately.
+
+**Stage 5**: 220 passed + smoke PASS from main post-merge.
+
+**Recorded honestly**: this repo has no BE and no FE, so nothing here is end-to-end — every check
+asserts against instruction text, and the first real exercise happens in a downstream project. The
+TraceCoder risk (arXiv 2602.06875 places probes by LLM reasoning over prior failures, not static
+analysis) remains open and is mitigated only by the discovery-only wording.
+
+**Files**: .claude/skills/diagnose/SKILL.md, .claude/hooks/tests/test_diagnose_evidence_loop.py
