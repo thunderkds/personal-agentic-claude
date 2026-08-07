@@ -374,6 +374,214 @@ def test_sc8_phase_1_2_3_bodies_are_byte_identical():
         )
 
 
+# ===========================================================================
+# T060 — cross-tier boundary instrumentation and correlated trace reporting.
+#
+# Phase 4 gains a discovery-only boundary inventory and a `traceparent`-shaped
+# correlation field; the Stuck-Loop Checkpoint gains path reconstruction.
+#
+#   T060-SC1 — boundary inventory names all four artifact classes (AC1)
+#   T060-SC1 — the inventory is discovery-only and does not authorise a probe (AC2)
+#   T060-SC2 — `traceparent` correlation, trace-id/span-id roles, convention-not-SDK (AC3)
+#   T060-SC2 — header-less hops carry the value in the payload (AC4)
+#   T060-SC2 — a dropped value fragments the trace; mismatch judges the hop (AC5)
+#   T060-SC3 — path reconstruction precedes verdicts (AC6) and reports
+#              `path incomplete` rather than inferring a missing side (AC7)
+#   T060      — event-trace read-vs-write split (AC8); global probe budget (AC9)
+#   T060-SC6  — negative: no `daemon` / `ingest server` / `relay` re-enters (AC12)
+#
+# AC10/AC11 (Phase 1/2/3 bodies and the Phase heading list unchanged) are already
+# enforced by test_sc7_* and test_sc8_* above. Their fixtures were re-captured from
+# the pre-T060 tree at 1ac8cfa and are byte-identical to the pinned values, so the
+# existing constants stand as this task's pre-change capture — no new pins needed.
+# ===========================================================================
+
+
+def test_t060_boundary_inventory_names_the_four_artifact_classes():
+    body = phase4()
+    assert re.search(r"\*\*Boundary inventory\*\*", body), (
+        "Phase 4 must have a Boundary inventory step"
+    )
+    for artifact in (
+        r"HTTP route/handler definitions",
+        r"outbound HTTP client call sites",
+        r"`fetch`/`axios`/`requests`",
+        r"queue or job publish/consume points",
+        r"sub-agent spawn sites",
+    ):
+        assert re.search(artifact, body), (
+            f"the boundary inventory is missing the artifact class: {artifact}"
+        )
+
+
+def test_t060_boundary_inventory_is_discovery_only():
+    """AC2 — the mitigation for the recorded TraceCoder risk. If discovery ever
+    authorises a probe on its own, the 1-10 budget dies on first real use."""
+    body = phase4()
+    assert re.search(r"discovery-only", body), (
+        "the inventory step must be labelled discovery-only"
+    )
+    assert re.search(r"does not authorise a probe", body), (
+        "the inventory step must state that building it does not authorise a probe"
+    )
+    assert re.search(r"hypothesis gate still decides", body), (
+        "the inventory step must defer to the existing hypothesis gate"
+    )
+    assert re.search(r"maps to no hypothesis is not inserted", body), (
+        "the no-orphan-probe gate the inventory defers to must still be present"
+    )
+
+
+def test_t060_empty_inventory_does_not_stall_phase4():
+    body = phase4()
+    assert re.search(r"empty inventory", body, re.IGNORECASE), (
+        "Phase 4 must handle a single-process project with zero boundaries"
+    )
+
+
+def test_t060_correlation_uses_a_traceparent_shaped_value():
+    body = phase4()
+    assert "traceparent" in body, "Phase 4 must name the `traceparent` header literally"
+    assert re.search(r"W3C Trace Context", body), (
+        "Phase 4 must name W3C Trace Context as the adopted convention"
+    )
+    assert re.search(r"trace-id\*\*? shared by every probe", body), (
+        "Phase 4 must state the trace-id is shared across one request's probes"
+    )
+    assert re.search(r"span-id\*\*? unique to each probe", body), (
+        "Phase 4 must state the span-id is unique per probe"
+    )
+    assert "`traceparent`" in body and re.search(
+        r"`hypothesisId`, `location`, `message`, `data`, `timestamp`, `traceparent`", body
+    ), "the NDJSON payload field list must carry the correlation field"
+
+
+def test_t060_correlation_is_convention_not_dependency():
+    """The guide's hardest constraint: shape and header name only, no SDK."""
+    body = phase4()
+    assert re.search(r"convention only", body), (
+        "Phase 4 must state the correlation format is a convention only"
+    )
+    assert re.search(r"never an SDK, library, or dependency", body), (
+        "Phase 4 must forbid adopting an implementation alongside the convention"
+    )
+
+
+def test_t060_traceparent_is_omitted_when_the_inventory_is_empty():
+    """Stage 4 P2 (Supervisor): `traceparent` was added to the payload field list
+    unconditionally, while step 4 tells the empty-inventory single-process case to
+    proceed "unchanged" -- which would require a degenerate correlation field on
+    every probe of a run that has no hop for it to join. The scoping sentence that
+    resolves this had no assertion pinning it, the same gap T058's own Stage 4 P2
+    found."""
+    body = phase4()
+    assert re.search(r"omit\s+it when the inventory is empty", body), (
+        "Phase 4 must scope `traceparent` out of the empty-inventory case"
+    )
+    assert re.search(r"single-process run has no hop", body), (
+        "Phase 4 must say why it is omitted, not just that it is"
+    )
+
+
+def test_t060_headerless_hops_carry_correlation_in_the_payload():
+    body = phase4()
+    assert re.search(r"ride \*\*in the payload\*\*", body), (
+        "Phase 4 must state the correlation value rides in the payload when headers cannot carry it"
+    )
+    for case in (r"queue\s+message", r"background job", r"sub-agent spawn"):
+        assert re.search(case, body), (
+            f"Phase 4 must name the header-less hop case: {case}"
+        )
+
+
+def test_t060_dropped_correlation_is_a_fragmented_trace():
+    body = phase4()
+    assert re.search(r"fragmented trace", body), (
+        "Phase 4 must name the fragmented-trace failure mode of a dropped correlation value"
+    )
+    assert re.search(r"mismatched trace-ids is evidence\s+about that hop, not about the hypothesis", body), (
+        "a mismatched probe pair must be reported as evidence about the hop, not the hypothesis"
+    )
+
+
+def test_t060_event_trace_is_readable_but_never_writable():
+    """AC8 — the deliberate amendment to T058. Both halves must be stated."""
+    body = phase4()
+    assert re.search(r"Never \*write\* debug output to `memory/event-trace/`", body), (
+        "Phase 4 must keep T058's prohibition on writing debug output to memory/event-trace/"
+    )
+    assert re.search(
+        r"\*Reading\* `memory/event-trace/\*\.jsonl`.*?is permitted", body, re.DOTALL
+    ), "Phase 4 must permit reading memory/event-trace/*.jsonl as a correlation source"
+    assert re.search(r"writing to it is not", body), (
+        "the read permission must restate that writing remains forbidden"
+    )
+
+
+def test_t060_probe_budget_ceiling_is_global():
+    """AC9 — the inventory must not smuggle in a per-boundary budget."""
+    body = phase4()
+    assert re.search(r"never more than 10", body), "the 10-probe ceiling must be unchanged"
+    assert re.search(r"ceiling is global", body), (
+        "Phase 4 must state the ceiling is global, not per-boundary"
+    )
+    assert re.search(r"no boundary,? and no inventory entry.*?earns a probe budget of its own", body), (
+        "Phase 4 must forbid a per-boundary probe budget"
+    )
+
+
+def test_t060_checkpoint_reconstructs_the_path_before_verdicts():
+    body = checkpoint()
+    assert re.search(r"before assigning any verdict", body, re.IGNORECASE), (
+        "path reconstruction must be ordered before verdict assignment"
+    )
+    assert re.search(r"[Gg]roup .*probes by trace-id", body), (
+        "path reconstruction must group probes by trace-id"
+    )
+    assert re.search(r"order\s+each group by timestamp", body), (
+        "path reconstruction must order each trace-id group by timestamp"
+    )
+    assert re.search(
+        r"first boundary at which the observed value diverged from the\s+predicted value", body
+    ), "path reconstruction must name the first boundary where observed diverged from predicted"
+    assert re.search(r"never merge two trace-ids", body), (
+        "concurrent requests must not be merged into one path"
+    )
+    # ordering: reconstruction precedes the CONFIRMED/REJECTED/INCONCLUSIVE resolution
+    assert body.index("Path reconstruction") < body.index("CONFIRMED"), (
+        "path reconstruction must appear before the verdict vocabulary in the Checkpoint"
+    )
+
+
+def test_t060_one_sided_probes_report_path_incomplete():
+    """AC7 is load-bearing: absence must never be laundered into an inferred value."""
+    body = checkpoint()
+    assert "`path incomplete`" in body, (
+        "the Checkpoint must define the `path incomplete` outcome"
+    )
+    assert re.search(r"probes on\s+only one side of a boundary", body), (
+        "`path incomplete` must be triggered by one-sided probe sets"
+    )
+    assert re.search(r"never infer what the missing side saw", body), (
+        "the Checkpoint must forbid inferring the missing side"
+    )
+    assert re.search(r"not licence to conclude", body), (
+        "`path incomplete` must be a finding about instrumentation, like INCONCLUSIVE"
+    )
+
+
+def test_t060_rejected_transport_layer_did_not_re_enter():
+    """AC12 — negative, file-wide by design (a stray mention anywhere reopens
+    the transport T058 rejected outright). This assertion passes trivially on a
+    file that never mentioned the tokens, so it was mutation-verified RED."""
+    text = read_skill().lower()
+    for token in ("daemon", "ingest server", "relay"):
+        assert token not in text, (
+            f"`{token}` appears in diagnose/SKILL.md — T058 rejected the daemon/ingest/relay "
+            "transport outright and T060 does not reopen it"
+        )
+
+
 if __name__ == "__main__":
     import sys
 
