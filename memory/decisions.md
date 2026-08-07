@@ -267,6 +267,53 @@ tests/test_task_context.py (new, 29 tests incl. 18 subprocess-from-foreign-cwd)
 
 ---
 
+## T046 merged: `Pattern reference` advisory field in TASK_GUIDE_template.md (2026-07-24)
+
+> Recovered 2026-08-07 from `stash@{0}`, where this record had sat uncommitted since the task
+> merged. The implementation shipped at `bf23413`; its memory pass did not.
+
+**Decision**: Every TASK_GUIDE now carries an advisory `**Pattern reference**:` field in its
+`## Approach` section, naming an existing file the implementing agent should imitate (or an explicit
+opt-out `None — no comparable prior art in this repo`). Closes the gap that Karpathy **Surgical
+Changes** ("Match existing styles perfectly") was a principle with no operational hook, and lived
+only in `CLAUDE.md`, which is NOT in the sub-agent read list — so it reached no sub-agent (the
+"'already covered' must mean reaches-the-context" learning). `TASK_GUIDE_Txxx.md` IS in that list,
+so the field reaches the agent without touching `.claude/agents/*.md`. Sourced from a scan of the
+Claude Code prompt library (`https://code.claude.com/docs/en/prompt-library`, 52 prompts): ~46 already
+covered by existing skills/agents; 3 gaps found; user scoped to gap #1 ("Follow an existing pattern")
+and explicitly REJECTED gap #2 (UI render→compare→fix self-check loop — zero UI tasks ever, so
+speculative) and gap #3 (Supervisor→agent steering protocol — no observed need). Advisory only: no
+hook, no gate, no Hard-Stop Gate, no backfill into existing guides — mirrors the `Depends on` /
+`Entry point` precedent exactly.
+
+**Risk**: rated Medium purely because `TASK_GUIDE_template.md` is a hub file every future task
+inherits — NOT because the edit was large (5 lines). Hub claim was verified, not asserted: a
+differential test ran all six guide-parsing regexes (title/agent/complexity/risk/priority/Depends on
+in `post_write_register_task.py`) plus the merge gate's `verify`-row pattern against the pre- and
+post-change template — byte-identical results. A new `**Bold**:` line in `## Approach` collides with
+no parser.
+
+**Test**: `.claude/hooks/tests/test_task_guide_template_pattern_reference.py` (9 tests) asserts
+against the REAL template file (`Path(__file__).resolve().parents[3]`), never an inline copy. The
+load-bearing assertion is section-scoped: it slices between `^## Approach` and the next `^## ` with
+`re.MULTILINE|DOTALL` and searches ONLY that slice — a bare `in template` check would still pass if
+the field drifted out of `## Approach`, the exact vacuous-assertion trap hit 3× (T036/T042/T039).
+All 4 negative controls (field deleted / moved out of Approach / opt-out stripped / example path
+pointed at a missing file) were independently mutated on the real template by the Supervisor and
+observed RED, then reverted. Slicer anchors on `^## ` to guard the T045 unanchored-lookahead class.
+
+**Stage 4**: 0 P0/P1/P2, 3 P3 (all test-file, none requested: noun-named `example_path()`; a
+duplicated field still passes — no occurrence-count assertion; `remove_field_block` eats extra blank
+lines). security-review executed (2nd successful run in project history after the origin remote was
+added 2026-07-23) — no findings; no untrusted input reaches the change.
+
+**Merged**: `--no-ff`, commit `bf23413`, branch `feat/t046-pattern-reference`.
+
+**Files**: templates/TASK_GUIDE_template.md,
+.claude/hooks/tests/test_task_guide_template_pattern_reference.py (new, 9 tests)
+
+---
+
 ## T044 merged: hook lifecycle & evidence integrity (Stage 4 reviewed 2026-07-30, merged 2026-07-31)
 
 Three defects in one subsystem, all observed live on 2026-07-23.

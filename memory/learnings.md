@@ -585,3 +585,29 @@ helper closes T039's vacuity mode, where both sides extracted empty and empties 
 Strictly the hash alone suffices when the expectation is a hardcoded digest (an empty body hashes to
 something else), but the floor makes the failure message say *truncated* rather than *changed*.
 Fourth recorded instance of the vacuous-assertion family.
+
+---
+
+## Two T046 process gotchas, both re-confirmations (2026-07-24, T046)
+
+> Recovered 2026-08-07 from `stash@{0}`, uncommitted since T046 merged.
+
+**The Ghostty spawn marker silently failed again.** The sub-agent finished correct work (2 commits)
+but the `.done` marker was never written and the wait-loop reported nothing. Verifying the worktree
+with `git status --short` + `git log --oneline` directly is the only trustworthy signal. Third
+occurrence after T027 and T028.
+
+**`git checkout -- <file>` is blocked by the git-guardrails hook**, not just `checkout .`. An
+attempt to discard an uncommitted `PROJECT_KANBAN.md` scratch edit was silently refused, leaving the
+task showing In Progress, and the merge gate correctly rejected the merge. To revert an uncommitted
+tracked file while the guardrail is active, re-edit it back by hand with the Edit tool rather than
+`git checkout`.
+
+## Kanban merge hygiene when both sides touch the board (2026-07-24, T046)
+
+The Supervisor's live board edits (move task to In Progress) and the branch's board edits (move to
+Ready for Review) both change the same rows relative to the merge base, which conflicts on
+`--no-ff`. Clean path: before merging, restore the Supervisor-side `PROJECT_KANBAN.md` to match the
+merge base so only the branch changed it, merge, THEN move the task to Done on the merged result and
+commit. Do NOT pre-move to Done on the Supervisor side before merging — that reintroduces the
+same-row conflict.
