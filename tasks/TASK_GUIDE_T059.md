@@ -172,8 +172,13 @@ tracked report path — it now only reads `reports/token-audit_2026-07-21.md` wi
 full suite run in a gitignored-trace worktree no longer overwrites the file's 106 entries with an
 empty Entries block (worktree BEFORE: 107 deletions; AFTER: zero modification).
 
-**WITNESS**: to be derived by the Supervisor from `memory/event-trace/T059.jsonl` at review time —
-not asserted by the implementing agent.
+**WITNESS**: derived by the Supervisor from `memory/event-trace/T059.jsonl` (18 records,
+`2026-08-07T04:03:38Z` to `2026-08-07T04:23:03Z`), not from the implementing agent's report. The
+attributed test run is recorded at `2026-08-07T04:20:06Z`. The Supervisor additionally re-ran the
+full suite (`207 passed`, `git status --short` empty) and the SC2 mutation control independently
+inside the worktree — truncated report gave `1 failed`, `cp` restore gave `1 passed` — so the
+implementing agent was not the sole oracle for its own acceptance test.
+
 
 ---
 
