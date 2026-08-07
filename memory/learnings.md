@@ -697,3 +697,19 @@ a full cache-split `usage` and a `toolStats` block on every spawn the whole time
 
 Before building an instrument, dump one raw payload of whatever the harness already hands you. The
 cheapest instrument is the one you are already being given and throwing away.
+
+
+## An empty Todo column can mean "never registered", not "nothing left" (2026-08-07)
+
+After T061 merged, `PROJECT_KANBAN.md` read 0 Todo / 0 In Progress / 59 Done, and the user reasonably
+read that as the harness refactor being finished. It was not: T061 shipped *measurement only* and is
+scoped in its own guide as "this task captures; it concludes nothing". The five directions that would
+actually change performance existed solely as prose in `BRAINSTORMING_LOG.md`.
+
+Hard-Stop Gate 3 covers the opposite failure — work that is done but still shows Todo. It says
+nothing about a direction that has been decided, prioritised and recorded but never turned into a
+row, and that gap makes the board silently overstate completeness.
+
+**Rule**: when an ideation or planning session ends with a selected direction, register its items on
+the board in the same session, even when every one of them is blocked or gated. A blocked row is
+information; an absent row is a false all-clear.

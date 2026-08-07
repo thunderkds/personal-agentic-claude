@@ -989,4 +989,10 @@ built-in diffing the checked-out branch).
 
 **Stage 5**: 246 passed + smoke PASS from main post-merge.
 
+**Confirmed live 2026-08-07 post-merge**, which the fixture-based tests could not do: a real spawn
+from the main checkout wrote the first genuine `spawn` record — 15,727 total, 15,294 `cache_read`,
+423 `cache_creation_5m`, 0 `1h`, 8 output, `bash_count` 1, `resolved_model` claude-sonnet-5. The 46
+Agent records predating the merge carry no `spawn` key, so all analysis data accrues from here
+forward; there is no retrospective corpus.
+
 **Files**: .claude/hooks/post_tool_trace.py, .claude/hooks/tests/test_post_tool_trace_spawn.py
