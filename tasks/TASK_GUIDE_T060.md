@@ -186,7 +186,17 @@ discovery-only boundary inventory and a `traceparent` correlation step were inse
 gained a `traceparent` field, and the Checkpoint now reconstructs the data path (reporting `path
 incomplete` rather than inferring) before any hypothesis verdict is assigned.
 
-**WITNESS**: [derived from `memory/event-trace/T060.jsonl`, never the implementing agent alone]
+**WITNESS**: derived by the Supervisor from `memory/event-trace/T060.jsonl` (27 records,
+`2026-08-07T03:22:06Z` to `2026-08-07T05:22:16Z`), not from the implementing agent's report. First
+attributed test run at `2026-08-07T05:15:37Z`.
+
+The Supervisor independently re-verified rather than accepting the agent's table: Phase 1/2/3 bodies
+recomputed against `1ac8cfa` and confirmed byte-identical (1052/157/249 chars); the `### Phase`
+heading list diffed against `1ac8cfa` and confirmed identical; `daemon`/`ingest server`/`relay`
+confirmed absent file-wide; and the two load-bearing assertions were mutation-controlled by the
+Supervisor itself — AC2 (`does not authorise a probe` → `authorises a probe`) and AC7
+(`never infer what the missing side saw` → `infer ...`), each RED then restored GREEN. The
+implementing agent was therefore not the sole oracle for its own acceptance tests.
 
 ---
 
