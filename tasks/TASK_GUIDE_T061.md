@@ -119,12 +119,12 @@ python3 -m pytest .claude/hooks/tests -q
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | [AC4 golden comparison + AC6 four fail-open cases — mutation-verified] |
-| verify | ☐ pass / ☐ fail / ☐ N/A | |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_post_tool_trace_spawn.py` — 26 tests, AC1–AC11 (25 by the implementer, 1 added by the Supervisor at Stage 4 to pin the P2 cache-TTL fix). `python3 -m pytest .claude/hooks/tests/test_post_tool_trace_spawn.py -q` → `25 passed in 0.65s`. **Not end-to-end**: the Agent payload is a fixture pinned to the guide's 2026-08-07 probe capture (key set + arm-B numbers); a test cannot spawn a sub-agent to produce a real `tool_response`. The hook itself *is* driven for real — subprocess, event JSON on stdin, foreign cwd, isolated sandbox root. |
+| Verification command run | ☑ pass | `python3 -m pytest .claude/hooks/tests -q` → `246 passed` (220 pre-existing, unmodified, + 26 new), re-run after the Stage 4 P2 fix. Baseline before any edit in this worktree: `220 passed in 7.19s`. |
+| Negative cases hold | ☑ pass | **Supervisor added 3 further controls at Stage 4, all RED then restored GREEN**: AC5 forced `prompt`/`content` into `spawn`; the P2 `usage.update` disabled; the fixture reverted to its invented `ephemeral_5m` key. Implementer's own: AC4 golden: checked twice — pinned pre-change record lines (timestamp elided, key order included) **and** a differential run of the actual pre-change source recovered via `git show 82883a2:.claude/hooks/post_tool_trace.py`; both identical. AC6: five fail-open cases (key absent / `None` / string / `{}` / dict with no cost fields) all yield `set(record) == {timestamp, tool_name, summary, is_error}`, exit 0. All mutation-verified — 5 cycles, each RED then restored GREEN (`cp` from a backup, never `git checkout`): M1 emit `prompt`+`content` → 5 failed incl. `test_record_never_carries_the_spawn_prompt_or_content`; M2 always-emit `spawn` with `None`s → 13 failed; M3 drop the `Agent`-only guard → 7 failed incl. **both** golden tests; M4 pass camelCase through → 11 failed; M5 require both sub-objects → 6 failed. Restore verified byte-identical by `diff`. |
+| verify | ☑ pass | Full suite 246 passed; hook exercised as a real subprocess in every test; `extract_spawn` never raises by construction (`isinstance` guard + `try/except` → `None`), matching the fail-open contract of `lib/task_context.py`. |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Two files: `.claude/hooks/post_tool_trace.py` (+72/−0, one new pure function plus a 4-line `if tool_name == "Agent"` block) and the new test file. No file in "Files Must NOT Touch" was read or written. `pre_bash_block_unsafe_merge.py` reads these records by key and is unaffected: no existing key changed, one optional key added on `Agent` only. |
+| Full smoke suite still green (no regression) | ☑ pass | `246 passed`; the 220 pre-existing tests are byte-unmodified (`git status --short` shows no change under `tests/` other than the new file). |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | hook change, no UI component |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ N/A | hook change, no UI component |
 | **UI: Responsiveness at target viewports** | ☐ N/A | hook change, no UI component |
@@ -156,12 +156,55 @@ python3 -m pytest .claude/hooks/tests -q
 Supporting capture, same commit — all 42 Agent records in `memory/event-trace/` carry only
 `['timestamp', 'tool_name', 'summary', 'is_error']`, where `summary` is the spawn *prompt*.
 
-**AFTER**: [post-change record for an Agent spawn, pasted verbatim]
+Live capture, taken before the first implementation commit, against the real trace directory the
+hook writes to. Note: `memory/event-trace/` does not exist inside this worktree (it is gitignored,
+so a fresh worktree has none); the directory scanned is the main checkout's, which is where the live
+hook actually writes — the same records the guide's "42 Agent spawns" line refers to, now 45.
 
-**DELTA**: [one sentence]
+```
+$ ls memory/event-trace          # inside the worktree
+ls: cannot access 'memory/event-trace': No such file or directory
 
-**WITNESS**: [derived from `memory/event-trace/T061.jsonl`, never the implementing agent alone]
+captured_at_utc: 2026-08-07T06:32:22.958346+00:00
+trace_dir: /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/memory/event-trace
+agent_records: 45
+records_with_spawn: 0
+keys: ['is_error', 'summary', 'timestamp', 'tool_name'] count: 45
+```
 
+Every Agent record in existence has exactly those four keys and none has a `spawn` key.
+
+**AFTER**: post-change record for an Agent spawn, emitted by the real hook over a subprocess with the
+guide's probe payload on stdin (fixture, not a live spawn — see the note in the Evidence table):
+
+```json
+{"timestamp": "2026-08-07T06:35:21.754835+00:00", "tool_name": "Agent", "summary": "{\"subagent_type\": \"common-infrastructure\", \"prompt\": \"Task ID: T061\\nSee tasks/TASK_GUIDE_T061.md\"}", "is_error": false, "spawn": {"total_tokens": 16981, "tool_use_count": 1, "duration_ms": 6875, "resolved_model": "claude-sonnet-5", "agent_type": "common-infrastructure", "status": "completed", "usage": {"input_tokens": 2, "output_tokens": 3, "cache_creation_input_tokens": 404, "cache_read_input_tokens": 16572}, "tool_stats": {"read_count": 0, "search_count": 0, "bash_count": 1, "edit_file_count": 0, "lines_added": 0, "lines_removed": 0}}}
+```
+
+**DELTA**: an Agent trace record gains a `spawn` object carrying the six top-level cost fields, a
+four-field `usage` split by cache disposition and a six-field `tool_stats`, all snake_cased, while
+every non-`Agent` record stays byte-identical to what the pre-change hook emitted.
+
+**WITNESS**: derived by the Supervisor from `memory/event-trace/T061.jsonl` (43 records,
+`2026-08-07T06:27:02Z` to `2026-08-07T06:44:23Z`), first attributed test run at `06:32:12Z` — not
+from the implementing agent's report.
+
+**The agent's one acknowledged gap was closed by the Supervisor, not accepted.** It reported,
+correctly, that its Agent-path test is a fixture because it cannot spawn a sub-agent to produce a
+real `tool_response`. The Supervisor still had the two verbatim payloads captured by the 2026-08-07
+probe and drove the new hook with them directly. Both reproduce their hand-measured numbers through
+the new code path:
+
+```
+tokens=15669  cache_rd=15259  cr_5m=405  cr_1h=0  bash=1  model=claude-sonnet-5
+tokens=16981  cache_rd=16572  cr_5m=404  cr_1h=0  bash=1  model=claude-sonnet-5
+```
+
+AC4 was additionally re-verified by an independent differential: the pre-change hook recovered via
+`git show 82883a2:.claude/hooks/post_tool_trace.py`, run over identical `Bash`/`Write`/`Read` events
+in a parallel sandbox, output compared with timestamps elided — **byte-identical**. AC5 was
+mutation-controlled by the Supervisor (forcing `prompt`/`content` into `spawn` → RED, restore →
+GREEN), as were the Stage 4 P2 fix and the fixture-drift correction.
 ---
 
 ## Approach
@@ -235,13 +278,13 @@ do not encode any of these numbers as thresholds in code.
 
 ## Edge Case Checklist
 
-- [ ] `tool_response` arriving as a JSON string rather than a dict (seen in truncated-payload fallbacks elsewhere in this hook family — see the T044 `extract_command` learning)
-- [ ] `usage.iterations` is a list that can grow large — do not copy it into the record
-- [ ] A spawn that errored: `status` may be absent or non-`completed`; `spawn` should still be written if cost fields exist, since a failed spawn still cost tokens
-- [ ] Nested `usage.cache_creation.{ephemeral_5m,ephemeral_1h}` — decide explicitly whether to keep; if kept, flatten, do not nest three deep
-- [ ] `toolStats` present but all zeros is a legitimate record, not a reason to omit the object
-- [ ] Record size: `summary` is already capped at `MAX_SUMMARY_LEN`; confirm the new object cannot push a single JSONL line to an unreasonable size
-- [ ] Concurrent spawns appending to the same `<task>.jsonl` — appends are line-atomic today; do not change the write mode
+- [x] `tool_response` arriving as a JSON string rather than a dict — `isinstance` guard returns `None`; covered by `test_unusable_tool_response_yields_no_spawn_key[truncated payload-False]`. The same guard is applied one layer down to `usage`/`toolStats` (`test_non_dict_usage_and_tool_stats_are_skipped_not_crashed`), because this hook family's last four defects sat *below* the logic under review
+- [x] `usage.iterations` never copied — it is absent from `SPAWN_USAGE_FIELDS`, asserted by `test_record_never_carries_the_spawn_prompt_or_content` and size-bounded by `test_record_line_stays_small` (5,000 iterations + 500 KB `content` → line < 1000 chars)
+- [x] A spawn that errored still records its cost — `status` is copied when present, never required; `test_failed_spawn_still_records_its_cost` (status absent, `is_error` true) and `test_error_flag_still_derived_from_tool_response`
+- [x] `usage.cache_creation.{ephemeral_5m,ephemeral_1h}` — **explicitly dropped**, not flattened: their sum is already `cache_creation_input_tokens`, which AC2 names, so keeping them adds a third nesting level for a value already present. Recorded in the code comment; asserted absent
+- [x] `toolStats` all zeros is kept — omission would make "used no tools" indistinguishable from "harness didn't report"; `test_tool_stats_of_all_zeros_is_still_recorded`
+- [x] Record size — fixed set of scalars, no unbounded field copied; see `test_record_line_stays_small`
+- [x] Write mode untouched — still `open(trace_path, "a")` + a single `json.dumps` line; the diff does not touch the write
 
 ---
 
@@ -285,10 +328,10 @@ golden test and the AC6 fail-open cases.
 
 ## Completion Checklist
 
-- [ ] Implementation done
-- [ ] Self-review: `Skill({ skill: "code-review" })` run
-- [ ] Security review: `Skill({ skill: "security-review" })` run (Medium risk) — run manually and label it if the checked-out branch is not the task branch
-- [ ] Tests written AND pass — output pasted into Evidence table (Hard-Stop Gate 5)
-- [ ] `Skill({ skill: "verify" })` run
+- [x] Implementation done
+- [ ] Self-review: `Skill({ skill: "code-review" })` run — **not run by the implementing agent**: the `Skill` tool is not available in a sub-agent context. A manual read-through of the full diff was done instead (findings: none beyond what the Evidence table records). Stage 4 must run the real skill.
+- [ ] Security review: `Skill({ skill: "security-review" })` run (Medium risk) — **not run**, same reason. Manual note for the reviewer: the change adds no I/O, no new file path, no network, no `subprocess`, no user-controlled value reaching a filename; it copies six scalars out of a payload the hook already holds in memory. `task_id` (the only value reaching a path) is untouched.
+- [x] Tests written AND pass — output pasted into Evidence table (Hard-Stop Gate 5)
+- [x] `Skill({ skill: "verify" })` run — equivalent verification performed and recorded in the Evidence `verify` row; the skill itself is not invocable here.
 - [ ] `memory/MEMORY.md` updated (flag to Supervisor; sub-agents do not write memory)
-- [ ] Supervisor notified: task ready for Stage 4 review
+- [x] Supervisor notified: task ready for Stage 4 review
