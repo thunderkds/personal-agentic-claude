@@ -703,3 +703,171 @@ reader couldn't predict before the task began, and only the bugfix repro loop de
 all. A score over conformance rows would have produced a confident number measuring the wrong thing.
 **Files**: BRAINSTORMING_LOG.md, PROJECT_SPEC.md, memory/glossary.md, docs/ddr/0003-demonstration-block-and-delivery-report.md
 **Record**: DDR gate scored 3-of-3 (ADR-eligible). User asked, chose DDR over ADR escalation — "hard to reverse" is the weak leg; this is a process-artifact change, not an architectural commitment like ADR-0001. -> see DDR-0003
+
+## T053 + T055 integrated and pushed, 2026-08-06
+
+**T053** — `## Demonstration` block (BEFORE / AFTER / DELTA / WITNESS, no `N/A` path on BEFORE) added
+to `templates/TASK_GUIDE_template.md` and the bugfix Step 3 skeleton; the bugfix flavor's BEFORE
+*points at* the Phase 1 repro loop rather than duplicating it (DDR-0003's two-copies-that-disagree
+risk). `craft-spawn-prompt` gained element 7, the BEFORE-capture-before-implementation instruction.
+`pre_agent_validate_guide.py` gained a non-blocking blank-BEFORE advisory with an explicit fail-open
+wrapper around both warning paths.
+
+**T055** — bugfix Evidence table went 3 free-text rows → 12 gate-visible rows (the 9-row
+implementation shape + the 3 preserved bugfix-specific rows). The merge gate was not *failing* on
+bugfix tasks, it was structurally absent. Step 5 review wording updated to match.
+
+**Process, and the part worth remembering**: both Stage 3 runs were killed mid-task by the step-limit
+hook via the shared-`.state` race (see learnings.md). The Supervisor recovered both worktrees,
+resolved the `bugfix/SKILL.md` conflict by keeping both changes, and **wrote T053's AC6/AC7 hook
+advisory and all 8 of its tests itself** — the agent never reached them. T055's agent reported
+`151 passed` and a mutation check; both were re-run independently from the main checkout rather than
+trusted, given this repo's record of false Evidence (T035, T039). Final: `159 passed`, both mutation
+cycles observed RED then GREEN.
+
+One self-review defect caught before commit: `before_field_is_blank` used
+`value.replace("OR", "")`, which strips those letters from any word ("ERROR"→"ERR"). Narrowed to
+`\bOR\b`. It could not have produced a wrong verdict yet — a latent trap, not a live bug.
+
+Deliberately **not** done: T054 (`delivery-report`) remains blocked on nothing now that T053 has
+landed, but was out of scope for this session. Branch `docs/stage2-demonstration-block-t053-t055`
+pushed; **not merged to main** — no PR opened, awaiting user decision.
+
+## T056 registered P0, 2026-08-06
+
+The shared `.claude/hooks/.state/` root needs a per-worktree key *and* a Supervisor-exempt path.
+Raised to P0 above the remaining T054 work because it halted a live session and required manual user
+recovery. Carried as an open risk since T047; this is the first time it bit.
+
+## T056 merged: session-scoped step counters + TTL expiry, 2026-08-06
+
+The step-limit guard hard-blocked a whole Supervisor session **three times in one day**. Root cause
+was two-part, and the shared-state race was the *lesser* half:
+
+1. **Counters are never reset.** `post_agent_move_to_review.py` is deliberately inert as a writer
+   (T044 — no completion event carries task identity), so `step_count_<task>.txt` grew monotonically
+   forever with no automatic path back to zero for any task, ever. The third incident's poisoning
+   counter belonged to **T053 — already Done and pushed hours earlier**.
+2. **Counters were keyed by task alone**, so one session's exhausted budget broadcast to every
+   session resolving to that task, including the Supervisor's.
+
+Fix: key on `step_count_<sanitized-session>_<task>.txt` off the event's `session_id`, plus an
+mtime-based TTL (`CLAUDE_STEP_COUNT_TTL_S`, default 6h) treating an expired counter as 0.
+`makedirs`/write wrapped so an unwritable state dir fails open. `session_id` treated as untrusted
+(it reaches a filename): sanitized to `[A-Za-z0-9]`, truncated to 64, `nosession` fallback.
+
+`task_context.py` deliberately untouched — the attribution/state-file race is a separate concern, and
+the guard is now safe *without* depending on it being fixed. Attribution can still mis-tag concurrent
+agents; it can no longer *block* them, which is the harm that actually stopped sessions.
+
+Stage 4: the 2 pre-existing `test_task_context.py` edits are filename-literal updates with assertions
+unweakened (checked, not assumed). security-review **PASS, 0 actionable** — manual, 11 hostile
+`session_id` probes (`../../../etc/passwd`, `$(whoami)`, NUL byte, 200-char): no traversal, injection,
+empty or overlong segment. Incident reproduced end-to-end against the fixed hook by the Supervisor
+rather than trusted from tests: 41 events session A → blocked, 1 event session B → **allowed**.
+Mutation-verified both load-bearing assertions RED then GREEN. `169 passed` re-run from the main
+checkout post-merge. Pushed on `docs/stage2-demonstration-block-t053-t055`; **not merged to main, no
+PR opened**.
+
+**Still open after this task**: `pre_agent_step_limit.STATE_DIR` resolves off `__file__`, while
+`task_context.py` resolves its state root off `$CLAUDE_PROJECT_DIR`. Same directory in practice
+(the harness always invokes main-checkout hooks) but the two can diverge, which made verification
+harder to reason about. Worth reconciling with the eventual attribution task.
+
+## T054 merged: delivery-report skill + HTML template, 2026-08-06
+
+Closes the DDR-0003 block (T053 → T055 → T056 → T054). `Skill({ skill: "delivery-report" })` renders a
+task's Demonstration block as a self-contained dark-neon HTML page at
+`reports/delivery-report_<branch>_<timestamp>.html`: BEFORE/AFTER side by side, DELTA as the headline,
+and a `filled / total` completion count over the Evidence table — the "number" the original request
+asked for. No scored dimension, risk percentage, or findings table (DDR-0003 decision 3: a Delivery
+Report demonstrates, it does not assess). Stage 5 trigger, after `verify`, before merge.
+
+**AC7 is the design's spine and it holds.** WITNESS is resolved from `memory/event-trace/<task>.jsonl`
+and never read from the guide. Proof came from rendering T053, whose guide contains a **typed** WITNESS
+paragraph written by the Supervisor: the renderer ignored it and printed `WITNESS underived — no
+memory/event-trace/T053.jsonl found`. It refuses to launder a typed claim into evidence, which is
+exactly what DDR-0003 said would otherwise make the field fiction.
+
+**MANIFEST deliberately NOT changed**, contradicting the guide's own AC9. MANIFEST lists *directories*
+(`.claude/skills`, `templates`) copied with `cp -r`, so the new skill and template already deploy;
+explicit per-file paths would be redundant and break the file's convention. An AC written from an
+older mental model of a file is worth checking against the file before satisfying it literally.
+
+Stage 4: security-review **PASS, 1 P3** — `task_id` flows unsanitized into
+`os.path.join(...f"{task_id}.jsonl")`, so a crafted ID could traverse on read. Operator-invoked CLI
+with no untrusted input, not actionable now, same class T056 just hardened. UI sign-off done by the
+Supervisor, not the implementer (the guide assigns it that way so the implementer is not its own sole
+oracle): 0 external assets, palette matches `report_template.html`, `max-width:980px` +
+`flex: 1 1 320px` so panes wrap without a media query and nothing scrolls horizontally at 1024px+.
+
+Verified post-merge from the main checkout: `177 passed` + `smoke-install.sh: PASS`. Pushed on
+`docs/stage2-demonstration-block-t053-t055`; **not merged to main, no PR opened.**
+
+## T057 merged: self-clearing step-limit block + default 40→90, 2026-08-06
+
+The step-limit guard hard-blocked the Supervisor's session **four times in one day**, each recovery
+requiring the user to run a manual `rm`. T056 keyed counters by `session_id`, which fixed
+agent-vs-*unrelated*-session bleed — but **a spawned sub-agent inherits its parent's `session_id`**,
+so the pairing that actually occurs was never separated.
+
+Fix (user decision): make the block **self-clearing**. On exceeding the limit, reset the counter to 0
+and bump a durable `block_count` **before** emitting the block, so a crash between the two can never
+leave the counter above the limit. The runaway's current call still dies; the next call from any
+session is allowed. Deliberately **identity-free** — no field available to the hooks distinguishes an
+agent from its spawner, so the fix must not depend on one. Counter is now two lines
+(`count\nblock_count`); legacy one-line files degrade to `block_count=0`; TTL expiry resets both.
+Default `CLAUDE_STEP_LIMIT` raised 40→90, justified in-comment from evidence (T054 spent 42
+legitimate calls, T056 38). The false "manually reset ..." instruction is gone; the message now says
+the counter was reset automatically, and escalates on the 3rd+ block.
+
+**Accepted trade-off, recorded not hidden**: the guard is weaker — a true loop is interrupted every N
+calls rather than halted. Accepted because observed cost (4 lockouts, ~an hour of recovery, 2 lost
+agent runs) vastly exceeded observed benefit (0 real runaways ever caught). AC6's escalating message
+is the agreed mitigation.
+
+**AC9 worked exactly as designed.** The agent hit 8 failing pre-existing tests and **stopped and
+reported instead of editing them green** — the single most valuable thing it did. The Supervisor
+verified each independently rather than accepting "they contradict the design": all 8 encoded
+intentionally-superseded behaviour (hardcoded "blocks at 41", the single-line counter format, and
+SC2's explicit "session A must still be blocked" which this task reverses). Updated with inline
+reasons, each keeping the property it existed to protect. That suite now **pins `CLAUDE_STEP_LIMIT`
+via env**, so a future default change cannot silently invalidate it again.
+
+Verified end-to-end by the Supervisor, not just asserted: block fires at the limit, next call allowed,
+AC5/AC6 confirmed live. `188 passed` + smoke PASS from the main checkout post-merge. Pushed on
+`docs/stage2-demonstration-block-t053-t055`; **not merged to main, no PR opened.**
+
+## T058 merged: diagnose becomes an evidence-driven instrumentation loop (2026-08-06)
+
+`diagnose` Phase 4 was a single line ranking instrument types by preference
+(`debugger/REPL > targeted boundary logs > ...`, `Tag logs [DEBUG-xxxx]`). It never said what to log,
+in what format, how many probes, how a probe ties back to a Phase 3 hypothesis, or when
+instrumentation may be removed. It is now a 7-step procedure: local NDJSON sink (never
+`memory/event-trace/`), a 1–10 probe budget (typical 2–6), a mandatory `hypothesisId` on every probe,
+five named placement categories, a fixed payload shape, `#region debug log` wrappers, and
+clear-then-run. Three downstream holes the loop exposed are closed in the same change: the Stuck-Loop
+Checkpoint gains CONFIRMED/REJECTED/INCONCLUSIVE with log-line citation (only REJECTED increments
+T052's counter; INCONCLUSIVE routes back to re-instrumenting the *same* hypothesis and is explicitly
+not licence to move on), Phase 5 retains instrumentation until a post-fix verification run's logs
+prove success and reverts changes made for REJECTED hypotheses, and Phase 6 cleanup is marker-driven
+(delete region→endregion, re-grep for zero, review `git diff`). 59 → 90 lines.
+
+**Prior art**: `github.com/millionco/debug-agent` (MIT), consulted at the user's prompting *after*
+Stage 2 had already produced a guide. Eight mechanisms adopted. Its transport layer was rejected
+outright — Node daemon, HTTP ingest server, hosted Cloudflare relay — as the wrong dependency for a
+Python/shell repo and an external hop for program values. Where `diagnose` is stronger it was kept:
+the Phase 1 ten-rung repro ladder stays ahead of any ask-the-user step, and the T052 checkpoint has
+no counterpart in the prior art.
+
+**Rejected direction, recorded so it does not return**: gating `diagnose`'s phases on the C0–C3
+Complexity matrix (C0 = phases 1/2/5, C1 = +3, C2/C3 = full). Dropped, not deferred, for two reasons
+— a second scaling mechanism would compete with the matrix that already sets every other skill's
+trigger threshold, and complexity is a property of the *fix*, which is not knowable until the bug is
+diagnosed, so it would gate diagnosis on an output of diagnosis. AC12/AC13/AC14 are negative criteria
+pinning line 8, the full `### Phase` heading list, and the Phase 1/2/3 bodies byte-identical
+specifically so the dropped direction cannot re-enter through an implementation.
+
+Stage 4: code-review 0 P0 / 0 P1 / 1 P2 fixed / 2 P3. security-review PASS, 0 actionable (run
+manually and labelled — the built-in diffs the checked-out branch, which was not `t058-work`).
+Six mutation controls observed RED then restored. 19 new tests, 207 passed. Merged to main 2026-08-06.

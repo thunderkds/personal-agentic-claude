@@ -426,3 +426,174 @@ correctly scoped) — it's the structural shape of append-only files edited by c
 worktree-isolated tasks. Resolution is trivial (keep both lines) but expect it whenever two Stage-3
 tasks in flight at once both touch `MANIFEST`, `PROJECT_KANBAN.md`'s own section boundaries, or any
 other single shared append point.
+
+## A guard can lock out the only role able to release it (T053/T055, 2026-08-06)
+
+`pre_agent_step_limit` keys its counter off the shared `.claude/hooks/.state/active_task`. When the
+T055 agent exhausted its 40-call budget, every session that inherited the stale ID was killed —
+including the Supervisor's. The hook's own message says "Supervisor: reset
+`.state/step_count_T055.txt`", but the Supervisor could not: `Bash` and `Read` were both blocked, and
+the reset needs a tool call. Recovery required the user to intervene manually.
+
+Two lessons:
+- A kill-switch must exempt the role its own remediation message addresses, or it is a deadlock.
+- **The `Write` tool was never gated while `Bash` and `Read` were.** Overwriting the counter with `0`
+  released the block. When a hook appears to have blocked everything, probe other tool families
+  before escalating — the gate is rarely as total as it looks.
+
+## A worktree agent structurally cannot write the main-checkout state path (T053, 2026-08-06)
+
+`craft-spawn-prompt` element 6 instructs the agent to write an absolute main-checkout path. A
+worktree-isolated agent's sandbox **refuses** it and redirects to the worktree copy, which the hooks
+never read. So the mandated attribution instruction is unfollowable by exactly the agents it targets;
+the agent then inherits whatever ID another agent left in the shared file. This is the root of the
+T056 race — not merely concurrent writes, but that the correct write is impossible. Do not "fix" this
+by rewording the instruction; the channel itself needs to be per-worktree.
+
+## `isolation: "worktree"` forks from **main**, not the current branch (2026-08-06)
+
+Confirmed by three spawns: every Agent-tool worktree came up at `main` (`8f19a45`) while the working
+branch was many commits ahead. So a guide committed on a feature branch is **invisible** to the agent
+you spawn for it — T053, T055 and T056's first two spawns all landed in trees without their own
+TASK_GUIDE. My first read of this was "forked one commit behind"; that was wrong and made it look
+like a timing problem. It is not timing — it is a fixed base, and no amount of committing earlier
+fixes it.
+
+Two things that work:
+- Put a `ls tasks/TASK_GUIDE_Txxx.md` self-check at the top of every spawn prompt with an explicit
+  STOP instruction. T056's third spawn halted correctly instead of inventing the task from the
+  prompt's orienting content.
+- For branch-based work, create the worktree yourself off the branch tip
+  (`git worktree add -b <name> <path> HEAD`) and spawn **without** `isolation` — the Agent tool would
+  otherwise create a second worktree and orphan yours (already recorded).
+
+## Parallel spawns onto a known-open race are the Supervisor's error, not the agents' (2026-08-06)
+
+Memory had carried the shared-`.state` race as open since T047. Spawning T053 and T055 concurrently
+turned a documented risk into a session-halting failure that cost both runs. When memory flags a
+concurrency risk as open, serialize until it is closed — the parallelism saved nothing here and cost
+two full agent runs plus a manual recovery.
+
+## The Kanban is test-covered — editing it after the last test run pushes red (2026-08-06)
+
+`test_find_kanban_section_on_real_current_board` reads the **live** `PROJECT_KANBAN.md` and asserts
+every `- [x]` row resolves to Done. Marking T053/T055 `[x]` while placing them in Ready for Review
+turned the suite red at 158/159 — and it shipped, because the final board edits came after the last
+`pytest` run and the commit went out unverified. `[x]` means Done on this board; Ready for Review
+uses `[ ]`.
+
+The board is not an inert document — it is an input to the hook suite. Any Kanban edit is a code
+change for testing purposes: re-run `pytest` after it, not before. Third recorded instance of
+evidence that named a commit without being re-run at that commit (T035, T039).
+
+## A counter with no reset path is a landmine with a fuse, not a guard (T056, 2026-08-06)
+
+`post_agent_move_to_review.py` was made inert in T044 for a correct reason (no completion event
+carries task identity) — but nothing replaced it as the resetter, so every step counter grew forever.
+The failure did not look like "counter never resets"; it looked like three unrelated random
+lockouts, one of them caused by a task that had been Done for hours. When a guard's state has no
+automatic path back to its safe value, the guard's real behaviour is "eventually blocks everything",
+and the delay before that hides the cause.
+
+Whenever a component is deliberately disabled, ask what it was the *only* thing doing. T044 answered
+"it can't write the Kanban correctly" and stopped there; the counter reset it also owned went
+unnoticed for weeks.
+
+## Clean up your own attribution pointer after a verification run (2026-08-06)
+
+Twice this session the poisoning `active_task` pointer was one the *Supervisor* wrote for its own
+verification run and left armed. Counters accrue against whatever it names, and the next session
+inherits it. Write it immediately before a verification command, clear it immediately after — the
+6h staleness window is far too long to rely on when several tasks run in one session.
+
+Caught the third instance at **39 of 40** calls, one away from another lockout.
+
+## A sub-agent inherits its parent's `session_id` (T054, 2026-08-06)
+
+T056 keyed step counters by `session_id` to stop one task's exhausted budget blocking other sessions.
+It works for unrelated sessions — but a spawned agent runs under the **parent's** `session_id`, so the
+counter `step_count_<parent-session>_T054.txt` blocked the Supervisor as well when the agent spent its
+42 calls. Agent-vs-parent is the pairing that actually occurs in this pipeline; agent-vs-unrelated is
+the rare one. A fix keyed on session identity must include something that distinguishes agent from
+spawner. → **T057**.
+
+Corollary on sizing: 40 calls was demonstrably too low for a ~7-file C2 task. The agent made concrete
+forward progress on every call and still died before its first commit. Either raise the limit for
+multi-file tasks or split them — "commit early and often" does not help an agent that runs out before
+commit #1.
+
+## An AC can be written against a file's older shape (T054, 2026-08-06)
+
+T054's AC9 required `MANIFEST` to gain the new skill and template paths. But MANIFEST lists
+*directories* copied with `cp -r`, so both already deployed; adding the paths would have been
+redundant and inconsistent with every other line in the file. Satisfying the AC literally would have
+made the repo worse. Check the file the AC describes before treating the AC as ground truth — and
+record the deviation in the Evidence, don't silently skip it.
+
+## A guard's value is measured against its actual record, not its intent (T057, 2026-08-06)
+
+The step-limit hook's lifetime record: 4 hard lockouts of the Supervisor, ~an hour of manual
+recovery, 2 lost agent runs, 0 runaways caught. Kept at full strength it would have kept costing that.
+The right move was to deliberately weaken it and say so in the guide, not to keep hardening a guard
+whose failure mode was more expensive than the thing it guarded against. When a safety mechanism has
+a measurable history, weigh the change against that history rather than against the hazard it was
+imagined to prevent.
+
+## An agent that stops on failing tests is doing the most valuable thing it can (T057, 2026-08-06)
+
+T057's agent found 8 pre-existing failures and halted with a written reason instead of editing them
+green — exactly what AC9 asked. That single decision is what made the outcome trustworthy: had it
+"fixed" them, the suite would have gone green while quietly deleting SC2's coverage. Two follow-ons:
+- Put an explicit "do not modify existing tests, STOP and report" instruction in every spawn prompt.
+  It cost one round-trip and bought a real review.
+- **Verify the agent's reasoning anyway.** "These tests contradict the new design" is exactly the
+  claim that launders a regression. Each of the 8 was checked individually before being touched.
+
+## Stale Evidence is false Evidence once the blocker is resolved (T057, 2026-08-06)
+
+The agent honestly filled the Evidence table with `verify | fail | 8 failed, 180 passed` while the
+test conflict was open. After the Supervisor resolved it, that row was no longer honest — it recorded
+a state that no longer existed, and the merge gate scans that exact cell. Evidence written mid-blocker
+must be re-written when the blocker clears, not left as a historical note. 4th Evidence-integrity
+incident (T035 false claims, T039 unre-run command, T053 weak-advisory, now this).
+
+## A test that writes to a tracked repo file is invisible where you run it and destructive where you don't (T059, 2026-08-06)
+
+`.claude/hooks/tests/test_token_audit_generator.py:235` requests the `tmp_path` fixture and then
+ignores it, calling `token_audit.generate_report()` with `ROOT / "reports" / "token-audit_2026-07-21.md"`
+— the real tracked file. In the **main checkout** `memory/event-trace/` is populated, so regeneration
+only ever appends and the damage shows up as nothing worse than a permanently dirty working tree
+(this is why it survived undetected; it was already dirty in this session's opening `git status`).
+In a **worktree** the trace dir is gitignored and therefore empty, so the identical call writes an
+empty Entries block over all 106 derived entries. A sub-agent's commit swept up the clobbered file and
+did not report it. The lesson is not "the agent was careless" — re-running the suite reproduced it
+deterministically, which is what proved the cause was the suite, not the agent. **Check whether a
+test writes anywhere outside `tmp_path` before trusting a clean-looking suite, and diff every file in
+an agent's commit against the guide's predicted file list.** Registered as T059.
+
+## Prior art can reframe a task after Stage 2 has already locked it (T058, 2026-08-06)
+
+The user pointed at `github.com/millionco/debug-agent` *after* the guide was written, committed, and
+about to be spawned. Reading it turned a text edit into a design change and moved the task C1 → C2.
+Nothing was wasted — the guide was rewritten and re-committed before the spawn — but the cheaper
+order is to search for an existing implementation of the idea during Stage 0.5, not after Stage 2.
+The general-agent-template's Search-Before-You-Build ladder covers this for *implementers*; it does
+not currently fire for the Supervisor writing a guide.
+
+## Retiring a convention touches more places than the AC table enumerates (T058, 2026-08-06)
+
+T058's AC11 named Phase 6's cleanup checkbox as the one place referencing the retired `[DEBUG-xxxx]`
+prefix. It also lived in the Karpathy Surgical-Changes override on line 13 — outside the predicted
+diff and outside every "Files Must NOT Touch" entry. The implementing agent found it, changed it, and
+flagged it rather than burying it. **When retiring a token or convention, grep the whole file for it;
+do not trust the predicted diff.** The test that caught it (`"[DEBUG-" not in text`, asserted
+file-wide because it is a *negative*) is the rare case where a file-wide substring assertion is the
+correct instrument.
+
+## A section-body checksum needs a length floor beside it (T058, 2026-08-06)
+
+Pairing `sha256(body)` with a minimum-length assertion and a non-empty guard inside the extraction
+helper closes T039's vacuity mode, where both sides extracted empty and empties compared equal.
+Strictly the hash alone suffices when the expectation is a hardcoded digest (an empty body hashes to
+something else), but the floor makes the failure message say *truncated* rather than *changed*.
+Fourth recorded instance of the vacuous-assertion family.
