@@ -827,7 +827,11 @@ def test_t067_file_stays_within_the_line_cap():
     """AC15 — the cap is a hard constraint, not advice. Counts the whole file
     including frontmatter. Passes trivially under the cap, so it was
     mutation-verified RED by padding the file past 165 lines."""
-    line_count = len(read_skill().rstrip("\n").split("\n"))
+    # Count exactly as `grep -c ''` does. `rstrip("\n")` would strip ALL
+    # trailing newlines, so blank-line padding past the cap was invisible while
+    # the docstring claimed the whole file was counted (Supervisor Stage 4 P3).
+    text = read_skill()
+    line_count = text.count("\n") + (0 if text.endswith("\n") else 1)
     assert line_count <= LINE_COUNT_CAP_T067, (
         f"diagnose/SKILL.md is {line_count} lines, over the {LINE_COUNT_CAP_T067}-line cap — "
         "tighten the prose rather than raising the cap"
