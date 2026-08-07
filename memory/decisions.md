@@ -243,27 +243,6 @@ legitimate CLAUDE.md edit.
 **Files**: CLAUDE.md, scripts/test-claude-md-refs.sh (new), tasks/TASK_GUIDE_T039.md
 
 ---
-
-## T043 planned: fix trace/step-limit task attribution (2026-07-23)
-
-**Decision**: Both `post_tool_trace.py` and `pre_agent_step_limit.py` resolve "which task is this?"
-via a bare `re.search(r"\bT\d{3}\b")` over the tool payload — and the trace hook searches
-`tool_response` too, so *reading* PROJECT_KANBAN.md files the record under whichever Task ID appears
-first in that file's text. Fix is a shared `.claude/hooks/lib/task_context.py:resolve_task_id()`
-reusing the structural-reference pattern already proven in `pre_agent_validate_guide.py`
-(`extract_structural_task_ids`, T022), with documented precedence: `CLAUDE_ACTIVE_TASK` env →
-`TASK_GUIDE_Txxx.md` in a *path-valued* input field → structural ref in an `Agent` spawn prompt →
-unattributed. Explicitly rejected: inferring from the worktree path (worktrees are named
-`agent-<hash>`, no Task ID) and keeping the whole-payload regex as a fallback (a wrong tag is worse
-than a missing one — same principle as T042).
-
-**Why it is P0**: it blocks T040, which blocks T030. DDR-0001 maps spend as session `/cost` split
-across that session's tagged entries — with wrong tags the derived audit log is *confidently wrong*.
-
-**Files**: tasks/TASK_GUIDE_T043.md (Stage 2 artifact only; implementation not started)
-
----
-
 ## T043 merged: structural task attribution for the always-on hooks (2026-07-23)
 
 **Decision**: `post_tool_trace.py` and `pre_agent_step_limit.py` no longer infer the Task ID from
@@ -288,7 +267,7 @@ tests/test_task_context.py (new, 29 tests incl. 18 subprocess-from-foreign-cwd)
 
 ---
 
-## T044 — Hook lifecycle & evidence integrity (Stage 4 reviewed 2026-07-30, not yet integrated)
+## T044 merged: hook lifecycle & evidence integrity (Stage 4 reviewed 2026-07-30, merged 2026-07-31)
 
 Three defects in one subsystem, all observed live on 2026-07-23.
 
@@ -332,33 +311,6 @@ Kanban → Ready for Review → Done *before* the integration step (the gate rej
 **Files**: .claude/hooks/post_agent_move_to_review.py, pre_bash_block_unsafe_merge.py,
 tests/test_merge_gate_evidence.py (new, 29), tests/test_move_to_review.py (new, 11),
 .claude/skills/craft-spawn-prompt/SKILL.md
-
-## Stage 2 planning: T047 — repair trace attribution's channel (2026-07-31)
-
-**Decision**: Plan the AC7 defect as its own P0 task rather than patching it inside T044's already-merged
-work. T044's *logic* (structural precedence, boundary-anchored runner matching) is correct and reviewed;
-what failed is the **channel** — `CLAUDE_ACTIVE_TASK` is read from the hook process's `os.environ`, and a
-hook is spawned by the harness as a sibling of the tool call, so an `export` inside a Bash tool call can
-never reach it. Separating channel from logic keeps T044's reviewed matching untouched (T047 AC9) and
-makes the regression guard explicit (T047 AC5 re-runs the two real `T043.jsonl` records).
-
-**Deliberately left open for the implementing agent**: which channel to use. Three candidates recorded in
-the guide (state file under `.claude/hooks/.state/`, `settings.json` env injection, cwd/worktree-derived)
-with trade-offs — works-from-a-tool-call, stays structural, staleness risk, machinery cost — and none
-pre-selected. This follows the Ambiguity Protocol's requirement-vs-implementation split: the user-facing
-requirement ("honest tasks must not be blocked") is fixed; the mechanism is an implementation decision
-that belongs to the task. "No channel can carry per-task identity" is sanctioned as a valid documented
-outcome, mirroring T044's AC3 conclusion about the completion signal.
-
-**Two guide-authoring choices worth keeping**: (1) T047's Verification Command is written *without* a
-`CLAUDE_ACTIVE_TASK=` prefix, with a note saying why — copying T044's prefix would have propagated the
-inert mechanism into the guide meant to fix it; (2) the Test Plan mandates a real end-to-end run, because
-T044's suite is green while patching `os.environ`, which never crosses the process boundary where the
-defect lives.
-
-**Knock-on**: T040 re-blocked on T047 (it would build the DDR-0001 replacement token-audit window on
-records that are silently all `_untagged`), so T030 stays blocked behind it. DDR-0001's second measurement
-window cannot open until T047 lands.
 
 ## T047 Stage 4 closed: active-task state file as the attribution channel (2026-07-31)
 
@@ -733,12 +685,6 @@ Deliberately **not** done: T054 (`delivery-report`) remains blocked on nothing n
 landed, but was out of scope for this session. Branch `docs/stage2-demonstration-block-t053-t055`
 pushed; **not merged to main** — no PR opened, awaiting user decision.
 
-## T056 registered P0, 2026-08-06
-
-The shared `.claude/hooks/.state/` root needs a per-worktree key *and* a Supervisor-exempt path.
-Raised to P0 above the remaining T054 work because it halted a live session and required manual user
-recovery. Carried as an open risk since T047; this is the first time it bit.
-
 ## T056 merged: session-scoped step counters + TTL expiry, 2026-08-06
 
 The step-limit guard hard-blocked a whole Supervisor session **three times in one day**. Root cause
@@ -871,3 +817,45 @@ specifically so the dropped direction cannot re-enter through an implementation.
 Stage 4: code-review 0 P0 / 0 P1 / 1 P2 fixed / 2 P3. security-review PASS, 0 actionable (run
 manually and labelled — the built-in diffs the checked-out branch, which was not `t058-work`).
 Six mutation controls observed RED then restored. 19 new tests, 207 passed. Merged to main 2026-08-06.
+
+## Stage 2 planning: T060 — diagnose cross-tier boundary instrumentation, 2026-08-07
+
+**Decision**: Extend T058's Phase 4 evidence loop to bugs whose suspect data crosses a tier
+boundary. Three additions, confined to Phase 4 and the Stuck-Loop Checkpoint: a **discovery-only
+boundary inventory** (route/handler definitions, outbound HTTP client call sites, queue
+publish/consume points, sub-agent spawn sites) that does *not* authorise a probe — the existing
+no-orphan-probe hypothesis gate still decides which listed boundaries get instrumented; a **W3C
+Trace Context `traceparent`-shaped correlation field** (shared trace-id, per-probe span-id) adopted
+as a naming convention only, no SDK and no dependency, including the payload-carried variant for
+queues, background jobs and agent spawns where headers cannot travel, and the fragmented-trace case
+where a hop drops the value; and a **path-reconstruction step** ordering probes by trace-id then
+timestamp, naming the first boundary where an observed value diverged from prediction, and
+reporting `path incomplete` on one-sided probe sets rather than inferring the missing side.
+
+**Amendment to a T058 decision, stated not hidden**: T058 locked that debug logs must never be
+routed to `memory/event-trace/`. The user defined the Agent tier as a sub-agent's tool calls, which
+requires reading that channel. T060 splits write from read — writing debug output there stays
+forbidden; reading it at analysis time as a correlation source is new and permitted.
+
+**Recorded risk — the chosen direction has prior art against it**: TraceCoder (arXiv 2602.06875),
+the one system found that actually built this component, places probes by LLM reasoning over
+previous execution failures rather than static analysis. The user selected static auto-discovery
+with that counter-evidence stated; only the abstract-level claim was readable, so its reasons are
+unread. Mitigated by keeping the inventory discovery-only so hypothesis reasoning stays
+load-bearing. If Stage 3 or 4 finds the inventory motivating probes the hypotheses did not, that is
+the predicted failure and it escalates rather than being worked around.
+
+**Second recorded risk**: this repo is Python and shell with no backend and no frontend, so the
+feature cannot be dogfooded here. Its tests assert against instruction text and fixtures and must
+not be described as end-to-end.
+
+**Prior-art search, 2026-08-07**: nothing in the agent-skill space covers the cross-tier leg.
+`doraemonkeys/claude-code-debug-mode` runs the same hypothesis-instrument-analyze loop with the same
+`#region` wrapping but is explicitly single-process with no correlation IDs. Honeycomb's
+`instrumentation-advisor` is the closest published artifact to codebase gap-scanning but discloses
+no scanning method — recorded so it is not re-searched.
+
+**Blocked on**: T059. A Stage 3 spawn runs in a worktree, where the destructive token-audit test
+reproduces a known data-loss incident.
+
+**Files**: tasks/TASK_GUIDE_T060.md (Stage 2 artifact only; implementation not started)
