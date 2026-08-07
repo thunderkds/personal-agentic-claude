@@ -221,7 +221,7 @@ the prompt channel from the memory channel, or be labelled as unable to.
 |------|--------|
 | `scripts/memory_usage_report.py` | new — read-only analysis over `memory/event-trace/`, stdout only |
 | `.claude/hooks/tests/test_memory_usage_report.py` | new — AC8–AC11 |
-| `reports/memory-usage_2026-08-07.md` | new — the written finding. **Confirm with the Supervisor before creating**: `reports/` is gitignored except `token-audit_*.md`, so a new file there will not survive the worktree unless the exception is extended |
+| `docs/memory-usage-finding-2026-08-07.md` | new — the written finding. **Decided by the Supervisor 2026-08-07**: it lives in `docs/`, not `reports/`. `reports/` is gitignored except `token-audit_*.md`, so a file there would die in the worktree (the recorded T028 gotcha); and this is a durable analysis rather than regenerable output, which is what `docs/` is for. No `.gitignore` change needed |
 
 ## Files Must NOT Touch
 
