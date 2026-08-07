@@ -1031,3 +1031,28 @@ pre-existing tests, not 31. Second instance of the T054 learning that an AC can 
 file's older shape.
 
 **Files**: .claude/skills/diagnose/SKILL.md, .claude/hooks/tests/test_diagnose_evidence_loop.py
+
+## DDR-0004: Hard-Stop Gate 1 upheld; cheaper spawns, not fewer spawns, 2026-08-07
+
+**Decision (user ruling)**: Gate 1 stands unchanged — the Supervisor still never writes implementation
+code directly. T062 (spawn threshold for C0/C1) closed without implementation. The harness pursues
+*cheaper* spawns (T064/T065/T066) rather than *fewer*, accepting the ~15.7k per-spawn floor.
+
+**Why this needed a ruling, not engineering**: T061's telemetry showed the floor is fixed per spawn
+(15,669 tokens for a bare `echo`; T059 spent 48,401 on a three-line fix) while trimming injected
+context is worth only ~a tenth of nominal, since ~97% arrives as cache reads. So spawn *count* is the
+dominant lever — but eliminating spawns means the Supervisor implements, which Gate 1 forbids by name.
+
+**Rejected — C0/C1 exemption**: LR-0001/LR-0002 both record the Supervisor drifting into
+implementation because a task "felt small"; an exemption legitimises that trigger by name. It also
+collapses implementer and reviewer into one role, and on 2026-08-07 that separation caught a false
+fixture provenance claim, a vacuous line-cap assertion, and three stale Evidence tables.
+
+**Accepted consequence, stated not hidden**: the largest measured lever is deliberately not pulled,
+and the chosen path has a **low ceiling**. T064/T065/T066 will not recover the floor.
+
+**Revisit if**: telemetry over many real spawns shows the floor is materially larger, or that small
+tasks are far more numerous than assumed; or if a mechanism preserves implementer/reviewer separation
+without a second full spawn.
+
+**Files**: docs/ddr/0004-uphold-hard-stop-gate-1-over-spawn-elimination.md
