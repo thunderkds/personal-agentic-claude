@@ -58,8 +58,10 @@ specific prediction; change one variable at a time.
    about that hop, not about the hypothesis.
 7. **Payload** — append one JSON object per line (NDJSON), fields
    `hypothesisId`, `location`, `message`, `data`, `timestamp`, `traceparent` — so the log is parsed
-   programmatically, not read by eye. Never log secrets, tokens, API keys, or PII in `data`; the
-   correlation value is not `data` for that rule's purposes, but must never embed a session token.
+   programmatically, not read by eye. `traceparent` belongs on any probe sitting at a boundary; omit
+   it when the inventory is empty, since a single-process run has no hop for it to join. Never log
+   secrets, tokens, API keys, or PII in `data`; the correlation value is not `data` for that rule's
+   purposes, but must never embed a session token.
 8. **Wrap** — every probe sits between `#region debug log` and `#endregion` markers in
    language-appropriate comment syntax (`//`, `#`, `--`, `/* */`); they need only be greppable.
 9. **Run** — clear the log file first so runs do not mix, run the Phase 1 feedback loop, then read

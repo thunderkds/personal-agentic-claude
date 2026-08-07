@@ -467,6 +467,22 @@ def test_t060_correlation_is_convention_not_dependency():
     )
 
 
+def test_t060_traceparent_is_omitted_when_the_inventory_is_empty():
+    """Stage 4 P2 (Supervisor): `traceparent` was added to the payload field list
+    unconditionally, while step 4 tells the empty-inventory single-process case to
+    proceed "unchanged" -- which would require a degenerate correlation field on
+    every probe of a run that has no hop for it to join. The scoping sentence that
+    resolves this had no assertion pinning it, the same gap T058's own Stage 4 P2
+    found."""
+    body = phase4()
+    assert re.search(r"omit\s+it when the inventory is empty", body), (
+        "Phase 4 must scope `traceparent` out of the empty-inventory case"
+    )
+    assert re.search(r"single-process run has no hop", body), (
+        "Phase 4 must say why it is omitted, not just that it is"
+    )
+
+
 def test_t060_headerless_hops_carry_correlation_in_the_payload():
     body = phase4()
     assert re.search(r"ride \*\*in the payload\*\*", body), (
