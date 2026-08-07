@@ -656,3 +656,44 @@ byte-identical and add the scoping as a following sentence.
 
 A failing assertion after a review fix is a question about the fix, not a defect in the test. Same
 family as "don't reword the docs to dodge the merge gate."
+
+## A fixture can claim provenance it does not have (2026-08-07, T061 Stage 4)
+
+`test_post_tool_trace_spawn.py`'s docstring said its Agent payload was "pinned to the 2026-08-07
+probe capture". Its nested keys were invented: `ephemeral_5m` where the real harness sends
+`ephemeral_5m_input_tokens`. Every test passed, because the implementation had been written against
+the same wrong names — the fixture and the code agreed with each other and neither agreed with
+reality.
+
+It surfaced only because the Supervisor still had the raw probe dump and drove the hook with the
+*actual* payload. A field written against that fixture would have silently never populated in
+production, with a green suite the whole time.
+
+**Rule**: when a test claims to be pinned to a captured payload, keep the capture and diff against it
+— a provenance claim in a docstring is not provenance. Related to "patching a channel in a test
+doesn't prove the channel works", but distinct: here the channel was real and the *fixture* was
+counterfeit.
+
+## Volume is not cost when nearly everything is a cache read (2026-08-07, T061 investigation)
+
+Two probe arms, same trivial work, varying only the unique prompt size: arm A 29 unique tokens →
+15,669 total / 15,259 cache_read / 405 cache_creation; arm B 1,144 unique tokens → 16,981 / 16,572 /
+404. Adding 1,115 tokens of novel prompt text moved `cache_creation` by **−1**.
+
+Unique per-task content is *not* paid at creation rates — the spawn prompt is already inside the
+Supervisor's cached context before the agent starts. So trimming injected context (MEMORY.md, guides,
+CLAUDE.md) is worth roughly a tenth of its nominal token count.
+
+What survives is the floor: **every spawn costs ~15.7k tokens before doing any work** (15,669 for a
+single `echo`), against 48,401 for T059's real three-line fix and 81,220 for T060. The lever is spawn
+*count*, not spawn *content*. Recorded from n=3 synthetic spawns — directional, not established.
+
+## Measure before optimizing, but check the measurement is not already arriving (2026-08-07)
+
+DDR-0001 spent two measurement windows failing to capture cost-per-task by hand from `/cost`, and
+DDR-0002 retired the effort. The `Agent` tool had been returning `totalTokens`, `totalToolUseCount`,
+a full cache-split `usage` and a `toolStats` block on every spawn the whole time, and
+`post_tool_trace.py` had been receiving and discarding it across 42 spawns.
+
+Before building an instrument, dump one raw payload of whatever the harness already hands you. The
+cheapest instrument is the one you are already being given and throwing away.

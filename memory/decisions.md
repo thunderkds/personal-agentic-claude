@@ -964,3 +964,29 @@ TraceCoder risk (arXiv 2602.06875 places probes by LLM reasoning over prior fail
 analysis) remains open and is mitigated only by the discovery-only wording.
 
 **Files**: .claude/skills/diagnose/SKILL.md, .claude/hooks/tests/test_diagnose_evidence_loop.py
+
+## T061 merged: per-spawn cost telemetry captured from the harness's own payload, 2026-08-07
+
+**Decision**: `post_tool_trace.py` read `tool_response` on every PostToolUse event and used exactly
+one field from it, `is_error`; the record it wrote was `summarize(tool_input)` — the prompt going in.
+Agent records now also carry a guarded `spawn` object: `total_tokens`, `tool_use_count`,
+`duration_ms`, `resolved_model`, `agent_type`, `status`, a `usage` sub-object split by cache
+disposition (including the flattened `cache_creation_5m`/`cache_creation_1h` TTL tiers), and a
+`tool_stats` sub-object with the tool mix and `lines_added`/`lines_removed`. Harness camelCase is
+translated to snake_case on the way in. `prompt`, `content` and the unbounded `usage.iterations` are
+deliberately not copied. Every non-`Agent` record is byte-identical, verified by differential against
+the pre-change hook at `82883a2`.
+
+**Not a reversal of DDR-0002.** That ruling retired a *manual* `/cost` channel which failed in both
+measurement windows because it depended on a human pasting a number. This channel depends on no human
+action — the harness hands the hook the payload, and the hook already ran on every Agent spawn.
+`reports/token-audit_*.md` stays retired and untouched.
+
+**Stage 4**: 0 P0 / 0 P1 / 1 P2 fixed / 2 P3. The P2 restored the `cache_creation` TTL split — the two
+tiers are priced differently, so dropping it forces any cost analysis to assume all creation is 5m,
+which defeats the task's purpose. security-review PASS, 0 actionable, manual (sixth occurrence of the
+built-in diffing the checked-out branch).
+
+**Stage 5**: 246 passed + smoke PASS from main post-merge.
+
+**Files**: .claude/hooks/post_tool_trace.py, .claude/hooks/tests/test_post_tool_trace_spawn.py
