@@ -107,12 +107,12 @@ python3 -m pytest .claude/hooks/tests -q && git status --short reports/
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | [SC2 mutation control — must show RED then restored] |
-| verify | ☐ pass / ☐ fail / ☐ N/A | |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_token_audit_generator.py::test_real_report_generation_and_gitignore` reworked; reads tracked file, no `generate_report` call, `tmp_path` param removed |
+| Verification command run | ☑ pass | `python3 -m pytest .claude/hooks/tests -q && git status --short reports/` → `207 passed`, empty status |
+| Negative cases hold | ☑ pass | SC2 mutation control: truncated report → `1 failed` (RED, `AssertionError: assert 'Window opened 2026-07-21' in ...`); restored via `cp` from pre-mutation backup → `1 passed` (GREEN) |
+| verify | ☑ pass | full suite `207 passed`; `git status --short reports/` empty after both single-test and full-suite runs |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | only `test_token_audit_generator.py` (test file) touched; `token_audit.py` and the report file untouched |
+| Full smoke suite still green (no regression) | ☑ pass | `.claude/hooks/tests` full run: `207 passed in 7.22s` |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | test-file change, no UI component |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ N/A | test-file change, no UI component |
 | **UI: Responsiveness at target viewports** | ☐ N/A | test-file change, no UI component |
@@ -137,11 +137,43 @@ This is the benign main-checkout form of the defect — 18 appended lines, track
 test run. The destructive worktree form (all 106 entries replaced by an empty Entries block) was
 observed on 2026-08-06 during T058 Stage 4 and is recorded in `memory/learnings.md`.
 
-**AFTER**: [same command, post-change — expected to print nothing]
+**BEFORE (worktree capture)**: captured from inside this worktree (`/home/hungnguyenhuu/workspace/pets/wt-t059`,
+branch `t059-work`) at `2026-08-07T04:19:59Z`, before any implementation commit, after a full suite
+run (`207 passed`):
 
-**DELTA**: [one sentence]
+```
+$ git status --short reports/
+ M reports/token-audit_2026-07-21.md
 
-**WITNESS**: [derived from `memory/event-trace/T059.jsonl`, never the implementing agent alone]
+$ git diff --stat reports/token-audit_2026-07-21.md
+ reports/token-audit_2026-07-21.md | 108 +-------------------------------------
+ 1 file changed, 1 insertion(+), 107 deletions(-)
+```
+
+This is the destructive worktree form of the defect: `memory/event-trace/` is gitignored and empty in
+this worktree, so `generate_report` overwrote all 106 derived entries with an empty Entries block
+(107 deletions vs main checkout's 18 benign insertions).
+
+**AFTER**: run from this worktree post-fix, `2026-08-07`, full suite `207 passed`, then `git status --short reports/`:
+
+```
+$ python3 -m pytest .claude/hooks/tests -q
+........................................................................ [ 34%]
+........................................................................ [ 69%]
+...............................................................          [100%]
+207 passed in 7.22s
+
+$ git status --short reports/
+(no output)
+```
+
+**DELTA**: `test_real_report_generation_and_gitignore` no longer calls `generate_report` against the
+tracked report path — it now only reads `reports/token-audit_2026-07-21.md` with `read_text`, so a
+full suite run in a gitignored-trace worktree no longer overwrites the file's 106 entries with an
+empty Entries block (worktree BEFORE: 107 deletions; AFTER: zero modification).
+
+**WITNESS**: to be derived by the Supervisor from `memory/event-trace/T059.jsonl` at review time —
+not asserted by the implementing agent.
 
 ---
 
