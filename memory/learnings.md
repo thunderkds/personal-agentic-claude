@@ -738,3 +738,37 @@ ran, including the board edit that would have satisfied it.
 The recorded rule "close the task on the Kanban BEFORE `git merge`" means **in a separate tool call**,
 not merely earlier in the same command. Same family as the gate blocking on prose in a heredoc: the
 guard reads the string, not the intent.
+
+## Two errors that cancel look more convincing than the truth (2026-08-07, T063)
+
+Reconciling T067's agent-reported tool mix against the trace, T063's first cut produced a perfect
+`33 == 33` across all four rows. It was wrong: the unwindowed bucket still held the Supervisor's
+pre-spawn guide `Write`, which exactly compensated for one missing agent edit. The windowed — correct —
+reconciliation leaves a 1-call residual that is still unexplained.
+
+A *perfect* agreement between two independently-derived numbers deserves more suspicion than a close
+one, especially when both sides were assembled by the same person. Ask what could be wrong on both
+sides at once before accepting it.
+
+## A mutation that does not take effect proves nothing (2026-08-07, T063 Stage 4)
+
+The Supervisor's AC9 control appended a file write to the end of `memory_usage_report.py` and the suite
+stayed **GREEN**, which looked like a real gap in a load-bearing guard. The mutation was inert: the
+write sat *after* `if __name__ == "__main__": sys.exit(main())`, so it never executed. Re-inserted
+inside `main()`, it turned both guards RED immediately.
+
+Before trusting a GREEN result from a mutation control, confirm the mutation actually changed
+behaviour — here, that the file was really created. This is the mirror of the vacuous-assertion family:
+there the assertion is empty, here the *stimulus* is. A false "the test is weak" finding is as costly
+as a missed one.
+
+## A naive metric can measure your own process instead of the thing (2026-08-07, T063)
+
+"5 of 49 tasks show a `MEMORY.md` read" read like strong evidence that agents ignore injected memory.
+It was measuring *when the active-task pointer gets armed*: `craft-spawn-prompt` element 6 arms it
+before the first verification command, which is after the mandatory startup reads, so every agent's
+memory read lands in `_untagged` (30 of them) rather than under its task.
+
+When a metric derived from instrumentation gives a striking answer, first ask which of *your own*
+process steps it could be measuring instead. Third instrument-validity failure in this repo after
+DDR-0001 and DDR-0002.

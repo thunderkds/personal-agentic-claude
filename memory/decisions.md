@@ -1056,3 +1056,40 @@ tasks are far more numerous than assumed; or if a mechanism preserves implemente
 without a second full spawn.
 
 **Files**: docs/ddr/0004-uphold-hard-stop-gate-1-over-spawn-elimination.md
+
+## T063 merged: what event-trace attributes, and how memory actually reaches agents, 2026-08-07
+
+**(a) ESTABLISHED** — `memory/event-trace/` records **both** the Supervisor's and the sub-agent's tool
+calls in one file, separable by time window but not by bucket. Proven two ways: first-person (T063's
+own records) and by reconciling T067's `spawn.tool_stats` against windowed buckets. **The naive
+"5 of 49 tasks read MEMORY.md" figure measures when agents arm the active-task pointer, not whether
+they read memory**: `craft-spawn-prompt` element 6 arms it "before running any test or verification
+command", which is *after* the mandatory startup reads, so those land in `_untagged` — 30 `MEMORY.md`
+reads there against 6 across 61 task buckets.
+
+**(b) ESTABLISHED for the current template** — element 4 mandates verbatim injection of `MEMORY.md`;
+practice passes a **path**. Zero of 49 `Agent` records contain the file's H1, 4 name the path, and 5 of
+5 recent agents opened it. Correctly hedged: 48 of 49 summaries sit at the 300-char `MAX_SUMMARY_LEN`,
+so a later paste cannot be ruled out.
+
+**(c) NOT ESTABLISHED** — `post_tool_trace.py` never stores agent output, so no citation corpus exists
+in principle. The report shows *opened*, not *drawn upon*, and refuses to infer non-use from absence.
+
+**This invalidated the Supervisor's own premise**: the claim that `MEMORY.md` costs ~10,700 tokens
+injected into every spawn is **false** — it is passed as a path costing ~20 tokens. The 15.7k per-spawn
+floor stands (measured), but its composition does not.
+
+**Implication for T065**: a **channel decision first** — honour element 4's verbatim mandate (making
+size expensive per spawn and compression valuable) or amend it to the path practice already in use
+(making the cost *optional* rather than eliminated, since 5 of 5 agents opened the file anyway). Then
+shrink the hot tier, which is safe under either branch. Do not compress on the old premise; do not
+delete without evidence of non-use.
+
+**Instrument defects found, deliberately not fixed**: the active-task pointer is armed too late to
+capture startup reads; the trace carries no actor field; `MAX_SUMMARY_LEN=300` prevents any prompt-content
+audit.
+
+**Stage 4**: 0 P0/P1/P2, 1 P3 fixed. 9 new tests, 267 passed + smoke PASS.
+
+**Files**: scripts/memory_usage_report.py, docs/memory-usage-finding-2026-08-07.md,
+.claude/hooks/tests/test_memory_usage_report.py
