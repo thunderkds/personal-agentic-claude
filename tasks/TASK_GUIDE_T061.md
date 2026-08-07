@@ -185,8 +185,26 @@ guide's probe payload on stdin (fixture, not a live spawn — see the note in th
 four-field `usage` split by cache disposition and a six-field `tool_stats`, all snake_cased, while
 every non-`Agent` record stays byte-identical to what the pre-change hook emitted.
 
-**WITNESS**: [derived from `memory/event-trace/T061.jsonl`, never the implementing agent alone]
+**WITNESS**: derived by the Supervisor from `memory/event-trace/T061.jsonl` (43 records,
+`2026-08-07T06:27:02Z` to `2026-08-07T06:44:23Z`), first attributed test run at `06:32:12Z` — not
+from the implementing agent's report.
 
+**The agent's one acknowledged gap was closed by the Supervisor, not accepted.** It reported,
+correctly, that its Agent-path test is a fixture because it cannot spawn a sub-agent to produce a
+real `tool_response`. The Supervisor still had the two verbatim payloads captured by the 2026-08-07
+probe and drove the new hook with them directly. Both reproduce their hand-measured numbers through
+the new code path:
+
+```
+tokens=15669  cache_rd=15259  cr_5m=405  cr_1h=0  bash=1  model=claude-sonnet-5
+tokens=16981  cache_rd=16572  cr_5m=404  cr_1h=0  bash=1  model=claude-sonnet-5
+```
+
+AC4 was additionally re-verified by an independent differential: the pre-change hook recovered via
+`git show 82883a2:.claude/hooks/post_tool_trace.py`, run over identical `Bash`/`Write`/`Read` events
+in a parallel sandbox, output compared with timestamps elided — **byte-identical**. AC5 was
+mutation-controlled by the Supervisor (forcing `prompt`/`content` into `spawn` → RED, restore →
+GREEN), as were the Stage 4 P2 fix and the fixture-drift correction.
 ---
 
 ## Approach
