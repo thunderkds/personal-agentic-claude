@@ -611,3 +611,27 @@ Ready for Review) both change the same rows relative to the merge base, which co
 merge base so only the branch changed it, merge, THEN move the task to Done on the merged result and
 commit. Do NOT pre-move to Done on the Supervisor side before merging — that reintroduces the
 same-row conflict.
+
+## The register hook stubs a Kanban row you are about to write by hand (2026-08-07, T059/T060)
+
+`post_write_register_task.py` fires on the Write of a `tasks/TASK_GUIDE_Txxx.md` and auto-registers a
+minimal Todo row. If the Supervisor has already written a detailed row for that task, the board ends
+up with **two** rows for one task — a bare stub (`title | agent | C2 | Risk | P1`) and the real one.
+Both landed committed in T060's Stage 2 commit and were only caught later by eyeballing the board
+structure. The stub sorts *above* the detailed row, so a casual read sees the uninformative one.
+
+After writing any TASK_GUIDE, re-read the Kanban section before committing. The Kanban is
+test-covered, but the covering test asserts section parsing, not row uniqueness — nothing catches a
+duplicate ID.
+
+## A memory pass is uncommitted work like any other, and stashes hide it (2026-08-07, T046)
+
+T046 shipped on 2026-07-24 (`bf23413`, feature live in the template, Kanban row under Done) but
+`grep T046 memory/` returned **zero hits** two weeks later. Its entire memory pass — a 44-line
+decision entry and two learnings — had been stashed and forgotten. The task looked complete by every
+signal that normally gets checked: merged commit, passing tests, closed board row.
+
+The three recorded uncommitted-work gotchas all concern *implementation* left in a worktree. This is
+the same failure applied to the audit trail, and it is harder to notice because nothing downstream
+fails when memory is missing. Audit `git stash list` during any recovery pass, and treat a memory
+write as part of the task, not as bookkeeping that can trail it.
