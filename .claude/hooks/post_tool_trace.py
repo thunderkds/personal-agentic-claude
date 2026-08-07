@@ -50,9 +50,12 @@ def summarize(tool_input):
 # the way in rather than passed through.
 #
 # Deliberately NOT copied: `prompt` and `content` (already covered by
-# `summary`; duplicating them doubles trace size), `usage.iterations` (an
-# unbounded list), and `usage.cache_creation.{ephemeral_5m,ephemeral_1h}` (a
-# third nesting level whose totals are already in the two cache_* fields).
+# `summary`; duplicating them doubles trace size) and `usage.iterations` (an
+# unbounded list). `usage.cache_creation.{ephemeral_5m,ephemeral_1h}` IS kept,
+# flattened rather than nested three deep: their sum is already
+# `cache_creation_input_tokens`, but the split says which TTL tier the write
+# went to, and the two tiers are priced differently — dropping it would force
+# any cost analysis to assume all creation is 5m.
 SPAWN_TOP_FIELDS = (
     ("totalTokens", "total_tokens"),
     ("totalToolUseCount", "tool_use_count"),
@@ -66,6 +69,10 @@ SPAWN_USAGE_FIELDS = (
     ("output_tokens", "output_tokens"),
     ("cache_creation_input_tokens", "cache_creation_input_tokens"),
     ("cache_read_input_tokens", "cache_read_input_tokens"),
+)
+SPAWN_CACHE_CREATION_FIELDS = (
+    ("ephemeral_5m_input_tokens", "cache_creation_5m"),
+    ("ephemeral_1h_input_tokens", "cache_creation_1h"),
 )
 SPAWN_TOOL_STATS_FIELDS = (
     ("readCount", "read_count"),
@@ -104,6 +111,12 @@ def extract_spawn(tool_response):
         spawn = _pick(tool_response, SPAWN_TOP_FIELDS)
         usage = _pick(tool_response.get("usage"), SPAWN_USAGE_FIELDS)
         if usage:
+            cache_creation = _pick(
+                tool_response.get("usage", {}).get("cache_creation")
+                if isinstance(tool_response.get("usage"), dict) else None,
+                SPAWN_CACHE_CREATION_FIELDS,
+            )
+            usage.update(cache_creation)
             spawn["usage"] = usage
         tool_stats = _pick(tool_response.get("toolStats"), SPAWN_TOOL_STATS_FIELDS)
         if tool_stats:

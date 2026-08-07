@@ -58,7 +58,14 @@ AGENT_TOOL_RESPONSE = {
         "output_tokens": 3,
         "cache_creation_input_tokens": 404,
         "cache_read_input_tokens": 16572,
-        "cache_creation": {"ephemeral_5m": 404, "ephemeral_1h": 0},
+        # Key names verbatim from the 2026-08-07 probe capture. They are NOT
+        # `ephemeral_5m`/`ephemeral_1h` — an earlier version of this fixture
+        # invented those, and a field written against them would silently
+        # never populate against a real payload.
+        "cache_creation": {
+            "ephemeral_5m_input_tokens": 404,
+            "ephemeral_1h_input_tokens": 0,
+        },
         "service_tier": "standard",
         "iterations": [{"input_tokens": 2}, {"input_tokens": 0}],
     },
@@ -223,11 +230,18 @@ def test_agent_record_carries_usage_split_by_cache_disposition(sandbox):
     """AC2."""
     run_agent_event(sandbox, AGENT_TOOL_RESPONSE)
     usage = sandbox.only_record()["spawn"]["usage"]
+    # Exact equality is deliberate: it pins the whole shape, so a field added
+    # or dropped is caught. Extended at Stage 4 with the two flattened
+    # cache_creation TTL tiers (see the P2 in test_usage_keeps_the_cache_
+    # creation_ttl_split) -- the expectation was updated to the new intended
+    # shape, NOT loosened to a subset match.
     assert usage == {
         "input_tokens": 2,
         "output_tokens": 3,
         "cache_creation_input_tokens": 404,
         "cache_read_input_tokens": 16572,
+        "cache_creation_5m": 404,
+        "cache_creation_1h": 0,
     }
 
 
@@ -389,6 +403,19 @@ def test_failed_spawn_still_records_its_cost(sandbox):
 # ---------------------------------------------------------------------------
 # AC7 — partial payloads keep what is present
 # ---------------------------------------------------------------------------
+
+def test_usage_keeps_the_cache_creation_ttl_split(sandbox):
+    """Stage 4 P2 (Supervisor): the two cache_creation TTL tiers are priced
+    differently, so their sum in `cache_creation_input_tokens` is not
+    sufficient for a task whose whole purpose is cost telemetry — dropping the
+    split forces any analysis to assume all creation is 5m. Flattened, not
+    nested three deep, per the guide's edge-case item."""
+    run_agent_event(sandbox, AGENT_TOOL_RESPONSE)
+    usage = sandbox.only_record()["spawn"]["usage"]
+    assert usage["cache_creation_5m"] == 404, "5m TTL tier must be captured"
+    assert usage["cache_creation_1h"] == 0, "1h TTL tier must be captured, including when zero"
+    assert "cache_creation" not in usage, "must be flattened, not nested"
+
 
 def test_missing_tool_stats_still_emits_usage(sandbox):
     """AC7 / SC4."""
