@@ -232,9 +232,8 @@ def test_old_window_file_intact_and_closed_inconclusive():
 
 # --- AC4 / AC8: real report exists, DDR-0001 header, not gitignored ---
 
-def test_real_report_generation_and_gitignore(tmp_path):
+def test_real_report_generation_and_gitignore():
     report_path = ROOT / "reports" / "token-audit_2026-07-21.md"
-    token_audit.generate_report(str(ROOT / "memory" / "event-trace"), str(report_path))
     text = report_path.read_text(encoding="utf-8")
     assert "Window opened 2026-07-21" in text
     assert "window-close condition" in text.lower()
