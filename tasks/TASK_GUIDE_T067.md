@@ -121,15 +121,35 @@ python3 -m pytest .claude/hooks/tests/test_diagnose_evidence_loop.py -q && pytho
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | [AC10–AC15 — each mutation-verified RED then restored] |
-| verify | ☐ pass / ☐ fail / ☐ N/A | |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | 12 new tests in `.claude/hooks/tests/test_diagnose_evidence_loop.py` (`test_t067_*`), covering AC1–AC10 and AC13–AC15. These are **assertions against instruction text**, not end-to-end runtime checks — the artifact under test is a skill document. `python3 -m pytest .claude/hooks/tests/test_diagnose_evidence_loop.py -q` → `44 passed in 0.11s` (32 pre-existing + 12 new). Note: AC16 says "31 pre-existing tests"; the file actually held **32** before this task. |
+| Verification command run | ☑ pass | `python3 -m pytest .claude/hooks/tests/test_diagnose_evidence_loop.py -q` → `44 passed`; `python3 -m pytest .claude/hooks/tests -q` → `258 passed in 12.39s` (baseline in this worktree was 246). |
+| Negative cases hold | ☑ pass | 18 mutation controls, **18/18 RED then restored GREEN**, restored by `cp` from a pre-edit backup (never `git checkout`). Includes the two trivially-passing ones: **AC10** — inserting `defense-in-depth guards at every layer` → `1 failed`, restored → `1 passed`; **AC15** — appending 20 padding lines (175 > 165) → `1 failed`, restored → `1 passed`. Also mutated: step *order* of the backward trace, red-flag routing, the secrets/PII sentence, the 10-probe ceiling → 25, the 2-consecutive-REJECTED trigger → "3 failed fix attempts", and 3–5 hypotheses → one. Script: `scratchpad/mutate.py`; it asserts each mutation target exists before mutating, so a control cannot itself go vacuous. |
+| verify | ☑ pass | Full hook suite green (258), `diagnose/SKILL.md` = **155 lines** (≤165), `grep -c -iE 'defen[cs]e[ -]in[ -]depth'` = **0**, `grep -c -i 'root cause'` = **3** (was 1). |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | `git diff --stat`: exactly 2 files — `.claude/skills/diagnose/SKILL.md` (+35/-4) and its test file (+256/-...). No file from the "Must NOT Touch" table modified. |
+| Full smoke suite still green (no regression) | ☑ pass | `258 passed`, 0 failed. No pre-existing test was edited to make it pass; the single pre-existing failure encountered (the Phase 3 hash pin) was a fixture **re-pin** mandated by AC7 — see Deviations below. |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | skill-instruction change, no UI component |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ N/A | skill-instruction change, no UI component |
 | **UI: Responsiveness at target viewports** | ☐ N/A | skill-instruction change, no UI component |
+
+### Deviations (implementer — for Supervisor sign-off)
+
+1. **One pre-existing test fixture was changed: the Phase 3 hash pin.**
+   `test_sc8_phase_1_2_3_bodies_are_byte_identical` pinned Phase 1, Phase 2 **and Phase 3** to their
+   pre-T058 sha256. T067's AC7 requires Phase 3 to change (the working-reference comparison is a
+   hypothesis *source*, so it belongs there) and T067's AC11 deliberately narrows the byte-identical
+   guarantee to Phase 1/2 only — so this test cannot pass unmodified while AC7 is satisfied. AC16
+   ("all pre-existing tests pass unmodified") and AC7 are in direct conflict on this one fixture.
+   Resolution taken: the Phase 3 pin was **re-captured, not deleted**
+   (`d8facfe3…` → `0a33b7ed…`, min-len 150 → 600), so Phase 3 stays locked against future drift, and
+   the 3–5 requirement inside it is separately pinned by
+   `test_t067_t058_and_t060_numbers_are_unchanged` (mutation-verified RED). Phase 1 and Phase 2 pins
+   are untouched and still passing. **This is the one judgement call in the task and wants explicit
+   Supervisor sign-off**; deleting the pin instead would have lost coverage.
+2. **AC16's test count is off by one** — it says 31 pre-existing tests in the file; there are 32.
+3. **Not verified, flagged rather than asserted**: nothing here proves the *behavioural* claim that
+   an agent reading the new text will actually trace backward or stop at a red flag. Every assertion
+   is structural, against the document. `verify` was run as the checks listed in the Evidence table,
+   not as the built-in skill (the worktree has no separate runtime to exercise).
 
 ---
 
@@ -148,12 +168,72 @@ Verified with `grep -n -i 'root cause' .claude/skills/diagnose/SKILL.md` → one
 The Karpathy Operational Commands block (lines 10–13) contains no root-cause rule, and Phase 5
 (lines 104–110) constrains *when* the fix is written but never *where* it lands.
 
-**AFTER**: [verbatim excerpt of the new rule, backward-tracing section, and red-flag block]
+**AFTER**: 155 lines (+31, cap 165). `grep -n -i 'root cause'` now returns **three** hits — the
+unchanged notification template at line 155, plus the standing rule at line 14 and its restatement at
+the point of action at line 131. Verbatim excerpts:
 
-**DELTA**: [one sentence]
+Karpathy Operational Commands, line 14:
 
-**WITNESS**: [derived from `memory/event-trace/T067.jsonl`, never the implementing agent alone]
+```
+- **Fix the root cause, never the symptom**: the fix must land where the cause *originated*, not where the error *surfaced*. A fix applied at the surfacing site is a **failure, not a partial success**, even when the symptom disappears. A cause counts as the root cause only when the Checkpoint marked its hypothesis **CONFIRMED** — never when it is merely asserted.
+```
 
+Phase 5, at the point of action (lines 131–134):
+
+```
+**Before writing the fix**, state in one line where the root cause is — the CONFIRMED hypothesis and
+the specific location it originates — and confirm the fix lands *there*, not at the site where the
+error surfaced. A fix at the surfacing site is a failure, not a partial success. This constrains
+*where* the fix goes; it does not require a test seam, so the no-seam finding below stays reachable.
+```
+
+Phase 4, backward tracing (lines 96–101):
+
+```
+**Backward tracing** — use this to pick probe *sites* when the bug has the shape *a value is already
+invalid when it arrives*. It does not apply to a perf regression or a flaky test, and it replaces
+none of step 5's Placement options, which still decide what each probe records. In order:
+observe the symptom; identify the code that directly produced it; identify that code's caller;
+continue up the call chain recording the value passed at each level; and locate where the invalid
+value originated — that origin, not the site that surfaced it, is where the fix belongs.
+```
+
+Phase 4, red flags, immediately before the Stuck-Loop Checkpoint (lines 107–112):
+
+```
+**Red flags — the method has already been abandoned.** Any one of these returns you to **Phase 1**:
+proposing a fix before tracing to an origin; changing more than one variable at a time; asserting a
+cause without evidence from the loop; reaching for a quick fix under time pressure. These fire
+*before* the Stuck-Loop Checkpoint below and do not replace it — the Checkpoint counts disproven
+hypotheses and offers a choice of three options, while red flags catch the behaviour earlier and
+offer no choice at all.
+```
+
+**DELTA**: `diagnose` now forbids symptom fixes as a standing rule *and* at the moment the fix is
+written, supplies a scoped five-step backward trace for value-wrong-on-arrival bugs, names four
+behaviours that route the agent back to Phase 1 before the Stuck-Loop Checkpoint would fire, and
+derives hypotheses from a working reference — in +31 lines, with the 1–10 budget, the 2-consecutive-
+REJECTED trigger and the 3–5 hypothesis requirement all unchanged and defense-in-depth absent.
+
+**WITNESS**: derived by the Supervisor from `memory/event-trace/T067.jsonl` (29 records,
+`2026-08-07T09:54:44Z` to `10:27:10Z`), first attributed test run at `10:19:37Z` — not from the
+implementing agent's report.
+
+Independently re-verified rather than accepted: Phase 1/2 bodies recomputed against `d374cb1` and
+confirmed byte-identical (1052/157 chars); the `###` heading list diffed identical; the forbidden
+token absent under both spellings; the T058/T060 numbers (budget ceiling 10, 2-consecutive-REJECTED,
+3–5 hypotheses) all still present; file at **155 lines**, under the 165 cap.
+
+**This task is also the first real production reading from T061's telemetry** — its own spawn was
+captured automatically:
+
+```
+total 83,802 | cache_read 81,781 (97.6%) | cache_creation_5m 265 | output 1,754
+tool_uses 33 | bash 14 | edit 15 | read 4 | +464/−31 lines | opus-5 | 498s
+```
+
+That corroborates the n=3 synthetic finding on a real C2 task: 97.6% of the spawn is cache reads,
+and `cache_creation` is 265 tokens against 83,802 total. Volume is not cost.
 ---
 
 ## Approach

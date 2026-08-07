@@ -11,6 +11,7 @@ A discipline for hard bugs. Skip phases only when explicitly justified. When exp
 - **Think Before Coding**: Do not hypothesise without a feedback loop (Phase 1). Generate 3–5 ranked, falsifiable hypotheses before testing any.
 - **Goal-Driven Execution**: Turn the repro into a failing regression test *before* the fix, when a correct seam exists.
 - **Surgical Changes**: Change one variable at a time. Wrap every debug log in `#region debug log` markers so cleanup is one `grep`.
+- **Fix the root cause, never the symptom**: the fix must land where the cause *originated*, not where the error *surfaced*. A fix applied at the surfacing site is a **failure, not a partial success**, even when the symptom disappears. A cause counts as the root cause only when the Checkpoint marked its hypothesis **CONFIRMED** — never when it is merely asserted.
 
 ### Phase 1 — Build a feedback loop *(this is the skill)*
 A fast, deterministic, agent-runnable pass/fail signal for the bug. Everything else just consumes it. Be aggressive; refuse to give up. Try in roughly this order:
@@ -23,6 +24,11 @@ Run the loop; watch the bug appear. Confirm it's the **user's** failure mode (no
 
 ### Phase 3 — Hypothesise
 Generate **3–5 ranked, falsifiable** hypotheses before testing any. Format: "If X is the cause, then changing Y makes the bug disappear." Show the ranked list to the user (cheap checkpoint — they may re-rank instantly); don't block if they're AFK.
+
+**Working-reference comparison** — one source of hypotheses: locate similar code that *works* (a
+sibling route, an earlier revision, an analogous module), enumerate the differences between it and
+the broken path, and derive hypotheses from those differences. If no working reference exists, say
+so and generate the 3–5 by other means rather than stalling on the search.
 
 ### Phase 4 — Instrument
 Locate the bug from evidence the program emits, not from re-reading source. Each probe maps to a
@@ -61,15 +67,33 @@ specific prediction; change one variable at a time.
    programmatically, not read by eye. `traceparent` belongs on any probe sitting at a boundary; omit
    it when the inventory is empty, since a single-process run has no hop for it to join. Never log
    secrets, tokens, API keys, or PII in `data`; the correlation value is not `data` for that rule's
-   purposes, but must never embed a session token.
+   purposes, but must never embed a session token. A probe may also capture a **stack trace** to
+   identify its caller — the secrets/PII rule above is unchanged and applies to it, since a stack
+   embeds paths and may embed argument values. Under test, write the probe output somewhere test
+   output actually surfaces (the runner's captured stdout/stderr, or the NDJSON file read back
+   afterwards); a project logger may be suppressed by the test harness and swallow every probe.
 8. **Wrap** — every probe sits between `#region debug log` and `#endregion` markers in
    language-appropriate comment syntax (`//`, `#`, `--`, `/* */`); they need only be greppable.
 9. **Run** — clear the log file first so runs do not mix, run the Phase 1 feedback loop, then read
    the file back and resolve each hypothesis at the Checkpoint below.
 
+**Backward tracing** — use this to pick probe *sites* when the bug has the shape *a value is already
+invalid when it arrives*. It does not apply to a perf regression or a flaky test, and it replaces
+none of step 5's Placement options, which still decide what each probe records. In order:
+observe the symptom; identify the code that directly produced it; identify that code's caller;
+continue up the call chain recording the value passed at each level; and locate where the invalid
+value originated — that origin, not the site that surfaced it, is where the fix belongs.
+
 If no seam exists for a probe (compiled dependency, third-party binary), fall back to the Phase 1
 ladder's differential and bisection rungs. For perf: measure a baseline first (profiler/timing/query
 plan), then bisect.
+
+**Red flags — the method has already been abandoned.** Any one of these returns you to **Phase 1**:
+proposing a fix before tracing to an origin; changing more than one variable at a time; asserting a
+cause without evidence from the loop; reaching for a quick fix under time pressure. These fire
+*before* the Stuck-Loop Checkpoint below and do not replace it — the Checkpoint counts disproven
+hypotheses and offers a choice of three options, while red flags catch the behaviour earlier and
+offer no choice at all.
 
 ### Stuck-Loop Checkpoint (mandatory)
 **Path reconstruction — before assigning any verdict.** Group Phase 4's probes by trace-id, order
@@ -94,7 +118,9 @@ tested, and the count is **consecutive**, not total-ever — a disproof followed
 confirmation that gets refined and re-tested successfully resets the streak. Present exactly these
 3 named options and wait for a choice before proceeding:
 1. Try the next ranked hypothesis (or generate new ones if the list is exhausted).
-2. Widen scope — reconsider the mental model itself, not just the next guess.
+2. Widen scope — reconsider the mental model itself, not just the next guess. The architectural
+   tell: if each fix reveals new shared state or coupling in a *different* place, that is a design
+   problem, not the next bug in a queue — report it as such rather than chasing the next one.
 3. Abandon and escalate this diagnosis approach to the Supervisor.
 Record the two disproven hypotheses and the chosen option in the TASK_GUIDE's `### Attempts Log`
 (bugfix-flavored guides). For standalone `diagnose` calls with no bugfix-shaped TASK_GUIDE, report
@@ -102,6 +128,11 @@ the attempts log directly to the Supervisor instead — never skip the checkpoin
 is no field to write it into.
 
 ### Phase 5 — Fix + regression test
+**Before writing the fix**, state in one line where the root cause is — the CONFIRMED hypothesis and
+the specific location it originates — and confirm the fix lands *there*, not at the site where the
+error surfaced. A fix at the surfacing site is a failure, not a partial success. This constrains
+*where* the fix goes; it does not require a test seam, so the no-seam finding below stays reachable.
+
 Write the regression test **before the fix** — but only if a **correct seam** exists (one that exercises the real bug pattern at the call site). If no correct seam exists, that itself is the finding — note it. With a seam: minimised repro → failing test → fix → passing → re-run the Phase 1 loop against the original scenario.
 
 Keep Phase 4's instrumentation **active through the fix** — do not remove any probe until a post-fix
