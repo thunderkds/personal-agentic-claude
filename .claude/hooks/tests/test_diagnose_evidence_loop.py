@@ -94,8 +94,14 @@ PHASE_BODY_SHA256_PRE_CHANGE = {
     "Phase 2 — Reproduce": (
         "c7959c08af1e1b8dea0a9a2156e82683ccf88c4e41cb2c72b793ea6de03630b2"
     ),
+    # T067 re-pin. T058/T060 held Phase 3 out of scope; T067's AC7 deliberately
+    # changes it (the working-reference comparison is a hypothesis *source*, so it
+    # belongs in Phase 3) and T067's AC11 narrows the byte-identical guarantee to
+    # Phase 1 and Phase 2 only. The pin is re-captured, not deleted, so Phase 3
+    # stays locked against unintended drift from here on; the 3–5 requirement is
+    # separately pinned by test_t067_t058_and_t060_numbers_are_unchanged.
     "Phase 3 — Hypothesise": (
-        "d8facfe345245b10888d01b7b27d9de01083516cec10db0ed10499d4b42036a8"
+        "0a33b7ed9cd3ee381d8d65cbc11b592c4854f505371eefed13367c7244a23762"
     ),
 }
 
@@ -104,7 +110,7 @@ PHASE_BODY_SHA256_PRE_CHANGE = {
 PHASE_BODY_MIN_LEN = {
     "Phase 1 — Build a feedback loop": 900,
     "Phase 2 — Reproduce": 100,
-    "Phase 3 — Hypothesise": 150,
+    "Phase 3 — Hypothesise": 600,
 }
 
 
@@ -580,6 +586,252 @@ def test_t060_rejected_transport_layer_did_not_re_enter():
             f"`{token}` appears in diagnose/SKILL.md — T058 rejected the daemon/ingest/relay "
             "transport outright and T060 does not reopen it"
         )
+
+
+# ===========================================================================
+# T067 — root-cause rule, backward tracing, red flags, working-reference
+# comparison. Prior art (obra/superpowers systematic-debugging) consulted, not
+# vendored; its defense-in-depth step was REJECTED outright (AC10).
+#
+#   T067-AC1  — root-cause rule in the Karpathy block
+#   T067-AC2  — restated in Phase 5 at the point of action
+#   T067-AC3/4 — backward tracing: five ordered steps, scoped, Placement intact
+#   T067-AC5/6 — red flags: >=4 behaviours, route to Phase 1, sibling of the
+#                Checkpoint rather than a replacement for it
+#   T067-AC7  — Phase 3 working-reference comparison
+#   T067-AC8  — Phase 4 payload: stack capture + test-visible output
+#   T067-AC9  — Stuck-Loop "widen scope" names the architectural tell
+#   T067-AC10 — negative, file-wide: defense-in-depth must not re-enter
+#   T067-AC13/14 — T058/T060 numbers unchanged (1-10 budget, 2 consecutive
+#                REJECTED, 3-5 hypotheses)
+#   T067-AC15 — negative: the file stays <= 165 lines
+#
+# These assert *instruction text*, not runtime behaviour. AC10 and AC15 pass
+# trivially on a compliant file, so both were mutation-verified RED by
+# introducing the forbidden token and by padding the file past the cap.
+# ===========================================================================
+
+LINE_COUNT_CAP_T067 = 165
+
+
+def karpathy():
+    return extract_section(read_skill(), "Karpathy Operational Commands")
+
+
+def phase3():
+    return extract_section(read_skill(), "Phase 3 — Hypothesise")
+
+
+def phase5():
+    return extract_section(read_skill(), "Phase 5 — Fix + regression test")
+
+
+def test_t067_karpathy_block_carries_the_root_cause_rule():
+    body = karpathy()
+    assert re.search(r"root cause", body, re.IGNORECASE), (
+        "the Karpathy block must carry a root-cause rule"
+    )
+    assert re.search(r"originated", body), (
+        "the rule must say the fix lands where the cause originated"
+    )
+    assert re.search(r"surfaced", body), (
+        "the rule must contrast with where the error surfaced"
+    )
+    assert re.search(r"failure, not a partial success", body), (
+        "a symptom fix must be framed as a failure, not a partial success"
+    )
+    assert re.search(r"CONFIRMED", body), (
+        "'root cause' must be tied to the CONFIRMED verdict, not asserted freely"
+    )
+
+
+def test_t067_phase5_restates_the_rule_at_the_point_of_action():
+    body = phase5()
+    assert re.search(r"[Bb]efore writing the fix", body), (
+        "Phase 5 must place the root-cause check before the fix is written"
+    )
+    assert re.search(r"root cause", body, re.IGNORECASE), (
+        "Phase 5 must name the root cause at the point of action"
+    )
+    assert re.search(r"confirm the fix lands", body), (
+        "Phase 5 must require confirming the fix lands at the root cause"
+    )
+    assert re.search(r"failure, not a partial success", body), (
+        "Phase 5 must restate the symptom-fix verdict, not merely gesture at it"
+    )
+    # Edge case: the rule must not make the existing no-seam finding unreachable.
+    assert re.search(r"no-seam finding.*reachable", body), (
+        "Phase 5 must state the root-cause rule does not close off the no-seam path"
+    )
+
+
+def test_t067_phase4_backward_tracing_names_the_five_ordered_steps():
+    body = phase4()
+    assert re.search(r"\*\*Backward tracing\*\*", body), (
+        "Phase 4 must name the backward tracing technique"
+    )
+    steps = [
+        r"observe the symptom",
+        r"identify the code that directly produced it",
+        r"identify that code's caller",
+        r"continue up the call chain recording the value passed at each\s+level",
+        r"locate where the invalid\s+value originated",
+    ]
+    positions = []
+    for step in steps:
+        match = re.search(step, body)
+        assert match is not None, f"backward tracing is missing the step: {step}"
+        positions.append(match.start())
+    assert positions == sorted(positions), (
+        f"backward tracing's five steps are out of order: {positions}"
+    )
+
+
+def test_t067_backward_tracing_is_scoped_and_does_not_replace_placement():
+    """AC4 — it fits a value-wrong-on-arrival bug, not every bug, and the
+    existing Placement options keep their role."""
+    body = phase4()
+    assert re.search(r"invalid when it arrives", body), (
+        "backward tracing must be scoped to the value-wrong-on-arrival shape"
+    )
+    assert re.search(r"does not apply to a perf regression or a flaky test", body), (
+        "backward tracing must be excluded from the perf and flaky-test shapes"
+    )
+    assert re.search(r"replaces\s+none of step 5's Placement options", body), (
+        "backward tracing must not replace or reorder the Placement options"
+    )
+
+
+def test_t067_red_flags_name_four_behaviours_and_route_to_phase_1():
+    body = phase4()
+    assert re.search(r"\*\*Red flags", body), "Phase 4 must carry a red-flag block"
+    for behaviour in (
+        r"proposing a fix before tracing",
+        r"changing more than one variable at a time",
+        r"asserting a\s+cause without evidence from the loop",
+        r"reaching for a quick fix under time pressure",
+    ):
+        assert re.search(behaviour, body), (
+            f"the red-flag block is missing the behaviour: {behaviour}"
+        )
+    assert re.search(r"returns you to \*\*Phase 1\*\*", body), (
+        "any red flag must route the agent back to Phase 1"
+    )
+
+
+def test_t067_red_flags_are_the_checkpoints_sibling_not_its_replacement():
+    """AC6 — the two mechanisms must stay distinguishable: the Checkpoint counts
+    disproven hypotheses and offers three options; red flags fire earlier on
+    behaviour and offer none."""
+    body = phase4()
+    assert re.search(r"\*before\* the Stuck-Loop Checkpoint", body), (
+        "the red-flag block must state it fires before the Stuck-Loop Checkpoint"
+    )
+    assert re.search(r"do not replace it", body), (
+        "the red-flag block must state it does not replace the Checkpoint"
+    )
+    assert re.search(r"counts disproven\s+hypotheses", body), (
+        "the block must name what the Checkpoint does, so the two stay distinct"
+    )
+    assert re.search(r"offer no choice at all", body), (
+        "red flags must not duplicate the Checkpoint's three named options"
+    )
+    # Ordering: the red flags sit before the Checkpoint section in the file.
+    text = read_skill()
+    assert text.index("**Red flags") < text.index("### Stuck-Loop Checkpoint"), (
+        "the red-flag block must be placed before the Stuck-Loop Checkpoint heading"
+    )
+
+
+def test_t067_phase3_gains_the_working_reference_comparison():
+    body = phase3()
+    assert re.search(r"\*\*Working-reference comparison\*\*", body), (
+        "Phase 3 must carry a working-reference comparison"
+    )
+    assert re.search(r"locate similar code that \*works\*", body), (
+        "the comparison must start by locating similar code that works"
+    )
+    assert re.search(r"enumerate the differences", body), (
+        "the comparison must enumerate differences against the broken path"
+    )
+    assert re.search(r"derive hypotheses from those differences", body), (
+        "the comparison must derive hypotheses from the differences"
+    )
+    assert re.search(r"[Ii]f no working reference exists", body), (
+        "the comparison must degrade gracefully when no reference exists"
+    )
+
+
+def test_t067_phase4_payload_notes_stack_capture_and_test_visible_output():
+    body = phase4()
+    assert re.search(r"capture a \*\*stack trace\*\* to\s+identify its caller", body), (
+        "the payload guidance must allow capturing a stack trace to identify the caller"
+    )
+    assert re.search(r"secrets/PII rule above is unchanged", body), (
+        "stack capture must not weaken the existing secrets/PII prohibition"
+    )
+    assert re.search(r"test\s+output actually surfaces", body), (
+        "the payload guidance must require probe output to go where test output surfaces"
+    )
+    assert re.search(r"logger may be suppressed", body), (
+        "the payload guidance must say why: a project logger may be suppressed under test"
+    )
+
+
+def test_t067_widen_scope_names_the_architectural_tell():
+    body = checkpoint()
+    assert re.search(r"architectural\s+tell", body), (
+        "the 'widen scope' option must name the architectural tell"
+    )
+    assert re.search(
+        r"each fix reveals new shared state or coupling in a \*different\* place", body
+    ), "the tell must be: each fix revealing new coupling somewhere else"
+    assert re.search(r"design\s+problem, not the next bug", body), (
+        "the tell must classify this as a design problem rather than a next bug"
+    )
+
+
+def test_t067_defense_in_depth_did_not_re_enter():
+    """AC10 — negative, file-wide by design: the rejected direction must not
+    appear in any spelling anywhere in the document. This passes trivially on a
+    file that never mentioned it, so it was mutation-verified RED by inserting
+    the token."""
+    text = read_skill().lower()
+    for token in ("defense-in-depth", "defence-in-depth", "defense in depth", "defence in depth"):
+        assert token not in text, (
+            f"`{token}` appears in diagnose/SKILL.md — T067 rejected defense-in-depth "
+            "outright; Phase 5's revert-REJECTED-changes rule already stops guards accumulating"
+        )
+
+
+def test_t067_t058_and_t060_numbers_are_unchanged():
+    """AC13/AC14 — the prior art's weaker numbers must not displace ours."""
+    body = phase4()
+    assert re.search(r"at least 1 probe", body) and re.search(r"never more than 10", body), (
+        "the 1-10 probe budget established by T058 must survive"
+    )
+    cp = checkpoint()
+    assert re.search(r"2 consecutive hypotheses are REJECTED", cp), (
+        "T052's 2-consecutive-REJECTED trigger must not be replaced by the prior art's "
+        "3-failed-fix-attempts trigger"
+    )
+    assert "3 failed" not in read_skill(), (
+        "the prior art's 3-failed-fix-attempts escalation must not have been imported"
+    )
+    assert re.search(r"\*\*3–5 ranked, falsifiable\*\* hypotheses", phase3()), (
+        "Phase 3 must still require 3-5 ranked falsifiable hypotheses, not a single hypothesis"
+    )
+
+
+def test_t067_file_stays_within_the_line_cap():
+    """AC15 — the cap is a hard constraint, not advice. Counts the whole file
+    including frontmatter. Passes trivially under the cap, so it was
+    mutation-verified RED by padding the file past 165 lines."""
+    line_count = len(read_skill().rstrip("\n").split("\n"))
+    assert line_count <= LINE_COUNT_CAP_T067, (
+        f"diagnose/SKILL.md is {line_count} lines, over the {LINE_COUNT_CAP_T067}-line cap — "
+        "tighten the prose rather than raising the cap"
+    )
 
 
 if __name__ == "__main__":
