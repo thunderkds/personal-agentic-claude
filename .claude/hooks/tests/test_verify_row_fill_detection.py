@@ -23,7 +23,9 @@ Run with: python3 -m pytest .claude/hooks/tests/test_verify_row_fill_detection.p
 import glob
 import os
 import re
+import shutil
 import sys
+import tempfile
 import types
 
 HOOKS_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -46,14 +48,23 @@ merge_gate = load_hook_module(HOOK_PATH, "pre_bash_block_unsafe_merge_verify_row
 
 
 def row_is_filled(evidence_section):
-    """Wraps the module's row check, resolved fresh each call so a re-import
-    after a mutation (see the mutation-verify test below) is actually exercised."""
-    for match in merge_gate.VERIFY_ROW_PATTERN.finditer(evidence_section):
-        result_cell = match.group("result") if "result" in match.groupdict() else match.group(0)
-        unchecked = getattr(merge_gate, "UNCHECKED_PASS_PATTERN", None)
-        if unchecked is None or not unchecked.search(result_cell):
-            return True
-    return False
+    """Drive the REAL `has_filled_verify_row` over a real review file.
+
+    Stage 4 finding: this helper previously re-implemented the gate's decision
+    (walk VERIFY_ROW_PATTERN, apply UNCHECKED_PASS_PATTERN) instead of calling
+    the shipped function, and degraded defensively via `getattr(...)`. Every
+    assertion below therefore tested a *copy* of the logic. Proven vacuous by
+    mutation: making `has_filled_verify_row` ignore UNCHECKED_PASS_PATTERN --
+    i.e. restoring the exact defect T068 exists to fix -- left the full suite
+    at 326 passed. The tests must go through the function the gate calls.
+    """
+    tmp = tempfile.mkdtemp()
+    try:
+        with open(os.path.join(tmp, "TASK_REVIEW_T900.md"), "w", encoding="utf-8") as fh:
+            fh.write("# TASK_REVIEW — T900\n\n## Evidence\n\n" + evidence_section + "\n")
+        return merge_gate.has_filled_verify_row("T900", tasks_dir=tmp)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
 
 
 TEMPLATE_PLACEHOLDER_ROW = (
