@@ -1127,3 +1127,33 @@ rejected direction cannot re-enter through the implementation.
 Measured saving, reported honestly: T060 33.6%, T061 32.3%, T063 31.4%, T067 30.5%, **T058 16.3%**.
 Recorded as "~31–34% typical, not a floor". `MANIFEST` deliberately unchanged (bare `templates`
 directory entry, `cp -r`, T054 precedent). 50 new tests, 317 passed.
+
+## T068 — the merge gate can tell a filled `verify` row from a placeholder (2026-08-09)
+
+Found by the T064 implementer during Stage 3, confirmed pre-existing against baseline `2612a05`.
+
+The gate's `VERIFY_ROW_PATTERN` was correct in intent — T026's two-bug fix requires the Check cell to
+be literally `verify` and the word "pass" to appear in the **Notes** column, not just Result. The
+defect was that T026 *also* wrote "pass" into the template's placeholder as guidance ("must literally
+state \"pass\" or \"fail\" here too..."), so the placeholder satisfied its own gate: a task that had
+filled in nothing already cleared the row check, leaving only `trace_shows_verification` standing.
+Fourth distinct way this gate has failed to gate, and the third whose root cause is guidance text
+being indistinguishable from filled-in evidence.
+
+Fix is in the **matcher, not the template**. Result and Notes are now captured as named groups and a
+new `UNCHECKED_PASS_PATTERN = r"☐\s*pass\b"` disqualifies a row only when its Result cell carries a
+literal unchecked *pass*. Rewording the placeholder was rejected: a test pins that string, the
+wording is genuinely useful reviewer guidance, and a matcher that only works because nobody wrote
+"pass" in a comment is the same class of defect as the T044 substring match.
+
+**The narrowness is load-bearing.** The obvious rule — reject any Result cell containing `☐` — breaks
+the legitimately filled `☑ pass / ☐ N/A` shape. Stage 2 surveyed every real `verify` row and pinned
+the six observed shapes into the guide as the oracle, which is what stopped that plausible fix from
+shipping.
+
+Stage 4: 1 P1 and 1 P3, both found by the Supervisor. See learnings.md — the P1 (tests asserting
+against a re-implementation of the gate logic) is the more instructive of the two and is the 7th
+entry in the vacuous-assertion family.
+
+Recorded honestly: `TASK_GUIDE_T050.md` still resolves to `False`, unchanged from the old pattern,
+because its Notes cell omits "pass". That is the T026 property working, not a regression.

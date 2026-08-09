@@ -815,3 +815,45 @@ four cleared 25% (30.5–33.6%) and one came in at **16.3%** on an unusually lar
 single-guide measurement would have supported a stronger claim than the data does. State the range
 and name the outlier; a control (one-line sections) measuring −0.4% is what shows the metric
 discriminates at all.
+
+## A test helper can re-implement the logic it is meant to test (T068, 2026-08-09)
+
+T068's new test file defined `row_is_filled()` which walked `VERIFY_ROW_PATTERN` and applied
+`UNCHECKED_PASS_PATTERN` itself, instead of calling the shipped `has_filled_verify_row()`. It even
+degraded defensively — `match.group("result") if "result" in match.groupdict() else match.group(0)`,
+`getattr(merge_gate, "UNCHECKED_PASS_PATTERN", None)`. All 8 assertions therefore tested a **copy of
+the logic living in the test file**, and the copy was correct, so everything looked green and the
+mutation controls even went RED.
+
+Proof it was vacuous: mutate the **real** function to ignore `UNCHECKED_PASS_PATTERN` — restoring the
+exact defect the task exists to fix — and the full suite stayed at `326 passed`. After rewiring the
+helper to write a real review file to a temp dir and call `has_filled_verify_row`, the identical
+mutation turned AC1 RED.
+
+**The tell is a test helper that reaches for a module's constants rather than its functions.** If a
+helper imports `SOME_PATTERN` and applies it, ask what calls that pattern in production and test
+*that* instead. Defensive `getattr`/`groupdict()` fallbacks in a test are a second tell: they exist so
+the helper survives the mutation you are about to make, which is the opposite of what a control needs.
+
+7th entry in the vacuous-assertion family, and the first where the vacuity was in the *harness around*
+the assertions rather than in an assertion itself.
+
+Contributing cause worth noting: `pre_bash_block_unsafe_merge.py` ends in a bare `main()` with no
+`if __name__ == "__main__"` guard, so importing it executes `main()` and blocks on `json.load(sys.stdin)`.
+Tests must load it through an `exec`-with-`main()`-stripped helper, and that friction is part of why a
+re-implementation looked like the easier path.
+
+## A guide's own factual error propagates into the implementation (T068, 2026-08-09)
+
+The Stage 2 guide's AC table attributed the `☑ pass / ☐ N/A` Result-cell shape to T050. It was wrong:
+T050's real row is `☑ pass` with no unchecked glyph, and the shape actually occurs in
+`TASK_GUIDE_T063.md`. The agent copied the attribution straight into a test constant named
+`T050_TRAP_ROW` — a fixture claiming a provenance it did not have (the recorded T061 failure,
+repeating, this time seeded by the Supervisor rather than the implementer).
+
+Both real rows omit "pass" from the Notes column and are therefore *correctly* rejected by the old
+and new patterns alike, so the fixture had to be synthetic anyway.
+
+**When a guide pins a corpus as the oracle, spot-check the corpus against the real files before
+writing it down.** A wrong example in a guide does not stay in the guide — it becomes a constant name,
+a docstring, and a code comment.

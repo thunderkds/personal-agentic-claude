@@ -153,9 +153,7 @@
 - [A memory pass is uncommitted work like any other, and stashes hide it](learnings.md) — T046 shipped 2026-07-24 with a merged commit, passing tests and a closed Kanban row, yet `grep T046 memory/` was empty two weeks later: its whole memory pass sat in a forgotten stash. Nothing downstream fails when memory is missing, so audit `git stash list` during recovery and treat the memory write as part of the task
 
 ### Patterns & Gotchas (thinking-report)
-- [col-chosen on both th and td](learnings.md) — must apply to header AND body cells in chosen column; omitting on td leaves body unstyled
-- [thinking-report trigger](learnings.md) — auto after Stage 0.5b direction approval and Stage 2 confirmation; args: session=<type> task=<ID> branch=<branch>
-- [Assumptions tag classes](learnings.md) — tag-resolved (green) / tag-assumption (amber) / tag-deferred (purple); min 2 items required
+- [thinking-report: trigger, tags, table styling](learnings.md) — auto after Stage 0.5b direction approval + Stage 2 confirmation (`session=<type> task=<ID> branch=<branch>`); Assumptions tags tag-resolved/green, tag-assumption/amber, tag-deferred/purple, min 2 items; `col-chosen` must be on BOTH th and td or the body column renders unstyled
 
 ### Decisions (Packs)
 - [Packs are additive-only, core unchanged](decisions.md) — pack agents/skills symlink alongside core; never replace core resources
@@ -163,9 +161,10 @@
 - [Pack structure: agents/ + skills/ + PACK.md](decisions.md) — pack agents use namespaced names (e.g. mobile-developer) to avoid core collisions
 
 ### Patterns (Packs)
-- [Pack mandatory gates by domain](learnings.md) — mobile→ui-accessibility; data→pipeline-safety; devops→infra-safety; ai-agent→eval-design; api→contract-review
-- [Pack agent boundary from core](learnings.md) — mobile≠frontend (lifecycle/app-store); data≠backend (pipeline idempotency); api≠backend (contract-first)
-- [install_pack() in setup.sh](learnings.md) — iterates agents/*.md and skills/*/ from pack dir; symlinks into .claude/agents/ and .claude/skills/
+- [Pack gates, agent boundaries and install](learnings.md) — gates by domain: mobile→ui-accessibility, data→pipeline-safety, devops→infra-safety, ai-agent→eval-design, api→contract-review; boundaries: mobile≠frontend (lifecycle/app-store), data≠backend (pipeline idempotency), api≠backend (contract-first); `install_pack()` iterates `agents/*.md` + `skills/*/` and symlinks into `.claude/`
+- [T068 merged: the merge gate can tell a filled `verify` row from a placeholder](decisions.md) — T026 required "pass" in the **Notes** column and then wrote "pass" into the template placeholder *as guidance*, so the placeholder satisfied its own gate and a task that filled in nothing already cleared the row check. Fixed in the **matcher, not the template**: Result/Notes captured separately, a literal `☐ pass` in Result disqualifies. Narrowness is load-bearing — rejecting any `☐` breaks the real `☑ pass / ☐ N/A` shape. 4th way this gate has failed to gate. 326 passed
+- [A test helper can re-implement the logic it is meant to test](learnings.md) — T068's `row_is_filled()` walked the gate's constants itself instead of calling the shipped `has_filled_verify_row`, with `getattr`/`groupdict()` fallbacks. All 8 assertions tested a **copy**; mutating the real function to restore the very defect left the suite at `326 passed`. **The tell: a helper reaching for a module's constants rather than its functions** — and defensive fallbacks in a control exist to survive the mutation you are about to make. 7th vacuous-assertion, 1st where the vacuity was in the harness not the assertion
+- [A guide's own factual error propagates into the implementation](learnings.md) — T068's Stage 2 AC table attributed the `☑ pass / ☐ N/A` shape to T050; it is really in T063, and T050's row has no unchecked glyph. The agent copied it into a constant named `T050_TRAP_ROW` — a fixture claiming provenance it lacks (T061 repeating, this time seeded by the Supervisor). **Spot-check a corpus against the real files before pinning it as the oracle**
 
 ### Patterns (learn skill)
 - [learn materiality gate](learnings.md) — write LR only for corrections, preference disclosures, confirmed patterns, corrected misconceptions; never for greetings or activity logs
