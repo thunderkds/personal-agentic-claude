@@ -857,3 +857,65 @@ and new patterns alike, so the fixture had to be synthetic anyway.
 **When a guide pins a corpus as the oracle, spot-check the corpus against the real files before
 writing it down.** A wrong example in a guide does not stay in the guide — it becomes a constant name,
 a docstring, and a code comment.
+
+## A cap on a proxy metric decays silently (T065, 2026-08-09)
+
+The hot-tier cap counted **lines** while the cost was **characters**. Across 12 commits it was green
+while the file grew 15.5%, and twice the line count went *down* while the character count went *up* —
+the Supervisor consolidated old entries to satisfy the cap and spent the room on longer new ones. A
+gate whose units are not the thing you pay for teaches people to game the units, and it does so
+without ever failing.
+
+What makes the replacement stick is **not the new number** but the sentence next to it declaring it a
+**ratchet** and naming the only tool allowed to move it, downward. A budget with no such rule is a
+budget that gets raised the first time it is inconvenient.
+
+Corollary for the gate's message: `assert x <= y` gives the next person nothing. Report current value,
+budget, overage, and the sanctioned remedy.
+
+## The harmful copy of a retired contract is usually the one you did not predict (T065, 2026-08-09)
+
+The guide named `docs/claude-md/pipeline-stages.md` as the home of "do not re-read memory". A second,
+**more load-bearing** copy lived in `.claude/agents/general-agent-template.md` — the file sub-agents
+actually read — and a third in `compact-memory/SKILL.md` was found only by running the negative test.
+The guide predicted 8 locations; the sweep found 11, and the file-wide negative grep found 3 of them.
+
+A file-wide negative grep is not a formality on this kind of task. Second instance after T058.
+
+## A negative-grep test is vacuous if its file list is wrong (T065, 2026-08-09)
+
+A test asserting "this string appears nowhere in these files" passes for free if a path is mistyped or
+the list is short. Two guards, both needed: assert every enumerated file **exists**, and assert that
+lines you deliberately *content-excluded* (here `CLAUDE.md`'s unrelated "If 200 lines can be 50") are
+**still present** — otherwise deleting them is an equally green way to pass.
+
+Also: exclude a known-good hit by **matching its content**, never by allowing "one hit". A count-based
+allowance silently absorbs the next real regression.
+
+## A sub-agent has no `Skill` tool (T065, 2026-08-09)
+
+`TASK_GUIDE_template.md`'s Completion Checklist instructs the implementer to run
+`Skill({ skill: "code-review" })`, `security-review` and `verify`. A sub-agent's toolset is
+Read/Write/Edit/Bash/Glob/Grep — **`Skill` is not in it**, so those three lines are structurally
+unfollowable by the role they are addressed to. T065's agent reported this rather than silently
+claiming the runs; earlier tasks have quietly recorded "security-review PASS" in exactly this spot.
+The Supervisor must run all three at Stage 4. The template should say so.
+
+## A scope guard committed as an invariant blocks the thing it was guarding (T065, 2026-08-09)
+
+T065's AC12 said "this task must not touch `memory/MEMORY.md`'s index entries". The test that enforced
+it asserted `len(entry_lengths) == 146` — the exact count at review time. That question ("did T065
+touch the index?") is only meaningful *while T065 is in review*. Committed as a standing assertion it
+forbade the harness from **ever recording a new memory entry**, and it failed on the first legitimate
+memory pass after the merge — minutes later, on the very next commit.
+
+Neither the implementer nor the Supervisor caught it at Stage 4, and no amount of mutation testing
+would have: nothing added an entry while the test existed, so it could only manifest in use.
+
+**The tell is an assertion pinning a count, hash, or line number captured "as of this task".** Ask
+whether it will still be true after the next unrelated change. If not, it is a scope guard — verify it
+at review time by diffing directly, and either drop it or pin it to an explicit baseline ref. Keep the
+genuinely invariant half (here: the header still states the budget and the path channel).
+
+Second instance of the recorded "working-tree-vs-HEAD is a scope guard, not a repeatable test", and
+the first where the guard blocked a routine harness operation rather than just failing noisily.

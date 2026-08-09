@@ -300,13 +300,32 @@ def test_ac3_per_entry_report_is_advisory_and_never_fails(tmp_path):
     assert_hot_tier_within_budget(copy)
 
 
-def test_ac12_memory_md_index_entries_are_untouched_by_this_task():
-    """Only header rules lines changed. The index is `/compact-memory`'s territory."""
-    _, entry_lengths = measure_hot_tier(MEMORY_PATH)
-    assert len(entry_lengths) == 146, (
-        f"expected the 146 index entries T065 measured to be unchanged in count, "
-        f"found {len(entry_lengths)} — AC12 forbids adding or removing any"
-    )
+def test_ac12_memory_md_header_rules_state_the_budget_and_the_channel():
+    """AC12's *invariant* half. The scope-guard half is deliberately gone.
+
+    As shipped this test asserted `len(entry_lengths) == 146` — the exact entry
+    count at T065's review. That is a **scope guard**, not an invariant: it
+    answered "did T065 touch the index?", which is a question only meaningful
+    while T065 was in review. Committed as a standing assertion it forbade the
+    harness from ever recording a new memory entry, and it failed on the very
+    first legitimate memory pass after the merge. Neither the implementer nor
+    the Supervisor caught it at Stage 4 because nothing added an entry while
+    the test existed — it could only manifest in use.
+
+    (Recorded rule: "working-tree-vs-HEAD is a scope guard, not a repeatable
+    test — decide invariant or one-shot." AC12 was verified at review time by
+    diffing the index lines directly: 0 changed, 6 insertions / 3 deletions,
+    all header rules. That verification is done and does not need re-running
+    forever.)
+
+    What genuinely *is* invariant is that the header still states the budget and
+    the path channel — the two things T065 exists to establish.
+    """
+    header = MEMORY_PATH.read_text(encoding="utf-8").split("---", 1)[0]
+    assert "52,000 characters" in header
+    assert "ratchet" in header
+    assert "path" in header.lower()
+    assert "Injected in full" not in header
 
 
 def test_ac4_documented_per_entry_limit_is_labelled_an_aspiration():

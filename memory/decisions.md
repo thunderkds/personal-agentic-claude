@@ -1157,3 +1157,26 @@ entry in the vacuous-assertion family.
 
 Recorded honestly: `TASK_GUIDE_T050.md` still resolves to `False`, unchanged from the old pattern,
 because its Notes cell omits "pass". That is the T026 property working, not a regression.
+
+## T065 — honest memory channel + a size gate that measures cost (2026-08-09)
+
+Two fictions, both shipped downstream by `setup.sh` and MANIFEST.
+
+**Channel.** `craft-spawn-prompt` element 4 mandated "full contents of `memory/MEMORY.md`, verbatim";
+practice passed a **path**. T063 measured it (0 of 49 prompts carried the H1; 5 of 5 agents opened the
+file), and T064, T068 and T065's own spawns each confirmed it first-person. **User ruled 2026-08-09:
+amend the doc to match practice, not the reverse.** The sharp end was an instruction telling agents
+*"the agent must not re-read it; it is already in context"* — false under the real channel, and an
+agent obeying it never reads memory at all.
+
+**Gate.** `assert len(lines) <= 200` while the cost is characters. Across the last 12 commits touching
+the file, lines stayed pinned at 200–201 while chars grew 42,577 → 49,156 (+15.5%) and mean entry
+276 → 326. Green on every one. Replaced with `HOT_TIER_CHAR_BUDGET = 52_000`.
+
+**The number is not the fix; the comment is.** The budget ships with an in-code note declaring it a
+**ratchet** — `/compact-memory` may lower it, nothing may raise it to fit growth. Without that the new
+gate decays exactly as the old one did. Per-entry 150 chars became explicitly *advisory and reported*,
+never enforced (89% violate it; a hard gate would have turned the suite red on arrival).
+
+Scope held: content compaction stayed out (the `MEMORY.md` diff is header rules only, zero index
+entries touched, still 146 entries). The guide predicted 8 shipping locations; the sweep found **11**.
