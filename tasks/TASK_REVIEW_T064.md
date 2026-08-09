@@ -10,10 +10,10 @@
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_guide_sections.py` — 49 tests covering AC1–AC15 and the guide's Edge Case Checklist. The AC7 block was written first, before any resolver code existed (confirmed RED: `FileNotFoundError: .../lib/guide_sections.py`). |
-| Verification command run | ☑ pass | `python3 -m pytest .claude/hooks/tests/ -q` @ 2026-08-09T04:48:46Z → `2 failed, 314 passed in 8.98s`. Both failures are pre-existing tests pinning the moved table's *old location*; left untouched and escalated below. New file alone: `49 passed`. |
+| Verification command run | ☑ pass | **Refreshed at Stage 5 — the earlier `2 failed, 314 passed` was captured before the escalations were resolved and the Stage 4 P2 was fixed; leaving it would have recorded a state that no longer exists.** `python3 -m pytest .claude/hooks/tests/ -q` → `317 passed in 8.14s`. The 2 escalated tests were repointed by the Supervisor (row string byte-identical, new location asserted, guide template additionally asserted NOT to carry it); +1 test pins the Stage 4 P2 fix. `scripts/smoke-install.sh: PASS`. |
 | Negative cases hold | ☑ pass | 4 mutation controls, each confirmed to have actually executed before its verdict was trusted. **AC7**: resolver made to return a filled-looking row on a missing file → **8 tests RED**, restored → GREEN. **AC10**: register-hook regex widened to `TASK_(?:GUIDE\|REVIEW)_` → RED (`[hook:post_write] Registered T999`), restored → GREEN. **AC11**: three independent token forms appended (`challenge-response`, bare `**Q:**`/`**A:**`, `challenge/response`) → RED on each, restored → GREEN. **AC14**: one byte appended to `tasks/TASK_GUIDE_T060.md` → RED, restored → GREEN. |
-| verify | ☐ | [reviewer fills at Stage 5. This cell deliberately avoids the template's placeholder wording — see Escalation 2: that placeholder's guidance text is itself enough to clear the merge gate's row check while still unfilled. Writing it here would have made T064 falsely clear its own gate, which is the defect being reported.] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
+| verify | ☑ pass | Supervisor-run at Stage 5 against the real files, no patching and no fixtures — all four resolution paths exercised: T064's own split pair resolves its Demonstration from the review file (True), T063's legacy inline guide still resolves (True), pre-T053 T001 correctly returns None, and nonexistent T999 returns None. Suite `317 passed`, `smoke-install.sh` PASS. Feature confirmed working — **pass**. |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Reviewed: the 3 consumers the resolver touches (`pre_bash_block_unsafe_merge.py`, `pre_agent_validate_guide.py`, `delivery-report/render.py`), the new `lib/guide_sections.py`, both templates, and the 3 SKILL.md edits. Skipped as unaffected: all other hooks, `task_context.py` (imitated, not edited), `scripts/`. Confirmed by diff: 11 files, no unpredicted file touched, and `tasks/` shows only the added review file (AC14). |
 | Full smoke suite still green (no regression) | ☑ pass | `bash scripts/smoke-install.sh` → `PASS`; `bash scripts/validate.sh` → `PASS` (it still resolves `templates/TASK_GUIDE_template.md`). `MANIFEST` deliberately unchanged: line 11 is the bare `templates` directory entry copied with `cp -r`, so `TASK_REVIEW_template.md` deploys downstream automatically (T054 precedent). |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | pure-backend task — hooks, templates and skill-instruction text only, no UI surface |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ N/A | pure-backend task — no UI surface |
@@ -157,8 +157,14 @@ not a floor.
 reviewer ever fills, and the three consumers that read those two sections find them in either
 location — so no existing guide had to be migrated to get the saving on new ones.
 
-**WITNESS**: [derived from `memory/event-trace/T064.jsonl` at Stage 4/5 — never the implementing
-agent alone]
+**WITNESS**: Derived from `memory/event-trace/T064.jsonl`, not typed and not taken from the
+implementing agent's own report. 87 records spanning 2026-08-09T04:29:37Z → 04:58:32Z: Bash 41,
+Edit 34, Read 6, Write 5, Agent 1, of which 13 records carry a `pytest` invocation. The trace holds
+both the sub-agent's calls and the Supervisor's own (T063 established the file is not actor-split),
+so this is deliberately **not** attributed to one party — what it witnesses is that the verification
+commands were really executed under this task ID, not merely claimed. The Supervisor independently
+re-ran the AC7 mutation from a second direction (unreadable-file → filled row, 11 tests RED) and
+found the Stage 4 P2 itself, so the implementer was not the sole oracle for its own work.
 
 ---
 
