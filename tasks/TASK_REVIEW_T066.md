@@ -14,15 +14,15 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_agent_guide_dedup.py` — 35 tests covering AC1–AC7, AC9, AC10. AC8 is the mutation control, run manually below. Helper `scripts/measure_agent_guide_tokens.py` produces the AC7 numbers |
+| Verification command run | ☑ pass | `pytest .claude/hooks/tests/ -q && bash scripts/smoke-install.sh` → `373 passed in 8.66s` then `smoke-install.sh: PASS`. Re-run from a clean tree after all mutations were reverted (`git status --short` empty) |
+| Negative cases hold | ☑ pass | 20 of 35 assertions were RED before implementation. 3 post-implementation mutations, each confirmed applied before the verdict: **(AC8)** delete `## Communication Protocol` from `qa.md` → `Communication Protocol-qa` RED; **(AC6-i)** delete the whole Karpathy table from the template → RED for all 4 roles; **(AC6-ii)** delete *only* the `## Karpathy...` heading, body left intact (`grep -c "Think Before Coding"` = 1) → RED for all 4 roles. All reverted, suite back to 373 |
+| verify | ☐ pass / ☐ fail / ☐ N/A | **For the Supervisor.** `Skill()` is not in a sub-agent's toolset (Read/Write/Edit/Bash/Glob/Grep), so the implementer did not and could not run the `verify` skill; claiming a pass here would be the fabricated-evidence pattern this project has recorded 5 times. The verification command itself was run and is recorded in the row above |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Reviewed manually (labelled manual — no `code-review` skill available to a sub-agent): the 5 `.claude/agents/*.md` files, `.claude/skills/craft-agent/SKILL.md`, and the two new files. Blast radius checked by grepping the whole suite for the vacated paths/strings before deleting — this surfaced `test_memory_channel_and_budget.py:199`, see the escalation note below. Not reviewed: everything outside `.claude/agents/`, since AC5/AC10 pin `CLAUDE.md` and `MANIFEST` byte-identical and the tests enforce it |
+| Full smoke suite still green (no regression) | ☑ pass | `373 passed` (338 pre-existing + 35 new), `smoke-install.sh: PASS` |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | Pure-documentation task — the only changed files are Markdown agent guides, a skill file, a pytest module and a measurement script. No UI component exists in this repo |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | As above — no rendered surface is produced or changed |
+| **UI: Responsiveness at target viewports** | ☑ N/A | As above — no viewport is involved |
 
 ---
 
@@ -153,9 +153,121 @@ Use the plain-text report format from the General Agent Template (Agent / Task /
 files / Blockers). ...
 ```
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**:
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+*(1) Per-role loaded size after the change — `python3 scripts/measure_agent_guide_tokens.py`:*
 
-**WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
-implementing agent alone]
+```
+# per-role loaded size — working tree
+template `.claude/agents/general-agent-template.md`: 3,762 chars (~940 tok est.)
+
+| role | role guide chars | template chars | total chars | total tok (est.) |
+|---|---|---|---|---|
+| c-infra | 5,925 | 3,762 | 9,687 | 2,421 |
+| backend | 8,024 | 3,762 | 11,786 | 2,946 |
+| frontend | 7,696 | 3,762 | 11,458 | 2,864 |
+| qa | 6,821 | 3,762 | 10,583 | 2,645 |
+```
+
+**AC7 — measured, per role** (chars; token column is the guide's own `chars / 4` estimate, and it
+reproduces the guide's 2,541 / 3,482 figures exactly at the baseline):
+
+| role | before (chars) | after (chars) | delta | before (tok est.) | after (tok est.) | reduction |
+|---|---|---|---|---|---|---|
+| c-infra | 10,167 | 9,687 | −480 | 2,541 | 2,421 | **4.7%** |
+| backend | 13,928 | 11,786 | −2,142 | 3,482 | 2,946 | **15.4%** |
+| frontend | 13,581 | 11,458 | −2,123 | 3,395 | 2,864 | **15.6%** |
+| qa | 12,748 | 10,583 | −2,165 | 3,187 | 2,645 | **17.0%** |
+
+All four go down, so AC7 holds — but the honest reading is that **the spread is wide and c-infra is
+close to a null result at −4.7%**. That is expected and not a defect: c-infra is the one role that
+was *missing* two of the four shared sections, so it pays for new content (Complexity, Communication
+Protocol, a fuller startup sequence, `code-review`/`security-review` rows) out of the same template
+saving the others bank outright. Its guide grows 2,921 → 5,925 chars. The edge-case check the guide
+asked for holds: 5,925 alone is well under the 10,167-char pair it replaces.
+
+*(2) `general-agent-template.md` — what remains (7,246 → 3,762 chars). The four moved sections are
+gone; Base Rules, the Karpathy table, the Search-Before-You-Build ladder, Output Requirements and the
+Staleness Guard stay, and a new lead note states why:*
+
+```markdown
+> **What lives where.** The harness auto-loads `.claude/agents/<your-role>.md` as your system
+> prompt, so your role guide always reaches you; this file reaches you only if you open it. Anything
+> every role needs in its own words — the startup read sequence, the Complexity matrix, the skills
+> table, the Communication Protocol — therefore lives in each **role guide**, not here. What remains
+> below is the universal material that is stated once, in one place, and referenced from all four.
+```
+
+*(3) `common-infrastructure.md` — the two sections it had zero chars of now exist (AC2):*
+
+```
+$ grep -c "## Communication Protocol" .claude/agents/common-infrastructure.md
+1
+$ grep -c "^## Complexity & escalation" .claude/agents/common-infrastructure.md
+1
+```
+
+```markdown
+## Complexity & escalation
+
+Your TASK_GUIDE assigns a **Complexity Level** — scale process to it. **Risk is a separate axis**:
+it gates `security-review` regardless of complexity (a C0 change to auth config is still High risk).
+
+| Level | Scope signal | Process |
+|---|---|---|
+| **C0** Trivial | 1 file, ~≤10 LOC, no design decision (config flag, typo) | work inline, no worktree; `code-review` optional |
+| **C1** Simple | 1–2 files, known pattern, no new abstraction | single agent; `code-review` always |
+| **C2** Moderate | 3+ files, *or* a design choice, *or* a new component | plan before acting; `brainstorming` when >1 viable approach; `code-review` + `verify` |
+| **C3** Complex | cross-cutting, architectural, unknowns, or touches shared/core | decompose into subtasks; `brainstorming` **mandatory**; adversarial `verify` |
+
+A change to a **hub file** (one many others import/call) raises Risk even when the edit is small —
+scope review and testing to that blast radius, not the whole repo. If the task proves harder than
+its assigned level, **escalate and pause** — notify the Supervisor with the new level rather than
+powering through. Anything larger than C3 is an Epic and must be split by the Supervisor at Stage 2.
+```
+
+*(4) Startup step 4 no longer points an agent at its own system prompt (AC4). Every role guide now
+reads, in place of "Read this file":*
+
+```markdown
+4. Read `.claude/agents/general-agent-template.md` — Base Rules, the Karpathy Engineering
+   Principles, and the Search-Before-You-Build ladder
+```
+
+**DELTA**: Every sub-agent now receives its startup sequence, Complexity matrix, skills table and
+Communication Protocol in the one file the harness guarantees to load — most visibly
+common-infrastructure, which previously received no Complexity guidance and no Communication
+Protocol at all unless it chose to open a second file — while each role's total loaded text drops
+between 4.7% and 17.0%.
+
+**WITNESS**: *Left for the reviewer, deliberately.* Every command above was run by the T066
+implementing agent (common-infrastructure) in the worktree
+`/home/hungnguyenhuu/workspace/pets/pac-t066` on 2026-08-09, with the active-task pointer armed to
+`T066` before the first verification command, so the runs should be derivable from
+`memory/event-trace/T066.jsonl`. Per the guide, WITNESS must be derived from the trace and never
+from the implementing agent alone — typing a name here would launder exactly the claim T054 built
+its AC7 to refuse.
+
+---
+
+## Escalation — a pre-existing test that *nearly* contradicted AC3
+
+`.claude/hooks/tests/test_memory_channel_and_budget.py:199` (T065) asserts:
+
+```python
+template = _read(".claude/agents/general-agent-template.md")
+assert "read `memory/MEMORY.md` yourself" in template
+```
+
+That string lived inside the template's **Mandatory Startup Sequence** — the exact section AC3
+requires be removed. This is the "a test can pin a section's *location*" family recorded from T064.
+
+**It was resolved without touching the test**, and without weakening either criterion: the sentence
+was preserved byte-identical as a **Base Rule**, which is content the template legitimately keeps
+(it is not one of the four sections all four role guides carry, so AC3 is satisfied), while T065's
+contract — that the template states the real path-not-paste memory channel — stays true. The
+startup *sequence* is gone from the template; the *rule* about who reads memory remains, and it is
+also now stated in all four role guides.
+
+No existing test was modified. Flagging it because the near-miss is the actionable part: the fix
+only existed because the suite was grepped for the vacated section's strings *before* deleting it.
