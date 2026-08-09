@@ -919,3 +919,37 @@ genuinely invariant half (here: the header still states the budget and the path 
 
 Second instance of the recorded "working-tree-vs-HEAD is a scope guard, not a repeatable test", and
 the first where the guard blocked a routine harness operation rather than just failing noisily.
+
+## Dedupe toward the channel that is guaranteed, not the one that is tidy (T066, 2026-08-09)
+
+The harness auto-loads `.claude/agents/<name>.md` as an agent's system prompt, so a **role guide
+always arrives**. `general-agent-template.md` arrives only if the agent chooses to read it. The
+instinct on any dedup task is to make the shared template the single source and thin the leaves —
+that reads better and is what "de-duplicate" normally means. Here it would move content *out* of a
+guaranteed channel *into* an optional one, which is the "already covered must mean
+reaches-the-context" error with extra steps.
+
+Before consolidating anything, ask which file is **structurally guaranteed** to be in the reader's
+context and which merely *ought* to be. Do not go hunting for a read-rate to justify a bolder cut —
+guaranteed-vs-not is a structural fact; a measured rate is not the same claim.
+
+Corollary that nearly bit: the smallest leaf may be *missing* the shared section entirely.
+`common-infrastructure.md` had zero Communication Protocol and zero Complexity content, so the first
+deletion from the template would have silently stripped both from the most-used agent type.
+
+## A comparison whose two sides came from different readers (T066, 2026-08-09)
+
+T066's AC7 test passed **while the files were still untouched**: the baseline came from `git show`
+(bytes) and the current value from `read_text` (characters), and these guides are dense with `—` and
+`≤`, so bytes ran ~4% above chars and manufactured a saving out of UTF-8.
+
+New shape in the vacuous-assertion family, and the tell is specific: **a comparison whose two sides
+were produced by different readers** — `read_bytes` vs `read_text`, `git show` vs working tree, one
+side stripped and the other not. Normalise both sides through the same function before comparing.
+
+## `cmd | tail && git commit` commits a red suite (T066, 2026-08-09)
+
+`pytest -q 2>&1 | tail -2 && git commit ...` committed a failing suite, because `tail` always exits 0
+and `&&` gates on the **last command of the pipeline**, not on `pytest`. This repo chains commits
+behind `&&` routinely, so the footgun is live. Redirect to a file and check `$?`, or use
+`set -o pipefail`. Never read a pipeline's success from the tail of its output.

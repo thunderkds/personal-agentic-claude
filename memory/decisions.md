@@ -1181,3 +1181,30 @@ never enforced (89% violate it; a hard gate would have turned the suite red on a
 
 Scope held: content compaction stayed out (the `MEMORY.md` diff is header rules only, zero index
 entries touched, still 146 entries). The guide predicted 8 shipping locations; the sweep found **11**.
+
+## T066 — de-duplicate the startup read set, toward the guaranteed channel (2026-08-09)
+
+The row required Stage 2 to separate genuine duplication *inside one context* from deliberate
+redundancy *across different contexts* — the distinction T041 exists to protect. Two structural facts
+settled it, and they invert the obvious fix:
+
+1. **`CLAUDE.md` never reaches a sub-agent.** It is absent from the agent startup read list, so its
+   3,819 tok are Supervisor-context only and its overlap with the agent guides is cross-context
+   redundancy that must not be collapsed. Left byte-identical, test-enforced.
+2. **The role guide is guaranteed; the template is not.** The harness auto-loads
+   `.claude/agents/<name>.md` as the system prompt, while `general-agent-template.md` arrives only if
+   the agent opens it. So consolidation goes *into* the role guides — moving content out of a
+   guaranteed channel into an optional one is "already covered must mean reaches-the-context" with
+   extra steps.
+
+`common-infrastructure.md` had **zero** Communication Protocol and **zero** Complexity content,
+relying entirely on the template, so both were folded in before anything was deleted. The template
+went 7,246 → 3,762 chars, keeping Base Rules, the Karpathy table, the ladder, Output Requirements and
+the Staleness Guard.
+
+Measured per-role reduction: c-infra −4.7%, backend −15.4%, frontend −15.6%, qa −17.0%. The near-null
+c-infra figure was reported rather than averaged away — it is the one role that was *missing* two
+sections, so it buys new content out of the same saving the others bank.
+
+Left open as **T069**: the Karpathy table and the ladder live only in the template, before and after,
+so T041's fix depends on a read that is not guaranteed.
