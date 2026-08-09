@@ -14,9 +14,9 @@ itself contains the word "pass") satisfy the pre-T068 regex
 NOTHING at all already clears the row check.
 
 The AC6 corpus survey found six real shapes in the repo. Any fix must
-classify all of them correctly, in particular T050's real, legitimately
-filled `☑ pass / ☐ N/A` row — the obvious "reject any Result cell containing
-☐" rule would wrongly reject it.
+classify all of them correctly, in particular the legitimately filled
+`☑ pass / ☐ N/A` shape (real occurrence: tasks/TASK_GUIDE_T063.md) — the
+obvious "reject any Result cell containing ☐" rule would wrongly reject it.
 
 Run with: python3 -m pytest .claude/hooks/tests/test_verify_row_fill_detection.py -v
 """
@@ -84,9 +84,19 @@ FILLED_BARE_WORD_ROW = "| verify | pass | ran suite, all green — pass |"
 
 FILLED_EMOJI_ROW = "| verify | ✅ pass | end to end run — pass |"
 
-# T050's real row (tasks/TASK_GUIDE_T050.md) — legitimately filled, still
-# contains an unchecked glyph, just not attached to "pass".
-T050_TRAP_ROW = (
+# The `☑ pass / ☐ N/A` shape — legitimately filled, still contains an
+# unchecked glyph, just not attached to "pass". This is the shape the obvious
+# "reject any ☐" rule would wrongly reject.
+#
+# Provenance, corrected at Stage 4: the guide's AC table attributed this shape
+# to T050. It is wrong — the real occurrence is in tasks/TASK_GUIDE_T063.md,
+# and T050's row is `☑ pass` with no unchecked glyph at all. The row below is
+# therefore SYNTHETIC: it takes the real T063 Result cell and pairs it with a
+# Notes cell containing "pass", because both real rows omit "pass" from Notes
+# and are (correctly, per T026) rejected by the old and new patterns alike.
+# Recorded rather than quietly relabelled — "a fixture can claim provenance it
+# does not have" (T061) is exactly this failure.
+TRAP_SHAPE_ROW = (
     "| verify | ☑ pass / ☐ N/A | Supervisor read the diff (matches Files-to-Change "
     "exactly); default no-arg behavior byte-identical to pre-task (AC1) — pass |"
 )
@@ -115,15 +125,15 @@ def test_ac3_all_four_real_filled_shapes_are_filled():
         FILLED_CHECKED_BOX_ROW,
         FILLED_BARE_WORD_ROW,
         FILLED_EMOJI_ROW,
-        T050_TRAP_ROW,
+        TRAP_SHAPE_ROW,
     ):
         assert row_is_filled(row) is True, row
 
 
-def test_ac3_trap_t050_shape_specifically():
-    """The obvious "reject any ☐" rule fails this: T050 IS filled and still
-    contains ☐ (in `☐ N/A`, not attached to "pass")."""
-    assert row_is_filled(T050_TRAP_ROW) is True
+def test_ac3_trap_checked_pass_with_unchecked_na_shape():
+    """The obvious "reject any ☐" rule fails this shape: it IS filled and
+    still contains ☐ (in `☐ N/A`, not attached to "pass")."""
+    assert row_is_filled(TRAP_SHAPE_ROW) is True
 
 
 def test_ac4_pass_in_result_only_not_notes_stays_rejected():
