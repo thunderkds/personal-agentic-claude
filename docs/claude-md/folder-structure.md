@@ -41,7 +41,7 @@ The project root **must** contain these folders:
    *(Each pack contains agents/ + skills/ + PACK.md. Installed via `setup.sh --pack=<name>`.)*
 
 6. `memory/` folder containing:
-   - memory/MEMORY.md (hot-tier index — ≤200 lines, injected into every sub-agent spawn prompt)
+   - memory/MEMORY.md (hot-tier index — ≤52,000 characters, referenced by path in every sub-agent spawn prompt and read by the agent)
    - memory/decisions.md (cold tier — architectural/infra decisions)
    - memory/glossary.md (cold tier — domain terms & domain models)
    - memory/learnings.md (cold tier — requirement clarifications, patterns, gotchas)

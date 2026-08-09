@@ -345,8 +345,9 @@ scaffold_project() {
     cat > ./memory/MEMORY.md <<'EOF'
 # MEMORY.md — Hot-Tier Memory Index
 
-> **Rules**: Supervisor-only writes. Max 200 lines. One-line summaries + links to cold files.
-> Injected in full into every sub-agent spawn prompt.
+> **Rules**: Supervisor-only writes. Max 52,000 characters — a ratchet: `/compact-memory` may lower
+> it, never raise it to fit growth. One-line summaries + links to cold files.
+> Passed to every sub-agent as a path to read; the contents are not pasted into the spawn prompt.
 > Updated by the Supervisor — prompted by the PostToolUse hook on `git push` / `git merge` (diff-driven pass), or via the `/compact-memory` skill.
 
 ---

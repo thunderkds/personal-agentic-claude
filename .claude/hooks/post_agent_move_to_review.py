@@ -9,9 +9,10 @@ what follows is why, so the next reader does not "fix" it back.
 Two defects made the automatic move actively harmful (T044):
 
 1. **Wrong task.** The Task ID came from `re.findall(r"\\bT(\\d{3})\\b", prompt)`
-   over the *whole* spawn prompt. Stage 3 mandates pasting `memory/MEMORY.md`
-   verbatim into every spawn prompt, and that file is full of prose task IDs, so
-   one spawn moved every mentioned task — observed emptying `### In Progress`
+   over the *whole* spawn prompt. Stage 3 at the time mandated pasting
+   `memory/MEMORY.md` verbatim into every spawn prompt (T065 replaced that with
+   a path reference), and that file is full of prose task IDs, so one spawn
+   moved every mentioned task — observed emptying `### In Progress`
    entirely and deleting three unrelated step counters. Attribution now comes
    from `lib/task_context.py:resolve_task_id` (structural signals only, T043).
 

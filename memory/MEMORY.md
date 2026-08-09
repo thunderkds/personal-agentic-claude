@@ -1,7 +1,8 @@
 # MEMORY.md — Hot-Tier Memory Index
 
-> **Rules**: Supervisor-only writes. Max 200 lines. One-line summaries + links to cold files.
-> Injected in full into every sub-agent spawn prompt.
+> **Rules**: Supervisor-only writes. Max 52,000 characters — a ratchet: `/compact-memory` may lower
+> it, never raise it to fit growth. One-line summaries + links to cold files.
+> Passed to every sub-agent as a path to read; the contents are not pasted into the spawn prompt.
 > Updated by the Supervisor — prompted by the PostToolUse hook on `git push` / `git merge` (diff-driven pass), or via the `/compact-memory` skill.
 
 > **token-audit RETIRED 2026-08-05 (T030 / DDR-0002)**: `/cost` ground truth was never captured in
@@ -22,7 +23,9 @@
 
 ## Index
 
-<!-- Format: - [Title](cold-file.md#section) — one-line summary (≤150 chars) -->
+<!-- Format: - [Title](cold-file.md#section) — one-line summary.
+     Target ≤150 chars/entry: an ASPIRATION, not a gate — 130 of 146 entries exceed it
+     (mean 326, max 796). Reported by the size test, never enforced; /compact-memory's job. -->
 
 ### Decisions
 - [CLAUDE_LEGACY.md sync policy](decisions.md) — mirror new skills + session-startup gates + Hard-Stop Gates from CLAUDE.md into CLAUDE_LEGACY.md on each addition; bump version
