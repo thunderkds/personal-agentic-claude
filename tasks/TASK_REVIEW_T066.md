@@ -20,6 +20,10 @@
 | verify | ☑ pass | Supervisor-run at Stage 5, independently of the implementer. AC7 re-measured from the real files in characters (the implementer's first AC7 attempt was vacuous — a `git show` byte baseline against a `read_text` char current, which manufactured a ~4% "saving" while the files were untouched): c-infra 10,167→9,687 (−4.7%), backend 13,928→11,786 (−15.4%), frontend 13,581→11,458 (−15.6%), qa 12,748→10,583 (−17.0%) — reproduces the implementer's table exactly. AC1 confirmed by grep: all four shared sections now present in all four role guides. AC2 confirmed: `common-infrastructure.md` gained both `## Complexity & escalation` and `## Communication Protocol`, which it had zero of. AC5/AC10 confirmed: `git diff` for `CLAUDE.md` and `MANIFEST` is empty. Real pytest exit code checked **without a pipe** (`exit=0`, `373 passed`) after the implementer flagged that `pytest \| tail && git commit` had once committed a red suite. Feature confirmed working — **pass** |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Reviewed manually (labelled manual — no `code-review` skill available to a sub-agent): the 5 `.claude/agents/*.md` files, `.claude/skills/craft-agent/SKILL.md`, and the two new files. Blast radius checked by grepping the whole suite for the vacated paths/strings before deleting — this surfaced `test_memory_channel_and_budget.py:199`, see the escalation note below. Not reviewed: everything outside `.claude/agents/`, since AC5/AC10 pin `CLAUDE.md` and `MANIFEST` byte-identical and the tests enforce it |
 | Full smoke suite still green (no regression) | ☑ pass | `373 passed` (338 pre-existing + 35 new), `smoke-install.sh: PASS` |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | Pure-documentation task — the only changed files are Markdown agent guides, a skill file, a pytest module and a measurement script. No UI component exists in this repo |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | As above — no rendered surface is produced or changed |
+| **UI: Responsiveness at target viewports** | ☑ N/A | As above — no viewport is involved |
+
 ### security-review (Medium risk — mandatory)
 
 **PASS, 0 actionable.** Run by the **Supervisor** at Stage 4: `Skill()` is not in a sub-agent's
@@ -37,10 +41,6 @@ Surface assessed against the real diff: the only non-documentation additions are
   self-reported.
 
 The five agent guides and `craft-agent/SKILL.md` are instruction text with no executable surface.
-
-| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | Pure-documentation task — the only changed files are Markdown agent guides, a skill file, a pytest module and a measurement script. No UI component exists in this repo |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | As above — no rendered surface is produced or changed |
-| **UI: Responsiveness at target viewports** | ☑ N/A | As above — no viewport is involved |
 
 ---
 
