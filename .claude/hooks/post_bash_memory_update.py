@@ -26,7 +26,7 @@ Run the diff-driven memory-update pass now:
 2. Grep memory/decisions.md, memory/glossary.md, memory/learnings.md for any reference to the changed files
 3. Update matched entries in place (fix stale facts, expand with new context)
 4. Append any new decisions or learnings from this session to the appropriate cold file
-5. Summarize new/changed entries as one-liners in memory/MEMORY.md (keep hot tier ≤200 lines total)
+5. Summarize new/changed entries as one-liners in memory/MEMORY.md (keep hot tier ≤52,000 characters total)
 
 Routing: architectural/infra decisions → decisions.md | biz terms/domain models → glossary.md | patterns/gotchas/spec clarifications → learnings.md
 

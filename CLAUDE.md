@@ -189,7 +189,7 @@ See [`docs/claude-md/pipeline-stages.md`](docs/claude-md/pipeline-stages.md) for
 ## Memory Write Protocol
 See [`docs/claude-md/memory-write-protocol.md`](docs/claude-md/memory-write-protocol.md) for full detail.
 
-Supervisor-only writes. Hot tier `memory/MEMORY.md` (≤200 lines, injected verbatim into every spawn); cold tier routes to `memory/decisions.md` / `memory/glossary.md` / `memory/learnings.md`. Update triggers: `git push`/`git merge` PostToolUse hook (diff-driven pass), `/compact-memory`, or the `learn` skill.
+Supervisor-only writes. Hot tier `memory/MEMORY.md` (≤52,000 characters — a ratchet, lowerable by `/compact-memory` and never raised; passed to every spawn as a **path the agent reads**, not pasted); cold tier routes to `memory/decisions.md` / `memory/glossary.md` / `memory/learnings.md`. Update triggers: `git push`/`git merge` PostToolUse hook (diff-driven pass), `/compact-memory`, or the `learn` skill.
 
 ---
 

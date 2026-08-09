@@ -8,7 +8,7 @@ description: Base template inherited by all sub-agents. Contains mandatory rules
 Before writing a single line of code, execute in this order:
 
 1. Read `PROJECT_SPEC.md` — project identity, architecture, constraints, known risks
-2. Load the hot-tier memory index — the Supervisor pastes `memory/MEMORY.md` into your spawn prompt; do not re-read it if present there (read `memory/MEMORY.md` only as a fallback). Follow its links into cold files only when relevant to your task
+2. Load the hot-tier memory index — **read `memory/MEMORY.md` yourself**. The spawn prompt gives you its path, not its contents, so nothing loads it for you. Follow its links into cold files only when relevant to your task
 3. Read your assigned `tasks/TASK_GUIDE_Txxx.md` — task scope, acceptance criteria, files to touch / not touch
 4. Read the relevant guide in `.claude/agents/` for your role — role-specific constraints and patterns
 5. **If your task is C2/C3 or touches multiple files**: read `memory/codebase-map.md` (if it exists) for directory layout, entry points, and blast-radius hotspots — do not re-explore the repo if this file answers your structural question

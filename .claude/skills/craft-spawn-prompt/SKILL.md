@@ -30,7 +30,7 @@ Both shapes reuse the same checklist proven in `bugfix` Step 4; only element 2 a
 | 1 | Guide pointer | `tasks/TASK_GUIDE_Txxx.md` path | same |
 | 2 | Orienting content | Guide's Restated Intent / Requirement section, verbatim | Confirmed Mental Model section, verbatim |
 | 3 | First-action skill invocation | Only if the task explicitly requires one (e.g. `migration-safety` for schema work) — otherwise omit | `Skill({ skill: "diagnose" })` as the first action — always present |
-| 4 | Memory injection | Full contents of `memory/MEMORY.md`, verbatim | same |
+| 4 | Memory reference | The **path** `memory/MEMORY.md`, with an instruction to read it in full. Do **not** paste its contents | same |
 | 5 | Agent-guide pointer | `.claude/agents/<role>.md` from the guide's `**Agent guide**` field | same |
 | 6 | Trace-attribution instruction | The active-task state-file line below, verbatim | same |
 | 7 | Demonstration BEFORE-capture instruction | The BEFORE-capture line below, verbatim | same — for a bugfix guide, this is naturally satisfied by the Phase 1 repro loop the `diagnose` first action already builds; the instruction still restates the rule so the agent doesn't skip it under time pressure |
@@ -55,7 +55,7 @@ Since T064 the block lives in the sibling `tasks/TASK_REVIEW_Txxx.md`, not in th
 Read `extract_structural_task_ids()` directly from `.claude/hooks/pre_agent_validate_guide.py` — do not re-derive or approximate the pattern, it must stay byte-for-byte in sync with what the hook enforces. Run it against the assembled prompt text:
 - For every extracted task ID, confirm `tasks/TASK_GUIDE_T<id>.md` exists on disk.
 - If any extracted ID has no matching file, **flag** it in the output as "would be rejected by the spawn hook" — do not alter the prompt to work around it.
-- Prose-only `Txxx` mentions (e.g. inside the pasted `MEMORY.md` text) that don't match either structural marker (a `TASK_GUIDE_Txxx.md` reference, or a `Task ID:` declaration line) are correctly ignored by the hook and must not be flagged here.
+- Prose-only `Txxx` mentions (e.g. in an orienting-content excerpt) that don't match either structural marker (a `TASK_GUIDE_Txxx.md` reference, or a `Task ID:` declaration line) are correctly ignored by the hook and must not be flagged here.
 
 #### 5. Recommend spawn model
 Map the guide's `**Complexity Level**` to a model, per the table already in `CLAUDE.md` Stage 3 / `general-agent-template.md`: C0→haiku, C1→sonnet, C2→sonnet/opus, C3→opus.

@@ -152,7 +152,7 @@ For every task moved to In Progress:
 - The TASK_GUIDE_Txxx.md already exists in tasks/ — no need to regenerate it.
 - Invoke `Skill({ skill: "craft-spawn-prompt" })` with the task's guide path first — it assembles the spawn prompt, pre-flight-checks it against the spawn hook, and recommends the model per the task's **Complexity** (C0→haiku, C1→sonnet, C2→sonnet/opus, C3→opus). Then issue the `Agent()` call in that worktree using its output.
 - The sub-agent must read both its TASK_GUIDE_Txxx.md (from tasks/) and the relevant agent guide from .claude/agents/.
-- **Memory injection**: Always paste the full contents of `memory/MEMORY.md` verbatim into every sub-agent spawn prompt, after the task pointer. This is the hot-tier memory index (≤200 lines) — the agent must not re-read it; it is already in context.
+- **Memory injection**: Pass the **path** `memory/MEMORY.md` in every sub-agent spawn prompt, after the task pointer, with an instruction to read it in full. Do **not** paste its contents. This is the hot-tier memory index (≤52,000 characters) — **the agent must read it itself** as a mandatory startup step, so the cost is paid once, by the agents that need it, rather than on every spawn.
 
 Run the app during implementation to catch regressions early:
 ```
@@ -220,7 +220,7 @@ After all Stage 4 reviews pass:
    - Grep `memory/decisions.md`, `memory/glossary.md`, `memory/learnings.md` for references to those files
    - Update matched entries in place (fix stale facts, expand with new context)
    - Append any new decisions or learnings from this session to the appropriate cold file
-   - Summarize new/changed entries as one-liners in `memory/MEMORY.md` (keep hot tier ≤200 lines)
+   - Summarize new/changed entries as one-liners in `memory/MEMORY.md` (keep hot tier ≤52,000 characters)
 
 5. Merge the worktree and close the task on PROJECT_KANBAN.md.
 
