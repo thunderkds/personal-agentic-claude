@@ -1093,3 +1093,37 @@ audit.
 
 **Files**: scripts/memory_usage_report.py, docs/memory-usage-finding-2026-08-07.md,
 .claude/hooks/tests/test_memory_usage_report.py
+
+## T064 — split reviewer-filled sections out of the implementer's guide (2026-08-09)
+
+Registered as "TASK_GUIDE format refactor — prose to challenge-response cards". **The registered
+direction was rejected at Stage 2 by user ruling, not deferred**, and the scope replaced before any
+code was written.
+
+What forced the change. T063 had established that the guide is not injected verbatim — the agent
+opens it with `Read` — so its bytes are `cache_read`, re-paid on every agent turn. The real T061
+telemetry this task was gated on (T067 83,802 total / T063 111,056 / bare-`echo` probe 15,727) shows
+`cache_creation` flat at 265–423 tokens regardless of guide size, so a 6,800-token guide never
+appears there. Then measuring the two most recent guides *by section* showed the largest block is not
+reasoning prose but reviewer-filled scaffolding the implementer never uses: `## Demonstration`
+(5,443 ch on T060, 4,633 on T067) plus the `### Evidence` table (~3,000 ch) — about 35% of guide
+bytes, filled at Stage 4/5.
+
+Design: both sections move to a sibling `tasks/TASK_REVIEW_Txxx.md`; the guide keeps the heading with
+a `> **Moved.**` pointer. One new resolver, `.claude/hooks/lib/guide_sections.py`, serves all three
+consumers (`pre_bash_block_unsafe_merge.py`, `pre_agent_validate_guide.py`,
+`delivery-report/render.py`) — guide first, review file second, inline always wins.
+
+**Fallback, not migration** is the load-bearing property: all 20 existing guides keep both sections
+inline and are asserted byte-identical, so no historical task changes behaviour. Chosen deliberately
+because this hook family has five recorded parsing defects and a big-bang migration would move all
+20 onto the new path at once.
+
+This also *dissolved* the risk the row was registered with (that stripping prose would delete the
+recorded risks, rejected directions and prior art that made T058 and T060 land correctly), rather
+than mitigating it — no prose moves at all. AC11 pins the card format as a file-wide negative so the
+rejected direction cannot re-enter through the implementation.
+
+Measured saving, reported honestly: T060 33.6%, T061 32.3%, T063 31.4%, T067 30.5%, **T058 16.3%**.
+Recorded as "~31–34% typical, not a floor". `MANIFEST` deliberately unchanged (bare `templates`
+directory entry, `cp -r`, T054 precedent). 50 new tests, 317 passed.

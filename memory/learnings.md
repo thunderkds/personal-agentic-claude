@@ -772,3 +772,46 @@ memory read lands in `_untagged` (30 of them) rather than under its task.
 When a metric derived from instrumentation gives a striking answer, first ask which of *your own*
 process steps it could be measuring instead. Third instrument-validity failure in this repo after
 DDR-0001 and DDR-0002.
+
+## A hook that blocks via stdout JSON fails OPEN when it raises (T064, 2026-08-09)
+
+`pre_bash_block_unsafe_merge.py` signals a block by printing a `decision: block` object on **stdout**
+and exiting **0**. So an uncaught exception — an `ImportError` at module level, say — exits 1 with
+*empty* stdout, which the harness reads as a non-blocking hook error, and the guarded command
+**proceeds**. T064 shipped the new resolver as an unguarded import carrying a comment stating the
+absence of a `try/except` was what made the gate fail closed. It made it fail open, in the one place
+the task's own AC7 designated as must-fail-closed. Reproduced directly: hide the lib file, feed the
+hook a merge payload → `exit=1`, `stdout=[]`.
+
+The general rule: **for a hook, "fail closed" is a thing you must actively emit, never something you
+get by declining to catch.** If the block channel is stdout, an exception silences the block. Catch
+it and print the block explicitly.
+
+Also note the failure exists **only at module-import time**, so an in-process `import` of the hook
+cannot exercise it — the test has to run the hook as a subprocess. Same family as "patching a channel
+in a test doesn't prove the channel works". 4th distinct way this gate has failed to gate.
+
+## A test can pin a section's *location*, and a move-shaped task cannot pass it (T064, 2026-08-09)
+
+Two pre-existing tests asserted the `verify` Evidence row was present in
+`templates/TASK_GUIDE_template.md` and in `bugfix/SKILL.md` — the exact files T064's ACs vacate. No
+amount of correct implementation satisfies both the AC and the test; only a test edit resolves it.
+This is **distinct** from the recorded "when a test pins prose, fix the prose around it, not the
+test": there is no prose to fix, only a file path.
+
+Resolution that keeps the coverage: repoint the assertion to the new location with the asserted
+string **byte-identical**, and add a negative assertion that the old location no longer carries it,
+so the move cannot silently revert. Do not delete the test.
+
+**Stage 2 pre-flight for any move-shaped task**: grep the suite for the file paths the task will
+vacate, and list the hits in the guide as expected escalations. T064's guide did not, so the agent
+found them at implementation time — it escalated correctly rather than editing them green, which is
+the behaviour to keep asking for.
+
+## A percentage claim needs more than one sample (T064, 2026-08-09)
+
+T064's AC15 asked for "≥25% smaller for a guide of T060's shape". Measured across five real guides,
+four cleared 25% (30.5–33.6%) and one came in at **16.3%** on an unusually large `## Approach`. A
+single-guide measurement would have supported a stronger claim than the data does. State the range
+and name the outlier; a control (one-line sections) measuring −0.4% is what shows the metric
+discriminates at all.
