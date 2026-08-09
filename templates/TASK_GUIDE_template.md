@@ -79,7 +79,8 @@ If docs/legacy/ exists (legacy mode): also read `docs/legacy/risk-hotspots.md` a
 ## Evaluation & Acceptance (How we know the agent worked correctly)
 
 > Fill **Success Criteria** and **Verification Command** at Stage 2 (before spawning the agent).
-> The reviewer fills **Evidence** at Stage 4/5. A task is **not done** until every row has evidence.
+> The reviewer fills **Evidence** at Stage 4/5 in `tasks/TASK_REVIEW_T[NNN].md`, copied from
+> `templates/TASK_REVIEW_template.md`. A task is **not done** until every row has evidence.
 > Rule: the implementing agent must NOT be the sole author of its own acceptance test — the
 > Supervisor writes or signs off on the oracle first, so code and test can't be wrong together.
 
@@ -99,36 +100,13 @@ If docs/legacy/ exists (legacy mode): also read `docs/legacy/risk-hotspots.md` a
 
 ### Evidence (filled by reviewer at Stage 4/5)
 
-| Check | Result | Notes / output snippet |
-|-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+> **Moved.** Filled by the reviewer at Stage 4/5 in `tasks/TASK_REVIEW_T[NNN].md`.
 
 ---
 
 ## Demonstration
 
-> Anchors what this task delivered to an observable before/after pair. BEFORE has no `N/A` path:
-> if the task changes executable code, BEFORE is a pasted, timestamped terminal capture taken
-> **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
-> text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
-
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
-
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
-
-**DELTA**: [one sentence — what a user can now do that they could not before]
-
-**WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
-implementing agent alone]
+> **Moved.** See `tasks/TASK_REVIEW_T[NNN].md`.
 
 ---
 
@@ -208,7 +186,7 @@ implementing agent alone]
 - [ ] Self-review: `Skill({ skill: "code-review" })` run
 - [ ] Security review: `Skill({ skill: "security-review" })` run (if Medium/High risk)
 - [ ] Lint passes
-- [ ] Tests written AND pass — output pasted into Evidence table (Hard-Stop Gate 5)
+- [ ] Tests written AND pass — output pasted into `tasks/TASK_REVIEW_T[NNN].md`'s Evidence table (Hard-Stop Gate 5)
 - [ ] `Skill({ skill: "verify" })` run — feature confirmed working in running app
 - [ ] `docs/legacy/` updated (if new insights, legacy mode only)
 - [ ] `memory/MEMORY.md` updated (if new patterns or feedback learned)

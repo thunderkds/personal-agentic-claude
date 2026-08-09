@@ -15,9 +15,18 @@ import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+HOOKS_DIR = os.path.dirname(os.path.abspath(__file__))
 KANBAN = os.path.join(ROOT, "PROJECT_KANBAN.md")
 TASKS_DIR = os.path.join(ROOT, "tasks")
 TRACE_DIR = os.path.join(ROOT, "memory", "event-trace")
+
+# The Evidence table may live in the guide or in the sibling TASK_REVIEW file
+# (T064). Imported off __file__, like post_tool_trace.py does for task_context.
+# NOT wrapped in a fail-open except: this gate must fail **closed**. If the
+# resolver cannot be imported, `read_guide_section` raises here rather than
+# quietly resolving every task to "verified".
+sys.path.insert(0, os.path.join(HOOKS_DIR, "lib"))
+from guide_sections import read_guide_section  # noqa: E402
 
 BLOCKED_PATTERNS = [
     r"\bgit\s+push\b",
@@ -181,6 +190,29 @@ def trace_shows_verification(task_id):
         return False
     return False
 
+# The T026 two-bug fix, byte-for-byte: the Check cell must be the literal word
+# `verify` immediately before its `|`, AND the word "pass" must appear in the
+# *Notes* column, not only the Result column. T064 changed **where** this text
+# is read from; it must never change **what** is matched.
+VERIFY_ROW_PATTERN = re.compile(r"verify\s*\|[^|\n]+\|[^|\n]*pass", re.IGNORECASE)
+
+
+def has_filled_verify_row(task_id, tasks_dir=None):
+    """True only when the task's Evidence table — wherever it resolves, guide
+    first then `TASK_REVIEW_Txxx.md` — carries a filled `verify` row.
+
+    **Fails closed.** A missing guide, a missing review file, an unreadable
+    one, an absent Evidence section, or an unfilled row all return False. This
+    is the one place in T064 where a wrong answer is silent and repo-wide: if
+    "review file missing" ever became anything other than "no evidence", the
+    merge gate would stop gating on every task at once.
+    """
+    section = read_guide_section(task_id, "Evidence", tasks_dir or TASKS_DIR)
+    if not section:
+        return False
+    return bool(VERIFY_ROW_PATTERN.search(section))
+
+
 def main():
     try:
         event = json.load(sys.stdin)
@@ -232,21 +264,17 @@ def main():
         # Check each for verify evidence in their task guide
         unverified = []
         for tid in ready_review:
-            guide_path = os.path.join(TASKS_DIR, f"TASK_GUIDE_{tid}.md")
-            try:
-                with open(guide_path) as f:
-                    guide = f.read()
-                # Look for a filled verify row in the Evidence table AND a
-                # matching real tool call in the event trace — the text claim
-                # alone is not trusted (the model can lie about success).
-                has_evidence_row = re.search(r"verify\s*\|[^|\n]+\|[^|\n]*pass", guide, re.IGNORECASE)
-                has_trace = trace_shows_verification(tid)
-                if not has_evidence_row or not has_trace:
-                    unverified.append(tid if has_evidence_row else f"{tid} (no evidence row)")
-                    if has_evidence_row and not has_trace:
-                        unverified[-1] = f"{tid} (evidence row present but no verified tool call in memory/event-trace/{tid}.jsonl)"
-            except FileNotFoundError:
-                unverified.append(tid)
+            # Look for a filled verify row in the Evidence table — in the guide,
+            # or in the sibling TASK_REVIEW file it may have moved to (T064) —
+            # AND a matching real tool call in the event trace. The text claim
+            # alone is not trusted (the model can lie about success). Every
+            # absence resolves to False, so this stays fail-closed.
+            has_evidence_row = has_filled_verify_row(tid)
+            has_trace = trace_shows_verification(tid)
+            if not has_evidence_row or not has_trace:
+                unverified.append(tid if has_evidence_row else f"{tid} (no evidence row)")
+                if has_evidence_row and not has_trace:
+                    unverified[-1] = f"{tid} (evidence row present but no verified tool call in memory/event-trace/{tid}.jsonl)"
 
         if unverified:
             blockers.append(
