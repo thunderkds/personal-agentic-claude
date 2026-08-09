@@ -225,9 +225,26 @@ def test_ac7_gate_finds_verify_row_in_real_skeleton_shaped_guide():
     with open(skill_path) as f:
         skill_text = f.read()
 
+    # T064 split the reviewer-filled Evidence table out of the bugfix skeleton
+    # into the sibling review file, so the skeleton now points at it rather than
+    # carrying the table inline. The property this test exists to protect —
+    # that the bugfix flavor produces a verify row the merge gate can actually
+    # see (T055) — is unchanged; it is now carried by the review template the
+    # skeleton instantiates, and is still asserted byte-for-byte below.
+    assert "tasks/TASK_REVIEW_Txxx.md" in skill_text, (
+        "bugfix SKILL.md skeleton no longer points at the sibling review file"
+    )
+
+    review_template = os.path.join(
+        os.path.dirname(os.path.dirname(HOOKS_DIR)),
+        "templates", "TASK_REVIEW_template.md",
+    )
+    with open(review_template) as f:
+        skill_text = f.read()
+
     assert "| verify | ☐ pass / ☐ fail / ☐ N/A |" in skill_text, (
-        "bugfix SKILL.md skeleton no longer contains a verify row in the gate's "
-        "expected shape"
+        "the bugfix flavor's review template no longer contains a verify row "
+        "in the gate's expected shape"
     )
 
     # Fill the skeleton's checkbox cells the way a reviewer would, then run the

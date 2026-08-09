@@ -28,6 +28,13 @@ from datetime import datetime, timezone
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 TEMPLATE_PATH = os.path.join(ROOT, "templates", "delivery_report_template.html")
+TASKS_DIR = os.path.join(ROOT, "tasks")
+
+# Both sections may live in the guide or in the sibling TASK_REVIEW file
+# (T064) — one resolver, shared with the two hooks, so this file does not
+# become a third independent copy of the same fallback.
+sys.path.insert(0, os.path.join(ROOT, ".claude", "hooks", "lib"))
+from guide_sections import read_review_text, resolve_section  # noqa: E402
 
 DEMO_SECTION_RE = re.compile(r"^##\s*Demonstration\s*$(.*?)(?=^##\s|\Z)", re.M | re.S)
 FIELD_RE = re.compile(
@@ -43,15 +50,19 @@ class NoDemonstrationBlock(Exception):
     """Raised when a guide predates T053 and has no `## Demonstration` section."""
 
 
-def parse_demonstration(guide_text):
-    """Parse BEFORE/AFTER/DELTA from the Demonstration block. Raises
-    NoDemonstrationBlock if the section is entirely absent (edge case: guide
-    predates T053) so callers can report clearly instead of crashing."""
-    m = DEMO_SECTION_RE.search(guide_text)
-    if not m:
-        raise NoDemonstrationBlock("no '## Demonstration' section found in guide")
+def parse_demonstration(guide_text, review_text=None):
+    """Parse BEFORE/AFTER/DELTA from the Demonstration block — resolved from
+    the guide first, then the sibling `TASK_REVIEW_Txxx.md` (T064).
 
-    block = m.group(1)
+    Raises NoDemonstrationBlock when *neither* source carries the block, so the
+    pre-T053 edge case is still reported clearly rather than swallowed by the
+    new fallback."""
+    block = resolve_section(guide_text, review_text, "Demonstration")
+    if block is None:
+        raise NoDemonstrationBlock(
+            "no '## Demonstration' section found in the guide or its TASK_REVIEW sibling"
+        )
+
     fields = {}
     for fm in FIELD_RE.finditer(block):
         fields[fm.group(1)] = fm.group(2).strip()
@@ -61,7 +72,10 @@ def parse_demonstration(guide_text):
     # than containing it — resolve the reference from the Evidence table's
     # "Repro loop" row instead of printing the pointer text raw.
     if re.search(r"repro loop", before, re.I):
-        row = REPRO_ROW_RE.search(guide_text)
+        # The row lives wherever the Evidence table resolved — the pointer must
+        # follow the table when it moves to the review file.
+        evidence = resolve_section(guide_text, review_text, "Evidence")
+        row = REPRO_ROW_RE.search(evidence if evidence is not None else guide_text)
         if row and row.group(1).strip():
             before = f"[resolved from Evidence 'Repro loop' row] {row.group(1).strip()}"
 
@@ -86,16 +100,20 @@ EVIDENCE_ROW_RE = re.compile(
 )
 
 
-def parse_evidence_table(guide_text):
+def parse_evidence_table(guide_text, review_text=None):
     """Return (rows) where each row is {check, result, notes, status} and
     status is one of 'filled' | 'blank' | 'n_a'. Generic across both flavors
     and both row counts (9 implementation / 12 bugfix) — counts whatever rows
-    are present rather than assuming a fixed total."""
-    m = re.search(r"^###\s*Evidence.*?$(.*?)(?=^##|\Z)", guide_text, re.M | re.S)
+    are present rather than assuming a fixed total.
+
+    Resolved guide-first, then the sibling `TASK_REVIEW_Txxx.md` (T064). The
+    count comes from **wherever the table resolved** — the two sources are
+    never summed, or a split pair whose guide still had a stale table would
+    report a total spanning a file boundary."""
+    section = resolve_section(guide_text, review_text, "Evidence")
     rows = []
-    if not m:
+    if section is None:
         return rows
-    section = m.group(1)
     for rm in EVIDENCE_ROW_RE.finditer(section):
         check = rm.group("check").strip()
         result = rm.group("result").strip()
@@ -163,9 +181,10 @@ def render(template_text, slots):
     return out
 
 
-def build_slots(task_id, branch, guide_text, root=ROOT):
+def build_slots(task_id, branch, guide_text, root=ROOT, tasks_dir=None):
+    review_text = read_review_text(task_id, tasks_dir or TASKS_DIR)
     try:
-        demo = parse_demonstration(guide_text)
+        demo = parse_demonstration(guide_text, review_text)
         no_demo = False
     except NoDemonstrationBlock:
         demo = {
@@ -175,7 +194,7 @@ def build_slots(task_id, branch, guide_text, root=ROOT):
         }
         no_demo = True
 
-    evidence_rows = parse_evidence_table(guide_text)
+    evidence_rows = parse_evidence_table(guide_text, review_text)
     total = len(evidence_rows)
     filled = sum(1 for r in evidence_rows if r["status"] == "filled")
     n_a = sum(1 for r in evidence_rows if r["status"] == "n_a")
@@ -222,7 +241,12 @@ def main():
     with open(TEMPLATE_PATH) as f:
         template_text = f.read()
 
-    slots = build_slots(task_id, branch, guide_text)
+    # The review sibling lives next to the guide, wherever the caller pointed
+    # us — not necessarily this checkout's tasks/.
+    slots = build_slots(
+        task_id, branch, guide_text,
+        tasks_dir=os.path.dirname(os.path.abspath(guide_path)) or TASKS_DIR,
+    )
     html = render(template_text, slots)
 
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")

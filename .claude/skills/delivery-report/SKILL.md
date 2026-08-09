@@ -38,6 +38,11 @@ to stderr. The script already writes the file — you do not need to re-save it.
 
 #### 2. What the renderer does (for context, not to reimplement)
 
+- Resolves both reviewer-filled sections **guide first, then the sibling `tasks/TASK_REVIEW_Txxx.md`**
+  (T064), through the one shared resolver `.claude/hooks/lib/guide_sections.py`. A pre-T064 guide
+  that still carries them inline renders exactly as it always did; a split pair renders identically.
+  A guide whose section is only a `> **Moved.**` pointer counts as not carrying it, so resolution
+  falls through. Pass the guide path — the renderer looks for the review file beside it.
 - Parses the `## Demonstration` section for BEFORE/AFTER/DELTA using one regex shared by both flavors.
 - If the guide's BEFORE points at the bugfix flavor's "Phase 1 repro loop" by name, resolves it from
   the Evidence table's `Repro loop` row rather than printing the pointer text raw.
@@ -47,8 +52,9 @@ to stderr. The script already writes the file — you do not need to re-save it.
   `memory/event-trace/<task>.jsonl` (AC7) — a count of tool-call records and their timestamp span, not
   a name. If no trace file or no records exist, it renders as explicitly underived — never a guessed
   or fabricated name. Do not override this with a typed value.
-- If the guide predates T053 and has no `## Demonstration` section at all, the report renders that
-  gap explicitly instead of crashing.
+- If neither the guide nor the review file has a `## Demonstration` section at all (a guide predating
+  T053, or a split pair whose review file was never created), the report renders that gap explicitly
+  instead of crashing.
 - If BEFORE/AFTER/DELTA is blank in the guide, the report renders that gap explicitly rather than
   omitting the row or silently succeeding.
 - Field text is inserted inside `<pre>` without manual HTML-escaping, matching the established

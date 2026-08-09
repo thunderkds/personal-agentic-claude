@@ -55,7 +55,14 @@ def test_old_broken_verify_row_does_not_match_gate():
 
 
 def test_fixed_row_present_in_template_file():
-    template = open("templates/TASK_GUIDE_template.md").read()
+    # T064 moved the reviewer-filled Evidence table out of the implementer's
+    # guide into the sibling review template. The row's required shape is
+    # unchanged and is still asserted byte-for-byte here — only the file it
+    # lives in moved. The guide must no longer carry it (T064 AC2).
+    template = open("templates/TASK_REVIEW_template.md").read()
     assert "| verify | ☐ pass / ☐ fail / ☐ N/A |" in template
     assert "`verify` skill — works in running app" not in template
     assert "the merge gate scans this Notes column for the word" in template
+
+    guide_template = open("templates/TASK_GUIDE_template.md").read()
+    assert "| verify | ☐ pass / ☐ fail / ☐ N/A |" not in guide_template
