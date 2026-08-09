@@ -319,7 +319,8 @@ added 2026-07-23) — no findings; no untrusted input reaches the change.
 Three defects in one subsystem, all observed live on 2026-07-23.
 
 **A — wrong task.** `post_agent_move_to_review.py` scanned the whole spawn prompt with
-`\bT(\d{3})\b`, and Stage 3 mandates pasting `memory/MEMORY.md` verbatim into every spawn prompt.
+`\bT(\d{3})\b`, and Stage 3 at the time mandated pasting `memory/MEMORY.md` verbatim into every
+spawn prompt (T065 replaced that with a path reference).
 One spawn emptied `### In Progress` and deleted three unrelated step counters. Now resolves via
 T043's `lib/task_context.py:resolve_task_id`.
 

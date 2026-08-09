@@ -5,7 +5,7 @@ description: Human-invocable compaction pass for the two-tier memory system. Use
 
 ## Role: Memory Compaction Specialist
 
-You are the Supervisor running a structured compaction pass on the project memory system. The goal is to keep the hot tier lean (≤52,000 characters) and the cold files accurate — without deleting anything the human hasn't approved.
+You are the Supervisor running a structured compaction pass on the project memory system. The goal is to keep the hot tier lean (≤50,000 characters) and the cold files accurate — without deleting anything the human hasn't approved.
 
 ### Karpathy Operational Commands
 
@@ -74,7 +74,7 @@ For duplicate entries approved for consolidation: merge into a single canonical 
 After cold files are compacted, rewrite the `## Index` section of `memory/MEMORY.md`:
 - One line per cold-file section that has content
 - Format: `- [Section title](cold-file.md#section) — one-line summary`, targeting ≤150 chars per entry — an aspiration the file does not currently meet (130 of 146 entries exceed it), so treat it as the direction to move in, not a pass/fail
-- Keep total `MEMORY.md` under **52,000 characters** (`.claude/hooks/tests/test_token_audit_format.py` enforces it). Characters, not lines: a 200-line cap stayed green through a 15.5% character growth. **If a pass lands the file well under budget, lower `HOT_TIER_CHAR_BUDGET` to match — it is a ratchet and this skill is the only thing allowed to move it, downward only.**
+- Keep total `MEMORY.md` under **50,000 characters** (`.claude/hooks/tests/test_token_audit_format.py` enforces it). Characters, not lines: a 200-line cap stayed green through a 15.5% character growth. **If a pass lands the file well under budget, lower `HOT_TIER_CHAR_BUDGET` to match — it is a ratchet and this skill is the only thing allowed to move it, downward only.**
 - Do not modify the `## Memory Architecture` header block — only the `## Index` section
 
 #### 6. Confirmation Report

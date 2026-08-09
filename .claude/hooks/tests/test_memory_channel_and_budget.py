@@ -202,7 +202,7 @@ def test_ac5_and_ac6_the_contract_now_states_the_path_channel():
 def test_ac8_setup_sh_seeded_stub_carries_the_corrected_rules():
     setup = _read("setup.sh")
     stub = setup.split("cat > ./memory/MEMORY.md <<'EOF'")[1].split("\nEOF")[0]
-    assert "52,000 characters" in stub, "seeded stub must carry the character budget"
+    assert f"{HOT_TIER_CHAR_BUDGET:,} characters" in stub, "seeded stub must carry the character budget"
     assert "ratchet" in stub, "seeded stub must say the budget only ever goes down"
     assert "path to read" in stub, "seeded stub must describe the real channel"
     assert "200 lines" not in stub
@@ -322,7 +322,7 @@ def test_ac12_memory_md_header_rules_state_the_budget_and_the_channel():
     the path channel — the two things T065 exists to establish.
     """
     header = MEMORY_PATH.read_text(encoding="utf-8").split("---", 1)[0]
-    assert "52,000 characters" in header
+    assert f"{HOT_TIER_CHAR_BUDGET:,} characters" in header
     assert "ratchet" in header
     assert "path" in header.lower()
     assert "Injected in full" not in header

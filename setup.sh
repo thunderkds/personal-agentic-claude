@@ -345,7 +345,7 @@ scaffold_project() {
     cat > ./memory/MEMORY.md <<'EOF'
 # MEMORY.md — Hot-Tier Memory Index
 
-> **Rules**: Supervisor-only writes. Max 52,000 characters — a ratchet: `/compact-memory` may lower
+> **Rules**: Supervisor-only writes. Max 50,000 characters — a ratchet: `/compact-memory` may lower
 > it, never raise it to fit growth. One-line summaries + links to cold files.
 > Passed to every sub-agent as a path to read; the contents are not pasted into the spawn prompt.
 > Updated by the Supervisor — prompted by the PostToolUse hook on `git push` / `git merge` (diff-driven pass), or via the `/compact-memory` skill.
@@ -364,7 +364,7 @@ scaffold_project() {
 
 <!-- Format: - [Title](cold-file.md#section) — one-line summary.
      Target ≤150 chars/entry. Advisory: reported by the size test, never enforced.
-     The enforced gate is the 52,000-character whole-file budget above. -->
+     The enforced gate is the 50,000-character whole-file budget above. -->
 EOF
   fi
   if [ ! -f ./memory/decisions.md ]; then
