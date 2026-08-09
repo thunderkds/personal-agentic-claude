@@ -210,7 +210,23 @@ def trace_shows_verification(task_id):
 # `verify` immediately before its `|`, AND the word "pass" must appear in the
 # *Notes* column, not only the Result column. T064 changed **where** this text
 # is read from; it must never change **what** is matched.
-VERIFY_ROW_PATTERN = re.compile(r"verify\s*\|[^|\n]+\|[^|\n]*pass", re.IGNORECASE)
+# Same three-part shape as before T068 (Check cell literally `verify`, Result
+# and Notes are the two pipe-delimited cells that follow, "pass" required in
+# the third/Notes cell — the T026 property) but Result/Notes are now captured
+# separately so an *unchecked* box can be told apart from a filled one.
+VERIFY_ROW_PATTERN = re.compile(
+    r"verify\s*\|(?P<result>[^|\n]*)\|(?P<notes>[^|\n]*pass[^|\n]*)",
+    re.IGNORECASE,
+)
+
+# The template's own placeholder guidance text writes "pass" as one of the
+# unchecked options: `☐ pass / ☐ fail / ☐ N/A`. That is guidance, not a filled
+# answer, so a literal unchecked "☐ pass" in the Result cell disqualifies the
+# row — but only that exact combination. A legitimately filled
+# `☑ pass / ☐ N/A` row (the shape occurs in tasks/TASK_GUIDE_T063.md) must NOT
+# trip this: the guard checks for ☐ directly attached to "pass", not for ☐
+# appearing anywhere in the cell.
+UNCHECKED_PASS_PATTERN = re.compile(r"☐\s*pass\b", re.IGNORECASE)
 
 
 def has_filled_verify_row(task_id, tasks_dir=None):
@@ -218,15 +234,19 @@ def has_filled_verify_row(task_id, tasks_dir=None):
     first then `TASK_REVIEW_Txxx.md` — carries a filled `verify` row.
 
     **Fails closed.** A missing guide, a missing review file, an unreadable
-    one, an absent Evidence section, or an unfilled row all return False. This
-    is the one place in T064 where a wrong answer is silent and repo-wide: if
+    one, an absent Evidence section, an unfilled row, or a row still carrying
+    the template's unchecked `☐ pass` placeholder all return False. This is
+    the one place in T064 where a wrong answer is silent and repo-wide: if
     "review file missing" ever became anything other than "no evidence", the
     merge gate would stop gating on every task at once.
     """
     section = read_guide_section(task_id, "Evidence", tasks_dir or TASKS_DIR)
     if not section:
         return False
-    return bool(VERIFY_ROW_PATTERN.search(section))
+    for match in VERIFY_ROW_PATTERN.finditer(section):
+        if not UNCHECKED_PASS_PATTERN.search(match.group("result")):
+            return True
+    return False
 
 
 def main():
