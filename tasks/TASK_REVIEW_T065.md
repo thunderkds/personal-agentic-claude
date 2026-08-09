@@ -16,13 +16,34 @@
 |-------|--------|------------------------|
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_memory_channel_and_budget.py` (12 new tests: AC3, AC4, AC5/AC6, AC7, AC8, AC9 ×2, AC10, AC11, AC12, SC1, anti-vacuity guard) and `.claude/hooks/tests/test_token_audit_format.py` (`test_memory_md_hot_tier_stays_within_char_budget`, replacing `test_memory_md_hot_tier_stays_within_line_limit`) |
 | Verification command run | ☑ pass | `pytest .claude/hooks/tests/ -q` → `338 passed in 7.90s`; `bash scripts/smoke-install.sh` → `smoke-install.sh: PASS` (all 15 installed-artifact assertions `[ok]`) |
-| Negative cases hold | ☑ pass | 5 mutation controls, each confirmed to have **landed** (grep count / boolean printed) before the run and reverted after. M1 AC7 — reintroduced `Injected in full into every sub-agent spawn prompt` → RED. M2 AC9 — reintroduced `under 200 lines` → RED. M2b AC9 anti-count-allowance — added a **real** cap line to `CLAUDE.md`, the one file with a legitimately-excluded `200 lines` hit, and the Simplicity-First line still present → RED (proves the exclusion is by content, not by an allowance of one hit). M3 — reverted the gate to line-based → AC10 RED **and** AC11 RED. Post-revert: `338 passed`, `git status` clean of mutations |
+| Negative cases hold | ☑ pass | 5 mutation controls, each confirmed to have **landed** (grep count / boolean printed) before the run and reverted after. M1 AC7 — reintroduced `Injected in full into every sub-agent spawn prompt` → RED. M2 AC9 — reintroduced `under 200 lines` → RED. M2b AC9 anti-count-allowance — added a **real** cap line to `CLAUDE.md`, the one file with a legitimately-excluded `200 lines` hit, and the Simplicity-First line still present → RED (proves the exclusion is by content, not by an allowance of one hit). M3 — reverted the gate to line-based → AC10 RED **and** AC11 RED. Post-revert: `338 passed`, `git status` clean of mutations. **Supervisor's own independent control (the implementer was not the sole oracle)**: on a copy of the live file, appended 400 chars to each of 10 index entries — `49,451 → 53,461` chars with a **line delta of exactly 0**, asserted before trusting the verdict. New gate went **RED** naming chars/budget/overage; the old `len(lines) <= 200` assertion is structurally blind to that mutation, which is the entire defect |
 | verify | ☑ pass | `Skill()` is not available to this sub-agent (tools are Read/Write/Edit/Bash only), so `verify` was run manually and is labelled as such: the full verification command was re-run after the final edit, the AC10 defect was reproduced end-to-end on a copy against both the old and new gate (Demonstration below), and the live budget was measured at 49,451 / 52,000 — **pass** |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Reviewed: the 16 changed files plus every location the AC9/AC7 sweep enumerates (23 shipping files). Skipped with reason: `memory/decisions.md` / `learnings.md` / `glossary.md` (cold tier, Supervisor-only), `docs/memory-usage-finding-2026-08-07.md` and `docs/ddr/*` (dated historical records), `PROJECT_KANBAN.md` / `BRAINSTORMING_LOG.md` / `tasks/*` (they quote the old rule as description), `.claude/hooks/tests/*` other than the two above (they carry the old prompt shape as fixture data and recorded rationale) |
 | Full smoke suite still green (no regression) | ☑ pass | 338 passed (326 pre-existing, all previously green, none modified to pass) + `smoke-install.sh: PASS` |
 | **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | Pure-backend/docs task — no UI component. The guide's Completion Checklist marks this row N/A explicitly |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | As above — nothing rendered |
 | **UI: Responsiveness at target viewports** | ☑ N/A | As above — nothing rendered |
+
+### security-review (Medium risk — mandatory)
+
+**PASS, 0 actionable.** Run by the **Supervisor at Stage 4**, not the implementer: the sub-agent
+correctly reported it could not run `Skill()` at all (its tools are Read/Write/Edit/Bash) and
+declined to claim a skill run it had not performed.
+
+Run **manually and labelled** — this is the ninth occurrence of the recorded failure mode where the
+built-in diffs the *checked-out* branch (`feat/t059-…`) rather than the work branch (`t065-work`),
+which would have returned a false PASS on a mandatory gate.
+
+Surface assessed against the real diff:
+- Every change is prose or documentation except one test assertion. The two hook edits
+  (`post_bash_memory_update.py`, `post_agent_move_to_review.py`) are **comment/docstring text only** —
+  no executable line changed.
+- `git diff | grep '^+'` for `subprocess|os.system|eval(|exec(|urllib|requests|socket|chmod|rm -rf`
+  returns **0** hits. No new input, filesystem-write, or network surface.
+- `setup.sh`'s seeded stub is the one place where new text enters a shell context. The heredoc is
+  still `<<'EOF'` (quoted), and the new text introduces backticks (`` `/compact-memory` ``) which
+  would be command substitution in an *unquoted* heredoc. Verified empirically rather than by
+  inspection: ran `scaffold_project` into a temp dir and confirmed the backticks render literally.
 
 ---
 
