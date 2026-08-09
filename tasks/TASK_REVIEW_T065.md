@@ -14,15 +14,15 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_memory_channel_and_budget.py` (12 new tests: AC3, AC4, AC5/AC6, AC7, AC8, AC9 ×2, AC10, AC11, AC12, SC1, anti-vacuity guard) and `.claude/hooks/tests/test_token_audit_format.py` (`test_memory_md_hot_tier_stays_within_char_budget`, replacing `test_memory_md_hot_tier_stays_within_line_limit`) |
+| Verification command run | ☑ pass | `pytest .claude/hooks/tests/ -q` → `338 passed in 7.90s`; `bash scripts/smoke-install.sh` → `smoke-install.sh: PASS` (all 15 installed-artifact assertions `[ok]`) |
+| Negative cases hold | ☑ pass | 5 mutation controls, each confirmed to have **landed** (grep count / boolean printed) before the run and reverted after. M1 AC7 — reintroduced `Injected in full into every sub-agent spawn prompt` → RED. M2 AC9 — reintroduced `under 200 lines` → RED. M2b AC9 anti-count-allowance — added a **real** cap line to `CLAUDE.md`, the one file with a legitimately-excluded `200 lines` hit, and the Simplicity-First line still present → RED (proves the exclusion is by content, not by an allowance of one hit). M3 — reverted the gate to line-based → AC10 RED **and** AC11 RED. Post-revert: `338 passed`, `git status` clean of mutations |
+| verify | ☑ pass | `Skill()` is not available to this sub-agent (tools are Read/Write/Edit/Bash only), so `verify` was run manually and is labelled as such: the full verification command was re-run after the final edit, the AC10 defect was reproduced end-to-end on a copy against both the old and new gate (Demonstration below), and the live budget was measured at 49,451 / 52,000 — **pass** |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Reviewed: the 16 changed files plus every location the AC9/AC7 sweep enumerates (23 shipping files). Skipped with reason: `memory/decisions.md` / `learnings.md` / `glossary.md` (cold tier, Supervisor-only), `docs/memory-usage-finding-2026-08-07.md` and `docs/ddr/*` (dated historical records), `PROJECT_KANBAN.md` / `BRAINSTORMING_LOG.md` / `tasks/*` (they quote the old rule as description), `.claude/hooks/tests/*` other than the two above (they carry the old prompt shape as fixture data and recorded rationale) |
+| Full smoke suite still green (no regression) | ☑ pass | 338 passed (326 pre-existing, all previously green, none modified to pass) + `smoke-install.sh: PASS` |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | Pure-backend/docs task — no UI component. The guide's Completion Checklist marks this row N/A explicitly |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | As above — nothing rendered |
+| **UI: Responsiveness at target viewports** | ☑ N/A | As above — nothing rendered |
 
 ---
 
@@ -83,9 +83,45 @@ Fiction 1's prior content, quoted verbatim from the files as they exist at `8bd9
 The spawn prompt that produced this document handed a **path** and said "read `memory/MEMORY.md` in
 full" — first-person evidence, and the third independent confirmation after T063's corpus and T064.
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**:
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+Captured 2026-08-09T12:50:03Z at `HEAD = 6ecc4a4`. **The identical mutation, on a copy of the
+post-change file**: ~4,000 characters appended onto existing entries, zero lines added.
 
-**WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
-implementing agent alone]
+```
+$ python3 - "$D/MEMORY.md"   # same padding script as the BEFORE capture
+lines 202 -> 202  (delta 0)
+chars 49451 -> 53507  (delta +4056)
+NEW GATE: AssertionError: MEMORY.md is 53,507 characters, over the 52,000-character
+hot-tier budget by 1,507. Run `/compact-memory` to shrink the file — do NOT raise
+HOT_TIER_CHAR_BUDGET, it is a ratchet that only ever goes down.
+$ date -u '+AFTER captured %Y-%m-%dT%H:%M:%SZ'
+AFTER captured 2026-08-09T12:50:03Z
+```
+
+The message names the current size, the budget and the overage (AC2), and it names the only
+sanctioned remedy — because the temptation the old cap died of was to edit the number.
+
+Fiction 1's new content, verbatim:
+
+- `.claude/skills/craft-spawn-prompt/SKILL.md:33`
+  `| 4 | Memory reference | The **path** `memory/MEMORY.md`, with an instruction to read it in full. Do **not** paste its contents | same |`
+- `docs/claude-md/pipeline-stages.md:155` (AC6 — the sentence is inverted, not merely deleted)
+  `- **Memory injection**: Pass the **path** `memory/MEMORY.md` in every sub-agent spawn prompt, after the task pointer, with an instruction to read it in full. Do **not** paste its contents. This is the hot-tier memory index (≤52,000 characters) — **the agent must read it itself** as a mandatory startup step, so the cost is paid once, by the agents that need it, rather than on every spawn.`
+- `.claude/agents/general-agent-template.md:11` — a **second** copy of the harmful sentence, outside
+  the guide's predicted eight locations, found by AC9's sweep:
+  `2. Load the hot-tier memory index — **read `memory/MEMORY.md` yourself**. The spawn prompt gives you its path, not its contents, so nothing loads it for you.`
+- `memory/MEMORY.md:3-5`
+  `> **Rules**: Supervisor-only writes. Max 52,000 characters — a ratchet: `/compact-memory` may lower`
+  `> it, never raise it to fit growth. One-line summaries + links to cold files.`
+  `> Passed to every sub-agent as a path to read; the contents are not pasted into the spawn prompt.`
+
+**DELTA**: A Supervisor can no longer grow `memory/MEMORY.md` past its cost budget while the suite
+stays green — the gate now measures characters, refuses a 4,056-character increase that added no
+lines, and tells the reader to compact the file rather than raise the number; and an agent that
+follows the documented startup sequence now actually reads memory instead of being told it is
+already in context when it is not.
+
+**WITNESS**: [to be filled at Stage 4/5 from `memory/event-trace/T065.jsonl` — not by the
+implementing agent alone. The active-task pointer was armed at 2026-08-09T12:38:48Z, before any
+test or verification command, so the runs above are attributable.]

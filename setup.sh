@@ -362,7 +362,9 @@ scaffold_project() {
 
 ## Index
 
-<!-- Format: - [Title](cold-file.md#section) — one-line summary (≤150 chars) -->
+<!-- Format: - [Title](cold-file.md#section) — one-line summary.
+     Target ≤150 chars/entry. Advisory: reported by the size test, never enforced.
+     The enforced gate is the 52,000-character whole-file budget above. -->
 EOF
   fi
   if [ ! -f ./memory/decisions.md ]; then
