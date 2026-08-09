@@ -22,11 +22,27 @@ TRACE_DIR = os.path.join(ROOT, "memory", "event-trace")
 
 # The Evidence table may live in the guide or in the sibling TASK_REVIEW file
 # (T064). Imported off __file__, like post_tool_trace.py does for task_context.
-# NOT wrapped in a fail-open except: this gate must fail **closed**. If the
-# resolver cannot be imported, `read_guide_section` raises here rather than
-# quietly resolving every task to "verified".
+#
+# This gate must fail **closed**, and an unguarded import does NOT achieve that
+# (Stage 4 finding). This hook signals a block by printing a `decision: block`
+# JSON object on stdout and exiting 0; a bare ImportError exits 1 with *empty*
+# stdout, which the harness reads as a non-blocking hook error and the merge
+# proceeds — the precise direction AC7 exists to prevent. So the import is
+# guarded and its failure is turned into an explicit block.
 sys.path.insert(0, os.path.join(HOOKS_DIR, "lib"))
-from guide_sections import read_guide_section  # noqa: E402
+try:
+    from guide_sections import read_guide_section  # noqa: E402
+except Exception as exc:  # pragma: no cover - exercised via subprocess test
+    print(json.dumps({
+        "decision": "block",
+        "reason": (
+            "[hook:pre_bash] Evidence resolver unavailable "
+            f"({type(exc).__name__}: {exc}) — cannot confirm Stage 5 verify "
+            "evidence for any task, so this push/merge is blocked. Restore "
+            ".claude/hooks/lib/guide_sections.py."
+        ),
+    }))
+    sys.exit(0)
 
 BLOCKED_PATTERNS = [
     r"\bgit\s+push\b",

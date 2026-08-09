@@ -799,3 +799,49 @@ def test_pointer_only_section_is_treated_as_absent():
     body = "\n> **Moved.** See `tasks/TASK_REVIEW_T900.md`.\n\n"
     assert guide_sections.is_pointer_only(body) is True
     assert guide_sections.is_pointer_only(body + "| verify | pass | pass |\n") is False
+
+
+# ---------------------------------------------------------------------------
+# Stage 4 finding (Supervisor): the gate signals a block by printing a
+# `decision: block` object on stdout and exiting 0. An unguarded ImportError
+# exits 1 with EMPTY stdout, which the harness reads as a non-blocking hook
+# error — so the merge proceeds. That is a fail-OPEN in the one place AC7
+# requires fail-closed. Run as a subprocess: the failure only exists at module
+# import time, so importing the module in-process cannot exercise it.
+# ---------------------------------------------------------------------------
+
+def test_ac7_missing_resolver_blocks_rather_than_failing_open(tmp_path):
+    import json as _json
+    import shutil
+    import subprocess
+
+    hooks_dir = os.path.dirname(HOOKS_DIR) if False else HOOKS_DIR
+    gate = os.path.join(hooks_dir, "pre_bash_block_unsafe_merge.py")
+    lib = os.path.join(hooks_dir, "lib", "guide_sections.py")
+    stashed = os.path.join(str(tmp_path), "guide_sections.py.bak")
+
+    shutil.move(lib, stashed)
+    try:
+        proc = subprocess.run(
+            [sys.executable, gate],
+            input=_json.dumps({
+                "tool_name": "Bash",
+                "tool_input": {"command": "git " + "push" + " origin main"},
+            }),
+            capture_output=True,
+            text=True,
+        )
+    finally:
+        shutil.move(stashed, lib)
+
+    assert proc.stdout.strip(), (
+        "gate produced NO stdout when the resolver was missing — the harness "
+        "reads that as a non-blocking error and the merge proceeds (fail-open)"
+    )
+    decision = _json.loads(proc.stdout)
+    assert decision.get("decision") == "block", (
+        f"expected an explicit block, got: {decision}"
+    )
+    assert proc.returncode == 0, (
+        "a block must be signalled by stdout + exit 0, not a non-zero exit"
+    )
