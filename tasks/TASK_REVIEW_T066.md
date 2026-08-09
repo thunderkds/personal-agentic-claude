@@ -34,13 +34,15 @@
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
 **BEFORE**: This task changes documentation text, so BEFORE is the **verbatim prior content** of the
-sections being moved, plus the per-role token table as it stood at `HEAD` (`3bcc919`). Captured
-2026-08-09, before the first implementation commit.
+sections being moved, plus the per-role token table as it stood at the pre-task branch tip
+`8fc4dd2` (the parent of T066's own Stage 2 guide commit — `3bcc919` predates a `/compact-memory`
+pass that edited `CLAUDE.md`, so it is not the right baseline for AC5). Captured 2026-08-09, before
+the first implementation commit.
 
-*(1) Per-role loaded size at `HEAD` — `python3 scripts/measure_agent_guide_tokens.py HEAD`:*
+*(1) Per-role loaded size at the baseline — `python3 scripts/measure_agent_guide_tokens.py 8fc4dd2`:*
 
 ```
-# per-role loaded size — HEAD
+# per-role loaded size — 8fc4dd2
 template `.claude/agents/general-agent-template.md`: 7,246 chars (~1,811 tok est.)
 
 | role | role guide chars | template chars | total chars | total tok (est.) |
