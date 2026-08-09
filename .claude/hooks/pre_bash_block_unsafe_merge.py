@@ -222,9 +222,10 @@ VERIFY_ROW_PATTERN = re.compile(
 # The template's own placeholder guidance text writes "pass" as one of the
 # unchecked options: `☐ pass / ☐ fail / ☐ N/A`. That is guidance, not a filled
 # answer, so a literal unchecked "☐ pass" in the Result cell disqualifies the
-# row — but only that exact combination. `☐ N/A` (T050's real, legitimately
-# filled `☑ pass / ☐ N/A` row) must NOT trip this: the guard checks for ☐
-# directly attached to "pass", not for ☐ appearing anywhere in the cell.
+# row — but only that exact combination. A legitimately filled
+# `☑ pass / ☐ N/A` row (the shape occurs in tasks/TASK_GUIDE_T063.md) must NOT
+# trip this: the guard checks for ☐ directly attached to "pass", not for ☐
+# appearing anywhere in the cell.
 UNCHECKED_PASS_PATTERN = re.compile(r"☐\s*pass\b", re.IGNORECASE)
 
 
