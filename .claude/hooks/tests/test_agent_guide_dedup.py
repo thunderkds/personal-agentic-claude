@@ -409,9 +409,14 @@ def test_t069_ac5_craft_agent_emits_the_table_in_generated_role_guides():
         "craft-agent does not name the Karpathy table, so a role it generates is born without a "
         "Permanent Rule — it can no longer inherit one from the template (T066 edge case #6)"
     )
-    assert "VERBATIM" in skill or "verbatim" in skill, (
-        "craft-agent must say the table is copied verbatim; an 'adapt it to the role' instruction "
-        "would let a generated guide reword a Permanent Rule"
+    # Both halves, because they are separately deletable and each alone free-passes the other.
+    # A control that removed the drafting bullet left this test green off the skeleton alone.
+    assert "copied VERBATIM from `backend.md`" in skill, (
+        "craft-agent's drafting checklist no longer tells the drafter to copy the table verbatim; "
+        "an 'adapt it to the role' instruction would let a generated guide reword a Permanent Rule"
+    )
+    assert "Carries the ## Karpathy Engineering Principles (Compact)" in skill, (
+        "the emitted draft skeleton no longer declares that the generated guide carries the table"
     )
     assert "Karpathy Principles / Search-Before-You-Build from" not in skill, (
         "the emitted draft skeleton still claims the Karpathy principles are INHERITED from "

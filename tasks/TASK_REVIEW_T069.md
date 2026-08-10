@@ -71,9 +71,50 @@ The template's own prose asserted the location that this task invalidates —
 `## Staleness Guard` (line 67-69): "If you edit Base Rules or the Karpathy Engineering Principles
 **above**, check `AGENTS.md` …".
 
-**AFTER**: [same greps, post-change]
+**AFTER**: Same greps at `8b5bcb2`. The table is now in the four auto-loaded role guides and
+nowhere else; the advisory ladder did not move.
 
-**DELTA**: [one sentence — what a sub-agent now receives that it previously only might have]
+```
+$ grep -rn "## Karpathy Engineering Principles (Compact)" .claude/agents/
+.claude/agents/frontend.md:29:## Karpathy Engineering Principles (Compact)
+.claude/agents/common-infrastructure.md:29:## Karpathy Engineering Principles (Compact)
+.claude/agents/qa.md:29:## Karpathy Engineering Principles (Compact)
+.claude/agents/backend.md:29:## Karpathy Engineering Principles (Compact)
+   (general-agent-template.md: no longer listed)
+
+$ for f in common-infrastructure backend frontend qa; do \
+    printf '%s: ' ".claude/agents/$f.md"; \
+    grep -cF -e "Ask vs. Guess" -e "Scope locking" ".claude/agents/$f.md"; done
+.claude/agents/common-infrastructure.md: 2
+.claude/agents/backend.md: 2
+.claude/agents/frontend.md: 2
+.claude/agents/qa.md: 2
+
+$ grep -rn "## Search Before You Build" .claude/agents/
+.claude/agents/general-agent-template.md:28:## Search Before You Build
+```
+
+**DELTA**: Every sub-agent now receives the Karpathy Engineering Principles in its auto-loaded
+system prompt, which the harness guarantees, instead of one optional read behind a template the
+event trace shows was opened 9 times across 66 task buckets.
+
+**AC9 measurement** (chars, `Path.read_text` on both sides — never `git show` bytes against
+`read_text` chars, the comparison that manufactured a ~4% saving in T066). Pair = role guide +
+template, which is what an agent actually pays. Baseline `8d6d56b`, after `8b5bcb2`:
+
+| role | before | after | delta |
+|---|---|---|---|
+| c-infra | 9,687 | 9,897 | **+210** |
+| backend | 11,786 | 11,996 | **+210** |
+| frontend | 11,458 | 11,668 | **+210** |
+| qa | 10,583 | 10,793 | **+210** |
+
+**The guide predicted 0 and the real number is +210 — stated as measured, not reframed.** The
+table itself is exactly cost-neutral (+622 into each guide, −622 from the template, per-role
+components: guide 5,925→6,547 for c-infra, template 3,762→3,350). The residual +210 is the three prose
+edits AC6 requires — the header note's verbatim-carry sentence, Base Rules line 14, and the
+Staleness Guard — none of which is the table. The claim that survives is the narrower one the
+AC9 test asserts: the move did not cost a *copy* of the table (+622 would).
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/T069.jsonl`, never the
 implementing agent alone]
