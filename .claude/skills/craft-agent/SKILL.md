@@ -36,6 +36,7 @@ For every genuinely uncovered role, draft:
 - Required skills / expertise
 - Specific rules — role overrides; state "Inherits from `general-agent-template.md`" explicitly, matching the shape of `backend.md`/`frontend.md`/`qa.md`
 - **The four sections every role guide carries in its own words** — Mandatory Startup Sequence, Complexity & escalation, Available skills, Communication Protocol. These are *not* inherited: the harness auto-loads `.claude/agents/<name>.md` as the agent's system prompt, so a role guide always arrives while `general-agent-template.md` arrives only if the agent opens it. Copy the shape from `backend.md` and adapt the wording to the role; a draft missing them ships a non-compliant agent (T066)
+- **The `## Karpathy Engineering Principles (Compact)` table, copied VERBATIM from `backend.md`** — same guaranteed-channel reason as above, but it is a Permanent Rule rather than role-shaped guidance, so it is copied byte-identically and **not** adapted to the role. It no longer lives in `general-agent-template.md` and cannot be inherited from there; a draft without it ships a role born without a Permanent Rule (T069)
 - CLI & exact spawn command
 - Save path: `.claude/agents/<name>.md`
 
@@ -56,8 +57,9 @@ tools: ...
 model: ...
 ---
 
-Inherits Base Rules / Karpathy Principles / Search-Before-You-Build from
-general-agent-template.md. Carries its own Mandatory Startup Sequence, Complexity &
+Inherits Base Rules / Search-Before-You-Build from
+general-agent-template.md. Carries the ## Karpathy Engineering Principles (Compact)
+table verbatim, plus its own Mandatory Startup Sequence, Complexity &
 escalation, Available skills, and Communication Protocol. Overrides:
 ...
 ```
