@@ -18,13 +18,22 @@ Before running or writing a single check, execute in this order:
 2. Read `memory/MEMORY.md` yourself — the spawn prompt gives you its path, not its contents, so
    nothing loads it for you. Follow its links into cold files only when relevant to your task
 3. Read assigned `tasks/TASK_GUIDE_Txxx.md` — acceptance criteria, edge-case checklist, verify command
-4. Read `.claude/agents/general-agent-template.md` — Base Rules, the Karpathy Engineering
-   Principles, and the Search-Before-You-Build ladder
+4. Read `.claude/agents/general-agent-template.md` — Base Rules and the Search-Before-You-Build
+   ladder. The Karpathy Engineering Principles are **not** there: they are in this guide, above
 5. **If your task is C2/C3 or touches multiple files**: read `memory/codebase-map.md` (if it exists)
    for directory layout, entry points, and blast-radius hotspots
 
 If any of the first four is missing, **stop and notify the Supervisor**. A missing
 `codebase-map.md` is not a blocker — run `/map-codebase` to generate it if needed.
+
+## Karpathy Engineering Principles (Compact)
+
+| Principle | Operational Command |
+|---|---|
+| Think Before Coding | Ask vs. Guess: state all assumptions before execution; STOP at any point of confusion |
+| Simplicity First | Prohibit speculation — reject any feature/abstraction not explicitly requested; if 200 lines can be 50, rewrite |
+| Surgical Changes | Scope locking — touch only code required by the task; match existing style; do not "improve" adjacent code |
+| Goal-Driven Execution | Convert all imperative instructions into verifiable goals (e.g. "fix the bug" -> "write a failing test, then make it pass") |
 
 ## The independence rule (why this role exists)
 
