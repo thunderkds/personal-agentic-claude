@@ -37,7 +37,7 @@ Stage 5: Verify end-to-end → merge → ship
 
 | Path | What it contains |
 |------|-----------------|
-| `.claude/agents/` | Core sub-agent definitions (common-infrastructure, backend, frontend, qa) |
+| `.claude/agents/` | Core sub-agent definitions (common-infrastructure, backend, frontend, qa) + `general-agent-template.md` — see [Agent guides](#agent-guides-the-guaranteed-channel) |
 | `.claude/skills/` | Custom skills (strategy, ideate, brainstorming, grill-with-docs, tdd, code-review, resolve-pr-feedback, compound, compound-refresh, optimize, ship, learn, wake, …) |
 | `.claude/hooks/` | Pipeline enforcement hooks (auto-kanban, gate checks, merge blocks, memory updates) |
 | `.claude/settings.json` | Hook wiring *(deployed as a per-project copy — projects append their own permissions)* |
@@ -56,6 +56,33 @@ Stage 5: Verify end-to-end → merge → ship
 **Core resources** (`.claude/agents/`, `.claude/skills/`, `.claude/hooks/`, `templates/`, `CLAUDE.md`) are **copied as real files** directly into your project by `setup.sh` — no dependency on any central clone. `.claude/settings.json` is copied too (projects add their own permissions to it). Project-specific files (`tasks/`, `memory/`) are created fresh and never overwritten. Run `update.sh` to refresh core resources later — see [Update](#update).
 
 **Pack resources** (`packs/`) are a separate, unchanged mechanism: they remain **symlinked** from a persistent `~/.supervisor` clone — see [Packs](#packs-optional-domain-extensions) below.
+
+### Agent guides: the guaranteed channel
+
+Two kinds of file live in `.claude/agents/`, and the difference decides what belongs in each:
+
+| File | How it reaches a sub-agent |
+|------|---------------------------|
+| `<role>.md` (`backend.md`, `qa.md`, …) | **Guaranteed** — Claude Code auto-loads it as that agent's system prompt |
+| `general-agent-template.md` | **Optional** — arrives only if the agent chooses to open it |
+
+Anything an agent is *required* to follow must live in the role guide. The template is for material
+an agent can be trusted to fetch when it needs it. In practice that means:
+
+- Each role guide carries its own **Mandatory Startup Sequence, Complexity matrix, skills table and
+  Communication Protocol** — written in that role's own words — plus the **Karpathy Engineering
+  Principles table, copied verbatim and identical across all four**. The principles are mandatory
+  for every sub-agent, so they must arrive through the guaranteed channel.
+- `general-agent-template.md` keeps the shared Base Rules, the Search-Before-You-Build ladder
+  (advisory), Output Requirements and the Staleness Guard.
+
+**If you edit or add a role guide** — by hand or via `/craft-agent` — copy the Karpathy table across
+byte-identically. A role guide without it ships an agent missing a project-wide rule, and
+`scripts/test-agent-template.sh` plus `.claude/hooks/tests/test_agent_guide_dedup.py` will fail.
+
+> The same rule governs `CLAUDE.md`: it is the **Supervisor's** instruction set and never reaches a
+> sub-agent, so overlap between it and the agent guides is deliberate redundancy across separate
+> contexts — not duplication to collapse.
 
 ---
 
