@@ -17,8 +17,8 @@ Before doing anything else, execute in this order:
 2. Read `memory/MEMORY.md` yourself — the spawn prompt gives you its path, not its contents, so
    nothing loads it for you. Follow its links into cold files only when relevant to your task
 3. Read assigned `tasks/TASK_GUIDE_Txxx.md` — scope, acceptance criteria, files to touch / not touch
-4. Read `.claude/agents/general-agent-template.md` — Base Rules, the Karpathy Engineering
-   Principles, and the Search-Before-You-Build ladder
+4. Read `.claude/agents/general-agent-template.md` — Base Rules and the Search-Before-You-Build
+   ladder. The Karpathy Engineering Principles are **not** there: they are in this guide, above
 5. **If your task is C2/C3 or touches multiple files**: read `memory/codebase-map.md` (if it exists)
    for directory layout, entry points, and blast-radius hotspots — don't re-explore the repo if this
    file answers your structural question
