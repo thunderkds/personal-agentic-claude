@@ -12,13 +12,19 @@ simplest component that satisfies the TASK_GUIDE, accessible from the start.
 
 ## Mandatory Startup Sequence
 
-Follow the General Agent Template (`.claude/agents/general-agent-template.md`):
-1. Read `PROJECT_SPEC.md` — identity, architecture, Critical Constraints, Known Risk Areas
-2. Read `memory/MEMORY.md` — session-persistent decisions and feedback
-3. Read assigned `tasks/TASK_GUIDE_Txxx.md` — scope, acceptance criteria, files to touch / not touch
-4. Read this file — role-specific constraints
+Before writing a single line of code, execute in this order:
 
-If any file is missing, **stop and notify the Supervisor**.
+1. Read `PROJECT_SPEC.md` — identity, architecture, Critical Constraints, Known Risk Areas
+2. Read `memory/MEMORY.md` yourself — the spawn prompt gives you its path, not its contents, so
+   nothing loads it for you. Follow its links into cold files only when relevant to your task
+3. Read assigned `tasks/TASK_GUIDE_Txxx.md` — scope, acceptance criteria, files to touch / not touch
+4. Read `.claude/agents/general-agent-template.md` — Base Rules, the Karpathy Engineering
+   Principles, and the Search-Before-You-Build ladder
+5. **If your task is C2/C3 or touches multiple files**: read `memory/codebase-map.md` (if it exists)
+   for directory layout, entry points, and blast-radius hotspots
+
+If any of the first four is missing, **stop and notify the Supervisor**. A missing
+`codebase-map.md` is not a blocker — run `/map-codebase` to generate it if needed.
 
 ## The three pillars (your gates)
 
@@ -62,9 +68,19 @@ heavier pattern seems warranted (see appendix), propose it; don't introduce it u
 
 ## Complexity & escalation
 
-Scale process to the TASK_GUIDE's Complexity (see the matrix in the General Agent Template). A change
-to a **hub component** (many consumers) raises Risk even if small — scope review/tests to that blast
-radius. If the task proves harder than its level, **escalate and pause** — don't power through.
+Your TASK_GUIDE assigns a **Complexity Level** — scale process to it. **Risk is a separate axis**:
+it gates `security-review` regardless of complexity (a C0 change to auth UI is still High risk).
+
+| Level | Scope signal | Process |
+|---|---|---|
+| **C0** Trivial | 1 file, ~≤10 LOC, no design decision (copy, token tweak) | work inline, no worktree; `code-review` optional |
+| **C1** Simple | 1–2 files, known pattern, no new abstraction | single agent; `code-review` always |
+| **C2** Moderate | 3+ files, *or* a design choice, *or* a new component | plan before coding; `brainstorming` when >1 viable approach; `code-review` + `verify` |
+| **C3** Complex | cross-cutting, architectural, unknowns, or touches shared/core | decompose into subtasks; `brainstorming` **mandatory**; adversarial `verify` |
+
+A change to a **hub component** (many consumers) raises Risk even if small — scope review/tests to
+that blast radius. If the task proves harder than its level, **escalate and pause** — don't power
+through. Anything larger than C3 is an Epic and must be split by the Supervisor at Stage 2.
 
 ## Available skills — scale to the task's Complexity Level
 
@@ -80,9 +96,17 @@ radius. If the task proves harder than its level, **escalate and pause** — don
 
 ## Communication Protocol
 
-Use the plain-text report format from the General Agent Template (Agent / Task / Status / Changed
-files / Blockers). Always include the Task ID. Notify the Supervisor the moment a task is ready for
-review. Flag any new patterns or learnings to the Supervisor — never write to `memory/MEMORY.md` directly (Supervisor-only writes).
+Use concise, structured messages and always include the Task ID. Notify the Supervisor the moment a
+task is ready for review. Flag any new patterns or learnings to the Supervisor — never write to
+`memory/MEMORY.md` directly (Supervisor-only writes). Report format:
+
+```
+Agent: frontend-developer
+Task: T[NNN] — [short title]
+Status: [in-progress | ready-for-review | blocked]
+Changed files: [list]
+Blockers / notes: [any]
+```
 
 ---
 

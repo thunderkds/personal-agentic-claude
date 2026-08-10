@@ -42,6 +42,90 @@ def summarize(tool_input):
     return text[:MAX_SUMMARY_LEN]
 
 
+# --- Agent spawn cost capture (T061) --------------------------------------
+# The harness hands PostToolUse the spawn's own accounting in `tool_response`;
+# before T061 every field of it but `is_error` was discarded. These maps name
+# exactly what is kept, harness key -> record key. The harness sends camelCase;
+# every other field in this record is snake_case, so names are translated on
+# the way in rather than passed through.
+#
+# Deliberately NOT copied: `prompt` and `content` (already covered by
+# `summary`; duplicating them doubles trace size) and `usage.iterations` (an
+# unbounded list). `usage.cache_creation.{ephemeral_5m,ephemeral_1h}` IS kept,
+# flattened rather than nested three deep: their sum is already
+# `cache_creation_input_tokens`, but the split says which TTL tier the write
+# went to, and the two tiers are priced differently — dropping it would force
+# any cost analysis to assume all creation is 5m.
+SPAWN_TOP_FIELDS = (
+    ("totalTokens", "total_tokens"),
+    ("totalToolUseCount", "tool_use_count"),
+    ("totalDurationMs", "duration_ms"),
+    ("resolvedModel", "resolved_model"),
+    ("agentType", "agent_type"),
+    ("status", "status"),
+)
+SPAWN_USAGE_FIELDS = (
+    ("input_tokens", "input_tokens"),
+    ("output_tokens", "output_tokens"),
+    ("cache_creation_input_tokens", "cache_creation_input_tokens"),
+    ("cache_read_input_tokens", "cache_read_input_tokens"),
+)
+SPAWN_CACHE_CREATION_FIELDS = (
+    ("ephemeral_5m_input_tokens", "cache_creation_5m"),
+    ("ephemeral_1h_input_tokens", "cache_creation_1h"),
+)
+SPAWN_TOOL_STATS_FIELDS = (
+    ("readCount", "read_count"),
+    ("searchCount", "search_count"),
+    ("bashCount", "bash_count"),
+    ("editFileCount", "edit_file_count"),
+    ("linesAdded", "lines_added"),
+    ("linesRemoved", "lines_removed"),
+)
+
+
+def _pick(source, field_map):
+    """Copy only the keys that are actually present. A key that is absent from
+    the source stays absent from the result — never carried through as None,
+    which would make an unpopulated payload indistinguishable from a real
+    zero."""
+    if not isinstance(source, dict):
+        return {}
+    picked = {}
+    for src_key, dest_key in field_map:
+        if src_key in source:
+            picked[dest_key] = source[src_key]
+    return picked
+
+
+def extract_spawn(tool_response):
+    """Cost fields of an `Agent` spawn, or None when the payload carries none.
+
+    Fail-open on the same contract as the rest of this hook family (see
+    `lib/task_context.py`): a missing, None, string, or partial `tool_response`
+    yields None — the record is then written with no `spawn` key at all —
+    and nothing here may raise, because this runs on every tool call."""
+    try:
+        if not isinstance(tool_response, dict):
+            return None
+        spawn = _pick(tool_response, SPAWN_TOP_FIELDS)
+        usage = _pick(tool_response.get("usage"), SPAWN_USAGE_FIELDS)
+        if usage:
+            cache_creation = _pick(
+                tool_response.get("usage", {}).get("cache_creation")
+                if isinstance(tool_response.get("usage"), dict) else None,
+                SPAWN_CACHE_CREATION_FIELDS,
+            )
+            usage.update(cache_creation)
+            spawn["usage"] = usage
+        tool_stats = _pick(tool_response.get("toolStats"), SPAWN_TOOL_STATS_FIELDS)
+        if tool_stats:
+            spawn["tool_stats"] = tool_stats
+        return spawn or None
+    except Exception:
+        return None
+
+
 def main():
     try:
         event = json.load(sys.stdin)
@@ -65,6 +149,12 @@ def main():
         "summary": summarize(tool_input),
         "is_error": is_error,
     }
+
+    # Agent only: every other tool's record shape is unchanged, byte for byte.
+    if tool_name == "Agent":
+        spawn = extract_spawn(tool_response)
+        if spawn:
+            record["spawn"] = spawn
 
     with open(trace_path, "a") as f:
         f.write(json.dumps(record) + "\n")

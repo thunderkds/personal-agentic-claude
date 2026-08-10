@@ -117,23 +117,27 @@ Generate `tasks/TASK_GUIDE_Txxx.md` using this bug-specific structure:
 - [ ] Post-mortem: what would have prevented this?
 
 ### Evidence (filled by reviewer at Stage 4/5)
-| Check | Result | Notes / output snippet |
-|-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI-affecting bugfixes, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
-| Repro loop | ☐ pass / ☐ fail | [command/observation that reproduced the bug before the fix] |
-| Regression test | ☐ pass / ☐ fail | [test file path(s) added to lock the fix in] |
-| Smoke suite | ☐ pass / ☐ fail | [bug-specific smoke check beyond the full suite row above] |
+
+> **Moved.** Filled by the reviewer at Stage 4/5 in `tasks/TASK_REVIEW_Txxx.md`.
 
 ## Demonstration
 
+> **Moved.** See `tasks/TASK_REVIEW_Txxx.md`.
+```
+
+Then create the sibling `tasks/TASK_REVIEW_Txxx.md` from `templates/TASK_REVIEW_template.md` and
+append the three bugfix-only Evidence rows to its table, so the bugfix flavor carries 12 rows to the
+implementation flavor's 9:
+
+```markdown
+| Repro loop | ☐ pass / ☐ fail | [command/observation that reproduced the bug before the fix] |
+| Regression test | ☐ pass / ☐ fail | [test file path(s) added to lock the fix in] |
+| Smoke suite | ☐ pass / ☐ fail | [bug-specific smoke check beyond the full suite row above] |
+```
+
+Fill the review file's Demonstration block this way for a bugfix:
+
+```markdown
 **BEFORE**: same command as the Phase 1 repro loop above, captured before any fix commit exists —
 do not restate it here as a second copy; point at it by name (e.g. "see Phase 1 repro loop") so
 the two cannot drift out of sync.
@@ -146,9 +150,11 @@ the two cannot drift out of sync.
 implementing agent alone>
 ```
 
-The three UI rows default to `☐ N/A` for a pure-backend bugfix — but a bugfix that touches a UI
-component must fill them with real evidence before Hard-Stop Gate 6 is satisfied; defaulting to N/A
-on a UI-affecting bugfix is not a valid shortcut.
+Both flavors split the same two sections into the same sibling file, keeping their field names and
+ordering identical — that is the property `delivery-report` depends on to need no flavor branch
+(T053, preserved by T064). The three UI rows default to `☐ N/A` for a pure-backend bugfix — but a
+bugfix that touches a UI component must fill them with real evidence before Hard-Stop Gate 6 is
+satisfied; defaulting to N/A on a UI-affecting bugfix is not a valid shortcut.
 
 Add the row to `PROJECT_KANBAN.md`.
 
@@ -158,7 +164,7 @@ Completion criterion: TASK_GUIDE exists on disk with the confirmed mental model 
 
 ### Step 4 — Spawn sub-agent with diagnose wired in
 
-Invoke `Skill({ skill: "craft-spawn-prompt" })` with the task's guide path, passing "must invoke `Skill({ skill: "diagnose" })` as the first action" as the required first-action input — the skill detects this guide's Mental Model section, assembles the bugfix-flavored prompt (guide pointer, confirmed mental model verbatim, the diagnose first-action instruction, `memory/MEMORY.md` verbatim, agent-guide pointer), pre-flight-checks it, and recommends the spawn model. Issue the `Agent()` call in a worktree using its output.
+Invoke `Skill({ skill: "craft-spawn-prompt" })` with the task's guide path, passing "must invoke `Skill({ skill: "diagnose" })` as the first action" as the required first-action input — the skill detects this guide's Mental Model section, assembles the bugfix-flavored prompt (guide pointer, confirmed mental model verbatim, the diagnose first-action instruction, the `memory/MEMORY.md` **path** with an instruction to read it, agent-guide pointer), pre-flight-checks it, and recommends the spawn model. Issue the `Agent()` call in a worktree using its output.
 
 The sub-agent must not write any fix code before all Diagnosis Gates in the TASK_GUIDE are checked. If the sub-agent's diagnosis contradicts the confirmed mental model, it must stop and report back to the Supervisor before continuing.
 

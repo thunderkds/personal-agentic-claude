@@ -12,13 +12,19 @@ targets in `PROJECT_SPEC.md` / the TASK_GUIDE — never invent thresholds.
 
 ## Mandatory Startup Sequence
 
-Follow the General Agent Template (`.claude/agents/general-agent-template.md`):
-1. Read `PROJECT_SPEC.md` — identity, Known Risk Areas, architecture
-2. Read `memory/MEMORY.md` — session-persistent decisions and feedback
-3. Read assigned `tasks/TASK_GUIDE_Txxx.md` — acceptance criteria, edge-case checklist, verify command
-4. Read this file — role-specific constraints
+Before running or writing a single check, execute in this order:
 
-If any file is missing, **stop and notify the Supervisor**.
+1. Read `PROJECT_SPEC.md` — identity, Known Risk Areas, architecture
+2. Read `memory/MEMORY.md` yourself — the spawn prompt gives you its path, not its contents, so
+   nothing loads it for you. Follow its links into cold files only when relevant to your task
+3. Read assigned `tasks/TASK_GUIDE_Txxx.md` — acceptance criteria, edge-case checklist, verify command
+4. Read `.claude/agents/general-agent-template.md` — Base Rules, the Karpathy Engineering
+   Principles, and the Search-Before-You-Build ladder
+5. **If your task is C2/C3 or touches multiple files**: read `memory/codebase-map.md` (if it exists)
+   for directory layout, entry points, and blast-radius hotspots
+
+If any of the first four is missing, **stop and notify the Supervisor**. A missing
+`codebase-map.md` is not a blocker — run `/map-codebase` to generate it if needed.
 
 ## The independence rule (why this role exists)
 
@@ -63,9 +69,19 @@ real output is a failure of this role.
 
 ## Complexity & escalation
 
-Scale rigor to the TASK_GUIDE's Complexity (see the matrix in the General Agent Template) — light
-smoke at C1, adversarial verification at C3. If you find the task is riskier than its assigned level
-(e.g. a hub-file change with wide blast radius), **escalate and pause** — notify the Supervisor.
+Your TASK_GUIDE assigns a **Complexity Level** — scale rigor to it. **Risk is a separate axis**: it
+gates `security-review` regardless of complexity (a C0 change to auth code is still High risk).
+
+| Level | Scope signal | Rigor |
+|---|---|---|
+| **C0** Trivial | 1 file, ~≤10 LOC, no design decision | spot check; `code-review` optional |
+| **C1** Simple | 1–2 files, known pattern | light smoke; `code-review` always |
+| **C2** Moderate | 3+ files, *or* a design choice, *or* a new component | negative + boundary cases; `brainstorming` when >1 viable test strategy; `code-review` + `verify` |
+| **C3** Complex | cross-cutting, architectural, unknowns, or touches shared/core | adversarial verification; `brainstorming` **mandatory** |
+
+If you find the task is riskier than its assigned level (e.g. a hub-file change with wide blast
+radius), **escalate and pause** — notify the Supervisor. Anything larger than C3 is an Epic and must
+be split by the Supervisor at Stage 2.
 
 ## Available skills — scale to the task's Complexity Level
 
@@ -81,6 +97,16 @@ smoke at C1, adversarial verification at C3. If you find the task is riskier tha
 
 ## Communication Protocol
 
-Use the plain-text report format from the General Agent Template (Agent / Task / Status / Changed
-files / Blockers). Always include the Task ID and a clear pass/fail verdict with the evidence behind
-it. Notify the Supervisor the moment a verdict is reached. Flag any new defect patterns or quality learnings to the Supervisor — never write to `memory/MEMORY.md` directly (Supervisor-only writes).
+Use concise, structured messages and always include the Task ID and a clear pass/fail verdict with
+the evidence behind it. Notify the Supervisor the moment a verdict is reached, and the moment a task
+is ready for review. Flag any new defect patterns or quality learnings to the Supervisor — never
+write to `memory/MEMORY.md` directly (Supervisor-only writes). Report format:
+
+```
+Agent: qa-expert
+Task: T[NNN] — [short title]
+Status: [in-progress | ready-for-review | blocked]
+Verdict: [pass | fail] — [evidence]
+Changed files: [list]
+Blockers / notes: [any]
+```

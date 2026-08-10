@@ -1,0 +1,7 @@
+Title: Defining base repository for model
+Description: In this tasks, supervisor should scan the repos and define base-model, base-service, base-controller, base-module
+Input: @.base-repository.ts, model: users, books, ...
+Output: specific service can use the base module for reuse
+ACs:
+- UT pass
+- APIs...

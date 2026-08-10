@@ -30,7 +30,7 @@ Both shapes reuse the same checklist proven in `bugfix` Step 4; only element 2 a
 | 1 | Guide pointer | `tasks/TASK_GUIDE_Txxx.md` path | same |
 | 2 | Orienting content | Guide's Restated Intent / Requirement section, verbatim | Confirmed Mental Model section, verbatim |
 | 3 | First-action skill invocation | Only if the task explicitly requires one (e.g. `migration-safety` for schema work) — otherwise omit | `Skill({ skill: "diagnose" })` as the first action — always present |
-| 4 | Memory injection | Full contents of `memory/MEMORY.md`, verbatim | same |
+| 4 | Memory reference | The **path** `memory/MEMORY.md`, with an instruction to read it in full. Do **not** paste its contents | same |
 | 5 | Agent-guide pointer | `.claude/agents/<role>.md` from the guide's `**Agent guide**` field | same |
 | 6 | Trace-attribution instruction | The active-task state-file line below, verbatim | same |
 | 7 | Demonstration BEFORE-capture instruction | The BEFORE-capture line below, verbatim | same — for a bugfix guide, this is naturally satisfied by the Phase 1 repro loop the `diagnose` first action already builds; the instruction still restates the rule so the agent doesn't skip it under time pressure |
@@ -45,15 +45,17 @@ The fix is a channel `task_context.py` can actually observe: a plain state file,
 
 Known limitation, not solved by this element: the state file is shared by every worktree using this checkout's hooks, so two tasks running verification at the same moment can race and mis-attribute each other's `Bash` calls. Safe for the common case (one task verifying at a time); flag genuinely concurrent Stage 3 verification to the Supervisor rather than trusting the file blindly.
 
-**Element 7 — why this must be said before, not after (DDR-0003).** The guide's `## Demonstration` BEFORE field cannot be back-filled once an implementation commit exists — it is the one field in the whole checklist that isn't satisfiable by assertion after the fact. `pre_agent_validate_guide.py` only warns (non-blocking) when a referenced guide's BEFORE field is still blank at spawn time; it cannot verify a capture was taken at the *right* moment. The instruction is the substantive half of the mechanism, not the reminder — put it first in the spawn prompt, before any other implementation instruction:
+**Element 7 — why this must be said before, not after (DDR-0003).** The `## Demonstration` BEFORE field cannot be back-filled once an implementation commit exists — it is the one field in the whole checklist that isn't satisfiable by assertion after the fact. `pre_agent_validate_guide.py` only warns (non-blocking) when a referenced task's BEFORE field is still blank at spawn time; it cannot verify a capture was taken at the *right* moment. The instruction is the substantive half of the mechanism, not the reminder — put it first in the spawn prompt, before any other implementation instruction.
 
-> **Demonstration BEFORE capture**: before your first implementation commit, fill this guide's `## Demonstration` BEFORE field. If this task changes executable code, run the exact command(s) named in the guide's Demonstration section and paste the real, timestamped output — a BEFORE captured after the change is not a BEFORE, there is no `N/A` path. If it does not change executable code (docs/templates/skill-instruction text), BEFORE is the verbatim prior content of what you are about to change, quoted from the file as it exists right now.
+Since T064 the block lives in the sibling `tasks/TASK_REVIEW_Txxx.md`, not in the guide (the guide keeps a `> **Moved.**` pointer). Name that file's **literal absolute path** in the prompt — `$CLAUDE_PROJECT_DIR` is set for hooks but **EMPTY inside an agent's `Bash` tool call**, so an instruction built from that variable is unfollowable by exactly the agent it targets (recorded gotcha, root of T056). Create the review file from `templates/TASK_REVIEW_template.md` at Stage 2 if it does not exist yet, so the agent has somewhere to write:
+
+> **Demonstration BEFORE capture**: before your first implementation commit, fill the `## Demonstration` BEFORE field in `<absolute-path-to-worktree>/tasks/TASK_REVIEW_Txxx.md` (the guide carries only a `> **Moved.**` pointer). If this task changes executable code, run the exact command(s) named in the guide's Demonstration section and paste the real, timestamped output — a BEFORE captured after the change is not a BEFORE, there is no `N/A` path. If it does not change executable code (docs/templates/skill-instruction text), BEFORE is the verbatim prior content of what you are about to change, quoted from the file as it exists right now.
 
 #### 4. Pre-flight structural-reference check
 Read `extract_structural_task_ids()` directly from `.claude/hooks/pre_agent_validate_guide.py` — do not re-derive or approximate the pattern, it must stay byte-for-byte in sync with what the hook enforces. Run it against the assembled prompt text:
 - For every extracted task ID, confirm `tasks/TASK_GUIDE_T<id>.md` exists on disk.
 - If any extracted ID has no matching file, **flag** it in the output as "would be rejected by the spawn hook" — do not alter the prompt to work around it.
-- Prose-only `Txxx` mentions (e.g. inside the pasted `MEMORY.md` text) that don't match either structural marker (a `TASK_GUIDE_Txxx.md` reference, or a `Task ID:` declaration line) are correctly ignored by the hook and must not be flagged here.
+- Prose-only `Txxx` mentions (e.g. in an orienting-content excerpt) that don't match either structural marker (a `TASK_GUIDE_Txxx.md` reference, or a `Task ID:` declaration line) are correctly ignored by the hook and must not be flagged here.
 
 #### 5. Recommend spawn model
 Map the guide's `**Complexity Level**` to a model, per the table already in `CLAUDE.md` Stage 3 / `general-agent-template.md`: C0→haiku, C1→sonnet, C2→sonnet/opus, C3→opus.

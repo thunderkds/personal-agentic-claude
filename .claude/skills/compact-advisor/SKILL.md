@@ -45,7 +45,7 @@ These are different mechanisms with different scope. Answer both, independently:
 
 **b. Cold memory files** (`compact-memory` territory — different skill, different files):
 - Only relevant if `memory/decisions.md`, `memory/learnings.md`, or `memory/glossary.md` is
-  approaching or over ~500 lines, or `memory/MEMORY.md` is approaching 200 lines.
+  approaching or over ~500 lines, or `memory/MEMORY.md` is approaching its 50,000-character budget.
 - If none of these apply, say so plainly and do not recommend `compact-memory` — don't recommend a
   compaction pass just because this skill ran.
 

@@ -46,7 +46,7 @@ Stage 5: Verify end-to-end → merge → ship
 | `CLAUDE.md` | Supervisor instructions (greenfield) |
 | `CLAUDE_LEGACY.md` | Supervisor instructions (brownfield / existing codebase) |
 | `tasks/` | *(per project)* Task guides generated at Stage 2 |
-| `memory/MEMORY.md` | *(per project)* Hot-tier memory index — ≤200 lines, injected into every sub-agent spawn prompt |
+| `memory/MEMORY.md` | *(per project)* Hot-tier memory index — ≤50,000 characters, referenced by path in every sub-agent spawn prompt and read by the agent |
 | `memory/decisions.md` | *(per project)* Architectural + infrastructure decisions |
 | `memory/glossary.md` | *(per project)* Canonical biz-domain terms and core domain models |
 | `memory/learnings.md` | *(per project)* Specs clarifications, patterns, gotchas |
@@ -393,7 +393,7 @@ Eight hooks enforce the pipeline automatically — no prompt reminders needed.
 The framework uses a **two-tier hot/cold memory** design to keep agents aligned across sessions, plus a **structural layer** for codebase topology.
 
 ```
-memory/MEMORY.md          ← Hot tier (≤200 lines, always injected into spawn prompts)
+memory/MEMORY.md          ← Hot tier (≤50,000 chars, referenced by path in spawn prompts)
 memory/decisions.md       ← Cold tier: architectural + infrastructure decisions
 memory/glossary.md        ← Cold tier: canonical biz-domain terms + core domain models
 memory/learnings.md       ← Cold tier: specs clarifications, patterns, gotchas
@@ -402,7 +402,8 @@ memory/codebase-map.md    ← Structural tier: directory tree, entry points, bla
 
 **How it works:**
 - **Supervisor-only writes.** Sub-agents never write to memory directly.
-- **Spawn injection.** The Supervisor pastes the full `memory/MEMORY.md` verbatim into every sub-agent spawn prompt — no extra reads needed.
+- **Spawn injection.** The Supervisor passes the **path** `memory/MEMORY.md` in every sub-agent spawn prompt and the agent reads it as a mandatory startup step — the contents are not pasted, so an agent that does not need memory does not pay for it.
+- **Size gate.** The hot tier is capped at **50,000 characters** (not lines — a 200-line cap stayed green while the file grew 15.5% in characters). The budget is a ratchet: `/compact-memory` may lower it, nothing raises it.
 - **Auto-update.** The `post_bash_memory_update.py` hook fires after `git push/merge/pull` and prompts a diff-driven update pass: changed files → grep cold files → update matched entries → append new learnings.
 - **Manual compaction.** Type `/compact-memory` any time to run a human-gated compaction: stale entries are flagged, reviewed, then pruned; the hot-tier index is re-synced.
 

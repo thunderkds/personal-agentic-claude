@@ -1,0 +1,298 @@
+#!/usr/bin/env python3
+"""T066 — de-duplicate the agent startup read set, in the direction the channel allows.
+
+The obvious de-duplication is wrong here. `general-agent-template.md` arrives in an agent's
+context only if the agent chooses to open it; `.claude/agents/<name>.md` is auto-loaded by the
+harness as the agent's system prompt and therefore *always* arrives. Consolidating shared content
+into the template would move it out of a guaranteed channel into an optional one — the
+"already covered must mean reaches-the-context" error (T041). So the direction is **into the role
+guides**.
+
+  AC1  — every shared section is present in all four role guides after the change
+  AC2  — `common-infrastructure.md` gains Communication Protocol + Complexity (it had NEITHER)
+  AC3  — the template no longer restates a section all four role guides carry
+  AC4  — no startup sequence tells an agent to read the file that is already its system prompt
+  AC5  — `CLAUDE.md` byte-identical to the pre-task baseline
+  AC6  — the Karpathy table and the Search-Before-You-Build ladder stay reachable per role
+  AC7  — per-role loaded size strictly lower than the baseline, for all four roles
+  AC9  — no role guide loses its role-specific sections
+  AC10 — `MANIFEST` byte-identical to the pre-task baseline
+
+Sections are matched by **content probes**, not by heading name. The guide's edge-case checklist
+warns that a shared heading can carry materially different bodies across roles; a heading-name
+match would call two different things "the same section" and pass on a file that says nothing.
+
+Run with: python3 -m pytest .claude/hooks/tests/test_agent_guide_dedup.py -v
+"""
+import re
+import subprocess
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[3]
+
+# The pre-task branch tip (parent of T066's own Stage 2 guide commit; the last commit before
+# this task touched anything). AC5/AC10 are "unchanged vs HEAD" questions, and `HEAD` moves with
+# every commit this task makes — pinning the ref is what keeps them answerable after merge.
+# (Contrast T065's AC12, which pinned a *count* captured at review time and then forbade the
+# thing it was guarding from ever changing again. A baseline ref dates the comparison; a
+# baseline count freezes the world.)
+BASELINE_REF = "8fc4dd2"
+
+TEMPLATE = ".claude/agents/general-agent-template.md"
+ROLE_GUIDES = {
+    "c-infra": ".claude/agents/common-infrastructure.md",
+    "backend": ".claude/agents/backend.md",
+    "frontend": ".claude/agents/frontend.md",
+    "qa": ".claude/agents/qa.md",
+}
+ALL_AGENT_FILES = [TEMPLATE, *ROLE_GUIDES.values()]
+
+
+def read(rel: str) -> str:
+    return (ROOT / rel).read_text(encoding="utf-8")
+
+
+def read_at(rel: str, ref: str) -> bytes:
+    return subprocess.run(
+        ["git", "-C", str(ROOT), "show", f"{ref}:{rel}"],
+        check=True, capture_output=True,
+    ).stdout
+
+
+def headings(text: str) -> list[str]:
+    return re.findall(r"^##\s+(.+?)\s*$", text, re.M)
+
+
+# --------------------------------------------------------------------------
+# Shared-section probes. Each entry is (label, [substrings that must ALL appear]).
+# These are the four sections the TASK_GUIDE measured as duplicated between the
+# template and the role guides.
+# --------------------------------------------------------------------------
+STARTUP_PROBES = [
+    "PROJECT_SPEC.md",
+    "memory/MEMORY.md",
+    "tasks/TASK_GUIDE_Txxx.md",
+    "memory/codebase-map.md",
+    "stop and notify the Supervisor",
+]
+COMMUNICATION_PROBES = [
+    "## Communication Protocol",
+    "Task ID",
+    "Status:",
+    "Changed files:",
+    "ready for review",
+]
+COMPLEXITY_PROBES = ["C0", "C1", "C2", "C3", "hub", "escalate and pause"]
+SKILLS_PROBES = ['Skill({ skill: "code-review" })', 'Skill({ skill: "verify" })']
+
+SHARED_SECTIONS = {
+    "Mandatory Startup Sequence": STARTUP_PROBES,
+    "Communication Protocol": COMMUNICATION_PROBES,
+    "Complexity guidance": COMPLEXITY_PROBES,
+    "Available Skills": SKILLS_PROBES,
+}
+
+
+# --------------------------------------------------------------------------
+# Anti-vacuity guard. Every assertion below reads a file by path; a mistyped or
+# vacated path would make the whole module inspect nothing.
+# --------------------------------------------------------------------------
+def test_every_agent_file_exists():
+    missing = [rel for rel in ALL_AGENT_FILES if not (ROOT / rel).is_file()]
+    assert not missing, f"agent file(s) missing, so this module inspects nothing: {missing}"
+
+
+# --------------------------------------------------------------------------
+# AC1 / AC2 — the guards. Written before any deletion: they are what makes every
+# later removal from the template safe.
+# --------------------------------------------------------------------------
+@pytest.mark.parametrize("role", sorted(ROLE_GUIDES))
+@pytest.mark.parametrize("section", sorted(SHARED_SECTIONS))
+def test_ac1_every_shared_section_is_present_in_every_role_guide(role, section):
+    text = read(ROLE_GUIDES[role])
+    absent = [p for p in SHARED_SECTIONS[section] if p not in text]
+    assert not absent, (
+        f"{ROLE_GUIDES[role]} does not carry {section!r} — missing probe(s) {absent}. "
+        f"The role guide is the guaranteed channel (it is the auto-loaded system prompt); "
+        f"nothing may be removed from the template unless all four role guides carry it."
+    )
+
+
+def test_ac2_common_infrastructure_gained_communication_protocol_and_complexity():
+    """The trap. `common-infrastructure.md` had 0 chars of both and relied entirely on the
+    template. The first deletion from the template silently strips both from every c-infra
+    spawn — the agent type this project uses most."""
+    text = read(ROLE_GUIDES["c-infra"])
+    for section in ("Communication Protocol", "Complexity guidance"):
+        absent = [p for p in SHARED_SECTIONS[section] if p not in text]
+        assert not absent, f"c-infra still lacks {section!r}: missing {absent}"
+
+
+# --------------------------------------------------------------------------
+# AC3 — the template no longer restates what all four role guides carry.
+# --------------------------------------------------------------------------
+def test_ac3_template_does_not_restate_any_fully_shared_section():
+    template = read(TEMPLATE)
+    tmpl_headings = headings(template)
+    banned = [
+        "Mandatory Startup Sequence (Every Agent, Every Task)",
+        "Complexity Levels — How Much Process to Apply",
+        "Available Skills (Callable by Any Agent)",
+        "Communication Protocol",
+    ]
+    still_there = [h for h in tmpl_headings if h in banned]
+    assert not still_there, (
+        f"the template still carries section(s) every role guide now has: {still_there}"
+    )
+    # Heading removal alone is not the criterion — the *body* must be gone too.
+    assert "| **C0** Trivial" not in template, "the C0–C3 matrix body is still in the template"
+    assert "Blockers / notes:" not in template, "the report-format block is still in the template"
+    assert 'Skill({ skill: "code-review" })' not in template, (
+        "the skills table is still in the template"
+    )
+
+
+# --------------------------------------------------------------------------
+# AC4 — do not tell an agent to read its own system prompt.
+# --------------------------------------------------------------------------
+def test_ac4_no_guide_tells_an_agent_to_re_read_its_own_system_prompt():
+    offenders = []
+    for role, rel in ROLE_GUIDES.items():
+        for lineno, line in enumerate(read(rel).splitlines(), start=1):
+            if re.match(r"^\s*\d+\.", line) and re.search(
+                r"[Rr]ead this file|[Rr]ead the relevant guide in `\.claude/agents/`", line
+            ):
+                offenders.append(f"{rel}:{lineno}: {line.strip()}")
+    for lineno, line in enumerate(read(TEMPLATE).splitlines(), start=1):
+        if "Read the relevant guide in `.claude/agents/` for your role" in line:
+            offenders.append(f"{TEMPLATE}:{lineno}: {line.strip()}")
+    assert not offenders, (
+        "a startup step still instructs a re-read of the auto-loaded role guide:\n  "
+        + "\n  ".join(offenders)
+    )
+
+
+# --------------------------------------------------------------------------
+# AC5 / AC10 — file-wide negatives.
+# --------------------------------------------------------------------------
+@pytest.mark.parametrize("rel", ["CLAUDE.md", "MANIFEST"])
+def test_ac5_ac10_out_of_scope_files_are_byte_identical_to_the_baseline(rel):
+    assert (ROOT / rel).read_bytes() == read_at(rel, BASELINE_REF), (
+        f"{rel} changed. CLAUDE.md never reaches a sub-agent at all, so its overlap with the "
+        f"agent guides is CROSS-context redundancy and must not be collapsed; MANIFEST already "
+        f"deploys `.claude/agents` as a directory entry."
+    )
+
+
+# --------------------------------------------------------------------------
+# AC6 — T041's fix must survive, per role, in whatever that role actually loads.
+# --------------------------------------------------------------------------
+KARPATHY_PROBES = [
+    "## Karpathy Engineering Principles (Compact)",
+    "Think Before Coding",
+    "Simplicity First",
+    "Surgical Changes",
+    "Goal-Driven Execution",
+]
+LADDER_PROBES = [
+    "## Search Before You Build",
+    "Does this need to exist at all?",
+    "Is it already in this codebase?",
+    "Does the stdlib already do this?",
+    "native platform/framework feature",
+    "already-installed dependency",
+    "Can it be one line?",
+    "write the minimum working code",
+]
+
+
+def reachable_text(role: str) -> tuple[str, list[str]]:
+    """Everything a role's context can contain: its auto-loaded guide, plus every
+    `.claude/agents/*.md` that guide instructs it to read."""
+    rel = ROLE_GUIDES[role]
+    guide = read(rel)
+    files = [rel]
+    for ref in sorted(set(re.findall(r"\.claude/agents/[a-z-]+\.md", guide))):
+        if ref != rel and (ROOT / ref).is_file():
+            files.append(ref)
+    return "\n".join(read(f) for f in files), files
+
+
+@pytest.mark.parametrize("role", sorted(ROLE_GUIDES))
+def test_ac6_karpathy_table_and_ladder_reachable_from_every_role(role):
+    text, files = reachable_text(role)
+    assert len(files) > 1, (
+        f"{role}'s guide references no other agent file, so this assertion could only ever "
+        f"inspect the guide itself — that is the vacuous case, not a pass."
+    )
+    missing = [p for p in KARPATHY_PROBES + LADDER_PROBES if p not in text]
+    assert not missing, (
+        f"T041's fix is no longer reachable from {role}'s context (files: {files}); "
+        f"missing: {missing}"
+    )
+
+
+# --------------------------------------------------------------------------
+# AC7 — measured, not asserted.
+# --------------------------------------------------------------------------
+def loaded_chars(role: str) -> int:
+    return len(read(ROLE_GUIDES[role])) + len(read(TEMPLATE))
+
+
+def baseline_loaded_chars(role: str) -> int:
+    # `.decode()` is load-bearing: these files are full of em dashes and `≤`, so a byte count
+    # runs ~4% above the character count. Comparing bytes-before against chars-after made AC7
+    # pass while the files were still untouched — a saving conjured entirely out of UTF-8.
+    return len(read_at(ROLE_GUIDES[role], BASELINE_REF).decode("utf-8")) + len(
+        read_at(TEMPLATE, BASELINE_REF).decode("utf-8")
+    )
+
+
+@pytest.mark.parametrize("role", sorted(ROLE_GUIDES))
+def test_ac7_per_role_loaded_size_is_strictly_lower_than_baseline(role):
+    before, after = baseline_loaded_chars(role), loaded_chars(role)
+    assert after < before, (
+        f"{role}: {before:,} -> {after:,} chars — not lower. Report the real number rather "
+        f"than reframing the criterion."
+    )
+
+
+# --------------------------------------------------------------------------
+# AC9 — role-specific content is not collateral damage.
+# --------------------------------------------------------------------------
+ROLE_SPECIFIC = {
+    "c-infra": ["## Environment Health Checklist", "## Output Format", "## Responsibilities"],
+    "backend": [
+        "## Scope boundaries (who owns what)",
+        "## Appendix — Advanced / distributed patterns (decision-gated)",
+        "## The three pillars (your gates)",
+    ],
+    "frontend": [
+        "## Scope boundaries (who owns what)",
+        "## Appendix — Advanced UI patterns (decision-gated)",
+        "## The three pillars (your gates)",
+    ],
+    "qa": [
+        "## The independence rule (why this role exists)",
+        "## Scope boundaries (who owns what)",
+        "## Evaluation checklist (apply what the task needs)",
+    ],
+}
+
+
+@pytest.mark.parametrize("role", sorted(ROLE_GUIDES))
+def test_ac9_role_specific_sections_survive(role):
+    text = read(ROLE_GUIDES[role])
+    missing = [s for s in ROLE_SPECIFIC[role] if s not in text]
+    assert not missing, f"{role} lost role-specific section(s): {missing}"
+
+
+def test_ac9_decision_gated_appendices_stay_below_the_body():
+    """An Appendix is decision-gated and must not be promoted into the always-loaded body."""
+    for role in ("backend", "frontend"):
+        text = read(ROLE_GUIDES[role])
+        idx = text.index("## Appendix")
+        assert "**not defaults.**" in text[idx:], f"{role}'s appendix lost its gating sentence"
+        assert text[idx:].count("## ") == 1, f"{role} has content after the appendix"

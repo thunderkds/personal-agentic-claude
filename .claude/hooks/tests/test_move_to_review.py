@@ -3,9 +3,10 @@
 
 **Defect A (attribution).** The hook extracted its Task ID with
 `re.findall(r"\\bT(\\d{3})\\b", prompt)` over the *entire* `Agent` spawn prompt.
-Stage 3 mandates pasting `memory/MEMORY.md` verbatim into every spawn prompt,
-and that file is full of prose task IDs — so a single spawn could move several
-unrelated In-Progress rows to Ready for Review and delete their step counters.
+Stage 3 at the time mandated pasting `memory/MEMORY.md` verbatim into every
+spawn prompt (T065 replaced that with a path reference), and that file is full
+of prose task IDs — so a single spawn could move several unrelated In-Progress
+rows to Ready for Review and delete their step counters.
 
 **Defect B (lifecycle).** The hook is a `PostToolUse` matcher on `Agent`, which
 fires when the tool call returns. For a background sub-agent that is when the

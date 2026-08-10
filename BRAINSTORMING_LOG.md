@@ -344,3 +344,129 @@ Files that **must not** be touched:
 > Approved by user on 2026-08-05. **Grilling complete 2026-08-05** — see Grilling Outcome above.
 > Final form: HTML Delivery Report (Markdown rejected), Stage 5 post-`verify` trigger, reminder hook
 > + spawn-time warning (no merge blocking), BEFORE with no N/A path. ~300 lines, split across 3 tasks.
+
+---
+
+# Ideation: harness agent-performance (2026-08-07)
+
+## Scope constraint set by the user
+
+This harness is built to be installed into **other repos**. Past tasks in this repo are a minor
+reference at best, not the basis for evaluation — the 58 completed tasks are all harness-building
+work in a Python/shell repo and cannot stand in for a downstream web app or data pipeline.
+
+The operative distinction that follows from this:
+
+| Ships downstream (in scope) | Instance-only (out of scope) |
+|---|---|
+| `CLAUDE.md` (real copy, `setup.sh:238`) | `MEMORY.md` **content** — `setup.sh:344` seeds a fresh stub |
+| `.claude/agents/` incl. `general-agent-template.md` | `PROJECT_SPEC.md` — project-specific, from template |
+| `.claude/skills/`, `.claude/hooks/`, `templates/` | the 58 past tasks and their outcomes |
+| `docs/claude-md/`, `AGENTS.md` | |
+
+**Correction recorded**: the Supervisor initially led with "`MEMORY.md` costs 10,727 tokens per
+spawn, 47% reducible". That number is real but instance-only — a fresh install starts near zero. The
+harness defect is not the size of this repo's memory, it is that **the growth mechanism ships**: the
+200-line cap test lives in `.claude/hooks/tests`, and the Memory Write Protocol that produced
+281-char "one-line summaries" (stated rule: ≤150 chars, 86% of 147 entries violate it) lives in
+`docs/claude-md/`. The disease travels; the symptom does not.
+
+## Measured baseline (2026-08-07, no new instrument required)
+
+Per-spawn injected constant: `MEMORY.md` ~10,727 tok + `general-agent-template.md` ~1,817 +
+role guide ~730 ≈ 13,274. Plus the guide (T059 3,474 / T060 6,836), plus startup reads
+(`CLAUDE.md` 3,794 + `PROJECT_SPEC.md` 3,857) ≈ 24,000–28,000 tok before any work begins.
+
+Measured actuals, taken from the `Agent` tool's own return value: **T059 48,401 tokens / 19 tool
+uses (~50% orientation overhead); T060 81,220 / 30 (~33%)**. DDR-0001 spent two measurement windows
+failing to capture cost-per-task by hand from `/cost`; the harness has been receiving it
+automatically per spawn and discarding it.
+
+## Candidates: 38 generated, 7 survived, then re-ranked under the downstream constraint
+
+Rejected on feasibility: relevance-scored injection and semantic retrieval (no ground truth for
+"relevant"), a `recall` tool (does not exist), delta-encoded memory (unreadable by humans), harness-
+internal prompt-cache ordering, model-pass compression (spends tokens to save tokens), self-tuning
+selection and simulated agents (need a corpus far larger than 58 tasks).
+
+Rejected on impact: dropping the guide paste from spawn prompts (re-opens the recorded
+worktree-forks-from-main halt), trimming Kanban rows (not injected, costs nothing per spawn),
+cutting Supervisor re-verification (trades correctness for tokens — it caught stale Evidence twice
+on 2026-08-07 alone).
+
+Rejected on differentiation: deleting guards (guard efficacy is a different topic, explicitly
+redirected away from), task sizing (a Stage 2 judgment, not a harness change).
+
+**Demoted by the user**: replay-eval over past tasks — unrepresentative of downstream projects.
+
+## Selected Direction
+
+**Sequential, by priority — not a single pick.** Order and rationale:
+
+1. **Capture per-spawn telemetry** (`subagent_tokens`, `tool_uses` → `event-trace`). Prerequisite:
+   every other candidate is unfalsifiable without it. Ships in `.claude/hooks`, language-agnostic,
+   gives each downstream repo its own baseline. Cannot fail as DDR-0001/0002 did — no human in the
+   loop. **Open question for brainstorming: does DDR-0002's "retire, don't re-instrument" ruling bar
+   this, or did it bar only manual `/cost` logging?**
+2. **Prove memory is actually used** — answerable only after (1); gates whether (3) and (4) are
+   worth doing at all.
+3. **Guide format refactor** — biggest per-task variable; `TASK_GUIDE_template.md` ships.
+4. **Injection cap measures chars, not lines** — cheap and ships, but payoff is deferred.
+5. **Spawn threshold for C0/C1** — potentially the largest win (eliminates overhead for a task class
+   rather than reducing it), held back only because it collides with Hard-Stop Gate 1, which is a
+   Permanent Rule and a user decision. **May deserve promotion once (1) produces numbers.**
+6. **De-dupe the startup read set** — last; T039 already harvested most of it, and some overlap is
+   deliberate cross-context redundancy.
+
+## Investigation outcome (2026-08-07, temporary probe, reverted)
+
+A probe was registered on `PostToolUse`/`Agent`, three spawns were run, and it was removed. Two
+hypotheses, one rejected:
+
+- **H1 — the PostToolUse Agent payload carries structured cost fields.** **CONFIRMED.**
+  `tool_response` holds `totalTokens`, `totalToolUseCount`, `totalDurationMs`, `resolvedModel`,
+  `agentType`, `status`, a full `usage` breakdown, and `toolStats` incl. `linesAdded`/`linesRemoved`.
+- **H2 — unique per-task content is paid at `cache_creation` rates, stable injected content is
+  served as `cache_read`.** **REJECTED.**
+
+| arm | unique prompt | total | cache_read | cache_creation | output |
+|---|---|---|---|---|---|
+| A | 29 tok | 15,669 | 15,259 | 405 | 3 |
+| B | 1,144 tok | 16,981 | 16,572 | 404 | 3 |
+
+Arm B added 1,115 tokens of novel prompt text and moved `cache_creation` by **−1**. The unique
+content landed in `cache_read` like everything else, because the spawn prompt is already inside the
+Supervisor's cached context before the agent starts.
+
+**Consequences, which reorder the priority list above:**
+
+1. Token-volume optimization is worth roughly **a tenth** of its nominal figure — nearly everything
+   injected is billed as a cache read. Items 3, 4 and 6 are all worth about 10% of what the raw
+   counts advertise.
+2. The guide-vs-memory inversion stated after the first probe (n=1) is **withdrawn**. Guides are not
+   expensive because they are unique; they are cached too.
+3. The dominant lever is **spawn count**, not spawn content. Every spawn costs ~15.7k tokens before
+   doing any work (arm A: 15,669 for a single `echo`), against 48,401 for T059's real three-line fix
+   and 81,220 for T060. **Item 5 is therefore promoted from last to first on evidence** — the
+   promotion flagged as possible when the order was written.
+4. All of the above rests on **n=3 synthetic spawns** and is not established. This is exactly why
+   item 1 ships first regardless of the reordering: standing capture over dozens of real spawns is
+   what the next decision should rest on.
+
+**Three corrections the Supervisor made to its own framing during this investigation**, recorded so
+the reasoning is auditable rather than looking like it arrived clean: (a) the opening
+"`MEMORY.md` costs 10,727 tok/spawn, 47% reducible" figure is instance-only and does not ship
+downstream; (b) cache dominance means volume is not cost; (c) H2's inversion was wrong.
+
+## Revised order
+
+1. **T061 — capture per-spawn telemetry** (registered, Stage 2 planned 2026-08-07). Unchanged as
+   first build: everything else now depends on real numbers.
+2. **Spawn threshold for C0/C1** — promoted from 5th. Blocked on a user decision about Hard-Stop
+   Gate 1, and on T061's data.
+3. **Prove memory is actually used** — unchanged.
+4. **Guide format refactor** — demoted; worth ~10% of nominal.
+5. **Injection cap measures chars not lines** — demoted; same reason.
+6. **De-dupe the startup read set** — unchanged, last.
+
+Next: Stage 3 on T061.

@@ -243,27 +243,6 @@ legitimate CLAUDE.md edit.
 **Files**: CLAUDE.md, scripts/test-claude-md-refs.sh (new), tasks/TASK_GUIDE_T039.md
 
 ---
-
-## T043 planned: fix trace/step-limit task attribution (2026-07-23)
-
-**Decision**: Both `post_tool_trace.py` and `pre_agent_step_limit.py` resolve "which task is this?"
-via a bare `re.search(r"\bT\d{3}\b")` over the tool payload — and the trace hook searches
-`tool_response` too, so *reading* PROJECT_KANBAN.md files the record under whichever Task ID appears
-first in that file's text. Fix is a shared `.claude/hooks/lib/task_context.py:resolve_task_id()`
-reusing the structural-reference pattern already proven in `pre_agent_validate_guide.py`
-(`extract_structural_task_ids`, T022), with documented precedence: `CLAUDE_ACTIVE_TASK` env →
-`TASK_GUIDE_Txxx.md` in a *path-valued* input field → structural ref in an `Agent` spawn prompt →
-unattributed. Explicitly rejected: inferring from the worktree path (worktrees are named
-`agent-<hash>`, no Task ID) and keeping the whole-payload regex as a fallback (a wrong tag is worse
-than a missing one — same principle as T042).
-
-**Why it is P0**: it blocks T040, which blocks T030. DDR-0001 maps spend as session `/cost` split
-across that session's tagged entries — with wrong tags the derived audit log is *confidently wrong*.
-
-**Files**: tasks/TASK_GUIDE_T043.md (Stage 2 artifact only; implementation not started)
-
----
-
 ## T043 merged: structural task attribution for the always-on hooks (2026-07-23)
 
 **Decision**: `post_tool_trace.py` and `pre_agent_step_limit.py` no longer infer the Task ID from
@@ -288,12 +267,60 @@ tests/test_task_context.py (new, 29 tests incl. 18 subprocess-from-foreign-cwd)
 
 ---
 
-## T044 — Hook lifecycle & evidence integrity (Stage 4 reviewed 2026-07-30, not yet integrated)
+## T046 merged: `Pattern reference` advisory field in TASK_GUIDE_template.md (2026-07-24)
+
+> Recovered 2026-08-07 from `stash@{0}`, where this record had sat uncommitted since the task
+> merged. The implementation shipped at `bf23413`; its memory pass did not.
+
+**Decision**: Every TASK_GUIDE now carries an advisory `**Pattern reference**:` field in its
+`## Approach` section, naming an existing file the implementing agent should imitate (or an explicit
+opt-out `None — no comparable prior art in this repo`). Closes the gap that Karpathy **Surgical
+Changes** ("Match existing styles perfectly") was a principle with no operational hook, and lived
+only in `CLAUDE.md`, which is NOT in the sub-agent read list — so it reached no sub-agent (the
+"'already covered' must mean reaches-the-context" learning). `TASK_GUIDE_Txxx.md` IS in that list,
+so the field reaches the agent without touching `.claude/agents/*.md`. Sourced from a scan of the
+Claude Code prompt library (`https://code.claude.com/docs/en/prompt-library`, 52 prompts): ~46 already
+covered by existing skills/agents; 3 gaps found; user scoped to gap #1 ("Follow an existing pattern")
+and explicitly REJECTED gap #2 (UI render→compare→fix self-check loop — zero UI tasks ever, so
+speculative) and gap #3 (Supervisor→agent steering protocol — no observed need). Advisory only: no
+hook, no gate, no Hard-Stop Gate, no backfill into existing guides — mirrors the `Depends on` /
+`Entry point` precedent exactly.
+
+**Risk**: rated Medium purely because `TASK_GUIDE_template.md` is a hub file every future task
+inherits — NOT because the edit was large (5 lines). Hub claim was verified, not asserted: a
+differential test ran all six guide-parsing regexes (title/agent/complexity/risk/priority/Depends on
+in `post_write_register_task.py`) plus the merge gate's `verify`-row pattern against the pre- and
+post-change template — byte-identical results. A new `**Bold**:` line in `## Approach` collides with
+no parser.
+
+**Test**: `.claude/hooks/tests/test_task_guide_template_pattern_reference.py` (9 tests) asserts
+against the REAL template file (`Path(__file__).resolve().parents[3]`), never an inline copy. The
+load-bearing assertion is section-scoped: it slices between `^## Approach` and the next `^## ` with
+`re.MULTILINE|DOTALL` and searches ONLY that slice — a bare `in template` check would still pass if
+the field drifted out of `## Approach`, the exact vacuous-assertion trap hit 3× (T036/T042/T039).
+All 4 negative controls (field deleted / moved out of Approach / opt-out stripped / example path
+pointed at a missing file) were independently mutated on the real template by the Supervisor and
+observed RED, then reverted. Slicer anchors on `^## ` to guard the T045 unanchored-lookahead class.
+
+**Stage 4**: 0 P0/P1/P2, 3 P3 (all test-file, none requested: noun-named `example_path()`; a
+duplicated field still passes — no occurrence-count assertion; `remove_field_block` eats extra blank
+lines). security-review executed (2nd successful run in project history after the origin remote was
+added 2026-07-23) — no findings; no untrusted input reaches the change.
+
+**Merged**: `--no-ff`, commit `bf23413`, branch `feat/t046-pattern-reference`.
+
+**Files**: templates/TASK_GUIDE_template.md,
+.claude/hooks/tests/test_task_guide_template_pattern_reference.py (new, 9 tests)
+
+---
+
+## T044 merged: hook lifecycle & evidence integrity (Stage 4 reviewed 2026-07-30, merged 2026-07-31)
 
 Three defects in one subsystem, all observed live on 2026-07-23.
 
 **A — wrong task.** `post_agent_move_to_review.py` scanned the whole spawn prompt with
-`\bT(\d{3})\b`, and Stage 3 mandates pasting `memory/MEMORY.md` verbatim into every spawn prompt.
+`\bT(\d{3})\b`, and Stage 3 at the time mandated pasting `memory/MEMORY.md` verbatim into every
+spawn prompt (T065 replaced that with a path reference).
 One spawn emptied `### In Progress` and deleted three unrelated step counters. Now resolves via
 T043's `lib/task_context.py:resolve_task_id`.
 
@@ -332,33 +359,6 @@ Kanban → Ready for Review → Done *before* the integration step (the gate rej
 **Files**: .claude/hooks/post_agent_move_to_review.py, pre_bash_block_unsafe_merge.py,
 tests/test_merge_gate_evidence.py (new, 29), tests/test_move_to_review.py (new, 11),
 .claude/skills/craft-spawn-prompt/SKILL.md
-
-## Stage 2 planning: T047 — repair trace attribution's channel (2026-07-31)
-
-**Decision**: Plan the AC7 defect as its own P0 task rather than patching it inside T044's already-merged
-work. T044's *logic* (structural precedence, boundary-anchored runner matching) is correct and reviewed;
-what failed is the **channel** — `CLAUDE_ACTIVE_TASK` is read from the hook process's `os.environ`, and a
-hook is spawned by the harness as a sibling of the tool call, so an `export` inside a Bash tool call can
-never reach it. Separating channel from logic keeps T044's reviewed matching untouched (T047 AC9) and
-makes the regression guard explicit (T047 AC5 re-runs the two real `T043.jsonl` records).
-
-**Deliberately left open for the implementing agent**: which channel to use. Three candidates recorded in
-the guide (state file under `.claude/hooks/.state/`, `settings.json` env injection, cwd/worktree-derived)
-with trade-offs — works-from-a-tool-call, stays structural, staleness risk, machinery cost — and none
-pre-selected. This follows the Ambiguity Protocol's requirement-vs-implementation split: the user-facing
-requirement ("honest tasks must not be blocked") is fixed; the mechanism is an implementation decision
-that belongs to the task. "No channel can carry per-task identity" is sanctioned as a valid documented
-outcome, mirroring T044's AC3 conclusion about the completion signal.
-
-**Two guide-authoring choices worth keeping**: (1) T047's Verification Command is written *without* a
-`CLAUDE_ACTIVE_TASK=` prefix, with a note saying why — copying T044's prefix would have propagated the
-inert mechanism into the guide meant to fix it; (2) the Test Plan mandates a real end-to-end run, because
-T044's suite is green while patching `os.environ`, which never crosses the process boundary where the
-defect lives.
-
-**Knock-on**: T040 re-blocked on T047 (it would build the DDR-0001 replacement token-audit window on
-records that are silently all `_untagged`), so T030 stays blocked behind it. DDR-0001's second measurement
-window cannot open until T047 lands.
 
 ## T047 Stage 4 closed: active-task state file as the attribution channel (2026-07-31)
 
@@ -703,3 +703,508 @@ reader couldn't predict before the task began, and only the bugfix repro loop de
 all. A score over conformance rows would have produced a confident number measuring the wrong thing.
 **Files**: BRAINSTORMING_LOG.md, PROJECT_SPEC.md, memory/glossary.md, docs/ddr/0003-demonstration-block-and-delivery-report.md
 **Record**: DDR gate scored 3-of-3 (ADR-eligible). User asked, chose DDR over ADR escalation — "hard to reverse" is the weak leg; this is a process-artifact change, not an architectural commitment like ADR-0001. -> see DDR-0003
+
+## T053 + T055 integrated and pushed, 2026-08-06
+
+**T053** — `## Demonstration` block (BEFORE / AFTER / DELTA / WITNESS, no `N/A` path on BEFORE) added
+to `templates/TASK_GUIDE_template.md` and the bugfix Step 3 skeleton; the bugfix flavor's BEFORE
+*points at* the Phase 1 repro loop rather than duplicating it (DDR-0003's two-copies-that-disagree
+risk). `craft-spawn-prompt` gained element 7, the BEFORE-capture-before-implementation instruction.
+`pre_agent_validate_guide.py` gained a non-blocking blank-BEFORE advisory with an explicit fail-open
+wrapper around both warning paths.
+
+**T055** — bugfix Evidence table went 3 free-text rows → 12 gate-visible rows (the 9-row
+implementation shape + the 3 preserved bugfix-specific rows). The merge gate was not *failing* on
+bugfix tasks, it was structurally absent. Step 5 review wording updated to match.
+
+**Process, and the part worth remembering**: both Stage 3 runs were killed mid-task by the step-limit
+hook via the shared-`.state` race (see learnings.md). The Supervisor recovered both worktrees,
+resolved the `bugfix/SKILL.md` conflict by keeping both changes, and **wrote T053's AC6/AC7 hook
+advisory and all 8 of its tests itself** — the agent never reached them. T055's agent reported
+`151 passed` and a mutation check; both were re-run independently from the main checkout rather than
+trusted, given this repo's record of false Evidence (T035, T039). Final: `159 passed`, both mutation
+cycles observed RED then GREEN.
+
+One self-review defect caught before commit: `before_field_is_blank` used
+`value.replace("OR", "")`, which strips those letters from any word ("ERROR"→"ERR"). Narrowed to
+`\bOR\b`. It could not have produced a wrong verdict yet — a latent trap, not a live bug.
+
+Deliberately **not** done: T054 (`delivery-report`) remains blocked on nothing now that T053 has
+landed, but was out of scope for this session. Branch `docs/stage2-demonstration-block-t053-t055`
+pushed; **not merged to main** — no PR opened, awaiting user decision.
+
+## T056 merged: session-scoped step counters + TTL expiry, 2026-08-06
+
+The step-limit guard hard-blocked a whole Supervisor session **three times in one day**. Root cause
+was two-part, and the shared-state race was the *lesser* half:
+
+1. **Counters are never reset.** `post_agent_move_to_review.py` is deliberately inert as a writer
+   (T044 — no completion event carries task identity), so `step_count_<task>.txt` grew monotonically
+   forever with no automatic path back to zero for any task, ever. The third incident's poisoning
+   counter belonged to **T053 — already Done and pushed hours earlier**.
+2. **Counters were keyed by task alone**, so one session's exhausted budget broadcast to every
+   session resolving to that task, including the Supervisor's.
+
+Fix: key on `step_count_<sanitized-session>_<task>.txt` off the event's `session_id`, plus an
+mtime-based TTL (`CLAUDE_STEP_COUNT_TTL_S`, default 6h) treating an expired counter as 0.
+`makedirs`/write wrapped so an unwritable state dir fails open. `session_id` treated as untrusted
+(it reaches a filename): sanitized to `[A-Za-z0-9]`, truncated to 64, `nosession` fallback.
+
+`task_context.py` deliberately untouched — the attribution/state-file race is a separate concern, and
+the guard is now safe *without* depending on it being fixed. Attribution can still mis-tag concurrent
+agents; it can no longer *block* them, which is the harm that actually stopped sessions.
+
+Stage 4: the 2 pre-existing `test_task_context.py` edits are filename-literal updates with assertions
+unweakened (checked, not assumed). security-review **PASS, 0 actionable** — manual, 11 hostile
+`session_id` probes (`../../../etc/passwd`, `$(whoami)`, NUL byte, 200-char): no traversal, injection,
+empty or overlong segment. Incident reproduced end-to-end against the fixed hook by the Supervisor
+rather than trusted from tests: 41 events session A → blocked, 1 event session B → **allowed**.
+Mutation-verified both load-bearing assertions RED then GREEN. `169 passed` re-run from the main
+checkout post-merge. Pushed on `docs/stage2-demonstration-block-t053-t055`; **not merged to main, no
+PR opened**.
+
+**Still open after this task**: `pre_agent_step_limit.STATE_DIR` resolves off `__file__`, while
+`task_context.py` resolves its state root off `$CLAUDE_PROJECT_DIR`. Same directory in practice
+(the harness always invokes main-checkout hooks) but the two can diverge, which made verification
+harder to reason about. Worth reconciling with the eventual attribution task.
+
+## T054 merged: delivery-report skill + HTML template, 2026-08-06
+
+Closes the DDR-0003 block (T053 → T055 → T056 → T054). `Skill({ skill: "delivery-report" })` renders a
+task's Demonstration block as a self-contained dark-neon HTML page at
+`reports/delivery-report_<branch>_<timestamp>.html`: BEFORE/AFTER side by side, DELTA as the headline,
+and a `filled / total` completion count over the Evidence table — the "number" the original request
+asked for. No scored dimension, risk percentage, or findings table (DDR-0003 decision 3: a Delivery
+Report demonstrates, it does not assess). Stage 5 trigger, after `verify`, before merge.
+
+**AC7 is the design's spine and it holds.** WITNESS is resolved from `memory/event-trace/<task>.jsonl`
+and never read from the guide. Proof came from rendering T053, whose guide contains a **typed** WITNESS
+paragraph written by the Supervisor: the renderer ignored it and printed `WITNESS underived — no
+memory/event-trace/T053.jsonl found`. It refuses to launder a typed claim into evidence, which is
+exactly what DDR-0003 said would otherwise make the field fiction.
+
+**MANIFEST deliberately NOT changed**, contradicting the guide's own AC9. MANIFEST lists *directories*
+(`.claude/skills`, `templates`) copied with `cp -r`, so the new skill and template already deploy;
+explicit per-file paths would be redundant and break the file's convention. An AC written from an
+older mental model of a file is worth checking against the file before satisfying it literally.
+
+Stage 4: security-review **PASS, 1 P3** — `task_id` flows unsanitized into
+`os.path.join(...f"{task_id}.jsonl")`, so a crafted ID could traverse on read. Operator-invoked CLI
+with no untrusted input, not actionable now, same class T056 just hardened. UI sign-off done by the
+Supervisor, not the implementer (the guide assigns it that way so the implementer is not its own sole
+oracle): 0 external assets, palette matches `report_template.html`, `max-width:980px` +
+`flex: 1 1 320px` so panes wrap without a media query and nothing scrolls horizontally at 1024px+.
+
+Verified post-merge from the main checkout: `177 passed` + `smoke-install.sh: PASS`. Pushed on
+`docs/stage2-demonstration-block-t053-t055`; **not merged to main, no PR opened.**
+
+## T057 merged: self-clearing step-limit block + default 40→90, 2026-08-06
+
+The step-limit guard hard-blocked the Supervisor's session **four times in one day**, each recovery
+requiring the user to run a manual `rm`. T056 keyed counters by `session_id`, which fixed
+agent-vs-*unrelated*-session bleed — but **a spawned sub-agent inherits its parent's `session_id`**,
+so the pairing that actually occurs was never separated.
+
+Fix (user decision): make the block **self-clearing**. On exceeding the limit, reset the counter to 0
+and bump a durable `block_count` **before** emitting the block, so a crash between the two can never
+leave the counter above the limit. The runaway's current call still dies; the next call from any
+session is allowed. Deliberately **identity-free** — no field available to the hooks distinguishes an
+agent from its spawner, so the fix must not depend on one. Counter is now two lines
+(`count\nblock_count`); legacy one-line files degrade to `block_count=0`; TTL expiry resets both.
+Default `CLAUDE_STEP_LIMIT` raised 40→90, justified in-comment from evidence (T054 spent 42
+legitimate calls, T056 38). The false "manually reset ..." instruction is gone; the message now says
+the counter was reset automatically, and escalates on the 3rd+ block.
+
+**Accepted trade-off, recorded not hidden**: the guard is weaker — a true loop is interrupted every N
+calls rather than halted. Accepted because observed cost (4 lockouts, ~an hour of recovery, 2 lost
+agent runs) vastly exceeded observed benefit (0 real runaways ever caught). AC6's escalating message
+is the agreed mitigation.
+
+**AC9 worked exactly as designed.** The agent hit 8 failing pre-existing tests and **stopped and
+reported instead of editing them green** — the single most valuable thing it did. The Supervisor
+verified each independently rather than accepting "they contradict the design": all 8 encoded
+intentionally-superseded behaviour (hardcoded "blocks at 41", the single-line counter format, and
+SC2's explicit "session A must still be blocked" which this task reverses). Updated with inline
+reasons, each keeping the property it existed to protect. That suite now **pins `CLAUDE_STEP_LIMIT`
+via env**, so a future default change cannot silently invalidate it again.
+
+Verified end-to-end by the Supervisor, not just asserted: block fires at the limit, next call allowed,
+AC5/AC6 confirmed live. `188 passed` + smoke PASS from the main checkout post-merge. Pushed on
+`docs/stage2-demonstration-block-t053-t055`; **not merged to main, no PR opened.**
+
+## T058 merged: diagnose becomes an evidence-driven instrumentation loop (2026-08-06)
+
+`diagnose` Phase 4 was a single line ranking instrument types by preference
+(`debugger/REPL > targeted boundary logs > ...`, `Tag logs [DEBUG-xxxx]`). It never said what to log,
+in what format, how many probes, how a probe ties back to a Phase 3 hypothesis, or when
+instrumentation may be removed. It is now a 7-step procedure: local NDJSON sink (never
+`memory/event-trace/`), a 1–10 probe budget (typical 2–6), a mandatory `hypothesisId` on every probe,
+five named placement categories, a fixed payload shape, `#region debug log` wrappers, and
+clear-then-run. Three downstream holes the loop exposed are closed in the same change: the Stuck-Loop
+Checkpoint gains CONFIRMED/REJECTED/INCONCLUSIVE with log-line citation (only REJECTED increments
+T052's counter; INCONCLUSIVE routes back to re-instrumenting the *same* hypothesis and is explicitly
+not licence to move on), Phase 5 retains instrumentation until a post-fix verification run's logs
+prove success and reverts changes made for REJECTED hypotheses, and Phase 6 cleanup is marker-driven
+(delete region→endregion, re-grep for zero, review `git diff`). 59 → 90 lines.
+
+**Prior art**: `github.com/millionco/debug-agent` (MIT), consulted at the user's prompting *after*
+Stage 2 had already produced a guide. Eight mechanisms adopted. Its transport layer was rejected
+outright — Node daemon, HTTP ingest server, hosted Cloudflare relay — as the wrong dependency for a
+Python/shell repo and an external hop for program values. Where `diagnose` is stronger it was kept:
+the Phase 1 ten-rung repro ladder stays ahead of any ask-the-user step, and the T052 checkpoint has
+no counterpart in the prior art.
+
+**Rejected direction, recorded so it does not return**: gating `diagnose`'s phases on the C0–C3
+Complexity matrix (C0 = phases 1/2/5, C1 = +3, C2/C3 = full). Dropped, not deferred, for two reasons
+— a second scaling mechanism would compete with the matrix that already sets every other skill's
+trigger threshold, and complexity is a property of the *fix*, which is not knowable until the bug is
+diagnosed, so it would gate diagnosis on an output of diagnosis. AC12/AC13/AC14 are negative criteria
+pinning line 8, the full `### Phase` heading list, and the Phase 1/2/3 bodies byte-identical
+specifically so the dropped direction cannot re-enter through an implementation.
+
+Stage 4: code-review 0 P0 / 0 P1 / 1 P2 fixed / 2 P3. security-review PASS, 0 actionable (run
+manually and labelled — the built-in diffs the checked-out branch, which was not `t058-work`).
+Six mutation controls observed RED then restored. 19 new tests, 207 passed. Merged to main 2026-08-06.
+
+## Stage 2 planning: T060 — diagnose cross-tier boundary instrumentation, 2026-08-07
+
+**Decision**: Extend T058's Phase 4 evidence loop to bugs whose suspect data crosses a tier
+boundary. Three additions, confined to Phase 4 and the Stuck-Loop Checkpoint: a **discovery-only
+boundary inventory** (route/handler definitions, outbound HTTP client call sites, queue
+publish/consume points, sub-agent spawn sites) that does *not* authorise a probe — the existing
+no-orphan-probe hypothesis gate still decides which listed boundaries get instrumented; a **W3C
+Trace Context `traceparent`-shaped correlation field** (shared trace-id, per-probe span-id) adopted
+as a naming convention only, no SDK and no dependency, including the payload-carried variant for
+queues, background jobs and agent spawns where headers cannot travel, and the fragmented-trace case
+where a hop drops the value; and a **path-reconstruction step** ordering probes by trace-id then
+timestamp, naming the first boundary where an observed value diverged from prediction, and
+reporting `path incomplete` on one-sided probe sets rather than inferring the missing side.
+
+**Amendment to a T058 decision, stated not hidden**: T058 locked that debug logs must never be
+routed to `memory/event-trace/`. The user defined the Agent tier as a sub-agent's tool calls, which
+requires reading that channel. T060 splits write from read — writing debug output there stays
+forbidden; reading it at analysis time as a correlation source is new and permitted.
+
+**Recorded risk — the chosen direction has prior art against it**: TraceCoder (arXiv 2602.06875),
+the one system found that actually built this component, places probes by LLM reasoning over
+previous execution failures rather than static analysis. The user selected static auto-discovery
+with that counter-evidence stated; only the abstract-level claim was readable, so its reasons are
+unread. Mitigated by keeping the inventory discovery-only so hypothesis reasoning stays
+load-bearing. If Stage 3 or 4 finds the inventory motivating probes the hypotheses did not, that is
+the predicted failure and it escalates rather than being worked around.
+
+**Second recorded risk**: this repo is Python and shell with no backend and no frontend, so the
+feature cannot be dogfooded here. Its tests assert against instruction text and fixtures and must
+not be described as end-to-end.
+
+**Prior-art search, 2026-08-07**: nothing in the agent-skill space covers the cross-tier leg.
+`doraemonkeys/claude-code-debug-mode` runs the same hypothesis-instrument-analyze loop with the same
+`#region` wrapping but is explicitly single-process with no correlation IDs. Honeycomb's
+`instrumentation-advisor` is the closest published artifact to codebase gap-scanning but discloses
+no scanning method — recorded so it is not re-searched.
+
+**Blocked on**: T059. A Stage 3 spawn runs in a worktree, where the destructive token-audit test
+reproduces a known data-loss incident.
+
+**Files**: tasks/TASK_GUIDE_T060.md (Stage 2 artifact only; implementation not started)
+
+## T059 merged: the test suite no longer writes to a tracked report, 2026-08-07
+
+**Decision**: `test_token_audit_generator.py:235` took the `tmp_path` fixture, ignored it, and called
+`generate_report` with the real tracked `reports/token-audit_2026-07-21.md` as its output path. Fixed
+by deleting the generator call, reading the file instead, and dropping the now-unused fixture — three
+lines, the shape the neighbouring `test_old_window_file_intact_and_closed_inconclusive` already used
+on the other tracked report.
+
+Reading the test settled two things the Kanban row could not: the correct pattern already existed in
+the same file, and `generate_report` is exercised eight times against `tmp_path` elsewhere, so the
+destructive call contributed **zero** generation coverage. It existed only to produce a file the test
+then read.
+
+**Stage 4**: 0 P0 / 0 P1 / 0 P2, 3 P3 accepted — the test name still says `generation` though it no
+longer generates; real-trace-dir shape coverage now rests entirely on synthetic fixtures; a
+pre-existing unused `import os` was verified unused at the parent commit and left alone under
+Surgical Changes. security-review PASS, 0 actionable, run manually and labelled (fourth occurrence of
+the built-in diffing the wrong branch). The Supervisor re-ran the SC2 mutation control itself rather
+than trusting the agent's: truncated report → `1 failed`, `cp` restore → `1 passed`.
+
+**Stage 5**: 207 passed + smoke PASS from main post-merge. The 21 lines of accumulated pre-fix dirt
+were restored to HEAD via `git show HEAD:<path> > <path>` — `git checkout -- <file>` is
+guardrail-blocked — and the suite was re-run twice to confirm the file stays clean.
+
+**Files**: .claude/hooks/tests/test_token_audit_generator.py, tasks/TASK_GUIDE_T059.md
+
+## T060 merged: diagnose gains cross-tier boundary instrumentation, 2026-08-07
+
+**Decision**: Phase 4 goes from 7 steps to 9. A **discovery-only boundary inventory** (HTTP
+route/handler definitions, outbound HTTP client call sites, queue publish/consume points, sub-agent
+spawn sites) lists where a probe *could* go; step 3's no-orphan-probe hypothesis gate still decides
+where one *does* go, so the 1–10 ceiling stays global and no boundary earns a budget of its own. A
+**correlate** step carries a W3C Trace Context `traceparent`-shaped value — one trace-id per request,
+a span-id per probe — as a naming and shape convention only, never an SDK or dependency, with the
+payload-carried variant for queues, background jobs and agent spawns, and the fragmented-trace case
+where a hop drops the value. The Checkpoint gains **path reconstruction ahead of any verdict**: group
+by trace-id, order by timestamp, name the first boundary where observed diverged from predicted, and
+report `path incomplete` on one-sided probe sets rather than inferring the missing side.
+
+**Amendment to T058, stated in step 1 of the skill itself**: writing debug output to
+`memory/event-trace/` stays forbidden; *reading* it at analysis time as a correlation source for the
+sub-agent tier is permitted.
+
+**Stage 4**: 0 P0 / 0 P1 / 1 P2 fixed / 1 P3 accepted. The P2: `traceparent` was added to the NDJSON
+payload field list unconditionally while step 4 tells the empty-inventory single-process case to
+proceed "unchanged", which would require a degenerate correlation field on every probe of a run with
+no hop. security-review PASS, 0 actionable, manual (fifth occurrence of the built-in diffing the
+checked-out branch). 15 mutation controls RED→GREEN, AC12 injected three times separately.
+
+**Stage 5**: 220 passed + smoke PASS from main post-merge.
+
+**Recorded honestly**: this repo has no BE and no FE, so nothing here is end-to-end — every check
+asserts against instruction text, and the first real exercise happens in a downstream project. The
+TraceCoder risk (arXiv 2602.06875 places probes by LLM reasoning over prior failures, not static
+analysis) remains open and is mitigated only by the discovery-only wording.
+
+**Files**: .claude/skills/diagnose/SKILL.md, .claude/hooks/tests/test_diagnose_evidence_loop.py
+
+## T061 merged: per-spawn cost telemetry captured from the harness's own payload, 2026-08-07
+
+**Decision**: `post_tool_trace.py` read `tool_response` on every PostToolUse event and used exactly
+one field from it, `is_error`; the record it wrote was `summarize(tool_input)` — the prompt going in.
+Agent records now also carry a guarded `spawn` object: `total_tokens`, `tool_use_count`,
+`duration_ms`, `resolved_model`, `agent_type`, `status`, a `usage` sub-object split by cache
+disposition (including the flattened `cache_creation_5m`/`cache_creation_1h` TTL tiers), and a
+`tool_stats` sub-object with the tool mix and `lines_added`/`lines_removed`. Harness camelCase is
+translated to snake_case on the way in. `prompt`, `content` and the unbounded `usage.iterations` are
+deliberately not copied. Every non-`Agent` record is byte-identical, verified by differential against
+the pre-change hook at `82883a2`.
+
+**Not a reversal of DDR-0002.** That ruling retired a *manual* `/cost` channel which failed in both
+measurement windows because it depended on a human pasting a number. This channel depends on no human
+action — the harness hands the hook the payload, and the hook already ran on every Agent spawn.
+`reports/token-audit_*.md` stays retired and untouched.
+
+**Stage 4**: 0 P0 / 0 P1 / 1 P2 fixed / 2 P3. The P2 restored the `cache_creation` TTL split — the two
+tiers are priced differently, so dropping it forces any cost analysis to assume all creation is 5m,
+which defeats the task's purpose. security-review PASS, 0 actionable, manual (sixth occurrence of the
+built-in diffing the checked-out branch).
+
+**Stage 5**: 246 passed + smoke PASS from main post-merge.
+
+**Confirmed live 2026-08-07 post-merge**, which the fixture-based tests could not do: a real spawn
+from the main checkout wrote the first genuine `spawn` record — 15,727 total, 15,294 `cache_read`,
+423 `cache_creation_5m`, 0 `1h`, 8 output, `bash_count` 1, `resolved_model` claude-sonnet-5. The 46
+Agent records predating the merge carry no `spawn` key, so all analysis data accrues from here
+forward; there is no retrospective corpus.
+
+**Files**: .claude/hooks/post_tool_trace.py, .claude/hooks/tests/test_post_tool_trace_spawn.py
+
+## T067 merged: diagnose gains a root-cause rule, backward tracing, and red flags, 2026-08-07
+
+**Decision**: From a prior-art comparison against `obra/superpowers/skills/systematic-debugging`
+(consulted at the user's pointer, **not vendored**). Before this, `root cause` occurred exactly once
+in 124 lines — in the notification template. The skill asked the agent to *report* a root cause and
+never required the fix to be *at* one.
+
+Six additions, 124 → **155 lines** (cap 165): the root-cause rule in the Karpathy block **and**
+restated in Phase 5 at the point of action, because a rule stated only at the top is forgotten by the
+time the fix is written; five-step backward tracing in Phase 4, scoped to the value-wrong-on-arrival
+shape rather than replacing Placement; a red-flag block before the Stuck-Loop Checkpoint as its
+earlier-firing sibling; working-reference comparison in Phase 3 as a hypothesis source; stack capture
+and test-visible probe output in the payload; the architectural tell on the widen-scope option.
+
+**Rejected outright, pinned absent under both spellings**: defense-in-depth. Its source adds four
+redundant guards for one bug, contradicting Simplicity First — and Phase 5 already reverts
+REJECTED-hypothesis changes to stop exactly that accumulation.
+
+**Deliberately not replaced, ours being stronger**: their one-line "reproduce reliably" vs our
+ten-rung ladder; their single hypothesis vs our 3–5 ranked falsifiable; their ad-hoc `console.error`
+vs our NDJSON loop with `hypothesisId`, 1–10 budget and T060's cross-tier correlation; their
+3-failed-fix-attempts escalation vs T052's earlier 2-consecutive-disproof trigger.
+
+**Stage 4**: 0 P0/P1/P2, 1 P3 fixed. 21 mutation controls (18 implementer, 3 Supervisor).
+security-review PASS, 0 actionable, manual. **Stage 5**: 258 passed + smoke PASS from main.
+
+**Guide defect, the Supervisor's**: AC7 mandated changing Phase 3 while AC16 required all pre-existing
+tests unmodified — but an existing test pinned Phase 3's body, so both could not hold. The agent
+escalated rather than papering over it and re-captured the hash instead of deleting the pin (min-len
+also raised 150→600, so Phase 3 is pinned harder than before). AC16's count was also wrong: 32
+pre-existing tests, not 31. Second instance of the T054 learning that an AC can be written against a
+file's older shape.
+
+**Files**: .claude/skills/diagnose/SKILL.md, .claude/hooks/tests/test_diagnose_evidence_loop.py
+
+## DDR-0004: Hard-Stop Gate 1 upheld; cheaper spawns, not fewer spawns, 2026-08-07
+
+**Decision (user ruling)**: Gate 1 stands unchanged — the Supervisor still never writes implementation
+code directly. T062 (spawn threshold for C0/C1) closed without implementation. The harness pursues
+*cheaper* spawns (T064/T065/T066) rather than *fewer*, accepting the ~15.7k per-spawn floor.
+
+**Why this needed a ruling, not engineering**: T061's telemetry showed the floor is fixed per spawn
+(15,669 tokens for a bare `echo`; T059 spent 48,401 on a three-line fix) while trimming injected
+context is worth only ~a tenth of nominal, since ~97% arrives as cache reads. So spawn *count* is the
+dominant lever — but eliminating spawns means the Supervisor implements, which Gate 1 forbids by name.
+
+**Rejected — C0/C1 exemption**: LR-0001/LR-0002 both record the Supervisor drifting into
+implementation because a task "felt small"; an exemption legitimises that trigger by name. It also
+collapses implementer and reviewer into one role, and on 2026-08-07 that separation caught a false
+fixture provenance claim, a vacuous line-cap assertion, and three stale Evidence tables.
+
+**Accepted consequence, stated not hidden**: the largest measured lever is deliberately not pulled,
+and the chosen path has a **low ceiling**. T064/T065/T066 will not recover the floor.
+
+**Revisit if**: telemetry over many real spawns shows the floor is materially larger, or that small
+tasks are far more numerous than assumed; or if a mechanism preserves implementer/reviewer separation
+without a second full spawn.
+
+**Files**: docs/ddr/0004-uphold-hard-stop-gate-1-over-spawn-elimination.md
+
+## T063 merged: what event-trace attributes, and how memory actually reaches agents, 2026-08-07
+
+**(a) ESTABLISHED** — `memory/event-trace/` records **both** the Supervisor's and the sub-agent's tool
+calls in one file, separable by time window but not by bucket. Proven two ways: first-person (T063's
+own records) and by reconciling T067's `spawn.tool_stats` against windowed buckets. **The naive
+"5 of 49 tasks read MEMORY.md" figure measures when agents arm the active-task pointer, not whether
+they read memory**: `craft-spawn-prompt` element 6 arms it "before running any test or verification
+command", which is *after* the mandatory startup reads, so those land in `_untagged` — 30 `MEMORY.md`
+reads there against 6 across 61 task buckets.
+
+**(b) ESTABLISHED for the current template** — element 4 mandates verbatim injection of `MEMORY.md`;
+practice passes a **path**. Zero of 49 `Agent` records contain the file's H1, 4 name the path, and 5 of
+5 recent agents opened it. Correctly hedged: 48 of 49 summaries sit at the 300-char `MAX_SUMMARY_LEN`,
+so a later paste cannot be ruled out.
+
+**(c) NOT ESTABLISHED** — `post_tool_trace.py` never stores agent output, so no citation corpus exists
+in principle. The report shows *opened*, not *drawn upon*, and refuses to infer non-use from absence.
+
+**This invalidated the Supervisor's own premise**: the claim that `MEMORY.md` costs ~10,700 tokens
+injected into every spawn is **false** — it is passed as a path costing ~20 tokens. The 15.7k per-spawn
+floor stands (measured), but its composition does not.
+
+**Implication for T065**: a **channel decision first** — honour element 4's verbatim mandate (making
+size expensive per spawn and compression valuable) or amend it to the path practice already in use
+(making the cost *optional* rather than eliminated, since 5 of 5 agents opened the file anyway). Then
+shrink the hot tier, which is safe under either branch. Do not compress on the old premise; do not
+delete without evidence of non-use.
+
+**Instrument defects found, deliberately not fixed**: the active-task pointer is armed too late to
+capture startup reads; the trace carries no actor field; `MAX_SUMMARY_LEN=300` prevents any prompt-content
+audit.
+
+**Stage 4**: 0 P0/P1/P2, 1 P3 fixed. 9 new tests, 267 passed + smoke PASS.
+
+**Files**: scripts/memory_usage_report.py, docs/memory-usage-finding-2026-08-07.md,
+.claude/hooks/tests/test_memory_usage_report.py
+
+## T064 — split reviewer-filled sections out of the implementer's guide (2026-08-09)
+
+Registered as "TASK_GUIDE format refactor — prose to challenge-response cards". **The registered
+direction was rejected at Stage 2 by user ruling, not deferred**, and the scope replaced before any
+code was written.
+
+What forced the change. T063 had established that the guide is not injected verbatim — the agent
+opens it with `Read` — so its bytes are `cache_read`, re-paid on every agent turn. The real T061
+telemetry this task was gated on (T067 83,802 total / T063 111,056 / bare-`echo` probe 15,727) shows
+`cache_creation` flat at 265–423 tokens regardless of guide size, so a 6,800-token guide never
+appears there. Then measuring the two most recent guides *by section* showed the largest block is not
+reasoning prose but reviewer-filled scaffolding the implementer never uses: `## Demonstration`
+(5,443 ch on T060, 4,633 on T067) plus the `### Evidence` table (~3,000 ch) — about 35% of guide
+bytes, filled at Stage 4/5.
+
+Design: both sections move to a sibling `tasks/TASK_REVIEW_Txxx.md`; the guide keeps the heading with
+a `> **Moved.**` pointer. One new resolver, `.claude/hooks/lib/guide_sections.py`, serves all three
+consumers (`pre_bash_block_unsafe_merge.py`, `pre_agent_validate_guide.py`,
+`delivery-report/render.py`) — guide first, review file second, inline always wins.
+
+**Fallback, not migration** is the load-bearing property: all 20 existing guides keep both sections
+inline and are asserted byte-identical, so no historical task changes behaviour. Chosen deliberately
+because this hook family has five recorded parsing defects and a big-bang migration would move all
+20 onto the new path at once.
+
+This also *dissolved* the risk the row was registered with (that stripping prose would delete the
+recorded risks, rejected directions and prior art that made T058 and T060 land correctly), rather
+than mitigating it — no prose moves at all. AC11 pins the card format as a file-wide negative so the
+rejected direction cannot re-enter through the implementation.
+
+Measured saving, reported honestly: T060 33.6%, T061 32.3%, T063 31.4%, T067 30.5%, **T058 16.3%**.
+Recorded as "~31–34% typical, not a floor". `MANIFEST` deliberately unchanged (bare `templates`
+directory entry, `cp -r`, T054 precedent). 50 new tests, 317 passed.
+
+## T068 — the merge gate can tell a filled `verify` row from a placeholder (2026-08-09)
+
+Found by the T064 implementer during Stage 3, confirmed pre-existing against baseline `2612a05`.
+
+The gate's `VERIFY_ROW_PATTERN` was correct in intent — T026's two-bug fix requires the Check cell to
+be literally `verify` and the word "pass" to appear in the **Notes** column, not just Result. The
+defect was that T026 *also* wrote "pass" into the template's placeholder as guidance ("must literally
+state \"pass\" or \"fail\" here too..."), so the placeholder satisfied its own gate: a task that had
+filled in nothing already cleared the row check, leaving only `trace_shows_verification` standing.
+Fourth distinct way this gate has failed to gate, and the third whose root cause is guidance text
+being indistinguishable from filled-in evidence.
+
+Fix is in the **matcher, not the template**. Result and Notes are now captured as named groups and a
+new `UNCHECKED_PASS_PATTERN = r"☐\s*pass\b"` disqualifies a row only when its Result cell carries a
+literal unchecked *pass*. Rewording the placeholder was rejected: a test pins that string, the
+wording is genuinely useful reviewer guidance, and a matcher that only works because nobody wrote
+"pass" in a comment is the same class of defect as the T044 substring match.
+
+**The narrowness is load-bearing.** The obvious rule — reject any Result cell containing `☐` — breaks
+the legitimately filled `☑ pass / ☐ N/A` shape. Stage 2 surveyed every real `verify` row and pinned
+the six observed shapes into the guide as the oracle, which is what stopped that plausible fix from
+shipping.
+
+Stage 4: 1 P1 and 1 P3, both found by the Supervisor. See learnings.md — the P1 (tests asserting
+against a re-implementation of the gate logic) is the more instructive of the two and is the 7th
+entry in the vacuous-assertion family.
+
+Recorded honestly: `TASK_GUIDE_T050.md` still resolves to `False`, unchanged from the old pattern,
+because its Notes cell omits "pass". That is the T026 property working, not a regression.
+
+## T065 — honest memory channel + a size gate that measures cost (2026-08-09)
+
+Two fictions, both shipped downstream by `setup.sh` and MANIFEST.
+
+**Channel.** `craft-spawn-prompt` element 4 mandated "full contents of `memory/MEMORY.md`, verbatim";
+practice passed a **path**. T063 measured it (0 of 49 prompts carried the H1; 5 of 5 agents opened the
+file), and T064, T068 and T065's own spawns each confirmed it first-person. **User ruled 2026-08-09:
+amend the doc to match practice, not the reverse.** The sharp end was an instruction telling agents
+*"the agent must not re-read it; it is already in context"* — false under the real channel, and an
+agent obeying it never reads memory at all.
+
+**Gate.** `assert len(lines) <= 200` while the cost is characters. Across the last 12 commits touching
+the file, lines stayed pinned at 200–201 while chars grew 42,577 → 49,156 (+15.5%) and mean entry
+276 → 326. Green on every one. Replaced with `HOT_TIER_CHAR_BUDGET = 52_000`.
+
+**The number is not the fix; the comment is.** The budget ships with an in-code note declaring it a
+**ratchet** — `/compact-memory` may lower it, nothing may raise it to fit growth. Without that the new
+gate decays exactly as the old one did. Per-entry 150 chars became explicitly *advisory and reported*,
+never enforced (89% violate it; a hard gate would have turned the suite red on arrival).
+
+Scope held: content compaction stayed out (the `MEMORY.md` diff is header rules only, zero index
+entries touched, still 146 entries). The guide predicted 8 shipping locations; the sweep found **11**.
+
+## T066 — de-duplicate the startup read set, toward the guaranteed channel (2026-08-09)
+
+The row required Stage 2 to separate genuine duplication *inside one context* from deliberate
+redundancy *across different contexts* — the distinction T041 exists to protect. Two structural facts
+settled it, and they invert the obvious fix:
+
+1. **`CLAUDE.md` never reaches a sub-agent.** It is absent from the agent startup read list, so its
+   3,819 tok are Supervisor-context only and its overlap with the agent guides is cross-context
+   redundancy that must not be collapsed. Left byte-identical, test-enforced.
+2. **The role guide is guaranteed; the template is not.** The harness auto-loads
+   `.claude/agents/<name>.md` as the system prompt, while `general-agent-template.md` arrives only if
+   the agent opens it. So consolidation goes *into* the role guides — moving content out of a
+   guaranteed channel into an optional one is "already covered must mean reaches-the-context" with
+   extra steps.
+
+`common-infrastructure.md` had **zero** Communication Protocol and **zero** Complexity content,
+relying entirely on the template, so both were folded in before anything was deleted. The template
+went 7,246 → 3,762 chars, keeping Base Rules, the Karpathy table, the ladder, Output Requirements and
+the Staleness Guard.
+
+Measured per-role reduction: c-infra −4.7%, backend −15.4%, frontend −15.6%, qa −17.0%. The near-null
+c-infra figure was reported rather than averaged away — it is the one role that was *missing* two
+sections, so it buys new content out of the same saving the others bank.
+
+Left open as **T069**: the Karpathy table and the ladder live only in the template, before and after,
+so T041's fix depends on a read that is not guaranteed.
