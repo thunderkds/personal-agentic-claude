@@ -3,7 +3,10 @@
 # .claude/agents/general-agent-template.md (T041).
 #
 # Validates (AC numbers from tasks/TASK_GUIDE_T041.md):
-#   AC1 — all four Karpathy principle names + a one-line operational command each, inline
+#   AC1 — all four Karpathy principle names + a one-line operational command each, inline in
+#         each of the four ROLE GUIDES (repointed from $TEMPLATE by T069 — same strings, same
+#         `grep -qF`, new location)
+#   AC1b— negative (T069): the template carries neither the heading nor any of those commands
 #   AC2 — `## Search Before You Build` section with exactly 7 numbered rungs (1-7)
 #   AC3 — non-negotiables block (correctness/validation/error handling/security/explicit
 #         requirements never traded for a shorter diff)
@@ -24,6 +27,7 @@ set -eu
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 TEMPLATE="$ROOT/.claude/agents/general-agent-template.md"
+ROLE_GUIDES=".claude/agents/common-infrastructure.md .claude/agents/backend.md .claude/agents/frontend.md .claude/agents/qa.md"
 BASELINE_LINES=87
 BUDGET_LINES=132
 FAIL=0
@@ -42,20 +46,52 @@ if [ ! -f "$TEMPLATE" ]; then
   exit 1
 fi
 
-# --- AC1: all four Karpathy principle names + operational command, inline ----------
-for principle in "Think Before Coding" "Simplicity First" "Surgical Changes" "Goal-Driven Execution"; do
-  if grep -qF "$principle" "$TEMPLATE"; then
-    pass "AC1: principle name present: $principle"
-  else
-    fail "AC1: principle name missing: $principle"
+# Anti-vacuity: AC1 now greps four OTHER files. A mistyped path would make every one of its
+# `grep -qF` checks fail loudly rather than silently — but a *missing* file must be an error,
+# not a finding, so the failure is unambiguous.
+for path in $ROLE_GUIDES; do
+  if [ ! -f "$ROOT/$path" ]; then
+    printf 'test-agent-template: ERROR — %s not found (AC1 would inspect nothing)\n' "$path" >&2
+    exit 1
   fi
 done
 
+# --- AC1: all four Karpathy principle names + operational command, inline ----------
+# T069 REPOINTED, not loosened. T041 asserted these strings against $TEMPLATE; T069 moved the
+# table into the four role guides, because the harness auto-loads a role guide as the agent's
+# system prompt while the template arrives only if the agent opens it. The pinned strings below
+# are byte-identical to what T041 pinned and the `grep -qF` is unchanged — only the file each
+# one is checked against changed, plus the new negative that the old location is really vacated.
+for path in $ROLE_GUIDES; do
+  for principle in "Think Before Coding" "Simplicity First" "Surgical Changes" "Goal-Driven Execution"; do
+    if grep -qF "$principle" "$ROOT/$path"; then
+      pass "AC1: principle name present in $path: $principle"
+    else
+      fail "AC1: principle name missing from $path: $principle"
+    fi
+  done
+
+  for cmd in "Ask vs. Guess" "Prohibit speculation" "Scope locking" "Convert all imperative instructions"; do
+    if grep -qF "$cmd" "$ROOT/$path"; then
+      pass "AC1: operational command present in $path: $cmd"
+    else
+      fail "AC1: operational command missing from $path: $cmd"
+    fi
+  done
+done
+
+# --- AC1b (negative, T069): the template no longer carries the table -----------------
+if grep -qF '## Karpathy Engineering Principles (Compact)' "$TEMPLATE"; then
+  fail "AC1b: the Karpathy heading is still in the template (it moved to the role guides)"
+else
+  pass "AC1b: the Karpathy heading is no longer in the template"
+fi
+
 for cmd in "Ask vs. Guess" "Prohibit speculation" "Scope locking" "Convert all imperative instructions"; do
   if grep -qF "$cmd" "$TEMPLATE"; then
-    pass "AC1: operational command present: $cmd"
+    fail "AC1b: operational command still in the template: $cmd"
   else
-    fail "AC1: operational command missing: $cmd"
+    pass "AC1b: operational command absent from the template: $cmd"
   fi
 done
 

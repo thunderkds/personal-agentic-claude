@@ -473,10 +473,18 @@ def test_t069_ac9_report_per_role_pair_size(capsys):
         for role in sorted(ROLE_GUIDES):
             before, after = pair_chars(role, T069_BASELINE_REF), pair_chars(role)
             print(f"  {role:<10}| {before:>6,} | {after:>6,} | {after - before:+,}")
+    # Reporting, with ONE assertion, and deliberately not `after <= before`: that would be a
+    # scope guard committed as an invariant (T065 AC12) — correct today, and a blocker on the
+    # first legitimate sentence anyone adds to the template afterwards.
+    #
+    # The substantive claim is that moving the table did not cost a *copy* of the table: the
+    # guide gains one and the template loses one, so the pair moves by prose-sized amounts, not
+    # by table-sized ones. That has a real failure mode — forget the removal and the delta is
+    # +622 — while leaving future edits free.
     for role in sorted(ROLE_GUIDES):
-        before, after = pair_chars(role, T069_BASELINE_REF), pair_chars(role)
-        assert after <= before, (
-            f"{role}: {before:,} -> {after:,} chars. The move is supposed to cost nothing — the "
-            f"table is added to the guide and removed from the template, so the pair is flat. "
-            f"Report the real number; do not reframe the criterion."
+        delta = pair_chars(role) - pair_chars(role, T069_BASELINE_REF)
+        assert abs(delta) < len(KARPATHY_TABLE), (
+            f"{role}: pair moved {delta:+,} chars, which is a whole copy of the "
+            f"{len(KARPATHY_TABLE):,}-char table. Either the removal from the template did not "
+            f"happen, or the table was added somewhere it should not be."
         )

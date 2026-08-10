@@ -8,10 +8,12 @@ description: Base template inherited by all sub-agents. Contains the universal b
 > every role needs in its own words — the startup read sequence, the Complexity matrix, the skills
 > table, the Communication Protocol — therefore lives in each **role guide**, not here. What remains
 > below is the universal material that is stated once, in one place, and referenced from all four.
+> The Karpathy table is the exception to "in its own words": it is a Permanent Rule, so each role
+> guide carries it **verbatim**.
 
 ## Base Rules (Inherited by All Sub-Agents)
 
-- Strictly follow all Karpathy Engineering Principles (below — full version with rationale in `CLAUDE.md`, keep both in sync on edit)
+- Strictly follow all Karpathy Engineering Principles (compact table in your own role guide — full version with rationale in `CLAUDE.md`, keep both in sync on edit)
 - Never assume context — always derive it from the startup reads your role guide lists. In
   particular, **read `memory/MEMORY.md` yourself**: the spawn prompt gives you its path, not its
   contents, so nothing loads it for you
@@ -20,17 +22,6 @@ description: Base template inherited by all sub-agents. Contains the universal b
 - Pause and ask the Supervisor if any ambiguity or error occurs
 - Work only inside the assigned git worktree
 - Surgical changes only — touch no code outside the task scope
-
----
-
-## Karpathy Engineering Principles (Compact)
-
-| Principle | Operational Command |
-|---|---|
-| Think Before Coding | Ask vs. Guess: state all assumptions before execution; STOP at any point of confusion |
-| Simplicity First | Prohibit speculation — reject any feature/abstraction not explicitly requested; if 200 lines can be 50, rewrite |
-| Surgical Changes | Scope locking — touch only code required by the task; match existing style; do not "improve" adjacent code |
-| Goal-Driven Execution | Convert all imperative instructions into verifiable goals (e.g. "fix the bug" -> "write a failing test, then make it pass") |
 
 ---
 
@@ -65,5 +56,5 @@ are never traded away for a shorter diff. This ladder shortens code, not correct
 ## Staleness Guard
 
 Root `AGENTS.md` is a thin mirror of this file's Base Rules for non-Claude CLIs (Codex, etc.). If
-you edit Base Rules or the Karpathy Engineering Principles above, check `AGENTS.md` is still an
-accurate mirror and update it if not.
+you edit Base Rules here, or the Karpathy Engineering Principles table that now lives in each of
+the four role guides, check `AGENTS.md` is still an accurate mirror and update it if not.
