@@ -40,6 +40,10 @@ ROOT = Path(__file__).resolve().parents[3]
 # baseline count freezes the world.)
 BASELINE_REF = "8fc4dd2"
 
+# T069's own pre-implementation tip (the Stage 2 guide commit + the BEFORE capture), not T066's.
+# Same reasoning as above: a baseline *ref* dates the comparison; a baseline *count* freezes it.
+T069_BASELINE_REF = "8d6d56b"
+
 TEMPLATE = ".claude/agents/general-agent-template.md"
 ROLE_GUIDES = {
     "c-infra": ".claude/agents/common-infrastructure.md",
@@ -221,15 +225,35 @@ def reachable_text(role: str) -> tuple[str, list[str]]:
 
 
 @pytest.mark.parametrize("role", sorted(ROLE_GUIDES))
-def test_ac6_karpathy_table_and_ladder_reachable_from_every_role(role):
+def test_ac6_karpathy_table_is_reachable_directly_from_the_role_guide(role):
+    """T069 tightens T066's AC6 for the Karpathy half.
+
+    "Reachable" used to mean "in the guide, or in any agent file the guide *tells* the agent to
+    read". For a **Permanent Rule** that is too weak: the template arrives only if the agent opens
+    it, and the event trace showed 9 `Read` records on it across 66 task buckets. So for the
+    Karpathy table, reachable must mean the guaranteed channel — the auto-loaded role guide
+    itself, with no second hop.
+    """
+    guide = read(ROLE_GUIDES[role])
+    missing = [p for p in KARPATHY_PROBES if p not in guide]
+    assert not missing, (
+        f"the Karpathy table is not in {ROLE_GUIDES[role]} itself; missing: {missing}. "
+        f"It must reach {role} through the auto-loaded system prompt, not through an optional "
+        f"read of the template."
+    )
+
+
+@pytest.mark.parametrize("role", sorted(ROLE_GUIDES))
+def test_ac6_ladder_stays_reachable_from_every_role(role):
+    """The advisory half keeps the weaker, second-hop definition on purpose (T069 AC7)."""
     text, files = reachable_text(role)
     assert len(files) > 1, (
         f"{role}'s guide references no other agent file, so this assertion could only ever "
         f"inspect the guide itself — that is the vacuous case, not a pass."
     )
-    missing = [p for p in KARPATHY_PROBES + LADDER_PROBES if p not in text]
+    missing = [p for p in LADDER_PROBES if p not in text]
     assert not missing, (
-        f"T041's fix is no longer reachable from {role}'s context (files: {files}); "
+        f"T041's ladder is no longer reachable from {role}'s context (files: {files}); "
         f"missing: {missing}"
     )
 
@@ -296,3 +320,163 @@ def test_ac9_decision_gated_appendices_stay_below_the_body():
         idx = text.index("## Appendix")
         assert "**not defaults.**" in text[idx:], f"{role}'s appendix lost its gating sentence"
         assert text[idx:].count("## ") == 1, f"{role} has content after the appendix"
+
+
+# ==========================================================================
+# T069 — move the Karpathy table into the guaranteed channel.
+#
+# T066 consolidated *role-shaped* guidance into the role guides. The Karpathy table is not
+# role-shaped: `CLAUDE.md` calls it "mandatory for the Supervisor and all sub-agents", which
+# makes reaching it through an optional read the defect. It moves into all four role guides and
+# out of the template. The Search-Before-You-Build ladder is advisory and does NOT move.
+#
+#   AC1 — the table is present, verbatim, in all four role guides
+#   AC2 — the table is gone from the template (heading, principle names, operational commands)
+#   AC5 — `craft-agent` emits the table in newly generated role guides
+#   AC7 — the ladder is byte-identical in the template and absent from every role guide
+#   AC9 — per-role pair size, reported not asserted
+# ==========================================================================
+
+# The single source these four assertions compare against, so they cannot drift from each
+# other. Deliberately a literal in the test rather than an extraction from one of the files
+# under test: extracting it from a role guide would make "all four match" trivially true against
+# whichever file happened to be the source.
+KARPATHY_TABLE = """## Karpathy Engineering Principles (Compact)
+
+| Principle | Operational Command |
+|---|---|
+| Think Before Coding | Ask vs. Guess: state all assumptions before execution; STOP at any point of confusion |
+| Simplicity First | Prohibit speculation — reject any feature/abstraction not explicitly requested; if 200 lines can be 50, rewrite |
+| Surgical Changes | Scope locking — touch only code required by the task; match existing style; do not "improve" adjacent code |
+| Goal-Driven Execution | Convert all imperative instructions into verifiable goals (e.g. "fix the bug" -> "write a failing test, then make it pass") |"""
+
+# The four operational commands, byte-identical to the strings `scripts/test-agent-template.sh`
+# pins with `grep -qF`. AC2 is a file-wide negative over these, not just over the heading:
+# T058's lesson is that a retired token outlives the one occurrence an AC table enumerates.
+OPERATIONAL_COMMANDS = [
+    "Ask vs. Guess",
+    "Prohibit speculation",
+    "Scope locking",
+    "Convert all imperative instructions",
+]
+
+
+@pytest.mark.parametrize("role", sorted(ROLE_GUIDES))
+def test_t069_ac1_karpathy_table_is_verbatim_in_every_role_guide(role):
+    text = read(ROLE_GUIDES[role])
+    assert KARPATHY_TABLE in text, (
+        f"{ROLE_GUIDES[role]} does not carry the Karpathy table verbatim. The role guide is the "
+        f"channel the harness guarantees (it is the auto-loaded system prompt); a Permanent Rule "
+        f"must arrive there, not one optional read away in the template."
+    )
+
+
+def test_t069_ac2_template_no_longer_carries_the_karpathy_table():
+    template = read(TEMPLATE)
+    assert "## Karpathy Engineering Principles (Compact)" not in template, (
+        "the Karpathy H2 is still in the template"
+    )
+    leftovers = [c for c in OPERATIONAL_COMMANDS if c in template]
+    assert not leftovers, (
+        f"the template still carries operational-command string(s) {leftovers}. Removing the "
+        f"heading is not the criterion — the body must be gone too."
+    )
+
+
+def test_t069_ac2_removal_happened_only_after_every_role_guide_had_it():
+    """The order invariant, stated as a property of the tree rather than of the history.
+
+    The failure mode this guards is an intermediate state in which the table exists in neither
+    location: for as long as that state ships, every spawn loses a Permanent Rule. Equivalent to
+    `test_ac1_...`'s docstring rule at line 119, specialised to the section T069 moves.
+    """
+    present = [r for r in ROLE_GUIDES if KARPATHY_TABLE in read(ROLE_GUIDES[r])]
+    in_template = "## Karpathy Engineering Principles (Compact)" in read(TEMPLATE)
+    assert present or in_template, (
+        "the Karpathy table exists in NEITHER the template nor any role guide — no context "
+        "receives it at all. This is strictly worse than the defect T069 set out to fix."
+    )
+    if not in_template:
+        assert sorted(present) == sorted(ROLE_GUIDES), (
+            f"the table was removed from the template while only {sorted(present)} carry it; "
+            f"missing: {sorted(set(ROLE_GUIDES) - set(present))}"
+        )
+
+
+def test_t069_ac5_craft_agent_emits_the_table_in_generated_role_guides():
+    skill = read(".claude/skills/craft-agent/SKILL.md")
+    assert "## Karpathy Engineering Principles (Compact)" in skill, (
+        "craft-agent does not name the Karpathy table, so a role it generates is born without a "
+        "Permanent Rule — it can no longer inherit one from the template (T066 edge case #6)"
+    )
+    assert "VERBATIM" in skill or "verbatim" in skill, (
+        "craft-agent must say the table is copied verbatim; an 'adapt it to the role' instruction "
+        "would let a generated guide reword a Permanent Rule"
+    )
+    assert "Karpathy Principles / Search-Before-You-Build from" not in skill, (
+        "the emitted draft skeleton still claims the Karpathy principles are INHERITED from "
+        "general-agent-template.md — the template no longer has them"
+    )
+
+
+# --------------------------------------------------------------------------
+# AC7 — the advisory half does not move. Pinned positively (byte-identical in the template)
+# and negatively (absent from every role guide).
+# --------------------------------------------------------------------------
+def ladder_section(text: str) -> str:
+    start = text.index("## Search Before You Build")
+    end = text.index("\n---\n", start)
+    return text[start:end].rstrip("\n")
+
+
+def test_t069_ac7_ladder_is_byte_identical_to_the_baseline():
+    # Both sides are `str`. T066's AC7 compared `git show` BYTES against `read_text` CHARS and
+    # passed while the files were untouched — these guides are dense with `—`/`≤`, so the byte
+    # side ran ~4% high and manufactured a saving out of UTF-8. One reader, both sides.
+    now = ladder_section(read(TEMPLATE))
+    base = ladder_section(read_at(TEMPLATE, BASELINE_REF).decode("utf-8"))
+    assert now == base, (
+        "the Search-Before-You-Build ladder changed. T069 moves the Karpathy table only; the "
+        "ladder is advisory, stays in the template, and is pinned byte-identical."
+    )
+    assert len(re.findall(r"^\d+\.", now, re.M)) == 7, "the ladder lost or gained a rung"
+
+
+@pytest.mark.parametrize("role", sorted(ROLE_GUIDES))
+def test_t069_ac7_ladder_is_absent_from_every_role_guide(role):
+    text = read(ROLE_GUIDES[role])
+    assert "## Search Before You Build" not in text, (
+        f"{ROLE_GUIDES[role]} inlined the ladder. Only the Karpathy table moves; inlining both "
+        f"sections costs c-infra +1,187 chars per spawn and is net worse than before T066."
+    )
+
+
+# --------------------------------------------------------------------------
+# AC9 — measurement, reported not asserted.
+#
+# A pinned number here would be T065's AC12 again: a scope guard committed as an invariant,
+# correct during review and a blocker on the next legitimate edit. The assertion is only the
+# direction the guide claims (no *increase*); the numbers themselves are printed.
+# --------------------------------------------------------------------------
+def pair_chars(role: str, ref: str | None = None) -> int:
+    if ref is None:
+        return len(read(ROLE_GUIDES[role])) + len(read(TEMPLATE))
+    return len(read_at(ROLE_GUIDES[role], ref).decode("utf-8")) + len(
+        read_at(TEMPLATE, ref).decode("utf-8")
+    )
+
+
+def test_t069_ac9_report_per_role_pair_size(capsys):
+    with capsys.disabled():
+        print("\n  role      | before | after  | delta")
+        print("  ----------|--------|--------|------")
+        for role in sorted(ROLE_GUIDES):
+            before, after = pair_chars(role, T069_BASELINE_REF), pair_chars(role)
+            print(f"  {role:<10}| {before:>6,} | {after:>6,} | {after - before:+,}")
+    for role in sorted(ROLE_GUIDES):
+        before, after = pair_chars(role, T069_BASELINE_REF), pair_chars(role)
+        assert after <= before, (
+            f"{role}: {before:,} -> {after:,} chars. The move is supposed to cost nothing — the "
+            f"table is added to the guide and removed from the template, so the pair is flat. "
+            f"Report the real number; do not reframe the criterion."
+        )

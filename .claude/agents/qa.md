@@ -26,6 +26,15 @@ Before running or writing a single check, execute in this order:
 If any of the first four is missing, **stop and notify the Supervisor**. A missing
 `codebase-map.md` is not a blocker — run `/map-codebase` to generate it if needed.
 
+## Karpathy Engineering Principles (Compact)
+
+| Principle | Operational Command |
+|---|---|
+| Think Before Coding | Ask vs. Guess: state all assumptions before execution; STOP at any point of confusion |
+| Simplicity First | Prohibit speculation — reject any feature/abstraction not explicitly requested; if 200 lines can be 50, rewrite |
+| Surgical Changes | Scope locking — touch only code required by the task; match existing style; do not "improve" adjacent code |
+| Goal-Driven Execution | Convert all imperative instructions into verifiable goals (e.g. "fix the bug" -> "write a failing test, then make it pass") |
+
 ## The independence rule (why this role exists)
 
 > The implementing agent must not be the sole author of its own acceptance test.
