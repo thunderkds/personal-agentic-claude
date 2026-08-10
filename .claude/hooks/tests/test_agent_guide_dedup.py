@@ -493,3 +493,29 @@ def test_t069_ac9_report_per_role_pair_size(capsys):
             f"{len(KARPATHY_TABLE):,}-char table. Either the removal from the template did not "
             f"happen, or the table was added somewhere it should not be."
         )
+
+
+@pytest.mark.parametrize("role", sorted(ROLE_GUIDES))
+def test_t069_role_guide_does_not_advertise_the_template_as_the_karpathy_source(role):
+    """Stage 4 P2 fix, given its own assertion so it cannot silently regress.
+
+    Every role guide's startup step 4 used to read "Read general-agent-template.md — Base Rules,
+    the Karpathy Engineering Principles, and the Search-Before-You-Build ladder". After T069 that
+    sentence is false, and it is the same defect class T069 exists to fix — a pointer naming a
+    channel that no longer holds the content — living in the guaranteed channel itself.
+
+    Asserted as a *relationship*, not a pinned sentence: the guide may describe the template
+    however it likes, as long as it does not name the Karpathy principles as living there.
+    """
+    text = read(ROLE_GUIDES[role])
+    start = text.index("general-agent-template.md")
+    sentence = text[start : start + 220]
+    assert "Karpathy Engineering\n   Principles, and" not in sentence, (
+        f"{ROLE_GUIDES[role]} still tells the agent the Karpathy Principles are in the template"
+    )
+    assert not re.search(
+        r"general-agent-template\.md`? — Base Rules, the Karpathy", text
+    ), (
+        f"{ROLE_GUIDES[role]}'s startup step 4 still advertises the template as the source of "
+        f"the Karpathy principles; they are in this guide now"
+    )
