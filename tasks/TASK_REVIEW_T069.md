@@ -33,9 +33,43 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [verbatim excerpt: the Karpathy table's sole location in `general-agent-template.md`,
-plus a grep over the four role guides showing it absent — captured before the first implementation
-commit]
+**BEFORE**: Captured 2026-08-10 in worktree `/home/hungnguyenhuu/workspace/pets/wt-t069` at commit
+`ad13dc6` — **before any implementation commit existed** (`git log --oneline -1` →
+`ad13dc6 docs(T069): Stage 2 guide — move the Karpathy table to the guaranteed channel`).
+
+The Karpathy table's *sole* location, verbatim, `.claude/agents/general-agent-template.md:26-33`:
+
+```
+## Karpathy Engineering Principles (Compact)
+
+| Principle | Operational Command |
+|---|---|
+| Think Before Coding | Ask vs. Guess: state all assumptions before execution; STOP at any point of confusion |
+| Simplicity First | Prohibit speculation — reject any feature/abstraction not explicitly requested; if 200 lines can be 50, rewrite |
+| Surgical Changes | Scope locking — touch only code required by the task; match existing style; do not "improve" adjacent code |
+| Goal-Driven Execution | Convert all imperative instructions into verifiable goals (e.g. "fix the bug" -> "write a failing test, then make it pass") |
+```
+
+Grep showing it lives nowhere else in `.claude/agents/`, and is absent from all four role guides —
+i.e. it reaches a sub-agent only if that agent chooses to open the template:
+
+```
+$ grep -rn "## Karpathy Engineering Principles (Compact)" .claude/agents/
+.claude/agents/general-agent-template.md:26:## Karpathy Engineering Principles (Compact)
+
+$ for f in common-infrastructure backend frontend qa; do \
+    printf '%s: ' ".claude/agents/$f.md"; \
+    grep -cF -e "Ask vs. Guess" -e "Scope locking" ".claude/agents/$f.md"; done
+.claude/agents/common-infrastructure.md: 0
+.claude/agents/backend.md: 0
+.claude/agents/frontend.md: 0
+.claude/agents/qa.md: 0
+```
+
+The template's own prose asserted the location that this task invalidates —
+`general-agent-template.md:14`: ``- Strictly follow all Karpathy Engineering Principles (below — full version with rationale in `CLAUDE.md`, keep both in sync on edit)`` — and
+`## Staleness Guard` (line 67-69): "If you edit Base Rules or the Karpathy Engineering Principles
+**above**, check `AGENTS.md` …".
 
 **AFTER**: [same greps, post-change]
 
