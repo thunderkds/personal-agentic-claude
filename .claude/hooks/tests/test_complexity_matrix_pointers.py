@@ -51,10 +51,11 @@ ROLE_GUIDES = [
 RETIRED_TARGET = "general-agent-template.md"
 MATRIX_SECTION = "## Complexity & escalation"
 
-# T070's own pre-implementation tip (its RED-test + BEFORE-capture commit, the last commit before
-# any of the three prose files was edited). A baseline *ref* dates the comparison; a baseline
-# *count* would freeze the world (T065's AC12).
-T070_BASELINE_REF = "78d0f8f"
+# T070's edit commit — the same ref `test_agent_guide_dedup.py` pins CLAUDE.md to. None of the
+# paths below is touched by T070, so this ref and the pre-T070 tip `78d0f8f` are interchangeable
+# for them; one shared ref keeps the two files answering the same question. A baseline *ref* dates
+# the comparison; a baseline *count* would freeze the world (T065's AC12).
+T070_BASELINE_REF = "9f3f2e9"
 
 # The exact clause the three shipping files retire, and which the historical record must keep.
 RETIRED_CLAUSE = "Complexity matrix in `.claude/agents/general-agent-template.md`"

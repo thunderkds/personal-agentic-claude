@@ -44,14 +44,17 @@ BASELINE_REF = "8fc4dd2"
 # Same reasoning as above: a baseline *ref* dates the comparison; a baseline *count* freezes it.
 T069_BASELINE_REF = "8d6d56b"
 
-# T070's own pre-implementation tip (its RED-test + BEFORE-capture commit, the last commit before
-# `CLAUDE.md` was edited). T070 repointed CLAUDE.md:86 at the role guides, so the AC5 byte-identity
-# question is still exactly as strong — it is just asked against a later baseline. The assertion
-# shape is deliberately unchanged and the parametrize entry is NOT removed: what AC5 protects is
-# that CLAUDE.md's overlap with the agent guides is cross-context redundancy and must not be
-# collapsed, and that property is still true after T070. `MANIFEST` is untouched by T070 and stays
-# on BASELINE_REF.
-T070_BASELINE_REF = "78d0f8f"
+# T070's own edit commit — the first commit in which `CLAUDE.md:86` names the role guides instead
+# of the template the matrix left in T066. It is the *new* fixed point for CLAUDE.md, exactly as
+# `8fc4dd2` is for MANIFEST: the pre-T070 tip (`78d0f8f`) cannot serve, because comparing the fixed
+# file against its own unfixed state is red by construction and would only be satisfiable by
+# undoing AC1.
+#
+# The assertion shape is deliberately unchanged (`read_bytes() == read_at(rel, <ref>)`) and the
+# parametrize entry is NOT removed. What AC5 protects — that CLAUDE.md's overlap with the agent
+# guides is CROSS-context redundancy and must not be collapsed — is still true after T070 and must
+# still be guarded. `MANIFEST` is untouched by T070 and stays on `BASELINE_REF`.
+T070_BASELINE_REF = "9f3f2e9"
 
 TEMPLATE = ".claude/agents/general-agent-template.md"
 ROLE_GUIDES = {
