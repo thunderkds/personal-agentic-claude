@@ -33,12 +33,28 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: T070 changes no executable code — it edits prose in three markdown files — so BEFORE is
+the verbatim prior content of each line about to change, quoted from the tree at `2baecb9` (captured
+2026-08-14, before any implementation commit exists on `feat/t070-impl`).
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+`CLAUDE.md:86`
+```
+- Scale process to the task's **Complexity Level (C0–C3)** — see the Complexity matrix in `.claude/agents/general-agent-template.md`. **Risk Level** separately gates `security-review`.
+```
+
+`docs/claude-md/pipeline-stages.md:118`
+```
+5. Assign each task three independent labels: **Complexity (C0–C3)**, **Risk (Low/Med/High)**, and **Priority (P0–P2)**. Split any task larger than C3 (an **Epic**) into smaller tasks before generating guides. (Complexity drives agent process; Risk gates `security-review`; Priority sets ordering — see the matrix in `.claude/agents/general-agent-template.md`.) When setting **Risk**, factor in whether the task touches a **hub file** — one many others depend on, so its code-dependency blast radius is large. In legacy mode this is recorded in `docs/legacy/risk-hotspots.md`; in greenfield it's a judgment call (optionally informed by a structural code-graph approach — see Stage 1). A hub touch raises Risk a level even when the edit itself is small.
+```
+
+`templates/TASK_GUIDE_template.md:18`
+```
+5. Note the **Complexity Level** above and apply the matching process (brainstorm / decompose / verify depth / model) from the Complexity matrix in `.claude/agents/general-agent-template.md`
+```
+
+**AFTER**: [same three lines, post-change — filled by the reviewer at Stage 4/5]
 
 **DELTA**: [one sentence — what a user can now do that they could not before]
 
-**WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
+**WITNESS**: [who ran it and when — derived from `memory/event-trace/T070.jsonl`, never the
 implementing agent alone]
