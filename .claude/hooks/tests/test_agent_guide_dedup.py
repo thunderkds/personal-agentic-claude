@@ -44,6 +44,15 @@ BASELINE_REF = "8fc4dd2"
 # Same reasoning as above: a baseline *ref* dates the comparison; a baseline *count* freezes it.
 T069_BASELINE_REF = "8d6d56b"
 
+# T070's own pre-implementation tip (its RED-test + BEFORE-capture commit, the last commit before
+# `CLAUDE.md` was edited). T070 repointed CLAUDE.md:86 at the role guides, so the AC5 byte-identity
+# question is still exactly as strong — it is just asked against a later baseline. The assertion
+# shape is deliberately unchanged and the parametrize entry is NOT removed: what AC5 protects is
+# that CLAUDE.md's overlap with the agent guides is cross-context redundancy and must not be
+# collapsed, and that property is still true after T070. `MANIFEST` is untouched by T070 and stays
+# on BASELINE_REF.
+T070_BASELINE_REF = "78d0f8f"
+
 TEMPLATE = ".claude/agents/general-agent-template.md"
 ROLE_GUIDES = {
     "c-infra": ".claude/agents/common-infrastructure.md",
@@ -181,9 +190,12 @@ def test_ac4_no_guide_tells_an_agent_to_re_read_its_own_system_prompt():
 # --------------------------------------------------------------------------
 # AC5 / AC10 — file-wide negatives.
 # --------------------------------------------------------------------------
-@pytest.mark.parametrize("rel", ["CLAUDE.md", "MANIFEST"])
-def test_ac5_ac10_out_of_scope_files_are_byte_identical_to_the_baseline(rel):
-    assert (ROOT / rel).read_bytes() == read_at(rel, BASELINE_REF), (
+@pytest.mark.parametrize(
+    "rel,ref",
+    [("CLAUDE.md", T070_BASELINE_REF), ("MANIFEST", BASELINE_REF)],
+)
+def test_ac5_ac10_out_of_scope_files_are_byte_identical_to_the_baseline(rel, ref):
+    assert (ROOT / rel).read_bytes() == read_at(rel, ref), (
         f"{rel} changed. CLAUDE.md never reaches a sub-agent at all, so its overlap with the "
         f"agent guides is CROSS-context redundancy and must not be collapsed; MANIFEST already "
         f"deploys `.claude/agents` as a directory entry."
