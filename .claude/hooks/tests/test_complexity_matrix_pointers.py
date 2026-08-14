@@ -60,14 +60,27 @@ T070_BASELINE_REF = "9f3f2e9"
 # The exact clause the three shipping files retire, and which the historical record must keep.
 RETIRED_CLAUSE = "Complexity matrix in `.claude/agents/general-agent-template.md`"
 
-# Must-not-touch AND genuinely frozen: no future stage writes to these three, so bytes are the
-# strongest available assertion. Deliberately excludes `memory/decisions.md` and the TASK_GUIDEs,
-# which legitimately gain content later (the memory pass; T070's own Evidence/Checklist) — those
-# are protected by content below instead, which is the property actually at stake.
+# Must-not-touch AND genuinely frozen: a completed-work review record that no future stage writes
+# to, so bytes are the strongest available assertion.
+#
+# `README.md` and `.claude/agents/general-agent-template.md` were byte-pinned here too until the
+# Stage 4 review (P2) removed them. They are on T070's must-not-touch list, but they are *living*
+# files — the template was rewritten by T041, T051, T065, T066 and T069, and the README by T065 and
+# `304e6e6` — so a standing byte-pin would go RED on the next legitimate edit and force the repoint
+# dance T070 itself had to perform on `CLAUDE.md`. That is the recorded "a scope guard committed as
+# an invariant blocks what it guarded" (T065's AC12). Byte-identity was the right question to ask
+# *during* T070's review and the wrong thing to freeze afterwards, so what survives below is the
+# durable property instead: each of those two describes the move correctly and neither has
+# regressed into a stale pointer.
 FROZEN_PATHS = [
+    "tasks/TASK_REVIEW_T066.md",
+]
+
+# Already correct before T070 and deliberately untouched by it: each *describes* where the matrix
+# went rather than pointing stalely at the file it left.
+ALREADY_CORRECT_FILES = [
     "README.md",
     ".claude/agents/general-agent-template.md",
-    "tasks/TASK_REVIEW_T066.md",
 ]
 
 # Where the old wording is the historical record and must survive verbatim.
@@ -177,7 +190,37 @@ def test_ac7_frozen_out_of_scope_files_are_byte_identical_to_the_baseline(rel):
     path = ROOT / rel
     assert path.exists(), f"{rel} does not exist under {ROOT}."
     assert path.read_bytes() == _read_at(rel, T070_BASELINE_REF), (
-        f"{rel} changed. It is on T070's Files-Must-NOT-Touch list: README.md was already correct "
-        f"as of 304e6e6, general-agent-template.md line 8 *describes* the move rather than "
-        f"pointing stalely at it, and TASK_REVIEW_T066.md is completed-work record."
+        f"{rel} changed. It is completed-work record — the Stage 4/5 review of a task that closed "
+        f"on 2026-08-09 — so nothing should ever write to it again."
+    )
+
+
+@pytest.mark.parametrize("rel", ALREADY_CORRECT_FILES)
+def test_ac7_already_correct_files_still_describe_the_move(rel):
+    """The durable half of AC7 for the two living files, in place of a byte-pin (Stage 4 P2).
+
+    Deliberately asserts the *property* rather than the bytes: these two may legitimately be
+    rewritten by a later task, and must simply never regress into the defect T070 fixed.
+    """
+    lines = _lines(rel)
+
+    matrix_lines = [(n, ln) for n, ln in enumerate(lines, 1) if _mentions_matrix(ln)]
+    assert matrix_lines, (
+        f"{rel} no longer mentions the Complexity matrix at all. It is one of the two files that "
+        f"document where T066 moved it; losing that statement is how the pointer went stale in the "
+        f"first place."
+    )
+
+    # Whole-text, not per-line: in `general-agent-template.md` the sentence wraps, so "Complexity
+    # matrix" sits on line 8 and "role guide" on line 9. A line-scoped check here reads RED on a
+    # correct file — caught by the control run for this fix.
+    assert "role guide" in "\n".join(lines).lower(), (
+        f"{rel} mentions the Complexity matrix but no longer names the role guide as its home."
+    )
+
+    offenders = [f"{rel}:{n}: {ln.strip()}" for n, ln in matrix_lines if RETIRED_TARGET in ln]
+    assert not offenders, (
+        f"{rel} now pairs a Complexity-matrix claim with {RETIRED_TARGET}. It described the move "
+        f"correctly before T070 and has regressed into the stale pointer T070 retired:\n  "
+        + "\n  ".join(offenders)
     )
