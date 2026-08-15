@@ -254,12 +254,12 @@ labels can be dropped back on their instruction — but not silently.
 
 ## Completion Checklist
 
-- [ ] Implementation done
-- [ ] Self-review: `code-review` run (Supervisor — a sub-agent has no `Skill` tool)
-- [ ] Security review: `security-review` run — **mandatory at Medium risk**; check `git branch --show-current` first, or the built-in diffs main-vs-main and returns a false PASS
-- [ ] Lint passes
-- [ ] Tests written AND pass — output pasted into `tasks/TASK_REVIEW_T070.md`'s Evidence table (Hard-Stop Gate 5)
-- [ ] `verify` run — feature confirmed working
-- [ ] UI/Design Evidence rows marked ☐ N/A with justification (no UI component; section deleted above per Gate 6)
-- [ ] `memory/MEMORY.md` updated (if new patterns learned)
-- [ ] Supervisor notified: task ready for Stage 4 review
+- [x] Implementation done
+- [x] Self-review: `code-review` run (Supervisor — a sub-agent has no `Skill` tool) — 0 P0 / 0 P1 / 1 P2 (invariant byte-pins), fixed at `0d3053f`
+- [x] Security review: `security-review` run — **mandatory at Medium risk**; run manually and labelled (12th occurrence of the built-in diffing the checked-out branch) — PASS, 0 actionable, prose-only diff
+- [x] Lint passes — no linter in this repo for markdown; the Python test files are covered by the suite
+- [x] Tests written AND pass — output pasted into `tasks/TASK_REVIEW_T070.md`'s Evidence table (Hard-Stop Gate 5): `405 passed`, exit 0
+- [x] `verify` run — feature confirmed working — user-run 2026-08-15, **PASS** at the installer surface with 2 probes; see the Evidence `verify` row
+- [x] UI/Design Evidence rows marked ☐ N/A with justification (no UI component; section deleted above per Gate 6)
+- [x] `memory/MEMORY.md` updated (if new patterns learned)
+- [x] Supervisor notified: task ready for Stage 4 review

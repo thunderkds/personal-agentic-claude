@@ -1208,3 +1208,41 @@ sections, so it buys new content out of the same saving the others bank.
 
 Left open as **T069**: the Karpathy table and the ladder live only in the template, before and after,
 so T041's fix depends on a read that is not guaranteed.
+
+## T070 — repoint the stale Complexity-matrix pointers at the guaranteed channel (2026-08-15)
+
+T066 moved the C0–C3 Complexity matrix out of `.claude/agents/general-agent-template.md` and into
+each role guide, but three pointers kept naming the old location. The registered row named two of
+them (`CLAUDE.md:86`, `docs/claude-md/pipeline-stages.md:118`, both Supervisor-facing); the Stage 2
+sweep found a third, `templates/TASK_GUIDE_template.md:18`, and it is the one that matters —
+`MANIFEST:11` ships `templates` to every downstream repo, so it is step 5 of the Mandatory Startup
+block **in the guaranteed channel of the reader it misdirects**. Third occurrence of "retiring a
+convention touches more places than the AC table enumerates" (T058, T065, now T070), and the second
+consecutive task whose row under-counted before the sweep ran.
+
+**Wording deliberately differs per file.** The template addresses an implementing agent, who *has* a
+role guide, so it reads "in your role guide (`.claude/agents/[agent-file].md`)", reusing the
+placeholder its own step 4 already carries. The other two address the Supervisor, who has no role
+guide, so they name the directory (`.claude/agents/<role>.md`). One phrasing applied to all three
+would have repeated the exact error T066 diagnosed.
+
+**Historical carriers left byte-identical**, following T064's fallback-not-migration precedent: ~35
+`tasks/TASK_GUIDE_T0*.md`, `TASK_REVIEW_T066.md` and `memory/decisions.md:858` record what each agent
+was actually told at the time, and back-editing them would falsify the audit trail. `README.md:72`
+and `general-agent-template.md:8` were already correct — they *describe* the move.
+
+**The AC5 pin was repointed, not deleted.** `test_agent_guide_dedup.py:184` parametrized
+`["CLAUDE.md", "MANIFEST"]` against `BASELINE_REF = "8fc4dd2"`, so AC1 turned it RED by construction:
+no correct implementation satisfies both AC and test, only a test edit does (the T064 family). Split
+the parametrize and add `T070_BASELINE_REF`, mirroring `T069_BASELINE_REF` in that same file, keeping
+the assertion shape byte-identical and `MANIFEST` on the old ref. Deleting the entry was forbidden —
+it guards T066's cross-context-redundancy finding, still true after T070.
+
+Stage 4: 0 P0 / 0 P1 / 1 P2 / 0 P3. The P2 is instructive: T070's own AC7 byte-pins were written as
+standing invariants, the same shape as T065's `entries == 146` — a question that only means something
+*during* review, which as a committed assertion forbids the next legitimate edit. Fixed at `0d3053f`
+by scoping them to the review-time diff. security-review PASS, 0 actionable (12th occurrence of the
+built-in diffing the checked-out branch). 9 mutation controls RED→GREEN, one designed to **error**
+rather than free-pass on a typo'd path list. 11 new tests, 405 passed + smoke PASS.
+
+`verify` (user-run, PASS) was driven at the **installer** surface, not the suite — see learnings.
