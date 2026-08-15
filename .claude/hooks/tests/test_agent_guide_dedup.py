@@ -44,6 +44,18 @@ BASELINE_REF = "8fc4dd2"
 # Same reasoning as above: a baseline *ref* dates the comparison; a baseline *count* freezes it.
 T069_BASELINE_REF = "8d6d56b"
 
+# T070's own edit commit — the first commit in which `CLAUDE.md:86` names the role guides instead
+# of the template the matrix left in T066. It is the *new* fixed point for CLAUDE.md, exactly as
+# `8fc4dd2` is for MANIFEST: the pre-T070 tip (`78d0f8f`) cannot serve, because comparing the fixed
+# file against its own unfixed state is red by construction and would only be satisfiable by
+# undoing AC1.
+#
+# The assertion shape is deliberately unchanged (`read_bytes() == read_at(rel, <ref>)`) and the
+# parametrize entry is NOT removed. What AC5 protects — that CLAUDE.md's overlap with the agent
+# guides is CROSS-context redundancy and must not be collapsed — is still true after T070 and must
+# still be guarded. `MANIFEST` is untouched by T070 and stays on `BASELINE_REF`.
+T070_BASELINE_REF = "9f3f2e9"
+
 TEMPLATE = ".claude/agents/general-agent-template.md"
 ROLE_GUIDES = {
     "c-infra": ".claude/agents/common-infrastructure.md",
@@ -181,9 +193,12 @@ def test_ac4_no_guide_tells_an_agent_to_re_read_its_own_system_prompt():
 # --------------------------------------------------------------------------
 # AC5 / AC10 — file-wide negatives.
 # --------------------------------------------------------------------------
-@pytest.mark.parametrize("rel", ["CLAUDE.md", "MANIFEST"])
-def test_ac5_ac10_out_of_scope_files_are_byte_identical_to_the_baseline(rel):
-    assert (ROOT / rel).read_bytes() == read_at(rel, BASELINE_REF), (
+@pytest.mark.parametrize(
+    "rel,ref",
+    [("CLAUDE.md", T070_BASELINE_REF), ("MANIFEST", BASELINE_REF)],
+)
+def test_ac5_ac10_out_of_scope_files_are_byte_identical_to_the_baseline(rel, ref):
+    assert (ROOT / rel).read_bytes() == read_at(rel, ref), (
         f"{rel} changed. CLAUDE.md never reaches a sub-agent at all, so its overlap with the "
         f"agent guides is CROSS-context redundancy and must not be collapsed; MANIFEST already "
         f"deploys `.claude/agents` as a directory entry."

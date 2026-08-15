@@ -953,3 +953,32 @@ side stripped and the other not. Normalise both sides through the same function 
 and `&&` gates on the **last command of the pipeline**, not on `pytest`. This repo chains commits
 behind `&&` routinely, so the footgun is live. Redirect to a file and check `$?`, or use
 `set -o pipefail`. Never read a pipeline's success from the tail of its output.
+
+## Verify a docs change where it is *distributed*, not where it is written (T070, 2026-08-15)
+
+T070 edited three markdown prose lines, which reads like a SKIP — no runtime surface. But this repo's
+"app" is its installer, and `templates/` ships downstream via `MANIFEST`, so the claim "an agent
+following this pointer now arrives somewhere real" is directly observable: `SUPERVISOR_REPO=<local
+worktree> bash setup.sh` into a throwaway `git init` repo, then read the installed files back. That
+capture showed all three pointers landing fixed downstream, and following them landed on 4 C0–C3 rows
+in each role guide against **0** in `general-agent-template.md` — the defect and its fix, both visible
+at the surface a real reader meets. A prose change with a distribution mechanism has a runtime surface;
+look for the mechanism before reporting SKIP.
+
+## A fix outside MANIFEST reaches new installs only (T070, 2026-08-15)
+
+Driving the upgrade path — install pre-T070, then `update.sh` — showed `templates/TASK_GUIDE_template.md`
+silently updating while `CLAUDE.md` kept the stale pointer. `CLAUDE.md` is absent from `MANIFEST`;
+`setup.sh` copies it once as a project-owned file and `update.sh:276` names it as *the* example of a
+lock entry carried over untouched. So an edit to `CLAUDE.md` propagates to fresh installs and never to
+existing ones. Arguably correct (projects customize their own `CLAUDE.md`), but it means "I fixed it in
+`CLAUDE.md`" and "downstream repos have the fix" are different claims. `docs/claude-md/` **is** in
+MANIFEST, so the split runs right through what looks like one document.
+
+## The noun a pointer teaches should exist in the file it points to (T070, 2026-08-15)
+
+All three repointed lines say "the Complexity matrix", but the literal phrase occurs **0 times** in the
+role guides — the heading is `## Complexity & escalation`. A reader who greps the term the pointer gave
+them still lands nowhere. Same defect class T070 was written to fix, one notch smaller, and it survived
+the fix because the sweep matched the retired *path*, not the retired *noun*. Recorded, not folded in
+(Surgical Changes).

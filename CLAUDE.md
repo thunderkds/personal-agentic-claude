@@ -83,7 +83,7 @@ All sub-agents inherit from this base template unless explicitly overridden.
 - Update the Memory/Insights section of PROJECT_SPEC.md with key learnings
 - Pause and ask the Supervisor if any ambiguity or error occurs
 - Work only inside the assigned git worktree
-- Scale process to the task's **Complexity Level (C0–C3)** — see the Complexity matrix in `.claude/agents/general-agent-template.md`. **Risk Level** separately gates `security-review`.
+- Scale process to the task's **Complexity Level (C0–C3)** — see the Complexity matrix in each role guide (`.claude/agents/<role>.md`). **Risk Level** separately gates `security-review`.
 
 **Default Communication Protocol:**
 - Use concise, structured messages
