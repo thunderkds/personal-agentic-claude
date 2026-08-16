@@ -90,6 +90,8 @@ plus the pre-flight sweep recorded below.
 | 6 | The new test asserts **ground truth, not just prose**: it runs `git check-ignore` on `memory/decisions.md` (expect: not ignored) and on a `memory/event-trace/` path (expect: ignored), so the NOTE and reality are checked against each other rather than the NOTE against itself | The defect was prose contradicting `.gitignore`; only a cross-check catches a recurrence |
 | 7 | The hook's logic is byte-identical apart from the NOTE constant: trigger condition, the 5 numbered steps, the routing line and `main()` unchanged | Out of scope |
 | 8 | Existing suite still green, unmodified — in particular `test_memory_channel_and_budget.py`, which lists this file in `SHIPPING_FILES` for its negative content sweeps | No test-loosening |
+| 9 | **Added 2026-08-16.** In `.claude/hooks/tests/test_vital_slice.py::test_ac12_no_enforcement_machinery_was_added`, the **byte-identity half is deleted** — the `changed` list, its loop body and its `assert not changed`. The **content half is kept byte-identical**: `mentions`, the `"Vital slice" in p.read_text(...)` check, and `assert not mentions` with its message unchanged. Nothing else in that file is touched | Supervisor ruling 2026-08-16; the recorded "exclude by content, never by ref" rule |
+| 10 | **Added 2026-08-16, mutation-verified.** After the edit, `test_ac12` must still go **RED** when a non-test hook is made to reference the advisory field — append `# Vital slice` to any `.claude/hooks/*.py` and confirm failure. This is the assertion that actually enforces DDR-0005 §5; if it stops discriminating, the deletion removed the guard instead of the scope guard | Guards against the narrowing silently disarming the real check |
 
 ---
 
@@ -155,6 +157,28 @@ makes the guard durable, and it is cheap here because `git check-ignore` is a tw
 
 ---
 
+> ### Stage 3 amendment, 2026-08-16 — why AC9/AC10 exist
+>
+> The agent halted before committing: this task's one-line hook edit turns
+> `test_vital_slice.py::test_ac12_no_enforcement_machinery_was_added` red. That test pins **every**
+> non-test `.claude/hooks/*.py` byte-identical to `b69410c`. Verified independently by the Supervisor.
+>
+> **It is occurrence 7 of "a scope guard committed as an invariant", it was written during T071, and
+> the Supervisor signed it off at T071's Stage 4** — while explicitly ruling that AC11's line caps
+> were an acceptable budget, and missing the byte-identity glob one function below. The learning was
+> written to `memory/learnings.md` the same day and then violated by its own author on the next task.
+>
+> **The fix was already inside the test.** It carries two assertions: `changed` (byte-identity of
+> every hook — the scope guard) and `mentions` (no hook contains the string `Vital slice` — the real
+> guard). Only `mentions` enforces DDR-0005 §5's refusal of a gate, and being content-based it stays
+> true indefinitely and still catches a genuine regression. `changed` answered "did T071 add
+> machinery?", a question that only meant something during T071's review.
+>
+> Ruling: **delete `changed`, keep `mentions`** — the recorded "exclude by content, never by ref"
+> rule. Repointing `PRE_TASK_REF` (T070's precedent) was rejected here: it preserves both assertions
+> but simply moves the wall to T073's commit, so the next hook edit hits it again. AC10 exists
+> because deleting half of a two-assertion test is the easiest way to remove the wrong half.
+
 ## Edge Case Checklist
 
 - [ ] `git check-ignore` exit codes are inverted from intuition: **0 means ignored**, 1 means not. Assert on the code deliberately, and add a comment — a reversed assertion here passes for the wrong reason.
@@ -179,6 +203,7 @@ makes the guard durable, and it is cheap here because `git check-ignore` is a tw
 | `.gitignore` | It is correct. The prose was wrong |
 | `.claude/settings.json` | Hook registration is out of scope |
 | `.claude/hooks/tests/test_memory_channel_and_budget.py` | AC8 — it must stay green unmodified |
+| `.claude/hooks/tests/test_vital_slice.py` — everything except the `changed` half of `test_ac12` | AC9 permits deleting exactly that one assertion and its loop body. The other 36 tests, `PRE_TASK_REF`, and the `mentions` content check stay byte-identical |
 | `post_bash_memory_update.py`'s logic, steps and routing | AC7 — NOTE constant only |
 | `tasks/*`, `memory/decisions.md`, `PROJECT_KANBAN.md` | Dated records that legitimately quote the old text |
 
