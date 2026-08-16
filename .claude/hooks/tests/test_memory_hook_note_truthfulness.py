@@ -96,6 +96,50 @@ def test_ac6_ground_truth_decisions_md_is_not_git_ignored():
     )
 
 
+COLD_TIER = ("memory/decisions.md", "memory/glossary.md", "memory/learnings.md")
+
+
+def test_ac6_ground_truth_cold_tier_files_are_actually_tracked():
+    """The load-bearing half of AC6, added at Stage 4 review.
+
+    `git check-ignore` is NOT sufficient on its own: git never reports a *tracked*
+    path as ignored, so the sibling assertion above holds no matter what `.gitignore`
+    says. The T073 implementer proved this — adding `memory/decisions.md` to
+    `.gitignore` left that test green (SC6 did not reproduce RED).
+
+    Tracked-ness is what the NOTE actually claims, and it is what can genuinely
+    regress: untrack a cold file and this fails, which is the state that would make
+    the NOTE a lie again.
+    """
+    for rel in COLD_TIER:
+        result = subprocess.run(
+            ["git", "ls-files", "--error-unmatch", rel],
+            cwd=ROOT, capture_output=True,
+        )
+        assert result.returncode == 0, (
+            f"{rel} is NOT git-tracked, so the hook's NOTE telling the Supervisor to "
+            f"commit the cold-tier pass would be false. Either restore tracking or "
+            f"correct the NOTE — do not weaken this assertion."
+        )
+
+
+def test_ac6_ground_truth_event_trace_is_not_tracked():
+    """The mirror of the above: the sole local-only path must stay untracked.
+
+    Without this, `memory/event-trace/` could be committed and the NOTE's 'only
+    event-trace is local-only' clause would silently become wrong in the other
+    direction.
+    """
+    result = subprocess.run(
+        ["git", "ls-files", "memory/event-trace/"],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+    assert result.stdout.strip() == "", (
+        f"memory/event-trace/ has tracked files, contradicting the NOTE's claim that "
+        f"it is the sole local-only path:\n{result.stdout}"
+    )
+
+
 def test_ac6_ground_truth_event_trace_path_is_git_ignored():
     # git check-ignore: 0 = ignored, 1 = not ignored (inverted from intuition).
     # event-trace/ is the sole local-only exception, so we assert exit code 0.
