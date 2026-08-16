@@ -54,7 +54,13 @@ T069_BASELINE_REF = "8d6d56b"
 # parametrize entry is NOT removed. What AC5 protects — that CLAUDE.md's overlap with the agent
 # guides is CROSS-context redundancy and must not be collapsed — is still true after T070 and must
 # still be guarded. `MANIFEST` is untouched by T070 and stays on `BASELINE_REF`.
-T070_BASELINE_REF = "9f3f2e9"
+#
+# REPOINTED AGAIN by T071 (`9f3f2e9` -> `c512ae9`), for the same reason and by the same rule: T071
+# adds the Vital Slice sentence to CLAUDE.md's Simplicity First row, so `9f3f2e9` is now the file's
+# own unfixed state and comparing against it is red by construction. `c512ae9` is T071's CLAUDE.md
+# edit commit. Repointed, NOT deleted — the assertion body and the parametrize list are untouched,
+# and T071's AC15 re-proves the pin still discriminates by mutating CLAUDE.md and observing RED.
+T070_BASELINE_REF = "c512ae9"
 
 TEMPLATE = ".claude/agents/general-agent-template.md"
 ROLE_GUIDES = {
