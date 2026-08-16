@@ -147,6 +147,10 @@ If docs/legacy/ exists (legacy mode): also read `docs/legacy/risk-hotspots.md` a
 > Point at code that already works and should be imitated. Without one, the agent falls back to
 > generic best practice instead of this repo's conventions (Karpathy: Surgical Changes).
 
+**Vital slice**: [the part of this feature's implementation surface carrying most of its value, e.g. `the one happy-path endpoint the AC exercises`] or `None — the whole surface is the slice` (with a one-line reason)
+**Cut list**: [what is deliberately NOT built, one line each, e.g. `pagination (three rows today)`] or `None — nothing was cut`
+> A cut narrows implementation surface only — never an Acceptance Criterion, never a pipeline stage, never a Hard-Stop Gate. Advisory: an unrecorded cut is indistinguishable from an oversight later.
+
 [Recommended approach from brainstorming skill output, or Supervisor's decision for Low-risk tasks. Include the reasoning.]
 
 ---

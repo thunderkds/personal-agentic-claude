@@ -52,6 +52,11 @@ project. Default to the simplest design that satisfies the TASK_GUIDE. **Reject 
 required by the requirement or an approved decision (ADR).** Heavier patterns are decision-gated —
 see the appendix; never reach for them speculatively. If 200 lines can be 50, write 50.
 
+Then rank what is left: build the **vital slice** the acceptance criteria actually exercise, and
+record what you did not build — the flag nobody sets, the interface with one caller — as a **cut
+list**. A cut removes implementation surface, never an Acceptance Criterion, a pipeline stage or a
+Hard-Stop Gate.
+
 ## Scope boundaries (who owns what)
 
 - **You own:** API endpoints, request/response validation, business logic, data-access code,
