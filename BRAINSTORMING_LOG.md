@@ -470,3 +470,477 @@ downstream; (b) cache dominance means volume is not cost; (c) H2's inversion was
 6. **De-dupe the startup read set** — unchanged, last.
 
 Next: Stage 3 on T061.
+
+---
+
+# Brainstorming: compact the Kanban task-history context (2026-08-12)
+
+**Skill**: `Skill({ skill: "brainstorming" })` | **Tier**: Deep
+**Trigger**: user request to "refactor the tasks history by compacting the tasks context", after a
+measurement pass identified `PROJECT_KANBAN.md` as the largest context artifact in the repo.
+**Gate note**: the request contains *refactor*, so Hard-Stop Gate 2 floors any resulting task at
+**C2 / Medium Risk**. Not reducible without explicit user instruction.
+
+## The Problem Space
+
+The stated goal is reducing context tokens. The measured baseline:
+
+| Artifact | Chars | ~Tokens | How it enters context |
+|---|---:|---:|---|
+| `PROJECT_KANBAN.md` | 98,726 | **~24,700** | read in full by `wake`, every session |
+| `memory/MEMORY.md` | 49,518 | ~12,400 | read on demand (49,518 / 50,000 budget — 482 chars headroom) |
+| `PROJECT_SPEC.md` | 15,550 | ~3,900 | read on demand |
+| `CLAUDE.md` | 15,277 | ~3,819 | auto-injected every session |
+| skill roster (descriptions) | 10,256 | ~2,564 | auto-injected every session |
+| `AGENTS.md` | 595 | ~149 | auto-injected |
+
+Spawn-side, real T061 telemetry across 7 captured spawns shows 97.6–98.4% of every spawn arrives as
+`cache_read` (T064 187,906 total / 184,864 cache_read; bare-`echo` probe 15,727 / 15,294), with
+`cache_creation` never exceeding 1,016 tokens regardless of payload. This **re-confirms DDR-0004**:
+injected content is nearly free, spawn *count* is the lever. Nothing in this brainstorm should be
+justified on spawn-payload savings.
+
+### The reframing that decides this session
+
+`PROJECT_KANBAN.md` breaks down by section as:
+
+```
+### Done            97,267 ch  ~24,316 tok   98.5%
+### Todo               914 ch     ~228 tok    0.9%
+### In Progress          3 ch       ~0 tok    0.0%
+### Ready for Review     2 ch       ~0 tok    0.0%
+## Stage Tracker       259 ch      ~64 tok    0.3%
+## Blocked              26 ch       ~6 tok    0.0%
+```
+
+And `.claude/skills/wake/SKILL.md:30` instructs: *"Read full file, then filter to rows with status
+`In Progress` or `🔄`"*, with line 56 restating *"Emit task ID + title only — no description, no
+other columns."*
+
+**So `wake` reads ~24,316 tokens of Done history every session and discards 100% of it.** The Done
+section is expensive not because the rows are verbose but because the only token-paying reader
+structurally never uses it. The four hooks that also parse the board
+(`pre_bash_block_unsafe_merge.py:275`, `stop_review_reminder.py:29`,
+`pre_agent_validate_guide.py:40`, `post_write_register_task.py:64`) read the full file too, but they
+are Python processes — **their reads cost zero tokens**. Only the LLM-context read is billed.
+
+This is the same shape as T064, where the registered direction (prose→cards) was rejected at Stage 2
+because measurement showed the cost lived in reviewer scaffolding, not reasoning prose. Here the cost
+lives in the reader, not the file.
+
+### Constraints that are non-negotiable
+
+1. **`CLAUDE.md:23-24` mandates the opposite of compression** — "keep `PROJECT_KANBAN.md` rows …
+   fully detailed — those are the audit trail, not conversation, and simplifying them loses real
+   information." Any path that shortens rows must amend this rule, or it ships a board that violates
+   a standing instruction on the day it merges.
+2. **`CLAUDE.md` is pinned byte-identical** by `test_agent_guide_dedup.py:184` (T066 AC5). Amending
+   the rule turns that test RED — the T064 "a test pins a location" family. **T070 is already blocked
+   on this identical pin**, so any row-editing path collides with an already-registered task.
+3. **No row may contain a `###`** — `find_kanban_section`'s lookahead truncates the section there.
+   Recorded 6 times in this hook family (T018/T020/T022/T024/T039/T045).
+4. **The board is test-covered** — `test_find_kanban_section_on_real_current_board` reads the LIVE
+   file; `[x]` must mean Done. A Kanban edit is a code change; re-run pytest after it.
+
+### What is actually at risk if rows are compressed
+
+Verified rather than assumed:
+
+- **The row prose is NOT duplicated in the task's own guide.** Of T069's 38 substantial sentences,
+  2 appear in `TASK_GUIDE_T069.md` / `TASK_REVIEW_T069.md`. The board is the unique home of the
+  Stage 2/3/4 narrative. (This corrected an incorrect claim the Supervisor made earlier in session.)
+- **But 59 of 67 Done tasks are already represented in `memory/`** — `decisions.md` (136,650 ch) +
+  `learnings.md` (84,684 ch), both cold-tier and never auto-loaded. Absent: T002, T003, T004, T006,
+  T007, T008, T009, T011 — the bootstrap tasks.
+- **Every full row is recoverable from git.** 84 commits touch the board; `git log -S'AC9 is a
+  predicted-zero'` finds T069 at `bd06cc1`, `-S'TraceCoder'` finds T060 at `88d441e`. So compression
+  is a demotion to a colder tier, not destruction. Residual risk is discoverability: recovery
+  requires knowing a phrase to search for.
+
+## Alternative Paths
+
+| Option | Name | Summary | Invasiveness | Regression Risk | Saving | Recommended? |
+|---|---|---|---|---|---:|---|
+| A | Full-board compression | Rewrite all 67 Done rows to a 5-field schema | **High** | Medium | ~23,000 tok | |
+| B | Recency split | Compress the older 62, keep the last 5 full | Medium | Medium | ~20,000 tok | |
+| C | **Fix the reader** | `wake` reads only the sections it uses | **Very Low** | **Very Low** | ~24,300 tok | ✅ **Yes** |
+
+### Option A — Full-board compression
+
+**Approach**: Rewrite each of the 67 Done rows to the fixed 5-field schema selected by the user
+(outcome | Stage 4 defect counts | test count | the one durable lesson | refs to guide/review/memory),
+sourced from the existing `memory/` entry where one exists (59 of 67) and template-literal for the 8
+bootstrap tasks. Amend `CLAUDE.md:23-24`, repoint the T066 AC5 pin, add a test asserting every Done
+row carries all five fields and contains no `###`.
+
+**Pros**: Board becomes readable by a human again. Format returns to what
+`templates/PROJECT_KANBAN_template.md` already publishes downstream. Saving is durable — future rows
+are born compact.
+**Cons**: 67 hand-written summaries; amends a Permanent-Rules-adjacent instruction; collides with
+T070 on the AC5 pin; the largest edit ever made to the most parse-fragile file in the repo.
+**Why it might fail**: The fidelity risk has no strong oracle. A schema test verifies *shape, not
+truth* — a confidently wrong summary passes, which is the vacuous-assertion shape recorded 7 times
+here. The repo has two recorded incidents (T061, T068) of a fixture claiming provenance it lacked,
+both seeded by whoever wrote the artifact. Compressing 67 rows is 67 chances to repeat that, and the
+check would be run by the same party doing the compressing.
+**50% version**: template-literal rows only (title | C-level | date), discarding the 5-field schema.
+Saves marginally more and removes the fidelity problem entirely — but discards the defect/test/lesson
+signal, and still pays every structural cost above.
+
+### Option B — Recency split
+
+**Approach**: Keep the last ~5 Done tasks at full narrative, compress the older 62, rotate on a
+cadence.
+**Pros**: Preserves the actively-referenced working set at full fidelity; most of the saving.
+**Cons**: Introduces an ongoing rotation chore and a judgment call ("when does a row age out?") that
+nothing enforces. Inherits every constraint of Option A — `CLAUDE.md` amendment, AC5 pin, fidelity —
+while saving less.
+**Why it might fail**: An un-enforced periodic chore decays silently. T065 recorded exactly this: a
+budget without an in-code rule naming it a ratchet gets relaxed the first time it is inconvenient.
+The board would drift back within ~10 tasks and nothing would go red.
+
+### Option C — Fix the reader (recommended)
+
+**Approach**: Change `.claude/skills/wake/SKILL.md` so Step 1 reads only the sections it consumes —
+`### Todo`, `### In Progress`, `### Ready for Review` — via a bounded read (`Grep` for the section
+headers, or `Read` with `offset`/`limit`), never the full file. The Done section is never pulled into
+context. Not one row is touched.
+
+**Pros**: ~24,300 of the ~24,700 tokens recovered — **more than Option A**, because it also drops the
+Todo/Blocked/Stage-Tracker bytes that Option A keeps. Zero information loss; the audit trail stays
+exactly where CLAUDE.md mandates. **No `CLAUDE.md` amendment**, so **no T066 AC5 collision and no
+T070 entanglement**. No fidelity problem, because nothing is summarized. Cost is one edit to one
+skill file. It also fixes the cost for every downstream repo, since `wake` ships and instance content
+does not — the T065 mechanism-vs-content distinction, applied correctly.
+**Cons**: The board keeps growing on disk and stays unreadable to a human scrolling it. Does not
+address `wake`'s own truncation problem — the file already exceeds the 25,000-token tool-output cap,
+so a naive full read is silently truncated *today* (observed this session).
+**Why it might fail**: A skill instruction is not a guarantee — **this is exactly what T065
+disproved about `craft-spawn-prompt` element 4**, where the mandate said one thing and practice did
+another for 49 spawns. If `wake` is re-run by a future agent that reads the file wholesale anyway,
+the saving evaporates with nothing going red. **Mitigation, and it must be an AC**: pair the
+instruction with an executable check, so the property is enforced rather than requested. Second
+failure mode: a bounded read that mis-locates a section silently returns the wrong rows — the
+`find_kanban_section` defect family, now in an LLM-driven reader instead of a regex.
+**50% version**: change only the wording at `wake/SKILL.md:30` with no test. Rejected — that is the
+instruction-without-enforcement failure named above, and it is the single most repeated lesson in
+this repo's memory.
+
+## Adversarial Review — the strongest case against the recommendation
+
+Option C optimizes the measurement, and the measurement was taken during `/wake`. If the Supervisor
+or a human opens `PROJECT_KANBAN.md` for any other reason — reviewing history, answering "what did
+T060 decide?" — the full 98,726 chars still land in context, and Option C has done nothing. The
+honest scope of Option C is therefore *"remove the unconditional per-session cost"*, *not* "make the
+board cheap to consult". If board consultation is frequent, A or B recover value C cannot.
+
+Counter-evidence, recorded: `git log -S` and the `memory/` cold tier already serve targeted historical
+lookup at a fraction of a full-board read, and 59 of 67 tasks are covered there. So the frequent-
+consultation scenario has a cheaper answer than compressing the board.
+
+## Surgical Scope
+
+**Must be touched (Option C)**
+- `.claude/skills/wake/SKILL.md` — Step 1 source table (line 30) and Step 3 (line 56)
+- `.claude/hooks/tests/` — one new test asserting the enforced property
+
+**Must NOT be touched (Option C)**
+- `PROJECT_KANBAN.md` — not one row
+- `CLAUDE.md` — no amendment needed; AC5 byte-identity pin stays green; T070 stays independent
+- The four board-parsing hooks — their full-file reads are free and correct
+- `templates/PROJECT_KANBAN_template.md` — already correct; the live board drifted from it, not the reverse
+
+**Additionally in scope only if A or B is chosen**
+- `CLAUDE.md:23-24`, `test_agent_guide_dedup.py:184` (AC5 repoint), and coordination with T070
+
+## Edge Case Checklist for TASK_GUIDE
+
+1. Board with an empty `### Done` section (new downstream repo) — bounded read must not error.
+2. Board where `### Done` precedes `### Todo` (section order not guaranteed by the template).
+3. A row containing `###` inside its text — the 6-times-recorded truncation defect.
+4. `PROJECT_KANBAN.md` missing entirely — `wake`'s existing degradation note must still fire.
+5. A task sitting in `Ready for Review` — currently empty, so an untested path in the reader.
+6. File exceeding the 25,000-token tool-output cap — already true today; the fix must make this
+   unreachable, not merely unlikely.
+7. `🔄` status marker used instead of the `In Progress` section (both are honoured by `wake` today).
+8. The enforced check must fail RED when the instruction is reverted — mutation-verify from two
+   directions, per the 7 recorded vacuous-assertion incidents.
+
+## Decisions locked in this session (carry into Stage 2 if A or B is revived)
+
+- **Destination**: compress in place; git history + `memory/` are the surviving copies.
+- **Row schema**: fixed 5 fields — outcome, Stage 4 defect counts, test count, durable lesson, refs.
+- **Fidelity rule**: summaries must be traceable to the existing `memory/` entry; the 8 tasks with no
+  entry get template-literal rows; Supervisor spot-checks a random sample against `git log -S`
+  originals. A summary stating a fact absent from both `memory/` and the original row fails.
+
+## Recommended Path
+
+**Option C**, with the enforcement AC treated as load-bearing rather than optional. It achieves the
+user's stated goal more completely than the path selected mid-session, at roughly 2% of the
+invasiveness, without amending a standing rule, without colliding with T070, and without creating 67
+opportunities to record a fact that was never true.
+
+The three answers given during this session (compress in place / 5-field schema / memory-derived
+fidelity) were sound **given the premise that the file's size was the cost**. Measurement showed the
+premise was wrong. They are preserved above so that if the board's human readability is independently
+worth paying for, Stage 2 can pick them up without re-litigating.
+
+## Next Actions
+
+1. **User selects a path** — C alone, or C now and A/B registered separately as a readability task.
+2. If C: register one task, C2/Medium per Gate 2, targeting `wake/SKILL.md` + one enforcing test.
+3. Run `Skill({ skill: "grill-with-docs", args: "mode=plan" })` against the selected path.
+4. Note independently: `memory/MEMORY.md` sits at 49,518 / 50,000 chars — ~482 chars of headroom.
+   The next memory pass trips the gate. Sanctioned response is `/compact-memory`; never raise the
+   budget (T065 ratchet rule). Not part of this task.
+
+---
+---
+
+# Session: Pareto Focus for downstream feature delivery
+**Generated**: 2026-08-16
+**Task / Context**: Apply the Pareto principle (80/20) so that repos **installing this kit** deliver
+a feature by building the vital 20% of code that carries 80% of the value, and cutting the rest.
+**Skill**: `Skill({ skill: "brainstorming" })`
+**Tier**: Deep (architectural; changes a standing principle set that propagates to every downstream repo)
+
+> Appended below the 2026-08-05 session, which remains **open** — its Option C was never selected.
+> Nothing above this line is modified.
+
+---
+
+## The Problem Space
+
+The user's target is **not** this repo's tidiness. It is the product code written in a repo that has
+installed this kit. The operative quote: *"80% of the software's outcomes, value, or performance
+overhead stem from a vital 20% of its codebase"* — so at feature-delivery time, identify the vital
+20% and **cut** the other 80%, subject to one hard constraint the user stated explicitly: **the
+feature must still work correctly.**
+
+Two facts sharpen the problem.
+
+**1. Karpathy already covers part of this, and the user noticed.** `CLAUDE.md`'s Simplicity First
+reads: *"Prohibit speculation. Reject any feature or abstraction not explicitly requested. If 200
+lines can be 50, rewrite."* That is a **prohibition on the unrequested**. Pareto is a strictly
+stronger and different claim: even among what the user **did** request, most of it is not carrying
+the value. Simplicity First has no authority to cut a requested feature; Pareto claims exactly that
+authority. The overlap is real but partial — this is not a redundant principle, it is an escalation.
+
+**2. The cut has to survive the Acceptance Criteria gate.** The kit's whole enforcement spine runs
+through `templates/TASK_GUIDE_template.md`'s AC table (line 67) and Hard-Stop Gate 5 (no tests
+covering AC = not done). "The feature must still work correctly" translates, in this kit's own
+vocabulary, to: **a Pareto cut may never remove an Acceptance Criterion.** It cuts *implementation
+surface* — abstraction layers, configurability, generality, defensive breadth, premature
+extensibility — not *acceptance surface*. If the cut is negotiating with the AC table, it has
+stopped being Pareto and become descoping, which is the user's call, not the principle's.
+
+### Verified ground truth (claim-verification gate)
+
+| Claim | Verified against | Result |
+|---|---|---|
+| Kit ships to downstream repos via MANIFEST | `MANIFEST` | `.claude/agents`, `.claude/skills`, `.claude/hooks`, `templates`, `docs/claude-md`, `AGENTS.md` |
+| `CLAUDE.md` propagates downstream | `setup.sh:238-241` | Yes — installed as a real copy, **not** via MANIFEST |
+| A brownfield fork exists and must be synced | `setup.sh:222-234` | `CLAUDE_LEGACY.md` (629 lines) chosen for brownfield; sync policy is a recorded decision |
+| Karpathy principles live in one table | `CLAUDE.md` "Karpathy Engineering Principles" | 4 rows + Task Transformation Table |
+| Hard-Stop Gate count | `CLAUDE.md` | **6**, not 8 (an earlier verbal claim of 8 was wrong) |
+| Optional-skill precedent exists | `.claude/skills/optimize/SKILL.md` frontmatter | *"Optional skill — invoke only when a concrete metric target exists"* |
+| Advisory-field precedent exists | `memory/decisions.md` T046 | `Pattern reference` — one advisory field in the guide, no hook, no gate, no backfill |
+| Skills shipped | `ls .claude/skills` | 30 |
+
+---
+
+## The Alternatives
+
+### Option A — Pareto Focus as a 5th mandatory Karpathy principle
+
+Add a 5th row to the principles table in **both** `CLAUDE.md` and `CLAUDE_LEGACY.md`, plus a row in
+the Task Transformation Table (*Instead of "Build Feature Y" → "Rank Feature Y's surface by value,
+build the vital slice, record what was cut and why, verify the AC still pass."*). Inherited by every
+sub-agent through the General Agent Template.
+
+**Pros**
+- Maximum reach: principles are the one block `CLAUDE.md` keeps **inline** (T049 deliberately did not
+  split them out), so it is in the Supervisor's context every session.
+- Sits next to Simplicity First, where the distinction can be stated once and read in context.
+- Zero new machinery — no skill, no hook, no gate.
+
+**Cons**
+- Principles are load-bearing and currently 4. A 5th dilutes each, and this file has been through a
+  565→198-line reduction (T049) precisely because it had grown.
+- Mandatory means it fires on C0 typo-fix tasks too, where it is pure ceremony.
+- **A mandatory principle authorizing scope cuts is the highest-risk text this kit could ship** — see
+  Adversarial Review.
+
+### Option B — An optional `pareto` skill, invoked at Stage 2 before AC lock
+
+New `.claude/skills/pareto/SKILL.md`, following the `optimize` precedent: *"Optional — invoke only
+when a feature's implementation surface is large enough that a vital-few ranking changes what gets
+built."* Takes the drafted requirement, produces a ranked surface inventory, a proposed vital slice,
+and an explicit **Cut List** with a reason per cut, for user approval before the TASK_GUIDE's AC and
+Approach sections are written.
+
+**Pros**
+- Opt-in matches the user's own instinct (*"it will be the optional steps"*).
+- A skill can carry the whole procedure — ranking method, the AC-immunity rule, the Cut List format —
+  which a one-row principle cannot.
+- The Cut List is the real artifact. A cut that is not written down is indistinguishable from
+  forgetting, and six months later nobody can tell which.
+- Fits an existing, proven shape (`optimize`, `ideate`, `strategy` are all optional).
+
+**Cons**
+- Optional skills are invocation-triggered, and this repo has recorded that *"already covered" must
+  mean reaches-the-context* — `tdd` is cited in memory as covering something it never delivers,
+  precisely because it is invocation-triggered. An optional Pareto skill will be skipped exactly when
+  a task feels small, which is when it is most needed.
+- 31st skill. Marginal cost to every downstream repo's roster injection.
+
+### Option C — Sharpen Simplicity First in place + one advisory TASK_GUIDE field (the 50% version)
+
+No new principle, no new skill. Two surgical edits:
+1. One sentence appended to Simplicity First's Operational Command, extending it from *reject the
+   unrequested* to *rank the requested and build the vital slice first; the AC table is immune*.
+2. One advisory field in `templates/TASK_GUIDE_template.md`'s `## Approach` section — **`Vital slice`**
+   and **`Cut list`** — mirroring T046's `Pattern reference`: advisory, no hook, no gate, no backfill.
+
+**Pros**
+- **This is the 50%-less-code answer.** Roughly two paragraphs and one template field versus a skill
+  (~120 lines) or a principle-set change.
+- It lands in the **guaranteed channel**: `templates/` ships via `MANIFEST:11` to every downstream
+  repo, and the TASK_GUIDE is the one file the implementing agent re-reads every turn. Per the
+  repo's own recorded lesson — *dedupe toward the guaranteed channel, not the tidy one* — a field in
+  the guide reaches the implementer; a principle in `CLAUDE.md` **structurally does not** (`CLAUDE.md`
+  is not in the sub-agent read list; this is a recorded finding, not a guess).
+- Resolves the overlap the user identified rather than shipping two principles that argue.
+- The Cut List still exists as a durable artifact, in the file where the task's reasoning already lives.
+
+**Cons**
+- Advisory fields are ignorable. T046's `Pattern reference` shipped with no measurement of whether it
+  is ever filled in, so there is no evidence base for this shape working.
+- Editing Simplicity First's text touches a principle pinned by tests elsewhere; Stage 2 must grep the
+  suite for byte-pins before assuming the edit is free (this exact hazard is recorded twice — T064's
+  location pins and T066's AC5 byte-identity pin on `CLAUDE.md`).
+
+### Option D — Do nothing; Simplicity First already covers it
+
+Recorded for completeness because the user raised it. **Rejected**, but not vacuously: Simplicity
+First prohibits the unrequested and says *"if 200 lines can be 50, rewrite"* — a compression rule
+applied **after** the surface is chosen. It contains no instruction to rank a requested surface by
+value and decline to build part of it. The user's quote is about selection, not compression. The gap
+is genuine.
+
+---
+
+## Adversarial Review — "Why this might fail"
+
+**The laundering risk (applies hardest to A, materially to B and C).**
+This kit's two active Learning Records are `LR-0001` (*"refactor to clean architecture" was
+mis-evaluated as small and the pipeline was bypassed*) and `LR-0002` (*pipeline compliance is not
+enforced in practice; it gets bypassed when tasks feel small*). `DDR-0004` then **rejected** a
+proposed exemption to Hard-Stop Gate 1 on exactly this ground: the "it felt small" rationale is the
+documented drift mechanism in this repo. A principle that says *most of what you were asked to build
+is not worth building* is a **ready-made, principle-sanctioned vocabulary for that same drift.** It
+does not merely permit the failure mode — it supplies the justification. Any option that ships must
+carry an explicit counter-rule: **Pareto cuts implementation surface, never Acceptance Criteria,
+never a pipeline stage, never a gate.** Without that sentence, this is a net-negative change.
+
+**The unmeasured-ranking risk (applies to all).**
+"The vital 20%" implies a measurement. This repo has **three recorded instrument-validity failures**
+(DDR-0001 and DDR-0002 on token cost; T063's *"a naive metric can measure your own process instead of
+the thing"*). A vital-few ranking produced by an agent's judgement, with no baseline and no
+counterfactual, is a guess wearing a number. Whatever ships must either (a) require the ranking to be
+stated as a **claim with a named basis**, or (b) drop the numeric framing entirely and say
+*"vital slice"* — 20% is a heuristic, not a target, and writing "20%" invites someone to hit the
+number rather than find the value.
+
+**The correctness risk (the user's own constraint, and the sharpest one).**
+"Cut, but make sure it works correctly" is only safe because AC are immune. The dangerous cases are
+the ones where correctness is not in the AC table: error handling, boundary conditions, concurrency,
+and cleanup are exactly the code that *looks* like the low-value 80% (rarely executed, no user asks
+for it) and is exactly where correctness lives. **Tell: if the cut list is mostly `try/except`,
+validation, and edge-case branches, the ranking is inverted.** Note the AC table's row 3 is already
+templated as *"[negative / boundary condition]"* — the template itself anticipates this.
+
+**Option-specific**
+- **A fails** if the 5th principle is read as outranking the 4th. Two principles about doing less,
+  one of which permits cutting requested work — an agent resolving that conflict picks the permissive
+  one.
+- **B fails silently.** No invocation, no trace, no record that it was skipped. It will be invoked on
+  the C3 tasks that least need it and skipped on the C1 tasks where the 80% actually accumulates.
+- **C fails quietly** — two blank fields in every TASK_GUIDE. That is the honest failure mode though:
+  visible in every guide, cheap to detect, cheap to reverse.
+
+---
+
+## Risk Matrix
+
+| Risk | A (principle) | B (skill) | C (sharpen + field) |
+|---|---|---|---|
+| Becomes a bypass justification | **High** | Medium | Low–Medium |
+| Reaches the implementing sub-agent | **No** (CLAUDE.md not in agent read set) | Only if invoked | **Yes** (template is guaranteed) |
+| Ignored in practice | Low | **High** | Medium |
+| Cost to add | Low | Medium | **Lowest** |
+| Cost to reverse | Medium (pinned text, 2 files) | Low (delete a dir) | **Low** |
+| Collides with existing tests | Yes — byte-pins on `CLAUDE.md` | No | Yes — must grep first |
+| Produces a durable Cut List artifact | No | Yes | Yes |
+
+---
+
+## Surgical Scope
+
+**Should be touched (Option C):**
+- `CLAUDE.md` — Simplicity First row, Operational Command cell only
+- `CLAUDE_LEGACY.md` — same edit (mandatory under the recorded sync policy; brownfield installs get this file instead)
+- `templates/TASK_GUIDE_template.md` — `## Approach` section, two advisory fields
+
+**Must NOT be touched:**
+- The AC table structure, Hard-Stop Gates, or any of the 5 stages — Pareto has no authority over the
+  pipeline itself; that is precisely the failure this design guards against
+- The other three Karpathy rows
+- `tasks/TASK_GUIDE_T0*.md` — historical record, byte-identical (T064 fallback-not-migration precedent)
+- `.claude/hooks/` — no enforcement; advisory by design (T046 precedent)
+
+---
+
+## Edge Case Checklist (for the eventual TASK_GUIDE)
+
+1. A task with a single AC and no meaningful surface — the fields must be legitimately N/A without tripping any gate.
+2. A bugfix-flavored guide — does the field belong there at all? (Pareto on a bug fix is close to nonsense; a fix is at a root cause or it is not — T067.)
+3. A cut list that names error handling or boundary conditions → inverted ranking; must be called out at Stage 4 review.
+4. Byte-pin collision: grep the suite for assertions over the Simplicity First string **before** editing (T064/T066 lesson).
+5. `CLAUDE_LEGACY.md` drift — the sync policy has been missed before; verify both files in the same commit.
+6. A downstream repo that installed an earlier version — no backfill, fallback only.
+7. The word "20%" appearing as a target anyone tries to hit.
+
+---
+
+## Recommended Path
+
+**Option C**, with the AC-immunity sentence treated as load-bearing rather than decorative.
+
+Reasoning: the user's own instinct (*optional, because Karpathy covers it from the start*) is
+correct in substance but points at the wrong mechanism. What they want is not a new ceremony — it is
+Simplicity First extended from *don't build the unrequested* to *rank the requested*. C makes exactly
+that edit, at roughly 2% of the invasiveness of A or B, and it is the only option that puts the
+instruction in the channel the implementing agent is **structurally guaranteed** to read. Option A
+puts it in a file sub-agents never open; Option B puts it behind an invocation that the kit's own
+Learning Records predict will be skipped when tasks feel small.
+
+The single most important line to ship is not the Pareto framing at all — it is the counter-rule:
+**the cut applies to implementation surface, never to Acceptance Criteria, never to a pipeline stage
+or gate.** Without it, this change hands the repo's documented failure mode a principle to cite.
+
+---
+
+## Next Actions
+
+1. **User selects a path** — C as recommended, or A/B.
+2. Run `Skill({ skill: "grill-with-docs", args: "mode=plan" })` against the selected path — this is a
+   principle-level change touching a pinned file, so it likely warrants a DDR (2-of-3 gate).
+3. Stage 2: register **one** task. Hard-Stop Gate 2 does not apply (not a refactor), but the file is
+   pinned by tests, so **C2 / Medium Risk** is the honest floor.
+4. Stage 2 pre-flight, mandatory: grep the test suite for byte-pins over `CLAUDE.md` and the
+   Simplicity First string before writing the AC table.
+5. Unrelated but blocking soon: `memory/MEMORY.md` is at ~49.5k / 50,000 chars. The next memory pass
+   trips the ratchet. Sanctioned response is `/compact-memory`; never raise the budget.
+6. Still open from the previous session: its Option C (`wake` enforcement) was never selected.

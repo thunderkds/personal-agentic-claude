@@ -53,6 +53,10 @@ the requirement or an approved decision (ADR)** — no premature component libra
 state machines, no design-system scaffolding the task didn't ask for. Reuse before you build. If a
 heavier pattern seems warranted (see appendix), propose it; don't introduce it unilaterally.
 
+Rank the surface before you build it: ship the **vital slice** of props, variants and states this
+task proves it needs, and log the deferred ones as a **cut list**. Cutting narrows what you
+implement; it can never narrow an Acceptance Criterion, a pipeline stage or a Hard-Stop Gate.
+
 ## Scope boundaries (who owns what)
 
 - **You own:** components, client-side state, routing, forms/validation, styling, accessibility,

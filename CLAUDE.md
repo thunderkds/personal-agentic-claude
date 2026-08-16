@@ -83,7 +83,7 @@ All sub-agents inherit from this base template unless explicitly overridden.
 - Update the Memory/Insights section of PROJECT_SPEC.md with key learnings
 - Pause and ask the Supervisor if any ambiguity or error occurs
 - Work only inside the assigned git worktree
-- Scale process to the task's **Complexity Level (C0–C3)** — see the Complexity matrix in `.claude/agents/general-agent-template.md`. **Risk Level** separately gates `security-review`.
+- Scale process to the task's **Complexity Level (C0–C3)** — see the Complexity matrix in each role guide (`.claude/agents/<role>.md`). **Risk Level** separately gates `security-review`.
 
 **Default Communication Protocol:**
 - Use concise, structured messages
@@ -108,7 +108,7 @@ These principles are mandatory for the Supervisor and all sub-agents (inherited 
 | Principle              | Problem Addressed                          | Operational Command |
 |------------------------|--------------------------------------------|---------------------|
 | Think Before Coding    | Silent assumptions and hidden confusion    | Ask vs. Guess: Explicitly state all assumptions before execution. If ambiguity exists, present options and push back. STOP at any point of confusion. |
-| Simplicity First       | Overcomplication and bloated abstractions  | Prohibit speculation. Reject any feature or abstraction not explicitly requested. If 200 lines can be 50, rewrite. |
+| Simplicity First       | Overcomplication and bloated abstractions  | Prohibit speculation. Reject any feature or abstraction not explicitly requested. If 200 lines can be 50, rewrite. Then build the **vital slice** — the part of the requested surface carrying most of the value — and record what you deliberately did not build as a cut list. 80/20 is a heuristic for that ranking, never a target, and a cut narrows implementation surface only: never an Acceptance Criterion, never a pipeline stage, never a Hard-Stop Gate. |
 | Surgical Changes       | Orthogonal edits and unintentional side effects | Scope locking: Touch only code required by the task. Match existing styles perfectly. Do not "improve" adjacent code. |
 | Goal-Driven Execution  | Lack of leverage and failure to verify success | Convert all imperative instructions into verifiable goals using the Task Transformation Table below. |
 

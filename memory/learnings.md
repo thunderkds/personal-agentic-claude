@@ -953,3 +953,67 @@ side stripped and the other not. Normalise both sides through the same function 
 and `&&` gates on the **last command of the pipeline**, not on `pytest`. This repo chains commits
 behind `&&` routinely, so the footgun is live. Redirect to a file and check `$?`, or use
 `set -o pipefail`. Never read a pipeline's success from the tail of its output.
+
+## Verify a docs change where it is *distributed*, not where it is written (T070, 2026-08-15)
+
+T070 edited three markdown prose lines, which reads like a SKIP — no runtime surface. But this repo's
+"app" is its installer, and `templates/` ships downstream via `MANIFEST`, so the claim "an agent
+following this pointer now arrives somewhere real" is directly observable: `SUPERVISOR_REPO=<local
+worktree> bash setup.sh` into a throwaway `git init` repo, then read the installed files back. That
+capture showed all three pointers landing fixed downstream, and following them landed on 4 C0–C3 rows
+in each role guide against **0** in `general-agent-template.md` — the defect and its fix, both visible
+at the surface a real reader meets. A prose change with a distribution mechanism has a runtime surface;
+look for the mechanism before reporting SKIP.
+
+## A fix outside MANIFEST reaches new installs only (T070, 2026-08-15)
+
+Driving the upgrade path — install pre-T070, then `update.sh` — showed `templates/TASK_GUIDE_template.md`
+silently updating while `CLAUDE.md` kept the stale pointer. `CLAUDE.md` is absent from `MANIFEST`;
+`setup.sh` copies it once as a project-owned file and `update.sh:276` names it as *the* example of a
+lock entry carried over untouched. So an edit to `CLAUDE.md` propagates to fresh installs and never to
+existing ones. Arguably correct (projects customize their own `CLAUDE.md`), but it means "I fixed it in
+`CLAUDE.md`" and "downstream repos have the fix" are different claims. `docs/claude-md/` **is** in
+MANIFEST, so the split runs right through what looks like one document.
+
+## The noun a pointer teaches should exist in the file it points to (T070, 2026-08-15)
+
+All three repointed lines say "the Complexity matrix", but the literal phrase occurs **0 times** in the
+role guides — the heading is `## Complexity & escalation`. A reader who greps the term the pointer gave
+them still lands nowhere. Same defect class T070 was written to fix, one notch smaller, and it survived
+the fix because the sweep matched the retired *path*, not the retired *noun*. Recorded, not folded in
+(Surgical Changes).
+
+## A scope guard committed as an invariant — occurrences 4, 5 and 6, in one task (T071, 2026-08-16)
+
+T071 was blocked three separate times by the same shape, which is now frequent enough to state as a
+rule: **an assertion anchored to "the state as of my review" is a scope guard, and it becomes a wall
+the moment anyone legitimately touches that file again.**
+
+1. `test_ac5_ac10_…byte_identical` pinned `CLAUDE.md` to `9f3f2e9`, so *any* edit was RED.
+2. `test_ac7_per_role_loaded_size_is_strictly_lower_than_baseline` asserts the role guides stay
+   *strictly smaller forever* — a question that only meant something during T066's review. It left
+   **222 chars** of headroom on `common-infrastructure.md`.
+3. `test_ac3_reasoning_prose_sections_are_byte_identical_to_the_baseline` pinned the template's
+   `## Approach` section — the section T046 and T071 both show is *designed* to gain advisory fields.
+
+**The file already knew.** `test_t069_ac9`, sitting directly below (2), carries a comment refusing
+that exact shape: *"deliberately not `after <= before`: that would be a scope guard committed as an
+invariant (T065 AC12) — correct today, and a blocker on the first legitimate sentence anyone adds
+afterwards."* The lesson was written down and then violated twice in the same file.
+
+**Repointing is the fix, not deletion** — T070's precedent. But two refinements came out of T071:
+
+- **Repointing does not always help.** Repointing `BASELINE_REF` for (2) makes `before == after`, so
+  a strict `after < before` fails *by construction*. The agent tried it, measured 4 immediate
+  failures, and kept the old ref — correctly refusing a Supervisor instruction that was wrong.
+  **Check what the assertion's shape does at the new ref before repointing.**
+- **Check whether the constant is shared before moving it.** (3)'s `BASELINE_REF` fed **four**
+  assertions including the no-backfill guard. A wholesale repoint would have silently reset that
+  guard's baseline. The fix was to **split** the constant — new `APPROACH_BASELINE_REF` for the one
+  heading, old ref for the rest — so both pins keep discriminating. Verify a split with a mutation on
+  **each side**: a split is the easiest place to disarm a pin while the suite stays green.
+
+**Stage 2 pre-flight, amended**: grepping the suite for pinned *strings* is not enough. Also grep for
+**size invariants** — line caps, char budgets, `<`/`<=` comparisons against a baseline ref. T071's
+approved +8-lines-per-guide budget was unreachable for all four roles and nobody noticed until an
+agent measured it.

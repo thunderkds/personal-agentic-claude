@@ -15,7 +15,7 @@ Before writing any code:
 2. Read `memory/MEMORY.md`
 3. Read this file completely
 4. Read `.claude/agents/[agent-file].md`
-5. Note the **Complexity Level** above and apply the matching process (brainstorm / decompose / verify depth / model) from the Complexity matrix in `.claude/agents/general-agent-template.md`
+5. Note the **Complexity Level** above and apply the matching process (brainstorm / decompose / verify depth / model) from the Complexity matrix in your role guide (`.claude/agents/[agent-file].md`)
 6. **C2/C3 or multi-file tasks only**: read `memory/codebase-map.md` for directory layout, entry points, and blast-radius hotspots — skip if the task is C0/C1 and touches a single known file
 
 If docs/legacy/ exists (legacy mode): also read `docs/legacy/risk-hotspots.md` and `docs/legacy/architecture.md`.
@@ -146,6 +146,10 @@ If docs/legacy/ exists (legacy mode): also read `docs/legacy/risk-hotspots.md` a
 > Example: `Pattern reference: .claude/hooks/pre_agent_validate_guide.py — structural ID extraction, fail-open error handling`
 > Point at code that already works and should be imitated. Without one, the agent falls back to
 > generic best practice instead of this repo's conventions (Karpathy: Surgical Changes).
+
+**Vital slice**: [the part of this feature's implementation surface carrying most of its value, e.g. `the one happy-path endpoint the AC exercises`] or `None — the whole surface is the slice` (with a one-line reason)
+**Cut list**: [what is deliberately NOT built, one line each, e.g. `pagination (three rows today)`] or `None — nothing was cut`
+> A cut narrows implementation surface only — never an Acceptance Criterion, never a pipeline stage, never a Hard-Stop Gate. Advisory: an unrecorded cut is indistinguishable from an oversight later.
 
 [Recommended approach from brainstorming skill output, or Supervisor's decision for Low-risk tasks. Include the reasoning.]
 
