@@ -36,6 +36,19 @@ TASKS_DIR = os.path.join(REPO_ROOT, "tasks")
 # "Working-tree-vs-HEAD is a scope guard, not a repeatable test").
 BASELINE_REF = "2612a05"
 
+# T071 SPLIT this constant rather than repointing it. `BASELINE_REF` fed FOUR assertions, and one
+# of them is the no-backfill guard over `tasks/` below — so repointing it wholesale to reach the
+# `## Approach` pin would have silently reset the historical-guide baseline at the same time,
+# loosening a guard nobody asked to loosen in order to fix an unrelated one. Splitting keeps each
+# question answerable against the commit that actually settles it.
+#
+# `## Approach` alone moves to T071's template-edit commit: T071 adds the advisory `Vital slice` /
+# `Cut list` fields there (DDR-0005 §5, mirroring the `Pattern reference` field T046 added to the
+# same section), so `2612a05` is now that section's own pre-change state and comparing against it
+# is red by construction. The other three pinned sections are untouched by T071 and stay on
+# `BASELINE_REF`. Repointed, NOT deleted — both halves are mutation-proven to still discriminate.
+APPROACH_BASELINE_REF = "1b71821"
+
 
 # --------------------------------------------------------------------------
 # Module loading
@@ -578,10 +591,16 @@ def test_ac2_guide_template_no_longer_carries_either_body():
 
 
 def test_ac3_reasoning_prose_sections_are_byte_identical_to_the_baseline():
-    baseline = _git_show(BASELINE_REF, "templates/TASK_GUIDE_template.md")
     guide = _read(os.path.join(TEMPLATES_DIR, "TASK_GUIDE_template.md"))
-    for heading in ("Requirement (Pillar 1 — Adapt the requirement)",
-                    "Acceptance Criteria", "Approach", "Edge Case Checklist"):
+    # Per-heading baseline: `Approach` is pinned to T071's edit commit, the other three to T064's
+    # pre-task tip. See the APPROACH_BASELINE_REF comment at the top of this file for why this is
+    # a split and not a repoint.
+    refs = {"Requirement (Pillar 1 — Adapt the requirement)": BASELINE_REF,
+            "Acceptance Criteria": BASELINE_REF,
+            "Approach": APPROACH_BASELINE_REF,
+            "Edge Case Checklist": BASELINE_REF}
+    for heading, ref in refs.items():
+        baseline = _git_show(ref, "templates/TASK_GUIDE_template.md")
         pattern = rf"^## {re.escape(heading)}\s*$(.*?)(?=^## |\Z)"
         old, new = _slice(baseline, pattern), _slice(guide, pattern)
         assert old, f"baseline slice for {heading!r} is empty — the slicer is vacuous"

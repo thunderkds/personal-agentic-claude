@@ -982,3 +982,38 @@ role guides — the heading is `## Complexity & escalation`. A reader who greps 
 them still lands nowhere. Same defect class T070 was written to fix, one notch smaller, and it survived
 the fix because the sweep matched the retired *path*, not the retired *noun*. Recorded, not folded in
 (Surgical Changes).
+
+## A scope guard committed as an invariant — occurrences 4, 5 and 6, in one task (T071, 2026-08-16)
+
+T071 was blocked three separate times by the same shape, which is now frequent enough to state as a
+rule: **an assertion anchored to "the state as of my review" is a scope guard, and it becomes a wall
+the moment anyone legitimately touches that file again.**
+
+1. `test_ac5_ac10_…byte_identical` pinned `CLAUDE.md` to `9f3f2e9`, so *any* edit was RED.
+2. `test_ac7_per_role_loaded_size_is_strictly_lower_than_baseline` asserts the role guides stay
+   *strictly smaller forever* — a question that only meant something during T066's review. It left
+   **222 chars** of headroom on `common-infrastructure.md`.
+3. `test_ac3_reasoning_prose_sections_are_byte_identical_to_the_baseline` pinned the template's
+   `## Approach` section — the section T046 and T071 both show is *designed* to gain advisory fields.
+
+**The file already knew.** `test_t069_ac9`, sitting directly below (2), carries a comment refusing
+that exact shape: *"deliberately not `after <= before`: that would be a scope guard committed as an
+invariant (T065 AC12) — correct today, and a blocker on the first legitimate sentence anyone adds
+afterwards."* The lesson was written down and then violated twice in the same file.
+
+**Repointing is the fix, not deletion** — T070's precedent. But two refinements came out of T071:
+
+- **Repointing does not always help.** Repointing `BASELINE_REF` for (2) makes `before == after`, so
+  a strict `after < before` fails *by construction*. The agent tried it, measured 4 immediate
+  failures, and kept the old ref — correctly refusing a Supervisor instruction that was wrong.
+  **Check what the assertion's shape does at the new ref before repointing.**
+- **Check whether the constant is shared before moving it.** (3)'s `BASELINE_REF` fed **four**
+  assertions including the no-backfill guard. A wholesale repoint would have silently reset that
+  guard's baseline. The fix was to **split** the constant — new `APPROACH_BASELINE_REF` for the one
+  heading, old ref for the rest — so both pins keep discriminating. Verify a split with a mutation on
+  **each side**: a split is the easiest place to disarm a pin while the suite stays green.
+
+**Stage 2 pre-flight, amended**: grepping the suite for pinned *strings* is not enough. Also grep for
+**size invariants** — line caps, char budgets, `<`/`<=` comparisons against a baseline ref. T071's
+approved +8-lines-per-guide budget was unreachable for all four roles and nobody noticed until an
+agent measured it.

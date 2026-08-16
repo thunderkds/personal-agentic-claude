@@ -80,14 +80,16 @@ that must exist in all four role guides after this task. It exists today only in
 | 3 | Each of the four sections states the **AC-immunity** rule: the cut narrows implementation surface only — never an Acceptance Criterion, never a pipeline stage, never a Hard-Stop Gate | User constraint "must work correctly"; DDR-0005 §4 |
 | 4 | **Negative, file-wide**: no role guide and not `templates/TASK_GUIDE_template.md` contains `80/20`, `80%`, `20%`, or `Pareto` | User ruling: number only in `CLAUDE.md`; DDR-0005 §3 |
 | 5 | `CLAUDE.md` contains exactly one mention of the 80/20 heuristic, in the Simplicity First row, explicitly labelled a heuristic and not a target | DDR-0005 §3 |
-| 6 | **Byte-identity, positive**: the `KARPATHY_TABLE` constant in `.claude/hooks/tests/test_agent_guide_dedup.py` is unmodified, and its Simplicity First row still matches all four role guides verbatim | DDR-0005 §2 |
+| 6 | **Byte-identity, positive**: the `KARPATHY_TABLE` constant in `.claude/hooks/tests/test_agent_guide_dedup.py` is unmodified, and its Simplicity First row still matches all four role guides verbatim. **Amended 2026-08-16** — this AC constrains the `KARPATHY_TABLE` constant and every assertion body; it does **not** forbid repointing the two baseline refs named in AC14, which is an explicit user ruling | DDR-0005 §2; amended by AC14 |
 | 7 | **Byte-identity, positive**: `scripts/test-agent-template.sh` is unmodified and still passes; all four `grep -qF` operational-command strings are found | DDR-0005 §2 |
 | 8 | **Byte-identity, positive**: the two `If 200 lines can be 50` occurrences that `test_memory_channel_and_budget.py` requires still exist and are untouched | DDR-0005 §2 |
 | 9 | `templates/TASK_GUIDE_template.md`'s `## Approach` section gains a `Vital slice` field and a `Cut list` field, in the shape of the existing `Pattern reference` field | DDR-0005 §5 |
 | 10 | `CLAUDE_LEGACY.md`'s Simplicity First row receives the matching additive edit, in the **same commit** as the `CLAUDE.md` edit | Recorded sync policy; DDR-0005 §3 |
 | 11 | **Line cap**: `backend.md` ≤ 145, `frontend.md` ≤ 142, `common-infrastructure.md` ≤ 137, `qa.md` ≤ 129, `CLAUDE.md` ≤ 200, `templates/TASK_GUIDE_template.md` ≤ 197. If the content will not fit, **tighten the prose — do not raise a cap** | User ruling: +8/guide; DDR-0005 §6 |
-| 12 | **Negative, no-enforcement**: no file under `.claude/hooks/` is modified, and no test asserts that the `Vital slice` or `Cut list` field is non-empty | Out of scope; DDR-0005 §5 |
+| 12 | **Negative, no-enforcement**: no **hook** under `.claude/hooks/` (i.e. no non-test `.py` file, and nothing in `lib/`) is modified, and no test asserts that the `Vital slice` or `Cut list` field is non-empty. **Amended 2026-08-16** — the original wording said "no file under `.claude/hooks/`", which AC14 contradicts; the intent was always *no enforcement machinery*, and a test baseline ref is not machinery | Out of scope; DDR-0005 §5 |
 | 13 | **Negative, no-backfill**: every pre-existing `tasks/TASK_GUIDE_T0*.md` is byte-identical to its state at HEAD | Out of scope; T064 precedent |
+| 14 | **Added 2026-08-16.** In `.claude/hooks/tests/test_agent_guide_dedup.py`, exactly two module-level constants change: `T070_BASELINE_REF` (`9f3f2e9` → T071's `CLAUDE.md` edit commit) and `BASELINE_REF` (`8fc4dd2` → the same T071 commit). **Repointed, not deleted** — no assertion body, no parametrize list and no `KARPATHY_TABLE` byte is touched, and after the change both tests still fail if the file they guard is mutated | User ruling 2026-08-16; T070 precedent |
+| 15 | **Added 2026-08-16, mutation-verified.** After repointing, `test_ac5_ac10_out_of_scope_files_are_byte_identical_to_the_baseline` and `test_ac7_per_role_loaded_size_is_strictly_lower_than_baseline` must each be shown **RED** by mutating the file they guard (append a line to `CLAUDE.md`; append ~400 chars to `common-infrastructure.md`). A repointed pin that no longer discriminates is a vacuous assertion, and this repo has 7 recorded instances | Guards against the repoint silently disarming the pin |
 
 > **AC11 baselines, captured 2026-08-16** (`wc -l`): backend 137, frontend 134, common-infrastructure
 > 129, qa 121, `CLAUDE.md` 198, `templates/TASK_GUIDE_template.md` 193. The caps above are baseline
@@ -95,6 +97,32 @@ that must exist in all four role guides after this task. It exists today only in
 > committed as a standing invariant — the recorded T065 lesson is that a scope guard pinned as an
 > invariant blocks what it guarded. AC11's test may pin them; it must be written to read the baseline
 > from a pinned commit ref, or be deleted after review. State which at Stage 4.
+
+> ### Stage 3 amendment, 2026-08-16 — why AC14/AC15 exist
+>
+> The first spawn **halted before implementation** and was right to. Two live invariants made the
+> original AC table unsatisfiable, and the Supervisor verified both independently rather than taking
+> the report at face value:
+>
+> 1. `test_ac5_ac10_…byte_identical` pins `CLAUDE.md` byte-for-byte to `9f3f2e9`, so **any** edit is
+>    RED — while AC5 mandates an edit and AC6 forbade touching the test. No implementation satisfies
+>    both; only a test change does. **This is a Stage 2 defect, not an implementation problem.**
+> 2. `test_ac7_per_role_loaded_size_is_strictly_lower_than_baseline` leaves **222 chars** of headroom
+>    on `common-infrastructure.md` (backend 1,884 · frontend 1,865 · qa 1,907), and
+>    `test_t069_ac9_report_per_role_pair_size` leaves **362 chars** on every role. The ruled +8-line
+>    budget is ~600 chars, so **it was unreachable for all four roles**. The Stage 2 sweep checked for
+>    pinned *strings* and never checked for *size invariants* — the recorded "an AC written against a
+>    file's older shape" pattern, repeating.
+>
+> The user ruled **repoint both baselines** (option A). This is not weakening a guard: T070 hit the
+> identical `CLAUDE.md` pin and repointed it to its own edit commit, and that precedent is documented
+> in the test file's own comments. The substantive argument for repointing `BASELINE_REF` in
+> particular: AC7 asserts these files stay *strictly smaller forever*, which was only a meaningful
+> question during T066's review. As a standing assertion it forbids ever adding a legitimate sentence
+> to a role guide — the **5th occurrence** of T065's "scope guard committed as an invariant". The
+> sibling test directly below it, `test_t069_ac9`, carries a comment explicitly refusing that shape
+> for exactly this reason. AC15 exists because a repointed pin is the easiest possible place to
+> accidentally create a vacuous assertion.
 
 ---
 
@@ -194,7 +222,7 @@ Suggested per-role angle (guidance, not dictation — AC2 requires genuinely dif
 
 | File | Reason |
 |------|--------|
-| `.claude/hooks/tests/test_agent_guide_dedup.py` | AC6 asserts it is unmodified; its `KARPATHY_TABLE` is the pin this design routes around |
+| `.claude/hooks/tests/test_agent_guide_dedup.py` | **Amended** — AC14 permits changing exactly two module-level baseline refs in it. Everything else (assertion bodies, parametrize lists, `KARPATHY_TABLE`) stays untouched |
 | `scripts/test-agent-template.sh` | AC7 — same reason |
 | `.claude/hooks/tests/test_memory_channel_and_budget.py` | AC8 — it requires the "If 200 lines can be 50" lines to survive |
 | Any file under `.claude/hooks/` (non-test) | AC12 — advisory by design, no enforcement |

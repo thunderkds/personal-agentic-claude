@@ -183,7 +183,7 @@ Run these **one by one**. After each session, summarize findings, ask for user c
 | Principle           | Operational Command |
 |---------------------|---------------------|
 | Think Before Coding | Explicitly state assumptions. Stop at any confusion. |
-| Simplicity First    | Reject unrequested abstractions. |
+| Simplicity First    | Reject unrequested abstractions. Build the vital slice of what was requested and record the rest as a cut list; a cut never narrows an Acceptance Criterion, a pipeline stage or a Hard-Stop Gate. |
 | Surgical Changes    | Touch only required code. Match existing style exactly. |
 | Goal-Driven Execution | Use Test → Fix → Verify pattern. |
 
