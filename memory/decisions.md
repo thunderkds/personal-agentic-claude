@@ -1246,3 +1246,46 @@ built-in diffing the checked-out branch). 9 mutation controls RED→GREEN, one d
 rather than free-pass on a typo'd path list. 11 new tests, 405 passed + smoke PASS.
 
 `verify` (user-run, PASS) was driven at the **installer** surface, not the suite — see learnings.
+
+## T071 merged: Vital Slice extends Simplicity First, in the guaranteed channel — 2026-08-16
+
+→ see DDR-0005 (`docs/ddr/0005-vital-slice-extends-simplicity-first.md`)
+
+The user's Pareto framing, scoped explicitly at repos that **install** this kit rather than at this
+repo's own tidiness: at feature-delivery time build the vital slice of a feature's implementation
+surface and record what was deliberately not built.
+
+**The gap was real, and "do nothing" was rejected on the merits.** `CLAUDE.md`'s Simplicity First
+prohibits the *unrequested* and compresses what is written ("if 200 lines can be 50"); it never says
+*rank the requested and decline part of it*. Selection, not compression. Three of four paths rejected
+in DDR-0005: a 5th Karpathy principle (lands in `CLAUDE.md`, which is **not in the sub-agent read
+set** — it would never reach the agent writing code), an optional `pareto` skill (LR-0002 records
+optional steps being skipped exactly when tasks *feel* small, which is when the 80% accumulates), and
+no-op.
+
+**Placement was the whole design.** The rule went into the *unpinned* `## Simplicity First (your
+defining constraint)` prose **beside** the byte-pinned Karpathy table — "fix the prose around a
+pinned string, not the test", applied by **placement** rather than by negotiating with an assertion.
+`common-infrastructure.md` and `qa.md` had no such section at all (the T066 smallest-leaf shape) and
+had one created; per-role wording is enforced by a ≥12-consecutive-word overlap test. QA's section
+states the inverse duty — a cut list of uncovered error handling "is not a slice, it is a hole" —
+which is what makes AC-immunity enforceable rather than decorative.
+
+**The load-bearing sentence is the counter-rule, not the Pareto framing**: a cut narrows
+implementation surface only — never an Acceptance Criterion, never a pipeline stage, never a
+Hard-Stop Gate. Without it the change ships a principle-sanctioned vocabulary for the exact drift
+LR-0001/LR-0002 record and DDR-0004 refused to exempt. `80/20` appears exactly once, in `CLAUDE.md`,
+labelled a heuristic — file-wide-negative-tested absent from every operative file, because a number
+with no instrument becomes a target (DDR-0001, DDR-0002, T063).
+
+Advisory only — no hook, no gate, no backfill (T046 precedent, pinned as negatives). 37 new tests,
+**442 passed**. Stage 4: 0 P0/P1/P2, 2 P3 accepted. security-review PASS, run manually and labelled
+(**8th** occurrence of the built-in diffing the checked-out branch — it pulled in ~70 files of
+T059-T070 work). `verify` driven at the **installer** surface into two fresh targets, greenfield and
+brownfield both confirmed.
+
+**Two Stage 2 defects, both the Supervisor's**: AC5 mandated a `CLAUDE.md` edit while AC6 forbade
+touching the test that pins `CLAUDE.md` byte-for-byte — unsatisfiable, caught by the agent, which
+halted rather than editing a test green. And the ruled +8-lines-per-guide budget was unreachable for
+**all four** roles (362 chars/role headroom against ~600 needed) — the sweep checked pinned *strings*
+and never checked *size invariants*.
