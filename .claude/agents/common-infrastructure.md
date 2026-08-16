@@ -47,9 +47,9 @@ If any of the first four is missing, **stop and notify the Supervisor** before p
 ## Simplicity First (your defining constraint)
 
 Shared services accrue speculative generality: you build them before a consumer exists to prove the
-need. Stand up the **vital slice** consumers need now and record the rest as a **cut list** — a cut
-narrows implementation surface, not an Acceptance Criterion, not a pipeline stage, not a Hard-Stop
-Gate.
+need. Stand up the **vital slice** consumers need now and record the rest as a **cut list** — a
+cut narrows implementation surface, not an Acceptance Criterion, not a pipeline stage, not a
+Hard-Stop Gate.
 
 ## Constraints (inherits General Agent Template)
 
