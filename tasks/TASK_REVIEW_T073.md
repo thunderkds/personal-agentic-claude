@@ -33,10 +33,25 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: Captured 2026-08-16T09:39:59Z, before any implementation commit.
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+Verbatim prior NOTE text, `.claude/hooks/post_bash_memory_update.py:33`:
+```
+NOTE: memory/ writes are local-only (memory/* is gitignored except MEMORY.md). Do NOT commit or push the results of this pass — writing the files to disk is sufficient.
+```
+
+Ground-truth contradiction, same timestamp:
+```
+$ git check-ignore -v memory/decisions.md; echo "exit=$?"
+exit=1
+
+$ git check-ignore -v memory/event-trace/x.jsonl; echo "exit=$?"
+.gitignore:53:memory/event-trace/	memory/event-trace/x.jsonl
+exit=0
+```
+`memory/decisions.md` is NOT ignored (exit 1) — contradicting the NOTE's "gitignored except MEMORY.md" claim. Only `memory/event-trace/` is ignored (exit 0).
+
+**AFTER**: [to be filled after implementation]
 
 **DELTA**: [one sentence — what a user can now do that they could not before]
 
