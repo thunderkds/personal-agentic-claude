@@ -30,7 +30,7 @@ Run the diff-driven memory-update pass now:
 
 Routing: architectural/infra decisions → decisions.md | biz terms/domain models → glossary.md | patterns/gotchas/spec clarifications → learnings.md
 
-NOTE: memory/ writes are local-only (memory/* is gitignored except MEMORY.md). Do NOT commit or push the results of this pass — writing the files to disk is sufficient.
+NOTE: the cold-tier files (decisions.md, glossary.md, learnings.md) are git-tracked. Commit this pass — writing the files to disk is not sufficient. Only memory/event-trace/ is local-only (gitignored).
 """.strip()
 
 
