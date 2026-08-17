@@ -207,3 +207,72 @@ removing every dependence on how full the live file happens to be.
 - [ ] Both mutation controls (SC6, SC7) run, observed RED, reverted, suite green — output pasted
 - [ ] UI Evidence rows marked ☐ N/A (pure test-infrastructure task; UI/Design AC section deliberately deleted)
 - [ ] Supervisor notified: task ready for Stage 4 review
+
+---
+
+## Stage 2 Amendment — Supervisor ruling, 2026-08-17
+
+> The implementing agent halted on a genuine contradiction and was right to. Both defects below are
+> **the Supervisor's**, introduced at Stage 2 of this task and at Stage 4 of T071. Recorded, not hidden.
+
+### Defect 1 — AC5 contradicts this guide's own Files-Must-NOT-Touch list
+
+AC5 lowers `HOT_TIER_CHAR_BUDGET` to `45_000`. Two existing tests then fail because they assert the
+budget is stated in prose: `test_ac12` (against `memory/MEMORY.md`'s header) and `test_ac8` (against
+`setup.sh`'s seeded stub). But `memory/MEMORY.md` was placed on Files-Must-NOT-Touch.
+
+**Ruling: the prose edits are IN SCOPE. AC5 stands.** The Must-Not-Touch entry was written to protect
+memory *content* — the Index and its entries, and the T059 data-destruction precedent. It was never
+meant to freeze the header's statement of the budget. Leaving that header reading "Max 50,000
+characters" while the gate enforces 45,000 would ship **prose that contradicts ground truth, in the
+very file whose budget it describes** — which is precisely the defect T073 just fixed in
+`post_bash_memory_update.py`, three commits ago. Recreating it here would be indefensible.
+
+**Amended scope**, replacing the `memory/MEMORY.md` row in Files Must NOT Touch:
+
+| File | Scope |
+|------|-------|
+| `memory/MEMORY.md` — **header rule block only** (the `> **Rules**:` line stating the budget) | **In scope.** Change `50,000` → `45,000`. The ratchet sentence itself stays byte-identical |
+| `memory/MEMORY.md` — `## Index` and every entry | **Still off-limits.** Human-approved content; do not touch |
+| `memory/decisions.md`, `glossary.md`, `learnings.md` | **Still off-limits** |
+| `setup.sh` — the seeded stub's budget line (`setup.sh:348`) | **In scope.** Same one-number change, so a fresh install seeds the correct budget |
+
+**AC15 (new)**: `memory/MEMORY.md`'s header and `setup.sh`'s seeded stub both state `45,000
+characters`, and the ratchet sentence — *"a ratchet: `/compact-memory` may lower it, never raise it"*
+— is preserved byte-identical in both. The number moves; the rule declaring it a ratchet must not.
+
+### Defect 2 — a byte-identity pin the agent did not report, and could not have satisfied
+
+`test_vital_slice.py::test_ac8_the_two_simplicity_first_compression_lines_survive` ends with:
+
+```python
+assert (ROOT / rel).read_bytes() == read_at(rel, PRE_TASK_REF), f"{rel} was modified"
+```
+
+where `rel` is `.claude/hooks/tests/test_memory_channel_and_budget.py` — **the file containing the
+failing test T075 exists to fix.** No correct implementation can satisfy both this pin and AC1.
+
+**Occurrence 8 of scope-guard-committed-as-invariant.** Written by the Supervisor during T071 and
+signed off by the Supervisor at T071's Stage 4 — the same origin as occurrence 7, which blocked T073
+eight days later on the sibling glob one function above. The lesson had already been written to
+`memory/learnings.md` before either fired.
+
+**Ruling, following the T073 precedent exactly: delete the byte-identity half, keep the content
+half.** The `needles` check above it — that both Simplicity First compression lines still occur ≥2
+times — is content-based and therefore durable; it is the real enforcement and it stays. Repointing
+`PRE_TASK_REF` is **rejected**: it only moves the wall to T075's commit and guarantees a 9th
+occurrence for the next task that touches this file.
+
+**AC16 (new)**: `test_vital_slice.py::test_ac8` retains its `needles` content assertion unchanged, and
+its final byte-identity `assert` on `test_memory_channel_and_budget.py` is deleted. No other
+assertion in `test_vital_slice.py` is modified.
+
+**SC8 (new mutation control, mandatory)**: delete one of the two Simplicity First compression lines
+from a role guide and confirm `test_ac8` still goes **RED** on the surviving content assertion. This
+proves the content half is doing real work after the pin is removed — without it, deleting the pin
+could silently gut the test.
+
+### Revised expected suite total
+
+`452 passed` — 451 baseline, +1 for AC3's new size-independence test. AC16 removes an assertion, not
+a test, so the count does not drop.
