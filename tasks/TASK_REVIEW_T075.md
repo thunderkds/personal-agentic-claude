@@ -77,3 +77,53 @@ impossible to land — is removed while its content assertion stays.
 during implementation (the AC5/Must-Not-Touch contradiction, and the unsatisfiable byte-identity pin
 in `test_vital_slice.py`) were reported and ruled on by the Supervisor before this AFTER capture —
 see commit `4789377` (Stage 2 amendment) and the qa-expert report preceding it.
+
+
+---
+
+## Stage 4 Review Record — Supervisor, 2026-08-17
+
+**code-review**: 0 P0 / 0 P1 / 1 P2 / 3 P3. 0 safe fixes applied (none were P0/P1).
+
+**P2 — the SC6 control decayed the moment the ratchet dropped.** Verified numerically by the
+Supervisor, independently of the agent's report: old-loop capacity is `134 entries x 72 = 9,648`
+and the new target is `45,000 - 39,638 + 4,000 = 9,362`, so the buggy loop now reaches it by a
+margin of **286 characters**. The agent found this itself, reported it as a discovery rather than
+working around it, and was right to.
+
+**Mitigation, and it is what keeps this at P2 rather than P1**: AC3's stub test still discriminates
+old-from-new logic decisively — on a 3-entry stub the old loop's capacity is **216** against a target
+of **48,910**, so it falls short by orders of magnitude and goes RED. The fix therefore retains a
+genuine, size-independent control; SC6's decay left no hole, AC3 replaced it. The lesson is that
+**SC6 was anchored to the live file and should never have been** — the same coupling this whole task
+exists to remove, reproduced one level up in the guide's own control. Recorded, not fixed here.
+
+**P3 (all suggestions, none applied per the code-review skill's Phase 4 rule):**
+1. `test_ac10_turns_red_at_any_live_file_size` wraps `pytest.raises(AssertionError)` but asserts
+   nothing about the message, unlike its sibling — a spurious `AssertionError` from an unrelated
+   cause would pass it. Cheapest real improvement available, and pointed at this task's own subject.
+2. `-> tuple[int, int, int, int]` is the only builtin-generic hint in the hook suite. Harmless on
+   Python 3.12; noted as an inconsistency only.
+3. A file already over budget makes `_pad_past_budget` no-op, failing with "mutation added no
+   characters -- it is inert", which is true but misleading about the cause.
+
+**security-review**: **manual, PASS, 0 actionable.** The built-in was deliberately NOT invoked: it
+diffs the *checked-out* branch against `origin/HEAD`, and the Supervisor's shell resolves to the main
+checkout, so invoking it here would have diffed `main` against `main` and returned a **false PASS on a
+mandatory gate** — the recorded 3rd way this gate has failed to gate. Reviewed instead against the
+real `main...fix/t075-budget-test` diff. The entire non-test, non-doc surface is one digit inside a
+`<<'EOF'` heredoc in `setup.sh`; the delimiter is quoted so there is no parameter expansion and no
+injection surface, and the line is inert literal text written into a scaffolded file. No auth, input
+handling, secrets, permissions, SQL or shell execution is touched.
+
+**Supervisor verification of the agent's claims** (an agent report is a claim, not a fact):
+- Full suite re-run by the reviewer: **452 passed**.
+- `git diff --stat -- memory/` shows **only** `memory/MEMORY.md | 2 +-`, the header line; `## Index`,
+  every entry, and all three cold files confirmed untouched.
+- AC16 confirmed: `test_ac8`'s byte-identity assert is gone, its `needles` content assertion intact.
+- `assert_hot_tier_within_budget` / `measure_hot_tier` confirmed untouched by diff.
+
+**Flagged for a future task, not fixed here**: `test_vital_slice.py::test_ac7` still carries the same
+byte-identity pin shape against `scripts/test-agent-template.sh`. It passes today, but it is
+**occurrence 9 lying in wait** for the next task that touches that script. Same family as occurrences
+7 (blocked T073) and 8 (blocked this task).
