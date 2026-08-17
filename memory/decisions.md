@@ -1289,3 +1289,59 @@ touching the test that pins `CLAUDE.md` byte-for-byte — unsatisfiable, caught 
 halted rather than editing a test green. And the ruled +8-lines-per-guide budget was unreachable for
 **all four** roles (362 chars/role headroom against ~600 needed) — the sweep checked pinned *strings*
 and never checked *size invariants*.
+
+---
+
+## T073 merged: the memory-update hook stops telling sessions not to commit tracked files
+**Date:** 2026-08-17 · **Branch:** `fix/t073-memory-hook-note` (impl on `fix/t073-impl`, merged in) · **C1 / Medium**
+
+`post_bash_memory_update.py:33` fired after every `git push`/`git merge` and ended with *"memory/
+writes are local-only (memory/* is gitignored except MEMORY.md). Do NOT commit or push the results
+of this pass."* **Every clause was false**: `git ls-files memory/` returns `MEMORY.md`,
+`codebase-map.md`, `decisions.md`, `glossary.md`, `learnings.md`, `feedback_no-claude-credit.md` and
+both Learning Records; `.gitignore:53` excludes only `memory/event-trace/`, and `.gitignore:5` says
+in as many words that memory contents are tracked. So the hook instructed the Supervisor to leave
+tracked files dirty after the exact operation that should have carried them — **the documented
+mechanism behind T046's lost memory pass** (merged commit, passing tests, closed row, and
+`grep T046 memory/` still empty two weeks later). Nothing fails when memory is missing, so the defect
+was silent by construction. Found 2026-08-16 while answering a user question about whether
+`/compact-memory` can lose information: the safety argument rests on cold files being tracked, which
+is where the contradiction surfaced.
+
+**Fix is the NOTE text, not the hook's logic** — `main()` and `GIT_MEMORY_PATTERNS` are
+byte-unchanged. The new line states that the three cold-tier files are git-tracked and must be
+committed, and that only `memory/event-trace/` is local-only.
+
+**The sweep inverted the usual finding.** The row suspected 3 locations (`CLAUDE_LEGACY.md`,
+`docs/claude-md/memory-write-protocol.md`, the hook) and found **exactly 1** — both named files
+carry no commit/ignore guidance at all. The recorded pattern (T058/T065/T070/T071) is that a wrong
+statement outlives the one occurrence an AC table enumerates; here it did not. Worth recording
+because the sweep is cheap and the asymmetry is the point: it is run to find out, not to confirm.
+
+**AC6 is the design decision**: the new test cross-checks the prose against git ground truth rather
+than asserting the prose exists, because a prose-only assertion would pass just as happily if
+`.gitignore` changed underneath it — which is how this defect survived in the first place.
+
+**Stage 3 halt, and it was right to.** The one-line hook edit turned `test_vital_slice.py::test_ac12`
+red: that test pins every non-test `.claude/hooks/*.py` byte-identical to `b69410c`. **Occurrence 7
+of scope-guard-committed-as-invariant — written by the Supervisor during T071 and signed off by the
+Supervisor at T071's Stage 4**, which ruled explicitly on AC11's line caps and missed the
+byte-identity glob one function below. The learning had been written to `learnings.md` the same day.
+Ruling (AC9/AC10): **delete the byte-identity half, keep the content half** (`no hook contains
+"Vital slice"`) — the real, content-based enforcement of DDR-0005 §5. Repointing `PRE_TASK_REF` was
+rejected: it only moves the wall to T073's commit.
+
+**Stage 4: 0 P0 / 1 P1 fixed / 0 P2 / 0 P3.** The P1 is instructive. The implementer's own SC6
+mutation (add `memory/decisions.md` to `.gitignore`) stayed **GREEN**, and it reported that as a
+git-semantics curiosity rather than as the defect: `git check-ignore` never reports a **tracked**
+path as ignored, so `test_ac6_ground_truth_decisions_md_is_not_git_ignored` held regardless of
+`.gitignore` and was checking nothing — **8th instance of the vacuous-assertion family, and the first
+where a mutation control fired correctly and was misread**. Fixed at `c4ae887` by asserting what the
+NOTE actually claims: tracked-ness via `git ls-files --error-unmatch` over decisions/glossary/
+learnings, plus the mirror that `memory/event-trace/` has no tracked files. Mutation-verified by the
+Supervisor: `git rm --cached memory/glossary.md` → RED, restore → GREEN.
+
+**Stage 5 verify PASS, and the strong form of it.** Driven at the hook's real surface — a process fed
+real PostToolUse payloads on stdin — with main's unfixed copy as a live control: same event, still
+the false NOTE. Then the merge itself produced the end-to-end proof for free: `git merge` fired the
+real harness hook, which injected the **corrected** NOTE into the session. 451 passed.
