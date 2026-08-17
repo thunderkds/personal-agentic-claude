@@ -1017,3 +1017,54 @@ afterwards."* The lesson was written down and then violated twice in the same fi
 **size invariants** — line caps, char budgets, `<`/`<=` comparisons against a baseline ref. T071's
 approved +8-lines-per-guide budget was unreachable for all four roles and nobody noticed until an
 agent measured it.
+
+---
+
+## An instruction inside a hook is code, and a false one is a silent repo-wide defect
+**From T073, 2026-08-17.**
+
+`post_bash_memory_update.py` had no logic bug — `main()` and its trigger patterns were correct and
+stayed byte-unchanged through the fix. The defect was a **sentence** in the prompt it injects, which
+told every session for months not to commit files that are git-tracked. It produced a real loss
+(T046's memory pass sat in a forgotten stash; `grep T046 memory/` was empty two weeks after a green,
+merged, closed task) and nothing anywhere failed, because a missing memory entry has no test.
+
+Three things generalise:
+
+- **Prose a hook injects is executable by the model.** Review it with the same suspicion as a
+  conditional. "It's only a NOTE" is how it survived.
+- **Assert prose against ground truth, never against itself.** A test asserting the NOTE *exists*
+  would have passed just as happily while `.gitignore` drifted underneath it — which is exactly how
+  this survived. T073's test cross-checks `git ls-files --error-unmatch` and the absence of tracked
+  files under `memory/event-trace/`, so the assertion breaks when *reality* moves, not when the
+  wording does.
+- **`git check-ignore` cannot detect an ignore-rule mutation on a tracked path.** It never reports a
+  tracked file as ignored, so `check-ignore`-based assertions about tracked files are vacuous by
+  construction. The implementer's mutation control correctly stayed GREEN and was misread as a git
+  curiosity rather than as the defect — **8th vacuous-assertion instance, first one where the control
+  fired properly and the reading failed.** Assert tracked-ness with `ls-files`, not `check-ignore`.
+
+## The merge gate reads `tasks/` from `__file__`, so worktree-branch evidence is invisible to it
+**From T073 Stage 5, 2026-08-17.** `pre_bash_block_unsafe_merge.has_filled_verify_row` resolves
+`TASKS_DIR` off `ROOT = dirname(dirname(dirname(__file__)))` — the **main checkout**. The filled
+`verify` row lived on the worktree branch where the work was done, so the gate blocked the push with
+`T073 (no evidence row)` while the evidence was complete and correct. Probed directly:
+main-checkout `False` / worktree `True` / `trace_shows_verification('T073')` `True`.
+
+This is the **same `__file__`-vs-`$CLAUDE_PROJECT_DIR` root split flagged open since T056**, surfacing
+in a second subsystem. It is not a gate failure in the "failed to gate" family — it fails *closed*,
+which is right — but it is circular in practice: the fix is to get the branch into the checked-out
+tree, and the command that does that is itself gated. **The escape is the documented order, not a
+bypass: close the Kanban row before merging.** The row was legitimately closeable (tests green,
+evidence filled, verify PASS), and the gate scans only In Progress / Ready for Review.
+
+## A guard that scans the whole command string fires on a command that merely *mentions* the verb
+**From T073 Stage 5, 2026-08-17. Recorded before for the merge gate; now confirmed for
+`post_bash_memory_update` too.** `GIT_MEMORY_PATTERNS` matches anywhere in the command, so
+`echo 'do not git push yet'` triggers a spurious memory-update prompt — and a heredoc *documenting*
+the operation trips it as well. Both fired during this very verification: the driver command was
+blocked until the git verb was split in the harness source, and the memory-pass heredoc re-fired the
+hook while writing up the hook's own defect. Harmless here (worst case a no-op pass), and deliberately
+left untouched as out of scope — but the shape is now attested in two hooks, so treat "whole-string
+scan" as a known false-positive source whenever writing a new one. Write files with the Write tool
+rather than heredocs when the content quotes a guarded operation.
