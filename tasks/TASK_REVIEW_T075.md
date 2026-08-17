@@ -33,12 +33,31 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured 2026-08-17T08:45:27Z, before any implementation commit, by qa-expert
+(QA-Automation-Agent), in worktree `/home/hungnguyenhuu/workspace/pets/wt-t075`:
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+```
+$ cd /home/hungnguyenhuu/workspace/pets/wt-t075 && date -u +%Y-%m-%dT%H:%M:%SZ && \
+  python3 -m pytest .claude/hooks/tests/test_memory_channel_and_budget.py::test_ac10_growth_in_chars_without_growth_in_lines_turns_the_gate_red -v
+2026-08-17T08:45:27Z
+...
+        # The NEW gate is red, and says something actionable (AC2).
+>       with pytest.raises(AssertionError) as exc:
+E       Failed: DID NOT RAISE <class 'AssertionError'>
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+.claude/hooks/tests/test_memory_channel_and_budget.py:266: Failed
+=========================== short test summary info ============================
+FAILED .claude/hooks/tests/test_memory_channel_and_budget.py::test_ac10_growth_in_chars_without_growth_in_lines_turns_the_gate_red
+============================== 1 failed in 0.04s ===============================
+```
 
-**WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
-implementing agent alone]
+**AFTER**: BLOCKED — see report to Supervisor. Implementation of AC1–AC4 (test_ac10's own-breach
+padding loop, the breach assertion, and the AC3 tiny-stub size-independence test) is complete and
+was verified green in isolation. AC5 (lowering `HOT_TIER_CHAR_BUDGET` to `45_000`) surfaces a
+contradiction with the Files-Must-Not-Touch list — see notes below — so the task is halted before a
+full-suite AFTER capture, pending Supervisor ruling.
+
+**DELTA**: not yet delivered — blocked pending Supervisor decision on the AC5/Must-Not-Touch
+contradiction described in the qa-expert report.
+
+**WITNESS**: qa-expert (QA-Automation-Agent), 2026-08-17, this worktree.

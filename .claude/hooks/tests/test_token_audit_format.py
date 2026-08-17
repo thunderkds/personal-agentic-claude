@@ -88,7 +88,7 @@ MEMORY_PATH = Path(__file__).resolve().parents[3] / "memory" / "MEMORY.md"
 # headroom, so the next few honest edits land without anyone being tempted to
 # edit this line. Ratcheted DOWN from 52,000 by that pass, which consolidated 26
 # gotcha entries into 5 — the only direction this number is ever allowed to move.
-HOT_TIER_CHAR_BUDGET = 50_000
+HOT_TIER_CHAR_BUDGET = 45_000
 
 # Characters, not bytes. The file is full of `—`, `≤`, `☐`; its byte count is
 # ~1.1% higher than its character count, so a byte budget would not mean what
