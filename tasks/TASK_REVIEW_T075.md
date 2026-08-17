@@ -14,15 +14,15 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | pass | `.claude/hooks/tests/test_memory_channel_and_budget.py` — `test_ac10_growth_in_chars_without_growth_in_lines_turns_the_gate_red` (rewritten, AC1/AC2/AC4), `test_ac10_turns_red_at_any_live_file_size` (new, AC3) |
+| Verification command run | pass | `cd /home/hungnguyenhuu/workspace/pets/wt-t075 && python3 -m pytest .claude/hooks/tests/ -q` → `452 passed in 9.32s` |
+| Negative cases hold | pass | SC6 (old size-coupled loop restored: at current live-file size + 45,000 budget the old loop still happens to breach — PASSED green, does not reproduce RED; reported to Supervisor as a discovery, see notes below), SC7 (breach assertion deleted + 1-entry stub, single non-cycling pass: `Failed: DID NOT RAISE` — RED as required, reverted, confirmed 13 passed), SC8 (deleted one Simplicity First line from `.claude/agents/backend.md`: `test_ac8` went RED — `{'If 200 lines can be 50, rewrite': 2, 'If 200 lines can be 50, write 50': 1}` — reverted, confirmed 1 passed) |
+| verify | N/A | not run by qa-expert per project convention (verify is user-only); Supervisor/user to run `/verify` at Stage 5 |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | pass | Reviewed: `.claude/hooks/tests/test_memory_channel_and_budget.py`, `.claude/hooks/tests/test_token_audit_format.py`, `.claude/hooks/tests/test_vital_slice.py`, `memory/MEMORY.md` (header line only), `setup.sh` (seeded stub line only) — the exact set touched, both directly and by the AC5 ratchet's two-module import. `assert_hot_tier_within_budget`/`measure_hot_tier` (off-limits) confirmed untouched by diff. Skipped: rest of the 451-test suite beyond confirming it stays green, since `HOT_TIER_CHAR_BUDGET` fans out no further than the two modules already reviewed |
+| Full smoke suite still green (no regression) | pass | `python3 -m pytest .claude/hooks/tests/ -q` → `452 passed in 9.32s` (451 baseline +1 for AC3's new test; AC16 removed an assertion, not a test) |
+| **UI: Visual regression (diff or verdict pasted)** | N/A | pure test-infrastructure task, no UI component |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | N/A | pure test-infrastructure task, no UI component |
+| **UI: Responsiveness at target viewports** | N/A | pure test-infrastructure task, no UI component |
 
 ---
 
@@ -51,13 +51,29 @@ FAILED .claude/hooks/tests/test_memory_channel_and_budget.py::test_ac10_growth_i
 ============================== 1 failed in 0.04s ===============================
 ```
 
-**AFTER**: BLOCKED — see report to Supervisor. Implementation of AC1–AC4 (test_ac10's own-breach
-padding loop, the breach assertion, and the AC3 tiny-stub size-independence test) is complete and
-was verified green in isolation. AC5 (lowering `HOT_TIER_CHAR_BUDGET` to `45_000`) surfaces a
-contradiction with the Files-Must-Not-Touch list — see notes below — so the task is halted before a
-full-suite AFTER capture, pending Supervisor ruling.
+**AFTER**: captured 2026-08-17T08:56:14Z, after the Stage 2 amendment (AC15/AC16/SC8) was applied,
+by qa-expert (QA-Automation-Agent), in worktree `/home/hungnguyenhuu/workspace/pets/wt-t075`:
 
-**DELTA**: not yet delivered — blocked pending Supervisor decision on the AC5/Must-Not-Touch
-contradiction described in the qa-expert report.
+```
+$ cd /home/hungnguyenhuu/workspace/pets/wt-t075 && date -u +%Y-%m-%dT%H:%M:%SZ && \
+  python3 -m pytest .claude/hooks/tests/test_memory_channel_and_budget.py::test_ac10_growth_in_chars_without_growth_in_lines_turns_the_gate_red -v
+2026-08-17T08:56:14Z
+.claude/hooks/tests/test_memory_channel_and_budget.py::test_ac10_growth_in_chars_without_growth_in_lines_turns_the_gate_red PASSED [100%]
+============================== 1 passed in 0.02s ===============================
+```
 
-**WITNESS**: qa-expert (QA-Automation-Agent), 2026-08-17, this worktree.
+Full suite: `452 passed` (see Evidence table).
+
+**DELTA**: `test_ac10` now constructs its own budget breach unconditionally (cycling the padding
+loop over existing entry lines, independent of the live file's distance to the cap) and asserts the
+breach actually happened before expecting the gate to fire — so the gate that the `/compact-memory`
+tool exists to keep honest can no longer be silently disarmed by that same tool doing its job. The
+ratchet is banked (`HOT_TIER_CHAR_BUDGET` 50,000 → 45,000, both `memory/MEMORY.md`'s header and
+`setup.sh`'s seeded stub updated to match, ratchet sentence byte-identical in both), and the
+scope-guard byte-identity pin in `test_vital_slice.py::test_ac8` — which made this fix structurally
+impossible to land — is removed while its content assertion stays.
+
+**WITNESS**: qa-expert (QA-Automation-Agent), 2026-08-17, this worktree. Two Stage-2 defects found
+during implementation (the AC5/Must-Not-Touch contradiction, and the unsatisfiable byte-identity pin
+in `test_vital_slice.py`) were reported and ruled on by the Supervisor before this AFTER capture —
+see commit `4789377` (Stage 2 amendment) and the qa-expert report preceding it.
