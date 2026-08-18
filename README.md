@@ -330,6 +330,14 @@ any major refactor. No external dependencies — uses `find` and `git` only.
 
 All skills live in `.claude/skills/<name>/SKILL.md` and are auto-discovered by Claude Code. Invoke any skill via `Skill({ skill: "<name>" })` or the `/name` slash command.
 
+This repo's skills implement the open [Agent Skills specification](https://agentskills.io). A conforming `SKILL.md` must satisfy:
+- `name`: lowercase alphanumeric + hyphens only, matching the parent directory
+- `description`: non-empty, ≤1024 characters
+- length: ≤500 lines, counted over the whole file including frontmatter
+- optional `scripts/`, `references/`, `assets/` directories, loaded on demand
+
+`write-better-skill` is the in-repo authority for the full rules and the reasoning behind them; do not re-derive them here. Checked automatically by `.claude/hooks/tests/test_skill_spec_conformance.py`, run via `python3 -m pytest .claude/hooks/tests/test_skill_spec_conformance.py`.
+
 ### Phase 0 — Strategy & Ideation
 
 | Skill | When to use |
@@ -391,7 +399,7 @@ All skills live in `.claude/skills/<name>/SKILL.md` and are auto-discovered by C
 | `compact-advisor` | Dual-triggered: Supervisor invokes it on noticing signs of context overwhelm (losing track of a decision, repeated corrections, long session), or run `/compact-advisor` any time. Reports a plain verdict and, if warranted, whether `/compact` (live conversation) or `compact-memory` (cold files) is the fit — never both blended. |
 | `diagnose` | Stage 3 when something is broken/failing: disciplined reproduce → minimise → hypothesise → instrument → fix → regression-test loop. |
 | `teach` | Auto-fires when user asks to write/create a new skill: consults `write-better-skill` and emits a ready-to-save SKILL.md draft. |
-| `write-better-skill` | Craft reference for writing skills in this framework — invocation choice, leading words, completion criteria, failure modes. Consulted by `teach`; also audits existing skills. |
+| `write-better-skill` | Craft reference for writing skills in this framework — invocation choice, leading words, completion criteria, failure modes, and the Agent Skills spec conformance rules. Consulted by `teach`; also audits existing skills. Two reference files: `references/descriptions.md` (trigger-eval method for description quality) and `references/instruction-patterns.md` (six reusable body structures — Gotchas, Output templates, etc.). |
 | `git-guardrails-claude-code` | Stage 1 one-time setup: install a PreToolUse hook blocking destructive git commands. |
 
 ---
