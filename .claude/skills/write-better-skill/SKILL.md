@@ -53,7 +53,7 @@ This framework's skills implement the open [Agent Skills specification](https://
 
 **Progressive-disclosure budgets** (spec numbers, not prose):
 - metadata (`name` + `description`) ≈ **100 tokens**, loaded at startup for **every** skill — this is why description pruning pays repo-wide
-- `SKILL.md` body: **≤ 500 lines** and **≤ 5,000 tokens** once the skill activates
+- `SKILL.md`: **≤ 500 lines** and **≤ 5,000 tokens** once the skill activates. The line budget is measured over the **whole file, frontmatter included** — trimming the body to exactly 500 still fails, because the conformance test counts every line in `SKILL.md`.
 - resources (`scripts/`, `references/`, `assets/`) load **on demand only**
 
 **Bundled directories** — the spec's conventional layout beside `SKILL.md`:

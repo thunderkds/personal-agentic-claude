@@ -333,7 +333,7 @@ All skills live in `.claude/skills/<name>/SKILL.md` and are auto-discovered by C
 This repo's skills implement the open [Agent Skills specification](https://agentskills.io). A conforming `SKILL.md` must satisfy:
 - `name`: lowercase alphanumeric + hyphens only, matching the parent directory
 - `description`: non-empty, ≤1024 characters
-- body: ≤500 lines
+- length: ≤500 lines, counted over the whole file including frontmatter
 - optional `scripts/`, `references/`, `assets/` directories, loaded on demand
 
 `write-better-skill` is the in-repo authority for the full rules and the reasoning behind them; do not re-derive them here. Checked automatically by `.claude/hooks/tests/test_skill_spec_conformance.py`, run via `python3 -m pytest .claude/hooks/tests/test_skill_spec_conformance.py`.
