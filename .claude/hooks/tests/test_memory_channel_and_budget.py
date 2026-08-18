@@ -207,6 +207,19 @@ def test_ac8_setup_sh_seeded_stub_carries_the_corrected_rules():
     assert "path to read" in stub, "seeded stub must describe the real channel"
     assert "200 lines" not in stub
     assert "Injected in full" not in stub
+    # Every budget figure in the stub must be THE budget. Asserting the current
+    # number is *present* is not enough: the stub states it twice (the rules
+    # block and the Index comment), and T075 shipped with the ratchet lowered in
+    # one place and left at 50,000 in the other — a stub that contradicts itself,
+    # in the task whose whole subject is that number decaying. Caught at Stage 5
+    # by executing the heredoc, not by reading the diff. Written as "all figures
+    # agree" rather than `"50,000" not in stub` so the next ratchet cannot
+    # reintroduce it under a different number.
+    figures = set(re.findall(r"\d{1,3},\d{3}", stub))
+    assert figures == {f"{HOT_TIER_CHAR_BUDGET:,}"}, (
+        "seeded stub states a budget figure that is not the budget: found %s, "
+        "expected only %s — every number in the stub must agree with "
+        "HOT_TIER_CHAR_BUDGET" % (sorted(figures), f"{HOT_TIER_CHAR_BUDGET:,}"))
     # The heredoc is quoted (<<'EOF'), so nothing in the stub may look like an
     # expansion — an unquoted `$` or backtick would be silently evaluated if anyone
     # ever unquotes it, and `$(` would be evaluated the moment they do.
