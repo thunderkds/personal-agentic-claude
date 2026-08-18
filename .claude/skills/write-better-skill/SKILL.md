@@ -28,6 +28,8 @@ A model-invoked description does two jobs: state what the skill is, and list the
 - **One trigger per branch.** Synonyms that rename a single branch are duplication — collapse them.
 - **Cut identity already in the body.** Keep triggers plus any "when another skill needs…" reach clause.
 
+Read [`references/descriptions.md`](references/descriptions.md) when writing or revising a model-invoked `description` — it carries the rules that decide whether the skill fires at all (imperative phrasing, user intent, pushiness) and the trigger-eval method for testing one.
+
 ---
 
 ## Agent Skills Spec Conformance
@@ -86,11 +88,13 @@ A skill is built from **steps** (ordered actions) and **reference** (rules, defi
 2. **In-skill reference** — definitions and rules consulted on demand. A legitimately flat peer-set is fine (not a smell). This skill is all reference.
 3. **External reference** — pushed out of SKILL.md into a sibling file (e.g. `GLOSSARY.md`), reached via a **context pointer**. Loaded only when the pointer fires.
 
-**Progressive disclosure** is the move down the ladder — out of SKILL.md into a linked file — so the top stays legible. A **context pointer** must name the *trigger condition* for loading the file, not just its existence: "Read `references/api-errors.md` if the API returns a non-200 status code", never a bare "see `references/` for details". A pointer without a trigger condition is a pointer the agent cannot decide to follow.
+**Progressive disclosure** is the move down the ladder — out of SKILL.md into a linked file — so the top stays legible. A **context pointer** must name the *trigger condition* for loading the file, not just its existence, and must be written as a **Markdown link** — the two pointers in this file are the worked examples: each names when to load its target, and each is a link. Never a bare "see `references/` for details", and never a path in plain backticks: `.claude/hooks/tests/test_skill_reference_pointers.py` resolves links only, so a backticked path is a pointer nothing checks — it can rot to a missing file and the suite stays green. A pointer without a trigger condition is a pointer the agent cannot decide to follow; a pointer without link syntax is one nothing can verify.
 
 **Co-location**: keep a concept's definition, rules, and caveats under one heading so reading one part brings its neighbours.
 
 Split signal: inline what every branch needs; push behind a pointer what only some branches reach.
+
+Read [`references/instruction-patterns.md`](references/instruction-patterns.md) when drafting or restructuring a skill *body* — six reusable structures (gotchas, output templates, checklists, validation loops, plan-validate-execute, bundled scripts) and the rules for calibrating how tightly each part instructs.
 
 ---
 
@@ -127,6 +131,20 @@ Check every line for **relevance**: does it still bear on what the skill does?
 Hunt **no-ops** sentence by sentence — not just line by line. Run the no-op test on each sentence in isolation: does removing it change agent behaviour versus the default? If not, delete the whole sentence rather than trim words. Be aggressive — most failing prose should go, not be rewritten.
 
 A weak leading word (*be thorough*) is a no-op when the agent is already thorough by default. The fix is a stronger word (*relentless*), not a different technique.
+
+---
+
+## Sourcing
+
+**Start from real expertise.** A skill drafted from the model's general training knowledge produces generic filler — "handle errors appropriately", "follow best practices" — instead of the specific conventions, edge cases, and commands that make a skill worth loading. The model already knows the generic version; the skill exists for what it does not know.
+
+Source material must be **project-specific**: execution traces (`memory/event-trace/`), corrections the user made mid-task, git history — especially fixes, which show what actually went wrong — review comments, and real failure cases (`memory/learnings.md`).
+
+Two routes to it:
+- **Extract from a completed hands-on task.** Run the real task with an agent, then lift the reusable pattern: the sequence that worked, each correction you made, the input/output shapes, and the project facts you had to supply.
+- **Synthesize from existing project artifacts.** Feed the body of knowledge you already have — runbooks, specs, schemas, configs, incident write-ups — and draft from it. A skill built from this repo's own hook failures beats one built from an article about writing hooks.
+
+Then refine against real execution: run the draft on real tasks and feed back *all* results, not just the failures. Read the traces, not only the final output — an agent trying several approaches signals instructions that are too vague; an agent following an instruction that does not apply signals one that should be conditional or cut.
 
 ---
 

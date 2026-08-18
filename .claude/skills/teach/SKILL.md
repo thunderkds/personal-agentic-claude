@@ -39,12 +39,14 @@ Name one leading word — a compact pretraining concept the agent will think wit
 
 Apply all `write-better-skill` principles while drafting:
 
-- **description**: trigger phrasing (model-invoked) or human summary (user-invoked); front-load the leading word; one trigger per branch; no identity prose that belongs in the body.
+- **description**: trigger phrasing (model-invoked) or human summary (user-invoked); front-load the leading word; one trigger per branch; no identity prose that belongs in the body. Read `write-better-skill/references/descriptions.md` before writing a model-invoked description — it carries the imperative-phrasing, user-intent, and err-on-the-side-of-pushy rules that decide whether the skill fires at all.
 - **Role paragraph**: one sentence — persona + single job + pipeline position.
 - **Karpathy block**: only the overrides that matter for this skill (≤3 items).
 - **Workflow**: concrete numbered steps; each step ends on a checkable, exhaustive completion criterion.
 - **Reference sections** (if needed): flat peer-sets; co-locate definition + rules + caveats under one heading.
 - **Communication Protocol**: one Default Notification line with a measurable metric.
+
+Read `write-better-skill/references/instruction-patterns.md` when the body needs more than plain steps — gotchas, an output template, a checklist, a validation loop, plan-validate-execute, or a bundled script — and to calibrate how prescriptive each section should be.
 
 Run the no-op test on every sentence before including it.
 
