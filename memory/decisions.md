@@ -1379,3 +1379,35 @@ tokenizer is a dependency for a soft recommendation.
 641 passed (451 pre-existing + 190 new). Stage 4: 0 P0 / 0 P1 / 0 P2, 4 P3 accepted. Stage 5
 user-run `/verify` PASS, driven at the gate's real surface (six malformed skills created live)
 rather than by replaying the suite.
+
+## T079 merged: the skill-craft reference gains descriptions + instruction patterns — 2026-08-18
+
+Sources: `https://agentskills.io/skill-creation/best-practices` and `.../optimizing-descriptions`,
+read directly. Second of the three-task Agent Skills absorption (T078 -> T079 -> T080).
+
+`write-better-skill` had three bullets on descriptions, all about **pruning**, and nothing on the
+two rules that decide whether a skill fires at all. Now behind a context pointer in
+`references/descriptions.md`: imperative phrasing ("Use this skill when...", not "This skill
+does..."), user intent over implementation mechanics, err-on-the-side-of-pushy (name contexts where
+the user does *not* say the domain word), plus the trigger-eval method — ~20 labelled queries at
+8-10 positive / 8-10 **near-miss** negative, 3 runs at a 0.5 trigger-rate threshold, a fixed ~60/40
+train/validation split, selection by **validation** pass rate (which may not be the last iteration
+produced), and the anti-overfitting rule that you generalise to the category a failed query
+represents rather than pasting its keywords.
+
+`references/instruction-patterns.md` carries the six patterns (gotchas, output templates,
+checklists, validation loops, plan-validate-execute, bundled scripts) and the three calibration
+rules (match specificity to fragility; a default with an escape hatch, never a menu; procedures over
+declarations). `## Sourcing` in SKILL.md carries the start-from-real-expertise rule.
+
+**The gotchas entry is the point of the task.** `memory/learnings.md` already held exactly the
+material a gotchas section is made of, and none of it reached the skills an agent reads *before*
+hitting the situation. The entry now instructs authors to mine that file, and its own example is cut
+from the real recorded entries (`$CLAUDE_PROJECT_DIR` empty in an agent's Bash call, env vars
+invisible to hooks, `isolation:"worktree"` forking from `main`).
+
+Deliberately cut and stated as cuts: retroactive rewrites of the 30 existing descriptions; the
+trigger-eval bash harness (documented as a method, not built — 60 `claude -p` runs per skill is its
+own task); the `evaluating-skills` guide as a third body. All three recorded as follow-ups.
+
+648 passed. Stage 4: 0 P0 / 0 P1 / 1 P2 (fixed) / 1 P3. Stage 5 verify PASS.

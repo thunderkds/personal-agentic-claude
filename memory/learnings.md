@@ -1111,3 +1111,39 @@ Non-blocking (advisory only), so it cost nothing here — but it is the same sha
 defects in this hook family: **structural attribution done by free-text scan instead of by parsing
 the declared value.** Fix is to parse the field's value and stop at `None`, mirroring what
 `resolve_task_id` already does. Not yet filed as a task.
+
+## A gate that cannot see the form its own documentation teaches (T079, 2026-08-18)
+
+`test_skill_reference_pointers.py` resolves **Markdown links** only. `write-better-skill/SKILL.md`
+line 91 — the canonical example teaching what a context pointer *is* — was written as a path in
+plain backticks: ``Read `references/api-errors.md` if the API returns a non-200 status code``. So an
+author following the documented example produced a pointer the gate could not see, which could rot
+to a missing file with the suite staying green.
+
+Found at Stage 5 by **driving** the gate, not reading it: the same broken target gave `1 failed` in
+link form and `7 passed` in the taught form, the only difference being syntax. Reading the test
+would not have surfaced it — the test is correct; the *documentation* pointed somewhere the test
+does not look.
+
+Two generalisations worth keeping:
+1. **When you ship a rule and a checker for it, check that the rule's own examples are in the form
+   the checker reads.** Taught form and enforced form drifting apart is invisible to both.
+2. The naive fix was wrong: converting the illustrative `references/api-errors.md` into a link would
+   have made the gate **RED on its own documentation**, since that path does not exist. The fix was
+   to require link syntax, name the enforcing test, and use the file's own two real pointers as the
+   worked examples. **When a doc example is illustrative-but-fake, making it checkable means making
+   it real, not making it look real.**
+
+Also note the blind spot did not even register as a skipped test: `write-better-skill`'s two genuine
+link-form pointers satisfied the non-empty guard, so the suite looked fully exercised.
+
+## `git stash` is not a safe way to prove a fix mattered (T079, 2026-08-18)
+
+The implementing agent tried to demonstrate that its fence-handling fix was load-bearing by stashing
+it and re-running — but the stash took the **new test** along with the fix, so the run passed
+vacuously and appeared to prove the fix unnecessary. Same family as the recorded "reverting a
+mutation with `git checkout` also reverts your fix", one tool over.
+
+The agent recognised it and redid the control properly: old logic restored against the **new** test,
+which went RED. Correct method — when proving a fix matters, revert **only** the fix, never the
+evidence that detects it. Safest form is old-implementation + new-test, held apart explicitly.
