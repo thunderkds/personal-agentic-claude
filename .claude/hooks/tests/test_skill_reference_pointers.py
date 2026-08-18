@@ -76,15 +76,15 @@ def extract_relative_links(text):
     trimmed to the path — the file is what must exist.
     """
     links = []
-    fence = None
+    fence = None  # the OPEN marker, kept whole: a ``` inside a ```` block does
+                  # not close it (teach/SKILL.md nests exactly that way).
     for lineno, raw in enumerate(text.split("\n"), start=1):
         fence_match = FENCE_RE.match(raw)
         if fence_match:
             marker = fence_match.group(1)
             if fence is None:
-                fence = marker[0] * 3
-                continue
-            if marker[0] * 3 == fence:
+                fence = marker
+            elif marker[0] == fence[0] and len(marker) >= len(fence):
                 fence = None
             continue
         if fence is not None:
@@ -167,12 +167,14 @@ def test_extractor_ignores_non_pointers():
         "[ext](https://example.com/a.md)",
         "[anchor](#section)",
         "Format: `- [Title](cold-file.md#section)`",
+        "````",
         "```",
-        "[fenced](fenced-target.md)",
+        "[nested-fenced](nested-target.md)",
         "```",
+        "````",
         "[real](references/x.md#frag)",
     ])
-    assert extract_relative_links(sample) == [(7, "references/x.md")]
+    assert extract_relative_links(sample) == [(9, "references/x.md")]
 
 
 # --------------------------------------------------------------------------
