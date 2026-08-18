@@ -1174,3 +1174,40 @@ Corollary from T079's fix: **when a doc example is illustrative-but-fake, making
 making it real, not making it look real.** Converting the invented `references/api-errors.md` path
 into a link would have turned the gate RED on its own documentation; the fix was to use the file's
 own two genuine pointers as the worked examples.
+
+## A shipped stub can contradict itself where no in-repo file shows it (T075, 2026-08-18)
+
+T075 lowered `HOT_TIER_CHAR_BUDGET` 50,000 -> 45,000 and updated `setup.sh`'s seeded `MEMORY.md`
+stub. It updated **one** of the two places the stub states the number. The shipped file said
+`Max 45,000 characters — a ratchet` on line 3 and `The enforced gate is the 50,000-character
+whole-file budget above` on line 22 — contradicting itself about the one number the task exists to
+change, in every downstream repo `setup.sh` scaffolds.
+
+**Why nobody caught it earlier**: the live `memory/MEMORY.md` carries no such comment block, so the
+defect is invisible in-repo. It only appears if you **execute the heredoc**. Reading the diff shows
+a correct one-line change; running the scaffold shows a self-contradicting file. Stage 3 and Stage 4
+both passed it; Stage 5 caught it only because the shipping surface was driven rather than read.
+
+**The guard that should have caught it**: `test_ac8` asserted the new figure was *present*, and
+carried negative assertions for two other stale strings (`"200 lines"`, `"Injected in full"`) — but
+none for the old budget. The one negative assertion that mattered was the only one missing. 9th
+sighting of the vacuous-assertion family, and the sharpest yet: **the defect T075 exists to prevent,
+reintroduced inside T075.**
+
+Fixed as "every `\d{1,3},\d{3}` figure in the stub must equal `HOT_TIER_CHAR_BUDGET`" rather than
+`"50,000" not in stub`, so the next ratchet cannot reintroduce the same decay under a new number.
+Generalisable: **when a constant appears in shipped prose, assert agreement across all its
+occurrences, not the presence of the current value.** Pinning the old value only guards one step.
+
+## Clear `__pycache__` after a mutation control, before trusting the restore (2026-08-18)
+
+Mutating `test_token_audit_format.py`, running a control, then `git checkout`-ing it left the suite
+reporting **7 failed** while `git status` was clean and the constant was correct on disk. Stale
+bytecode: the module is imported through a `sys.path` insert by sibling test modules, so the `.pyc`
+outlived the restore.
+
+Harmless in that direction — a spurious RED. **The dangerous direction is the mirror**: a stale
+`.pyc` showing GREEN while the file on disk is broken, which is a false PASS on a mutation control.
+After any control that edits an imported module, `find -name __pycache__ -exec rm -rf {} +` before
+believing the restore run. Related to the recorded "an importlib-loaded module is a different object
+from the imported one" — same root, different mechanism.
