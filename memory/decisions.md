@@ -1345,3 +1345,37 @@ Supervisor: `git rm --cached memory/glossary.md` → RED, restore → GREEN.
 real PostToolUse payloads on stdin — with main's unfixed copy as a live control: same event, still
 the false NOTE. Then the merge itself produced the end-to-end proof for free: `git merge` fired the
 real harness hook, which injected the **corrected** NOTE into the session. 451 passed.
+
+## T078 merged: the Agent Skills spec is written down and enforced — 2026-08-18
+
+Source: `https://agentskills.io` (specification, best-practices, optimizing-descriptions), read
+directly rather than summarized, because the whole value is that the numbers are exact.
+
+**The finding that shaped the task**: all 30 skills in `.claude/skills/` already conformed to the
+Agent Skills open format — `name` matching the parent directory, `description` under 1024 chars,
+`SKILL.md` under 500 lines. But that compliance was **accidental**. `write-better-skill`, the repo's
+authoritative craft reference, stated not one of the constraints, and nothing tested them. Skill 31
+could have violated any of them silently. The task converts accidental compliance into checked
+compliance; it deliberately does **not** remodel the 30 skills the new gate watches.
+
+`write-better-skill` gains `## Agent Skills Spec Conformance`: the five `name` rules, the 1024-char
+description cap, `license`/`compatibility` (<=500)/`metadata`, the progressive-disclosure budgets as
+spec numbers (~100-token metadata loaded at startup for *every* skill, <=500 lines and <=5,000 tokens
+once activated, resources on demand), and the `scripts/`+`references/`+`assets/` layout with the
+one-level-deep reference rule. `allowed-tools` deliberately out of scope — the spec marks it
+Experimental and says support varies by implementation.
+
+**The vague line that got sharpened**: "the pointer's *wording* decides how reliably the agent
+reaches the material" is now the spec's concrete rule — a context pointer must name its **trigger
+condition** ("Read `references/api-errors.md` if the API returns a non-200 status code"), never a
+bare "see `references/` for details". A pointer without a trigger condition is one the agent cannot
+decide to follow.
+
+`skills-ref` (the spec's own validator) deliberately **not** vendored: a Go/JS toolchain to gate 30
+Markdown files fails Simplicity First. ~40 lines of stdlib Python instead. The 5,000-token budget is
+recorded as guidance but not tested — the 500-line rule is the stdlib-checkable proxy; a real
+tokenizer is a dependency for a soft recommendation.
+
+641 passed (451 pre-existing + 190 new). Stage 4: 0 P0 / 0 P1 / 0 P2, 4 P3 accepted. Stage 5
+user-run `/verify` PASS, driven at the gate's real surface (six malformed skills created live)
+rather than by replaying the suite.

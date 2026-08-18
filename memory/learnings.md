@@ -1068,3 +1068,46 @@ hook while writing up the hook's own defect. Harmless here (worst case a no-op p
 left untouched as out of scope — but the shape is now attested in two hooks, so treat "whole-string
 scan" as a known false-positive source whenever writing a new one. Write files with the Write tool
 rather than heredocs when the content quotes a guarded operation.
+
+## A conformance suite's real failure mode is its discovery layer, not its rules (T078, 2026-08-18)
+
+`test_skill_spec_conformance.py` parametrizes six checks over filesystem-discovered skill dirs. If
+discovery returns `[]`, pytest reports zero failures — a green suite that asserted nothing. Same
+defect already recorded as "a negative-grep test is free-passing if its file list is wrong", and why
+the task's mutation controls attack **discovery** (SC5/SC6) as well as the rules (SC3/SC4). SC6 is
+the one that matters: delete the non-empty + known-skill guards, point the root at an empty dir, and
+the suite goes **GREEN over zero skills**. That proves the guard is load-bearing; SC5 passing alone
+does not, because it never shows what caused the RED.
+
+Generalisable: **when a suite is parametrized over a discovered collection, the collection itself
+needs an assertion.** Two, ideally — non-empty, and a known member pinned by name (a mis-rooted glob
+can still be non-empty). The Supervisor's independent control confirmed the pairing works: a mutant
+hardcoding a 3-skill list was caught, but only by the *second* assertion (nonexistent root -> `[]`);
+the first, `discover_skill_dirs(SKILLS_DIR) == SKILL_DIRS`, compares the function against its own
+cached result and cannot fail for any implementation. 8th sighting of the vacuous-assertion family,
+this time inside a guard written specifically to prevent it.
+
+## An Evidence row can contain "pass" while meaning the opposite (T078, 2026-08-18)
+
+The implementing agent's draft verify row read: *"`Skill()` is not available to this agent's tool
+set, so `/verify` could not be invoked here — pass."* The merge gate scans that column for a runner
+or a verdict; this sentence would have satisfied a naive substring scan while stating the gate was
+never run. The agent was being honest — the trailing "pass" belonged to a different clause — but the
+cell as written is indistinguishable from a real PASS to the thing that reads it.
+
+**When reviewing Evidence, read the sentence, not the token.** 6th incident in the
+evidence-integrity family, and the first where the misleading text came from an agent truthfully
+reporting a limitation rather than overclaiming.
+
+## The `Depends on` extractor reads the whole line, so prose after `None` becomes a dependency (2026-08-18)
+
+`pre_agent_validate_guide.py:87` uses `re.search(r"\*\*Depends on\*\*:\s*(.+)", guide)` — it captures
+the entire rest of the line. A guide line reading ``**Depends on**: `None` — branched off `main`,
+independent of T074/T075`` produced the advisory *"T078 declares 'Depends on: T074' but T074 was not
+found anywhere on PROJECT_KANBAN.md"*. The explicit `None` was ignored and a `Txxx` from the
+explanatory clause was read as the declared dependency.
+
+Non-blocking (advisory only), so it cost nothing here — but it is the same shape as the other
+defects in this hook family: **structural attribution done by free-text scan instead of by parsing
+the declared value.** Fix is to parse the field's value and stop at `None`, mirroring what
+`resolve_task_id` already does. Not yet filed as a task.
