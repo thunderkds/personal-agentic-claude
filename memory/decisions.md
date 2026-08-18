@@ -1437,3 +1437,36 @@ for a human decision; `slim-skills/SKILL.md` untouched.
 
 648 passed. Stage 4: 0 P0 / 0 P1 / 1 P2 (fixed) / 1 P3. Stage 5 `/verify` recorded **N/A with
 justification, explicitly rather than implied** — docs-only, no runtime surface, would return SKIP.
+
+## T074 and T072 closed as will-not-do; T081 salvaged from T074 — 2026-08-18
+
+User asked whether either was needed for this repo. Both investigated empirically rather than
+judged from their Kanban rows; both closed, with one half salvaged.
+
+**T074 (hook-wiring preflight validator)** — premise does not hold here. All 8 project hook commands
+and all 22 machine-level commands resolve, 0 unresolvable. Stronger than any static scan: the hooks
+were observed **firing continuously** through the 2026-08-18 session (post-merge memory prompts,
+`pre_agent` advisories on every spawn, UserPromptSubmit every turn). The failure it guards came from
+one user on a different machine. **Finding recorded against the plan itself**: T074's approved
+50%-rule design was to regex-scan the settings *text* rather than walk the JSON — during this
+investigation the Supervisor's own three attempts to do exactly that produced false positives every
+time, because commands are written `python3 "$CLAUDE_PROJECT_DIR"/.claude/hooks/x.py` and the quote
+closes mid-path. A validator built that way would report 8 phantom missing hooks on a healthy
+machine — the inverse of the bug it exists to catch. If revived, walk the JSON.
+
+**T072 (`setup.sh` brownfield downgrade)** — the row overstated it. It claimed "no error and no
+explanation"; `setup.sh:227` actually emits *"Non-interactive mode detected. Defaulting to greenfield
+(CLAUDE.md). Re-run interactively to choose brownfield."*, naming default, consequence and remedy.
+What remains is a narrow UX gap for scripted brownfield installs. This repo is the installer's
+source, never its target. An arg-parsing loop already exists at `setup.sh:86`, so the fix is small
+and re-derivable. Revive on a user report, not speculatively.
+
+**T081 registered** with the surviving half: two README hook-table rows that are provably false
+against source — `post_agent_move_to_review.py` documented as moving the Kanban row and resetting
+the step counter when it has 0 write operations and is deliberately inert since T044, and
+`pre_agent_step_limit.py` documented as default 40 when the code reads 90. The first is actively
+misleading: the vanished counter reset is the recorded root cause of the step-limit lockouts.
+
+**Board convention introduced**: closed-but-not-done work lives under `### Closed (investigated,
+will not do)` with its full reasoning retained rather than deleted, so a future report can revive it
+without re-deriving the analysis.

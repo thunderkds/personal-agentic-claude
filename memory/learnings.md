@@ -1211,3 +1211,25 @@ Harmless in that direction — a spurious RED. **The dangerous direction is the 
 After any control that edits an imported module, `find -name __pycache__ -exec rm -rf {} +` before
 believing the restore run. Related to the recorded "an importlib-loaded module is a different object
 from the imported one" — same root, different mechanism.
+
+## `### Done` runs to end-of-file, so any `##` section below it reads as Done (2026-08-18)
+
+`find_kanban_section` matches `rf"### {section}\n(.*?)(?=^###|\Z)"`. `### Done` is the **last**
+`###` on the board, so its capture runs to `\Z` — swallowing every `##` section beneath it. Adding a
+`## Closed (investigated, will not do)` section made T074 and T072 classify as **Done**, the exact
+opposite of closed-without-doing.
+
+Fixed by making it `### Closed`, which terminates Done's match; closed rows then belong to no board
+section (`None`), which is the correct answer for work that was never done. **Latent and
+pre-existing**: `## Blocked` already sat below `### Done` and any task ID listed there would have
+read as Done too — dormant only because that table currently says "_None currently._".
+
+6th defect in this hook-regex family, and the second caused by a *lookahead that does not anchor the
+way the file is actually structured* (the first was `(?=###|\Z)` truncating on a quoted `###` inside
+a row). **Rule: when adding any section to `PROJECT_KANBAN.md`, run `find_kanban_section` over every
+affected task ID afterwards** — the board is parsed, so editing it is editing parser input.
+
+Two self-inflicted testing notes from the same investigation, both worth remembering: querying that
+function with `'081'` instead of `'T081'` returns `None` for everything and looks like a defect; and
+running it without `CLAUDE_PROJECT_DIR` set does the same, because `ROOT` resolves from it. Both
+produce a convincing false alarm before the real one was found.
