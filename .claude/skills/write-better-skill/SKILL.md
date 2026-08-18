@@ -30,6 +30,39 @@ A model-invoked description does two jobs: state what the skill is, and list the
 
 ---
 
+## Agent Skills Spec Conformance
+
+This framework's skills implement the open [Agent Skills specification](https://agentskills.io/specification). The rules below are **normative** — a skill that breaks one is malformed, not merely unpolished. Checked automatically by `.claude/hooks/tests/test_skill_spec_conformance.py` over every directory in `.claude/skills/`.
+
+**`name`** (required):
+- 1–64 characters
+- unicode lowercase alphanumeric (`a-z`, `0-9`) and hyphens (`-`) only — uppercase is invalid
+- must not start or end with a hyphen
+- must not contain consecutive hyphens (`--`)
+- must match the parent directory name
+
+**`description`** (required): non-empty, max 1024 characters. Craft guidance is in *Writing the description* above; this is the hard limit.
+
+**Optional fields:**
+- `license` — the licence applied to the skill. Add only when the skill ships under terms different from the repo's; keep it to a licence name or a bundled file name.
+- `compatibility` — max 500 characters. Add only when the skill has real environment requirements (intended product, required system packages, network access). Most skills do not need it.
+- `metadata` — a map from string keys to string values, for properties the spec does not define. Use unique-ish key names to avoid collisions.
+- `allowed-tools` — **out of scope in this framework.** The spec marks it Experimental and states support varies by implementation; no skill here uses it.
+
+**Progressive-disclosure budgets** (spec numbers, not prose):
+- metadata (`name` + `description`) ≈ **100 tokens**, loaded at startup for **every** skill — this is why description pruning pays repo-wide
+- `SKILL.md` body: **≤ 500 lines** and **≤ 5,000 tokens** once the skill activates
+- resources (`scripts/`, `references/`, `assets/`) load **on demand only**
+
+**Bundled directories** — the spec's conventional layout beside `SKILL.md`:
+- `scripts/` — executable code the agent runs; self-contained or with documented dependencies
+- `references/` — documentation loaded on demand; keep each file focused
+- `assets/` — templates, images, data files
+
+**File references** use relative paths from the skill root (`references/REFERENCE.md`, `scripts/extract.py`) and stay **one level deep**. Avoid deeply nested reference chains.
+
+---
+
 ## Leading Words
 
 A **leading word** is a compact concept from the model's pretraining that the agent thinks with while running the skill (e.g. *wake*, *learn*, *ship*, *tdd*, *diagnose*). Repeated in the body, it accumulates a distributed definition — anchoring a whole region of behaviour in fewer tokens by recruiting priors the model already holds.
@@ -53,7 +86,7 @@ A skill is built from **steps** (ordered actions) and **reference** (rules, defi
 2. **In-skill reference** — definitions and rules consulted on demand. A legitimately flat peer-set is fine (not a smell). This skill is all reference.
 3. **External reference** — pushed out of SKILL.md into a sibling file (e.g. `GLOSSARY.md`), reached via a **context pointer**. Loaded only when the pointer fires.
 
-**Progressive disclosure** is the move down the ladder — out of SKILL.md into a linked file — so the top stays legible. The pointer's *wording* decides how reliably the agent reaches the material.
+**Progressive disclosure** is the move down the ladder — out of SKILL.md into a linked file — so the top stays legible. A **context pointer** must name the *trigger condition* for loading the file, not just its existence: "Read `references/api-errors.md` if the API returns a non-200 status code", never a bare "see `references/` for details". A pointer without a trigger condition is a pointer the agent cannot decide to follow.
 
 **Co-location**: keep a concept's definition, rules, and caveats under one heading so reading one part brings its neighbours.
 
@@ -125,6 +158,7 @@ Check every claim in the draft against a source, not against plausibility:
 
 Registration checklist for any new skill:
 - [ ] Folder name matches `name:` frontmatter exactly
+- [ ] Frontmatter satisfies *Agent Skills Spec Conformance* above — verified by `python3 -m pytest .claude/hooks/tests/test_skill_spec_conformance.py`, not by re-deriving the rules
 - [ ] Added to the custom-skill table in `CLAUDE.md`
 - [ ] One-liner added to `memory/MEMORY.md` hot tier
 - [ ] `description` uses trigger phrasing (model-invoked) or human summary (user-invoked)
