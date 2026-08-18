@@ -80,7 +80,7 @@ def discover_skill_dirs(root=SKILLS_DIR):
             continue
         # `is_dir()` follows symlinks; a broken symlink reports False for both
         # is_dir and is_file, so catch it explicitly rather than dropping it.
-        if entry.is_dir() or (entry.is_symlink() and not entry.exists()):
+        if entry.is_dir() or (entry.is_symlink() and not os.path.exists(entry.path)):
             found.append(entry.path)
     return sorted(found)
 
