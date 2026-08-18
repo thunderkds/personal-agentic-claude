@@ -1147,3 +1147,30 @@ mutation with `git checkout` also reverts your fix", one tool over.
 The agent recognised it and redid the control properly: old logic restored against the **new** test,
 which went RED. Correct method — when proving a fix matters, revert **only** the fix, never the
 evidence that detects it. Safest form is old-implementation + new-test, held apart explicitly.
+
+## Documentation that describes a gate in terms the gate does not use (T079 + T080, 2026-08-18)
+
+**Two instances in one session, same family, both found by driving the gate rather than reading the
+diff.** A checker and its documentation drift apart in a way neither side can detect: the checker is
+correct, the docs are correct-sounding, and only running one against the other exposes the gap.
+
+1. **T079 — taught form vs. enforced form.** `test_skill_reference_pointers.py` resolves Markdown
+   links only, but `write-better-skill`'s canonical example of a context pointer was a path in plain
+   backticks. Same broken target: `1 failed` in link form, `7 passed` in the taught form.
+2. **T080 — the noun the budget measures.** Both `README.md` and `write-better-skill` said the
+   500-line budget applied to the `SKILL.md` **body**; `count_lines(read_skill_md(...))` counts the
+   **whole file, frontmatter included**. A live probe with a 498-line body went RED at `is 502
+   lines, spec budget is 500`. An author trimming to a 500-line body fails while the document
+   explaining the rule says they should pass. T080 had faithfully copied the wording from
+   `write-better-skill` — **byte-identical to the cited authority, and the authority was wrong**, so
+   the "numbers must match" AC actively propagated the defect.
+
+**The general rule: when you ship a rule plus a checker for it, verify the rule's own prose and
+examples against what the checker actually reads.** Matching the authority is not the same as being
+right; if the authority is imprecise, an AC demanding byte-identity spreads the imprecision. The
+cheap test is to construct the boundary case the prose describes and watch which way the gate goes.
+
+Corollary from T079's fix: **when a doc example is illustrative-but-fake, making it checkable means
+making it real, not making it look real.** Converting the invented `references/api-errors.md` path
+into a link would have turned the gate RED on its own documentation; the fix was to use the file's
+own two genuine pointers as the worked examples.

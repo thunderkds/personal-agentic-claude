@@ -1411,3 +1411,29 @@ trigger-eval bash harness (documented as a method, not built — 60 `claude -p` 
 own task); the `evaluating-skills` guide as a third body. All three recorded as follow-ups.
 
 648 passed. Stage 4: 0 P0 / 0 P1 / 1 P2 (fixed) / 1 P3. Stage 5 verify PASS.
+
+## T080 merged: the Agent Skills contract is discoverable from the README — 2026-08-18
+
+Completes the three-task absorption (T078 wrote the constraints down and enforced them, T079 added
+the craft guidance, T080 makes both findable). `README.md`'s `## Custom Skills` previously opened
+with one sentence about auto-discovery and never said the skills implement an open standard, never
+stated a constraint, and never named the authority — a contributor had no way to learn what makes a
+skill valid here.
+
+Now: an 8-line contract summary (cap was 12) naming the standard, the hard constraints, and the
+optional bundled dirs, pointing at `write-better-skill` for the full rules and at
+`test_skill_spec_conformance.py` with the exact command. **Pointer, not copy** — reproducing the
+spec in a third place is the `Duplication` failure mode `write-better-skill` itself names.
+
+**`CLAUDE.md` needed no edit — a documented no-op.** `write-better-skill` predates T078/T079 and was
+never in the Stage index (it is a craft reference consulted by `teach`, not a stage-invoked skill;
+`teach` is absent from that index too), and the two tasks added reference files and tests but no new
+skill *name*. Recording the no-op with its reasoning is the deliverable there, not an invented edit.
+
+**Unresolved and deliberately not reconciled**: `slim-skills` prunes a `SKILL.md` past **150** lines
+while the spec ceiling is **500**. Different thresholds serving different goals — repo taste vs.
+spec ceiling — and the README now states 500 in a section a `slim-skills` user may also read. Left
+for a human decision; `slim-skills/SKILL.md` untouched.
+
+648 passed. Stage 4: 0 P0 / 0 P1 / 1 P2 (fixed) / 1 P3. Stage 5 `/verify` recorded **N/A with
+justification, explicitly rather than implied** — docs-only, no runtime surface, would return SKIP.
