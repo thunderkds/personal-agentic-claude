@@ -33,8 +33,40 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured 2026-08-18T14:43:40Z, before any implementation commit on `fix/t079-impl`):
+
+*Markdown half* — verbatim prior content of `.claude/skills/write-better-skill/SKILL.md`, the only
+description-craft material the skill carried (lines 23–29). There was no `references/` directory, no
+`## Sourcing` section, and no context pointer anywhere in the file:
+
+```markdown
+### Writing the description
+
+A model-invoked description does two jobs: state what the skill is, and list the **branches** that trigger it. Every word is context load — prune harder than the body.
+
+- **Front-load the leading word** — the description is where it does its invocation work.
+- **One trigger per branch.** Synonyms that rename a single branch are duplication — collapse them.
+- **Cut identity already in the body.** Keep triggers plus any "when another skill needs…" reach clause.
+```
+
+`.claude/skills/teach/SKILL.md` step 4 "Draft the SKILL.md" likewise reached no reference file — its
+description bullet was self-contained:
+
+```markdown
+- **description**: trigger phrasing (model-invoked) or human summary (user-invoked); front-load the leading word; one trigger per branch; no identity prose that belongs in the body.
+```
+
+*Test half* — the hook suite before this task's change (no `test_skill_reference_pointers.py` exists):
+
+```
+$ date -u && python3 -m pytest .claude/hooks/tests/ -q
+Tue Aug 18 02:43:40 PM UTC 2026
+641 passed in 9.70s
+
+$ ls .claude/hooks/tests/test_skill_reference_pointers.py
+ls: cannot access '.claude/hooks/tests/test_skill_reference_pointers.py': No such file or directory
+```
+
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
