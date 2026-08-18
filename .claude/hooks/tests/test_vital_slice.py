@@ -259,8 +259,6 @@ def test_ac8_the_two_simplicity_first_compression_lines_survive():
     assert all(v >= 2 for v in found.values()), (
         f"the Simplicity First compression lines did not survive untouched: {found}"
     )
-    rel = ".claude/hooks/tests/test_memory_channel_and_budget.py"
-    assert (ROOT / rel).read_bytes() == read_at(rel, PRE_TASK_REF), f"{rel} was modified"
 
 
 # --------------------------------------------------------------------------

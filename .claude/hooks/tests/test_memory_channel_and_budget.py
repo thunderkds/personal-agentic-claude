@@ -228,30 +228,47 @@ def test_live_memory_md_is_within_budget_today():
     assert chars <= HOT_TIER_CHAR_BUDGET, hot_tier_entry_report(MEMORY_PATH)
 
 
-def test_ac10_growth_in_chars_without_growth_in_lines_turns_the_gate_red(tmp_path):
-    """THE defect. Under `len(lines) <= 200` this mutation was completely invisible."""
-    copy = _memory_copy(tmp_path)
+def _pad_past_budget(copy: Path) -> tuple[int, int, int, int]:
+    """Pad EXISTING `- [` entry lines, cycling over them, until the budget is
+    breached — independent of the live file's distance to the cap (AC1/AC3).
+    No line is ever added; only existing entry lines are appended to.
+    """
     chars_before, _ = measure_hot_tier(copy)
     lines_before = len(copy.read_text(encoding="utf-8").splitlines())
 
-    # Pad EXISTING entry lines up to (and past) the budget. No line is added.
     pad = " Additional qualifying detail appended to an existing entry, no newline."
     lines = copy.read_text(encoding="utf-8").split("\n")
-    target = HOT_TIER_CHAR_BUDGET - chars_before + 4_000
-    added, i = 0, 0
-    while added < target and i < len(lines):
-        if lines[i].startswith("- ["):
-            lines[i] += pad
-            added += len(pad)
-        i += 1
+    entry_idxs = [i for i, line in enumerate(lines) if line.startswith("- [")]
+    assert entry_idxs, "control failed: no '- [' entry lines to pad — cannot construct a breach"
+
+    added = 0
+    j = 0
+    while chars_before + added <= HOT_TIER_CHAR_BUDGET:
+        idx = entry_idxs[j % len(entry_idxs)]
+        lines[idx] += pad
+        added += len(pad)
+        j += 1
     copy.write_text("\n".join(lines), encoding="utf-8")
 
     chars_after, _ = measure_hot_tier(copy)
     lines_after = len(copy.read_text(encoding="utf-8").splitlines())
+    return chars_before, chars_after, lines_before, lines_after
+
+
+def test_ac10_growth_in_chars_without_growth_in_lines_turns_the_gate_red(tmp_path):
+    """THE defect. Under `len(lines) <= 200` this mutation was completely invisible."""
+    copy = _memory_copy(tmp_path)
+    chars_before, chars_after, lines_before, lines_after = _pad_past_budget(copy)
 
     # The mutation must actually have happened, and must be invisible to lines.
     assert lines_after == lines_before, "the mutation added lines — it is not the AC10 mutation"
     assert chars_after > chars_before, "the mutation added no characters — it is inert"
+    # The mutation must have achieved its actual purpose: breaching the budget.
+    # A mutation that merely "changed something" is not proof it did its job.
+    assert chars_after > HOT_TIER_CHAR_BUDGET, (
+        f"control failed: mutation did not breach the budget "
+        f"({chars_after:,} <= {HOT_TIER_CHAR_BUDGET:,})"
+    )
 
     # The OLD gate's verdict is UNCHANGED by a mutation that adds thousands of
     # characters. That invariance is the defect, stated in a form that does not
@@ -270,6 +287,29 @@ def test_ac10_growth_in_chars_without_growth_in_lines_turns_the_gate_red(tmp_pat
     assert f"{HOT_TIER_CHAR_BUDGET:,}" in message, "failure message must name the budget"
     assert f"{chars_after - HOT_TIER_CHAR_BUDGET:,}" in message, "must name the overage"
     assert "ratchet" in message, "must warn against raising the budget"
+
+
+def test_ac10_turns_red_at_any_live_file_size(tmp_path):
+    """AC3 — size-independence. A tiny synthetic stub must breach and go red
+    the same way the live file does, proving the mutation does not silently
+    depend on how close the real file happens to sit to the cap.
+    """
+    stub = tmp_path / "MEMORY.md"
+    stub.write_text(
+        "- [entry one](a.md) — short.\n"
+        "- [entry two](b.md) — short.\n"
+        "- [entry three](c.md) — short.\n",
+        encoding="utf-8",
+    )
+    chars_before, chars_after, lines_before, lines_after = _pad_past_budget(stub)
+
+    assert lines_after == lines_before
+    assert chars_after > HOT_TIER_CHAR_BUDGET, (
+        f"control failed: tiny-stub mutation did not breach the budget "
+        f"({chars_after:,} <= {HOT_TIER_CHAR_BUDGET:,})"
+    )
+    with pytest.raises(AssertionError):
+        assert_hot_tier_within_budget(stub)
 
 
 def test_ac11_many_short_lines_past_200_stay_green_while_under_budget(tmp_path):
