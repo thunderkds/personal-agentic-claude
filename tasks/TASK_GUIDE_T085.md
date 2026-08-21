@@ -94,7 +94,7 @@ exists and carries it. Removing first would leave the material in neither place.
 ### Verification Command (exact, runnable)
 
 ```bash
-python3 -m pytest tests/test_readme_slim.py -q && python3 -m pytest tests/ -q
+python3 -m pytest tests/test_readme_slim.py -q && python3 -m pytest .claude/hooks/tests/ tests/ -q
 ```
 
 ### Evidence

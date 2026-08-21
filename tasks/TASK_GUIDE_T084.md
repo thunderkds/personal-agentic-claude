@@ -82,7 +82,7 @@
 ### Verification Command (exact, runnable)
 
 ```bash
-python3 -m pytest tests/test_vercel_config.py -q && python3 -m pytest tests/ -q
+python3 -m pytest tests/test_vercel_config.py -q && python3 -m pytest .claude/hooks/tests/ tests/ -q
 ```
 
 ### Evidence

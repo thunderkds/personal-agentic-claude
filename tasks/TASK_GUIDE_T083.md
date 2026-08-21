@@ -104,7 +104,7 @@ user request quoted above, which `PROJECT_SPEC_SITE.md` records as the governing
 ### Verification Command (exact, runnable)
 
 ```bash
-python3 -m pytest tests/test_site_content.py -q && python3 -m pytest tests/ -q
+python3 -m pytest tests/test_site_content.py -q && python3 -m pytest .claude/hooks/tests/ tests/ -q
 ```
 
 ### Evidence (filled by reviewer at Stage 4/5)
