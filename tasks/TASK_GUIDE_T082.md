@@ -136,7 +136,22 @@ python3 -m pytest .claude/hooks/tests/test_untrusted_content_boundary.py .claude
 
 ### Evidence (filled by reviewer at Stage 4/5)
 
-> Filled by the reviewer in `tasks/TASK_REVIEW_T082.md`, copied from `templates/TASK_REVIEW_template.md`.
+> **Moved.** Filled by the reviewer at Stage 4/5 in `tasks/TASK_REVIEW_T082.md`.
+
+---
+
+## Demonstration
+
+> **Moved.** See `tasks/TASK_REVIEW_T082.md`.
+>
+> **BEFORE for this task**: T082 changes no executable code — it ships Markdown plus one new test
+> file. So BEFORE is the **verbatim prior content** of each surface about to change, quoted from the
+> file as it exists right now: the current Base Rules list in `.claude/agents/general-agent-template.md`,
+> the current `Default to **Fix**` sentence at `resolve-pr-feedback/SKILL.md:58`, the current
+> `WebSearch` bullet at `brainstorming/SKILL.md:16`, and the current `## Custom Skills` block in
+> `README.md`. Capture all four before your first implementation commit. There is no `N/A` path.
+>
+> **AFTER**: the same four quoted post-change, plus the passing output of the Verification Command.
 
 ---
 
