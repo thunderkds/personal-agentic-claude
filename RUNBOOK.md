@@ -89,6 +89,59 @@ Ordered steps to ship a release. Commands copy-pasteable.
 
 ---
 
+## Deploying the landing site
+
+Separate from the harness's own release above: this deploys `site/index.html` (the public marketing
+page) to Vercel. Config lives in `vercel.json` at the repo root; it declares `site` as the
+**output directory only** and sets no build/install/framework command — this is a static-file
+deploy, not a framework build.
+
+**Scope of what gets published**: only the contents of `site/` (currently `site/index.html`) are
+served. `vercel.json`'s `outputDirectory` is the one thing standing between this deploy and
+publishing the whole repo root — `memory/`, `tasks/`, `PROJECT_KANBAN*.md` and every other
+project-management file stay off the public URL because they are outside `site/`, not because
+Vercel is trusted to guess correctly.
+
+**This deploy is operator-run.** No agent, hook, or CI workflow triggers any of the commands below.
+The operator runs them by hand from a terminal with the Vercel CLI installed and authenticated.
+
+1. **One-time link** (per machine, per project) — associates this repo with a Vercel project:
+   ```sh
+   vercel link
+   ```
+
+2. **Preview deploy** — ships a throwaway preview URL, does not touch production:
+   ```sh
+   vercel
+   ```
+   Open the printed preview URL and confirm it renders the same content as local `site/index.html`.
+
+3. **Production deploy**:
+   ```sh
+   vercel --prod
+   ```
+
+4. **Verify the deploy served the current page**:
+   ```sh
+   curl -s <production-url> | grep -q "$(grep -m1 '<title>' site/index.html)" && echo "MATCH"
+   ```
+   `MATCH` means the served page contains the same `<title>` as the local file. For a stronger
+   check, diff the full response against `site/index.html` directly.
+
+**Rollback** — promote the previous deployment instead of re-deploying an old commit:
+```sh
+vercel ls                          # list deployments, newest first
+vercel promote <previous-deployment-url>
+```
+This re-points production at the last known-good deployment without a new build. Re-run the step-4
+verification against the production URL afterward.
+
+No Vercel token, project ID, or org ID is stored in this file or in `vercel.json` — the CLI reads
+those from its own local auth state (`vercel login` / `.vercel/` created by `vercel link`, which is
+gitignored).
+
+---
+
 ## Health Checks & Dashboards
 
 | Check | Command / URL | Pass condition |

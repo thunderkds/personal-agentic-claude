@@ -151,8 +151,27 @@ def test_no_external_assets():
     """AC1/AC8: zero network requests. src=/href= must never point at an
     external origin (http://, https://, or protocol-relative //). The
     install command's URL lives in visible text/code content, not in a
-    src=/href= attribute, so it never trips this check."""
+    src=/href= attribute, so it never trips this check.
+
+    T084 (carried over from T083's Stage 4 review): also cover CSS
+    `url(...)`, `@import`, and `<img srcset>` — a future addition through
+    any of those three channels would fetch over the network with only the
+    original src=/href= check still green. The page has none of these
+    today; this closes a latent gap, not a live bug."""
     text = _page_text()
     for attr_match in re.finditer(r'(?:src|href)\s*=\s*"([^"]*)"', text):
         value = attr_match.group(1)
         assert not re.match(r"^(https?:)?//", value), f"external asset reference: {value}"
+
+    for url_match in re.finditer(r'url\(\s*["\']?([^"\')]+)["\']?\s*\)', text):
+        value = url_match.group(1)
+        assert not re.match(r"^(https?:)?//", value), f"external CSS url(): {value}"
+
+    for import_match in re.finditer(r'@import\s+["\']([^"\']+)["\']', text):
+        value = import_match.group(1)
+        assert not re.match(r"^(https?:)?//", value), f"external @import: {value}"
+
+    for srcset_match in re.finditer(r'srcset\s*=\s*"([^"]*)"', text):
+        for candidate in srcset_match.group(1).split(","):
+            url = candidate.strip().split(" ")[0]
+            assert not re.match(r"^(https?:)?//", url), f"external srcset entry: {url}"
