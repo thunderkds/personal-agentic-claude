@@ -57,9 +57,30 @@ $ python3 -m pytest .claude/hooks/tests/ tests/ -q
 688 passed in 9.41s
 ```
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**:
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+`vercel.json` exists and parses:
+```
+$ cat vercel.json
+{
+  "outputDirectory": "site"
+}
+```
 
-**WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
-implementing agent alone]
+`RUNBOOK.md` gains a "Deploying the landing site" section (link/preview/production/verify/rollback,
+operator-run) between the harness's own Deploy Procedure/Rollback Procedure and
+"## Health Checks & Dashboards".
+
+Full-suite regression run, post-change:
+```
+$ python3 -m pytest .claude/hooks/tests/ tests/ -q
+693 passed in 8.45s
+```
+(688 baseline + 5 new `tests/test_vercel_config.py` tests = 693; 0 regressions.)
+
+**DELTA**: An operator can now run `vercel link` / `vercel` / `vercel --prod` from the repo root and
+have Vercel publish only `site/` (not the project's memory/task files), with a written rollback
+(`vercel promote <previous-deployment-url>`) instead of improvising one at incident time.
+
+**WITNESS**: common-infrastructure sub-agent (T084), 2026-08-21 — commands run directly in the
+`wt-t084` worktree; not yet independently re-run by the Supervisor/reviewer.
