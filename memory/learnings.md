@@ -1293,3 +1293,154 @@ CLAUDE.md rules), run the payload against the pre-change tree too. Without a con
 only proves the model behaves well, not that the change caused it. Expect this often: modern models
 already refuse blatant attacks, so the honest claim is usually "made the rule explicit and
 auditable", not "made the agent safe".
+
+## A false Stage 4 finding is as expensive as a missed one — verify the mutation, not just the result
+
+**Date:** 2026-08-21 · **Task:** T083
+
+The Supervisor's first Stage 4 pass on T083 reported mutation control M2 as non-reproducible: the
+implementer had claimed `AssertionError: step limit 90 ... not found on page`, and re-running it
+appeared to leave the suite green. Reading that as the 7th "a checkmark is a claim, not a fact"
+incident, the Supervisor raised a P1 and began rewriting the assertion to anchor it near the hook
+name.
+
+**The finding was wrong.** The page reads `default <strong>90</strong>`; the Supervisor's
+`sed 's/default 90/default 40/'` matched nothing and mutated zero bytes. The test never had a chance
+to fail. The implementer's evidence was accurate.
+
+**The generalisable rule:** when a mutation control does not go RED, the first hypothesis must be
+*"my mutation didn't land"*, not *"the test is vacuous"* — confirm the bytes actually changed
+(`git diff`, or grep the mutated string back) before drawing any conclusion about the assertion.
+A no-op mutation and a vacuous assertion produce **identical** observable output — a green suite —
+so the green result alone cannot distinguish them.
+
+This repo has trained hard on the vacuous-assertion family (T036/T042/T039 and six more), and that
+prior is strong enough to fire on a null result. The cost is real: it produced a false P1, and the
+"fix" was a speculative rewrite of a working test that had to be reverted once the mutation was
+re-run correctly. Suspicion is not evidence in either direction.
+
+## The merge gate does not know about a second Kanban board
+
+**Date:** 2026-08-21 · **Task:** T083
+
+`pre_bash_block_unsafe_merge.py` reads `PROJECT_KANBAN.md` by name. T083 introduced a second board,
+`PROJECT_KANBAN_SITE.md`, per Hard-Stop Gate 4 — and the merge of T083 was **not gated by it**: the
+hook saw only the harness board, where nothing was In Progress, and allowed the merge. The gate was
+satisfied for the wrong reason.
+
+Not fixed here (out of T083's scope, and the merge was independently verified). Recorded because
+Gate 4 and the merge gate now disagree about how many boards exist, and the next multi-board project
+will hit this silently. Any fix must glob `PROJECT_KANBAN*.md` rather than name one file.
+
+## `pytest tests/ -q` does not run this repo's test suite
+
+**Date:** 2026-08-21 · **Task:** T083
+
+The harness suite lives in `.claude/hooks/tests/` (30 files, 680 tests). `tests/` at the repo root
+holds shell scripts and little else. Because `.claude` is a hidden directory, **bare pytest does not
+collect it**: `python3 -m pytest tests/ -q` reports `8 passed` and `python3 -m pytest -q` from the
+repo root reports the same. The real command is:
+
+```
+python3 -m pytest .claude/hooks/tests/ tests/ -q    # 688 passed
+```
+
+The Supervisor wrote the short form into three Stage 2 TASK_GUIDEs as the Verification Command. An
+agent following it verbatim would have reported a green suite having run **zero** regression tests,
+and the number would have looked plausible. Corrected in T083/T084/T085. Use the explicit two-path
+form in every future guide.
+
+## "Published" and "uploaded" are different questions — a deploy config answers only the first
+
+**Date:** 2026-08-21 · **Task:** T084
+
+`vercel.json`'s `outputDirectory: "site"` correctly scopes what Vercel **serves**. The implementer
+reasoned from that to "`memory/`, `tasks/` and `PROJECT_KANBAN*.md` are never in the published
+output" — true, and it still left a hole, because the Vercel CLI **uploads the project source tree**
+to its build infrastructure on every deploy regardless of what is later served. This repo's project
+memory (decisions, learnings, event traces) and every TASK_GUIDE would have left the machine on every
+`vercel` invocation and been retained by a third party.
+
+Nothing about it is visible at a public URL, so neither the config, the tests, nor the runbook's own
+"scope of what gets published" paragraph surfaced it. **For any deploy/publish integration, ask both
+questions separately: what does this serve, and what does this transmit?**
+
+Fixed with `.vercelignore` as an **allowlist** — bare `*`, then re-admit only `site/` and
+`vercel.json`. A denylist enumerating `memory/`, `tasks/`, `docs/` was rejected: it fails open the
+first time anyone adds a directory, which is the same fail-open shape as the documentation drift the
+whole v1-site release exists to fix. Prefer deny-all-then-admit wherever the cost of a miss is
+exfiltration rather than breakage.
+
+## `.vercelignore`/`.gitignore`: `!dir/` must precede `!dir/**` or the negation is silently inert
+
+**Date:** 2026-08-21 · **Task:** T084
+
+Git cannot re-include a file whose **parent directory** is excluded. In an allowlist that opens with
+a bare `*`, the `site` directory itself is excluded, so a lone `!site/**` matches nothing and the
+deploy uploads **zero** files — a silent, total failure that looks like a working config. The working
+form re-admits the directory first:
+
+```
+*
+!site/
+!site/**
+!vercel.json
+```
+
+The two `!site` lines look redundant and will invite deletion. Verified with the real matcher
+(`git check-ignore` against a scratch tree), not by reading the spec: exactly `site/index.html` and
+`vercel.json` survive; `memory/`, `tasks/`, `docs/`, `PROJECT_KANBAN.md`, `.claude/hooks/` and `.env`
+are all excluded, and new files added under `site/` are admitted automatically.
+
+## A relative link to an .html file is inert on GitHub
+
+**Date:** 2026-08-21 · **Tasks:** T085 / T087
+
+The slimmed `README.md` points at the reference site three times as `[site](site/index.html)`.
+**GitHub does not render HTML files** — a visitor who clicks that gets syntax-highlighted source.
+The entire "the full reference lives on the site" strategy therefore delivers nothing to a GitHub
+reader until the operator deploys and pastes the real URL in.
+
+This is worse than an absent link, because it looks live. It also converts the deploy from a
+follow-up into a **release blocker**: the README was slimmed on the promise that the site carries the
+rest, and that promise is unfulfillable from GitHub until a real hostname exists.
+
+Generalises: whenever documentation is moved out of a rendered surface into a static file in the same
+repo, check that the *pointer* survives the move, not just the content.
+
+## Two cut lists written by the same author can still disagree
+
+**Date:** 2026-08-21 · **Tasks:** T083 / T085 / T087
+
+T083's cut list deliberately dropped the pack matrix from the site ("keep v1 to the four rosters").
+T085's cut list moved the pack matrix *to* the site. Both were written by the Supervisor, in the same
+Stage 2 pass, and neither was checked against the other. Result: the README shipped pointing at ~400
+lines of content that existed nowhere, and it took a Stage 4 review of the *second* task to notice.
+
+The `Cut list` field is per-task by design, which is what let two of them contradict. **When one
+task's cut list names another task as the new home for content, that is a cross-task dependency and
+has to be verified against that task's cut list, not assumed.** The implementing agent's AC3 report
+compounded it by asserting the content was "confirmed present" after spot-checking one table and
+generalising — a real reporting defect, but the gap was designed in before any agent ran.
+
+Fixed by T087, whose load-bearing part is not the recovered content but the assertion that every
+topic the README promises is present on the page.
+
+## Verify a documented *behaviour* by running it, not by re-reading the source
+
+**Date:** 2026-08-21 · **Task:** T085
+
+T085's whole point was correcting two false statements about hook behaviour. The tempting
+verification is to re-read the hooks and confirm the sentences match — that is code review, and it
+was already done at Stage 4. The `/verify` pass instead **ran both hooks against real payloads**:
+
+- `post_agent_move_to_review.py` fed an Agent payload, with `PROJECT_KANBAN.md` md5'd either side:
+  identical hash, zero counter files created. The "deliberately inert" claim is true of the running
+  hook, not just its docstring.
+- `pre_agent_step_limit.py` driven in a loop under an isolated session id, **with `CLAUDE_STEP_LIMIT`
+  deliberately unset** so a stale env var could not supply someone else's number: 90 allowed, first
+  block on call #91, self-clearing visible in the same capture.
+
+The second one is the point: reading `"90"` out of the source proves the literal, not the boundary.
+Running it proves there is no off-by-one — which was the plausible failure and would have survived
+every documentation-level check.
