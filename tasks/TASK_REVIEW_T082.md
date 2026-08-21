@@ -1,4 +1,4 @@
-# TASK_REVIEW — T082: [Short Title]
+# TASK_REVIEW — T082: Untrusted-content trust boundary for agent instruction channels
 
 > Sibling of `tasks/TASK_GUIDE_T082.md`. Everything here is **filled by the reviewer at Stage
 > 4/5** — it is deliberately NOT in the guide, because the implementing agent re-reads the guide on
@@ -17,7 +17,7 @@
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_untrusted_content_boundary.py` (new, 31 tests: existence, wiring, headings, line budget, pointer-not-copy) |
 | Verification command run | ☑ pass | `python3 -m pytest .claude/hooks/tests/test_untrusted_content_boundary.py .claude/hooks/tests/test_skill_spec_conformance.py -q` → `221 passed in 0.14s` |
 | Negative cases hold | ☑ pass | 3 mandatory mutation controls (SC2–SC4) all went RED naming the specific break, then reverted to green — see below |
-| verify | ☐ N/A | Not yet run — user-invoked only per Memory Write Protocol / common-infrastructure agent guide; requested at Stage 5 |
+| verify | ☑ pass | User-run `/verify` 2026-08-21 → **PASS**. Surface is the agent itself; drove a real `common-infrastructure` agent against injected PR-comment payloads on both the wired and unwired trees. Full record in the Stage 5 section below, including the two findings it surfaced. |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Reviewed: the 4 predicted wiring files, the new reference doc, the new test file, and `.claude/hooks/tests/test_agent_guide_dedup.py` (unavoidably touched — see notes below). Skipped: unrelated skills/agents/hooks not in the change set. |
 | Full smoke suite still green (no regression) | ☑ pass | `python3 -m pytest .claude/hooks/tests -q` → `680 passed in 9.52s` (baseline was 649; +31 from the new T082 test file, 0 regressions) |
 | **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | Pure-documentation task, no UI component |
