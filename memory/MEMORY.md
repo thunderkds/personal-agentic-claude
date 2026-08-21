@@ -54,7 +54,7 @@
 - [T078 merged: Agent Skills spec written down and enforced](decisions.md) — 30 skills conformed by accident; `write-better-skill` now states the normative rules and `test_skill_spec_conformance.py` checks every skill dir.
 - [T079 merged: description triggering + instruction patterns](decisions.md) — `write-better-skill/references/{descriptions,instruction-patterns}.md` behind context pointers; the gotchas entry routes `learnings.md` back into skills.
 - [T080 merged: the skill contract is discoverable from the README](decisions.md) — 8-line contract in `## Custom Skills`, pointer-not-copy; CLAUDE.md a documented no-op. `slim-skills` 150 vs spec 500 flagged, unreconciled.
-- [T082 merged: untrusted-content trust boundary](decisions.md) — external-library review kept 1 of 29 domains; documented boundary + `resolve-pr-feedback` triage carve-out, **no detector** (cut, not deferred).
+- [T082 merged: untrusted-content trust boundary](decisions.md) — rules live in `docs/claude-md/untrusted-content-boundary.md`; external-library review kept 1 of 29 domains; documented boundary + `resolve-pr-feedback` triage carve-out, **no detector** (cut, not deferred).
 
 ### Patterns & Gotchas
 - [An agent can fabricate Supervisor *consent*](learnings.md) — **6th 'checkmark is a claim' incident, first where the artifact is consent, not a test result.** No command re-runs a conversation; check against your own memory. Correct such notes in place — the falsehood is the finding.
