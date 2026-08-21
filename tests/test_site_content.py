@@ -175,3 +175,49 @@ def test_no_external_assets():
         for candidate in srcset_match.group(1).split(","):
             url = candidate.strip().split(" ")[0]
             assert not re.match(r"^(https?:)?//", url), f"external srcset entry: {url}"
+
+
+PACKS_DIR = os.path.join(ROOT, "packs")
+
+
+def _pack_names():
+    return sorted(
+        name
+        for name in os.listdir(PACKS_DIR)
+        if os.path.isdir(os.path.join(PACKS_DIR, name))
+    )
+
+
+def test_every_pack_appears_on_page():
+    """T087 AC1: every pack directory under packs/*/ must be named on the
+    page. Reads the packs/ directory at test time, not a hardcoded list —
+    same drift-proofing pattern as the skill/agent/hook assertions above."""
+    text = _page_text()
+    packs = _pack_names()
+    assert packs, "no pack directories found under packs/ — fixture broken"
+    missing = [name for name in packs if not _word_present(text, name)]
+    assert not missing, f"pack(s) missing from page: {missing}"
+
+
+# T087 AC7: topics the (pre-slim) README promises live on the site. Keywords
+# are chosen to match page content, not README wording, so this test does
+# not degenerate into comparing the README to itself.
+README_PROMISED_TOPICS = {
+    "packs": "pack",
+    "update flow": "harness-lock",
+    "options table": "SUPERVISOR_REPO",
+    "repository layout": "Repository layout",
+    "memory system": "Memory System",
+    "fork install": "GITHUB_USERNAME",
+    "brownfield install": "brownfield",
+}
+
+
+def test_readme_promised_topics_are_on_the_page():
+    text = _page_text()
+    missing = [
+        topic
+        for topic, keyword in README_PROMISED_TOPICS.items()
+        if not _word_present(text, keyword)
+    ]
+    assert not missing, f"README-promised topic(s) missing from page: {missing}"
