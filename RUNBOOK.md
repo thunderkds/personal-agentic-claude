@@ -102,6 +102,16 @@ publishing the whole repo root — `memory/`, `tasks/`, `PROJECT_KANBAN*.md` and
 project-management file stay off the public URL because they are outside `site/`, not because
 Vercel is trusted to guess correctly.
 
+**Scope of what gets uploaded is a separate question, and `outputDirectory` does not answer it.**
+The Vercel CLI transmits the project source tree to Vercel's build infrastructure on every deploy;
+`outputDirectory` governs only what is *served* from the result. Without `.vercelignore`, this
+repo's `memory/` (project decisions, learnings, event traces), `tasks/`, and `docs/` would be sent
+to a third party and retained there on every `vercel` invocation — never at a public URL, but off
+this machine all the same. `.vercelignore` is therefore an **allowlist**: it denies everything with
+a bare `*` and re-admits only `site/` and `vercel.json`. A denylist was rejected because it fails
+open the first time anyone adds a directory. `tests/test_vercel_config.py` asserts the allowlist
+form and asserts that `memory/`, `tasks/`, `docs/`, and `PROJECT_KANBAN*` are never re-admitted.
+
 **This deploy is operator-run.** No agent, hook, or CI workflow triggers any of the commands below.
 The operator runs them by hand from a terminal with the Vercel CLI installed and authenticated.
 

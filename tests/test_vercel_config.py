@@ -55,3 +55,38 @@ def test_no_framework_install_or_node_version_keys():
     config = _load_config()
     for key in ("framework", "installCommand", "nodeVersion", "devCommand"):
         assert key not in config, f"static-file deploy must not set '{key}'"
+
+
+VERCELIGNORE = os.path.join(ROOT, ".vercelignore")
+
+
+def test_vercelignore_is_an_allowlist():
+    """`outputDirectory` scopes what Vercel *serves*, not what the CLI *uploads* —
+    the source tree is transmitted to Vercel's build infrastructure on every
+    deploy. A denylist fails open the first time someone adds a directory, so
+    require the deny-everything-then-admit form."""
+    assert os.path.exists(VERCELIGNORE), (
+        ".vercelignore missing — without it the whole repo source, including "
+        "memory/ and tasks/, is uploaded to Vercel on every deploy"
+    )
+    with open(VERCELIGNORE, encoding="utf-8") as f:
+        lines = [ln.strip() for ln in f if ln.strip() and not ln.startswith("#")]
+    assert lines and lines[0] == "*", (
+        f".vercelignore must start with a bare `*` (deny all) before its "
+        f"negations; first rule is {lines[0]!r}"
+    )
+    assert "!site/" in lines or "!site/**" in lines, (
+        ".vercelignore denies everything but never re-admits site/ — the deploy "
+        "would upload nothing"
+    )
+
+
+def test_sensitive_dirs_not_admitted_by_vercelignore():
+    """memory/ and tasks/ must never appear as a negation."""
+    with open(VERCELIGNORE, encoding="utf-8") as f:
+        text = f.read()
+    for leaked in ("!memory", "!tasks", "!docs", "!PROJECT_KANBAN"):
+        assert leaked not in text, (
+            f".vercelignore re-admits {leaked[1:]!r} — that path would be "
+            f"uploaded to Vercel on every deploy"
+        )
