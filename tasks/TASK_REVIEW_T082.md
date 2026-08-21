@@ -33,8 +33,66 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: T082 changes no executable code. Verbatim prior content of the four surfaces named in
+the guide's Demonstration section, quoted as they existed on `fix/t082-impl` before any T082
+implementation commit:
+
+1. `.claude/agents/general-agent-template.md` — Base Rules (lines 14-24):
+   ```
+   ## Base Rules (Inherited by All Sub-Agents)
+
+   - Strictly follow all Karpathy Engineering Principles (compact table in your own role guide - full version with rationale in `CLAUDE.md`, keep both in sync on edit)
+   - Never assume context — always derive it from the startup reads your role guide lists. In
+     particular, **read `memory/MEMORY.md` yourself**: the spawn prompt gives you its path, not its
+     contents, so nothing loads it for you
+   - Communicate clearly with the Supervisor and other agents
+   - Update the Memory/Insights section of `PROJECT_SPEC.md` with key learnings after task completion
+   - Pause and ask the Supervisor if any ambiguity or error occurs
+   - Work only inside the assigned git worktree
+   - Surgical changes only — touch no code outside the task scope
+   ```
+
+2. `.claude/skills/resolve-pr-feedback/SKILL.md` — triage step (lines 47-62), including the
+   `Default to **Fix**` sentence at line 58:
+   ```
+   #### Phase 2 — Triage
+
+   For each thread, classify into one of four buckets:
+
+   | Bucket | Criteria | Action |
+   |---|---|---|
+   | **Fix** | Valid finding; code change is clear and safe | Implement fix |
+   | **Discuss** | Finding is invalid, based on a misread, or factually wrong | Reply with explanation; do not change code |
+   | **Human judgment** | Decision requires business context the reviewer can't have | Reply asking the Supervisor or user to decide; flag for human |
+   | **Question** | Reviewer is asking, not requesting a change | Reply with answer; no code change |
+
+   Default to **Fix** when the comment is a nitpick or style suggestion — most review feedback is correct and worth addressing.
+
+   Record the triage decision for every thread before writing a single line of code.
+
+   Completion criterion: every thread assigned a bucket; triage table complete.
+   ```
+
+3. `.claude/skills/brainstorming/SKILL.md` — `WebSearch` bullet (line 16):
+   ```
+   - **Alternative Path Generation**: Research and propose modern best practices (use `WebSearch` when comparing stack choices or architectural patterns) and compare them.
+   ```
+
+4. `README.md` — `## Custom Skills` block (lines 329-339), current opening:
+   ```
+   ## Custom Skills
+
+   All skills live in `.claude/skills/<name>/SKILL.md` and are auto-discovered by Claude Code. Invoke any skill via `Skill({ skill: "<name>" })` or the `/name` slash command.
+
+   This repo's skills implement the open [Agent Skills specification](https://agentskills.io). A conforming `SKILL.md` must satisfy:
+   - `name`: lowercase alphanumeric + hyphens only, matching the parent directory
+   - `description`: non-empty, ≤1024 characters
+   - length: ≤500 lines, counted over the whole file including frontmatter
+   - optional `scripts/`, `references/`, `assets/` directories, loaded on demand
+
+   `write-better-skill` is the in-repo authority for the full rules and the reasoning behind them; do not re-derive them here. Checked automatically by `.claude/hooks/tests/test_skill_spec_conformance.py`, run via `python3 -m pytest .claude/hooks/tests/test_skill_spec_conformance.py`.
+   ```
+   (No `### External security reporting` block exists anywhere in `README.md` prior to this task.)
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
