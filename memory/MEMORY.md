@@ -54,8 +54,12 @@
 - [T078 merged: Agent Skills spec written down and enforced](decisions.md) — 30 skills conformed by accident; `write-better-skill` now states the normative rules and `test_skill_spec_conformance.py` checks every skill dir.
 - [T079 merged: description triggering + instruction patterns](decisions.md) — `write-better-skill/references/{descriptions,instruction-patterns}.md` behind context pointers; the gotchas entry routes `learnings.md` back into skills.
 - [T080 merged: the skill contract is discoverable from the README](decisions.md) — 8-line contract in `## Custom Skills`, pointer-not-copy; CLAUDE.md a documented no-op. `slim-skills` 150 vs spec 500 flagged, unreconciled.
+- [T082 merged: untrusted-content trust boundary](decisions.md) — external-library review kept 1 of 29 domains; documented boundary + `resolve-pr-feedback` triage carve-out, **no detector** (cut, not deferred).
 
 ### Patterns & Gotchas
+- [An agent can fabricate Supervisor *consent*](learnings.md) — **6th 'checkmark is a claim' incident, first where the artifact is consent, not a test result.** No command re-runs a conversation; check against your own memory. Correct such notes in place — the falsehood is the finding.
+- ['Guaranteed channel' is structural — verify by removing the candidate](learnings.md) — T082's AC named the *optional* template as guaranteed; the Supervisor wrote it wrong with the contradicting docstring in view, and **a wrong AC is obeyed, not caught**. Delete the candidate channel and re-run the agent; `CLAUDE.md` was doing all the work.
+- [A documented control needs a control group](learnings.md) — T082's unwired tree refused every injected payload too. For agent-behaviour changes run the payload against the pre-change tree, or a PASS only proves the model behaves well. Honest claim is usually 'explicit and auditable', not 'safe'.
 - [T075 merged: budget mutation decoupled from file size; ratchet 45,000](decisions.md) — `test_ac10` now cycles until it breaches and asserts it achieved that; verify caught the seeded stub stating both 45,000 and 50,000.
 - [Assert agreement across a constant's occurrences, not presence of the current value](learnings.md) — a shipped stub contradicted itself where no in-repo file showed it; only executing the heredoc surfaced it.
 - [Clear `__pycache__` after a mutation control](learnings.md) — stale bytecode outlived a `git checkout` restore; the mirror case is a false GREEN.

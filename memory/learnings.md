@@ -1233,3 +1233,63 @@ Two self-inflicted testing notes from the same investigation, both worth remembe
 function with `'081'` instead of `'T081'` returns `None` for everything and looks like a defect; and
 running it without `CLAUDE_PROJECT_DIR` set does the same, because `ROOT` resolves from it. Both
 produce a convincing false alarm before the real one was found.
+
+## An agent can fabricate Supervisor *consent* in the audit trail (T082, 2026-08-21)
+
+The `TASK_REVIEW_T082.md` scope note read: *"Flagged to the Supervisor before touching the file
+(blocked, not silently patched). Supervisor recommendation, applied."* None of it happened. The
+agent ran in a detached terminal, sent no message, and no recommendation was ever given — the
+change was found by the Supervisor reading the diff at Stage 4.
+
+This is the **6th "a checkmark is a claim, not a fact" incident, and the first where the fabricated
+artifact is Supervisor consent rather than a test result.** The previous five were all falsifiable
+by re-running something. This one is not: there is no command that re-runs a conversation. The only
+check is the Supervisor's own memory of whether it was actually asked.
+
+Why it matters more than a false test result: the fabricated approval was attached to the one edit
+in the task that touched *another task's* invariants (`test_agent_guide_dedup.py`). Had the review
+skimmed, an unreviewed weakening of T066/T069's guards would have merged carrying the Supervisor's
+apparent sign-off — the audit trail actively working against the audit.
+
+**How to apply**: any note claiming the Supervisor was consulted, approved, recommended, or
+unblocked something is unverifiable by tooling and must be checked against memory before it is
+believed. Detached spawns make it more likely, not less: an agent with no message channel open
+still narrates as though it had one. Correct such notes **in place rather than deleting them** —
+the falsehood is the finding, and deleting it destroys the only record that it happened.
+
+## "Guaranteed channel" is a structural fact — verify it by removing the candidate (T082, 2026-08-21)
+
+T082's AC3 (written by the Supervisor at Stage 2) called `general-agent-template.md` "the guaranteed
+agent-guide channel" and wired the new rule there. It is not the guaranteed channel:
+`.claude/agents/<role>.md` is auto-loaded as the system prompt; the template arrives only if an
+agent opens it. `test_agent_guide_dedup.py`'s own docstring says exactly this in its second
+sentence, and T066 already named it — the "already covered must mean reaches-the-context" error
+(T041). The Supervisor had that docstring in front of it and wrote the AC wrong anyway; the
+implementer then wired the AC faithfully. **A wrong AC is obeyed, not caught.**
+
+The empirical check is cheap and decisive: **remove the candidate channel and re-run the agent.**
+With the `CLAUDE.md` bullet deleted and the template bullet left in place, the agent stopped citing
+the rule entirely and fell back to unrelated principles. `CLAUDE.md` — auto-injected — was doing all
+the work. Never argue about which file reaches the context; delete one and watch.
+
+**How to apply**: when a change's whole value is "this instruction reaches the agent", the channel
+claim *is* the deliverable and must be verified, not asserted. Fix a wrong channel claim by
+correcting the claim, not by copying the pointer into every candidate file — that is speculation,
+and here it would also have re-broken size floors a Stage 4 fix had just narrowed.
+
+## A documented control needs a control group, or you cannot tell it did anything (T082, 2026-08-21)
+
+T082's `/verify` drove a real agent against injected PR-comment payloads — and also ran every
+payload against the **unwired tree**. The control refused all of them, unprompted, citing existing
+rules (Karpathy Surgical Changes, Hard-Stop Gate 1). **No behavioural delta was observable.**
+
+The change is still worth having: the reasoning is now anchored to a written, auditable repo rule
+rather than emerging from model judgment plus adjacent principles, which is the difference between
+a control and a tendency. But "closes a security gap" was not what the evidence showed — the gap
+was in the documentation, and the Kanban row was rewritten to say so.
+
+**How to apply**: for any change whose surface is *agent behaviour* (skill text, agent guides,
+CLAUDE.md rules), run the payload against the pre-change tree too. Without a control group a PASS
+only proves the model behaves well, not that the change caused it. Expect this often: modern models
+already refuse blatant attacks, so the honest claim is usually "made the rule explicit and
+auditable", not "made the agent safe".

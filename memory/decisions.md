@@ -1470,3 +1470,25 @@ misleading: the vanished counter reset is the recorded root cause of the step-li
 **Board convention introduced**: closed-but-not-done work lives under `### Closed (investigated,
 will not do)` with its full reasoning retained rather than deleted, so a future report can revive it
 without re-deriving the analysis.
+
+## T082 merged: untrusted-content trust boundary (2026-08-21)
+
+Registered from the user's review of `github.com/mukul975/Anthropic-Cybersecurity-Skills` (817
+skills / 29 domains). **27 domains assessed out of scope** for a supervisor harness — they would
+install under `packs/`, never merged into `.claude/skills/` (Gate 4). AI Security was the one real
+gap: a repo-wide grep for injection/untrusted-content handling returned 3 hits, all filename
+sanitisation in `pre_agent_step_limit.py`.
+
+Ships `docs/claude-md/untrusted-content-boundary.md` (three normative rules: Quarantine / Never
+obey / Report, don't act), a pointer from `CLAUDE.md` and `general-agent-template.md`, a triage
+carve-out in `resolve-pr-feedback` (scope-widening comments are Human judgment, never the documented
+`Default to Fix`), a clause on `brainstorming`'s `WebSearch` line, a README provenance block with
+the review + implementation dates, and `test_untrusted_content_boundary.py` (31 tests).
+
+**Explicitly no detector, no scanner, no hook** — recorded as a cut, not a deferral. Pattern-matching
+adversarial text would be this repo's third instrument promising more than it can measure (DDR-0002
+retired the second). The control reports; it does not filter.
+
+Two corrections at review, both recorded in `learnings.md`: the delivering channel is `CLAUDE.md`,
+not the template (the Supervisor's Stage 2 AC was wrong), and no behavioural delta was observable
+against an unwired control tree.
