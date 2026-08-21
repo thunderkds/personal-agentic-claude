@@ -17,7 +17,7 @@
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_site_content.py` (8 tests, covers AC2/3/4/5/7 per the drift constraint; written and observed RED before `site/index.html` existed) |
 | Verification command run | ☑ pass | `python3 -m pytest tests/test_site_content.py -q` → `8 passed in 0.02s`; `python3 -m pytest .claude/hooks/tests tests/ -q` → `688 passed in 9.08s` (baseline 680 + 8 new, 0 regressions) |
 | Negative cases hold | ☑ pass | Mutation controls M1/M2/M3 all observed RED with the exact failing assertion (pasted below), then reverted; suite re-confirmed 688 passed after revert |
-| verify | ☐ N/A | user-run only per role guide; not run by the implementing agent |
+| verify | ☑ PASS | User-run `/verify` 2026-08-21, driven by the Supervisor. Surface: the page served over `python3 -m http.server` on 127.0.0.1:8731 (as Vercel will serve it), driven in headless `google-chrome` at 1280/375px. Zero-network claim verified from the **server access log**, not from the markup: only `GET / 200` ×3 plus `GET /favicon.ico 404` ×2 — no CSS, font, image or script fetch; `grep -c '<script'` = 0. Hook table scrolls inside its own container at 375px, body never scrolls sideways. Install command byte-identical to canonical (md5 match). Both corrected hook facts render as intended. **PASS with 4 findings, none blocking** — see below. |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Reviewed only `site/index.html`, `tests/test_site_content.py`, `tasks/TASK_REVIEW_T083.md` — the 3 predicted files from the guide's Files to Change table. Did not touch/edit `README.md`, `.claude/skills/**`, `.claude/agents/**`, `.claude/settings.json`, `vercel.json`, or any Kanban file (Files Must NOT Touch) |
 | Full smoke suite still green (no regression) | ☑ pass | `688 passed in 9.08s` post-implementation and again post-mutation-revert (688 passed in 9.81s); baseline was 680 passed |
 | **UI: Visual regression (diff or verdict pasted)** | ☑ pass | Baseline capture (no prior snapshot exists — first version, per the guide). Screenshots taken via headless `google-chrome` at 375/768/1280px, saved to scratchpad. LLM-vision review of all three: header, "What you get", "Agent roles" (4 spawnable cards + `general-agent-template` marked "not a spawnable role"), "Skills (30)" (8 stage groups incl. Cross-cutting), "Hooks" table (8 rows, BLOCKS/ADVISES/INERT tags, step-limit=90 and inert-hook facts both visible), and "Install" section (curl command, restart note, update command) all render in order, fully readable, no overlapping/clipped text |
@@ -78,3 +78,42 @@ of 90), and the exact install/update commands — with the roster content enforc
 before implementation, the GREEN suite after, all three mutation controls (M1/M2/M3, each observed
 RED then reverted), and the full regression suite (`.claude/hooks/tests tests/`, 680 → 688, 0
 regressions) directly via Bash in this session.
+
+
+---
+
+## Stage 5 `/verify` findings (2026-08-21, user-run)
+
+Recorded here rather than only in conversation — these are observations about the shipped page that
+no test covers, and they are the reason the verdict is "PASS with findings" and not a bare PASS.
+
+1. **⚠️ Mobile: the install command is truncated.** At 375px the page's primary call to action renders
+   as `curl -fsSL https://raw.githubusercontent` and requires horizontal scrolling inside the code
+   block to read or select. The string is correct and selectable; the friction is that a first-time
+   phone visitor meets a cut-off command with no copy button. Highest-value available fix.
+2. **⚠️ Mobile: the hook table's `Behavior` column is off-screen.** That column carries the two
+   corrected facts (inert / default 90) that AC5 exists to publish, so a mobile reader must scroll
+   sideways to reach them. Stacking the table to cards under 480px would resolve both this and (1).
+3. **Two `GET /favicon.ico → 404` per load.** No favicon ships. Harmless, but it is a 404 in the logs
+   of a page that otherwise makes zero requests, and a blank tab icon on a v1 release.
+4. **Desktop measure is inconsistent.** `body` caps at `960px` but `section` at `72ch` (~640px), so the
+   hero card spans the full container while every section below stops ~290px short of it. Legible and
+   arguably a deliberate reading measure, but the hero visibly overhangs. Author's call.
+
+Tracked forward as **T086**, not fixed in T083 — the page passes its acceptance criteria as written,
+and (1)/(2) are a responsive-layout change with its own visual evidence requirement rather than a
+correction to what T083 delivered.
+
+## Stage 4 note — the P1 belonged to the Supervisor, not the implementer
+
+The Stage 2 Verification Command (`python3 -m pytest tests/ -q`) collected **8** tests, not 688: the
+harness suite lives in `.claude/hooks/tests/`, which bare pytest does not collect because `.claude` is
+hidden. An agent following the guide verbatim would have reported a green suite having run zero
+regression tests. Corrected in the T083/T084/T085 guides.
+
+Also recorded, because the opposite error is the one this repo keeps making: the Supervisor's first
+Stage 4 pass reported mutation control M2 as **non-reproducible** and began rewriting the assertion
+around that. It was wrong — the page reads `default <strong>90</strong>`, so the Supervisor's
+`sed 's/default 90/default 40/'` matched nothing and mutated no bytes. The implementer's M2 evidence
+was accurate. All three controls were subsequently reproduced RED independently. The rewrite was
+reverted rather than kept, since the finding justifying it had evaporated.
