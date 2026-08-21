@@ -38,7 +38,7 @@ Select when the project delivers a native or cross-platform mobile application. 
 Selected automatically during interactive `setup.sh`. To add to an existing install:
 
 ```sh
-sh ~/.supervisor/setup.sh --pack mobile
+sh ~/.supervisor/setup.sh --pack=mobile
 ```
 
 ---

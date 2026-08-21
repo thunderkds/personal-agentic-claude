@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="no-js">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>personal-agentic-claude — multi-agent supervisor kit for Claude Code</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230a0a12'/%3E%3Cpath d='M8 23 L16 9 L24 23' fill='none' stroke='%2300d4ff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<script>document.documentElement.className = "js";</script>
 <style>
   :root {
     --bg:        #0a0a12;
@@ -20,26 +22,92 @@
     --green-dim: rgba(0,255,136,.12);
     --amber-dim: rgba(255,184,0,.12);
     --purple-dim: rgba(168,85,247,.12);
+
+    --sidebar-w: 15rem;
+    --measure:   72ch;
   }
 
   * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    max-width: 960px;
-    margin: 2rem auto;
-    padding: 0 1rem;
+    margin: 0;
     color: var(--text);
     background: var(--bg);
     line-height: 1.6;
+    overflow-x: hidden;
   }
+
+  /* ---- shell ------------------------------------------------------- */
+  .layout {
+    display: grid;
+    grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+    gap: 2.5rem;
+    max-width: 78rem;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+  .content { min-width: 0; max-width: var(--measure); padding: 2rem 0 0; }
+
+  /* ---- sidebar ----------------------------------------------------- */
+  .sidebar {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    max-height: 100vh;
+    overflow-y: auto;
+    padding: 2rem .5rem 2rem 0;
+  }
+  .sidebar .brand {
+    display: block; color: #fff; font-weight: 700; font-size: .95rem;
+    text-decoration: none; margin-bottom: .35rem; word-break: break-word;
+  }
+  .sidebar .brand-sub { color: var(--muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; margin: 0 0 1.25rem; }
+  .nav-group-title {
+    color: var(--muted); font-size: .68rem; text-transform: uppercase;
+    letter-spacing: .08em; font-weight: 700; margin: 1.1rem 0 .35rem;
+  }
+  .sidebar ul { list-style: none; margin: 0; padding: 0; }
+  .sidebar li { margin: 0; }
+  .sidebar a {
+    display: block; padding: .3rem .6rem; border-left: 2px solid var(--border);
+    color: var(--muted); text-decoration: none; font-size: .87rem; border-radius: 0 4px 4px 0;
+  }
+  .sidebar a:hover { color: var(--text); background: var(--surface); }
+  .sidebar a.active {
+    color: var(--cyan); background: var(--cyan-dim);
+    border-left-color: var(--cyan); font-weight: 600;
+  }
+  .nav-toggle {
+    display: none;
+    font: inherit; font-size: .85rem; font-weight: 600;
+    background: var(--surface); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: .45rem .8rem; cursor: pointer;
+  }
+  .nav-toggle:hover { border-color: var(--cyan); color: var(--cyan); }
+
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--cyan); outline-offset: 2px;
+  }
+  .skip-link {
+    position: absolute; left: -9999px; top: 0;
+    background: var(--surface); color: var(--cyan);
+    padding: .6rem 1rem; border: 1px solid var(--cyan); border-radius: 0 0 6px 0; z-index: 10;
+  }
+  .skip-link:focus { left: 0; }
+
+  /* ---- content ----------------------------------------------------- */
   h1 { font-size: 1.6rem; color: #fff; letter-spacing: .01em; margin: 0 0 .5rem; }
   h2 {
-    font-size: 1.05rem; color: var(--cyan); margin: 2.5rem 0 1rem;
+    font-size: 1.05rem; color: var(--cyan); margin: 0 0 1rem;
     text-transform: uppercase; letter-spacing: .06em; font-weight: 700;
     border-bottom: 1px solid var(--border); padding-bottom: .5rem;
   }
   p { color: var(--text); }
-  .lead { color: var(--muted); font-size: 1.05rem; max-width: 72ch; }
+  .lead { color: var(--muted); font-size: 1.05rem; }
 
   .header {
     background: var(--surface);
@@ -51,11 +119,14 @@
     box-shadow: 0 0 24px rgba(0,212,255,.08), 0 4px 24px rgba(0,0,0,.5);
   }
 
-  section { max-width: 72ch; }
-  .table-wrap { max-width: none; overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
-  table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: .9rem; }
+  section { margin: 2.5rem 0; scroll-margin-top: 1rem; }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
+  table { border-collapse: collapse; width: 100%; min-width: 40rem; font-size: .9rem; }
   th, td { text-align: left; padding: .6rem .8rem; border-bottom: 1px solid var(--border); }
   th { background: var(--surface2); color: var(--muted); text-transform: uppercase; font-size: .75rem; letter-spacing: .05em; }
+  /* keep the leading column reachable while the table scrolls sideways */
+  th:first-child, td:first-child { position: sticky; left: 0; background: var(--bg); }
+  th:first-child { background: var(--surface2); }
   tr:last-child td { border-bottom: none; }
   code { color: var(--cyan); background: var(--cyan-dim); padding: .1rem .4rem; border-radius: 4px; font-size: .85em; }
   .tag { display: inline-block; padding: .1rem .5rem; border-radius: 999px; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
@@ -75,18 +146,67 @@
 
   pre.install {
     background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
-    padding: 1rem; overflow-x: auto; font-size: .85rem; color: var(--green);
+    padding: 1rem; font-size: .85rem; color: var(--green);
+    white-space: pre-wrap; overflow-wrap: anywhere;
   }
 
   footer { color: var(--muted); font-size: .8rem; margin: 3rem 0 1.5rem; }
 
-  @media (max-width: 480px) {
-    body { margin: 1rem auto; }
+  /* ---- mobile ------------------------------------------------------ */
+  @media (max-width: 767px) {
+    .layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .sidebar {
+      position: static; max-height: none; overflow: visible;
+      padding: 1rem 0 .5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .content { padding-top: 1.5rem; }
+    .js .nav-toggle { display: inline-block; }
+    .js .nav-groups[data-collapsed="true"] { display: none; }
+    .sidebar .brand-sub { margin-bottom: .75rem; }
     .skill-group ul { columns: 1; }
+    .header { padding: 1.25rem; }
   }
 </style>
 </head>
-<body>
+<body id="top">
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div class="layout">
+
+<aside class="sidebar">
+  <a class="brand" href="#top">personal-agentic-claude</a>
+  <p class="brand-sub">supervisor kit &middot; v1</p>
+  <button class="nav-toggle" type="button" aria-expanded="true" aria-controls="site-nav">Menu</button>
+  <nav id="site-nav" class="nav-groups" aria-label="Site sections">
+    <p class="nav-group-title">Overview</p>
+    <ul>
+      <li><a href="#what-you-get">What you get</a></li>
+    </ul>
+    <p class="nav-group-title">Getting started</p>
+    <ul>
+      <li><a href="#install">Install</a></li>
+      <li><a href="#update-flow">Update flow</a></li>
+      <li><a href="#install-variants">Install variants</a></li>
+    </ul>
+    <p class="nav-group-title">The team</p>
+    <ul>
+      <li><a href="#agent-roles">Agent roles</a></li>
+      <li><a href="#skills">Skills</a></li>
+      <li><a href="#hooks">Hooks</a></li>
+    </ul>
+    <p class="nav-group-title">Reference</p>
+    <ul>
+      <li><a href="#packs">Packs</a></li>
+      <li><a href="#repository-layout">Repository layout</a></li>
+      <li><a href="#memory-system">Memory system</a></li>
+      <li><a href="#options">Options</a></li>
+    </ul>
+  </nav>
+</aside>
+
+<main id="main" class="content">
 
 <div class="header">
   <h1>personal-agentic-claude</h1>
@@ -96,8 +216,7 @@
     hooks, not just prompted convention. Install it into any git repo with one command.
   </p>
 </div>
-
-<section>
+<section id="what-you-get">
 <h2>What you get</h2>
 <p class="lead">
   A base team of four spawnable sub-agent roles, a roster of skills covering every pipeline stage,
@@ -106,7 +225,55 @@
 </p>
 </section>
 
-<section>
+<section id="install">
+<h2>Install</h2>
+<p class="lead">
+  Prerequisites: an existing <strong>git repo</strong>, and <code>git</code>, <code>curl</code>,
+  and a POSIX <code>sh</code> on your PATH.
+</p>
+<pre class="install">curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh</pre>
+<p class="lead">
+  <strong>Restart Claude Code</strong> after install so it picks up the new
+  <code>.claude/agents/</code>, <code>.claude/skills/</code>, and <code>.claude/settings.json</code>.
+</p>
+<p class="lead">To pull in newer harness changes later, run the update script from your repo root:</p>
+<pre class="install">sh update.sh</pre>
+</section>
+
+<section id="update-flow">
+<h2>Update flow</h2>
+<p class="lead">
+  <code>update.sh</code> is a separate script from <code>setup.sh</code> — run it from inside your
+  already-installed project, which must still be a git repository:
+</p>
+<pre class="install">sh /path/to/personal-agentic-claude/update.sh</pre>
+<p class="lead">
+  It re-fetches the framework fresh, then for every <code>MANIFEST</code> file compares your
+  project's current copy against the content hash recorded at the last install/update
+  (<code>.claude/harness-lock.json</code>):
+</p>
+<ul class="lead">
+  <li><strong>Untouched since install</strong> — silently overwritten with the latest upstream version.</li>
+  <li><strong>Customized</strong> — shown a diff and prompted per file: overwrite / skip / view diff again.</li>
+</ul>
+</section>
+
+<section id="install-variants">
+<h2>Install variants</h2>
+<p class="lead"><strong>Fork install</strong> — export your username first and swap it into the URL:</p>
+<pre class="install">export GITHUB_USERNAME=your-username
+curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-claude/main/setup.sh | sh</pre>
+<p class="lead">
+  <strong>Greenfield vs. brownfield</strong> — chosen interactively during <code>setup.sh</code>.
+  Piped installs are non-interactive and default to greenfield (<code>CLAUDE.md</code>). For a
+  brownfield project (an existing codebase), clone this repo somewhere, <code>cd</code> into your
+  target project, invoke that checkout's <code>setup.sh</code> by path, and choose the brownfield
+  option — it uses <code>CLAUDE_LEGACY.md</code>, which adds legacy-codebase guidance (risk
+  hotspots, strangler-fig patterns).
+</p>
+</section>
+
+<section id="agent-roles">
 <h2>Agent roles</h2>
 <p class="lead">
   Four roles are directly spawnable via the <code>Agent</code> tool, each scoped to a single
@@ -146,7 +313,7 @@
 </div>
 </section>
 
-<section>
+<section id="skills">
 <h2>Skills (30)</h2>
 <p class="lead">
   One inline instruction set loaded per invocation, grouped by which pipeline stage it belongs to.
@@ -192,7 +359,7 @@
 </div>
 </section>
 
-<section>
+<section id="hooks">
 <h2>Hooks</h2>
 <p class="lead">
   Deterministic shell/python guardrails the harness runs — not the model. Each fires on a
@@ -217,63 +384,7 @@
 </div>
 </section>
 
-<section>
-<h2>Install</h2>
-<p class="lead">
-  Prerequisites: an existing <strong>git repo</strong>, and <code>git</code>, <code>curl</code>,
-  and a POSIX <code>sh</code> on your PATH.
-</p>
-<pre class="install">curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh</pre>
-<p class="lead">
-  <strong>Restart Claude Code</strong> after install so it picks up the new
-  <code>.claude/agents/</code>, <code>.claude/skills/</code>, and <code>.claude/settings.json</code>.
-</p>
-<p class="lead">To pull in newer harness changes later, run the update script from your repo root:</p>
-<pre class="install">sh update.sh</pre>
-</section>
-
-<section>
-<h2>Repository layout</h2>
-<p class="lead">
-  The mandatory folder structure created by install. Core resources are copied as real files;
-  project-specific files are created fresh and never overwritten by an update.
-</p>
-<div class="table-wrap">
-<table>
-<thead><tr><th>Path</th><th>What it contains</th></tr></thead>
-<tbody>
-<tr><td><code>.claude/agents/</code></td><td>Core sub-agent definitions plus <code>general-agent-template.md</code></td></tr>
-<tr><td><code>.claude/skills/</code></td><td>Custom skills, auto-discovered by Claude Code</td></tr>
-<tr><td><code>tasks/</code></td><td>Task guides generated at Stage 2 (per project)</td></tr>
-<tr><td><code>templates/</code></td><td>Blank templates for PRD, PROJECT_SPEC, task board, TASK_GUIDE, and more</td></tr>
-<tr><td><code>packs/</code></td><td>Optional domain packs — each adds agents + skills for a specific project type</td></tr>
-<tr><td><code>memory/</code></td><td>Two-tier hot/cold memory files (per project) — see Memory System below</td></tr>
-</tbody>
-</table>
-</div>
-</section>
-
-<section>
-<h2>Memory System</h2>
-<p class="lead">
-  A two-tier hot/cold memory design keeps agents aligned across sessions. <strong>Writes are
-  Supervisor-only</strong> — sub-agents never write to memory directly.
-</p>
-<div class="table-wrap">
-<table>
-<thead><tr><th>File</th><th>Tier</th><th>Holds</th></tr></thead>
-<tbody>
-<tr><td><code>memory/MEMORY.md</code></td><td>Hot</td><td>≤50,000 characters, referenced by path in every sub-agent spawn prompt and read by the agent — not pasted</td></tr>
-<tr><td><code>memory/decisions.md</code></td><td>Cold</td><td>Architectural and infrastructure decisions</td></tr>
-<tr><td><code>memory/glossary.md</code></td><td>Cold</td><td>Canonical domain terms and core domain models</td></tr>
-<tr><td><code>memory/learnings.md</code></td><td>Cold</td><td>Spec clarifications, patterns, gotchas</td></tr>
-<tr><td><code>memory/codebase-map.md</code></td><td>Structural</td><td>Directory tree, entry points, blast-radius hotspots — generated by <code>map-codebase</code></td></tr>
-</tbody>
-</table>
-</div>
-</section>
-
-<section>
+<section id="packs">
 <h2>Packs (optional domain extensions)</h2>
 <p class="lead">
   The core framework ships four agents for every project. Packs add domain-specific agents and
@@ -308,25 +419,48 @@ sh ~/.supervisor/setup.sh --pack=mobile --pack=api   # multiple packs</pre>
 </p>
 </section>
 
-<section>
-<h2>Update flow</h2>
+<section id="repository-layout">
+<h2>Repository layout</h2>
 <p class="lead">
-  <code>update.sh</code> is a separate script from <code>setup.sh</code> — run it from inside your
-  already-installed project, which must still be a git repository:
+  The mandatory folder structure created by install. Core resources are copied as real files;
+  project-specific files are created fresh and never overwritten by an update.
 </p>
-<pre class="install">sh /path/to/personal-agentic-claude/update.sh</pre>
-<p class="lead">
-  It re-fetches the framework fresh, then for every <code>MANIFEST</code> file compares your
-  project's current copy against the content hash recorded at the last install/update
-  (<code>.claude/harness-lock.json</code>):
-</p>
-<ul class="lead">
-  <li><strong>Untouched since install</strong> — silently overwritten with the latest upstream version.</li>
-  <li><strong>Customized</strong> — shown a diff and prompted per file: overwrite / skip / view diff again.</li>
-</ul>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Path</th><th>What it contains</th></tr></thead>
+<tbody>
+<tr><td><code>.claude/agents/</code></td><td>Core sub-agent definitions plus <code>general-agent-template.md</code></td></tr>
+<tr><td><code>.claude/skills/</code></td><td>Custom skills, auto-discovered by Claude Code</td></tr>
+<tr><td><code>tasks/</code></td><td>Task guides generated at Stage 2 (per project)</td></tr>
+<tr><td><code>templates/</code></td><td>Blank templates for PRD, PROJECT_SPEC, task board, TASK_GUIDE, and more</td></tr>
+<tr><td><code>packs/</code></td><td>Optional domain packs — each adds agents + skills for a specific project type</td></tr>
+<tr><td><code>memory/</code></td><td>Two-tier hot/cold memory files (per project) — see Memory System below</td></tr>
+</tbody>
+</table>
+</div>
 </section>
 
-<section>
+<section id="memory-system">
+<h2>Memory System</h2>
+<p class="lead">
+  A two-tier hot/cold memory design keeps agents aligned across sessions. <strong>Writes are
+  Supervisor-only</strong> — sub-agents never write to memory directly.
+</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>File</th><th>Tier</th><th>Holds</th></tr></thead>
+<tbody>
+<tr><td><code>memory/MEMORY.md</code></td><td>Hot</td><td>≤45,000 characters, referenced by path in every sub-agent spawn prompt and read by the agent — not pasted</td></tr>
+<tr><td><code>memory/decisions.md</code></td><td>Cold</td><td>Architectural and infrastructure decisions</td></tr>
+<tr><td><code>memory/glossary.md</code></td><td>Cold</td><td>Canonical domain terms and core domain models</td></tr>
+<tr><td><code>memory/learnings.md</code></td><td>Cold</td><td>Spec clarifications, patterns, gotchas</td></tr>
+<tr><td><code>memory/codebase-map.md</code></td><td>Structural</td><td>Directory tree, entry points, blast-radius hotspots — generated by <code>map-codebase</code></td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section id="options">
 <h2>Options</h2>
 <div class="table-wrap">
 <table>
@@ -342,25 +476,63 @@ sh ~/.supervisor/setup.sh --pack=mobile --pack=api   # multiple packs</pre>
 </div>
 </section>
 
-<section>
-<h2>Install variants</h2>
-<p class="lead"><strong>Fork install</strong> — export your username first and swap it into the URL:</p>
-<pre class="install">export GITHUB_USERNAME=your-username
-curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-claude/main/setup.sh | sh</pre>
-<p class="lead">
-  <strong>Greenfield vs. brownfield</strong> — chosen interactively during <code>setup.sh</code>.
-  Piped installs are non-interactive and default to greenfield (<code>CLAUDE.md</code>). For a
-  brownfield project (an existing codebase), clone this repo somewhere, <code>cd</code> into your
-  target project, invoke that checkout's <code>setup.sh</code> by path, and choose the brownfield
-  option — it uses <code>CLAUDE_LEGACY.md</code>, which adds legacy-codebase guidance (risk
-  hotspots, strangler-fig patterns).
-</p>
-</section>
-
 <footer>
   personal-agentic-claude — v1 release. This page is generated content, drift-tested against the
   live <code>.claude/</code> directory by <code>tests/test_site_content.py</code>.
 </footer>
+</main>
+</div>
+
+<script>
+(function () {
+  var nav = document.getElementById("site-nav");
+  var toggle = document.querySelector(".nav-toggle");
+
+  // Mobile menu. The nav is open in the markup so a JS-less page still shows
+  // the full link list; collapsing is applied here, and only below 768px by CSS.
+  if (nav && toggle) {
+    nav.setAttribute("data-collapsed", "true");
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.addEventListener("click", function () {
+      var collapsed = nav.getAttribute("data-collapsed") === "true";
+      nav.setAttribute("data-collapsed", collapsed ? "false" : "true");
+      toggle.setAttribute("aria-expanded", collapsed ? "true" : "false");
+    });
+    nav.addEventListener("click", function (event) {
+      if (event.target.tagName === "A" && window.innerWidth < 768) {
+        nav.setAttribute("data-collapsed", "true");
+        toggle.setAttribute("aria-expanded", "false");
+      }
+    });
+  }
+
+  // Scroll-spy. Deterministic: the active link is always the first section in
+  // document order that is currently intersecting, so overlapping short
+  // sections cannot make the highlight flicker between them.
+  var sections = [].slice.call(document.querySelectorAll("main > section[id]"));
+  var links = {};
+  [].forEach.call(document.querySelectorAll('#site-nav a[href^="#"]'), function (a) {
+    links[a.getAttribute("href").slice(1)] = a;
+  });
+  if (!("IntersectionObserver" in window) || !sections.length) { return; }
+
+  var visible = {};
+  function paint() {
+    var current = null;
+    for (var i = 0; i < sections.length; i++) {
+      if (visible[sections[i].id]) { current = sections[i].id; break; }
+    }
+    for (var id in links) {
+      if (links[id]) { links[id].classList.toggle("active", id === current); }
+    }
+  }
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) { visible[entry.target.id] = entry.isIntersecting; });
+    paint();
+  }, { rootMargin: "0px 0px -60% 0px" });
+  sections.forEach(function (section) { observer.observe(section); });
+})();
+</script>
 
 </body>
 </html>

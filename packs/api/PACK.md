@@ -37,7 +37,7 @@ Select when the project's primary deliverable is a public or internal API contra
 ## Install
 
 ```sh
-sh ~/.supervisor/setup.sh --pack api
+sh ~/.supervisor/setup.sh --pack=api
 ```
 
 ---

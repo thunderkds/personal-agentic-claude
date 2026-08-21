@@ -58,17 +58,16 @@
 
 - [T083 merged: landing site with test-enforced rosters](decisions.md) — plain HTML/CSS, no build; own board per Gate 4 but `Txxx` IDs kept so spawn-validation parses; rosters asserted against `.claude/` at test time.
 
-- [T084 merged: Vercel static deploy config](decisions.md) — `outputDirectory: site`, no build; `.vercelignore` allowlist; deploy stays operator-run, no agent or hook triggers it.
+- [T084 merged: Vercel static deploy config](decisions.md) — `outputDirectory: site`, no build; `.vercelignore` allowlist; deploy stays operator-run.
 
-- [T085/T087 merged: README 477→55 + the site carries what it points at](decisions.md) — T081 closed; both false hook facts corrected at source and verified by **running** the hooks; T087 adds the promise-honouring assertion.
+- [T085/T087 merged: README 477→55 + site carries what it points at](decisions.md) — T081 closed; both false hook facts corrected at source and verified by **running** the hooks.
+
+- [T088 merged: PACK.md flag form + agreement test](decisions.md) — five docs told users `--pack <name>`; the parser exits 1 on it. Test parses `setup.sh`'s case block at test time.
 
 ### Patterns & Gotchas
-- [Relative .html links are inert on GitHub](learnings.md) — serves source, not a page; makes deploying a release blocker when docs are slimmed on a site's promise.
-- [Two cut lists by the same author can disagree](learnings.md) — T083 dropped the pack matrix; T085 moved it *to* the site. A cut list naming another task as the new home is a cross-task dependency — verify it.
-- [Verify a documented behaviour by running it](learnings.md) — reading source proves the literal, not the boundary: running the step-limit hook proved 90-allowed/91-blocked.
-- ["Published" ≠ "uploaded"](learnings.md) — a deploy config scopes what is served; the CLI still transmits the source tree. `memory/` would have gone to a third party on every `vercel` run.
-- [`!dir/` must precede `!dir/**` in an allowlist](learnings.md) — a lone `!site/**` uploads zero files and looks like a working config; the redundant-looking pair is load-bearing.
-- [A false Stage 4 finding costs as much as a missed one](learnings.md) — when a mutation control stays green, first hypothesis is "my mutation didn't land", not "the test is vacuous" — the two are observationally identical.
+- [v1-site release: evidence lessons](learnings.md) — mutation control stays green → first hypothesis is "my mutation didn't land", not "vacuous test"; verify a documented *behaviour* by running it; for "doc D matches source S" the mandatory control changes **S**.
+- [v1-site release: publishing lessons](learnings.md) — relative `.html` links are inert on GitHub (deploy becomes a release blocker); "published" ≠ "uploaded" (a deploy config scopes serving, the CLI still transmits the tree); `!dir/` must precede `!dir/**` or an allowlist uploads zero files.
+- [v1-site release: planning + CLI lessons](learnings.md) — two cut lists by the same author can disagree (cross-task dependency, verify it); two docs disagree until something reads one against the other; to verify a destructive CLI find the guard that fires first (and zsh does not word-split `$var`).
 - [The merge gate reads one board by name](learnings.md) — `pre_bash_block_unsafe_merge.py` checks `PROJECT_KANBAN.md` only, so T083's site board was ungated at merge. Any fix must glob `PROJECT_KANBAN*.md`.
 - [`pytest tests/ -q` runs 8 tests, not 688](learnings.md) — the suite lives in `.claude/hooks/tests/` and bare pytest skips hidden dirs. Always `python3 -m pytest .claude/hooks/tests/ tests/ -q` in guides.
 - [An agent can fabricate Supervisor *consent*](learnings.md) — **6th 'checkmark is a claim' incident, first where the artifact is consent, not a test result.** No command re-runs a conversation; check against your own memory. Correct such notes in place — the falsehood is the finding.

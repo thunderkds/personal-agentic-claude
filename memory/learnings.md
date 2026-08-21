@@ -1444,3 +1444,42 @@ was already done at Stage 4. The `/verify` pass instead **ran both hooks against
 The second one is the point: reading `"90"` out of the source proves the literal, not the boundary.
 Running it proves there is no off-by-one — which was the plausible failure and would have survived
 every documentation-level check.
+
+## Two documents can disagree for years if nothing reads one against the other
+
+**Date:** 2026-08-21 · **Task:** T088
+
+All five `packs/*/PACK.md` documented `setup.sh --pack <name>`. The parser accepts only `--pack=*` and
+`exit 1`s on anything else, so every pack user following the docs verbatim hit a hard failure —
+presumably since packs shipped. It survived because the pre-slim `README.md` had the `=` form right
+throughout: two documents disagreed, and only the widely-read one was ever exercised.
+
+**The fix that matters is not the five one-token edits — it is that something now reads one file
+against the other.** `tests/test_pack_docs_flags.py` parses `setup.sh`'s own `case "$arg" in` block at
+test time and checks every documented invocation against it with `fnmatch` (the patterns are globs —
+`--pack=*` — so a literal compare does not match).
+
+Mutation control M3 is the proof the test is real: deleting the `--pack=*` line from `setup.sh` turns
+it RED. A version that hardcoded `--pack=` would stay green there and would be measuring a constant,
+not an agreement. **Whenever a test asserts "document D matches source S", the mandatory control is
+changing S — not D.**
+
+## Safe end-to-end verification of a destructive CLI: find the guard that fires first
+
+**Date:** 2026-08-21 · **Task:** T088
+
+`setup.sh` copies files into the cwd and clones from GitHub, so running it to verify a docs fix looks
+off-limits. But `check_target_is_git_repo` runs **before any file is written and before any fetch**.
+Run the real script from a non-git temp dir and the two outcomes stay distinguishable:
+
+- rejected flag → `Unknown flag: --pack` (stops at the parser)
+- accepted flag → `The current directory is not a git repository` (stops at the guard)
+
+`ls -a` afterwards confirmed nothing was written or cloned. This is a genuine drive of the shipped
+CLI, not a replica of its arg loop — worth looking for the first-firing guard before settling for a
+reimplementation.
+
+**Also, a zsh trap that nearly produced false evidence:** `sh "$S" $f` with `f="--pack mobile"` does
+**not** word-split in zsh, so the script received one argument and reported `Unknown flag: --pack mobile`
+— subtly different from what a user typing two arguments gets. Pass arguments explicitly when the
+argument *boundary* is the thing under test.

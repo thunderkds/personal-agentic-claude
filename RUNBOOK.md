@@ -190,3 +190,4 @@ gitignored).
 | Version / Tag | Date | Scope (Task IDs) | Deployer | Outcome |
 |---------------|------|------------------|----------|---------|
 | v1.0.0 | 2026-08-15 | T070 (first tagged release; codifies the state of `main` at `238421c`) | hungnh1110@gmail.com | _pending operator execution_ |
+| v1.1.0 | 2026-08-21 | T083, T084, T085, T087, T088 — public landing site, Vercel deploy config, README 477→55, site reference content, PACK.md flag fix | hungnh1110@gmail.com | _pending operator execution — site deploy not yet run_ |
