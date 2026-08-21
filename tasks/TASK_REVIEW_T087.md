@@ -17,7 +17,7 @@
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_site_content.py::test_every_pack_appears_on_page`, `tests/test_site_content.py::test_readme_promised_topics_are_on_the_page` — both written and observed RED before content existed (see mutation/RED evidence below), GREEN after |
 | Verification command run | ☑ pass | `python3 -m pytest tests/test_site_content.py -q` → `10 passed in 0.02s`; `python3 -m pytest .claude/hooks/tests/ tests/ -q` → `697 passed in 9.64s` |
 | Negative cases hold | ☑ pass | M1/M2/M3 mutation controls below — each observed RED with the correct failing assertion, each confirmed to change bytes via `diff`, each reverted |
-| verify | ☐ N/A | user-run only per `memory/MEMORY.md` (`project_verify_skill_is_user_only.md`) — not run by this agent |
+| verify | ☑ pass | User-run `/verify` 2026-08-21 — **pass**. Page served over HTTP and driven in headless Chrome at 1280/375px. All six new sections render in the existing visual language; access log shows `GET / 200` only — zero external requests despite the page growing 11,335 → 18,609 bytes. **Content accuracy probed against source, not against the recovered README**: pack agents match `packs/*/agents/` exactly (mobile→mobile-developer, data→data-engineer, devops→devops-engineer, ai-agent→ai-engineer, api→api-designer), skills match, and Options defaults match `setup.sh:72-73` (`thunderkds`) and `setup.sh:20` (`$HOME/.supervisor`). All three at-risk edge cases survived recovery intact: `SUPERVISOR_PATH` still packs-only, the `~/.supervisor` persistent-clone caveat still present, and the `curl … \| sh --pack=x` does-not-work explanation still full-length. Leakage probe on ~400 lines of recovered prose dense with task IDs: `grep -coE '\bT[0-9]{3}\b'` = 0, `grep -ci 'kanban\|in progress'` = 0. |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Touched only `site/index.html` (new sections appended before `<footer>`) and `tests/test_site_content.py` (two new tests appended), exactly the "Files to Change (Predicted)" list in the TASK_GUIDE. Did not touch `README.md`, `packs/**`, `.claude/**`, `PROJECT_KANBAN*.md`, `memory/**`, `vercel.json`/`.vercelignore` |
 | Full smoke suite still green (no regression) | ☑ pass | `python3 -m pytest .claude/hooks/tests/ tests/ -q` → `697 passed` (695 baseline + 2 new tests, 0 regressions) |
 | **UI: Visual regression (diff or verdict pasted)** | ☑ pass | Headless-Chrome screenshots at 1280px full-page — new sections (Repository layout, Memory System, Packs, Update flow, Options, Install variants) render in the existing dark-theme visual language: same card/table styling, no clipped or overlapping text, reads top-to-bottom sensibly from header through footer |
@@ -80,3 +80,36 @@ breaks that promise fails `tests/test_readme_promised_topics_are_on_the_page`.
 `/home/hungnguyenhuu/workspace/pets/wt-t087` at 2026-08-21T09:47Z (BEFORE) and after the
 implementation commit (AFTER); trace recorded in `memory/event-trace/T087.jsonl` via
 `.claude/hooks/.state/active_task`.
+
+
+---
+
+## Stage 5 `/verify` findings (2026-08-21, user-run)
+
+1. **⚠️ T086's mobile scope grew materially.** Four more wide tables landed, and on the packs table the
+   entire **SKILLS column is off-screen** at 375px — a reader cannot see what a pack gives them without
+   scrolling sideways inside the table. Same class as the hook table's `Behavior` column. T086 was
+   registered as "two mobile items"; it is now the dominant reading problem on the page and should be
+   re-read as higher priority before any public deploy.
+2. **⚠️ The repo contradicts itself on the memory cap, and the page had to pick a side.** `CLAUDE.md`
+   says `≤50,000 characters`; `memory/MEMORY.md`'s own header says `Max 45,000 characters`. The page
+   states ≤50,000, which is the correct call (`CLAUDE.md` governs) — but one of those two files is
+   wrong and the error is now published. Not T087's to fix; needs its own task.
+3. Probe that held: zero external requests after a 64% page-weight increase.
+4. Probe that held: no task-ID or KANBAN leakage from recovered prose that was dense with both.
+5. The update-flow section references `.claude/harness-lock.json`, which does not exist in this repo —
+   correctly, since it is generated in the *target* project at install time. Consistent with T085's
+   finding that the file is absent here, but the two are easy to confuse later.
+
+## Stage 4 note — the P1 found here belongs to another file
+
+The implementer surfaced, and the Supervisor empirically reproduced, that all five `packs/*/PACK.md`
+files document `sh ~/.supervisor/setup.sh --pack <name>` while `setup.sh:87` parses only `--pack=*`
+and `setup.sh:88` exits 1 on anything else. Reproduced by replicating the arg loop in isolation
+(the installer itself was never run): `--pack mobile` → `Unknown flag: --pack`, exit 1;
+`--pack=mobile` → `OK packs: mobile`, exit 0. Registered as **T088**; correctly out of T087's file
+scope, and T087 used the working `=` form on the site.
+
+Accepted limitation, not a defect: `README_PROMISED_TOPICS` is a hardcoded list, so it catches the
+page dropping a known topic but not the README adding a new promise. The guide specified it that way;
+parsing prose for promises would be less reliable than the gap it closes.
