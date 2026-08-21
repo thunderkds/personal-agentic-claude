@@ -1391,3 +1391,56 @@ The two `!site` lines look redundant and will invite deletion. Verified with the
 (`git check-ignore` against a scratch tree), not by reading the spec: exactly `site/index.html` and
 `vercel.json` survive; `memory/`, `tasks/`, `docs/`, `PROJECT_KANBAN.md`, `.claude/hooks/` and `.env`
 are all excluded, and new files added under `site/` are admitted automatically.
+
+## A relative link to an .html file is inert on GitHub
+
+**Date:** 2026-08-21 · **Tasks:** T085 / T087
+
+The slimmed `README.md` points at the reference site three times as `[site](site/index.html)`.
+**GitHub does not render HTML files** — a visitor who clicks that gets syntax-highlighted source.
+The entire "the full reference lives on the site" strategy therefore delivers nothing to a GitHub
+reader until the operator deploys and pastes the real URL in.
+
+This is worse than an absent link, because it looks live. It also converts the deploy from a
+follow-up into a **release blocker**: the README was slimmed on the promise that the site carries the
+rest, and that promise is unfulfillable from GitHub until a real hostname exists.
+
+Generalises: whenever documentation is moved out of a rendered surface into a static file in the same
+repo, check that the *pointer* survives the move, not just the content.
+
+## Two cut lists written by the same author can still disagree
+
+**Date:** 2026-08-21 · **Tasks:** T083 / T085 / T087
+
+T083's cut list deliberately dropped the pack matrix from the site ("keep v1 to the four rosters").
+T085's cut list moved the pack matrix *to* the site. Both were written by the Supervisor, in the same
+Stage 2 pass, and neither was checked against the other. Result: the README shipped pointing at ~400
+lines of content that existed nowhere, and it took a Stage 4 review of the *second* task to notice.
+
+The `Cut list` field is per-task by design, which is what let two of them contradict. **When one
+task's cut list names another task as the new home for content, that is a cross-task dependency and
+has to be verified against that task's cut list, not assumed.** The implementing agent's AC3 report
+compounded it by asserting the content was "confirmed present" after spot-checking one table and
+generalising — a real reporting defect, but the gap was designed in before any agent ran.
+
+Fixed by T087, whose load-bearing part is not the recovered content but the assertion that every
+topic the README promises is present on the page.
+
+## Verify a documented *behaviour* by running it, not by re-reading the source
+
+**Date:** 2026-08-21 · **Task:** T085
+
+T085's whole point was correcting two false statements about hook behaviour. The tempting
+verification is to re-read the hooks and confirm the sentences match — that is code review, and it
+was already done at Stage 4. The `/verify` pass instead **ran both hooks against real payloads**:
+
+- `post_agent_move_to_review.py` fed an Agent payload, with `PROJECT_KANBAN.md` md5'd either side:
+  identical hash, zero counter files created. The "deliberately inert" claim is true of the running
+  hook, not just its docstring.
+- `pre_agent_step_limit.py` driven in a loop under an isolated session id, **with `CLAUDE_STEP_LIMIT`
+  deliberately unset** so a stale env var could not supply someone else's number: 90 allowed, first
+  block on call #91, self-clearing visible in the same capture.
+
+The second one is the point: reading `"90"` out of the source proves the literal, not the boundary.
+Running it proves there is no off-by-one — which was the plausible failure and would have survived
+every documentation-level check.

@@ -60,7 +60,12 @@
 
 - [T084 merged: Vercel static deploy config](decisions.md) — `outputDirectory: site`, no build; `.vercelignore` allowlist; deploy stays operator-run, no agent or hook triggers it.
 
+- [T085/T087 merged: README 477→55 + the site carries what it points at](decisions.md) — T081 closed; both false hook facts corrected at source and verified by **running** the hooks; T087 adds the promise-honouring assertion.
+
 ### Patterns & Gotchas
+- [A relative link to an .html file is inert on GitHub](learnings.md) — `[site](site/index.html)` serves syntax-highlighted source, not a page. Makes deploying a **release blocker**, not a follow-up, whenever docs are slimmed on the promise a site carries the rest.
+- [Two cut lists by the same author can disagree](learnings.md) — T083 dropped the pack matrix from the site; T085 moved it *to* the site. Shipped a README pointing at ~400 lines existing nowhere. A cut list naming another task as the new home is a **cross-task dependency**, verify it.
+- [Verify a documented behaviour by running it](learnings.md) — re-reading the source proves the literal, not the boundary. Running `pre_agent_step_limit.py` proved 90-allowed/91-blocked; reading `"90"` would have missed an off-by-one.
 - ["Published" ≠ "uploaded"](learnings.md) — a deploy config scopes what is **served**; the CLI still **transmits** the source tree. For any publish integration ask both questions. Cost: `memory/` would have gone to a third party on every `vercel` run.
 - [`!dir/` must precede `!dir/**` in an allowlist](learnings.md) — git cannot re-include a file whose parent dir is excluded, so a lone `!site/**` uploads **zero** files and looks like a working config. The redundant-looking pair is load-bearing.
 - [A false Stage 4 finding costs as much as a missed one](learnings.md) — when a mutation control does not go RED, first hypothesis is **"my mutation didn't land"**, not "the test is vacuous"; a no-op mutation and a vacuous assertion are observationally identical (both green). Cost a false P1 on T083.
