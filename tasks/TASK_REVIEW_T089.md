@@ -58,9 +58,35 @@ scroll the whole document. Visual baseline at 1280px: `reports/t089/before-1280.
 narrow (72ch) content column with the hero card overhanging every section below it (the T086
 measure inconsistency), no sidebar, no sense of position or of what else exists.
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER** (same commands, post-change, 2026-08-21):
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```
+$ grep -c '<nav' site/index.html
+1
+
+$ grep -c '^<section id=' site/index.html
+11
+
+$ python3 -m pytest tests/test_site_content.py -q
+14 passed in 0.03s
+
+$ python3 -m pytest .claude/hooks/tests/ tests/ -q
+706 passed in 9.21s          # 702 baseline + 4 new T089 assertions
+```
+
+Scroll-spy proof (headless probe that scrolls to `#hooks`, then reads the active link):
+
+```
+scrollY=4145 ACTIVE=Hooks -> #hooks
+```
+
+Screenshots: `reports/t089/after-{320,375,768,1280}.png`, `after-scrollspy-frame.png`
+(sticky sidebar + active "Hooks" link mid-document), `after-375-nojs.png` (script-stripped copy).
+
+**DELTA**: a reader can now see the whole document's structure at once and jump straight to any of
+the 11 sections from a persistent grouped sidebar that tracks where they are — instead of scrolling
+a ~5,000px unlabelled page — and the sidebar cannot silently rot, because a dead link or an
+unreachable section now fails the suite.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
