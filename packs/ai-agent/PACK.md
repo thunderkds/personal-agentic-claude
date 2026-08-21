@@ -37,7 +37,7 @@ Select when the project builds on top of LLM APIs — chat interfaces, autonomou
 ## Install
 
 ```sh
-sh ~/.supervisor/setup.sh --pack ai-agent
+sh ~/.supervisor/setup.sh --pack=ai-agent
 ```
 
 ---
