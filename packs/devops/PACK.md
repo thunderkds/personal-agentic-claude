@@ -37,7 +37,7 @@ Select when the project's primary deliverable is infrastructure, deployment auto
 ## Install
 
 ```sh
-sh ~/.supervisor/setup.sh --pack devops
+sh ~/.supervisor/setup.sh --pack=devops
 ```
 
 ---

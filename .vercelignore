@@ -1,0 +1,13 @@
+# Allowlist, not a denylist. `outputDirectory` in vercel.json controls what is
+# *served*; it does not control what is *uploaded*. The Vercel CLI transmits the
+# project source tree to Vercel's build infrastructure on every deploy, so without
+# this file `memory/` (project decisions, learnings, event traces), `tasks/`,
+# `PROJECT_KANBAN*.md`, and `docs/` would all be sent to a third party on every
+# `vercel` invocation — not published at a public URL, but transmitted and retained
+# off-machine all the same. Enumerating what to exclude would fail open the first
+# time a new directory is added, so deny everything and admit only what the deploy
+# actually needs.
+*
+!site/
+!site/**
+!vercel.json

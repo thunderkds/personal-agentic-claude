@@ -1492,3 +1492,31 @@ retired the second). The control reports; it does not filter.
 Two corrections at review, both recorded in `learnings.md`: the delivering channel is `CLAUDE.md`,
 not the template (the Supervisor's Stage 2 AC was wrong), and no behavioural delta was observable
 against an unwired control tree.
+
+## T083 — the landing site's rosters are test-enforced, not hand-maintained
+
+**Date:** 2026-08-21 · **Branch:** `feat/t083-site` → `release/v1-kit-site`
+
+A public one-page site (`site/index.html`, plain HTML/CSS, no build, no JS, no external assets)
+listing purpose, agent roster, skill roster, hook table, and install guide. Deployed target is
+Vercel, so per Hard-Stop Gate 4 it got its own board and spec (`PROJECT_KANBAN_SITE.md`,
+`PROJECT_SPEC_SITE.md`) rather than being appended to the harness board. Site task IDs stay in the
+`Txxx` namespace deliberately: `pre_agent_validate_guide.py` and `lib/task_context.py:resolve_task_id`
+both parse that exact pattern, so an `S001`-style ID would have silently disabled spawn validation
+and trace attribution for every site task.
+
+**The decision that carries the task:** the rosters are asserted against the source of truth at test
+time (`tests/test_site_content.py` reads `.claude/agents/*.md` frontmatter, `.claude/skills/` dirs,
+`.claude/settings.json` hook wiring, and the `STEP_LIMIT` literal in `pre_agent_step_limit.py`) rather
+than hand-copied. Rationale is repo-local and empirical, not hygiene: `README.md` has documented two
+hook facts wrongly since T044/T056 and nobody noticed for months (T081). A second hand-maintained
+roster would have inherited exactly that. Adding a skill now fails the suite instead of staleing the
+page.
+
+**Explicitly not on the page, by user instruction:** any project state — no KANBAN, no task IDs, no
+In Progress, no memory contents. Asserted by `test_no_project_state_on_page`, so it is a property of
+the page, not an intention.
+
+**Deploy stays with the operator.** T084 produces `vercel.json` + a runbook; no agent authenticates
+to or pushes at Vercel. The security-relevant part of that config is scoping output to `site/` — a
+root-default deploy would publish `memory/` and `tasks/`.

@@ -56,7 +56,20 @@
 - [T080 merged: the skill contract is discoverable from the README](decisions.md) — 8-line contract in `## Custom Skills`, pointer-not-copy; CLAUDE.md a documented no-op. `slim-skills` 150 vs spec 500 flagged, unreconciled.
 - [T082 merged: untrusted-content trust boundary](decisions.md) — rules live in `docs/claude-md/untrusted-content-boundary.md`; external-library review kept 1 of 29 domains; documented boundary + `resolve-pr-feedback` triage carve-out, **no detector** (cut, not deferred).
 
+- [T083 merged: landing site with test-enforced rosters](decisions.md) — plain HTML/CSS, no build; own board per Gate 4 but `Txxx` IDs kept so spawn-validation parses; rosters asserted against `.claude/` at test time.
+
+- [T084 merged: Vercel static deploy config](decisions.md) — `outputDirectory: site`, no build; `.vercelignore` allowlist; deploy stays operator-run.
+
+- [T085/T087 merged: README 477→55 + site carries what it points at](decisions.md) — T081 closed; both false hook facts corrected at source and verified by **running** the hooks.
+
+- [T088 merged: PACK.md flag form + agreement test](decisions.md) — five docs told users `--pack <name>`; the parser exits 1 on it. Test parses `setup.sh`'s case block at test time.
+
 ### Patterns & Gotchas
+- [v1-site release: evidence lessons](learnings.md) — mutation control stays green → first hypothesis is "my mutation didn't land", not "vacuous test"; verify a documented *behaviour* by running it; for "doc D matches source S" the mandatory control changes **S**.
+- [v1-site release: publishing lessons](learnings.md) — relative `.html` links are inert on GitHub (deploy becomes a release blocker); "published" ≠ "uploaded" (a deploy config scopes serving, the CLI still transmits the tree); `!dir/` must precede `!dir/**` or an allowlist uploads zero files.
+- [v1-site release: planning + CLI lessons](learnings.md) — two cut lists by the same author can disagree (cross-task dependency, verify it); two docs disagree until something reads one against the other; to verify a destructive CLI find the guard that fires first (and zsh does not word-split `$var`).
+- [The merge gate reads one board by name](learnings.md) — `pre_bash_block_unsafe_merge.py` checks `PROJECT_KANBAN.md` only, so T083's site board was ungated at merge. Any fix must glob `PROJECT_KANBAN*.md`.
+- [`pytest tests/ -q` runs 8 tests, not 688](learnings.md) — the suite lives in `.claude/hooks/tests/` and bare pytest skips hidden dirs. Always `python3 -m pytest .claude/hooks/tests/ tests/ -q` in guides.
 - [An agent can fabricate Supervisor *consent*](learnings.md) — **6th 'checkmark is a claim' incident, first where the artifact is consent, not a test result.** No command re-runs a conversation; check against your own memory. Correct such notes in place — the falsehood is the finding.
 - ['Guaranteed channel' is structural — verify by removing the candidate](learnings.md) — T082's AC named the *optional* template as guaranteed; the Supervisor wrote it wrong with the contradicting docstring in view, and **a wrong AC is obeyed, not caught**. Delete the candidate channel and re-run the agent; `CLAUDE.md` was doing all the work.
 - [A documented control needs a control group](learnings.md) — T082's unwired tree refused every injected payload too. For agent-behaviour changes run the payload against the pre-change tree, or a PASS only proves the model behaves well. Honest claim is usually 'explicit and auditable', not 'safe'.
