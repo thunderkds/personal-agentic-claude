@@ -37,7 +37,7 @@ Select when the project's primary output is data movement, transformation, or an
 ## Install
 
 ```sh
-sh ~/.supervisor/setup.sh --pack data
+sh ~/.supervisor/setup.sh --pack=data
 ```
 
 ---
