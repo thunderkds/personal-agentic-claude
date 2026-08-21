@@ -58,7 +58,11 @@
 
 - [T083 merged: landing site with test-enforced rosters](decisions.md) — `site/index.html` plain HTML/CSS, no build; own board per Gate 4 (`PROJECT_KANBAN_SITE.md`) but `Txxx` IDs kept so spawn-validation/trace still parse; rosters asserted against `.claude/` at test time because README has been wrong about its own hooks since T044 (T081).
 
+- [T084 merged: Vercel static deploy config](decisions.md) — `outputDirectory: site`, no build; `.vercelignore` allowlist; deploy stays operator-run, no agent or hook triggers it.
+
 ### Patterns & Gotchas
+- ["Published" ≠ "uploaded"](learnings.md) — a deploy config scopes what is **served**; the CLI still **transmits** the source tree. For any publish integration ask both questions. Cost: `memory/` would have gone to a third party on every `vercel` run.
+- [`!dir/` must precede `!dir/**` in an allowlist](learnings.md) — git cannot re-include a file whose parent dir is excluded, so a lone `!site/**` uploads **zero** files and looks like a working config. The redundant-looking pair is load-bearing.
 - [A false Stage 4 finding costs as much as a missed one](learnings.md) — when a mutation control does not go RED, first hypothesis is **"my mutation didn't land"**, not "the test is vacuous"; a no-op mutation and a vacuous assertion are observationally identical (both green). Cost a false P1 on T083.
 - [The merge gate reads one board by name](learnings.md) — `pre_bash_block_unsafe_merge.py` checks `PROJECT_KANBAN.md` only, so T083's site board was ungated at merge. Any fix must glob `PROJECT_KANBAN*.md`.
 - [`pytest tests/ -q` runs 8 tests, not 688](learnings.md) — the suite lives in `.claude/hooks/tests/` and bare pytest skips hidden dirs. Always `python3 -m pytest .claude/hooks/tests/ tests/ -q` in guides.

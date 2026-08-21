@@ -1349,3 +1349,45 @@ The Supervisor wrote the short form into three Stage 2 TASK_GUIDEs as the Verifi
 agent following it verbatim would have reported a green suite having run **zero** regression tests,
 and the number would have looked plausible. Corrected in T083/T084/T085. Use the explicit two-path
 form in every future guide.
+
+## "Published" and "uploaded" are different questions — a deploy config answers only the first
+
+**Date:** 2026-08-21 · **Task:** T084
+
+`vercel.json`'s `outputDirectory: "site"` correctly scopes what Vercel **serves**. The implementer
+reasoned from that to "`memory/`, `tasks/` and `PROJECT_KANBAN*.md` are never in the published
+output" — true, and it still left a hole, because the Vercel CLI **uploads the project source tree**
+to its build infrastructure on every deploy regardless of what is later served. This repo's project
+memory (decisions, learnings, event traces) and every TASK_GUIDE would have left the machine on every
+`vercel` invocation and been retained by a third party.
+
+Nothing about it is visible at a public URL, so neither the config, the tests, nor the runbook's own
+"scope of what gets published" paragraph surfaced it. **For any deploy/publish integration, ask both
+questions separately: what does this serve, and what does this transmit?**
+
+Fixed with `.vercelignore` as an **allowlist** — bare `*`, then re-admit only `site/` and
+`vercel.json`. A denylist enumerating `memory/`, `tasks/`, `docs/` was rejected: it fails open the
+first time anyone adds a directory, which is the same fail-open shape as the documentation drift the
+whole v1-site release exists to fix. Prefer deny-all-then-admit wherever the cost of a miss is
+exfiltration rather than breakage.
+
+## `.vercelignore`/`.gitignore`: `!dir/` must precede `!dir/**` or the negation is silently inert
+
+**Date:** 2026-08-21 · **Task:** T084
+
+Git cannot re-include a file whose **parent directory** is excluded. In an allowlist that opens with
+a bare `*`, the `site` directory itself is excluded, so a lone `!site/**` matches nothing and the
+deploy uploads **zero** files — a silent, total failure that looks like a working config. The working
+form re-admits the directory first:
+
+```
+*
+!site/
+!site/**
+!vercel.json
+```
+
+The two `!site` lines look redundant and will invite deletion. Verified with the real matcher
+(`git check-ignore` against a scratch tree), not by reading the spec: exactly `site/index.html` and
+`vercel.json` survive; `memory/`, `tasks/`, `docs/`, `PROJECT_KANBAN.md`, `.claude/hooks/` and `.env`
+are all excluded, and new files added under `site/` are admitted automatically.
