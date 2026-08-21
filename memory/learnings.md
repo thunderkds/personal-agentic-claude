@@ -1293,3 +1293,59 @@ CLAUDE.md rules), run the payload against the pre-change tree too. Without a con
 only proves the model behaves well, not that the change caused it. Expect this often: modern models
 already refuse blatant attacks, so the honest claim is usually "made the rule explicit and
 auditable", not "made the agent safe".
+
+## A false Stage 4 finding is as expensive as a missed one — verify the mutation, not just the result
+
+**Date:** 2026-08-21 · **Task:** T083
+
+The Supervisor's first Stage 4 pass on T083 reported mutation control M2 as non-reproducible: the
+implementer had claimed `AssertionError: step limit 90 ... not found on page`, and re-running it
+appeared to leave the suite green. Reading that as the 7th "a checkmark is a claim, not a fact"
+incident, the Supervisor raised a P1 and began rewriting the assertion to anchor it near the hook
+name.
+
+**The finding was wrong.** The page reads `default <strong>90</strong>`; the Supervisor's
+`sed 's/default 90/default 40/'` matched nothing and mutated zero bytes. The test never had a chance
+to fail. The implementer's evidence was accurate.
+
+**The generalisable rule:** when a mutation control does not go RED, the first hypothesis must be
+*"my mutation didn't land"*, not *"the test is vacuous"* — confirm the bytes actually changed
+(`git diff`, or grep the mutated string back) before drawing any conclusion about the assertion.
+A no-op mutation and a vacuous assertion produce **identical** observable output — a green suite —
+so the green result alone cannot distinguish them.
+
+This repo has trained hard on the vacuous-assertion family (T036/T042/T039 and six more), and that
+prior is strong enough to fire on a null result. The cost is real: it produced a false P1, and the
+"fix" was a speculative rewrite of a working test that had to be reverted once the mutation was
+re-run correctly. Suspicion is not evidence in either direction.
+
+## The merge gate does not know about a second Kanban board
+
+**Date:** 2026-08-21 · **Task:** T083
+
+`pre_bash_block_unsafe_merge.py` reads `PROJECT_KANBAN.md` by name. T083 introduced a second board,
+`PROJECT_KANBAN_SITE.md`, per Hard-Stop Gate 4 — and the merge of T083 was **not gated by it**: the
+hook saw only the harness board, where nothing was In Progress, and allowed the merge. The gate was
+satisfied for the wrong reason.
+
+Not fixed here (out of T083's scope, and the merge was independently verified). Recorded because
+Gate 4 and the merge gate now disagree about how many boards exist, and the next multi-board project
+will hit this silently. Any fix must glob `PROJECT_KANBAN*.md` rather than name one file.
+
+## `pytest tests/ -q` does not run this repo's test suite
+
+**Date:** 2026-08-21 · **Task:** T083
+
+The harness suite lives in `.claude/hooks/tests/` (30 files, 680 tests). `tests/` at the repo root
+holds shell scripts and little else. Because `.claude` is a hidden directory, **bare pytest does not
+collect it**: `python3 -m pytest tests/ -q` reports `8 passed` and `python3 -m pytest -q` from the
+repo root reports the same. The real command is:
+
+```
+python3 -m pytest .claude/hooks/tests/ tests/ -q    # 688 passed
+```
+
+The Supervisor wrote the short form into three Stage 2 TASK_GUIDEs as the Verification Command. An
+agent following it verbatim would have reported a green suite having run **zero** regression tests,
+and the number would have looked plausible. Corrected in T083/T084/T085. Use the explicit two-path
+form in every future guide.
