@@ -338,6 +338,10 @@ This repo's skills implement the open [Agent Skills specification](https://agent
 
 `write-better-skill` is the in-repo authority for the full rules and the reasoning behind them; do not re-derive them here. Checked automatically by `.claude/hooks/tests/test_skill_spec_conformance.py`, run via `python3 -m pytest .claude/hooks/tests/test_skill_spec_conformance.py`.
 
+### External security reporting
+
+This repo tracks the security reporting of [`mukul975/Anthropic-Cybersecurity-Skills`](https://github.com/mukul975/Anthropic-Cybersecurity-Skills), reviewed 2026-08-21. Of its 29 domains, only AI Security (prompt injection) was assessed in-scope for this agentic supervisor harness; the resulting control shipped as T082 on 2026-08-21 — see `docs/claude-md/untrusted-content-boundary.md`. The other 28 domains (pentesting, forensics, OT/ICS, malware RE, …) were assessed out of scope and would install under `packs/` if ever wanted, never merged into `.claude/skills/`.
+
 ### Phase 0 — Strategy & Ideation
 
 | Skill | When to use |

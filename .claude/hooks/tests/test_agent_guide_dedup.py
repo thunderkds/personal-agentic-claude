@@ -60,7 +60,26 @@ T069_BASELINE_REF = "8d6d56b"
 # own unfixed state and comparing against it is red by construction. `c512ae9` is T071's CLAUDE.md
 # edit commit. Repointed, NOT deleted — the assertion body and the parametrize list are untouched,
 # and T071's AC15 re-proves the pin still discriminates by mutating CLAUDE.md and observing RED.
-T070_BASELINE_REF = "c512ae9"
+#
+# REPOINTED AGAIN by T082 (`c512ae9` -> `ebb2958`): T082 adds a Base Rule pointer bullet to
+# CLAUDE.md's `## General Agent Template` Base Rules list (the untrusted-content trust boundary),
+# so `c512ae9` is now the file's own unfixed state. `ebb2958` is T082's CLAUDE.md edit commit.
+T070_BASELINE_REF = "ebb2958"
+
+# T082's own edit commit (same commit as the repoint above). T082 adds a mandatory Base Rule bullet
+# to `general-agent-template.md` too (the same untrusted-content pointer) — a legitimate, required
+# change, not drift.
+#
+# Used by AC9 for ALL roles, and by AC7 for exactly ONE. The two guards are not in the same
+# position and were wrongly repointed together in T082's first pass (corrected at Stage 4):
+#
+#   AC9  — the pair-drift bound was ALREADY at ~96% of its `len(KARPATHY_TABLE)` budget before
+#          T082, so the shared +160 pushes all four roles over (+640..+760 vs `8d6d56b`). The
+#          repoint is genuinely forced, and AC9's own comment below explicitly warns against
+#          letting this guard fossilize. Repointing keeps it live.
+#   AC7  — three of four roles still clear T066's floor strictly, with ~1,400 chars of headroom.
+#          Only `c-infra` breaches. See `AC7_ROLE_BASELINE` below: pin the one, leave the three.
+T082_BASELINE_REF = "ebb2958"
 
 TEMPLATE = ".claude/agents/general-agent-template.md"
 ROLE_GUIDES = {
@@ -286,22 +305,55 @@ def loaded_chars(role: str) -> int:
     return len(read(ROLE_GUIDES[role])) + len(read(TEMPLATE))
 
 
+# AC7 is a PER-ROLE floor, and only one role actually needed repointing at T082 (Stage 4 finding).
+#
+# T082 adds ~160 chars to the shared TEMPLATE, so it moves every role's pair by the same amount —
+# but the roles do not sit the same distance above T066's floor. Measured against `8fc4dd2` with
+# T082's changes in place:
+#
+#     backend               12,528 vs 13,928   -1,400   still strictly lower
+#     frontend              12,177 vs 13,581   -1,404   still strictly lower
+#     qa                    11,343 vs 12,748   -1,405   still strictly lower
+#     common-infrastructure 10,327 vs 10,167     +160   breaches
+#
+# `common-infrastructure.md` is the smallest role guide, so the shared +160 tips only that pair
+# over. T082's first pass repointed ALL FOUR to its own edit commit and relaxed `<` to `<=`, which
+# threw away ~1,400 chars of live headroom on three roles to fix a breach on one — and made the
+# assertion `x <= x` at the moment it landed, i.e. vacuous exactly when it was introduced. The
+# commit message's claim that "the original T066 savings are preserved structurally" was true for
+# the three roles that did not need the repoint and false for the one that forced it.
+#
+# So: keep T066's floor and strict `<` where they still hold, and pin only the role that genuinely
+# breaches. A blanket repoint would have made the next role to breach invisible.
+AC7_ROLE_BASELINE = {"c-infra": T082_BASELINE_REF}  # key must match ROLE_GUIDES above
+
+
 def baseline_loaded_chars(role: str) -> int:
     # `.decode()` is load-bearing: these files are full of em dashes and `≤`, so a byte count
     # runs ~4% above the character count. Comparing bytes-before against chars-after made AC7
     # pass while the files were still untouched — a saving conjured entirely out of UTF-8.
-    return len(read_at(ROLE_GUIDES[role], BASELINE_REF).decode("utf-8")) + len(
-        read_at(TEMPLATE, BASELINE_REF).decode("utf-8")
+    ref = AC7_ROLE_BASELINE.get(role, BASELINE_REF)
+    return len(read_at(ROLE_GUIDES[role], ref).decode("utf-8")) + len(
+        read_at(TEMPLATE, ref).decode("utf-8")
     )
 
 
 @pytest.mark.parametrize("role", sorted(ROLE_GUIDES))
 def test_ac7_per_role_loaded_size_is_strictly_lower_than_baseline(role):
     before, after = baseline_loaded_chars(role), loaded_chars(role)
-    assert after < before, (
-        f"{role}: {before:,} -> {after:,} chars — not lower. Report the real number rather "
-        f"than reframing the criterion."
-    )
+    if role in AC7_ROLE_BASELINE:
+        # Pinned to its own T082 floor, so `<=`: `<` would be red by construction against a
+        # baseline that reads the same content. Still catches any further growth past this point.
+        assert after <= before, (
+            f"{role}: {before:,} -> {after:,} chars — grew past its T082 floor. Report the real "
+            f"number rather than reframing the criterion."
+        )
+    else:
+        # Unchanged from T066: still strictly lower, with ~1,400 chars of headroom.
+        assert after < before, (
+            f"{role}: {before:,} -> {after:,} chars — not lower than the T066 floor. Report the "
+            f"real number rather than reframing the criterion."
+        )
 
 
 # --------------------------------------------------------------------------
@@ -497,7 +549,7 @@ def test_t069_ac9_report_per_role_pair_size(capsys):
         print("\n  role      | before | after  | delta")
         print("  ----------|--------|--------|------")
         for role in sorted(ROLE_GUIDES):
-            before, after = pair_chars(role, T069_BASELINE_REF), pair_chars(role)
+            before, after = pair_chars(role, T082_BASELINE_REF), pair_chars(role)
             print(f"  {role:<10}| {before:>6,} | {after:>6,} | {after - before:+,}")
     # Reporting, with ONE assertion, and deliberately not `after <= before`: that would be a
     # scope guard committed as an invariant (T065 AC12) — correct today, and a blocker on the
@@ -507,8 +559,12 @@ def test_t069_ac9_report_per_role_pair_size(capsys):
     # guide gains one and the template loses one, so the pair moves by prose-sized amounts, not
     # by table-sized ones. That has a real failure mode — forget the removal and the delta is
     # +622 — while leaving future edits free.
+    #
+    # Repointed T069_BASELINE_REF -> T082_BASELINE_REF for the same reason as AC7 above: T082 adds
+    # a legitimate sentence to the template, and re-measuring drift from that new floor (rather
+    # than from T069's tip) is what keeps this a live guard instead of a fossil.
     for role in sorted(ROLE_GUIDES):
-        delta = pair_chars(role) - pair_chars(role, T069_BASELINE_REF)
+        delta = pair_chars(role) - pair_chars(role, T082_BASELINE_REF)
         assert abs(delta) < len(KARPATHY_TABLE), (
             f"{role}: pair moved {delta:+,} chars, which is a whole copy of the "
             f"{len(KARPATHY_TABLE):,}-char table. Either the removal from the template did not "
