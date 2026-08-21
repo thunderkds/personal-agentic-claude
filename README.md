@@ -340,7 +340,7 @@ This repo's skills implement the open [Agent Skills specification](https://agent
 
 ### External security reporting
 
-This repo tracks the security reporting of [`mukul975/Anthropic-Cybersecurity-Skills`](https://github.com/mukul975/Anthropic-Cybersecurity-Skills), reviewed 2026-08-21. Of its 29 domains, only AI Security (prompt injection) was assessed in-scope for this agentic supervisor harness; the resulting control shipped as T082 on `<implemented>` — see `docs/claude-md/untrusted-content-boundary.md`. The other 28 domains (pentesting, forensics, OT/ICS, malware RE, …) were assessed out of scope and would install under `packs/` if ever wanted, never merged into `.claude/skills/`.
+This repo tracks the security reporting of [`mukul975/Anthropic-Cybersecurity-Skills`](https://github.com/mukul975/Anthropic-Cybersecurity-Skills), reviewed 2026-08-21. Of its 29 domains, only AI Security (prompt injection) was assessed in-scope for this agentic supervisor harness; the resulting control shipped as T082 on 2026-08-21 — see `docs/claude-md/untrusted-content-boundary.md`. The other 28 domains (pentesting, forensics, OT/ICS, malware RE, …) were assessed out of scope and would install under `packs/` if ever wanted, never merged into `.claude/skills/`.
 
 ### Phase 0 — Strategy & Ideation
 
