@@ -17,7 +17,7 @@
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
 | Verification command run | ☐ pass / ☐ fail | [paste actual output] |
 | Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
+| verify | ☑ pass | User-run `/verify` 2026-08-21 — **pass**, driven by the Supervisor. **The deploy itself was NOT exercised**: no Vercel CLI on the machine, none installed or authenticated, because deploying is outward-facing and the operator's call. Two surfaces were drivable and were driven. (1) `.vercelignore` uses gitignore syntax, so the real matcher ran via `git check-ignore` against a scratch tree mirroring this repo — exactly two files survive upload, `site/index.html` and `vercel.json`; `memory/decisions.md`, `memory/event-trace/`, `tasks/`, `docs/`, `PROJECT_KANBAN.md`, `README.md`, `.claude/hooks/` all EXCLUDED. Probed under growth: new files inside `site/` (incl. a new nested dir) are admitted automatically, while a brand-new top-level dir and `.env` are excluded with no edit to the file — fail-closed in both directions. (2) The runbook's step-4 verification command ran verbatim against a served copy (`MATCH`) and against a deliberately wrong page (`NO MATCH`) — it discriminates rather than printing MATCH regardless. |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
 | Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
@@ -84,3 +84,38 @@ have Vercel publish only `site/` (not the project's memory/task files), with a w
 
 **WITNESS**: common-infrastructure sub-agent (T084), 2026-08-21 — commands run directly in the
 `wt-t084` worktree; not yet independently re-run by the Supervisor/reviewer.
+
+
+---
+
+## Stage 5 `/verify` findings (2026-08-21, user-run)
+
+1. **⚠️ The deploy is unverified and unverifiable from here.** Whether Vercel honours
+   `outputDirectory` for a build-less static project is a property of the platform, not of this repo.
+   Everything around it is verified: valid JSON, names a directory that exists and contains
+   `index.html`, declares no build/install/framework key, upload scope resolves as documented. **The
+   operator must run the preview deploy (`vercel`) before `vercel --prod`** — the runbook orders it
+   that way for exactly this reason, and it is the first real test of the one claim verification
+   could not reach.
+2. **The gitignore re-inclusion trap did not bite, and the reason is load-bearing.** `*` excludes the
+   `site` directory itself, and git cannot re-include a file whose parent directory is excluded — so a
+   lone `!site/**` would have been **silently inert** and the deploy would have uploaded nothing. The
+   file re-admits `!site/` *before* `!site/**`, which is what makes it work. Recorded because the two
+   lines look redundant and someone will eventually delete one.
+3. Probe that held: `.env` at repo root is excluded. Not present today; covered by the deny-all rather
+   than by anyone having thought of it.
+4. `vercel ls` in the rollback step lists deployments across the whole Vercel account, not filtered to
+   this project. Fine with one project, mildly noisy later.
+
+## Stage 4 note — the P1, and why the agent's reasoning was right but landed short
+
+The implementer reported that `memory/`, `tasks/` and `PROJECT_KANBAN*.md` are "never in the published
+output." **That was true and still left the hole**: `outputDirectory` scopes what Vercel *serves*, not
+what the CLI *uploads*. The Vercel CLI transmits the project source tree to Vercel's build
+infrastructure on every deploy, so this repo's project memory — decisions, learnings, event traces —
+would have left the machine on every `vercel` invocation and been retained by a third party. Never at
+a public URL, which is precisely why neither the config nor the original runbook paragraph surfaced it.
+
+Fixed with `.vercelignore` as an **allowlist** (bare `*`, then re-admit `site/` and `vercel.json`
+only). A denylist was the obvious shape and was rejected: it fails open the first time anyone adds a
+directory — the same failure mode as the documentation drift this whole release exists to fix.
