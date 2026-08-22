@@ -148,10 +148,9 @@ def test_no_project_state_on_page():
 
 
 def test_no_external_assets():
-    """AC1/AC8: zero network requests. src=/href= must never point at an
-    external origin (http://, https://, or protocol-relative //). The
-    install command's URL lives in visible text/code content, not in a
-    src=/href= attribute, so it never trips this check.
+    """AC1/AC8: zero asset requests. Resource ``src`` attributes and
+    stylesheet ``<link href>`` values must never point at an external origin.
+    Ordinary ``<a href>`` documentation links are navigation, not assets.
 
     T084 (carried over from T083's Stage 4 review): also cover CSS
     `url(...)`, `@import`, and `<img srcset>` — a future addition through
@@ -159,9 +158,13 @@ def test_no_external_assets():
     original src=/href= check still green. The page has none of these
     today; this closes a latent gap, not a live bug."""
     text = _page_text()
-    for attr_match in re.finditer(r'(?:src|href)\s*=\s*"([^"]*)"', text):
-        value = attr_match.group(1)
-        assert not re.match(r"^(https?:)?//", value), f"external asset reference: {value}"
+    for tag_match in re.finditer(r"<([A-Za-z][A-Za-z0-9-]*)([^>]*)>", text):
+        tag_name, attributes = tag_match.groups()
+        for attr_match in re.finditer(r'(src|href)\s*=\s*"([^"]*)"', attributes):
+            attribute, value = attr_match.groups()
+            is_resource = attribute == "src" or (tag_name.lower() == "link" and attribute == "href")
+            if is_resource:
+                assert not re.match(r"^(https?:)?//", value), f"external asset reference: {value}"
 
     for url_match in re.finditer(r'url\(\s*["\']?([^"\')]+)["\']?\s*\)', text):
         value = url_match.group(1)
@@ -175,6 +178,12 @@ def test_no_external_assets():
         for candidate in srcset_match.group(1).split(","):
             url = candidate.strip().split(" ")[0]
             assert not re.match(r"^(https?:)?//", url), f"external srcset entry: {url}"
+
+
+def test_canonical_repository_is_linked_on_page():
+    text = _page_text()
+    assert 'href="https://github.com/thunderkds/personal-agentic-claude"' in text
+    assert "GitHub repository" in text
 
 
 PACKS_DIR = os.path.join(ROOT, "packs")
