@@ -230,3 +230,108 @@ def test_readme_promised_topics_are_on_the_page():
         if not _word_present(text, keyword)
     ]
     assert not missing, f"README-promised topic(s) missing from page: {missing}"
+
+
+# ---------------------------------------------------------------------------
+# T089 — navigation integrity. The page is now a navigable document with a
+# sticky sidebar; a sidebar whose links rot is worse than no sidebar, and
+# nothing else in this repo would catch that. AC2/AC3 are the load-bearing
+# assertions: every nav link resolves, and every section is reachable.
+# ---------------------------------------------------------------------------
+
+TOKEN_AUDIT_TEST = os.path.join(
+    ROOT, ".claude", "hooks", "tests", "test_token_audit_format.py"
+)
+
+
+def _nav_hrefs():
+    """Every in-page anchor href inside the sidebar <nav> block."""
+    text = _page_text()
+    nav = re.search(r"<nav\b[^>]*>(.*?)</nav>", text, re.DOTALL)
+    assert nav, "page has no <nav> element — the sidebar navigation is missing"
+    return re.findall(r'href\s*=\s*"#([^"]+)"', nav.group(1))
+
+
+def _top_level_section_ids():
+    """ids of <section> elements that are direct children of <main>.
+
+    Nesting is tracked explicitly so a future nested <section> inside a
+    top-level one does not register as an orphan (Edge Case: AC3 needs a
+    precise definition of "top-level")."""
+    text = _page_text()
+    main = re.search(r"<main\b[^>]*>(.*)</main>", text, re.DOTALL)
+    assert main, "page has no <main> element — cannot identify top-level sections"
+    ids, depth = [], 0
+    for tag in re.finditer(r"<section\b([^>]*)>|</section>", main.group(1)):
+        if tag.group(0).startswith("</"):
+            depth -= 1
+            continue
+        if depth == 0:
+            attrs = tag.group(1)
+            id_match = re.search(r'id\s*=\s*"([^"]+)"', attrs)
+            assert id_match, f"top-level <section{attrs}> has no id — AC3"
+            ids.append(id_match.group(1))
+        depth += 1
+    return ids
+
+
+def _element_ids():
+    return set(re.findall(r'\bid\s*=\s*"([^"]+)"', _page_text()))
+
+
+def test_every_nav_link_resolves_to_a_section_id():
+    """AC2: no dead links. Every sidebar href="#x" must have an element
+    with id="x" on the page."""
+    present = _element_ids()
+    hrefs = _nav_hrefs()
+    assert hrefs, "sidebar <nav> contains no in-page links"
+    dead = sorted({h for h in hrefs if h not in present})
+    assert not dead, f"dead nav link(s) — no element with these id(s): {dead}"
+
+
+def test_every_section_has_a_nav_link():
+    """AC3: no orphan sections. Every top-level <section id=…> under <main>
+    must be reachable from the sidebar."""
+    linked = set(_nav_hrefs())
+    sections = _top_level_section_ids()
+    assert sections, "no top-level <section id=…> found under <main>"
+    orphans = [s for s in sections if s not in linked]
+    assert not orphans, f"section(s) with no nav link: {orphans}"
+
+
+def test_all_scripts_are_inline():
+    """AC9 / SC3: the page may execute script, but only inline script.
+    Zero external requests remains absolute."""
+    for script in re.finditer(r"<script\b([^>]*)>", _page_text()):
+        assert not re.search(r"\bsrc\s*=", script.group(1)), (
+            f"<script{script.group(1)}> loads an external file — "
+            "all script must be inline"
+        )
+
+
+def _enforced_hot_tier_budget():
+    with open(TOKEN_AUDIT_TEST, encoding="utf-8") as f:
+        match = re.search(r"HOT_TIER_CHAR_BUDGET\s*=\s*([\d_]+)", f.read())
+    assert match, "could not parse HOT_TIER_CHAR_BUDGET out of test_token_audit_format.py"
+    return int(match.group(1).replace("_", ""))
+
+
+def test_memory_cap_matches_enforced_budget():
+    """AC8: the memory cap published on the page must equal the enforced
+    HOT_TIER_CHAR_BUDGET, read from the enforcing test at test time — not a
+    hardcoded 45,000. Publishing a stale figure (50,000) is exactly the
+    defect this replaces."""
+    budget = _enforced_hot_tier_budget()
+    text = _page_text()
+    assert _word_present(text, f"{budget:,}") or _word_present(text, str(budget)), (
+        f"page does not publish the enforced hot-tier budget {budget:,}"
+    )
+    stale = [
+        n
+        for n in re.findall(r"\b\d{2},\d{3}\b(?=\s*character)", text)
+        if int(n.replace(",", "")) != budget
+    ]
+    assert not stale, (
+        f"page publishes character-cap figure(s) {stale} that disagree with the "
+        f"enforced HOT_TIER_CHAR_BUDGET of {budget:,}"
+    )
