@@ -11,7 +11,7 @@
 > **Batch 2026-09-12 — Easy Kit installer rework (T109–T117).** Authority: `docs/adr/0002-one-confirmed-menu-driven-installer.md`
 > (Accepted), `BRAINSTORMING_LOG.md`. All nine build on the integration branch `feat/easy-kit-one-command`
 > cut from `main`; each worktree branches from it and merges back; `main` receives the whole set in one
-> reviewed merge after every task passes `/verify` (`memory/decisions.md`, 2026-09-12). Order:
+> reviewed merge after every task passes `/verify` (`memory/decisions.md`, 2026-09-12). **Superseded same day after T109**: the user merged T109 + the integration branch into `main` (PR #84, #85) — from T110 on, each task is merged back into `feat/easy-kit-one-command`, pushed, and merged to `main` by the user, **strictly one at a time**. Order:
 > T109 first → T110–T113 may spawn in parallel but **merge one at a time**, re-running the installer suites
 > after each → T114 → T115 → T116 → T117 (strictly serial: each rewrites `setup.sh`'s prompts/arguments).
 > Baseline measured 2026-09-12 on `main` `8115bc9`: `1 failed, 844 passed` (the pre-existing
@@ -22,7 +22,6 @@
 > is not Done. T115 adds `tests/test_docs_match_installer.py`; T116/T117 extend it, so a removed flag can't
 > creep back into a live doc.
 
-- [ ] **T110** — Update delivers `CLAUDE.md`, through the same edit-safe rule as every other file | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T110.md` | Review: `tasks/TASK_REVIEW_T110.md` | Depends on: T109 | Registered 2026-09-12
 - [ ] **T111** — Kit hooks reach a project that already has `settings.json`, and stay current on update | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T111.md` | Review: `tasks/TASK_REVIEW_T111.md` | Depends on: T109 | Registered 2026-09-12
 - [ ] **T112** — First install never destroys a project's own files — they are backed up and named | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T112.md` | Review: `tasks/TASK_REVIEW_T112.md` | Depends on: T109 | Registered 2026-09-12 — directory-wipe case asserted from code reading only; the implementer's BEFORE must prove it
 - [ ] **T113** — Update removes what upstream stopped shipping (unless edited), and kit tests stop shipping | Common-Infrastructure-Agent | C2 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_T113.md` | Review: `tasks/TASK_REVIEW_T113.md` | Depends on: T109 | Registered 2026-09-12
@@ -66,6 +65,7 @@
 
 
 ### In Progress
+- [ ] **T110** — Update delivers `CLAUDE.md`, through the same edit-safe rule as every other file | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T110.md` | Review: `tasks/TASK_REVIEW_T110.md` | Depends on: T109 | Registered 2026-09-12 | **Stage 3 started 2026-09-12** — `common-infrastructure` (sonnet, C2) in `wt-t110` on `fix/t110-update-claude-md`, spawned via Ghostty/`setsid`
 
 
 

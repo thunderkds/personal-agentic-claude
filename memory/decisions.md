@@ -2059,3 +2059,15 @@ suite had been red since T097.
 **Carried forward**: P2-1 into T113's guide (smoke suite copies the MANIFEST parser); P3 — document the `run: |` and
 guard-deletion limits when T114 touches `ci.yml`; follow-up to register — CI runs no Python tests.
 **Files**: .github/workflows/ci.yml, tests/test_ci_wires_shell_suites.py, tests/test_install_update_smoke.sh
+
+
+### 2026-09-12 — Installer rework now reaches `main` one task at a time, by user-merged PR (supersedes the same-day "one reviewed merge at the end")
+**Decision**: After T109, the user merged `fix/t109-ci-suites` (PR #84) and `feat/easy-kit-one-command` (PR #85) into `main`
+(`992e293`) and asked to "continue one by one". From T110 on: each task's worktree branches from
+`feat/easy-kit-one-command` (fast-forwarded to `main`), merges back into it after Stage 4/5, both branches are pushed, and the
+user merges to `main` by PR. Tasks run strictly serially — T110 → T111 → T112 → T113 → T114 → T115 → T116 → T117.
+**Why**: user direction. The earlier "`main` gets the whole set in one merge" rule existed to avoid exposing curl installers
+to a half-migrated installer; that exposure is now accepted per task.
+**Known exposure**: `main` will carry intermediate states — most visibly between T116 (install-time pack menu removed) and
+T117 (`select-packs` activation). T110–T113 are independent hardening and low exposure.
+**Files**: PROJECT_KANBAN.md, tasks/TASK_GUIDE_T11*.md
