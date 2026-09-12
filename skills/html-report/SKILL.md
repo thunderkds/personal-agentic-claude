@@ -1,6 +1,6 @@
 ---
 name: html-report
-description: Generate a self-contained HTML report from the immediately preceding Stage 4 skill output (code-review, security-review, blast-radius). Produces scored dimensions (Risk %, Code Quality %, Adaptation Effort %) with progress bars, a findings table, and summary prose. Invoke immediately after any Stage 4 skill completes. Args: skill=<name> task=<TASK_ID> branch=<branch-name>
+description: "Generate a self-contained HTML report from the immediately preceding Stage 4 skill output (code-review, security-review, blast-radius). Produces scored dimensions (Risk %, Code Quality %, Adaptation Effort %) with progress bars, a findings table, and summary prose. Invoke immediately after any Stage 4 skill completes. Args: skill=<name> task=<TASK_ID> branch=<branch-name>"
 ---
 
 ## Role: HTML Report Renderer

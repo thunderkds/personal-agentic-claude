@@ -1,6 +1,6 @@
 ---
 name: bugfix
-description: Triage and drive a bug fix end-to-end — use when the user reports a defect, regression, or unexpected behaviour, or when a sub-agent surfaces a broken/failing condition during Stage 3. Runs the full Supervisor orchestration loop: intake → orient → TASK_GUIDE → diagnose → review → integrate.
+description: "Triage and drive a bug fix end-to-end — use when the user reports a defect, regression, or unexpected behaviour, or when a sub-agent surfaces a broken/failing condition during Stage 3. Runs the full Supervisor orchestration loop: intake → orient → TASK_GUIDE → diagnose → review → integrate."
 ---
 
 ## Role: Bug Fix Orchestrator

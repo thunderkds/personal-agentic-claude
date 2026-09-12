@@ -1,6 +1,6 @@
 ---
 name: thinking-report
-description: Render the Supervisor's reasoning from a completed session (brainstorming, grilling, or planning) as a self-contained HTML page with a Decision box, Trade-Off Matrix, and Assumptions list. Invoke after any brainstorming, grill-with-docs, or /plan session where a direction was locked. Args: session=<brainstorming|grilling|planning> task=<TASK_ID> branch=<branch-name>
+description: "Render the Supervisor's reasoning from a completed session (brainstorming, grilling, or planning) as a self-contained HTML page with a Decision box, Trade-Off Matrix, and Assumptions list. Invoke after any brainstorming, grill-with-docs, or /plan session where a direction was locked. Args: session=<brainstorming|grilling|planning> task=<TASK_ID> branch=<branch-name>"
 ---
 
 ## Role: Thinking & Decision Visualiser

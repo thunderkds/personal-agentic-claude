@@ -1,6 +1,6 @@
 ---
 name: delivery-report
-description: Render a completed task's Demonstration block (BEFORE/AFTER/DELTA/WITNESS) plus its Evidence-table completion count as a self-contained, browsable HTML page. Invoke at Stage 5, after `verify` passes and before merge. Args: task=<TASK_ID> guide=<path/to/TASK_GUIDE_Txxx.md> branch=<branch-name>
+description: "Render a completed task's Demonstration block (BEFORE/AFTER/DELTA/WITNESS) plus its Evidence-table completion count as a self-contained, browsable HTML page. Invoke at Stage 5, after `verify` passes and before merge. Args: task=<TASK_ID> guide=<path/to/TASK_GUIDE_Txxx.md> branch=<branch-name>"
 ---
 
 ## Role: Delivery Report Renderer
