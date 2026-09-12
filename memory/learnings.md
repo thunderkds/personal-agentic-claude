@@ -2253,3 +2253,39 @@ Supervisor read the test's asserted ordering back against the AC table.
 especially where one row constrains ordering, formatting, or shape that another row also pins down
 by example. And at Stage 4, diff what the tests actually assert against every AC row, not just the
 ones the agent's summary mentions. A guide defect is invisible in a green test run.
+
+
+## An agent that never exits looks exactly like an agent that is still working (T109, 2026-09-12)
+
+The round-2 T109 agent committed its fix and evidence at 18:27, was told to `/exit`, and instead sat at its
+prompt. The completion wait keyed on the launcher's `.done` marker, which only fires when the session ends, so the
+Supervisor reported "waiting for the agent to finish" for **3h20m** while the work was already done (1m34s of CPU in
+3h). The CPU-flat warning in the watcher was phrased "likely waiting on a permission prompt" — the other reading,
+"done and idle", was the true one. **Rule**: when a watcher reports flat CPU, check `git log` / `git status --short` in
+the worktree before waiting further; a clean tree whose last commit fills the review file is finished work. Stop the
+idle session via its pidfile (SIGTERM its `claude` child → marker `exit=143`). Files: `.claude/markers/launch_T109r2.sh`.
+
+## Verify a CI-workflow change by replaying its `run:` steps in a fresh container — and know the replay's blind spots (T109, 2026-09-12)
+
+With triggers limited to push-to-main/PR, `gh` unauthenticated and `act` absent, the `/verify` surface for a `ci.yml`
+change was reached by replaying every `run:` step, in order, under `bash --noprofile --norc -eo pipefail`, in a fresh
+`ubuntu:24.04` container with no git identity. Mechanics that mattered:
+- **Clone from a `git bundle`, not a bind-mounted repo.** Cloning the read-only-mounted main `.git` failed inside the
+  container ("make sure you have the correct access rights"); a bundle of the branch cloned cleanly.
+- **Put each mutation in a host-side scratch clone and commit it**, then bundle that — the container replays exactly one
+  tree, and every probe gets its own bundle so parallel runs cannot race.
+- **The replay's own parser only reads single-line `run:` values.** A `run: |` block reached bash as a bare `|` and failed
+  rc=2 *before* the step it was meant to probe — a harness artifact, not a finding. Re-check such probes directly.
+- It is still not an Actions run; say so in the verdict.
+
+## A guard that CI never executes protects nothing at the surface CI is (T109, 2026-09-12)
+
+T109 round 1 shipped a correct drift guard — every `tests/*.sh` must be wired into `ci.yml` or excluded — as a pytest
+file, while `ci.yml` runs no pytest at all. Unit-level the guard was green and its mutation controls held; at the CI
+surface, a replay with an unwired always-failing suite still reported `JOB RESULT: success`. The same review found the
+guard matched `tests/X.sh` **anywhere** in `ci.yml`, so a shellcheck-argument or comment mention counted as wired. The
+agent's own M2 control deleted a step for a suite mentioned nowhere else — a real failure, but the one mutation that
+could not reveal the hole. **Rules**: (1) a check whose job is to protect CI must itself be a CI step, and must assert
+its own step exists; (2) choose mutation controls that overlap another mention of the same thing, not the cleanest case.
+Round 2 fixed both (`af9e620`). Still open: **CI runs no Python tests at all** (~848, pre-existing). Files:
+`.github/workflows/ci.yml`, `tests/test_ci_wires_shell_suites.py`.

@@ -2046,3 +2046,16 @@ TASK_GUIDE.
 **Why**: User: packs "should be identified from the biz domain … Agent will analyze and suggest." The
 ~200 KB catalog beats a mid-session network fetch.
 **Files**: packs/*/PACK.md, MANIFEST, docs/claude-md/folder-structure.md
+
+
+### 2026-09-12 — T109 merged: every installer shell suite runs in CI, and the drift guard is a CI step
+**Decision**: `ci.yml` gains one named step per installer shell suite (7) plus `python3 tests/test_ci_wires_shell_suites.py`,
+which fails unless every `tests/*.sh` is wired by a direct `run: bash|sh tests/<name>.sh` line or excluded with a reason
+(`test_shellcheck_clean.sh`), and asserts its own step exists. The guard runs as a plain script because the runner's
+`python3` has no pytest and Ubuntu 24.04 blocks system `pip install`. The smoke suite reads MANIFEST field 1 only.
+Merged into `feat/easy-kit-one-command` (`300cf4e`) after /verify FAIL→round 2→PASS and Stage 4 (0 P0/P1).
+**Why**: none of the 9 installer defects found on 2026-09-12 were caught because CI never ran the installer's suites; one
+suite had been red since T097.
+**Carried forward**: P2-1 into T113's guide (smoke suite copies the MANIFEST parser); P3 — document the `run: |` and
+guard-deletion limits when T114 touches `ci.yml`; follow-up to register — CI runs no Python tests.
+**Files**: .github/workflows/ci.yml, tests/test_ci_wires_shell_suites.py, tests/test_install_update_smoke.sh

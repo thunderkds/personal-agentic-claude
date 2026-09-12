@@ -241,6 +241,11 @@
 - [An extension-filtered grep cannot establish "every occurrence"](learnings.md#an-extension-filtered-grep-cannot-establish-every-occurrence-t107-2026-09-06) — `--include='*.sh'` etc. hid the extensionless MANIFEST from T107's baseline; filter by path exclusion for audits.
 - [T107 merged: the product is Easy Kit on every surface](decisions.md) — 5 one-line edits; install path and audit trail deliberately untouched.
 
+- [An agent that never exits looks like one still working](learnings.md) — T109r2 idled 3h20m after committing; on a CPU-flat warning, check the worktree's commits before waiting.
+- [Verify a ci.yml change by container replay](learnings.md) — fresh ubuntu:24.04, clone from a git bundle, one committed mutation per bundle; the replay parser can't read `run: |`.
+- [A guard CI never executes protects nothing](learnings.md) — T109 r1 drift guard was pytest-only; CI ran no pytest. Make the guard a CI step that checks its own step.
+- [T109 merged: installer suites + drift guard in CI](decisions.md) — 7 suites + plain-script guard; follow-up open: CI runs no Python tests (~848).
+
 ### Glossary
 - [Report / Report Slot / Scoring Dimension / Report Session](glossary.md) — canonical terms for the html-report skill and Stage 4 reporting system
 - [Thinking Report / Trade-Off Matrix / Thinking Session](glossary.md) — canonical terms for the thinking-report skill and Stage 0.5–2 decision system
