@@ -212,8 +212,95 @@ prompt_conflict() {
   done
 }
 
-# ── Compare + update every fresh file, recording final hashes to a decisions file
-# Writes key<TAB>hash lines to $_decisions and each handled key to $_processed.
+# ── Compare + update a single file, recording its final hash to $_decisions
+# and marking $_rel handled in $_processed. Shared by process_files (MANIFEST
+# entries) and process_claude_md (T110) so both go through one comparison +
+# prompt path. Sets LAST_FILE_INSTALLED to 1 iff install_file actually ran, so
+# a caller can tell "installed" apart from "skipped/left alone".
+# _force_conflict=1 skips the untouched/no-diff fast paths and always prompts
+# (used when the caller could not establish which upstream file backs $_dst).
+LAST_FILE_INSTALLED=0
+process_one_file() {
+  _src="$1"
+  _dst="$2"
+  _rel="$3"
+  _lock="$4"
+  _decisions="$5"
+  _processed="$6"
+  _force_conflict="${7:-}"
+  LAST_FILE_INSTALLED=0
+  _fresh_hash=$(compute_file_hash "$_src")
+  printf '%s\n' "$_rel" >> "$_processed"
+
+  # New file added upstream since install — install directly, no conflict.
+  if [ ! -e "$_dst" ]; then
+    install_file "$_src" "$_dst"
+    LAST_FILE_INSTALLED=1
+    printf '%s\t%s\n' "$_rel" "$_fresh_hash" >> "$_decisions"
+    log_info "new file installed: $_rel"
+    return
+  fi
+
+  _cur_hash=$(compute_file_hash "$_dst")
+  _rec_hash=$(lookup_lock_hash "$_lock" "$_rel")
+
+  if [ "$_force_conflict" != "1" ]; then
+    # Untouched since install (hash still matches the lock) — overwrite silently.
+    if [ -n "$_rec_hash" ] && [ "$_cur_hash" = "$_rec_hash" ]; then
+      install_file "$_src" "$_dst"
+      LAST_FILE_INSTALLED=1
+      printf '%s\t%s\n' "$_rel" "$_fresh_hash" >> "$_decisions"
+      return
+    fi
+
+    # No real diff (current content already equals upstream) — no-op overwrite,
+    # nothing to resolve. Covers "edited back to upstream" and "identical but
+    # never tracked" without a pointless empty-diff prompt.
+    if [ "$_cur_hash" = "$_fresh_hash" ]; then
+      install_file "$_src" "$_dst"
+      LAST_FILE_INSTALLED=1
+      printf '%s\t%s\n' "$_rel" "$_fresh_hash" >> "$_decisions"
+      return
+    fi
+  fi
+
+  # Real conflict: user customized this file (or it was never tracked and the
+  # content genuinely differs), or the caller forced the conflict path because
+  # it could not identify $_dst's upstream source. Show the diff and prompt.
+  if [ -n "$_rec_hash" ]; then
+    log_warn "conflict: '$_rel' has local changes since install"
+  else
+    log_warn "conflict: '$_rel' is not recorded in the lock and differs from upstream"
+  fi
+  log_info "diff (current vs upstream) for $_rel:"
+  diff -u "$_dst" "$_src" >&2 || true
+
+  prompt_conflict "$_dst" "$_src"
+  case "$CONFLICT_DECISION" in
+    o)
+      install_file "$_src" "$_dst"
+      LAST_FILE_INSTALLED=1
+      printf '%s\t%s\n' "$_rel" "$_fresh_hash" >> "$_decisions"
+      log_info "overwrote: $_rel"
+      ;;
+    s)
+      # Keep the local file; preserve its prior recorded hash if it had one.
+      if [ -n "$_rec_hash" ]; then
+        printf '%s\t%s\n' "$_rel" "$_rec_hash" >> "$_decisions"
+      fi
+      log_info "skipped: $_rel (kept your local version)"
+      ;;
+    eof)
+      UNRESOLVED=$((UNRESOLVED + 1))
+      if [ -n "$_rec_hash" ]; then
+        printf '%s\t%s\n' "$_rel" "$_rec_hash" >> "$_decisions"
+      fi
+      log_warn "no input for '$_rel' — left your local version untouched; re-run interactively to resolve."
+      ;;
+  esac
+}
+
+# ── Compare + update every MANIFEST file, recording final hashes ─────────────
 # Sets UNRESOLVED to the count of conflicts left unresolved due to no input.
 UNRESOLVED=0
 process_files() {
@@ -226,71 +313,76 @@ process_files() {
   # Loop over the file list via fd 3 so fd 0 (stdin) stays free for prompts.
   while IFS= read -r _rel <&3; do
     [ -n "$_rel" ] || continue
-    _src="$HARNESS_TEMP_DIR/$_rel"
-    _dst="./$_rel"
-    _fresh_hash=$(compute_file_hash "$_src")
-    printf '%s\n' "$_rel" >> "$_processed"
-
-    # New file added upstream since install — install directly, no conflict.
-    if [ ! -e "$_dst" ]; then
-      install_file "$_src" "$_dst"
-      printf '%s\t%s\n' "$_rel" "$_fresh_hash" >> "$_decisions"
-      log_info "new file installed: $_rel"
-      continue
-    fi
-
-    _cur_hash=$(compute_file_hash "$_dst")
-    _rec_hash=$(lookup_lock_hash "$_lock" "$_rel")
-
-    # Untouched since install (hash still matches the lock) — overwrite silently.
-    if [ -n "$_rec_hash" ] && [ "$_cur_hash" = "$_rec_hash" ]; then
-      install_file "$_src" "$_dst"
-      printf '%s\t%s\n' "$_rel" "$_fresh_hash" >> "$_decisions"
-      continue
-    fi
-
-    # No real diff (current content already equals upstream) — no-op overwrite,
-    # nothing to resolve. Covers "edited back to upstream" and "identical but
-    # never tracked" without a pointless empty-diff prompt.
-    if [ "$_cur_hash" = "$_fresh_hash" ]; then
-      install_file "$_src" "$_dst"
-      printf '%s\t%s\n' "$_rel" "$_fresh_hash" >> "$_decisions"
-      continue
-    fi
-
-    # Real conflict: user customized this file (or it was never tracked and the
-    # content genuinely differs). Show the diff and prompt.
-    if [ -n "$_rec_hash" ]; then
-      log_warn "conflict: '$_rel' has local changes since install"
-    else
-      log_warn "conflict: '$_rel' is not recorded in the lock and differs from upstream"
-    fi
-    log_info "diff (current vs upstream) for $_rel:"
-    diff -u "$_dst" "$_src" >&2 || true
-
-    prompt_conflict "$_dst" "$_src"
-    case "$CONFLICT_DECISION" in
-      o)
-        install_file "$_src" "$_dst"
-        printf '%s\t%s\n' "$_rel" "$_fresh_hash" >> "$_decisions"
-        log_info "overwrote: $_rel"
-        ;;
-      s)
-        # Keep the local file; preserve its prior recorded hash if it had one.
-        if [ -n "$_rec_hash" ]; then
-          printf '%s\t%s\n' "$_rel" "$_rec_hash" >> "$_decisions"
-        fi
-        log_info "skipped: $_rel (kept your local version)"
-        ;;
-      eof)
-        UNRESOLVED=$((UNRESOLVED + 1))
-        if [ -n "$_rec_hash" ]; then
-          printf '%s\t%s\n' "$_rel" "$_rec_hash" >> "$_decisions"
-        fi
-        log_warn "no input for '$_rel' — left your local version untouched; re-run interactively to resolve."
-        ;;
-    esac
+    process_one_file "$HARNESS_TEMP_DIR/$_rel" "./$_rel" "$_rel" "$_lock" "$_decisions" "$_processed"
   done 3< "$_list"
+}
+
+# ── Determine which upstream file backs the project's CLAUDE.md (T110) ───────
+# Prefers the recorded lock field (AC4: "claude_md_source"). Falls back to
+# heading inference for old locks written before this field existed (AC5):
+# compares CLAUDE.md's first line against each candidate's first line in the
+# fetched temp clone. Sets CLAUDE_MD_SOURCE to the winning filename, or
+# "conflict" when neither/both match — never guessed.
+CLAUDE_MD_SOURCE=""
+resolve_claude_md_source() {
+  _lock="$1"
+  _dst="$2"
+  _recorded=$(lookup_lock_hash "$_lock" "claude_md_source")
+  if [ -n "$_recorded" ]; then
+    CLAUDE_MD_SOURCE="$_recorded"
+    return
+  fi
+  if [ ! -e "$_dst" ]; then
+    # Deleted by the user, or never installed — treat like any missing file.
+    CLAUDE_MD_SOURCE="CLAUDE.md"
+    return
+  fi
+  _dst_first=$(head -n1 "$_dst" 2>/dev/null || true)
+  _match=""
+  for _cand in CLAUDE.md CLAUDE_LEGACY.md; do
+    _cand_path="$HARNESS_TEMP_DIR/$_cand"
+    [ -f "$_cand_path" ] || continue
+    _cand_first=$(head -n1 "$_cand_path")
+    if [ "$_dst_first" = "$_cand_first" ]; then
+      if [ -n "$_match" ]; then
+        CLAUDE_MD_SOURCE="conflict"
+        return
+      fi
+      _match="$_cand"
+    fi
+  done
+  CLAUDE_MD_SOURCE="${_match:-conflict}"
+}
+
+# ── Deliver CLAUDE.md through the same edit-safe rule as every other file (T110)
+# Sets FINAL_CLAUDE_MD_SOURCE to the value write_new_lock should record — the
+# resolved source when known, or empty when still unresolved (ambiguous heading
+# with no overwrite this run), so a future update keeps trying to resolve it
+# rather than recording a guess.
+FINAL_CLAUDE_MD_SOURCE=""
+process_claude_md() {
+  _lock="$1"
+  _decisions="$2"
+  _processed="$3"
+  _dst="./CLAUDE.md"
+  resolve_claude_md_source "$_lock" "$_dst"
+
+  if [ "$CLAUDE_MD_SOURCE" = "conflict" ]; then
+    log_warn "conflict: 'CLAUDE.md' install source could not be determined from its first line — treating as customized."
+    process_one_file "$HARNESS_TEMP_DIR/CLAUDE.md" "$_dst" "CLAUDE.md" "$_lock" "$_decisions" "$_processed" 1
+    if [ "$LAST_FILE_INSTALLED" = "1" ]; then
+      FINAL_CLAUDE_MD_SOURCE="CLAUDE.md"
+    fi
+    return
+  fi
+
+  FINAL_CLAUDE_MD_SOURCE="$CLAUDE_MD_SOURCE"
+  _src="$HARNESS_TEMP_DIR/$CLAUDE_MD_SOURCE"
+  if [ ! -f "$_src" ]; then
+    log_error "CLAUDE.md source '$CLAUDE_MD_SOURCE' not found in fetched harness — leaving your CLAUDE.md untouched."
+    return
+  fi
+  process_one_file "$_src" "$_dst" "CLAUDE.md" "$_lock" "$_decisions" "$_processed"
 }
 
 # ── Preserve lock entries not seen in this run (e.g. CLAUDE.md, removed-upstream)
@@ -315,16 +407,25 @@ carry_over_unprocessed() {
 }
 
 # ── Rewrite .claude/harness-lock.json from the decisions file ────────────────
-# Same JSON shape setup.sh writes: { "files": { "<path>": "<hash>", ... } }.
+# Same JSON shape setup.sh writes: { "claude_md_source": "...", "files": { ... } }.
+# _claude_md_source may be empty (T110 AC5: still unresolved this run) — in
+# that case the field is simply omitted, same as an old pre-T110 lock, so the
+# next update retries inference rather than recording a guess.
 write_new_lock() {
   _decisions="$1"
   _lock="$2"
+  _claude_md_source="$3"
   _sorted="$HARNESS_TEMP_DIR/.update-lock-sorted"
   # Unique by full line; keys are already unique so this only stabilizes order.
   LC_ALL=C sort -u "$_decisions" > "$_sorted"
 
   {
-    printf '{\n  "files": {\n'
+    printf '{\n'
+    if [ -n "$_claude_md_source" ]; then
+      _esc_src=$(printf '%s' "$_claude_md_source" | sed 's/\\/\\\\/g; s/"/\\"/g')
+      printf '  "claude_md_source": "%s",\n' "$_esc_src"
+    fi
+    printf '  "files": {\n'
     _first=1
     while IFS='	' read -r _k _h; do
       [ -n "$_k" ] || continue
@@ -451,8 +552,9 @@ main() {
 
   build_fresh_file_list "$manifest" "$fresh_list"
   process_files "$lock" "$fresh_list" "$decisions" "$processed"
+  process_claude_md "$lock" "$decisions" "$processed"
   carry_over_unprocessed "$lock" "$manifest" "$decisions" "$processed"
-  write_new_lock "$decisions" "$lock"
+  write_new_lock "$decisions" "$lock" "$FINAL_CLAUDE_MD_SOURCE"
 
   # Re-project every selected/already-present harness from the canon this run
   # just refreshed. Replaces each destination wholesale, so nothing upstream
