@@ -1,6 +1,6 @@
 # 0001. Direct-to-repo install/update, no persistent central clone
 
-**Status**: Accepted
+**Status**: Accepted — **partially superseded by ADR-0002** (2026-09-12): the separate-`update.sh` and always-full-overwrite `setup.sh` clauses, and the packs deferral, are replaced. Temp-clone-copy-discard, the git-repo prerequisite, the hash-lock and symlink-install refusal remain in force.
 **Date**: 2026-07-17
 **Deciders**: User (thunderkds), Supervisor
 **Related**: BRAINSTORMING_LOG_direct-install.md · supersedes the symlink-from-`~/.supervisor` model documented in `PROJECT_SPEC.md` glossary ("Central clone", "General resources")

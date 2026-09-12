@@ -15,7 +15,7 @@
 - **Demonstration** — the TASK_GUIDE block anchoring a task's outcome to an observable before/after pair, present in **both** guide flavors. Fields: BEFORE (command showing the thing absent/failing; the bugfix flavor's is its Phase 1 repro loop), AFTER (same command post-change), DELTA (one sentence: what a user can now do), WITNESS (who ran it and when — never the implementing agent alone). Canonical term — not "demo block" or "before/after section".
 - **BEFORE capture** — the RED-state observation recorded in a Demonstration block *before any implementation commit exists*. The only field in the system that cannot be back-filled from a finished branch; every other checklist row in either guide flavor is satisfiable by assertion alone.
 
-- **Pack** — an optional domain extension bundle: `agents/` + `skills/` + `PACK.md`. Installed via `setup.sh --pack=<name>`; symlinked into `.claude/agents/` and `.claude/skills/` alongside core resources.
+- **Pack** — an optional domain extension bundle: `agents/` + `skills/` + `PACK.md`. **Never chosen at install** (ADR-0002, proposed 2026-09-12): every pack ships inactive as the **Pack catalog**; the Supervisor recommends packs from the business domain via `select-packs`, and an approved pack becomes an **Activated pack** when its files are copied into the plain-root canon. The old `setup.sh --pack=<name>` path installed nothing after ADR-0001 and is removed.
 - **Core framework** — the always-installed base: backend, frontend, common-infrastructure, qa agents + all `.claude/skills/` entries. Packs are additive on top; they never replace core resources.
 - **Pack agent** — a domain-specific sub-agent defined in `packs/<name>/agents/<agent-name>.md`. Uses a namespaced name (e.g. `mobile-developer`) to avoid collision with core agents.
 
@@ -25,8 +25,11 @@
 
 <!-- - **ModelName** (`path/to/model.py`) — what it represents, key fields/invariants. -->
 
-- **Harness** — a CLI/agent runtime the kit installs into (Claude Code, Codex). Selected at install
-  time via `setup.sh --harness <name>`; N=2 by decision (DDR-0006 follow-up).
+- **Harness** — internal term for a CLI/agent runtime the kit installs into (Claude Code, Codex); N=2
+  by decision (DDR-0006 follow-up). **Users see "CLI"**, picked from a numbered menu at install
+  (ADR-0002, proposed 2026-09-12), replacing `setup.sh --harness <name>`. Legacy identifiers
+  (`harness-lock.json`, `lib/harness-fetch.sh`) use "harness" for the *kit* itself and are
+  deliberately not renamed — never show the word to users.
 - **Canon** — the single tracked source of truth for skills and agent guides: real directories at
   plain root (`skills/`, `agents/`). Everything else is derived from it.
 - **Projection** — a generated, gitignored copy of the canon written into a harness's own directory

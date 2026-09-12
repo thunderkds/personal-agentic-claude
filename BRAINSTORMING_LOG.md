@@ -1,84 +1,85 @@
 # BRAINSTORMING_LOG.md
-**Generated**: 2026-08-17
-**Task / Context**: Hook wiring drift — a `settings.json` entry pointing at a hook file that does not exist bricks every Bash call, and the resulting error gives no direction to fix
+**Generated**: 2026-09-12
+**Task / Context**: Easy Kit install/update scripts (`setup.sh`, `update.sh`, `lib/harness-fetch.sh`) — make them work as documented, and simple to use (few options)
 **Skill**: `Skill({ skill: "brainstorming" })`
-**Tier**: Standard (moderate ambiguity; resolved by one user-supplied error report + empirical probing of all 8 hooks)
+**Tier**: Deep (install contract touches every user repo; two findings are silent data loss; 43 files reference `setup.sh`)
 
-> Supersedes the 2026-08-05 Demonstration-block log (T053/T054 subject, shipped and closed).
-> Recoverable from git history.
+> Supersedes the 2026-08-17 hook-wiring-drift log (T074, shipped and closed). Recoverable from git history.
 
 ---
 
 ## The Problem Space
 
-### What actually happened
+### Evidence — measured, not inferred
 
-A machine running this framework reported:
+Two probe runs on 2026-09-12 against committed `main` (`8115bc9`), in scratch git repos with
+`SUPERVISOR_REPO=file://<kit>` and `HOME` isolated. Interactive prompts driven through a pty (`script -qec`).
 
-> *Broken hook: `.claude/settings.json` wires `pre_bash_block_dangerous_git.py` into every Bash call's
-> PreToolUse, but that file doesn't exist on disk — so right now all Bash commands fail, not just git
-> ones.*
+**Works**: fresh non-interactive install (30 skills, 5 agents, hooks, settings.json, 110-hash lock,
+relative `.claude/{skills,agents}` links); piped bootstrap incl. `sh -c "$(…)" -- --harness codex`;
+unmodified skill updates; customized skill kept on update (exits 2 without a TTY); Codex projection +
+presence-based re-projection; brownfield `CLAUDE_LEGACY.md` survives update; second update is a
+no-op (0 dirty files); all 8 settings.json hook paths resolve and every hook exits ≤1 on `{}`;
+worktree resolves the canon links; bad flag / non-git dir fail before any write.
 
-The user's complaint was not that the hook blocked something. It was that **the error carried no
-direction to fix and no explanation of what the hook was for**.
+**Broken**:
 
-### Verified facts (claim-verification gate)
-
-Every assertion below was checked against the actual files, not recalled:
-
-| Claim | Verification | Result |
+| # | Defect | Measured |
 |---|---|---|
-| The 8 framework hooks crash on a foreign machine | Ran all 8 as subprocesses under 3 conditions: home repo, bare project (hooks copied, no `tasks/`/KANBAN/`memory/`), `CLAUDE_PROJECT_DIR` unset — 24 runs | **False.** 0 non-zero exits, 0 tracebacks. All fail open silently by design |
-| `pre_bash_block_dangerous_git.py` is shipped by this repo | `find`, `grep` over `MANIFEST*`, `setup.sh`, `update.sh`, `scripts/` | **Never shipped.** Matches no file in repo history |
-| The guardrails skill creates that filename | Read `.claude/skills/git-guardrails-claude-code/SKILL.md` | **No.** It installs `block-dangerous-git.sh` — shell, not Python, different stem |
-| The bundled guardrail script exists | `ls .claude/skills/git-guardrails-claude-code/scripts/` | Yes — `block-dangerous-git.sh`, 507 bytes, executable |
-| This machine has the same drift | Cross-checked every wired path in 3 settings files against disk | **No.** 8/8 framework + 22/22 machine-level all resolve |
-| All 8 hooks are wired | Parsed `.claude/settings.json` | Yes, all 8, correct events |
+| 1 | Packs install nothing | `install_pack` reads `$SUPERVISOR_PATH/packs` (`~/.supervisor`), never created since ADR-0001 (which deferred packs, `docs/adr/0001-…md:25,55`). `--pack=mobile` and interactive `1, 5` both warn "not found in central clone — skipping", then log "Packs requested: mobile api". |
+| 2 | Update never delivers `CLAUDE.md` / `settings.json` | Upstream changed skill + CLAUDE.md + settings.json → only the skill arrived. Neither file is in `MANIFEST`; `build_fresh_file_list` walks MANIFEST only. New gates and new hooks never reach existing projects. |
+| 3 | No runnable update command | `update.sh` is not installed into the project and has no curl bootstrap (`update.sh:59-62` exits). Site offers `sh update.sh` (fails) and `sh /path/to/personal-agentic-claude/update.sh` (needs a clone). |
+| 4 | Re-running setup silently clobbers edits | Customized `skills/diagnose/SKILL.md` overwritten, exit 0, no prompt. |
+| 5 | Install clobbers a project's own `CLAUDE.md` / `AGENTS.md` | Pre-existing `# my project rules` replaced without warning; uncommitted content is unrecoverable. |
+| 6 | Existing `settings.json` → zero hooks, silently | `install_settings` returns early with no message; nothing merges hook wiring. |
+| 7 | Skill deleted upstream survives update | Warned, kept; Claude still loads it. |
+| 8 | Kit-internal tests ship into user repos | 36 files under `.claude/hooks/tests/`; install = 119 files, 1.4 MB. |
+| 9 | CI does not run the install/update suites | `ci.yml` runs `smoke-install.sh` + `test_harness_projection.sh` only; `tests/test_setup.sh` (253 l), `test_update.sh` (408 l), `test_install_update_smoke.sh` (236 l) never run in CI. |
 
-### The real root cause
+**Option sprawl** (user asked for fewer): `--copy` (no-op for base), `--pack=` (broken; `--pack x` rejected),
+interactive pack menu, `--harness`/`--harness=`, `SUPERVISOR_REPO` + `GITHUB_USERNAME` (two knobs, one
+purpose), `SUPERVISOR_PATH` (exists only for broken packs), test seams visible to users
+(`HARNESS_SKILL_BODY_CAP`, `SETUP_SH_DIR`, `SETUP_SH_DEFINE_ONLY`), and the `sh -c "$(curl …)" --` form.
 
-The failing filename was **invented by pattern-matching**. The framework's real hooks are named
-`pre_bash_block_unsafe_merge.py`, `pre_agent_step_limit.py`, … so `pre_bash_block_dangerous_git.py`
-*looks* exactly like a framework hook. Something wrote the `settings.json` entry using that
-convention without ever creating the file.
+### Non-negotiables
 
-The guardrails skill's own step order makes this easy to hit:
-
-- **Step 2** — place the script (`block-dangerous-git.sh`)
-- **Step 3** — register it in `settings.json`
-- **Step 5** — "Verify": `echo '{...}' | .claude/hooks/block-dangerous-git.sh`
-
-Run step 3 without step 2, or let the name drift between them, and Bash is dead. **Step 5 verifies the
-script in isolation and never verifies that `settings.json` points at a path that resolves.** The one
-check that would have caught this is the one check the skill does not do.
-
-### Why it was unfixable-feeling, and the constraint that dominates every option
-
-**The broken tool is the tool you need to fix it.** When a `PreToolUse/Bash` hook is unresolvable,
-every Bash call fails — including `ls`, including `cat settings.json`, including any repair script we
-might ship. A `scripts/doctor.sh` is worthless in the exact moment it is needed.
-
-Any viable remedy must therefore be reachable **without Bash** — i.e. via `Read`/`Edit` on a known
-path, or via a *different* hook event that still fires, or printed pre-emptively before the breakage.
-
-### Non-negotiable constraints
-
-1. No remedy may depend on Bash working.
-2. Framework hooks must keep failing **open** (silent exit 0) — that property is load-bearing and
-   deliberately chosen; do not trade it away.
-3. `pre_bash_block_unsafe_merge.py` must keep failing **closed** (it emits `decision: block` and exits
-   0 by design — see its guarded import). These two rules are not in conflict; they are per-hook.
-4. Whatever we add must survive `setup.sh` / `update.sh` deployment into other projects.
+- Git history remains the undo path; never write before the git-repo check.
+- A user's local edits are never destroyed without an explicit choice.
+- ADR-0001's temp-clone-copy-discard model stays (no central clone returns).
+- Codex skill-body cap stays skip-not-truncate.
 
 ---
 
 ## Questions for the User
 
-1. Should the remedy also cover **third-party** hooks (`~/.claude/settings.json` — `orca`,
-   `supervisor-viz`, `node-terminal`)? They are outside this framework but they are wired into the
-   same session, and one of them is emitting `[null] 📁 null` on every prompt in this very session.
-2. Is the priority **prevention** (never break again) or **recovery** (a clear path out when it does)?
-   Option D below is the only one that seriously buys both.
+Resolved in this session (2026-09-12):
+
+1. **Do packs stay an installer feature?** → **No install-time pack choice.** Packs are identified from the
+   business domain: the Supervisor analyzes and *suggests* packs, and the client decides later.
+2. **Where do pack files come from after approval?** → **Ship a dormant catalog.** All of `packs/`
+   (5 packs, 20 files, ~200 KB) is copied inactive; activation copies the chosen pack into the canon.
+3. **Script shape?** → **One command**, auto-detecting install vs update, **but it confirms and lets the
+   user choose another action** rather than acting silently.
+
+4. **No parameters at all (user, 2026-09-12).** "One single command; the options should be chosen by the
+   user from a list, not params the user must remember and push in at initialize." Every choice is a
+   numbered menu. The user delegated the remaining calls: "Following it and choose the good one."
+
+Decided by the Supervisor under that delegation — each still open to challenge in `grill-with-docs`:
+
+5. **No `/dev/tty` (CI, Docker, `ssh` without `-t`)** → proceed with the *safe* defaults and print every
+   one: install = Claude Code + greenfield; update = keep all local edits, unresolved conflicts exit 2.
+   Never reinstall without a TTY. Tests drive the menus through a pty (`script -qec`, proven at T108).
+6. **Existing user `CLAUDE.md` / `AGENTS.md`** → saved to `<name>.bak` before the kit copy, shown in the
+   plan screen before confirmation. No extra question; never silent, never lost.
+7. **`settings.json`** → merge kit hook entries into the existing file with `python3` (already a hard
+   prerequisite — every wired hook is `python3 …`). User permissions untouched. If `python3` is absent,
+   fail the hook step loudly — hooks could not run anyway.
+8. **Pack activation** → a Supervisor skill (`select-packs`) at Phase 0/Stage 1: reads each dormant
+   `packs/*/PACK.md` "When to use", recommends, asks the client via a pick list, copies the approved
+   pack into `agents/`/`skills/`. Installing kit content is configuration, not project implementation —
+   recorded in a DDR so Gate 1 is interpreted explicitly, not by convenience.
+9. **Upstream-deleted skill** → removed if its lock hash still matches (never edited); kept + warned if edited.
 
 ---
 
@@ -86,175 +87,145 @@ path, or via a *different* hook event that still fires, or printed pre-emptively
 
 | Option | Name | Summary | Invasiveness | Code Volume | Regression Risk | Recommended? |
 |--------|------|---------|-------------|------------|----------------|--------------|
-| A | The Doctor Script | `scripts/hook-doctor.sh` cross-checks wiring vs. disk | Low | ~80 lines | Low | |
-| B | The Self-Describing Hook | Every hook gains `--explain`; errors cite a `docs/hooks.md` registry | Medium | ~250 lines | Medium | |
-| C | The Source Fix | Reorder the guardrails skill; add wiring check to `setup.sh`/`update.sh` | Low | ~40 lines | Low | |
-| D | **Preflight + Docs** | SessionStart validator that names the bad entry and the Read/Edit fix, plus a README troubleshooting section | Low-Med | ~120 lines | Low | ✅ Yes |
+| A | Two Scripts, Fixed | Keep setup/update; fix defects 1–9 in place | Low | ~+150 / −120 | Low | |
+| B | One Confirmed Entrypoint | `setup.sh` becomes the only command: detect → show plan → confirm/choose; `update.sh` a thin alias; dormant pack catalog | Medium | ~+220 / −260 | Medium | ✅ Yes |
+| C | Silent Auto Entrypoint | Like B, no confirmation menu, flags only | Medium | ~+160 / −260 | Medium | |
 
-### Option A — The Doctor Script
-**Approach**: Ship `scripts/hook-doctor.sh` that parses all settings files, resolves every wired hook
-path, and reports `OK` / `MISSING` per entry (exactly the probe I ran above).
+### Option A — Two Scripts, Fixed
+**Approach**: Setup refuses when a lock exists ("use update"); update gains a curl bootstrap and covers
+`CLAUDE.md` + `settings.json`; packs copied from the temp clone; wire the 3 suites into CI.
+**Pros**: Smallest diff; zero doc/test renames; each fix independently shippable.
+**Cons**: Users still learn two commands and two URLs; keeps the pack menu the user just rejected;
+duplicated flag parsing, hashing and repo resolution survive in both files (`compute_file_hash`,
+`resolve_repo_url`, `check_*` are copy-pasted today).
+**Why it might fail**: Contradicts two locked answers (no install-time packs; one command). Fixes the
+symptoms while the surface the user called too complex stays the same size.
 
-**Pros**: Trivially simple; reuses a script already proven in this session; useful for third-party hooks too.
+### Option B — One Confirmed Entrypoint
+**Approach**: Keep the name `setup.sh` (43 referencing files, the curl URL already public) as the single
+entrypoint. It detects state and prints a plan, then asks via `/dev/tty`:
+`No install found → [I]nstall / [c]ancel`; `Install found → [U]pdate (keeps your edits) / [r]einstall
+(backs up edits) / [c]ancel`. `update.sh` becomes a ≤10-line alias that runs the update action. Shared
+functions move into `lib/harness-fetch.sh`. Remove `--copy`, `--pack=`, the pack menu,
+`SUPERVISOR_PATH`, `install_abs`, `install_pack`. Ship `packs/` as a dormant catalog in `MANIFEST`;
+activation happens later in the pipeline. Update covers `CLAUDE.md` + `settings.json` through the
+same hash-lock conflict path. Stop shipping `.claude/hooks/tests/`. CI runs all install/update suites.
+**Revised 2026-09-12 per user: zero flags.** Every choice is a numbered menu, at most three screens:
+1. **Action** — `No install found: 1) Install  2) Cancel` / `Install found: 1) Update (keeps your edits)  2) Reinstall (backs up edits)  3) Cancel`
+2. **CLIs** (install/reinstall only) — multi-pick `1) Claude Code  2) Codex`, pre-selected from `command -v claude/codex`; update re-derives from what is present
+3. **Project type** (install/reinstall only) — `1) New project (CLAUDE.md)  2) Existing/legacy project (CLAUDE_LEGACY.md)`
 
-**Cons**: Purely reactive. Requires the user to know it exists.
+Then a plan screen (what will be written, what is backed up) and `Proceed? [Y/n]`. `--harness`,
+`--copy`, `--pack=` and the `sh -c "$(curl …)" --` form all go; `SUPERVISOR_REPO` stays only as an
+undocumented developer/test seam.
+**Pros**: One line for users forever; matches all three locked answers; re-running can no longer wipe
+edits by accident; net code *shrinks*; old docs/URLs keep working through the name + alias.
+**Cons**: Largest behavior change; `curl | sh` stdin is the script, so the prompt must read `/dev/tty`
+and handle its absence; settings.json merge in POSIX sh is genuinely awkward; existing tests that
+parse setup's `case` block (`tests/test_pack_docs_flags.py`) and pack-choice parsing
+(`tests/test_pack_choice_parsing.sh`, T108) must be retired or rewritten — T108's fix gets deleted.
+**Why it might fail**: The confirm menu becomes new option sprawl if it grows past 3 choices;
+`/dev/tty` probing differs across macOS/Linux/containers; bundling 9 defects into one task produces a
+C3 that fails review — must be split (see Next Actions).
 
-**Why it might fail**: **Fatal — it is a Bash script, and the failure mode it diagnoses is "Bash does not
-work."** It can never run at the moment of breakage. It would only ever be useful preventatively, which
-is Option C's job done worse.
-
-### Option B — The Self-Describing Hook
-**Approach**: Every framework hook gains an `--explain` flag printing its purpose, trigger, and remedy.
-Add `docs/hooks.md` as a registry. Every block message ends with `See docs/hooks.md#<anchor>`.
-
-**Pros**: Genuinely improves the eight real hooks' messages; the registry is a good artifact regardless;
-helps the *legitimate block* case (missing TASK_GUIDE, step limit) as well as the broken case.
-
-**Cons**: Large surface — touches all 8 hooks plus docs. Solves the wrong problem for the reported
-incident: a hook that does not exist cannot print its own `--explain` text.
-
-**Why it might fail**: Effort concentrated where the pain was not. The reported failure had **no hook**
-to describe itself. Also risks the T041/T066 trap — writing explanatory prose into a channel that never
-reaches the reader who needs it.
-
-### Option C — The Source Fix
-**Approach**: Reorder `git-guardrails-claude-code` so registration cannot precede file placement; make
-its step 5 verify the *wired path* resolves, not just the script; add a wiring-vs-disk check to
-`setup.sh` and `update.sh`.
-
-**Pros**: Kills the root cause at its origin. Smallest diff. Directly targets the mechanism proven above.
-
-**Cons**: Does nothing for a machine already broken — including, possibly, the user's other machine
-right now. Only covers drift introduced *by the skill*; a hand-edited or model-invented entry
-(which is what actually happened here) bypasses it entirely.
-
-**Why it might fail**: The incident was **not** caused by the skill running incorrectly — the filename
-never existed in any version. So the fix addresses a plausible path that was not the actual path taken.
-
-### Option D — Preflight Validation + Troubleshooting Docs ✅
-**Approach**: Three small, complementary pieces:
-
-1. **A `SessionStart` hook** (`session_validate_hook_wiring.py`) that parses every settings file,
-   resolves each wired hook command's script path, and — if any is missing — prints a precise,
-   actionable block **at session start, before any Bash call is attempted**:
-   ```
-   ⚠️  BROKEN HOOK WIRING — Bash will fail on every call until fixed.
-     .claude/settings.json → PreToolUse/Bash
-       wired:   .claude/hooks/pre_bash_block_dangerous_git.py
-       on disk: MISSING
-     This is not a framework hook — no such file has ever shipped.
-     FIX (no Bash required — use Read/Edit):
-       Edit .claude/settings.json and delete that hooks entry,
-       OR run /git-guardrails-claude-code to install the real
-       guardrail (block-dangerous-git.sh) and wire it correctly.
-   ```
-   `SessionStart` still fires when `PreToolUse/Bash` is broken, so the message arrives **through a
-   channel the failure cannot block**, and names a `Read`/`Edit` remedy that works without Bash.
-
-2. **A README troubleshooting section** — the two stale hook rows corrected (see below), plus
-   "when a hook misbehaves": how to tell a framework hook from a machine-level one, what each
-   `[hook:...]` tag means, and the wiring-drift symptom and cure.
-
-3. **Fold in Option C's cheap half** — the guardrails skill verifies the wired path resolves.
-
-**Pros**: Recovery arrives before the breakage bites, through an unblockable channel. Prevention and
-recovery both covered. Small, additive, no existing hook modified — so the fail-open/fail-closed
-properties are untouched.
-
-**Why it might fail**: A ninth hook is more surface, and a validator that itself crashes would be
-ironic and bad — so it must be aggressively `try/except`-wrapped and fail open (never block a session
-start). Risk that `SessionStart` output is easy to scroll past; mitigated by printing only on failure,
-never on success. If the harness ever changes settings-file precedence, the parser drifts.
+### Option C — Silent Auto Entrypoint
+**Approach**: B's detection and cleanup, but no menu: lock absent → install, lock present → update;
+`--reinstall` flag to force.
+**Pros**: Simplest code; no TTY handling; identical behavior in CI and terminals.
+**Cons**: The user explicitly asked for confirmation and the ability to choose another action.
+**Why it might fail**: A wrong detection (lock deleted, partial install, worktree) acts with no chance
+to stop it — the exact silent-surprise class behind defects 4 and 5.
 
 ---
 
 ## 50% Rule Check
 
-Option D's piece 1 is the only real code. The 50%-less version: **skip the parser entirely** and have
-the validator simply `os.path.exists()` each `.py`/`.sh` token found by one regex over the raw settings
-text — no JSON walk, no event/matcher modelling. It loses the ability to say *which event* is broken,
-but keeps the part that matters: the missing path and the fix. That halves the code and removes the
-JSON-schema-drift risk. **Adopt this** — the event name is a nice-to-have, and `grep` of the settings
-file gives it to the user in one step if they want it.
-
-Piece 2 (docs) has no code. Piece 3 is ~5 lines in a SKILL.md.
+For Option B, the same goal with half the code:
+- **No new entrypoint file** — reuse `setup.sh`'s name and bootstrap; `update.sh` shrinks from 509 lines to an alias.
+- **Pack activation needs no script** — `.claude/{skills,agents}` already link to the plain-root canon,
+  so activation is copying `packs/<p>/agents/*` and `packs/<p>/skills/*` into `agents/`/`skills/`;
+  the lock + update path already handles files it did not ship (carry-over).
+- **settings.json**: don't write a JSON merger in sh — detect missing hook entries and print the exact
+  block to add, loudly, exit non-zero only on the explicit update action. (Pending Q6.)
+- **Delete, don't rewrite**: `install_abs`, `install_pack`, `prompt_packs`, `resolve_pack_choices`,
+  `--copy`, `SUPERVISOR_PATH` — roughly 140 lines out of `setup.sh` before anything is added.
 
 ---
 
 ## Recommended Path
 
-**Option D — Preflight Validation + Troubleshooting Docs**, with the 50%-rule simplification applied to
-the validator (regex scan, not JSON walk).
+**Option B — One Confirmed Entrypoint**, delivered as a sequence of small tasks, not one.
 
-It is the only option that satisfies the dominant constraint: **the remedy must not require the tool
-that is broken.** A is fatally Bash-dependent; B invests where the pain was not; C cannot help an
-already-broken machine and does not match the actual cause. D delivers the message through
-`SessionStart`, names a Bash-free fix, and costs ~60 lines after the 50% cut.
-
-The README work the user originally asked for rides along as piece 2 — and it now has real content:
-two provably stale rows plus a genuine troubleshooting story.
+It is the only option consistent with all three user decisions, and it reduces total script size
+while fixing every measured defect. Keeping the `setup.sh` name makes the change invisible to anyone
+holding the published curl line, which is the cheapest backward-compatibility available.
 
 ---
 
 ## Surgical Scope
 
 Files that **should** be touched:
-- `.claude/hooks/session_validate_hook_wiring.py` — new; the validator
-- `.claude/hooks/tests/test_hook_wiring_validation.py` — new; tests
-- `.claude/settings.json` — register the `SessionStart` hook
-- `README.md` — correct rows 407/408; add hook-troubleshooting section
-- `.claude/skills/git-guardrails-claude-code/SKILL.md` — step 5 verifies the wired path
-- `MANIFEST` — ship the new hook (T054 precedent: check whether directory-level `cp -r` already covers it **before** adding a line)
+- `setup.sh` — becomes the single confirmed entrypoint; pack installer code removed
+- `update.sh` — reduced to an alias onto the update action
+- `lib/harness-fetch.sh` — receives the functions currently duplicated across both scripts
+- `MANIFEST` — add `packs`; exclude `.claude/hooks/tests`
+- `.github/workflows/ci.yml` — run `tests/test_setup.sh`, `test_update.sh`, `test_install_update_smoke.sh`
+- `tests/test_setup.sh`, `tests/test_update.sh`, `tests/test_install_update_smoke.sh`, `scripts/smoke-install.sh` — new behaviors
+- `tests/test_pack_docs_flags.py`, `tests/test_pack_choice_parsing.sh` — retire or rewrite with the flags they guard
+- `README.md`, `site/index.html`, `RUNBOOK.md`, `AGENTS.md`, `PROJECT_SPEC.md` — one install/update line
+- `docs/claude-md/folder-structure.md:35-41`, `CLAUDE.md:66-67`, `CLAUDE_LEGACY.md` (sync policy), `packs/*/PACK.md`, `templates/PACK_template.md` — pack activation wording
+- A new DDR amending ADR-0001's pack deferral
 
 Files that **must not** be touched:
-- The 8 existing hooks — their fail-open/fail-closed semantics are load-bearing and separately tested
-- `.claude/hooks/lib/*.py` — unrelated to wiring
-- `~/.claude/settings.json` — the user's machine-level third-party hooks; read-only to us, never edited
-- `memory/MEMORY.md` — at 49,957 of its 50,000 ratchet; any entry needs `/compact-memory` first
+- `.claude/hooks/*.py` — hook behavior is out of scope; only their shipping manifest changes
+- `skills/*` bodies other than a pack-recommendation pointer — no skill rewrites ride along
+- `docs/adr/0001-direct-repo-install-no-central-clone.md` — amended by a DDR, never edited in place
+- `memory/` — Supervisor-only writes, Stage 5
 
 ---
 
 ## Edge Case Checklist for TASK_GUIDE
 
-- [ ] Validator must **never** block session start — wrap everything, exit 0 on any exception
-- [ ] Settings file absent / malformed JSON / empty → silent exit 0, no traceback
-- [ ] `$CLAUDE_PROJECT_DIR` unset, and `~` in a path → both must expand correctly (verified: hooks tolerate unset today)
-- [ ] A wired command that is inline shell, not a script path (e.g. `touch /tmp/x`) → must not be reported missing
-- [ ] Multi-hook `command` strings with pipes (`tee … | supervisor-viz …`) → must not false-positive
-- [ ] Same script wired to several events → report once, not N times
-- [ ] Report **only** on failure; a healthy session prints nothing
-- [ ] Message must name a `Read`/`Edit` remedy, never a Bash command
-- [ ] Distinguish framework hooks from third-party ones so the user knows whose problem it is
-- [ ] Test must straddle the boundary: assert against a settings file with a genuinely missing path, not a mocked `exists()` (T047 root-split lesson)
-- [ ] Do not assert the validator's prose exists — assert it against real on-disk state (T073 AC6 lesson)
+- [ ] `curl | sh`: stdin is the script — the confirm prompt reads `/dev/tty`, never fd 0
+- [ ] No `/dev/tty` (CI, Docker, `ssh` without `-t`): defined default, printed, and testable (Q4)
+- [ ] `sh -c "$(curl …)" --` still passes flags through the bootstrap re-invocation
+- [ ] Lock present but canon deleted / partial install → detection doesn't claim "update" over a broken tree
+- [ ] Old `~/.supervisor` symlink-model install still refused with a migration message
+- [ ] Pre-existing user `CLAUDE.md` / `AGENTS.md` never destroyed without a backup or explicit choice (Q5)
+- [ ] Existing `settings.json` without kit hooks → loud, specific message, never silent (Q6)
+- [ ] Activated pack files are not reported as "upstream no longer ships" orphans, nor overwritten by update
+- [ ] Pack agent/skill name colliding with a core name → refused, not overwritten
+- [ ] Upstream-deleted skill: unmodified → removed; modified → kept + warned (Q8)
+- [ ] Brownfield choice (`CLAUDE_LEGACY.md`) preserved when update now covers `CLAUDE.md`
+- [ ] `.claude/hooks/tests` removal from install doesn't break any hook import at runtime
+- [ ] Codex-only project: update doesn't create `.claude/` links; Codex cap still skip-not-truncate
+- [ ] Exit codes asserted directly in tests, never through a pipe (`| tail` masks them — seen in this probe)
+- [ ] `grep` in this environment wraps ugrep — tests use `command grep` (learnings: T107)
 
 ---
 
 ## Next Actions
 
-1. User selects a path (this document does not advance without it).
-2. Stage 2: register **T074** on `PROJECT_KANBAN.md` and generate `tasks/TASK_GUIDE_T074.md`.
-   Suggested labels: **C1 / Medium Risk / P1** — Medium because it touches `settings.json`, whose
-   breakage mode is total Bash loss.
-3. Stage 3: spawn `common-infrastructure` (owns hooks + settings + installer).
-4. Pre-flight per T064/T071 lessons: grep the suite for pinned paths and **size invariants** before
-   editing `README.md`.
-5. Separately decide whether the two open T073 findings (merge gate `__file__` blindness; whole-string
-   command scan) become their own task — they are unrelated to this one.
+For Stage 2 — split, in dependency order:
+
+1. **CI safety net first** (C1/Low): wire the 3 existing install/update suites into `ci.yml`; fix whatever is already red. Every later task then lands against a real gate.
+2. **Update coverage + no silent loss** (C2/Medium): `CLAUDE.md` + `settings.json` through the hash-lock path; never clobber pre-existing user `CLAUDE.md`/`AGENTS.md`; upstream-deleted-skill rule; stop shipping `.claude/hooks/tests`.
+3. **One confirmed entrypoint** (C2/Medium): detection + `/dev/tty` confirm menu in `setup.sh`; `update.sh` alias + curl bootstrap; remove `--copy`, `SUPERVISOR_PATH`, test seams from user-facing docs; single install line in README/site.
+4. **Dormant pack catalog + domain-driven activation** (C2/Medium): remove pack menu/`--pack=`/`install_pack`; ship `packs/`; Supervisor recommends from `PACK.md` "When to use" at Phase 0/Stage 1; activation path + DDR amending ADR-0001.
+5. Run `grill-with-docs` on this log to close Q4–Q8 before any TASK_GUIDE is written.
 
 ---
 
 ## User Selection
 
-> **Approved direction**: Option D — Preflight Validation + Troubleshooting Docs, with the 50%-rule
-> simplification applied to the validator (regex scan of the settings text, not a JSON walk).
-> Approved by user on 2026-08-17.
+> **Approved direction**: Option B — One Confirmed Entrypoint, revised to **zero flags, menu-driven**.
+> Approved by user on 2026-09-12 ("one single command … choose from the list … choose the good one").
+> Q5–Q9 decided by the Supervisor under delegation; to be stress-tested in `grill-with-docs`.
 >
-> **Open question 1 resolved by the Supervisor, stated as an assumption**: the validator **does**
-> scan machine-level hooks (`~/.claude/settings.json`) — the scan is the same code either way, and
-> the user's own machine currently runs a third-party hook emitting `[null] 📁 null` on every prompt.
-> It reports them **read-only**, labelled as not-ours, and never edits that file. Reversible: drop
-> the second path from the scan list.
->
-> **Open question 2**: answered implicitly by the choice — Option D was recommended precisely because
-> it buys prevention *and* recovery; no further ruling needed.
+> **grill-with-docs outcome (2026-09-12)**, each a user answer:
+> - **Branch**: one integration branch off `main`; `main` receives the set in one reviewed merge at the end.
+> - **Record tier**: new **ADR-0002** (`docs/adr/0002-one-confirmed-menu-driven-installer.md`, Proposed),
+>   partially superseding ADR-0001 and amending DDR-0007.
+> - **Terminology**: users see "CLI" and "Easy Kit"; "harness" stays internal; identifiers not renamed.
+> - **Pack activation**: `select-packs` copies verbatim kit-shipped pack files after client approval —
+>   an explicit, bounded Gate 1 interpretation written into ADR-0002.

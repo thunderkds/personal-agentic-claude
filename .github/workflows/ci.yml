@@ -26,3 +26,27 @@ jobs:
 
       - name: Per-harness projection tests (T097)
         run: bash tests/test_harness_projection.sh
+
+      - name: setup.sh test suite
+        run: bash tests/test_setup.sh
+
+      - name: update.sh test suite
+        run: bash tests/test_update.sh
+
+      - name: Install/update smoke suite
+        run: bash tests/test_install_update_smoke.sh
+
+      - name: Harness presence test suite (T098)
+        run: bash tests/test_t098_harness_presence.sh
+
+      - name: Pack choice parsing test suite
+        run: bash tests/test_pack_choice_parsing.sh
+
+      - name: harness-fetch.sh test suite
+        run: bash tests/test_harness_fetch.sh
+
+      - name: README-current test suite
+        run: bash tests/test_readme_current.sh
+
+      - name: CI wires every shell suite (drift guard)
+        run: python3 tests/test_ci_wires_shell_suites.py

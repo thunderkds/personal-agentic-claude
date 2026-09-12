@@ -1,6 +1,6 @@
 # 0007. Canonical `skills/` and `agents/` move to plain root; `.claude/` becomes a projection
 
-**Status**: Accepted
+**Status**: Accepted — **amended by ADR-0002** (2026-09-12): CLIs are chosen from an install menu, not `setup.sh --harness <name>`. The canon/projection model, presence rule and Codex cap are unchanged.
 **Date**: 2026-08-27
 **Deciders**: User (thunderkds), Supervisor
 **Related**: extends `DDR-0006` from doctrine text to kit assets · leaves `ADR-0001` unchanged · `BRAINSTORMING_LOG_harness-kit-portability.md` · implemented by B1/B2 (Stage 2 pending)
