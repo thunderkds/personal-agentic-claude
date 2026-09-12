@@ -14,6 +14,7 @@
 | verify | ☐ pass / ☐ fail / ☐ N/A | |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
 | Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| **Docs updated per guide's "Documentation to Update" (new text quoted)** | ☐ pass / ☐ fail | D1 site #update-flow, D2–D3 RUNBOOK.md, D4 PROJECT_SPEC.md |
 | HITL: user reviewed menu transcripts (SC1, SC3, SC6) | ☐ pass / ☐ fail | |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | terminal text menu, no visual design surface; wording is reviewed through the HITL row above |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ N/A | no design system applies to plain terminal output |

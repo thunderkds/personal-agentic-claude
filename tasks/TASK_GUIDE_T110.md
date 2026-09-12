@@ -151,6 +151,22 @@ line of each upstream candidate in the temp clone, so no heading text is hardcod
 
 ---
 
+## Documentation to Update
+
+> Batch rule (user, 2026-09-12: "make sure the document also be updated"): these rows are **acceptance
+> criteria**. Done requires each doc updated and its new text quoted in `tasks/TASK_REVIEW_T110.md`.
+> Historical records (`docs/adr/`, `docs/ddr/`, `tasks/`, `memory/`, `BRAINSTORMING_LOG*.md`, the task and
+> decision tables in `PROJECT_SPEC.md`) are never rewritten.
+
+| # | Doc | What is wrong today → what it must say |
+|---|-----|----------------------------------------|
+| D1 | `RUNBOOK.md` — Common Failure Modes row "A fix to `CLAUDE.md` never appears downstream" (`:192`) | States it is **by design** and must be merged by hand → replace: update now delivers `CLAUDE.md` from the source the project was installed with; an edited `CLAUDE.md` goes through the conflict prompt |
+| D2 | `site/index.html` `#update-flow` (`:269-277`) | Says update compares "every `MANIFEST` file" → add that `CLAUDE.md` is covered too, and that an existing/legacy project keeps receiving `CLAUDE_LEGACY.md` rules |
+
+Leave the command lines in `#update-flow` (`:264-268`) alone — T114 rewrites them.
+
+---
+
 ## Files to Change (Predicted)
 
 | File | Change |

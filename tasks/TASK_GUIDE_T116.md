@@ -139,6 +139,23 @@ with no destination pair and are never discovered by any CLI. The catalog is exa
 
 ---
 
+## Documentation to Update
+
+> Batch rule (user, 2026-09-12: "make sure the document also be updated"): these rows are **acceptance
+> criteria**. Done requires each doc updated and its new text quoted in `tasks/TASK_REVIEW_T116.md`.
+> Historical records are never rewritten. Pipeline doctrine (`CLAUDE.md`, `CLAUDE_LEGACY.md`,
+> `docs/claude-md/*`, `packs/*/PACK.md`, `templates/PACK_template.md`) is T117's.
+
+| # | Doc | What is wrong today → what it must say |
+|---|-----|----------------------------------------|
+| D1 | `site/index.html` `#packs` (`:429-462`) | "selected at install time", `sh ~/.supervisor/setup.sh --pack=mobile`, the `$SUPERVISOR_PATH` paragraph and the `sh -c … --pack=` form — all describe a path that installs nothing → every project ships all packs inactive; your Supervisor recommends packs for your project and activates the ones you approve. Keep the pack table |
+| D2 | `site/index.html` `#options` `SUPERVISOR_PATH` row (`:552`) | Remove — the variable no longer exists |
+| D3 | `PROJECT_SPEC.md` Known Risk Areas row "SUPERVISOR_PATH handling" (`:83`) | Remove, or replace with the catalog's real risk (an activated pack name colliding with core, owned by T117) |
+| D4 | `README.md` | Any pack install instruction → one sentence matching D1 (stay ≤ 75 lines) |
+| D5 | `tests/test_docs_match_installer.py` (from T115) | Extend the forbidden list with `SUPERVISOR_PATH`, `~/.supervisor`, `--pack=` for the same live-doc file list; mutation control: restore D1's old `--pack=mobile` line → test fails |
+
+---
+
 ## Files to Change (Predicted)
 
 | File | Change |

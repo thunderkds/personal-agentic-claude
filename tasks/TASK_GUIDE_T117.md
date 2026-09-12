@@ -149,6 +149,24 @@ decisions entry.
 
 ---
 
+## Documentation to Update
+
+> Batch rule (user, 2026-09-12: "make sure the document also be updated"): these rows are **acceptance
+> criteria** (AC9 summarises them). Done requires each doc updated and its new text quoted in
+> `tasks/TASK_REVIEW_T117.md`. Historical records are never rewritten.
+
+| # | Doc | What is wrong today → what it must say |
+|---|-----|----------------------------------------|
+| D1 | `CLAUDE.md` Skills-vs-Agents note (`:66-67`) and Stage index | "Pack skills symlink into `skills/` … when a pack is installed" → activated by `select-packs` after client approval; add `select-packs` to the Stage 1 index |
+| D2 | `CLAUDE_LEGACY.md` | Same changes, version bumped (sync policy, `memory/decisions.md`) |
+| D3 | `docs/claude-md/pipeline-stages.md` Stage 1 checklist | New step: once the business domain is known, run `Skill({ skill: "select-packs" })` |
+| D4 | `docs/claude-md/folder-structure.md` (`:35-41`) | "`packs/` folder (in the central clone)" and "Installed via `setup.sh --pack=<name>`" → shipped in every project as an inactive catalog; activated by `select-packs` |
+| D5 | `packs/*/PACK.md` (all 5) and `templates/PACK_template.md` | "Installed via" / install-command lines → "Recommended by `select-packs`, activated on client approval" |
+| D6 | `site/index.html` `#packs` (after T116's rewrite) and `#skills` roster | Add how activation works (recommend → choose → copied into `agents/`/`skills/`); list `select-packs` if `tests/test_site_content.py` requires it |
+| D7 | `tests/test_docs_match_installer.py` (from T115/T116) | Extend its file list with `CLAUDE.md`, `CLAUDE_LEGACY.md`, `packs/*/PACK.md`, `templates/PACK_template.md` for the `--pack` rule; this replaces SC3's ad-hoc grep |
+
+---
+
 ## Files to Change (Predicted)
 
 | File | Change |

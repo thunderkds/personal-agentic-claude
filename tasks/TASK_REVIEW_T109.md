@@ -14,6 +14,7 @@
 | verify | ☐ pass / ☐ fail / ☐ N/A | |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
 | Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| **Docs updated per guide's "Documentation to Update" (new text quoted)** | ☐ N/A | CI and tests only; no user-facing behaviour or instruction changed |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | CI config + test files only; no UI |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ N/A | no UI |
 | **UI: Responsiveness at target viewports** | ☐ N/A | no UI |

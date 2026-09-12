@@ -14,6 +14,7 @@
 | verify | ☐ pass / ☐ fail / ☐ N/A | |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
 | Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| **Docs updated per guide's "Documentation to Update" (new text quoted)** | ☐ pass / ☐ fail | D1 site #update-flow, D2 RUNBOOK.md health check, D3 MANIFEST header |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | shell installer; no UI |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ N/A | no UI |
 | **UI: Responsiveness at target viewports** | ☐ N/A | no UI |

@@ -14,6 +14,7 @@
 | verify | ☐ pass / ☐ fail / ☐ N/A | |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
 | Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| **Docs updated per guide's "Documentation to Update" (new text quoted)** | ☐ pass / ☐ fail | D1–D2 site #packs/#options, D3 PROJECT_SPEC.md, D4 README, D5 docs-agreement test extended + mutation control |
 | `tests/test_pack_choice_parsing.sh` retired — reason | ☐ pass / ☐ fail | |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | installer + MANIFEST; no UI |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ N/A | no UI |

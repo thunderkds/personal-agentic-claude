@@ -150,6 +150,26 @@ idea for the CLI multi-pick before T116 deletes it.
 
 ---
 
+## Documentation to Update
+
+> Batch rule (user, 2026-09-12: "make sure the document also be updated"): these rows are **acceptance
+> criteria** (AC9 is their summary). Done requires each doc updated and its new text quoted in
+> `tasks/TASK_REVIEW_T115.md`. Historical records are never rewritten.
+
+| # | Doc | What is wrong today → what it must say |
+|---|-----|----------------------------------------|
+| D1 | `README.md` install section (`:33-65`) | Two flag forms + `--harness` explanation → one line, one sentence on the menus (CLIs, project type); total file ≤ 75 lines (AC10) |
+| D2 | `site/index.html` `#install` (`:235-260`) | `--harness` examples and the `sh -c "$(curl …)" --` note → one line + a short description of the three menus |
+| D3 | `site/index.html` `#update-flow` "Which harnesses get updated" (`:279-300`) | `--harness` wording → user word "CLIs"; adding a CLI later = run the command, choose **Reinstall**, pick the CLI; the both-links-deleted edge restored the same way |
+| D4 | `site/index.html` `#install-variants` (`:303-316`) | "brownfield … clone this repo somewhere, invoke that checkout's `setup.sh` by path" → project type is a menu choice that works under `curl \| sh`; keep the fork-install variant |
+| D5 | `site/index.html` `#options` table (`:544-559`) | Remove the `--pack=`, `--harness`, `--copy` rows; keep `GITHUB_USERNAME` (fork installs) as an environment variable, not an everyday option. `SUPERVISOR_REPO` row removed (undocumented seam per ADR-0002). `SUPERVISOR_PATH` row is T116's |
+| D6 | `AGENTS.md` (`:31-41`) | `setup.sh --harness codex`, `update.sh --harness claude` → choose Codex / Claude Code in the CLI menu; Codex-only stays Codex-only on Update |
+| D7 | `docs/claude-md/folder-structure.md` (`:80-99`) | `--harness` / `update.sh --harness claude` wording → menu wording; keep the canon-link rules themselves unchanged |
+| D8 | `RUNBOOK.md` Deploy step 4 (`:52`) | If T114's D2 did not already make it flag-free and menu-aware, do so |
+| D9 | New `tests/test_docs_match_installer.py` | Fails if any **live** doc (`README.md`, `site/index.html`, `RUNBOOK.md`, `AGENTS.md`, `docs/claude-md/*.md`) contains `--harness`, `--copy`, `update.sh --`, or `sh -c "$(curl`. Explicit file list, not a repo-wide glob, so historical records are never in scope. Mutation control: put `--harness codex` back in `AGENTS.md` → test fails. T116 and T117 extend this same test |
+
+---
+
 ## Files to Change (Predicted)
 
 | File | Change |

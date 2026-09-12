@@ -14,6 +14,7 @@
 | verify | ☐ pass / ☐ fail / ☐ N/A | agent run on sample PRD vs control tree |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
 | Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| **Docs updated per guide's "Documentation to Update" (new text quoted)** | ☐ pass / ☐ fail | D1 CLAUDE.md, D2 CLAUDE_LEGACY.md, D3 pipeline-stages.md, D4 folder-structure.md, D5 PACK.md ×5 + template, D6 site, D7 docs-agreement test extended |
 | HITL: user reviewed the recommendation run | ☐ pass / ☐ fail | |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | skill + doc text; no UI surface |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ N/A | no UI |

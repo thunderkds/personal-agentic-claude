@@ -146,6 +146,20 @@ T109's smoke-test defect happened.
 
 ---
 
+## Documentation to Update
+
+> Batch rule (user, 2026-09-12: "make sure the document also be updated"): these rows are **acceptance
+> criteria**. Done requires each doc updated and its new text quoted in `tasks/TASK_REVIEW_T113.md`.
+> Historical records are never rewritten.
+
+| # | Doc | What is wrong today → what it must say |
+|---|-----|----------------------------------------|
+| D1 | `site/index.html` `#update-flow` bullet list (`:274-277`) | Only two cases listed → add the third: a file the kit no longer ships is removed if you never edited it, kept and named if you did |
+| D2 | `RUNBOOK.md` Deploy step 4 health check (`:55-59`) | Add `test ! -d .claude/hooks/tests` so a release that ships the kit's test suite again fails the check |
+| D3 | `MANIFEST` header comment | Document the `!<path>` exclusion syntax next to the existing destination-column explanation |
+
+---
+
 ## Files to Change (Predicted)
 
 | File | Change |

@@ -16,6 +16,11 @@
 > after each → T114 → T115 → T116 → T117 (strictly serial: each rewrites `setup.sh`'s prompts/arguments).
 > Baseline measured 2026-09-12 on `main` `8115bc9`: `1 failed, 844 passed` (the pre-existing
 > `test_readme_slim.py`, owned by T115).
+> **Docs ride with the code (user, 2026-09-12).** Each guide carries a "Documentation to Update" table
+> whose D-rows are acceptance criteria, and each review file a matching Evidence row — a task that leaves
+> README, the site, RUNBOOK, AGENTS.md, PROJECT_SPEC.md or pipeline doctrine describing the old installer
+> is not Done. T115 adds `tests/test_docs_match_installer.py`; T116/T117 extend it, so a removed flag can't
+> creep back into a live doc.
 
 - [ ] **T109** — CI runs every install/update shell suite, and the one it would have caught is fixed | Common-Infrastructure-Agent | C2 | Risk: Medium | P0 | Guide: `tasks/TASK_GUIDE_T109.md` | Review: `tasks/TASK_REVIEW_T109.md` | Depends on: none | Registered 2026-09-12
 - [ ] **T110** — Update delivers `CLAUDE.md`, through the same edit-safe rule as every other file | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T110.md` | Review: `tasks/TASK_REVIEW_T110.md` | Depends on: T109 | Registered 2026-09-12

@@ -151,6 +151,20 @@ never installed into user projects.
 
 ---
 
+## Documentation to Update
+
+> Batch rule (user, 2026-09-12: "make sure the document also be updated"): these rows are **acceptance
+> criteria**. Done requires each doc updated and its new text quoted in `tasks/TASK_REVIEW_T111.md`.
+> Historical records are never rewritten.
+
+| # | Doc | What is wrong today → what it must say |
+|---|-----|----------------------------------------|
+| D1 | `site/index.html` `#update-flow` bullet list (`:274-277`) | No mention of `settings.json` → add: kit hooks are merged into `.claude/settings.json` on install and update; your own permissions and hooks are kept |
+| D2 | `site/index.html` `#hooks` section | If it says hooks are wired only when `settings.json` is absent (or implies a manual merge), correct it; if it says nothing about wiring, add one sentence. Read the section first — do not assume its content |
+| D3 | `RUNBOOK.md` — Common Failure Modes table | New row: symptom "installer exits 2 and prints a `hooks` block", cause invalid `settings.json` or no `python3`, remediation: fix the JSON / install `python3`, re-run |
+
+---
+
 ## Files to Change (Predicted)
 
 | File | Change |

@@ -160,6 +160,18 @@ wires; these three are the agent's call, justified in the review file.
 
 ---
 
+## Documentation to Update
+
+> Batch rule (user, 2026-09-12: "make sure the document also be updated"): every task updates the
+> user-facing docs its change makes wrong, **in the same task**, and quotes the new text in the review
+> file. Historical records (`docs/adr/`, `docs/ddr/`, `tasks/`, `memory/`, `BRAINSTORMING_LOG*.md`, the
+> task and decision tables in `PROJECT_SPEC.md`) are never rewritten.
+
+**None — this task changes CI and tests only; no user-facing behaviour or instruction changes.** The
+review file's documentation row is marked N/A with this reason.
+
+---
+
 ## Files to Change (Predicted)
 
 | File | Change |

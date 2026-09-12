@@ -152,6 +152,21 @@ Reinstall without re-implementing it — note it in the function header.
 
 ---
 
+## Documentation to Update
+
+> Batch rule (user, 2026-09-12: "make sure the document also be updated"): these rows are **acceptance
+> criteria**. Done requires each doc updated and its new text quoted in `tasks/TASK_REVIEW_T112.md`.
+> Historical records are never rewritten.
+
+| # | Doc | What is wrong today → what it must say |
+|---|-----|----------------------------------------|
+| D1 | `PROJECT_SPEC.md` Critical Constraints (`:74`) — "`setup.sh` must be idempotent — re-running must not break existing setup or overwrite project files" | Stated as met; it is not (probe). Rewrite to the rule this task enforces: first install moves any pre-existing path it would replace to `<name>.bak` (or `.bak.N`) and names it |
+| D2 | `PROJECT_SPEC.md` Known Risk Areas row "Symlink creation … silent overwrite would destroy project data" (`:82`) | Describes the pre-ADR-0001 symlink model → reword to the copy model; mitigation = backup helper, with a pointer to ADR-0002 |
+| D3 | `site/index.html` `#install` | Add one sentence: installing into an existing project backs up files it would replace (`CLAUDE.md.bak`, `templates.bak/`, …) and lists them |
+| D4 | `RUNBOOK.md` — Common Failure Modes table | New row: symptom "`*.bak` files/folders appear after install", cause the project already had those paths, remediation: compare and merge by hand, then delete the backup |
+
+---
+
 ## Files to Change (Predicted)
 
 | File | Change |

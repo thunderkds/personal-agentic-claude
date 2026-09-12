@@ -14,6 +14,7 @@
 | verify | ☐ pass / ☐ fail / ☐ N/A | |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
 | Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| **Docs updated per guide's "Documentation to Update" (new text quoted)** | ☐ pass / ☐ fail | D1 README, D2–D5 site, D6 AGENTS.md, D7 folder-structure.md, D8 RUNBOOK.md, D9 docs-agreement test + mutation control |
 | HITL: user reviewed menu transcript + README install section | ☐ pass / ☐ fail | |
 | `tests/test_pack_docs_flags.py` retired/rewritten — reason | ☐ pass / ☐ fail | |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | terminal menus + Markdown/HTML doc text edits in existing sections; wording reviewed via HITL row; site layout untouched |

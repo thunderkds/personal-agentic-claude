@@ -171,6 +171,22 @@ one `/dev/tty` reader used by every prompt.
 
 ---
 
+## Documentation to Update
+
+> Batch rule (user, 2026-09-12: "make sure the document also be updated"): these rows are **acceptance
+> criteria**. Done requires each doc updated and its new text quoted in `tasks/TASK_REVIEW_T114.md`.
+> Historical records are never rewritten. README and the site's install/options sections are T115's — do
+> not edit them here.
+
+| # | Doc | What is wrong today → what it must say |
+|---|-----|----------------------------------------|
+| D1 | `site/index.html` `#update-flow` opening (`:264-268`) | "`update.sh` is a separate script … `sh /path/to/personal-agentic-claude/update.sh`" → run the same one command inside the project and choose **Update**; describe the plan screen and that Cancel changes nothing |
+| D2 | `RUNBOOK.md` Deploy step 4 health check (`:49-60`) | The install line now shows a menu → state how the check answers it (accept defaults in a terminal, or run with no terminal to take the printed defaults) so the check stays runnable |
+| D3 | `RUNBOOK.md` v2.0.0 rollback exposure (`:91-102`) and Failure Modes row `:191` | `bash update.sh` / `bash setup.sh` instructions → the one command with the action to pick (Update / Reinstall); the "conflicts could not be resolved" remediation becomes "re-run in a terminal and choose Update" |
+| D4 | `PROJECT_SPEC.md` Architecture Summary (`:23`) | Describes `setup.sh` reading `MANIFEST` and a separate update → one command that detects install vs update and confirms before acting (ADR-0002) |
+
+---
+
 ## Files to Change (Predicted)
 
 | File | Change |
