@@ -22,7 +22,6 @@
 > is not Done. T115 adds `tests/test_docs_match_installer.py`; T116/T117 extend it, so a removed flag can't
 > creep back into a live doc.
 
-- [ ] **T109** — CI runs every install/update shell suite, and the one it would have caught is fixed | Common-Infrastructure-Agent | C2 | Risk: Medium | P0 | Guide: `tasks/TASK_GUIDE_T109.md` | Review: `tasks/TASK_REVIEW_T109.md` | Depends on: none | Registered 2026-09-12
 - [ ] **T110** — Update delivers `CLAUDE.md`, through the same edit-safe rule as every other file | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T110.md` | Review: `tasks/TASK_REVIEW_T110.md` | Depends on: T109 | Registered 2026-09-12
 - [ ] **T111** — Kit hooks reach a project that already has `settings.json`, and stay current on update | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T111.md` | Review: `tasks/TASK_REVIEW_T111.md` | Depends on: T109 | Registered 2026-09-12
 - [ ] **T112** — First install never destroys a project's own files — they are backed up and named | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T112.md` | Review: `tasks/TASK_REVIEW_T112.md` | Depends on: T109 | Registered 2026-09-12 — directory-wipe case asserted from code reading only; the implementer's BEFORE must prove it
@@ -67,6 +66,7 @@
 
 
 ### In Progress
+- [ ] **T109** — CI runs every install/update shell suite, and the one it would have caught is fixed | Common-Infrastructure-Agent | C2 | Risk: Medium | P0 | Guide: `tasks/TASK_GUIDE_T109.md` | Review: `tasks/TASK_REVIEW_T109.md` | Depends on: none | Registered 2026-09-12 | **Stage 3 started 2026-09-12** — `common-infrastructure` (sonnet, C2) in `wt-t109` on `fix/t109-ci-suites`, spawned via Ghostty/`setsid`
 
 
 
