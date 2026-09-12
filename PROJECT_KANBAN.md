@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-09-07
+**Last updated**: 2026-09-12
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -8,6 +8,24 @@
 ## Board
 
 ### Todo
+> **Batch 2026-09-12 — Easy Kit installer rework (T109–T117).** Authority: `docs/adr/0002-one-confirmed-menu-driven-installer.md`
+> (Accepted), `BRAINSTORMING_LOG.md`. All nine build on the integration branch `feat/easy-kit-one-command`
+> cut from `main`; each worktree branches from it and merges back; `main` receives the whole set in one
+> reviewed merge after every task passes `/verify` (`memory/decisions.md`, 2026-09-12). Order:
+> T109 first → T110–T113 may spawn in parallel but **merge one at a time**, re-running the installer suites
+> after each → T114 → T115 → T116 → T117 (strictly serial: each rewrites `setup.sh`'s prompts/arguments).
+> Baseline measured 2026-09-12 on `main` `8115bc9`: `1 failed, 844 passed` (the pre-existing
+> `test_readme_slim.py`, owned by T115).
+
+- [ ] **T109** — CI runs every install/update shell suite, and the one it would have caught is fixed | Common-Infrastructure-Agent | C2 | Risk: Medium | P0 | Guide: `tasks/TASK_GUIDE_T109.md` | Review: `tasks/TASK_REVIEW_T109.md` | Depends on: none | Registered 2026-09-12
+- [ ] **T110** — Update delivers `CLAUDE.md`, through the same edit-safe rule as every other file | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T110.md` | Review: `tasks/TASK_REVIEW_T110.md` | Depends on: T109 | Registered 2026-09-12
+- [ ] **T111** — Kit hooks reach a project that already has `settings.json`, and stay current on update | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T111.md` | Review: `tasks/TASK_REVIEW_T111.md` | Depends on: T109 | Registered 2026-09-12
+- [ ] **T112** — First install never destroys a project's own files — they are backed up and named | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T112.md` | Review: `tasks/TASK_REVIEW_T112.md` | Depends on: T109 | Registered 2026-09-12 — directory-wipe case asserted from code reading only; the implementer's BEFORE must prove it
+- [ ] **T113** — Update removes what upstream stopped shipping (unless edited), and kit tests stop shipping | Common-Infrastructure-Agent | C2 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_T113.md` | Review: `tasks/TASK_REVIEW_T113.md` | Depends on: T109 | Registered 2026-09-12
+- [ ] **T114** — One command — it detects the project, shows a menu, and asks before acting | Common-Infrastructure-Agent | C2 | Risk: Medium | P0 | HITL | Guide: `tasks/TASK_GUIDE_T114.md` | Review: `tasks/TASK_REVIEW_T114.md` | Depends on: T110, T111, T112, T113 | Registered 2026-09-12
+- [ ] **T115** — Choose CLIs and project type from a list — every install flag is gone, and the docs show one line | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | HITL | Guide: `tasks/TASK_GUIDE_T115.md` | Review: `tasks/TASK_REVIEW_T115.md` | Depends on: T114 | Registered 2026-09-12
+- [ ] **T116** — Every pack ships as a dormant catalog; the broken install-time pack installer is removed | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T116.md` | Review: `tasks/TASK_REVIEW_T116.md` | Depends on: T115 (serialised — both rewrite `setup.sh` argument handling; approved breakdown said T114) | Registered 2026-09-12
+- [ ] **T117** — `select-packs` — the Supervisor recommends packs from the business domain and activates the ones the client approves | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | HITL | Guide: `tasks/TASK_GUIDE_T117.md` | Review: `tasks/TASK_REVIEW_T117.md` | Depends on: T116 | Registered 2026-09-12
 
 > **Session handoff — 2026-08-31.** T097 merged. Its worktree and the T096 lessons both held: the
 > guide was tracked before the spawn, and the `setsid` launch survived (46 min elapsed, agent

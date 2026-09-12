@@ -1996,3 +1996,53 @@ complete`, and the three post-install assertions in `RUNBOOK.md`'s Deploy Proced
 **T107 merged** (2026-09-06, `docs/t107-easy-kit`): the kit answered to two names — `site/index.html` said "Easy Kit", while `README.md:1`, `PROJECT_SPEC.md:12`, `setup.sh:2`, `update.sh:2` and `MANIFEST:1` said "Supervisor Agent Deployment System", so a reader clicking the README's site link appeared to land on a different product. User locked **Easy Kit**; five one-line edits, all comments or prose. `/verify` PASS at both surfaces: install and update ran clean, `--harness codex` still projected 26 skills (the MANIFEST banner is a `#` comment the parser skips), install parity against `main` exact at 117 files / 30 skills / 5 agents, and README H1 now matches the live site `<title>`. **Deliberately not renamed**: the `personal-agentic-claude` slug (the install path — renaming breaks every existing install's update path; guard held at 9 occurrences) and `tasks/`/`memory/`/`RUNBOOK.md`/`PROJECT_KANBAN.md` (audit trail). Noted at verify: the rename has **no runtime surface** — neither MANIFEST nor README is copied into a target project and the installer never prints the product name, so it lands entirely on the GitHub README and the site.
 **Three guide defects, found by the implementing agent and recorded in the guide rather than silently amended**: an extension-filtered baseline grep hid the extensionless `MANIFEST`; AC4's exclusion list omitted `PROJECT_KANBAN.md`; and the verification command **failed open** because this shell's `grep` wraps `ugrep` and drops the `./` prefix the exclusions relied on. The third is the one that generalises — see `learnings.md`.
 **Files**: README.md, PROJECT_SPEC.md, setup.sh, update.sh, MANIFEST, tasks/TASK_GUIDE_T107.md, tasks/TASK_REVIEW_T107.md
+
+### 2026-09-12 — Installer rework lands on one integration branch, released to `main` at the end
+**Decision**: The Easy Kit installer rework (BRAINSTORMING_LOG.md, 2026-09-12: one zero-flag menu-driven
+command, dormant pack catalog, update covering `CLAUDE.md`/`settings.json`) is built on a single
+integration branch cut from `main`. Each task's worktree branches from, and merges back into, that
+integration branch; `main` receives the whole set in one reviewed merge only after every task passes
+Stage 5 `/verify`. User choice at grill-with-docs, over "land on main" and "restore the v2 rule".
+**Why**: `main` is the published `curl | sh` source every live project installs from, and this rework
+changes that installer's entire user surface. Shipping it task-by-task would expose users to a
+half-migrated installer (e.g. packs removed from setup before the catalog + `select-packs` exists).
+**Context the rule now sits against**: the 2026-08-25 "v2 is the working branch; main is frozen" rule
+has not matched practice since the v2.0.0 release — T105–T108 all landed on `main`, which is 35 commits
+ahead of `v2` (merge-base `6d3d91f`). This decision does NOT restore or repeal that rule in general; it
+scopes branching for this rework only. The stale rule itself is an open item for the user.
+**Files**: setup.sh, update.sh, lib/harness-fetch.sh, MANIFEST, .github/workflows/ci.yml
+
+### 2026-09-12 — Installer becomes one zero-flag, menu-driven command → see ADR-0002
+**Decision**: `setup.sh` is the single Easy Kit command with no flags. It detects the lock, then offers
+numbered menus (action; CLIs; project type) read from `/dev/tty`, and a plan screen with `Proceed? [Y/n]`.
+With no TTY it uses printed safe defaults and never reinstalls. `update.sh` is kept as an alias.
+Install stops being always-full-overwrite: every path uses the hash-lock rule, a pre-existing
+`CLAUDE.md`/`AGENTS.md` goes to `.bak`, `settings.json` is merged via `python3`, and
+`.claude/hooks/tests/` stops shipping. Recorded as an **ADR** (all 3 criteria clear); the user chose
+ADR over DDR at grill-with-docs because it reverses an Accepted ADR.
+**Why**: A 2026-09-12 probe measured 9 defects, including packs installing nothing since ADR-0001, no
+runnable update, silent overwrite of edits and of a project's own `CLAUDE.md`, and update never
+delivering `CLAUDE.md`/`settings.json`. User requirement: "one single command; options chosen from a
+list, not params the user must remember."
+**Supersedes**: ADR-0001's script-split and full-overwrite clauses; DDR-0007's `--harness` selection;
+the 2026-06-18 "Pack install via --pack=<name> flag + interactive prompt" entry above.
+**Files**: setup.sh, update.sh, lib/harness-fetch.sh, MANIFEST, docs/adr/0002-one-confirmed-menu-driven-installer.md
+
+### 2026-09-12 — User-facing term is "CLI" and "Easy Kit"; "harness" stays internal → see ADR-0002
+**Decision**: Menus and output say "CLI" and "Easy Kit". "Harness" remains the internal glossary term for
+a CLI runtime. `harness-lock.json` and `lib/harness-fetch.sh` are not renamed, because renaming the lock
+breaks every existing install.
+**Why**: "Harness" meant both the CLI runtime (glossary) and the kit itself (lock filename, "Harness
+copied into …" output) — ambiguous to a user who never reads the glossary.
+**Files**: PROJECT_SPEC.md (Glossary), memory/glossary.md
+
+### 2026-09-12 — Packs are a dormant catalog; `select-packs` activates by business domain → see ADR-0002
+**Decision**: All of `packs/` ships inactive. `select-packs` (Supervisor, Phase 0/Stage 1) reads each
+`PACK.md` "When to use", recommends packs, the client picks from a list, and the skill copies the approved
+pack into `agents/`/`skills/`. A name collision with core is refused.
+**Gate 1 interpretation (user-approved)**: a verbatim copy of kit-shipped pack files after client approval
+is configuration, not implementation. Any edit to them, or any file not shipped in `packs/`, needs a
+TASK_GUIDE.
+**Why**: User: packs "should be identified from the biz domain … Agent will analyze and suggest." The
+~200 KB catalog beats a mid-session network fetch.
+**Files**: packs/*/PACK.md, MANIFEST, docs/claude-md/folder-structure.md
