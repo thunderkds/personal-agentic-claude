@@ -83,6 +83,11 @@ and nobody saw, because nothing runs it.
 | 5 | The same test also fails if `ci.yml` references a `tests/*.sh` path that does not exist (the other drift direction) | anti-drift both directions (`memory/learnings.md`, T106) |
 | 6 | Mutation control M1: reverting only the AC1 fix makes `bash tests/test_install_update_smoke.sh` exit non-zero — observed, landing confirmed by `git diff` first | a fix never observed failing is not evidence |
 | 7 | Mutation control M2: deleting one new step from `ci.yml` makes the AC4 test fail naming that suite | the drift guard must be observed failing |
+| 8 | **(Round 2)** CI runs the drift guard: one named `ci.yml` step runs `python3 tests/test_ci_wires_shell_suites.py`; the file has a `__main__` block that runs every `test_*` function and exits non-zero on any failure, and stays pytest-collectable | /verify FAIL 2026-09-12: an unwired failing suite left the replayed job green — "cannot silently stay out of CI" |
+| 9 | **(Round 2)** A suite counts as wired only via a `run:` line that directly invokes it (`run: bash tests/<name>.sh` or `run: sh tests/<name>.sh`). Mentions in another command (the shellcheck argument list), a comment, or a step name do not count | /verify probes A and B: shellcheck-only and comment-only mentions passed the guard |
+| 10 | **(Round 2)** The guard asserts that `ci.yml` has a run: step invoking `python3 tests/test_ci_wires_shell_suites.py` (self-check) | deleting the guard's own step must not silently disable it |
+| 11 | **(Round 2)** The review file's DELTA states only what is guaranteed; round 1's "now gates every future push" is corrected | claim/evidence divergence found at /verify |
+| 12 | **(Round 2)** Mutation controls, each observed failing with landing confirmed by `git diff`: M3 shellcheck-only mention → guard fails naming the suite; M4 comment-only mention → guard fails; M5 guard step deleted → self-check fails; M6 `python3 tests/test_ci_wires_shell_suites.py` with an unwired failing suite present → exit non-zero. M1/M2 re-run and still fail | a guard never observed failing is not evidence |
 
 ---
 
@@ -108,6 +113,7 @@ bash tests/test_install_update_smoke.sh
 bash tests/test_t098_harness_presence.sh
 bash tests/test_pack_choice_parsing.sh
 python3 -m pytest tests/test_ci_wires_shell_suites.py -q
+python3 tests/test_ci_wires_shell_suites.py; echo "guard as CI runs it: rc=$?"   # round 2
 python3 -m pytest .claude/hooks/tests/ tests/ -q   # expect only test_readme_slim.py red (pre-existing, T115)
 ```
 

@@ -83,10 +83,13 @@ else
 fi
 
 # AC1: every MANIFEST path (as listed in THIS repo's own MANIFEST) + CLAUDE.md
-# exist as real files/directories, never symlinks.
+# exist as real files/directories, never symlinks. A MANIFEST line's field 1 is
+# the source path; later fields (e.g. `codex=.codex/skills`) are per-harness
+# destination mappings, not part of the path — same rule as
+# harness_manifest_path() in lib/harness-fetch.sh.
 AC1_OK=1
 while IFS= read -r line; do
-  line=$(printf '%s' "$line" | tr -d '\r')
+  line=$(printf '%s' "$line" | tr -d '\r' | awk '$0 !~ /^[[:space:]]*(#|$)/ { print $1 }')
   case "$line" in '#'*|'') continue ;; esac
   installed_path="$TARGET1/$line"
   if [ ! -e "$installed_path" ]; then
