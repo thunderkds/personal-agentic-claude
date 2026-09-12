@@ -97,6 +97,13 @@ Probe B repeated post-fix (comment-only mention + unwired suite) -> guard now FA
 
 **DELTA (round 2)**: see corrected DELTA above. **WITNESS (round 2)**: Common-Infrastructure-Agent, 2026-09-12, worktree `wt-t109` on `fix/t109-ci-suites`.
 
+**WITNESS (independent, Supervisor — Stage 4 P2-2)**: the implementing agent is not the sole witness. On 2026-09-12 the
+Supervisor replayed every `ci.yml` `run:` step in fresh `ubuntu:24.04` containers from git bundles, twice: round 1 @ `813902a`
+(as-is success; broken wired suite → fails at its step; **unwired failing suite → job success = FAIL**) and round 2 @ `54babca`
+(as-is success incl. drift guard 4/4; unwired failing suite, shellcheck-only mention and comment-only mention → each fails at the
+drift-guard step naming the exact suite; guard step deleted → success; `run: |` block → guard fails naming the still-running
+suite). Full step output: the verify row in the Evidence table.
+
 
 ---
 
