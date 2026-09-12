@@ -143,6 +143,7 @@ T109's smoke-test defect happened.
 - [ ] Deleting a directory the user's shell is `cd`'d into is fine for a script, but never delete `skills/` or `agents/` roots themselves, even if empty
 - [ ] The `.claude/skills` → `../skills` symlink is re-created after pruning (existing step order must stay)
 - [ ] Hooks importing `tests/canon_paths.py` or any test helper → grep first; if found, that is a STOP-and-ask, not a silent move
+- [ ] **(From T109 Stage 4, P2-1)** `tests/test_install_update_smoke.sh` AC1 does NOT call `harness_manifest_path` — it carries its own copy of the field-1 awk rule (T109 fix). A new `!.claude/hooks/tests` MANIFEST line will make AC1 look for a path literally named `!.claude/hooks/tests` and fail. Update that copy in the same commit as the shared parser, or make the smoke suite source `lib/harness-fetch.sh` and call the function; either way prove it with the smoke suite green after the `!` line lands
 
 ---
 
