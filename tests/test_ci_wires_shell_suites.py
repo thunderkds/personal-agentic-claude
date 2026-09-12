@@ -46,8 +46,27 @@ def _real_test_suites():
     )
 
 
+_RUN_LINE_RE = re.compile(
+    r"^\s*run:\s*(?:bash|sh)\s+tests/([A-Za-z0-9_.-]+\.sh)\s*$"
+)
+
+
 def _ci_referenced_suites(text):
-    """Every tests/*.sh path any ci.yml `run:` line references."""
+    """Every tests/*.sh suite directly invoked by a ci.yml `run:` line —
+    `run: bash tests/<name>.sh` or `run: sh tests/<name>.sh` (optional
+    trailing whitespace) only. A mention inside another command (e.g. the
+    shellcheck argument list), a comment, or a step name does not count."""
+    wired = set()
+    for line in text.splitlines():
+        m = _RUN_LINE_RE.match(line)
+        if m:
+            wired.add(m.group(1))
+    return sorted(wired)
+
+
+def _ci_mentioned_suites(text):
+    """Every tests/*.sh path mentioned anywhere in ci.yml, wired or not —
+    used only to check that referenced paths actually exist on disk."""
     return sorted(set(re.findall(r"tests/([A-Za-z0-9_.-]+\.sh)", text)))
 
 
@@ -67,13 +86,27 @@ def test_every_real_suite_is_wired_or_excluded():
 
 def test_every_ci_referenced_suite_exists():
     text = _ci_yml_text()
-    referenced = _ci_referenced_suites(text)
+    referenced = _ci_mentioned_suites(text)
     real = set(_real_test_suites())
 
     missing = [name for name in referenced if name not in real]
     assert not missing, (
         "ci.yml references tests/*.sh path(s) that do not exist: "
         + ", ".join(missing)
+    )
+
+
+def test_ci_runs_the_drift_guard_itself():
+    """Deleting the step that runs this guard must not silently disable it."""
+    text = _ci_yml_text()
+    self_check_re = re.compile(
+        r"^\s*run:\s*python3\s+tests/test_ci_wires_shell_suites\.py\s*$",
+        re.MULTILINE,
+    )
+    assert self_check_re.search(text), (
+        "ci.yml has no run: step invoking "
+        "'python3 tests/test_ci_wires_shell_suites.py' — the drift guard "
+        "would never run in CI"
     )
 
 
@@ -91,3 +124,22 @@ def test_excluded_suites_still_exist_and_are_really_excluded():
             f"excluded suite '{name}' is now wired in ci.yml — "
             "remove it from EXCLUDED_SUITES"
         )
+
+
+if __name__ == "__main__":
+    _tests = [
+        obj
+        for name, obj in list(globals().items())
+        if name.startswith("test_") and callable(obj)
+    ]
+    _failed = 0
+    for _test in _tests:
+        try:
+            _test()
+        except AssertionError as exc:
+            _failed += 1
+            print(f"FAIL: {_test.__name__}: {exc}")
+        else:
+            print(f"PASS: {_test.__name__}")
+    print(f"----- summary: {len(_tests) - _failed} passed, {_failed} failed -----")
+    raise SystemExit(1 if _failed else 0)

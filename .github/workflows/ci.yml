@@ -47,3 +47,6 @@ jobs:
 
       - name: README-current test suite
         run: bash tests/test_readme_current.sh
+
+      - name: CI wires every shell suite (drift guard)
+        run: python3 tests/test_ci_wires_shell_suites.py
