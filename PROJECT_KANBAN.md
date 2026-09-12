@@ -66,7 +66,7 @@
 
 
 ### In Progress
-- [ ] **T109** — CI runs every install/update shell suite, and the one it would have caught is fixed | Common-Infrastructure-Agent | C2 | Risk: Medium | P0 | Guide: `tasks/TASK_GUIDE_T109.md` | Review: `tasks/TASK_REVIEW_T109.md` | Depends on: none | Registered 2026-09-12 | **Stage 3 started 2026-09-12** — `common-infrastructure` (sonnet, C2) in `wt-t109` on `fix/t109-ci-suites`, spawned via Ghostty/`setsid`
+- [ ] **T109** — CI runs every install/update shell suite, and the one it would have caught is fixed | Common-Infrastructure-Agent | C2 | Risk: Medium | P0 | Guide: `tasks/TASK_GUIDE_T109.md` | Review: `tasks/TASK_REVIEW_T109.md` | Depends on: none | Registered 2026-09-12 | **Stage 3 started 2026-09-12** — `common-infrastructure` (sonnet, C2) in `wt-t109` on `fix/t109-ci-suites`, spawned via Ghostty/`setsid` | **Round 1: /verify FAIL 2026-09-12** — wiring correct (container replay of ci.yml green; broken wired suite fails at its named step), but the drift guard is never run by CI (unwired failing suite → job success) and counts shellcheck-arg/comment mentions as wired. **Round 2 spawned** (AC8–AC12) in the same worktree
 
 
 
