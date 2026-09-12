@@ -318,6 +318,11 @@ fi
 MUTANT="$WORK/update.mutant.sh"
 sed 's/CLAUDE_MD_SOURCE="\$_recorded"/CLAUDE_MD_SOURCE="CLAUDE.md"/' "$UPDATE" > "$MUTANT"
 chmod +x "$MUTANT"
+# The mutant sources lib/harness-fetch.sh relative to its OWN location
+# (SCRIPT_DIR=dirname "$0"), so a bare copy in $WORK can't find it — mirror the
+# lib/ dir alongside it.
+mkdir -p "$WORK/lib"
+cp "$REPO_ROOT/lib/harness-fetch.sh" "$WORK/lib/harness-fetch.sh"
 if cmp -s "$UPDATE" "$MUTANT"; then
   fail "M1: mutation did not change update.sh — sed pattern did not match"
 else

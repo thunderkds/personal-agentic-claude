@@ -36,6 +36,9 @@ jobs:
       - name: Install/update smoke suite
         run: bash tests/test_install_update_smoke.sh
 
+      - name: update.sh CLAUDE.md delivery test suite (T110)
+        run: bash tests/test_update_claude_md.sh
+
       - name: Harness presence test suite (T098)
         run: bash tests/test_t098_harness_presence.sh
 

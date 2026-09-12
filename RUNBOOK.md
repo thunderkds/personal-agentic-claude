@@ -189,7 +189,7 @@ gitignored).
 | `curl \| sh` install prints "No local checkout detected" then works | Expected — `setup.sh` bootstraps a full clone because `$0` has no file location under a pipe (T038) | None; informational |
 | Install fails at clone | Network, or `SUPERVISOR_REPO` points at a bad URL | Re-run with an explicit `SUPERVISOR_REPO=<url>` |
 | `update.sh` exits non-zero with "conflict(s) could not be resolved" | Ran non-interactively over locally-customized files | Re-run `bash update.sh` in a real terminal and resolve per file |
-| A fix to `CLAUDE.md` never appears downstream | **By design** — `CLAUDE.md` is outside `MANIFEST`; `setup.sh` copies it once and `update.sh:276` carries its lock entry over untouched | Downstream must merge the change into their own `CLAUDE.md` by hand |
+| A fix to `CLAUDE.md` doesn't reach a project | `update.sh` (T110) delivers `CLAUDE.md` from the same source (`CLAUDE.md` or `CLAUDE_LEGACY.md`) the project was installed with, recorded as `claude_md_source` in `.claude/harness-lock.json`. It overwrites only when the project's `CLAUDE.md` is unedited since install; an edited `CLAUDE.md` goes through the same conflict prompt (`[o]/[s]/[v]`) as any other file | If prompted, `[v]iew` the diff and `[o]verwrite` to take the fix, or `[s]kip` to keep your edits and merge by hand |
 | Merge blocked: "Tasks still In Progress" | The pipeline gate reads `PROJECT_KANBAN.md` in the **current checkout** before the merge runs | Close the row to Done in a **separate** tool call, on the branch being merged, then merge |
 
 ---
