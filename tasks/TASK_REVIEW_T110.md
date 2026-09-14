@@ -110,3 +110,65 @@ freezing that file at its install-time content forever.
 **WITNESS**: Common-Infrastructure-Agent (T110), 2026-09-12, run in scratch git repos per the
 guide's BEFORE/AFTER probe protocol (`SUPERVISOR_REPO=file://...` local clones; brownfield driven
 through a pty via `script -qec`).
+
+---
+
+### BEFORE (round 2) — Common-Infrastructure-Agent, 2026-09-14T10:22Z, `fix/t110-update-claude-md` `9319d09`, before any round-2 implementation commit
+
+Scratch repos under `$SCRATCH/t110r2` (`SCRATCH` = the session scratchpad dir); upstream is a local
+`file://` clone of this branch at `9319d09`.
+
+**(i) Brownfield, user edited `CLAUDE.md` line 1, upstream `CLAUDE_LEGACY.md` changed, `o` via pty**
+
+```
+$ printf '2\n\n' | script -qec "SUPERVISOR_REPO=file://.../upstream1 bash setup.sh" /dev/null
+[info]  CLAUDE source: CLAUDE_LEGACY.md | lock: .claude/harness-lock.json
+$ git add -A && git commit -m install
+$ sed -i '1s/.*/# USER EDITED FIRST LINE (round2 BEFORE)/' CLAUDE.md
+$ head -1 CLAUDE.md → # USER EDITED FIRST LINE (round2 BEFORE)
+$ # upstream1: echo MARKER-LEGACY-R2-BEFORE >> CLAUDE_LEGACY.md; git commit
+$ printf 'o\n' | script -qec "SUPERVISOR_REPO=file://.../upstream1 bash update.sh" /dev/null
+[warn]  conflict: 'CLAUDE.md' has local changes since install
+[info]  diff (current vs upstream) for CLAUDE.md:
+--- ./CLAUDE.md
++++ /tmp/harness-fetch.vZJTZ3/CLAUDE_LEGACY.md
+@@ -1,4 +1,4 @@
+-# USER EDITED FIRST LINE (round2 BEFORE)
++# CLAUDE LEGACY SUPERVISOR - Operating Protocol
+...
++MARKER-LEGACY-R2-BEFORE
+  Resolve: [o]verwrite / [s]kip / [v]iew diff again: [info]  overwrote: CLAUDE.md
+[info]  Update complete. Re-recorded ./.claude/harness-lock.json
+update_exit=0
+$ tail -1 CLAUDE.md → MARKER-LEGACY-R2-BEFORE
+$ head -1 CLAUDE.md → # CLAUDE LEGACY SUPERVISOR - Operating Protocol
+$ grep claude_md_source .claude/harness-lock.json → "claude_md_source": "CLAUDE_LEGACY.md",
+```
+
+Round-1 code already honours the recorded source correctly here (the conflict diff was taken
+against `CLAUDE_LEGACY.md`, not the greenfield `CLAUDE.md`, and `[o]` installed the legacy
+content) — this confirms the Stage-4 finding is about **missing test coverage** (no SC exercises
+this divergent brownfield-plus-edit path), not a live behavioral bug in this exact case.
+
+**(ii) Lock's `claude_md_source` points outside the allowlist, at a real file in the scratch dir**
+
+```
+$ printf '1\n\n' | script -qec "SUPERVISOR_REPO=file://.../upstream1 bash setup.sh" /dev/null
+$ head -1 CLAUDE.md → # Claude Project Supervisor Guidelines
+$ echo MARKER-EVIL-FILE-CONTENT-R2 > $SCRATCH/t110r2/evil.md
+$ # rewrote .claude/harness-lock.json: "claude_md_source": "../claude-1000/.../scratchpad/t110r2/evil.md"
+$ SUPERVISOR_REPO="file://.../upstream1" bash update.sh </dev/null
+[info]  Update complete. Re-recorded ./.claude/harness-lock.json
+update_exit=0
+$ cat CLAUDE.md → MARKER-EVIL-FILE-CONTENT-R2
+$ grep claude_md_source .claude/harness-lock.json → "claude_md_source": "../claude-1000/.../scratchpad/t110r2/evil.md",
+```
+
+Confirms: an arbitrary relative path in the committed lock is used unvalidated as a source path —
+`../claude-1000/.../evil.md` resolves one level above `$HARNESS_TEMP_DIR` (itself always exactly
+`/tmp/harness-fetch.XXXXXX`) straight into a file outside the fetched harness, and its content
+silently lands in the project's `CLAUDE.md` with no prompt (no local edit → hash matched → fast
+overwrite path).
+
+**WITNESS (round 2)**: Common-Infrastructure-Agent (T110), 2026-09-14, scratch git repos, before
+any round-2 implementation commit.
