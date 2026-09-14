@@ -12,7 +12,13 @@
 #   SC4. install; update; update       -> recorded claude_md_source identical both times
 #   SC5. lock predates the source field -> heading inference still applies it
 #   SC6. old lock + hand-edited unknown heading -> conflict path, exit 2, file unchanged
+#   SC7. brownfield + edited CLAUDE.md line 1, answer "o" -> recorded source
+#        (CLAUDE_LEGACY.md) is honoured over heading inference
+#   SC8. lock's claude_md_source outside {CLAUDE.md, CLAUDE_LEGACY.md},
+#        pointing at a real scratch file -> rejected, never read into CLAUDE.md
 #   M1.  mutation: ignore recorded source, always resolve greenfield -> SC2 must fail
+#   M2.  mutation: disable the recorded-source branch entirely -> SC7 must fail
+#   M3.  mutation: remove the allowlist check on the recorded source -> SC8 must fail
 #
 # Brownfield installs are driven through a real pty (`script -qec`) because
 # setup.sh's mode/pack prompts are `[ -t 0 ]`-gated and unreachable from a pipe
@@ -310,6 +316,105 @@ else
 fi
 
 # =============================================================================
+# SC7 — brownfield, user edited CLAUDE.md's first line, upstream
+# CLAUDE_LEGACY.md changed: the RECORDED source must still be honoured (not
+# heading inference, which would see an unrecognized first line and treat it
+# as a conflict against greenfield CLAUDE.md instead). Answering "o" through
+# the standard hash-conflict prompt must land the fresh CLAUDE_LEGACY.md
+# content, never the greenfield CLAUDE.md's own first line.
+# =============================================================================
+T7SRC="$WORK/t7-source-honoured"
+mkdir -p "$T7SRC"
+git -C "$T7SRC" init -q
+if run_setup_brownfield "$T7SRC"; then
+  [ "$(lock_field "$T7SRC/.claude/harness-lock.json" claude_md_source)" = "CLAUDE_LEGACY.md" ] \
+    || fail "SC7: precondition broken — install did not record CLAUDE_LEGACY.md"
+
+  # Edit CLAUDE.md's first line — this changes its hash (triggers the normal
+  # conflict prompt) without changing its recorded install source.
+  { printf '# USER EDITED FIRST LINE\n'; tail -n +2 "$T7SRC/CLAUDE.md"; } \
+    > "$T7SRC/CLAUDE.md.new" && mv "$T7SRC/CLAUDE.md.new" "$T7SRC/CLAUDE.md"
+
+  bump_fixture_file CLAUDE_LEGACY.md "MARKER-SC7-LEGACY"
+
+  if run_update "$T7SRC" "$WORK/overwrite.in"; then
+    pass "SC7: update.sh exited 0 answering [o] to the conflict"
+  else
+    fail "SC7: update.sh exited $? (see $WORK/update.log)"; cat "$WORK/update.log" >&2
+  fi
+  if grep -q "MARKER-SC7-LEGACY" "$T7SRC/CLAUDE.md" 2>/dev/null; then
+    pass "SC7: CLAUDE.md carries the fresh CLAUDE_LEGACY.md marker"
+  else
+    fail "SC7: CLAUDE.md missing the fresh CLAUDE_LEGACY.md marker"
+  fi
+  if grep -q "GREENFIELD SUPERVISOR RULES" "$T7SRC/CLAUDE.md" 2>/dev/null; then
+    fail "SC7: CLAUDE.md picked up greenfield content — recorded source was not honoured"
+  else
+    pass "SC7: greenfield content never appeared"
+  fi
+  [ "$(lock_field "$T7SRC/.claude/harness-lock.json" claude_md_source)" = "CLAUDE_LEGACY.md" ] \
+    && pass "SC7: lock still records CLAUDE_LEGACY.md" \
+    || fail "SC7: lock's claude_md_source drifted away from CLAUDE_LEGACY.md"
+else
+  fail "SC7: setup failed for brownfield fixture — see $WORK/setup.log"; cat "$WORK/setup.log" >&2
+fi
+
+# =============================================================================
+# SC8 — lock's claude_md_source set to a value outside the allowlist
+# {CLAUDE.md, CLAUDE_LEGACY.md}, pointing (via relative traversal out of
+# HARNESS_TEMP_DIR) at a real file holding a unique marker. That marker must
+# never land in CLAUDE.md; update must still exit per the existing rules
+# (unedited CLAUDE.md -> fast overwrite via heading-inferred CLAUDE.md); and
+# the rewritten lock must record an allowlisted value (or omit the field).
+# =============================================================================
+T8="$WORK/t8-untrusted-source"
+mkdir -p "$T8"
+git -C "$T8" init -q
+if run_setup_greenfield "$T8"; then
+  EVILFILE="$WORK/sc8-evil.md"
+  printf 'MARKER-SC8-EVIL-CONTENT\n' > "$EVILFILE"
+  # $WORK and update.sh's own $HARNESS_TEMP_DIR are both direct children of
+  # the same $TMPDIR (mktemp "${TMPDIR:-/tmp}/<prefix>.XXXXXX"), so one level
+  # up plus $WORK's own basename reaches $EVILFILE regardless of the random
+  # suffix on either directory.
+  REL_EVIL="../$(basename "$WORK")/sc8-evil.md"
+  python3 - "$T8/.claude/harness-lock.json" "$REL_EVIL" <<'PYEOF'
+import sys
+path, rel = sys.argv[1], sys.argv[2]
+data = open(path).read()
+old = '"claude_md_source": "CLAUDE.md"'
+new = f'"claude_md_source": "{rel}"'
+assert old in data, "SC8 fixture assumption broken: claude_md_source line not found"
+open(path, "w").write(data.replace(old, new, 1))
+PYEOF
+
+  if run_update "$T8" /dev/null; then
+    pass "SC8: update.sh exited 0"
+  else
+    fail "SC8: update.sh exited $? (see $WORK/update.log)"; cat "$WORK/update.log" >&2
+  fi
+  if grep -q "MARKER-SC8-EVIL-CONTENT" "$T8/CLAUDE.md" 2>/dev/null; then
+    fail "SC8: the untrusted lock value's file content landed in CLAUDE.md"
+  else
+    pass "SC8: the untrusted lock value's file content never landed in CLAUDE.md"
+  fi
+  if grep -q "not an allowed value" "$WORK/update.log"; then
+    pass "SC8: stderr warns about the rejected claude_md_source value"
+  else
+    fail "SC8: stderr did not warn about the rejected value"; cat "$WORK/update.log" >&2
+  fi
+  _sc8_src=$(lock_field "$T8/.claude/harness-lock.json" claude_md_source)
+  case "$_sc8_src" in
+    CLAUDE.md|CLAUDE_LEGACY.md|"")
+      pass "SC8: rewritten lock records an allowlisted source ('$_sc8_src')" ;;
+    *)
+      fail "SC8: rewritten lock still carries an untrusted source ('$_sc8_src')" ;;
+  esac
+else
+  fail "SC8: setup failed — see $WORK/setup.log"; cat "$WORK/setup.log" >&2
+fi
+
+# =============================================================================
 # M1 — mutation control: patch update.sh so resolve_claude_md_source always
 # resolves "CLAUDE.md" regardless of the recorded/inferred source. SC2 (the
 # brownfield-propagation assertion) must then fail, proving SC2 actually
@@ -343,6 +448,82 @@ if run_setup_brownfield "$T7"; then
   fi
 else
   fail "M1: setup failed for mutation-control fixture — see $WORK/setup.log"; cat "$WORK/setup.log" >&2
+fi
+
+# =============================================================================
+# M2 — mutation control: disable the recorded-source branch entirely (force
+# heading inference always, even when a valid recorded source exists). SC7
+# must then fail: an edited CLAUDE.md first line no longer matches any
+# upstream heading, so the diff/overwrite falls back to greenfield CLAUDE.md
+# instead of the recorded CLAUDE_LEGACY.md.
+# =============================================================================
+MUTANT2="$WORK/update.mutant2.sh"
+sed 's/if \[ -n "\$_recorded" \]; then/if false; then/' "$UPDATE" > "$MUTANT2"
+chmod +x "$MUTANT2"
+if cmp -s "$UPDATE" "$MUTANT2"; then
+  fail "M2: mutation did not change update.sh — sed pattern did not match"
+else
+  pass "M2: mutation landed (mutant differs from update.sh)"
+fi
+
+T9="$WORK/t9-m2-mutation"
+mkdir -p "$T9"
+git -C "$T9" init -q
+if run_setup_brownfield "$T9"; then
+  { printf '# USER EDITED FIRST LINE\n'; tail -n +2 "$T9/CLAUDE.md"; } \
+    > "$T9/CLAUDE.md.new" && mv "$T9/CLAUDE.md.new" "$T9/CLAUDE.md"
+  bump_fixture_file CLAUDE_LEGACY.md "MARKER-M2-LEGACY"
+  ( cd "$T9" && SUPERVISOR_REPO="file://$FIXTURE" bash "$MUTANT2" <"$WORK/overwrite.in" \
+      >"$WORK/mutant2-update.log" 2>&1 )
+  if grep -q "GREENFIELD SUPERVISOR RULES" "$T9/CLAUDE.md" 2>/dev/null \
+     && ! grep -q "MARKER-M2-LEGACY" "$T9/CLAUDE.md" 2>/dev/null; then
+    pass "M2: mutant wrongly diffed/overwrote against greenfield CLAUDE.md (SC7 would fail)"
+  else
+    fail "M2: mutant did not reproduce the expected SC7 failure — mutation may be inert"
+  fi
+else
+  fail "M2: setup failed for mutation-control fixture — see $WORK/setup.log"; cat "$WORK/setup.log" >&2
+fi
+
+# =============================================================================
+# M3 — mutation control: remove the allowlist check (accept any recorded
+# claude_md_source value, as round 1 did). SC8 must then fail: the untrusted
+# lock value's file content lands directly in CLAUDE.md.
+# =============================================================================
+MUTANT3="$WORK/update.mutant3.sh"
+sed 's/CLAUDE\.md|CLAUDE_LEGACY\.md)/*)/' "$UPDATE" > "$MUTANT3"
+chmod +x "$MUTANT3"
+if cmp -s "$UPDATE" "$MUTANT3"; then
+  fail "M3: mutation did not change update.sh — sed pattern did not match"
+else
+  pass "M3: mutation landed (mutant differs from update.sh)"
+fi
+
+T10="$WORK/t10-m3-mutation"
+mkdir -p "$T10"
+git -C "$T10" init -q
+if run_setup_greenfield "$T10"; then
+  EVILFILE3="$WORK/m3-evil.md"
+  printf 'MARKER-M3-EVIL-CONTENT\n' > "$EVILFILE3"
+  REL_EVIL3="../$(basename "$WORK")/m3-evil.md"
+  python3 - "$T10/.claude/harness-lock.json" "$REL_EVIL3" <<'PYEOF'
+import sys
+path, rel = sys.argv[1], sys.argv[2]
+data = open(path).read()
+old = '"claude_md_source": "CLAUDE.md"'
+new = f'"claude_md_source": "{rel}"'
+assert old in data, "M3 fixture assumption broken: claude_md_source line not found"
+open(path, "w").write(data.replace(old, new, 1))
+PYEOF
+  ( cd "$T10" && SUPERVISOR_REPO="file://$FIXTURE" bash "$MUTANT3" </dev/null \
+      >"$WORK/mutant3-update.log" 2>&1 )
+  if grep -q "MARKER-M3-EVIL-CONTENT" "$T10/CLAUDE.md" 2>/dev/null; then
+    pass "M3: mutant wrongly copied the untrusted source's content into CLAUDE.md (SC8 would fail)"
+  else
+    fail "M3: mutant did not reproduce the expected SC8 failure — mutation may be inert"
+  fi
+else
+  fail "M3: setup failed for mutation-control fixture — see $WORK/setup.log"; cat "$WORK/setup.log" >&2
 fi
 
 printf '\n----- summary: %s passed, %s failed -----\n' "$PASS" "$FAIL"

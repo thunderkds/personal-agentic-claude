@@ -8,9 +8,9 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_update_claude_md.sh` — SC1(AC1), SC2(AC2), SC3(AC3), SC4(AC4), SC5(AC5,AC6), SC6(AC5,AC6), M1(AC7 mutation). `bash tests/test_update_claude_md.sh` → `----- summary: 23 passed, 0 failed -----`, exit 0 |
-| Verification command run | ☑ pass | All 5 guide commands run directly (exit codes read, never piped through `tail`): `test_update_claude_md.sh` → 23/23 pass, exit 0; `test_update.sh` → 31/31 pass, exit 0; `test_setup.sh` → 18/18 pass, exit 0; `test_install_update_smoke.sh` → 9/9 pass, exit 0; `shellcheck -x setup.sh update.sh` → exit 0, no output |
-| Negative cases hold | ☑ pass | SC3 (edited `CLAUDE.md` + upstream change → exit 2, edit kept, upstream marker absent), SC6 (unrecognized heading → exit 2, byte-unchanged), M1 (mutant that hardcodes greenfield resolution reproduces SC2's failure — proves SC2 is load-bearing, not vacuous) |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_update_claude_md.sh` — SC1(AC1), SC2(AC2), SC3(AC3), SC4(AC4), SC5(AC5,AC6), SC6(AC5,AC6), SC7(AC4, Stage-4 P1), SC8(Stage-4 P2), M1/M2/M3 mutations. Round 2: `bash tests/test_update_claude_md.sh` → `----- summary: 35 passed, 0 failed -----`, exit 0 |
+| Verification command run | ☑ pass | Round 2, all commands run directly (exit codes read, never piped through `tail`): `test_update_claude_md.sh` → 35/35 pass, exit 0; `test_update.sh` → 31/31 pass, exit 0; `test_setup.sh` → 18/18 pass, exit 0; `test_install_update_smoke.sh` → 9/9 pass, exit 0; `python3 tests/test_ci_wires_shell_suites.py` → 4/4 pass, exit 0; `docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:stable -x setup.sh update.sh` → exit 0, no output (see shellcheck row below for full transcript incl. the test-file-only info notes) |
+| Negative cases hold | ☑ pass | SC3 (edited `CLAUDE.md` + upstream change → exit 2, edit kept, upstream marker absent), SC6 (unrecognized heading → exit 2, byte-unchanged), SC8 (untrusted lock value rejected, stderr warns, marker never lands), M1/M2/M3 (each mutant reproduces the failure of the SC it targets, proving none of SC2/SC7/SC8 is vacuous) |
 | verify | ☐ pass / ☐ fail / ☐ N/A | *(left for the Supervisor/user — `/verify`)* |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Touched only `setup.sh` (`write_harness_lock`), `update.sh` (`process_files`→`process_one_file` refactor + new `resolve_claude_md_source`/`process_claude_md`/`write_new_lock` signature), `tests/test_update_claude_md.sh` (new), `.github/workflows/ci.yml` (+1 step), `RUNBOOK.md` (D1), `site/index.html` (D2). `MANIFEST`, `CLAUDE.md`/`CLAUDE_LEGACY.md` content, `.claude/settings.json` handling, and `lib/harness-fetch.sh` left untouched per guide's "Files Must NOT Touch" |
 | Full smoke suite still green (no regression) | ☑ pass | `test_update.sh` 31/31, `test_setup.sh` 18/18, `test_install_update_smoke.sh` 9/9 — all pre-existing cases pass unmodified; drift guard (`python3 tests/test_ci_wires_shell_suites.py`) 4/4 pass after wiring the new CI step |
@@ -172,3 +172,27 @@ overwrite path).
 
 **WITNESS (round 2)**: Common-Infrastructure-Agent (T110), 2026-09-14, scratch git repos, before
 any round-2 implementation commit.
+
+---
+
+## Round 2 (Stage 4 findings)
+
+| Finding | Closed by |
+|---------|-----------|
+| **P1** — no test proves the recorded `claude_md_source` is honoured | New **SC7**: brownfield install, edit `CLAUDE.md` line 1 (changes its hash, triggers the *existing* per-file conflict prompt — independent of heading inference), bump upstream `CLAUDE_LEGACY.md`, answer `[o]` via a plain pipe (this prompt is not `[ -t 0 ]`-gated). Asserts the fresh `CLAUDE_LEGACY.md` marker lands, the greenfield content never appears, and the lock still records `CLAUDE_LEGACY.md`. New mutation **M2** disables the `if [ -n "$_recorded" ]` branch entirely (forces heading inference always) and confirms SC7 then fails: the edited first line matches no known heading, so the run falls into the heading-conflict path and diffs against greenfield `CLAUDE.md` instead — proving SC7 actually exercises the record-honouring code, not a vacuous pass. BEFORE (round 2) probe above shows round-1 code already behaved correctly here; the gap was coverage, not behavior. |
+| **P2** — recorded value used unvalidated as a path | `resolve_claude_md_source` (`update.sh`) now allowlists the recorded `claude_md_source` to exactly `CLAUDE.md` or `CLAUDE_LEGACY.md`; any other value is rejected with `log_warn "recorded claude_md_source '<value>' is not an allowed value (CLAUDE.md or CLAUDE_LEGACY.md) — falling back to heading inference."` and falls through to the existing heading-inference/conflict path — no path stripping or normalization, per the Supervisor's decision. New **SC8**: lock's `claude_md_source` rewritten (via `python3` string replace) to a relative path that escapes `$HARNESS_TEMP_DIR` (always exactly one level under `$TMPDIR`, per `lib/harness-fetch.sh:91`) into a real scratch file holding a unique marker. Asserts the marker never reaches `CLAUDE.md`, stderr carries the rejection warning, and the rewritten lock ends up with an allowlisted (or absent) value. New mutation **M3** collapses the allowlist's `CLAUDE.md|CLAUDE_LEGACY.md)` case arm into `*)` (accept-anything, round-1 shape) and confirms SC8 then fails: the untrusted file's content lands in `CLAUDE.md` unmodified. BEFORE (round 2) probe above reproduces the live exploit pre-fix. |
+| **P2** — shellcheck evidence | Real `docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:stable -x setup.sh update.sh` output pasted below (round 2), not just a claimed result. |
+| **P3** (optional) — fieldless lock + user-deleted `CLAUDE.md` falls back to greenfield even for brownfield | **Skipped.** Guide marks this optional ("do it only if a few lines") and out of scope: the guide's own Edge Case Checklist already documents the current behavior ("`CLAUDE.md` deleted by the user → treated like any missing file … from the recorded source") as verified-correct for the *recorded-source* path; the residual gap is only the *fieldless-lock-and-deleted-file* double-unknown case, which the Requirement's "Out of scope" list (no cross-mode heuristics beyond heading inference) and the Supervisor's guide already treat as acceptable degraded behavior, not a defect. Left as-is to avoid inventing new inference logic beyond what SC5/AC5 specify. |
+
+### Round 2 shellcheck transcript
+
+```
+$ docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:stable -x setup.sh update.sh
+$ echo "SHELLCHECK_EXIT=$?"
+SHELLCHECK_EXIT=0
+```
+
+(No stdout/stderr output at all — clean run, exit 0. `tests/test_update_claude_md.sh` was also
+checked; it emits pre-existing-style SC2015/SC2016 *info*-level notes shared with the SC1–SC6
+patterns already in the file before round 2 — not part of the guide's exact verification command,
+left as-is for consistency with the surrounding test code.)

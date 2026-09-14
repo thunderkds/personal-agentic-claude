@@ -329,8 +329,15 @@ resolve_claude_md_source() {
   _dst="$2"
   _recorded=$(lookup_lock_hash "$_lock" "claude_md_source")
   if [ -n "$_recorded" ]; then
-    CLAUDE_MD_SOURCE="$_recorded"
-    return
+    case "$_recorded" in
+      CLAUDE.md|CLAUDE_LEGACY.md)
+        CLAUDE_MD_SOURCE="$_recorded"
+        return
+        ;;
+      *)
+        log_warn "recorded claude_md_source '$_recorded' is not an allowed value (CLAUDE.md or CLAUDE_LEGACY.md) — falling back to heading inference."
+        ;;
+    esac
   fi
   if [ ! -e "$_dst" ]; then
     # Deleted by the user, or never installed — treat like any missing file.
