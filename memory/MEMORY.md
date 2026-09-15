@@ -23,6 +23,10 @@
      (mean 326, max 796). Reported by the size test, never enforced; /compact-memory's job. -->
 
 ### Decisions
+- [`claude_md_source` records the CLAUDE file a project installed with](decisions.md) — T110: `update.sh` now delivers `CLAUDE.md` under the edit-safe rule; brownfield keeps `CLAUDE_LEGACY.md`; a pre-T110 `update.sh` drops the field and it self-heals by heading inference unless line 1 was edited
+- [A lock-file value is untrusted the moment it becomes a path](learnings.md) — T110: allowlist before concatenation, and pick a fallback that can't carry the bad value into the rewritten lock
+- [The Supervisor's own mutant is the Stage 4 step](learnings.md) — an agent's mutation controls prove its mutants fail, not that its suite is non-vacuous; mutate the source yourself and confirm the new test fails
+- [The push gate reads the board and the trace](learnings.md) — set `.claude/hooks/.state/active_task` before a task's verification work, or its Bash calls are attributed to nothing
 - [Interactive CLIs need a pty to verify](learnings.md) — `[ -t 0 ]`-gated prompts are unreachable from a pipe; drive the real binary with `script -qec` at Stage 5, and add a define-only source guard for the unit path (T108).
 - [A subshell `cd` doesn't wrap a pipeline outside it](learnings.md) — T108's probes installed into the main checkout instead of scratch; an installer prints `Setup complete.` either way. Assert the destination, don't trust the `cd`.
 - [Agents satisfy the AC they can and stay quiet about a contradictory one](learnings.md) — T108's AC1 (input order) and AC7 (numeric order) couldn't both hold; the agent shipped AC1 and never flagged it. Read the AC table against itself before spawning.
