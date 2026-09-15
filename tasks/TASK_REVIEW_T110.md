@@ -11,7 +11,7 @@
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_update_claude_md.sh` — SC1(AC1), SC2(AC2), SC3(AC3), SC4(AC4), SC5(AC5,AC6), SC6(AC5,AC6), SC7(AC4, Stage-4 P1), SC8(Stage-4 P2), M1/M2/M3 mutations. Round 2: `bash tests/test_update_claude_md.sh` → `----- summary: 35 passed, 0 failed -----`, exit 0 |
 | Verification command run | ☑ pass | Round 2, all commands run directly (exit codes read, never piped through `tail`): `test_update_claude_md.sh` → 35/35 pass, exit 0; `test_update.sh` → 31/31 pass, exit 0; `test_setup.sh` → 18/18 pass, exit 0; `test_install_update_smoke.sh` → 9/9 pass, exit 0; `python3 tests/test_ci_wires_shell_suites.py` → 4/4 pass, exit 0; `docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:stable -x setup.sh update.sh` → exit 0, no output (see shellcheck row below for full transcript incl. the test-file-only info notes) |
 | Negative cases hold | ☑ pass | SC3 (edited `CLAUDE.md` + upstream change → exit 2, edit kept, upstream marker absent), SC6 (unrecognized heading → exit 2, byte-unchanged), SC8 (untrusted lock value rejected, stderr warns, marker never lands), M1/M2/M3 (each mutant reproduces the failure of the SC it targets, proving none of SC2/SC7/SC8 is vacuous) |
-| verify | ☐ pass / ☐ fail / ☐ N/A | *(left for the Supervisor/user — `/verify`)* |
+| verify | ☑ pass | `/verify` run by the user 2026-09-15 — **PASS**, runtime observation at the CLI, no test suite involved. Offline upstream (`SUPERVISOR_REPO=file://`), three scratch projects installed by driving `setup.sh` itself (brownfield menu under `script -qec`). Core: upstream `CLAUDE_LEGACY.md` + `CLAUDE.md` both bumped after install, untouched project → `BEFORE: legacy-v3=0 greenfield-v3=0` → `AFTER: legacy-v3=1 greenfield-v3=0`. BEFORE control on `main`'s `update.sh`, same bump: `CONTROL BEFORE: v4=0` → `CONTROL AFTER: v4=0` (the defect, reproduced live). Probes: edited file + `s` → `skipped: CLAUDE.md (kept your local version)`, edit kept, upstream absent; `o` → legacy wins, no greenfield leak; tampered lock pointing outside the temp clone → `[warn] recorded claude_md_source '../../../../../../../…/evil/evil.md' is not an allowed value … falling back to heading inference`, `PWNED leaked? 0`, lock scrubbed back to `CLAUDE_LEGACY.md`; deleted `CLAUDE.md` → `new file installed: CLAUDE.md` from the recorded source; two runs → clean `git status`; greenfield project → `gfV6=1 legacyV6=0` (fix did not over-rotate to legacy). See '/verify findings' below. |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Touched only `setup.sh` (`write_harness_lock`), `update.sh` (`process_files`→`process_one_file` refactor + new `resolve_claude_md_source`/`process_claude_md`/`write_new_lock` signature), `tests/test_update_claude_md.sh` (new), `.github/workflows/ci.yml` (+1 step), `RUNBOOK.md` (D1), `site/index.html` (D2). `MANIFEST`, `CLAUDE.md`/`CLAUDE_LEGACY.md` content, `.claude/settings.json` handling, and `lib/harness-fetch.sh` left untouched per guide's "Files Must NOT Touch" |
 | Full smoke suite still green (no regression) | ☑ pass | `test_update.sh` 31/31, `test_setup.sh` 18/18, `test_install_update_smoke.sh` 9/9 — all pre-existing cases pass unmodified; drift guard (`python3 tests/test_ci_wires_shell_suites.py`) 4/4 pass after wiring the new CI step |
 | **Docs updated per guide's "Documentation to Update" (new text quoted)** | ☑ pass | D1 `RUNBOOK.md:192` now reads: *"`update.sh` (T110) delivers `CLAUDE.md` from the same source (`CLAUDE.md` or `CLAUDE_LEGACY.md`) the project was installed with, recorded as `claude_md_source` in `.claude/harness-lock.json`. It overwrites only when the project's `CLAUDE.md` is unedited since install; an edited `CLAUDE.md` goes through the same conflict prompt (`[o]/[s]/[v]`) as any other file"* — remediation cell updated to match. D2 `site/index.html` `#update-flow` now reads: *"It re-fetches the framework fresh, then for every `MANIFEST` file — plus `CLAUDE.md` — compares your project's current copy against the content hash recorded at the last install/update"* and adds: *"`CLAUDE.md` is delivered from the same source the project was installed with — a brownfield/existing project keeps receiving `CLAUDE_LEGACY.md`'s rules, never the greenfield `CLAUDE.md` — recorded per project in `.claude/harness-lock.json`."* Command lines at `:264-268` left untouched (T114) |
@@ -237,3 +237,22 @@ Docs D1/D2 confirmed landed: `RUNBOOK.md:192` no longer says "by design", and `s
 HTML report: `reports/code-review_fix-t110-update-claude-md_20260915T094750.html` (Risk 0%, Quality 95%, Effort 0%).
 
 **Next**: user runs `/verify`, then PR `fix/t110-update-claude-md` → `feat/easy-kit-one-command`.
+
+---
+
+## /verify findings (user-run, 2026-09-15)
+
+Verdict **PASS**. Two observations from driving the real CLI, neither blocking:
+
+1. **A pre-T110 `update.sh` silently drops `claude_md_source` from the lock.** Hit by accident in the
+   control project: installed with T110's `setup.sh` (field written), ran `main`'s `update.sh`, field
+   gone — `main`'s `write_new_lock` rebuilds from file-hash pairs only. It self-heals on the next T110
+   update via heading inference (observed: field absent → run → `"claude_md_source": "CLAUDE_LEGACY.md"`
+   restored and the pending marker delivered), so no data loss. The self-heal depends on the user not
+   having edited line 1 of their `CLAUDE.md`; if they have, that project lands in the heading-conflict
+   path and is prompted with a greenfield diff. Exposure is downgrade/mixed-version installs. AC6's
+   "old readers ignore it" covers the *read* side; this is the *write* side — worth an edge-case line,
+   not a code change.
+2. **`update.sh` with no `SUPERVISOR_REPO` fetches the live public repo with no confirmation** and
+   rewrote a scratch project when the env var was omitted. Not a T110 defect (pre-existing default),
+   but T114's menu rework is the natural place for a confirm step.
