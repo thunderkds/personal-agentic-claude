@@ -267,14 +267,19 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agenti
 </p>
 <pre class="install">sh /path/to/personal-agentic-claude/update.sh</pre>
 <p class="lead">
-  It re-fetches the framework fresh, then for every <code>MANIFEST</code> file compares your
-  project's current copy against the content hash recorded at the last install/update
-  (<code>.claude/harness-lock.json</code>):
+  It re-fetches the framework fresh, then for every <code>MANIFEST</code> file — plus
+  <code>CLAUDE.md</code> — compares your project's current copy against the content hash recorded
+  at the last install/update (<code>.claude/harness-lock.json</code>):
 </p>
 <ul class="lead">
   <li><strong>Untouched since install</strong> — silently overwritten with the latest upstream version.</li>
   <li><strong>Customized</strong> — shown a diff and prompted per file: overwrite / skip / view diff again.</li>
 </ul>
+<p class="lead">
+  <code>CLAUDE.md</code> is delivered from the same source the project was installed with — a
+  brownfield/existing project keeps receiving <code>CLAUDE_LEGACY.md</code>'s rules, never the
+  greenfield <code>CLAUDE.md</code> — recorded per project in <code>.claude/harness-lock.json</code>.
+</p>
 
 <h3>Which harnesses get updated</h3>
 <p class="lead">

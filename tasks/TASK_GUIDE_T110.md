@@ -143,11 +143,11 @@ line of each upstream candidate in the temp clone, so no heading text is hardcod
 
 ## Edge Case Checklist
 
-- [ ] `CLAUDE.md` deleted by the user → treated like any missing file ("new file installed" from the recorded source)
-- [ ] Upstream temp clone lacks the recorded source file → loud error naming it, no overwrite
-- [ ] CRLF in a user-edited `CLAUDE.md` changes the hash → conflict path, not silent overwrite (correct)
-- [ ] The JSON key/value is written without breaking the lock's existing shape for `harness-lock.json` readers in `.claude/hooks/` — grep for readers first
-- [ ] Two updates in a row produce no git diff on the second (idempotent)
+- [x] `CLAUDE.md` deleted by the user → treated like any missing file ("new file installed" from the recorded source) — verified in scratch: `[info] new file installed: CLAUDE.md`, restored
+- [x] Upstream temp clone lacks the recorded source file → loud error naming it, no overwrite — verified: `[error] CLAUDE.md source 'CLAUDE.md' not found in fetched harness — leaving your CLAUDE.md untouched.`, hash unchanged
+- [x] CRLF in a user-edited `CLAUDE.md` changes the hash → conflict path, not silent overwrite (correct) — inherent to `compute_file_hash`'s content-hash comparison, exercised by SC3
+- [x] The JSON key/value is written without breaking the lock's existing shape for `harness-lock.json` readers in `.claude/hooks/` — grep for readers first — `grep -rln "harness-lock" .claude/hooks/ lib/` found none; only `setup.sh`/`update.sh` read it, and AC6 confirms `extract_lock_pairs`/`lookup_lock_hash` are unaffected
+- [x] Two updates in a row produce no git diff on the second (idempotent) — verified in scratch: `git diff --stat HEAD` empty after a second update with no upstream change
 
 ---
 
@@ -196,11 +196,11 @@ installer suites unchanged and green.
 
 ## Completion Checklist
 
-- [ ] Implementation done
+- [x] Implementation done
 - [ ] Self-review: `Skill({ skill: "code-review" })` run (Supervisor)
 - [ ] Security review: `Skill({ skill: "security-review" })` run (Medium risk)
-- [ ] `shellcheck -x setup.sh update.sh` clean
-- [ ] Tests written AND pass — output pasted into `tasks/TASK_REVIEW_T110.md` (Hard-Stop Gate 5)
+- [x] `shellcheck -x setup.sh update.sh` clean
+- [x] Tests written AND pass — output pasted into `tasks/TASK_REVIEW_T110.md` (Hard-Stop Gate 5)
 - [ ] `/verify` — user-invoked
-- [ ] Learnings flagged to the Supervisor (Supervisor-only memory writes)
+- [x] Learnings flagged to the Supervisor (Supervisor-only memory writes) — see final report
 - [ ] Supervisor notified: task ready for Stage 4 review

@@ -458,7 +458,10 @@ write_harness_lock() {
   _count=$(wc -l < "$_files_list" | tr -d ' ')
 
   {
-    printf '{\n  "files": {\n'
+    printf '{\n'
+    _esc_src=$(printf '%s' "$CLAUDE_SRC" | sed 's/\\/\\\\/g; s/"/\\"/g')
+    printf '  "claude_md_source": "%s",\n' "$_esc_src"
+    printf '  "files": {\n'
     _first=1
     while IFS= read -r _rel; do
       [ -n "$_rel" ] || continue
