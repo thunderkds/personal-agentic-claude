@@ -2059,3 +2059,32 @@ suite had been red since T097.
 **Carried forward**: P2-1 into T113's guide (smoke suite copies the MANIFEST parser); P3 — document the `run: |` and
 guard-deletion limits when T114 touches `ci.yml`; follow-up to register — CI runs no Python tests.
 **Files**: .github/workflows/ci.yml, tests/test_ci_wires_shell_suites.py, tests/test_install_update_smoke.sh
+
+
+### 2026-09-12 — Installer rework now reaches `main` one task at a time, by user-merged PR (supersedes the same-day "one reviewed merge at the end")
+**Decision**: After T109, the user merged `fix/t109-ci-suites` (PR #84) and `feat/easy-kit-one-command` (PR #85) into `main`
+(`992e293`) and asked to "continue one by one". From T110 on: each task's worktree branches from
+`feat/easy-kit-one-command` (fast-forwarded to `main`), merges back into it after Stage 4/5, both branches are pushed, and the
+user merges to `main` by PR. Tasks run strictly serially — T110 → T111 → T112 → T113 → T114 → T115 → T116 → T117.
+**Why**: user direction. The earlier "`main` gets the whole set in one merge" rule existed to avoid exposing curl installers
+to a half-migrated installer; that exposure is now accepted per task.
+**Known exposure**: `main` will carry intermediate states — most visibly between T116 (install-time pack menu removed) and
+T117 (`select-packs` activation). T110–T113 are independent hardening and low exposure.
+**Files**: PROJECT_KANBAN.md, tasks/TASK_GUIDE_T11*.md
+
+### 2026-09-15 — `claude_md_source`: the lock records which CLAUDE file a project was installed with (T110)
+**Decision**: `update.sh` delivers `CLAUDE.md` through the same edit-safe rule as every other file, and
+the *upstream* file it comes from is a top-level `"claude_md_source"` field in
+`.claude/harness-lock.json` (`CLAUDE.md` or `CLAUDE_LEGACY.md`, allowlisted — any other value is warned
+about and falls through to first-line heading inference). The field is invisible to `extract_lock_pairs`
+(which matches hex hashes only), so older readers ignore it; `write_new_lock` must re-emit it or the
+next update loses it.
+**Why**: before T110, `update.sh` never touched `CLAUDE.md` at all — a fix to the supervisor rules
+reached no installed project, and `RUNBOOK.md` called that by design. A brownfield project must keep
+receiving `CLAUDE_LEGACY.md`'s rules, never the greenfield file, and the choice is made once at install.
+**Known exposure**: a *pre-T110* `update.sh` rebuilds the lock from file-hash pairs only and silently
+drops the field. It self-heals on the next T110 update via heading inference — unless the user has
+edited line 1 of their `CLAUDE.md`, which lands that project in the heading-conflict path with a
+greenfield diff. Downgrade/mixed-version installs are the exposure; AC6's "old readers ignore it"
+covers the read side only.
+**Files**: update.sh, setup.sh, tests/test_update_claude_md.sh, RUNBOOK.md, site/index.html

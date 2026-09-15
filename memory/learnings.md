@@ -2289,3 +2289,36 @@ could not reveal the hole. **Rules**: (1) a check whose job is to protect CI mus
 its own step exists; (2) choose mutation controls that overlap another mention of the same thing, not the cleanest case.
 Round 2 fixed both (`af9e620`). Still open: **CI runs no Python tests at all** (~848, pre-existing). Files:
 `.github/workflows/ci.yml`, `tests/test_ci_wires_shell_suites.py`.
+
+## 2026-09-15 — a value recorded in a lock file is untrusted input the moment it becomes a path
+T110 round 1 read `claude_md_source` straight out of `.claude/harness-lock.json` and concatenated it
+onto `$HARNESS_TEMP_DIR`, so a hand-edited lock could point `CLAUDE.md` at any file on disk. Stage 4
+scored it 6 (below the security-review bar) and carried it as a code-review P2 — the right call only
+because the fix was cheap: an allowlist of the two legal names, checked *before* any concatenation,
+with rejection falling through to the existing heading-inference path. The structural payoff is what
+makes it hold: a rejected value can never reach `FINAL_CLAUDE_MD_SOURCE`, so it also never survives
+into the rewritten lock — the poisoned value is scrubbed rather than persisted. **Rule**: project-local
+state files (locks, manifests, caches) are the user's to edit and therefore untrusted at the point they
+turn into a path; allowlist over sanitize, and prefer a fallback that cannot carry the bad value forward.
+Files: `update.sh` (`resolve_claude_md_source`), `tests/test_update_claude_md.sh` (SC8/M3).
+
+## 2026-09-15 — the Supervisor's own mutant is the review step, not the agent's mutation tests
+T110 round 1 shipped SC1–SC6 plus its own M1 control and still had a P1: no test failed when the
+recorded source was ignored. The gap was only visible because the Supervisor applied *its own* mutation
+to `update.sh` and watched SC1–SC6 all pass. Round 2 added SC7/SC8 and M2/M3, and the re-review repeated
+the same independent move — zeroing `_recorded` fails SC7, collapsing the allowlist fails SC8 with the
+untrusted file's content in `CLAUDE.md`. **Rule**: an agent's mutation controls prove its mutants fail,
+not that its suite is non-vacuous. At Stage 4, mutate the source yourself (back the file up, mutate, run,
+restore, confirm `git status` clean) and confirm the *specific* new test fails. Reading the new test is
+not a substitute. Files: `update.sh`, `tests/test_update_claude_md.sh`.
+
+## 2026-09-15 — the push gate blocks on the board and the trace, not on whether the work is done
+Pushing T110 was refused twice: first "Tasks still In Progress: T110" (verify had passed but the board
+was stale — the gate reads `PROJECT_KANBAN.md`, not the review file), then "evidence row present but no
+verified tool call in `memory/event-trace/T110.jsonl`" — the whole `/verify` session had run without
+`.claude/hooks/.state/active_task` set, so none of those Bash calls were attributed to T110. The honest
+fix for the second is to write the state file (literal absolute path to the main checkout) and then
+actually re-run a real verification command so the trace records a run that happened; the bypass in the
+hook's own note is not it. **Rule**: set the active-task pointer *before* starting a task's verification
+work, not after the gate complains. Files: `.claude/hooks/pre_bash_block_unsafe_merge.py`,
+`.claude/hooks/.state/active_task`.

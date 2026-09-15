@@ -11,7 +11,7 @@
 > **Batch 2026-09-12 — Easy Kit installer rework (T109–T117).** Authority: `docs/adr/0002-one-confirmed-menu-driven-installer.md`
 > (Accepted), `BRAINSTORMING_LOG.md`. All nine build on the integration branch `feat/easy-kit-one-command`
 > cut from `main`; each worktree branches from it and merges back; `main` receives the whole set in one
-> reviewed merge after every task passes `/verify` (`memory/decisions.md`, 2026-09-12). Order:
+> reviewed merge after every task passes `/verify` (`memory/decisions.md`, 2026-09-12). **Superseded same day after T109**: the user merged T109 + the integration branch into `main` (PR #84, #85) — from T110 on, each task is merged back into `feat/easy-kit-one-command`, pushed, and merged to `main` by the user, **strictly one at a time**. Order:
 > T109 first → T110–T113 may spawn in parallel but **merge one at a time**, re-running the installer suites
 > after each → T114 → T115 → T116 → T117 (strictly serial: each rewrites `setup.sh`'s prompts/arguments).
 > Baseline measured 2026-09-12 on `main` `8115bc9`: `1 failed, 844 passed` (the pre-existing
@@ -22,7 +22,6 @@
 > is not Done. T115 adds `tests/test_docs_match_installer.py`; T116/T117 extend it, so a removed flag can't
 > creep back into a live doc.
 
-- [ ] **T110** — Update delivers `CLAUDE.md`, through the same edit-safe rule as every other file | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T110.md` | Review: `tasks/TASK_REVIEW_T110.md` | Depends on: T109 | Registered 2026-09-12
 - [ ] **T111** — Kit hooks reach a project that already has `settings.json`, and stay current on update | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T111.md` | Review: `tasks/TASK_REVIEW_T111.md` | Depends on: T109 | Registered 2026-09-12
 - [ ] **T112** — First install never destroys a project's own files — they are backed up and named | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T112.md` | Review: `tasks/TASK_REVIEW_T112.md` | Depends on: T109 | Registered 2026-09-12 — directory-wipe case asserted from code reading only; the implementer's BEFORE must prove it
 - [ ] **T113** — Update removes what upstream stopped shipping (unless edited), and kit tests stop shipping | Common-Infrastructure-Agent | C2 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_T113.md` | Review: `tasks/TASK_REVIEW_T113.md` | Depends on: T109 | Registered 2026-09-12
@@ -68,10 +67,8 @@
 ### In Progress
 
 
-
-
-
 ### Ready for Review
+- [ ] **T110** — Update delivers `CLAUDE.md`, through the same edit-safe rule as every other file | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T110.md` | Review: `tasks/TASK_REVIEW_T110.md` | Depends on: T109 | Registered 2026-09-12 | **Stage 3 started 2026-09-12** — `common-infrastructure` (sonnet, C2) in `wt-t110` on `fix/t110-update-claude-md`, spawned via Ghostty/`setsid` | **Stage 4 2026-09-14** — Supervisor re-ran suites (23/31/18/9 pass); code-review P0:0 P1:1 (recorded `claude_md_source` untested — mutant ignoring it passes SC1–SC6) P2:2 (unvalidated recorded source used as path; shellcheck output not pasted) P3:1; security-review: no findings ≥8 (path-traversal candidate at 6, carried as P2) | **Round 2 complete 2026-09-14** (sonnet, `prompt_T110r2.txt`, `.exit`=129 = window teardown, but all 5 commits landed and the tree is clean) — SC7/SC8 + M2/M3 + allowlist | **Stage 4 round-2 re-review 2026-09-15** — P0:0 P1:0 P2:0 P3:0; all three carried findings closed under the **Supervisor's own** mutants (zeroing `_recorded` fails SC7; collapsing the allowlist fails SC8 with the untrusted file's content in `CLAUDE.md`); shellcheck reproduced clean (container, exit 0); security-review of the delta: no findings, round 1's traversal candidate superseded by the fix. Suites in `wt-t110`: 35/31/18/9 pass + T109 drift guard 4 pass. Report: `reports/code-review_fix-t110-update-claude-md_20260915T094750.html` | **`/verify` PASS 2026-09-15** (user-run) — runtime evidence at the CLI, not a test re-run: offline `file://` upstream, three scratch projects installed by driving `setup.sh` itself; untouched brownfield project `legacy-v3=0 → 1` with `greenfield-v3=0`, and the BEFORE control on `main`'s `update.sh` reproduces the defect live (`v4=0 → 0`). Probes: conflict prompt both ways, tampered-lock traversal rejected with no leak, deletion re-installed from the recorded source, idempotent second run, greenfield direction unaffected. Two non-blocking findings recorded in `tasks/TASK_REVIEW_T110.md` (a pre-T110 `update.sh` drops `claude_md_source`, self-healing via heading inference; `update.sh` defaults to a live public fetch with no confirm — the latter belongs to T114) | **NEXT**: PR `fix/t110-update-claude-md` → `feat/easy-kit-one-command`, then `delivery-report`, Done, memory diff pass
 
 
 
