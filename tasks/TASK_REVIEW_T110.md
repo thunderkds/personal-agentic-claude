@@ -196,3 +196,44 @@ SHELLCHECK_EXIT=0
 checked; it emits pre-existing-style SC2015/SC2016 *info*-level notes shared with the SC1–SC6
 patterns already in the file before round 2 — not part of the guide's exact verification command,
 left as-is for consistency with the surrounding test code.)
+
+---
+
+## Round 2 — Stage 4 re-review (Supervisor, 2026-09-15)
+
+Verdict: **P0 0 / P1 0 / P2 0 / P3 0.** All three carried round-1 findings closed, each confirmed by
+the Supervisor's *own* mutants applied to `update.sh` in `wt-t110` (not the agent's M2/M3 harness),
+with the file restored from a backup copy afterwards and `git status` clean.
+
+| Carried finding | Supervisor's independent check | Result |
+|---|---|---|
+| P1 — recorded `claude_md_source` untested | Forced `_recorded=""` in `resolve_claude_md_source` | `FAIL: SC7: CLAUDE.md picked up greenfield content — recorded source was not honoured` (+2 more SC7 failures). Round 1's mutant passed SC1–SC6; SC7 catches it. |
+| P2 — recorded source used unvalidated as a path | Collapsed the allowlist's `CLAUDE.md\|CLAUDE_LEGACY.md)` arm to `*)` | `FAIL: SC8: the untrusted lock value's file content landed in CLAUDE.md` (+ missing-warning + lock-drift failures). The exploit reproduces without the fix. |
+| P2 — shellcheck output not pasted | `docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:stable -x setup.sh update.sh` | No output, exit 0 — independently reproduced. |
+
+Structural note (checked, not a finding): a rejected value falls through to heading inference, which
+can only yield an allowlisted name or `conflict`, so it can never reach `FINAL_CLAUDE_MD_SOURCE` and
+never survives into the rewritten lock. SC8's third assertion holds for that reason, not by luck.
+
+Security-review of the round-2 delta: **no findings at or above the bar.** The only non-test change
+*is* the remediation for round 1's path-traversal candidate (scored 6, carried as a P2); that
+candidate is superseded. Considered and deliberately not filed: `log_warn` echoes the rejected value
+to stderr unescaped — log-content spoofing from a file the user already owns, below the P3 gate.
+
+Supervisor re-ran, in `wt-t110`:
+
+```
+tests/test_update_claude_md.sh      ----- summary: 35 passed, 0 failed -----
+tests/test_update.sh                ----- summary: 31 passed, 0 failed -----
+tests/test_setup.sh                 ----- summary: 18 passed, 0 failed -----
+tests/test_install_update_smoke.sh  9 passed, 0 failed
+tests/test_ci_wires_shell_suites.py ----- summary: 4 passed, 0 failed -----   (T109 drift guard sees the new suite as CI-wired)
+tests/test_shellcheck_clean.sh      cannot self-verify locally (no shellcheck binary on PATH); covered by the containerised run above and by CI's own gate
+```
+
+Docs D1/D2 confirmed landed: `RUNBOOK.md:192` no longer says "by design", and `site/index.html`
+`#update-flow` names `CLAUDE.md` and the brownfield `CLAUDE_LEGACY.md` rule.
+
+HTML report: `reports/code-review_fix-t110-update-claude-md_20260915T094750.html` (Risk 0%, Quality 95%, Effort 0%).
+
+**Next**: user runs `/verify`, then PR `fix/t110-update-claude-md` → `feat/easy-kit-one-command`.
