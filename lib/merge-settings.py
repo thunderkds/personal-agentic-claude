@@ -36,12 +36,14 @@ Additional guarantees:
       is atomic (temp file in the same directory + os.replace), so an
       interrupted run can never truncate the user's settings.
     * `ensure_ascii=False`, so non-ASCII content the user added stays readable.
+    * The file's existing permission bits are preserved across the write.
     * A symlinked settings.json is refused, never written through.
 """
 
 import json
 import os
 import re
+import stat
 import sys
 import tempfile
 
@@ -176,10 +178,20 @@ def load(path, what):
 
 def write_atomic(path, content):
     directory = os.path.dirname(os.path.abspath(path)) or "."
+    # mkstemp creates 0600 and os.replace carries that mode onto the
+    # destination, so without this the merge would silently tighten a
+    # project's 0644 settings.json to 0600 — content preserved, mode not.
+    # git tracks only the exec bit, so the change would never show in a diff.
+    try:
+        original_mode = stat.S_IMODE(os.stat(path).st_mode)
+    except OSError:
+        original_mode = None
     handle, tmp = tempfile.mkstemp(prefix=".settings-merge-", dir=directory)
     try:
         with os.fdopen(handle, "w", encoding="utf-8") as out:
             out.write(content)
+        if original_mode is not None:
+            os.chmod(tmp, original_mode)
         os.replace(tmp, path)
     except BaseException:
         if os.path.exists(tmp):

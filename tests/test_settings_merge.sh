@@ -201,6 +201,10 @@ EOF
 # ─────────────────────────────────────────────────────────────────────────────
 T1=$(new_target target-install)
 write_project_settings "$T1"
+# Seed a group-readable mode so the merge's mode preservation is observable:
+# mkstemp creates 0600 and os.replace carries the temp file's mode onto the
+# destination, so an unguarded atomic write silently tightens 0644 -> 0600.
+chmod 644 "$T1/.claude/settings.json"
 if run_setup "$T1"; then
   pass "SC1: setup.sh exits 0 over an existing settings.json"
 else
@@ -260,6 +264,15 @@ if [ -z "$(find "$T1/.claude" -maxdepth 1 -name '.settings.json.*' -o -maxdepth 
   pass "edge: atomic write leaves no temp-file residue"
 else
   fail "edge: atomic write left a temp file behind"
+fi
+
+# edge: the atomic write preserves the file's existing permission bits.
+# git tracks only the exec bit, so a regression here would never show in a diff.
+_mode_after=$(stat -c '%a' "$S1" 2>/dev/null || stat -f '%Lp' "$S1")
+if [ "$_mode_after" = "644" ]; then
+  pass "edge: atomic write preserves the file's permission bits (644)"
+else
+  fail "edge: atomic write changed the file mode 644 -> $_mode_after"
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
