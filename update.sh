@@ -78,6 +78,65 @@ compute_file_hash() {
   fi
 }
 
+# ── Settings merge (T111, ADR-0002) ──────────────────────────────────────────
+# `.claude/settings.json` is not a MANIFEST path — it is a per-project file the
+# user extends — so the hash-lock copy loop never touched it and an upstream
+# hook change never reached an installed project. This step reconciles the kit's
+# hook entries into it while leaving everything the user added alone.
+#
+# On refusal nothing is written: the block to add by hand is printed and the run
+# exits 2 at the end, after finishing its remaining work.
+SETTINGS_FAILED=0
+
+settings_merge_refused() {
+  _reason="$1"
+  _src="$2"
+  SETTINGS_FAILED=1
+  log_error "Could not merge Easy Kit hooks into ./.claude/settings.json: $_reason"
+  log_error "Nothing was written. Add the \"hooks\" entries below to ./.claude/settings.json by hand (keep your own entries), then re-run:"
+  cat "$_src" >&2
+}
+
+# Runs lib/merge-settings.py from the temp clone (same contract as setup.sh's
+# copy of this function — deliberately duplicated rather than added to
+# lib/harness-fetch.sh, which both scripts share for fetching only).
+merge_settings() {
+  _src="$1"
+  _dst="$2"
+  _merge="$HARNESS_TEMP_DIR/lib/merge-settings.py"
+
+  if [ ! -f "$_merge" ]; then
+    settings_merge_refused "the fetched Easy Kit has no lib/merge-settings.py" "$_src"
+    return
+  fi
+  if ! command -v python3 >/dev/null 2>&1; then
+    settings_merge_refused "python3 is not on PATH (every kit hook runs as 'python3 …', so it is a hard prerequisite)" "$_src"
+    return
+  fi
+  if ! python3 "$_merge" "$_src" "$_dst" "."; then
+    settings_merge_refused "the merge refused this file (reason above)" "$_src"
+    return
+  fi
+  log_info "Merged Easy Kit hooks into $_dst (your permissions and your own hook entries are kept)."
+}
+
+update_settings() {
+  _src="$HARNESS_TEMP_DIR/.claude/settings.json"
+  _dst="./.claude/settings.json"
+
+  if [ ! -f "$_src" ]; then
+    log_warn ".claude/settings.json not found in fetched Easy Kit — hook wiring left unchanged."
+    return
+  fi
+  if [ ! -e "$_dst" ] && [ ! -L "$_dst" ]; then
+    [ -d ./.claude ] || mkdir -p ./.claude
+    cp "$_src" "$_dst"
+    log_info "Installed $_dst (none existed). Restart Claude Code to activate hooks."
+    return
+  fi
+  merge_settings "$_src" "$_dst"
+}
+
 # ── Prerequisite: git installed ──────────────────────────────────────────────
 check_git() {
   if ! command -v git >/dev/null 2>&1; then
@@ -454,6 +513,12 @@ main() {
   carry_over_unprocessed "$lock" "$manifest" "$decisions" "$processed"
   write_new_lock "$decisions" "$lock"
 
+  # Reconcile kit hook entries into the project's settings.json. Runs AFTER the
+  # file copy so every hook script the merged entries reference is already on
+  # disk — a settings.json pointing at a missing hook file breaks every tool
+  # call in the project (memory/learnings.md, T074).
+  update_settings
+
   # Re-project every selected/already-present harness from the canon this run
   # just refreshed. Replaces each destination wholesale, so nothing upstream
   # removed can survive as an orphan alongside the new set.
@@ -502,6 +567,11 @@ main() {
 
   if [ "$UNRESOLVED" -gt 0 ]; then
     log_error "$UNRESOLVED conflict(s) could not be resolved (no interactive input). Re-run 'bash update.sh' in a terminal to resolve them."
+    exit 2
+  fi
+
+  if [ "$SETTINGS_FAILED" -ne 0 ]; then
+    log_error "Update finished, but Easy Kit hooks were NOT merged (see the message above)."
     exit 2
   fi
 }

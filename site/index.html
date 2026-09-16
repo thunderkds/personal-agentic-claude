@@ -274,6 +274,11 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agenti
 <ul class="lead">
   <li><strong>Untouched since install</strong> — silently overwritten with the latest upstream version.</li>
   <li><strong>Customized</strong> — shown a diff and prompted per file: overwrite / skip / view diff again.</li>
+  <li><strong><code>.claude/settings.json</code></strong> — not a <code>MANIFEST</code> file, so it is
+    <em>merged</em> rather than copied: the kit's hooks are reconciled into it on install
+    <em>and</em> on update, while your own permissions and your own hook entries are kept exactly as
+    they are. If it cannot be merged — invalid JSON, a symlink, or no <code>python3</code> — nothing
+    is written, the block to add by hand is printed, and the run exits <code>2</code>.</li>
 </ul>
 
 <h3>Which harnesses get updated</h3>
@@ -408,6 +413,11 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
   <code>PreToolUse</code>, <code>PostToolUse</code>, or <code>Stop</code> event and either
   <span class="tag tag-block">blocks</span> the tool call or only
   <span class="tag tag-advise">advises</span> (prints a message, never stops execution).
+</p>
+<p class="lead">
+  The wiring lives in <code>.claude/settings.json</code>. Both <code>setup.sh</code> and
+  <code>update.sh</code> merge every entry below into that file — including into one your project
+  already has — and never touch your own permissions or hook entries. No manual merge step.
 </p>
 <div class="table-wrap">
 <table>
