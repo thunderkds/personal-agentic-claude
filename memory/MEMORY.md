@@ -18,6 +18,29 @@
 
 ## Index
 
+### ⚠️ Session handoff — read first (written 2026-09-16)
+
+- **This checkout is on `main`, and `main` is behind the real work.** T111 is **Done, merged and
+  pushed**, but only on `feat/easy-kit-one-command` (`69ccde3`). On `main` the board still shows
+  T111 as Todo, `git log` shows none of its 8 commits, and this file is missing its 4 memory
+  entries. Do not re-plan or re-spawn T111 — check
+  `git log --oneline main..github/feat/easy-kit-one-command` before trusting anything below.
+- **Two branch heads are diverged and must be reconciled before T114.** T110 went straight to
+  `main` via PR #86; T111 went to `feat/easy-kit-one-command`. T114 depends on both. Decide the
+  merge direction (open the branch's PR, or rebase it onto `main`) before starting T114.
+- **Next task is T112** (first install never destroys a project's own files), unblocked, P1.
+  Its board row carries a caveat to honour: the directory-wipe case was *asserted from code
+  reading only* — the implementer's Demonstration BEFORE must prove it live, not restate it.
+  T112 edits `lib/harness-fetch.sh`; keep T113 serial behind it, both to avoid merge conflicts and
+  because the trace state file is shared across worktrees (concurrent verification mis-attributes
+  Bash calls between tasks).
+- **Two follow-ups recorded in `tasks/TASK_REVIEW_T111.md`, neither blocking**: (1) a user's own
+  entry whose command contains `.claude/hooks/` is silently removed by the ownership rule, while
+  the comparable `drop_dangling` case warns — a one-line stderr notice closes it; (2) fold the ~35
+  duplicated lines of `merge_settings`/`settings_merge_refused` out of `setup.sh`/`update.sh` into
+  a shared helper once T112/T113 stop editing `lib/harness-fetch.sh`.
+
+
 <!-- Format: - [Title](cold-file.md#section) — one-line summary.
      Target ≤150 chars/entry: an ASPIRATION, not a gate — 130 of 146 entries exceed it
      (mean 326, max 796). Reported by the size test, never enforced; /compact-memory's job. -->
