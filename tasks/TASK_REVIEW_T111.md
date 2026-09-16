@@ -15,7 +15,7 @@
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_settings_merge.sh` (new, 39 assertions) — SC1–SC8 + M1 + the Edge Case Checklist. `bash tests/test_settings_merge.sh` → `--- 39 passed, 0 failed ---`. AC→test map in the section below. |
 | Verification command run | ☑ pass | All six parts, 2026-09-16T07:16:59Z — see "Verification command output" below. `39 passed / 18 passed / 31 passed / 9 passed / shellcheck exit 0 / 795 passed`. |
 | Negative cases hold | ☑ pass | Invalid JSON → `SC6: install exits 2 on invalid settings.json`, `SC6: invalid settings.json left byte-identical`, stderr carries `settings.json` + a `"hooks"` block. No `python3` (PATH rebuilt without any `python*`) → `SC7: install exits 2 when python3 is absent`, file byte-identical. User entries → `SC2: user hook entry survives install` / `… survives update`. Symlink → `edge: install exits 2 on a settings.json symlink`, `edge: the symlink target was never written through`. **M1 observed failing on the real source** — output pasted below, not asserted. |
-| verify | ☐ pass / ☐ fail / ☐ N/A | Not run — `/verify` is user-invoked only (`memory/MEMORY.md`, project_verify_skill_is_user_only). |
+| verify | ☑ pass | User-run `/verify` 2026-09-16 — PASS. Runtime observation at the installer CLI against a `file://` upstream: install into a project with existing settings + user hook, update add/remove, idempotency, and four probes (invalid JSON, symlink, no python3, path traversal). See "Stage 5 /verify" below. |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Changed set: `lib/merge-settings.py` (new), `setup.sh:install_settings` + `main`, `update.sh:main`, `tests/test_settings_merge.sh` (new), two fixture builders, `.github/workflows/ci.yml` (one step), 2 docs. `lib/harness-fetch.sh` untouched (T112/T113 own it) — `git diff feat/easy-kit-one-command --stat` confirms. `.claude/hooks/*.py`, the kit's own `.claude/settings.json` and `MANIFEST` untouched, per the guide's "Files Must NOT Touch". |
 | Full smoke suite still green (no regression) | ☑ pass | `bash tests/test_install_update_smoke.sh` → `9 passed, 0 failed`. `python3 -m pytest .claude/hooks/tests/ -q` → `795 passed`. `python3 -m pytest tests/ -q` → `53 passed, 1 failed`; the one failure is `test_readme_slim.py::test_readme_is_at_most_75_lines` and is **pre-existing on the base branch** (`git show feat/easy-kit-one-command:README.md \| wc -l` → `83`; this branch does not modify `README.md`). |
 | **Docs updated per guide's "Documentation to Update" (new text quoted)** | ☑ pass | D1, D2, D3 all applied — new text quoted verbatim in "Documentation updated" below. |
@@ -312,3 +312,36 @@ python3 -m pytest .claude/hooks/tests/ -q      795 passed
 
 `shellcheck -x setup.sh update.sh`: not re-run — `git diff --name-only 24bcdc6 -- setup.sh update.sh`
 is empty, so the agent's clean result covers the current bytes of both scripts.
+
+---
+
+## Stage 5 `/verify` (user-run, 2026-09-16) — PASS
+
+Runtime observation at the real surface: `setup.sh` / `update.sh` driven via `SUPERVISOR_REPO` against a
+scratch `file://` clone of this branch, in throwaway git projects. No tests were run as evidence.
+
+| # | Step | Observed |
+|---|------|----------|
+| 1 | install over existing settings (user `permissions` + `echo my-own-guard`, mode 644) | exit 0, all 8 kit hooks wired, user entry kept first, permissions byte-intact, no command points at a missing file |
+| 2 | mode after install | **644** — the P2 fix (`bff80cf`) holds through the installer, not just the unit fixture |
+| 3 | upstream adds a hook + entry -> `update.sh` | file installed, entry landed, user entry survived |
+| 4 | upstream removes that hook + entry -> `update.sh` | entry gone, user entry intact, 8 kit entries still wired |
+| 5 | run update twice more | `cmp` byte-identical — no diff churn |
+| 6 | probe: invalid JSON | exit 2, file byte-identical, stderr names the file + prints the `"hooks"` block, lock still written (run completed its other work) |
+| 7 | probe: settings.json is a symlink onto a secret file | exit 2, still a symlink, target unchanged, clean refusal message |
+| 8 | probe: `python3` absent (PATH rebuilt minus `python*`) | exit 2, file untouched, cause named exactly |
+| 9 | probe: traversal entry `python3 ./.claude/hooks/../../evil.py` next to a real `evil.py` | entry **dropped**, plain user entry kept, 8 kit entries wired — the security review's fail-safe analysis confirmed at runtime |
+
+### Observations carried forward (not blockers)
+
+- **A user entry whose command contains `.claude/hooks/` is silently deleted.** The ownership rule working
+  as designed, but the module docstring promises user entries are "never modified, never removed", and
+  `drop_dangling` *does* warn when it removes an entry for a missing file. A one-line stderr notice on the
+  reconcile branch would close the gap. Recorded for a follow-up, not fixed here (scope lock).
+- **Upstream-deleted hook *files* are left behind** (step 4 left `pre_brand_new_gate.py` on disk). Explicitly
+  T111's out-of-scope list and exactly T113's job. Confirms the ordering is safe: stale entry gone, orphan
+  file inert.
+- `shellcheck` not re-run — `git diff --name-only 24bcdc6 -- setup.sh update.sh` is empty, so the agent's
+  clean result covers both scripts' current bytes.
+- Not exercised: whether Claude Code itself loads and fires the merged hooks. T111 claims only that entries
+  land correctly and reference existing files, which step 1 verifies directly.
