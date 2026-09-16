@@ -242,3 +242,73 @@ doing nothing.
 `feat/t111-settings-merge` `d3d05c4`, in a scratch git repo outside the worktree. **Not an independent
 witness** — the implementer ran its own probe. Stage 4/5 must re-run it (the commands are reproduced
 above verbatim) before this row counts as confirmed.
+
+---
+
+## Stage 4 Review (Supervisor, 2026-09-16)
+
+**code-review**: P0 0 / P1 0 / P2 1 / P3 0. **security-review**: no findings at confidence >= 8.
+
+Reachability (Phase 0.5): guide declares `install_settings` in `setup.sh` + a settings step in
+`update.sh` `main`. Both present and called. Pass.
+
+### P2-1 — `write_atomic` silently changed the file's permission bits (FIXED, `bff80cf`)
+
+`tempfile.mkstemp` creates 0600 and `os.replace` carries that mode onto the destination, so a
+project's 0644 `settings.json` came back 0600 — content preserved exactly, mode not, contradicting
+the module's own "keeps everything the user added" contract. Verified by running it, not inferred:
+
+```
+mode BEFORE: 644
+rc=0
+mode AFTER:  600
+```
+
+git tracks only the exec bit, so this would never have appeared in a user's diff. Fixed by stating
+the destination before the write and chmodding the temp file before `os.replace`; a new suite case
+seeds the fixture at 644 and asserts the mode afterwards. **Observed failing** against a mutated
+source with the `os.chmod` line removed:
+
+```
+FAIL: edge: atomic write changed the file mode 644 -> 600
+--- 39 passed, 1 failed ---
+```
+
+Source restored from a scratchpad copy, not `git checkout` (which would have reverted the fix too),
+then green: 40/40.
+
+### Security review — no findings
+
+The change writes the file that decides which commands run, so the question is whether untrusted
+input can reach a `command` string. It cannot: `merge_event_groups` only ever appends objects taken
+from the upstream file or preserves the project's own non-kit entries by reference — it never
+constructs, concatenates or templates a command. Traversal through `HOOK_PATH_RE`
+(`.claude/hooks/../../../etc/evil.py`) is fail-safe: matching only classifies an entry as kit-owned,
+which means it is reconciled against upstream and therefore **dropped** when upstream ships no
+matching key. Traversal makes a hostile entry more likely to be deleted, never executed — the
+inverse of T110's finding, where a lock value became a source path that was copied. `write_atomic`
+uses `mkstemp` in the destination directory then `os.replace`, which replaces a symlink rather than
+writing through it. The shell side is fully quoted with no user-derived words.
+
+Recorded as intended, not a defect: an edited kit entry is restored to upstream's version, so a user
+who deliberately neutered a kit hook gets it back on update. That is the guide's ownership rule, now
+documented in the site copy this task added.
+
+### Carried to a later task (not a finding against T111)
+
+`merge_settings` + `settings_merge_refused` are duplicated ~35 lines verbatim across `setup.sh` and
+`update.sh`. The agent was following the guide's "Files Must NOT Touch" rule on
+`lib/harness-fetch.sh` (T112/T113 edit there). Fold into a shared helper after those land.
+
+### Post-fix verification (Supervisor, 2026-09-16)
+
+```
+tests/test_settings_merge.sh        40 passed, 0 failed
+tests/test_setup.sh                 18 passed, 0 failed
+tests/test_update.sh                31 passed, 0 failed
+tests/test_install_update_smoke.sh   9 passed, 0 failed
+python3 -m pytest .claude/hooks/tests/ -q      795 passed
+```
+
+`shellcheck -x setup.sh update.sh`: not re-run — `git diff --name-only 24bcdc6 -- setup.sh update.sh`
+is empty, so the agent's clean result covers the current bytes of both scripts.
