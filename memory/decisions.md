@@ -2088,3 +2088,25 @@ edited line 1 of their `CLAUDE.md`, which lands that project in the heading-conf
 greenfield diff. Downgrade/mixed-version installs are the exposure; AC6's "old readers ignore it"
 covers the read side only.
 **Files**: update.sh, setup.sh, tests/test_update_claude_md.sh, RUNBOOK.md, site/index.html
+
+## T111: settings.json is merged, and the kit owns an entry by its command path (2026-09-16)
+
+**Decision**: `.claude/settings.json` is never copied over an existing file and never left alone
+either — it is merged by `lib/merge-settings.py` (stdlib-only, run from the temp clone, never
+installed into user projects), called by both `setup.sh` `install_settings` and a new `update.sh`
+settings step. Before T111, `install_settings` returned early on an existing file and said nothing,
+so every project that already had a `settings.json` got **zero** kit hooks wired, and `update.sh`
+had no settings step at all, so an upstream hook change never arrived.
+
+**Ownership rule**: an entry is the kit's if any of its `hooks[].command` strings references a path
+under `.claude/hooks/`. Matching is on the path found inside the command, not the whole string, so
+`python3 "$CLAUDE_PROJECT_DIR"/.claude/hooks/x.py` and `python3 ./.claude/hooks/x.py` are the same
+entry. Kit entries are reconciled against upstream (added, replaced in place, or removed when
+upstream stops shipping them); every other entry is the user's and is never modified or removed.
+
+**Refusal contract**: invalid JSON, a symlinked `settings.json`, or no `python3` on PATH → nothing
+is written, the file stays byte-identical, the exact `"hooks"` block to add by hand is printed to
+stderr, and the run finishes its remaining work before exiting 2. `python3` is already a hard
+prerequisite because all 8 wired hooks run as `python3 …`.
+
+**Files**: lib/merge-settings.py (new), setup.sh, update.sh, tests/test_settings_merge.sh (new).
