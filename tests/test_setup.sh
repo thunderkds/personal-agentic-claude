@@ -49,6 +49,10 @@ printf 'skill-content\n'          > "$FIXTURE/skills/brainstorming/SKILL.md"
 printf 'hook-content\n'           > "$FIXTURE/.claude/hooks/example_hook.py"
 printf 'template-content\n'       > "$FIXTURE/templates/PRD_template.md"
 printf '{ "hooks": {} }\n'        > "$FIXTURE/.claude/settings.json"
+# The installer merges kit hooks into an existing settings.json with this script
+# (T111); it runs from the fetched clone, so the fixture must ship it too.
+mkdir -p "$FIXTURE/lib"
+cp "$REPO_ROOT/lib/merge-settings.py" "$FIXTURE/lib/merge-settings.py"
 printf 'GREENFIELD SUPERVISOR RULES\n' > "$FIXTURE/CLAUDE.md"
 printf 'BROWNFIELD SUPERVISOR RULES\n' > "$FIXTURE/CLAUDE_LEGACY.md"
 cat > "$FIXTURE/MANIFEST" <<'EOF'

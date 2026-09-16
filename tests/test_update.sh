@@ -54,6 +54,10 @@ build_fixture() {
   printf 'hook-content\n'           > "$FIXTURE/.claude/hooks/example_hook.py"
   printf 'template-content\n'       > "$FIXTURE/templates/PRD_template.md"
   printf '{ "hooks": {} }\n'        > "$FIXTURE/.claude/settings.json"
+  # T111: setup/update merge kit hooks into an existing settings.json using
+  # lib/merge-settings.py from the fetched clone — the fixture must ship it.
+  mkdir -p "$FIXTURE/lib"
+  cp "$REPO_ROOT/lib/merge-settings.py" "$FIXTURE/lib/merge-settings.py"
   printf 'GREENFIELD SUPERVISOR RULES\n' > "$FIXTURE/CLAUDE.md"
   printf 'BROWNFIELD SUPERVISOR RULES\n' > "$FIXTURE/CLAUDE_LEGACY.md"
   cat > "$FIXTURE/MANIFEST" <<'EOF'

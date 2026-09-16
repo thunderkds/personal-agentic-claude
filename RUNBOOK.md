@@ -190,6 +190,7 @@ gitignored).
 | Install fails at clone | Network, or `SUPERVISOR_REPO` points at a bad URL | Re-run with an explicit `SUPERVISOR_REPO=<url>` |
 | `update.sh` exits non-zero with "conflict(s) could not be resolved" | Ran non-interactively over locally-customized files | Re-run `bash update.sh` in a real terminal and resolve per file |
 | A fix to `CLAUDE.md` never appears downstream | **By design** — `CLAUDE.md` is outside `MANIFEST`; `setup.sh` copies it once and `update.sh:276` carries its lock entry over untouched | Downstream must merge the change into their own `CLAUDE.md` by hand |
+| `setup.sh`/`update.sh` exits 2 and prints a `"hooks"` block | `.claude/settings.json` is invalid JSON or a symlink, or `python3` is not on `PATH` (every kit hook runs as `python3 …`) | Fix the JSON / replace the symlink with a real file / install `python3`, then re-run. The file is left byte-identical, so the printed block can also be pasted in by hand |
 | Merge blocked: "Tasks still In Progress" | The pipeline gate reads `PROJECT_KANBAN.md` in the **current checkout** before the merge runs | Close the row to Done in a **separate** tool call, on the branch being merged, then merge |
 
 ---
