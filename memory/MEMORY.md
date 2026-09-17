@@ -282,6 +282,10 @@
 - [State files conflict on purpose; do not union-merge them](learnings.md) — KANBAN/RUNBOOK are state, not logs; a union driver would have kept a fact T110 falsified. Pick one merge topology.
 - [T111 merged to main 2026-09-17](decisions.md) — `feat/easy-kit-one-command` reconciled at `4f766dd`; 9 suites green, 2 fixture suites red pending the follow-up; T112 unblocked.
 
+- [T118 merged: CI is green again, and the fixture gap is closed](decisions.md) — both builders copy the real `lib/merge-settings.py` before `git add -A`; installers untouched; 2 non-blocking follow-ups (t098 unlinted by CI; hook entries with a missing target dropped silently).
+- [A guide's acceptance numbers can be arithmetic on a broken run](learnings.md) — T118's AC said 15/38 (passed+failed of the red runs); the real green counts were 20/41. Take the target from the last green commit.
+- [Verify a test-only diff at the product's surface](learnings.md) — T118: hand-build the fixture, drive the real installer, mutate the one thing the task added — re-running the suite would only re-run CI.
+
 ### Glossary
 - [Report / Report Slot / Scoring Dimension / Report Session](glossary.md) — canonical terms for the html-report skill and Stage 4 reporting system
 - [Thinking Report / Trade-Off Matrix / Thinking Session](glossary.md) — canonical terms for the thinking-report skill and Stage 0.5–2 decision system

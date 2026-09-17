@@ -2131,3 +2131,21 @@ and `test_harness_projection.sh` (3 fail), both wired into CI — T111's fixture
 A bugfix task is to be registered for it; the guide must decide whether a fixture lacking
 `lib/merge-settings.py` should hard-fail or whether `update.sh` should degrade. T112 is unblocked
 and next (its directory-wipe case is asserted from code reading only — the BEFORE must prove it).
+
+## T118 merged: CI is green again, and the fixture gap is closed (2026-09-17)
+
+The defect T111 left behind (see learnings.md, "A new hard dependency breaks every synthetic-fixture
+suite that doesn't build it") is fixed fixture-side: both builders `cp` the real
+`lib/merge-settings.py` into `$FIXTURE/lib/` before their `git add -A`. 8 code lines, two files.
+`setup.sh`/`update.sh` untouched — the hard-fail contract (ADR-0002) stands, because a kit that
+cannot merge hooks installs no working hooks, and a fixture without the helper was simulating an
+impossible kit.
+
+On `main` post-merge: t098 20 passed, projection 41 passed, smoke 9 passed, drift guard 4 passed.
+
+Stage 4: P0 0 / P1 0 / P2 0 / P3 2, both pre-existing or optional. `/verify` PASS at the installer
+CLI. **Open follow-ups, neither blocking**: `tests/test_t098_harness_presence.sh` is absent from
+CI's shellcheck line (`ci.yml:19`) while its sibling is present, and carries 2 pre-existing SC2016
+infos that survive because nothing lints it; and the hook merge silently drops kit hook entries
+whose target file is missing, logging at `merge-settings:` rather than `[warn]` — the same silence
+as T111's recorded user-entry follow-up, in the other direction.

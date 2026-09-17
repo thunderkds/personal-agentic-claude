@@ -2398,3 +2398,26 @@ splitting board state across two lines of history.
 **Apply to**: resolve board/runbook conflicts by hand, taking the newer *fact* per row. Pick one
 merge topology — task PRs to the integration branch and only that branch to `main`, or task PRs
 straight to `main` — never both at once.
+
+## A guide's acceptance numbers can be arithmetic on a broken run (2026-09-17, T118)
+
+The T118 guide set AC1/AC2 at "15 and 38 checks passing", derived by adding passed+failed of the two
+red runs. Wrong: the aborts *skipped* cases, so the real green counts are higher — 20 and 41, the
+pre-merge counts on `main`. The implementing agent hit the right numbers and the guide was what
+needed correcting (`70ac170`).
+
+**Apply to**: when a suite fails by aborting rather than by asserting, its total is not the healthy
+total. Take the target count from a known-good run (the last green commit), never from arithmetic on
+the red one.
+
+## Verify a test-only diff at the product's surface, not by re-running the suite (2026-09-17, T118)
+
+T118's whole diff was two test files, which reads as a `/verify` SKIP. Re-running the suites would
+only have re-run CI. Instead: hand-build the fixture the suites now build and drive the real
+`setup.sh`/`update.sh` against a scratch project. That reached what the suites could not assert —
+the kit's hooks merging alongside a user's own `env` and `Stop` entries, exit 0 — and the decisive
+probe was stripping the helper back out to reproduce the pre-fix exit 2 with `settings.json`
+byte-identical.
+
+**Apply to**: a fixture/harness change is verifiable at the surface the harness drives. Build the
+harness's artifact by hand, drive the real binary, and mutate the one thing the task added.
