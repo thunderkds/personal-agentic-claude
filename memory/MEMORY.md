@@ -46,6 +46,10 @@
      (mean 326, max 796). Reported by the size test, never enforced; /compact-memory's job. -->
 
 ### Decisions
+- [T111: settings.json is merged, kit owns an entry by its command path](decisions.md) — install/update both merge via lib/merge-settings.py; an entry is the kit's if its command references `.claude/hooks/`; refusal (bad JSON/symlink/no python3) writes nothing, prints the block, exits 2
+- [An atomic write silently changes the file's mode](learnings.md) — mkstemp is 0600 and os.replace carries it onto the destination; git tracks only the exec bit so 644→600 never shows in a diff; chmod the temp file before replace
+- [Classification-only matching fails safe; a source path does not](learnings.md) — T110's traversal was a read-and-copy sink, T111's same-shape regex only classifies, so a hostile entry gets dropped; ask what the match is used for
+- [A restricted-PATH stub missing a binary fakes a convincing failure](learnings.md) — a "no python3" probe died at `ln: not found` exit 127 without reaching the code; subtract one binary from a full link farm, never hand-list
 - [`claude_md_source` records the CLAUDE file a project installed with](decisions.md) — T110: `update.sh` now delivers `CLAUDE.md` under the edit-safe rule; brownfield keeps `CLAUDE_LEGACY.md`; a pre-T110 `update.sh` drops the field and it self-heals by heading inference unless line 1 was edited
 - [A lock-file value is untrusted the moment it becomes a path](learnings.md) — T110: allowlist before concatenation, and pick a fallback that can't carry the bad value into the rewritten lock
 - [The Supervisor's own mutant is the Stage 4 step](learnings.md) — an agent's mutation controls prove its mutants fail, not that its suite is non-vacuous; mutate the source yourself and confirm the new test fails

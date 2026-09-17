@@ -2322,3 +2322,40 @@ actually re-run a real verification command so the trace records a run that happ
 hook's own note is not it. **Rule**: set the active-task pointer *before* starting a task's verification
 work, not after the gate complains. Files: `.claude/hooks/pre_bash_block_unsafe_merge.py`,
 `.claude/hooks/.state/active_task`.
+
+## An atomic write silently changes the file's mode, and git will never show you (2026-09-16, T111)
+
+`tempfile.mkstemp` creates its file 0600 and `os.replace` carries the **temp file's** mode onto the
+destination. So the standard temp-file+rename atomic-write idiom silently tightens a 0644 file to
+0600 — content preserved exactly, permissions not. Found at Stage 4 on `lib/merge-settings.py`,
+whose own docstring promised it "keeps everything the user added".
+
+**Why it hides**: git tracks only the exec bit (100644 vs 100755), so a 644→600 change produces no
+diff at all. Neither review nor CI would ever surface it; it took running the installer and stating
+the file. Fix: `os.stat(path)` before the write, `os.chmod(tmp, mode)` before `os.replace`, with the
+stat guarded for a missing destination.
+
+**Apply to**: any write_atomic/safe-write helper touching a file the user owns.
+
+## Classification-only matching fails safe; the same pattern as a source path does not (2026-09-16, T111)
+
+T110's finding was that a lock value became a **path that was read and copied**, so traversal
+(`../../…`) got an untrusted file's content into CLAUDE.md. T111's regex matches the same shape
+(`\.claude/hooks/[^\s"']+`, traversal included) but the match only **classifies** an entry as
+kit-owned, and being kit-owned means being reconciled against upstream — i.e. dropped when upstream
+ships no match. Verified at runtime: a project entry `python3 ./.claude/hooks/../../evil.py` next to
+a real `evil.py` was removed, not executed.
+
+**The rule**: ask what the match is *used for*. Feeding a path to open/copy is a traversal sink;
+using it as a set key or a boolean classification is not. Same regex, opposite risk direction.
+
+## A restricted-PATH stub that's missing a binary fakes a convincing failure (2026-09-16, T111)
+
+Probing the "no python3" branch, a hand-built `PATH` with ~25 linked binaries died at
+`setup.sh:344: ln: not found` with **exit 127** — which looks like a plausible failure of the code
+under test but never reached it. The real run (exit 2, correct message) needed a PATH linked from
+all of `/usr/bin` + `/bin` minus `python*`, the way `tests/test_settings_merge.sh` SC7 builds it.
+
+**Apply to**: any "tool X absent" probe — subtract the one binary from a full link farm, never
+hand-list the ones you think the script needs. A wrong exit code from your own stub is easy to
+misread as evidence.

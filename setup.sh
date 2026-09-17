@@ -391,11 +391,52 @@ install_claude() {
   cp "$src" "$dst"
 }
 
+# ── Settings merge: loud refusal (T111) ──────────────────────────────────────
+# Set when the kit's hooks could NOT be merged into the project's settings.json.
+# The run still finishes the rest of its work; main() exits 2 at the end.
+SETTINGS_FAILED=0
+
+# Print the exact block the user must add by hand, and record the failure.
+# Writes nothing — the project's settings.json is left byte-identical.
+settings_merge_refused() {
+  _reason="$1"
+  _src="$2"
+  SETTINGS_FAILED=1
+  log_error "Could not merge Easy Kit hooks into ./.claude/settings.json: $_reason"
+  log_error "Nothing was written. Add the \"hooks\" entries below to ./.claude/settings.json by hand (keep your own entries), then re-run:"
+  cat "$_src" >&2
+}
+
+# ── Merge the kit's hook entries into an existing settings.json (ADR-0002) ────
+# Runs lib/merge-settings.py from the TEMP CLONE, so the merge logic always
+# pairs with the settings file it is merging and is never installed into the
+# user's project. python3 is a hard prerequisite: every wired hook runs as
+# `python3 …`, so an install without it produces no working hooks anyway.
+merge_settings() {
+  _src="$1"
+  _dst="$2"
+  _merge="$HARNESS_TEMP_DIR/lib/merge-settings.py"
+
+  if [ ! -f "$_merge" ]; then
+    settings_merge_refused "the fetched Easy Kit has no lib/merge-settings.py" "$_src"
+    return
+  fi
+  if ! command -v python3 >/dev/null 2>&1; then
+    settings_merge_refused "python3 is not on PATH (every kit hook runs as 'python3 …', so it is a hard prerequisite)" "$_src"
+    return
+  fi
+  if ! python3 "$_merge" "$_src" "$_dst" "."; then
+    settings_merge_refused "the merge refused this file (reason above)" "$_src"
+    return
+  fi
+  log_info "Merged Easy Kit hooks into $_dst (your permissions and your own hook entries are kept)."
+}
+
 # ── Install settings.json (hook wiring) ──────────────────────────────────────
-# Copy-only, never overwrite an existing one: projects append their own
-# permissions to it (e.g. fewer-permission-prompts), which must not be clobbered.
-# Behavior preserved from the pre-ADR-0001 file; only the source is now the temp
-# clone instead of a persistent central clone.
+# No settings file yet: copy the kit's, exactly as before. One already there:
+# MERGE into it (ADR-0002) instead of returning silently — the pre-T111 early
+# return left every project that had a settings.json with zero kit hooks wired
+# and said nothing about it.
 install_settings() {
   src="$HARNESS_TEMP_DIR/.claude/settings.json"
   dst="./.claude/settings.json"
@@ -405,7 +446,8 @@ install_settings() {
     return
   fi
   if [ -e "$dst" ] || [ -L "$dst" ]; then
-    return  # never overwrite project settings; merge hook changes manually
+    merge_settings "$src" "$dst"
+    return
   fi
   [ -d ./.claude ] || mkdir -p ./.claude
   cp "$src" "$dst"
@@ -599,6 +641,14 @@ main() {
   log_info "Harnesses:$HARNESSES"
   if [ -n "$PACKS" ]; then
     log_info "Packs requested:$PACKS"
+  fi
+
+  # The hook merge is the only step allowed to fail without aborting the install
+  # (the rest of the kit is still worth having). Report it in the exit code so a
+  # script or CI run cannot mistake a hook-less install for a complete one.
+  if [ "$SETTINGS_FAILED" -ne 0 ]; then
+    log_error "Setup finished, but Easy Kit hooks were NOT wired (see the message above)."
+    exit 2
   fi
 }
 
