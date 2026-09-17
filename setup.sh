@@ -375,7 +375,7 @@ prompt_mode() {
   esac
 }
 
-# ── Install CLAUDE.md as a real copy (always overwrite — fresh install) ───────
+# ── Install CLAUDE.md as a real copy (a differing existing one is backed up) ──
 install_claude() {
   src="$HARNESS_TEMP_DIR/$CLAUDE_SRC"
   dst="./CLAUDE.md"
@@ -387,7 +387,8 @@ install_claude() {
 
   parent="$(dirname "$dst")"
   [ -d "$parent" ] || mkdir -p "$parent"
-  [ -e "$dst" ] && rm -rf "$dst"
+  harness_backup_path "$src" "$dst"
+  { [ -e "$dst" ] || [ -L "$dst" ]; } && rm -rf "$dst"
   cp "$src" "$dst"
 }
 
@@ -609,7 +610,8 @@ main() {
     exit 1
   fi
 
-  # Copy every MANIFEST path as real files (always overwrite — fresh install).
+  # Copy every MANIFEST path as real files; differing pre-existing paths are
+  # moved to <path>.bak[.N] first (T112).
   harness_copy_manifest "$HARNESS_TEMP_DIR" "." "$manifest"
 
   # Canon now lands at plain root (skills/, agents/); Claude Code still reads
