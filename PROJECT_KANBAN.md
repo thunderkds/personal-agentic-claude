@@ -22,7 +22,6 @@
 > is not Done. T115 adds `tests/test_docs_match_installer.py`; T116/T117 extend it, so a removed flag can't
 > creep back into a live doc.
 
-- [ ] **T118** — Fixture repos carry what `update.sh` hard-requires, and CI is green again | Common-Infrastructure-Agent | C1 | Risk: Low | P0 | Guide: `tasks/TASK_GUIDE_T118.md` | Review: `tasks/TASK_REVIEW_T118.md` | Depends on: none | Registered 2026-09-17 from observed CI breakage on `main` at `4f766dd`, not inferred: T111 made `lib/merge-settings.py` a hard prerequisite of both installers (`setup.sh:418`, `update.sh:106`) but never taught the two synthetic-fixture suites to build it, so every `update.sh` call in them aborts at exit 2 — `test_t098_harness_presence.sh` 8/7 and `test_harness_projection.sh` 35/3, both CI-wired (`ci.yml:46`, `ci.yml:28`). T111's Stage 4 ran neither suite its own change broke. The fixture-vs-product design question is settled in the guide's Approach (fixture-side; the hard-fail contract is ADR-0002 and stays).
 - [ ] **T112** — First install never destroys a project's own files — they are backed up and named | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T112.md` | Review: `tasks/TASK_REVIEW_T112.md` | Depends on: T109 | Registered 2026-09-12 — directory-wipe case asserted from code reading only; the implementer's BEFORE must prove it
 - [ ] **T113** — Update removes what upstream stopped shipping (unless edited), and kit tests stop shipping | Common-Infrastructure-Agent | C2 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_T113.md` | Review: `tasks/TASK_REVIEW_T113.md` | Depends on: T109 | Registered 2026-09-12
 - [ ] **T114** — One command — it detects the project, shows a menu, and asks before acting | Common-Infrastructure-Agent | C2 | Risk: Medium | P0 | HITL | Guide: `tasks/TASK_GUIDE_T114.md` | Review: `tasks/TASK_REVIEW_T114.md` | Depends on: T110, T111, T112, T113 | Registered 2026-09-12
@@ -65,6 +64,7 @@
 
 
 ### In Progress
+- [ ] **T118** — Fixture repos carry what `update.sh` hard-requires, and CI is green again | Common-Infrastructure-Agent | C1 | Risk: Low | P0 | Guide: `tasks/TASK_GUIDE_T118.md` | Review: `tasks/TASK_REVIEW_T118.md` | Depends on: none | Registered 2026-09-17 from observed CI breakage on `main` at `4f766dd`, not inferred: T111 made `lib/merge-settings.py` a hard prerequisite of both installers (`setup.sh:418`, `update.sh:106`) but never taught the two synthetic-fixture suites to build it, so every `update.sh` call in them aborts at exit 2 — `test_t098_harness_presence.sh` 8/7 and `test_harness_projection.sh` 35/3, both CI-wired (`ci.yml:46`, `ci.yml:28`). T111's Stage 4 ran neither suite its own change broke. The fixture-vs-product design question is settled in the guide's Approach (fixture-side; the hard-fail contract is ADR-0002 and stays). | **Stage 3 started 2026-09-17** — `common-infrastructure` (sonnet, C1) in `wt-t118` on `fix/t118-fixture-merge-settings`, spawned via Ghostty/`setsid`, prompt `.claude/markers/prompt_T118.txt`
 
 
 ### Ready for Review
