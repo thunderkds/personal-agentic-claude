@@ -47,7 +47,9 @@ mkdir -p "$FIXTURE/agents" \
          "$FIXTURE/skills/small-two" \
          "$FIXTURE/skills/oversize-skill" \
          "$FIXTURE/.claude/hooks" \
-         "$FIXTURE/templates"
+         "$FIXTURE/templates" \
+         "$FIXTURE/lib"
+cp "$REPO_ROOT/lib/merge-settings.py" "$FIXTURE/lib/merge-settings.py"
 printf 'backend-agent-content\n' > "$FIXTURE/agents/backend.md"
 printf 'hook-content\n'          > "$FIXTURE/.claude/hooks/example_hook.py"
 printf 'template-content\n'      > "$FIXTURE/templates/PRD_template.md"
