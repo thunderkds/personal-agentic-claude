@@ -80,8 +80,8 @@ of files — `agents/`, `skills/`, `.claude/hooks`, `templates`, `MANIFEST`, `CL
 
 | # | Criterion (testable) | Traces to requirement |
 |---|----------------------|-----------------------|
-| 1 | `bash tests/test_t098_harness_presence.sh` exits 0, with all 15 checks passing and none skipped | "CI goes green again" |
-| 2 | `bash tests/test_harness_projection.sh` exits 0, with all 38 checks passing and none skipped | "CI goes green again" |
+| 1 | `bash tests/test_t098_harness_presence.sh` exits 0 at 20 passed / 0 failed — the pre-merge count on `main`, not passed+failed of the red run | "CI goes green again" |
+| 2 | `bash tests/test_harness_projection.sh` exits 0 at 41 passed / 0 failed — the pre-merge count on `main`, not passed+failed of the red run | "CI goes green again" |
 | 3 | Each fixture repo contains `lib/merge-settings.py` **copied from the real repo**, not a stub or an empty file, and the copy is committed into the fixture's git history alongside the other fixture files | "a believable Easy Kit" |
 | 4 | Anti-drift, both directions: deleting `lib/merge-settings.py` from a fixture makes that suite **fail by name** (proving the copy is load-bearing), and the suites still pass with it present | "test what they claim to test" |
 | 5 | `bash tests/test_install_update_smoke.sh`, `tests/test_settings_merge.sh`, `tests/test_setup.sh`, `tests/test_update.sh` and `python3 tests/test_ci_wires_shell_suites.py` still pass unchanged | Out-of-scope guard |
@@ -94,8 +94,8 @@ of files — `agents/`, `skills/`, `.claude/hooks`, `templates`, `MANIFEST`, `CL
 
 | # | Given (input/state) | Expect (output/behavior) | How it's checked |
 |---|---------------------|--------------------------|------------------|
-| 1 | `tests/test_t098_harness_presence.sh` on a clean checkout | exit 0, `15 passed, 0 failed` | automated test |
-| 2 | `tests/test_harness_projection.sh` on a clean checkout | exit 0, `38 passed, 0 failed` | automated test |
+| 1 | `tests/test_t098_harness_presence.sh` on a clean checkout | exit 0, `20 passed, 0 failed` | automated test |
+| 2 | `tests/test_harness_projection.sh` on a clean checkout | exit 0, `41 passed, 0 failed` | automated test |
 | 3 | Fixture built, then `lib/merge-settings.py` deleted from it before the installer runs | the suite FAILS and names the missing prerequisite — it must not pass silently | mutation, run by hand, output pasted |
 | 4 | `grep -c 'settings_merge_refused' setup.sh update.sh` | unchanged from `4f766dd` — the hard-fail contract was not softened | automated grep |
 | 5 | Full suite sweep (AC5 list) | every suite exits 0 | automated test |
