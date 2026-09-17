@@ -22,7 +22,6 @@
 > is not Done. T115 adds `tests/test_docs_match_installer.py`; T116/T117 extend it, so a removed flag can't
 > creep back into a live doc.
 
-- [ ] **T112** — First install never destroys a project's own files — they are backed up and named | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T112.md` | Review: `tasks/TASK_REVIEW_T112.md` | Depends on: T109 | Registered 2026-09-12 — directory-wipe case asserted from code reading only; the implementer's BEFORE must prove it
 - [ ] **T113** — Update removes what upstream stopped shipping (unless edited), and kit tests stop shipping | Common-Infrastructure-Agent | C2 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_T113.md` | Review: `tasks/TASK_REVIEW_T113.md` | Depends on: T109 | Registered 2026-09-12
 - [ ] **T114** — One command — it detects the project, shows a menu, and asks before acting | Common-Infrastructure-Agent | C2 | Risk: Medium | P0 | HITL | Guide: `tasks/TASK_GUIDE_T114.md` | Review: `tasks/TASK_REVIEW_T114.md` | Depends on: T110, T111, T112, T113 | Registered 2026-09-12
 - [ ] **T115** — Choose CLIs and project type from a list — every install flag is gone, and the docs show one line | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | HITL | Guide: `tasks/TASK_GUIDE_T115.md` | Review: `tasks/TASK_REVIEW_T115.md` | Depends on: T114 | Registered 2026-09-12
@@ -64,6 +63,7 @@
 
 
 ### In Progress
+- [ ] **T112** — First install never destroys a project's own files — they are backed up and named | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T112.md` | Review: `tasks/TASK_REVIEW_T112.md` | Depends on: T109 | Registered 2026-09-12 — directory-wipe case asserted from code reading only; the implementer's BEFORE must prove it | **Stage 3 started 2026-09-17** — `common-infrastructure` (opus, C2 destructive-path) in `wt-t112` on `feat/t112-backup-before-overwrite` off `main`, spawned via Ghostty/`setsid`, prompt `.claude/markers/prompt_T112.txt`. Guide retargeted at `main` (`d1f91de`) — the integration branch is retired. The directory-wipe BEFORE is the crux: still only asserted from `lib/harness-fetch.sh:152`, agent instructed to prove it live or STOP if it does not reproduce
 
 
 ### Ready for Review
