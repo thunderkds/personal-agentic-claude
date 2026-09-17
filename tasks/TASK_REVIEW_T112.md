@@ -8,13 +8,13 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_install_backups.sh` (new, wired in ci.yml) — Supervisor re-run 2026-09-17 at `5614934`: `13 passed, 0 failed` |
 | Verification command run | ☐ pass / ☐ fail | |
 | Negative cases hold | ☐ pass / ☐ fail | identical content (no .bak), existing .bak, non-git, M1 |
 | verify | ☐ pass / ☐ fail / ☐ N/A | |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **Docs updated per guide's "Documentation to Update" (new text quoted)** | ☐ pass / ☐ fail | D1–D2 PROJECT_SPEC.md, D3 site #install, D4 RUNBOOK.md |
+| Full smoke suite still green (no regression) | ☑ pass | Supervisor re-run: test_setup `18 passed, 0 failed`; test_install_update_smoke `9 passed, 0 failed`; test_harness_projection `41 passed, 0 failed`; test_t098_harness_presence `20 passed, 0 failed`; `shellcheck -x setup.sh lib/harness-fetch.sh tests/test_install_backups.sh` clean |
+| **Docs updated per guide's "Documentation to Update" (new text quoted)** | ☑ pass | D1–D2 PROJECT_SPEC.md, D3 site #install, D4 RUNBOOK.md — quoted below under the doc list |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | shell installer; no UI |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ N/A | no UI |
 | **UI: Responsiveness at target viewports** | ☐ N/A | no UI |
@@ -142,3 +142,23 @@ Also green: `test_update.sh`, `test_settings_merge.sh`, `test_update_claude_md.s
   new menu; T114's menu is not built.
 - Codex projections (`harness_project_manifest`), `update.sh`, `install_settings`, and
   `harness_install_canon_symlinks` are unchanged.
+
+## Stage 4 — Supervisor review (2026-09-17, branch head `5614934`)
+
+**code-review**: P0 0 · P1 0 · P2 0 · P3 0. Scope: `lib/harness-fetch.sh`, `setup.sh`, `tests/test_install_backups.sh`, `ci.yml`, docs.
+Callers: `harness_copy_manifest` and `harness_backup_path` are called only from `setup.sh`. `update.sh` is untouched, so the update path is unchanged, as the guide requires.
+Entry point `harness_copy_manifest` / `install_claude` present (reachability OK). `setup.sh` runs `set -e`, so `harness_copy_manifest`
+returning 1 on a failed backup aborts the install. The agent's own P1 (unchecked `mv`) was fixed in `5614934` with a test.
+
+**Supervisor mutants** (the agent's M1 not trusted alone):
+- M2: file identical-content short-circuit replaced with `false` → `FAIL: SC4: identical content produced a backup` (12 passed, 1 failed)
+- M3: `.bak.N` numbering loop replaced with `while false` → `FAIL: SC5: backup numbering` (12 passed, 1 failed)
+Both reverted; `git status` clean afterwards.
+
+**security-review** (Medium risk): no findings. All paths are quoted. A symlink is moved as the link itself (`-L` checked before any
+content compare, so the link is never followed). A failed or unreadable `diff -rq` counts as "different", so the helper backs the path up
+and never deletes it. Nothing is written outside the project directory.
+
+**CI edit approved**: `ci.yml` step for the new suite is required by `tests/test_ci_wires_shell_suites.py`.
+
+**Pending**: `/verify` (user-invoked).
