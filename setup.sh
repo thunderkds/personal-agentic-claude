@@ -387,7 +387,7 @@ install_claude() {
 
   parent="$(dirname "$dst")"
   [ -d "$parent" ] || mkdir -p "$parent"
-  harness_backup_path "$src" "$dst"
+  harness_backup_path "$src" "$dst" || exit 1
   { [ -e "$dst" ] || [ -L "$dst" ]; } && rm -rf "$dst"
   cp "$src" "$dst"
 }

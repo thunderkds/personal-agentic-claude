@@ -151,7 +151,7 @@ harness_copy_manifest() {
     # Real copy (no symlink). A differing pre-existing dest is moved to a
     # backup first (T112); what is left is identical to the kit's, so removing
     # it lets a directory copy replace cleanly instead of nesting inside itself.
-    harness_backup_path "$_src" "$_dst"
+    harness_backup_path "$_src" "$_dst" || return 1
     { [ -e "$_dst" ] || [ -L "$_dst" ]; } && rm -rf "$_dst"
     cp -r "$_src" "$_dst"
   done < "$_manifest_path"
@@ -171,6 +171,8 @@ harness_copy_manifest() {
 # Public on purpose: T114's "Reinstall (backs up your edits)" calls this rather
 # than re-implementing it. Unlike harness_install_canon_symlinks, an existing
 # .bak does not fail the run — the next free number keeps both backups.
+# Returns 1 (after an [error] line) if the move fails; the caller must then not
+# replace <dst>.
 harness_backup_path() {
   _bk_src="$1"
   _bk_dst="$2"
@@ -191,7 +193,12 @@ harness_backup_path() {
     _bk_n=$((_bk_n + 1))
     _bk_to="$_bk_dst.bak.$_bk_n"
   done
-  mv "$_bk_dst" "$_bk_to"
+  # Checked explicitly: a caller in an `if`/`&&` context runs without set -e,
+  # and reporting success here would send it on to rm -rf the unsaved original.
+  if ! mv "$_bk_dst" "$_bk_to"; then
+    _harness_log_error "Could not back up '$_bk_dst' to '$_bk_to' — nothing was replaced. Fix the permissions, then re-run."
+    return 1
+  fi
   _harness_log_warn "Backed up your existing '$_bk_dst' to '$_bk_to' before installing the kit's copy — compare and merge by hand, then delete the backup."
   case "$_bk_dst" in
     */.claude/hooks)

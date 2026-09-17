@@ -210,13 +210,34 @@ else
   fail "edge: type mismatch (rc=$RC)"; cat "$T.log" >&2
 fi
 
+# ── Edge — backup cannot be written: stop, keep the data, claim no backup ────
+# Called in a condition, set -e does not fire inside the helper, so the helper
+# must report the failed mv itself or the caller's rm -rf destroys the original.
+T="$WORK/ro"
+mkdir -p "$T/p/templates" "$T/kit/templates"
+printf 'mine\n' > "$T/p/templates/mine.md"
+printf 'kit\n'  > "$T/kit/templates/k.md"
+chmod a-w "$T/p"
+RO_OUT=$(sh -c '. "$1/lib/harness-fetch.sh"; set -e
+  if harness_backup_path "$2/kit/templates" "$2/p/templates"; then echo HELPER_OK; fi' \
+  _ "$REPO_ROOT" "$T" 2>&1)
+chmod u+w "$T/p"
+if [ "$(id -u)" -eq 0 ]; then
+  pass "edge: unwritable backup — skipped (root ignores directory permissions)"
+elif ! printf '%s' "$RO_OUT" | grep -q -e HELPER_OK -e 'Backed up' \
+   && [ -f "$T/p/templates/mine.md" ]; then
+  pass "edge: unwritable backup -> helper fails, no 'Backed up' claim, original intact"
+else
+  fail "edge: unwritable backup reported success: $RO_OUT"
+fi
+
 # ── M1 — mutation: restore the plain rm -rf → the SC3 check must fail ───────
 MUT="$WORK/mutant"
 mkdir -p "$MUT/lib"
 cp "$SETUP" "$MUT/setup.sh"
 cp "$REPO_ROOT/lib/"* "$MUT/lib/"
 # shellcheck disable=SC2016  # the $_dst text is sed input, meant literally
-sed -i.orig 's/^\([[:space:]]*\)harness_backup_path "\$_src" "\$_dst"$/\1[ -e "$_dst" ] \&\& rm -rf "$_dst"/' \
+sed -i.orig 's/^\([[:space:]]*\)harness_backup_path "\$_src" "\$_dst" || return 1$/\1[ -e "$_dst" ] \&\& rm -rf "$_dst"/' \
   "$MUT/lib/harness-fetch.sh"
 if cmp -s "$MUT/lib/harness-fetch.sh" "$MUT/lib/harness-fetch.sh.orig"; then
   fail "M1: mutation did not land (sed matched nothing)"
