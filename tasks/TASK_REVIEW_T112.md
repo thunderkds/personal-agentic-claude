@@ -33,8 +33,35 @@ AGENTS.md now: # AGENTS.md
 
 Exit 0, no warning, no backup.
 
-**Still to capture by the implementer, before the first commit**: the directory case (`templates/mine.md`
-pre-existing) — asserted from `lib/harness-fetch.sh:152` by reading only, not yet run.
+**BEFORE — directory case** (Common-Infrastructure-Agent, 2026-09-17, kit HEAD `d1f91de` = `main` + guide
+retarget only, before any implementation commit). Scratch git repo under `mktemp -d`, pre-seeded with
+`templates/mine.md` and `docs/claude-md/my-notes.md`, then `SUPERVISOR_REPO=file://<worktree> bash setup.sh </dev/null`:
+
+```
+== 2026-09-17T11:27:59Z BEFORE install (kit HEAD d1f91de)
+docs/claude-md:
+-rw-rw-r-- 1 hungnguyenhuu hungnguyenhuu   21 Sep 17 18:27 my-notes.md
+templates:
+-rw-rw-r-- 1 hungnguyenhuu hungnguyenhuu   16 Sep 17 18:27 mine.md
+== running setup.sh </dev/null
+exit=0
+[info]  Wrote ./.claude/harness-lock.json (110 file hashes).
+[info]  Setup complete. Harness copied into .../before.tIwuSI/proj
+[info]  CLAUDE source: CLAUDE.md | lock: .claude/harness-lock.json
+[info]  Harnesses:claude
+== 2026-09-17T11:27:59Z AFTER install
+docs/claude-md:
+code-naming-conventions.md  folder-structure.md  memory-write-protocol.md
+phase0-project-initiation.md  pipeline-stages.md  untrusted-content-boundary.md
+templates:
+ADR_template.md ... TASK_GUIDE_template.md TASK_REVIEW_template.md thinking_report_template.html
+ls: cannot access 'templates/mine.md': No such file or directory
+ls: cannot access 'docs/claude-md/my-notes.md': No such file or directory
+bak count: 0
+```
+
+Premise confirmed by running: both project directories are replaced wholesale by `rm -rf` at
+`lib/harness-fetch.sh:152`, exit 0, no warning, no backup.
 
 **AFTER**: [same probes — `.bak` present and named in output]
 
