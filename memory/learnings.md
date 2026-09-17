@@ -2359,3 +2359,42 @@ all of `/usr/bin` + `/bin` minus `python*`, the way `tests/test_settings_merge.s
 **Apply to**: any "tool X absent" probe — subtract the one binary from a full link farm, never
 hand-list the ones you think the script needs. A wrong exit code from your own stub is easy to
 misread as evidence.
+
+## A new hard dependency breaks every synthetic-fixture suite that doesn't build it (2026-09-17, T111 merge)
+
+T111 made `lib/merge-settings.py` a hard dependency of `update.sh` — absent, it exits 2 and prints
+the `"hooks"` block by design. But `tests/test_t098_harness_presence.sh` and
+`tests/test_harness_projection.sh` build **synthetic fixture repos** containing only selected
+files, and T111 never added the helper to either builder. Every `update.sh` call in those suites
+now aborts: 7 and 3 failures. Both are wired into CI (`ci.yml:28`, `ci.yml:46`), so this is red on
+`main`. Confirmed as T111's and not the merge's three ways: both suites fail on
+`feat/easy-kit-one-command` alone, both pass on pre-merge `main`, and the real-clone suite
+(`test_install_update_smoke.sh`) went green as soon as `main` carried the helper.
+
+**Apply to**: when a task adds a file that a shipped script *requires*, grep the test tree for
+fixture builders before Stage 4 sign-off — a fixture is an allowlist, so it fails closed and
+silently on anything new. T111's Stage 4 ran neither suite its own change broke.
+
+## A mid-merge working tree makes self-fetching tests lie (2026-09-17)
+
+During the T111 merge, three suites failed with "the fetched Easy Kit has no
+lib/merge-settings.py" although the file was present and staged. `update.sh` clones
+`SUPERVISOR_REPO`'s **committed** HEAD, so an uncommitted merge is invisible to it and the suite
+reports a defect that does not exist. One of the three was exactly this artifact and cleared on
+commit; the other two were the real T111 defect above.
+
+**Apply to**: any suite that clones the repo under test — commit the merge before believing its
+output, and separate artifact from defect by re-running each side alone.
+
+## State files conflict on purpose; do not union-merge them (2026-09-17)
+
+`PROJECT_KANBAN.md` and `RUNBOOK.md` conflicted on every PR between `main` and the integration
+branch. A `union` merge driver in `.gitattributes` would have produced two T110 rows in two
+different sections and silently kept a RUNBOOK line T110 had made false ("a fix to `CLAUDE.md`
+never appears downstream — **by design**"). These files are *state*, not append-only logs.
+Root cause of the recurrence: T110's PR #86 retargeted from the integration branch to `main`,
+splitting board state across two lines of history.
+
+**Apply to**: resolve board/runbook conflicts by hand, taking the newer *fact* per row. Pick one
+merge topology — task PRs to the integration branch and only that branch to `main`, or task PRs
+straight to `main` — never both at once.

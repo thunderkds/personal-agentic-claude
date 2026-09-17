@@ -2110,3 +2110,24 @@ stderr, and the run finishes its remaining work before exiting 2. `python3` is a
 prerequisite because all 8 wired hooks run as `python3 …`.
 
 **Files**: lib/merge-settings.py (new), setup.sh, update.sh, tests/test_settings_merge.sh (new).
+
+## T111 merged to main; the branch divergence is closed (2026-09-17)
+
+`feat/easy-kit-one-command` (8 commits, T111 complete through Stage 5) merged into `main` at
+`4f766dd` and pushed. Main had diverged 11 ahead / 8 behind since T110's PR #86 was retargeted to
+`main` instead of the integration branch.
+
+Conflicts, both resolved by hand (see learnings.md, "State files conflict on purpose"):
+- `RUNBOOK.md` — kept main's T110 row, dropped the branch's pre-T110 claim that a `CLAUDE.md` fix
+  never reaches downstream "by design", kept the branch's new exit-2 `"hooks"` row.
+- `PROJECT_KANBAN.md` — Done now carries T111 then T110, newest first; T111's Todo row and T110's
+  stale Ready for Review row are gone.
+
+Green on the merged tree: settings_merge 40, update_claude_md 35, setup 18, update 31,
+harness_fetch 9, pack_choice 15, readme_current, install_update_smoke 9, CI drift guard 4.
+
+**Known red, accepted by user decision to push first**: `test_t098_harness_presence.sh` (7 fail)
+and `test_harness_projection.sh` (3 fail), both wired into CI — T111's fixture-builder defect.
+A bugfix task is to be registered for it; the guide must decide whether a fixture lacking
+`lib/merge-settings.py` should hard-fail or whether `update.sh` should degrade. T112 is unblocked
+and next (its directory-wipe case is asserted from code reading only — the BEFORE must prove it).

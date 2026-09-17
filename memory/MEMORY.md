@@ -277,6 +277,11 @@
 - [A guard CI never executes protects nothing](learnings.md) — T109 r1 drift guard was pytest-only; CI ran no pytest. Make the guard a CI step that checks its own step.
 - [T109 merged: installer suites + drift guard in CI](decisions.md) — 7 suites + plain-script guard; follow-up open: CI runs no Python tests (~848).
 
+- [A new hard dependency breaks every synthetic-fixture suite that doesn't build it](learnings.md) — T111 made `lib/merge-settings.py` required by `update.sh`; two fixture-building suites never got it and are red in CI. Grep for fixture builders before Stage 4 sign-off.
+- [A mid-merge working tree makes self-fetching tests lie](learnings.md) — `update.sh` clones the committed HEAD; commit the merge before believing a suite that clones the repo under test.
+- [State files conflict on purpose; do not union-merge them](learnings.md) — KANBAN/RUNBOOK are state, not logs; a union driver would have kept a fact T110 falsified. Pick one merge topology.
+- [T111 merged to main 2026-09-17](decisions.md) — `feat/easy-kit-one-command` reconciled at `4f766dd`; 9 suites green, 2 fixture suites red pending the follow-up; T112 unblocked.
+
 ### Glossary
 - [Report / Report Slot / Scoring Dimension / Report Session](glossary.md) — canonical terms for the html-report skill and Stage 4 reporting system
 - [Thinking Report / Trade-Off Matrix / Thinking Session](glossary.md) — canonical terms for the thinking-report skill and Stage 0.5–2 decision system
