@@ -5,7 +5,7 @@
 **Priority**: P1
 **Assigned agent**: Common-Infrastructure-Agent
 **Agent guide**: `agents/common-infrastructure.md`
-**Branch**: worktree off `feat/easy-kit-one-command`; merges back into it
+**Branch**: worktree off `main`; merges back into `main`. (Amended 2026-09-17: `feat/easy-kit-one-command` was merged to `main` at `4f766dd` and retired — task branches now go straight to `main`, one topology only.)
 
 ---
 
