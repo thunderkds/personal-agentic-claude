@@ -14,15 +14,15 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | pass | No new test file (correct per guide's Hard-Stop Gate 5 note): `tests/test_t098_harness_presence.sh` (7→0 fail) and `tests/test_harness_projection.sh` (3→0 fail) went red→green, plus the AC4 mutation (below) proves the fix is load-bearing in both directions. |
+| Verification command run | pass | Full 7-command sweep run 2026-09-17T08:46:38Z — all exit 0: t098=0 projection=0 smoke=0 settings_merge=0 setup=0 update=0 ci_wires=0. |
+| Negative cases hold | pass | AC4 mutation: deleting the provisioned `lib/merge-settings.py` from each fixture builder (in-place edit, byte-identical restore verified via `diff`) reproduces the exact original failure by name (`the fetched Easy Kit has no lib/merge-settings.py`) — t098 back to 8 passed/7 failed, projection back to 35 passed/3 failed. AC4 grep: `settings_merge_refused` count unchanged at 4/4 in `setup.sh`/`update.sh` — hard-fail contract untouched. |
+| verify | ☐ N/A | user-invoked only per `memory/MEMORY.md` (`project_verify_skill_is_user_only`) — Supervisor/user to run `/verify`. |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | pass | Touched only the two fixture builders' provisioning block (mkdir + cp, ~2 lines each) in `tests/test_t098_harness_presence.sh` and `tests/test_harness_projection.sh`. `setup.sh`, `update.sh`, `lib/merge-settings.py`, `MANIFEST`, `ci.yml` untouched per guide's Files Must NOT Touch. |
+| Full smoke suite still green (no regression) | pass | AC5 sweep (verification command above) — all 7 suites green, including `test_install_update_smoke.sh` which clones the real repo. |
+| **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | Pure-infrastructure task, no UI component. |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ N/A | Pure-infrastructure task, no UI component. |
+| **UI: Responsiveness at target viewports** | ☐ N/A | Pure-infrastructure task, no UI component. |
 
 ---
 
@@ -33,12 +33,43 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: Captured 2026-09-17T08:45:20Z–08:45:24Z on branch `fix/t118-fixture-merge-settings`
+(pre-implementation), worktree `/home/hungnguyenhuu/workspace/pets/wt-t118`:
+
+```
+$ bash tests/test_t098_harness_presence.sh
+[... every AC1/AC2/AC3/AC4/AC9/AC10 failure: ...]
+[error] Could not merge Easy Kit hooks into ./.claude/settings.json: the fetched Easy Kit has no lib/merge-settings.py
+[error] Update finished, but Easy Kit hooks were NOT merged (see the message above).
+8 passed, 7 failed
+EXIT:1
+
+$ bash tests/test_harness_projection.sh
+[... AC7/AC9(x2) failures, same "no lib/merge-settings.py" root cause ...]
+test_harness_projection.sh: 35 passed, 3 failed
+EXIT:1
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+**AFTER**: Captured 2026-09-17T08:45:53Z–08:45:58Z, same branch/worktree, post-fix:
 
-**WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
-implementing agent alone]
+```
+$ bash tests/test_t098_harness_presence.sh
+[... all PASS ...]
+20 passed, 0 failed
+EXIT:0
+
+$ bash tests/test_harness_projection.sh
+[... all PASS ...]
+test_harness_projection.sh: 41 passed, 0 failed
+EXIT:0
+```
+
+**DELTA**: `main`'s CI is green again — both fixture-repo-dependent suites now build a believable Easy
+Kit (carrying `lib/merge-settings.py`) and exercise the real hook-merge path instead of aborting at
+`setup.sh:421`/`update.sh:109` before any of their actual assertions run.
+
+**WITNESS**: Common-Infrastructure-Agent (T118), ran all commands directly in
+`/home/hungnguyenhuu/workspace/pets/wt-t118` on `fix/t118-fixture-merge-settings`, 2026-09-17
+08:45–08:46 UTC.
