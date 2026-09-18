@@ -18,27 +18,26 @@
 
 ## Index
 
-### ⚠️ Session handoff — read first (written 2026-09-16)
+### ⚠️ Session handoff — read first (written 2026-09-18)
 
-- **This checkout is on `main`, and `main` is behind the real work.** T111 is **Done, merged and
-  pushed**, but only on `feat/easy-kit-one-command` (`69ccde3`). On `main` the board still shows
-  T111 as Todo, `git log` shows none of its 8 commits, and this file is missing its 4 memory
-  entries. Do not re-plan or re-spawn T111 — check
-  `git log --oneline main..github/feat/easy-kit-one-command` before trusting anything below.
-- **Two branch heads are diverged and must be reconciled before T114.** T110 went straight to
-  `main` via PR #86; T111 went to `feat/easy-kit-one-command`. T114 depends on both. Decide the
-  merge direction (open the branch's PR, or rebase it onto `main`) before starting T114.
-- **Next task is T112** (first install never destroys a project's own files), unblocked, P1.
-  Its board row carries a caveat to honour: the directory-wipe case was *asserted from code
-  reading only* — the implementer's Demonstration BEFORE must prove it live, not restate it.
-  T112 edits `lib/harness-fetch.sh`; keep T113 serial behind it, both to avoid merge conflicts and
-  because the trace state file is shared across worktrees (concurrent verification mis-attributes
-  Bash calls between tasks).
-- **Two follow-ups recorded in `tasks/TASK_REVIEW_T111.md`, neither blocking**: (1) a user's own
-  entry whose command contains `.claude/hooks/` is silently removed by the ownership rule, while
-  the comparable `drop_dangling` case warns — a one-line stderr notice closes it; (2) fold the ~35
-  duplicated lines of `merge_settings`/`settings_merge_refused` out of `setup.sh`/`update.sh` into
-  a shared helper once T112/T113 stop editing `lib/harness-fetch.sh`.
+- **T112 is Done, merged to `main` and pushed** (2026-09-18). `/verify` PASS at the installer CLI
+  with `main` as a live control. The 2026-09-16 handoff's "next task is T112" is spent; its
+  directory-wipe caveat was honoured and independently re-reproduced, so do not re-litigate it.
+- **Next task is T113**, deliberately held serial behind T112 — both edit `lib/harness-fetch.sh`,
+  and the trace state file is shared across worktrees (concurrent verification mis-attributes Bash
+  calls between tasks). T114 depends on T110, T111, T112, T113.
+- **Still open: two diverged branch heads, to reconcile before T114.** T110 and T112 are on `main`;
+  T111 is Done/merged/pushed **only** on `feat/easy-kit-one-command` (`69ccde3`), so `main`'s board
+  and history do not carry it. Check `git log --oneline main..github/feat/easy-kit-one-command`
+  before trusting the board on T111. Decide the merge direction (open the branch's PR, or rebase
+  onto `main`) before starting T114.
+- **Three follow-ups recorded, none blocking**: (1) `TASK_REVIEW_T112.md` — the abort message says
+  "nothing was replaced" while MANIFEST-earlier paths already were; wording fix scoped to one path.
+  (2) `TASK_REVIEW_T111.md` — a user's own entry whose command contains `.claude/hooks/` is
+  silently removed by the ownership rule, while the comparable `drop_dangling` case warns.
+  (3) fold the ~35 duplicated lines of `merge_settings`/`settings_merge_refused` out of
+  `setup.sh`/`update.sh` into a shared helper — **T112 has now stopped editing
+  `lib/harness-fetch.sh`, so this unblocks once T113 lands.**
 
 
 <!-- Format: - [Title](cold-file.md#section) — one-line summary.
@@ -46,6 +45,9 @@
      (mean 326, max 796). Reported by the size test, never enforced; /compact-memory's job. -->
 
 ### Decisions
+- [T112: install is backup-then-overwrite; `harness_backup_path` is public for T114](decisions.md) — a differing dest moves to `<path>.bak[.N]`, identical content is left alone, a symlink moves as the link, an existing backup is never overwritten, a failed mv aborts without replacing
+- [An identical-content short-circuit is what separates backup-on-install from backup-breeding](learnings.md) — judge a backup feature on run two: without it every update litters `.bak.N`; the happy-path "my data survived" assertion passes either way
+- [An error message's scope claim outlives the path it was written for](learnings.md) — T112's abort says "nothing was replaced" while MANIFEST-earlier paths already were; check the caller's loop before trusting an abort's scope
 - [T111: settings.json is merged, kit owns an entry by its command path](decisions.md) — install/update both merge via lib/merge-settings.py; an entry is the kit's if its command references `.claude/hooks/`; refusal (bad JSON/symlink/no python3) writes nothing, prints the block, exits 2
 - [An atomic write silently changes the file's mode](learnings.md) — mkstemp is 0600 and os.replace carries it onto the destination; git tracks only the exec bit so 644→600 never shows in a diff; chmod the temp file before replace
 - [Classification-only matching fails safe; a source path does not](learnings.md) — T110's traversal was a read-and-copy sink, T111's same-shape regex only classifies, so a hostile entry gets dropped; ask what the match is used for

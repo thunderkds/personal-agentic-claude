@@ -2421,3 +2421,38 @@ byte-identical.
 
 **Apply to**: a fixture/harness change is verifiable at the surface the harness drives. Build the
 harness's artifact by hand, drive the real binary, and mutate the one thing the task added.
+
+## An identical-content short-circuit is what separates backup-on-install from backup-breeding (2026-09-18, T112)
+
+T112 makes `setup.sh` back up a differing destination to `<path>.bak[.N]` instead of `rm -rf`-ing
+it. The obvious test is "my file survived." The test that actually decides whether the feature is
+usable is **the second install**: without the identical-content short-circuit, every re-run finds a
+destination that "exists" and moves it aside, so a project accumulates `templates.bak`, `.bak.1`,
+`.bak.2` on every update — the feature becomes litter and users stop reading the warnings.
+
+Measured at `/verify`: re-running the installer with everything already matching the kit printed
+`backup warn lines: 0` and created no `.bak.1`. The short-circuit compares files with `cmp -s` and
+directories with `diff -rq`, and deliberately skips the comparison for symlinks (`[ ! -L ]`) so a
+link is always moved as the link rather than compared through its target.
+
+**Why**: a backup feature is judged on its steady state, not its first run. The happy-path
+assertion ("my data survived") passes in both the good and the littering implementation.
+**How to apply**: for any move-aside/backup/quarantine behaviour, the mandatory probe is *do it
+twice*. Assert on the count of backups after run two, not just the survival of the original.
+
+## An error message's scope claim outlives the path it was written for (2026-09-18, T112)
+
+`harness_backup_path` aborts with *"Could not back up '<path>' … — nothing was replaced."* True of
+that path, and the sentence was written while thinking about that path. But `harness_copy_manifest`
+walks MANIFEST **in order**, so by the time a later entry fails, earlier entries are already
+replaced. Measured with a project owning both `agents/` (early) and an unwritable `docs/` (late):
+the run printed `Backed up … './agents'`, then the error claiming nothing was replaced, and
+afterwards `agents/` held the kit's files. No data was lost — `agents.bak/mine.md` was intact — but
+the user is told the run was a no-op when it left a half-installed project.
+
+**Why**: a message written inside a per-item function describes the item; the user reads it as
+describing the run. The bug is not in the logic, so no test catches it — only running the ordered
+loop to a mid-list failure shows it.
+**How to apply**: when an abort message makes a scope claim ("nothing", "no changes", "rolled
+back"), check what the *caller's* loop already did before the failure. Either scope the sentence to
+the item (`'<path>' was not replaced`) or make the claim true with a real rollback.
