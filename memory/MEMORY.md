@@ -26,11 +26,13 @@
 - **Next task is T113**, deliberately held serial behind T112 — both edit `lib/harness-fetch.sh`,
   and the trace state file is shared across worktrees (concurrent verification mis-attributes Bash
   calls between tasks). T114 depends on T110, T111, T112, T113.
-- **Still open: two diverged branch heads, to reconcile before T114.** T110 and T112 are on `main`;
-  T111 is Done/merged/pushed **only** on `feat/easy-kit-one-command` (`69ccde3`), so `main`'s board
-  and history do not carry it. Check `git log --oneline main..github/feat/easy-kit-one-command`
-  before trusting the board on T111. Decide the merge direction (open the branch's PR, or rebase
-  onto `main`) before starting T114.
+- **The T110/T111 branch divergence is RESOLVED — do not act on older handoffs that say otherwise.**
+  Verified 2026-09-18: `feat/easy-kit-one-command` is a strict **ancestor** of `main`
+  (`git merge-base --is-ancestor` yes; 32 ahead / 0 behind). T111 merged to `main` at `4f766dd`,
+  `lib/merge-settings.py` is on `main`, and its board row reads `[x]`. The 2026-09-16 warning was
+  true when written and is now spent; it was **re-asserted in error on 2026-09-18** by a Supervisor
+  editing this block without re-checking it. T114's dependencies T110/T111/T112 are all Done — only
+  **T113** remains before T114 is unblocked.
 - **Three follow-ups recorded, none blocking**: (1) `TASK_REVIEW_T112.md` — the abort message says
   "nothing was replaced" while MANIFEST-earlier paths already were; wording fix scoped to one path.
   (2) `TASK_REVIEW_T111.md` — a user's own entry whose command contains `.claude/hooks/` is
@@ -45,6 +47,7 @@
      (mean 326, max 796). Reported by the size test, never enforced; /compact-memory's job. -->
 
 ### Decisions
+- [A handoff warning is a measurement, and editing the block around it does not refresh it](learnings.md) — the T110/T111 divergence bullet was carried forward verbatim under a new date while already false; re-run the check before re-asserting, don't re-read the sentence
 - [T112: install is backup-then-overwrite; `harness_backup_path` is public for T114](decisions.md) — a differing dest moves to `<path>.bak[.N]`, identical content is left alone, a symlink moves as the link, an existing backup is never overwritten, a failed mv aborts without replacing
 - [An identical-content short-circuit is what separates backup-on-install from backup-breeding](learnings.md) — judge a backup feature on run two: without it every update litters `.bak.N`; the happy-path "my data survived" assertion passes either way
 - [An error message's scope claim outlives the path it was written for](learnings.md) — T112's abort says "nothing was replaced" while MANIFEST-earlier paths already were; check the caller's loop before trusting an abort's scope

@@ -2456,3 +2456,25 @@ loop to a mid-list failure shows it.
 **How to apply**: when an abort message makes a scope claim ("nothing", "no changes", "rolled
 back"), check what the *caller's* loop already did before the failure. Either scope the sentence to
 the item (`'<path>' was not replaced`) or make the claim true with a real rollback.
+
+## A handoff warning is a measurement, and editing the block around it does not refresh it (2026-09-18)
+
+The 2026-09-16 handoff said two branch heads were diverged and must be reconciled before T114. On
+2026-09-18 the Supervisor rewrote that handoff block — marking T112 done, moving "next task" to
+T113 — and **carried the divergence warning forward verbatim**, reformatted and re-asserted as
+current, without running a single command against it. It was already false: `feat/easy-kit-one-command`
+is a strict ancestor of `main` (`git merge-base --is-ancestor` → yes, 32 ahead / 0 behind), T111
+merged at `4f766dd`, `lib/merge-settings.py` on `main`, board row `[x]`. The reconciliation had
+happened days earlier, in the same T118 work the same handoff described.
+
+The failure mode is specific and worth naming: **editing a block feels like reviewing it.** Rewriting
+three of four bullets creates a strong sense that the fourth was considered, when it was only moved.
+A warning that survives an edit pass acquires false freshness — it now carries the new date.
+
+**Why**: handoff bullets are measurements with an expiry, not standing policy. `wake` surfaces them
+verbatim into the next session, so a stale one steers real decisions — here it would have sent a
+Supervisor to reconcile branches that are already one lineage, or to hold T114 behind nothing.
+**How to apply**: before re-asserting any handoff bullet under a new date, run the check that
+produced it. For a branch claim that is `git merge-base --is-ancestor` or `rev-list --left-right
+--count`, not reading the sentence again. If the check is not cheap enough to re-run, the bullet
+should name its evidence and its date so the next reader can tell measurement from assumption.
