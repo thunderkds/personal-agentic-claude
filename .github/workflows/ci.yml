@@ -36,6 +36,9 @@ jobs:
       - name: settings.json merge test suite (T111)
         run: bash tests/test_settings_merge.sh
 
+      - name: Install backup test suite (T112)
+        run: bash tests/test_install_backups.sh
+
       - name: Install/update smoke suite
         run: bash tests/test_install_update_smoke.sh
 

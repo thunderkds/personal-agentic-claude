@@ -244,6 +244,11 @@
   <code>.claude/agents/</code>, <code>.claude/skills/</code>, and <code>.claude/settings.json</code>.
 </p>
 <p class="lead">
+  Installing into an existing project never deletes what is already there: a file or folder the kit
+  would replace is first moved to a backup (<code>CLAUDE.md.bak</code>, <code>templates.bak/</code>, …),
+  and each backup is listed in the install output. Identical files are left alone.
+</p>
+<p class="lead">
   This installs for <strong>Claude Code</strong> by default. To install for a different CLI, pass
   <code>--harness</code> (repeat it to select more than one):
 </p>

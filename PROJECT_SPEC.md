@@ -71,7 +71,7 @@ The supervisor repo (`per-agentic-claude`) is a general framework. A `MANIFEST` 
 - Never symlink `tasks/`, `memory/`, `PRD.md`, or `PROJECT_SPEC.md` — these are project-specific
 - Never commit project-specific files to this repo
 - Scripts must be POSIX-compatible (no bash 4+ features unavailable on macOS default shell)
-- `setup.sh` must be idempotent — re-running must not break existing setup or overwrite project files
+- `setup.sh` must never destroy a project's own files — before replacing any pre-existing path (`CLAUDE.md` or a MANIFEST path, file or directory) whose content differs from the kit's, install moves it to `<name>.bak` (or the next free `<name>.bak.N`; an existing backup is never overwritten) and names the backup in its output. Identical content is left alone with no backup (T112, ADR-0002)
 
 ---
 
@@ -79,7 +79,7 @@ The supervisor repo (`per-agentic-claude`) is a general framework. A `MANIFEST` 
 
 | Area | Risk Level | Reason | Files |
 |------|-----------|--------|-------|
-| Symlink creation | Medium | If target already has real files (not symlinks), silent overwrite would destroy project data | `setup.sh` |
+| Copy install over existing paths | Medium | Install copies kit files over paths the project may already own; a silent replace would destroy project data. Mitigated by `harness_backup_path`, which moves a differing path to `<name>.bak[.N]` and names it — see `docs/adr/0002-one-confirmed-menu-driven-installer.md` ("No silent loss") | `setup.sh`, `lib/harness-fetch.sh` |
 | SUPERVISOR_PATH handling | Low | Path may not exist; must be created gracefully | `setup.sh`, `update.sh` |
 | WSL symlink behavior | Low | Linux symlinks in WSL filesystems behave correctly; Windows NTFS symlinks may not | `setup.sh` |
 

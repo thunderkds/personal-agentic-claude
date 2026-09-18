@@ -14,6 +14,7 @@
 #                                      -> that line's destination for <harness> ('' if none)
 #   harness_copy_manifest <tmp> <target> <manifest>
 #                                      -> copy each MANIFEST-listed path from <tmp> into <target>
+#   harness_backup_path <src> <dst>    -> move a differing <dst> aside to <dst>.bak[.N] (T112)
 #   harness_project_manifest <src> <target> <manifest> <harness>
 #                                      -> project MANIFEST paths into <harness>'s own directories
 #   harness_install_canon_symlinks [target]
@@ -147,11 +148,62 @@ harness_copy_manifest() {
 
     _parent=$(dirname "$_dst")
     [ -d "$_parent" ] || mkdir -p "$_parent"
-    # Real overwrite copy (no symlink). Remove any existing dest first so a
-    # directory copy replaces cleanly instead of nesting inside itself.
-    [ -e "$_dst" ] && rm -rf "$_dst"
+    # Real copy (no symlink). A differing pre-existing dest is moved to a
+    # backup first (T112); what is left is identical to the kit's, so removing
+    # it lets a directory copy replace cleanly instead of nesting inside itself.
+    harness_backup_path "$_src" "$_dst" || return 1
+    { [ -e "$_dst" ] || [ -L "$_dst" ]; } && rm -rf "$_dst"
     cp -r "$_src" "$_dst"
   done < "$_manifest_path"
+}
+
+# harness_backup_path <src> <dst>
+# Before the kit replaces <dst> with <src>, move a pre-existing <dst> aside so
+# install never destroys a project's own files (T112 / ADR-0002 "No silent loss").
+#   missing                         -> nothing
+#   identical to <src> (not a link) -> nothing; no backup, no output
+#   anything else (file, directory, symlink, type mismatch)
+#                                   -> moved to the first free of <dst>.bak,
+#                                      <dst>.bak.1, <dst>.bak.2, ... and named
+#                                      in a [warn] line. An existing backup is
+#                                      never overwritten. A symlink is moved as
+#                                      the link itself, its target untouched.
+# Public on purpose: T114's "Reinstall (backs up your edits)" calls this rather
+# than re-implementing it. Unlike harness_install_canon_symlinks, an existing
+# .bak does not fail the run — the next free number keeps both backups.
+# Returns 1 (after an [error] line) if the move fails; the caller must then not
+# replace <dst>.
+harness_backup_path() {
+  _bk_src="$1"
+  _bk_dst="$2"
+  [ -e "$_bk_dst" ] || [ -L "$_bk_dst" ] || return 0
+
+  if [ ! -L "$_bk_dst" ]; then
+    if [ -f "$_bk_src" ] && [ -f "$_bk_dst" ] && cmp -s "$_bk_src" "$_bk_dst"; then
+      return 0
+    fi
+    if [ -d "$_bk_src" ] && [ -d "$_bk_dst" ] && diff -rq "$_bk_src" "$_bk_dst" >/dev/null 2>&1; then
+      return 0
+    fi
+  fi
+
+  _bk_to="$_bk_dst.bak"
+  _bk_n=0
+  while [ -e "$_bk_to" ] || [ -L "$_bk_to" ]; do
+    _bk_n=$((_bk_n + 1))
+    _bk_to="$_bk_dst.bak.$_bk_n"
+  done
+  # Checked explicitly: a caller in an `if`/`&&` context runs without set -e,
+  # and reporting success here would send it on to rm -rf the unsaved original.
+  if ! mv "$_bk_dst" "$_bk_to"; then
+    _harness_log_error "Could not back up '$_bk_dst' to '$_bk_to' — nothing was replaced. Fix the permissions, then re-run."
+    return 1
+  fi
+  _harness_log_warn "Backed up your existing '$_bk_dst' to '$_bk_to' before installing the kit's copy — compare and merge by hand, then delete the backup."
+  case "$_bk_dst" in
+    */.claude/hooks)
+      _harness_log_warn "Your own hooks now live in '$_bk_to'; any entries in .claude/settings.json that point at them must be updated to that path." ;;
+  esac
 }
 
 # ── MANIFEST line parsing (T097) ──────────────────────────────────────────────
