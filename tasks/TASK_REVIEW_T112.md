@@ -9,10 +9,10 @@
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_install_backups.sh` (new, wired in ci.yml) — Supervisor re-run 2026-09-17 at `5614934`: `13 passed, 0 failed` |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | identical content (no .bak), existing .bak, non-git, M1 |
-| verify | ☐ pass / ☐ fail / ☐ N/A | |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
+| Verification command run | ☑ pass | Supervisor `/verify` 2026-09-18 at `0220529`: the real `setup.sh` driven end-to-end against 6 scratch git repos via `SUPERVISOR_REPO=<local checkout>` — runtime observation, not a test run. Control on `main` reproduced the wipe live: `ls: cannot access 'templates/my_template.md': No such file or directory` + `NO BACKUPS` + `Setup complete.` Subject on `wt-t112` backed up all 4 colliding paths; backup md5s `ae60d61…` / `23db51a…` / `5f5b262…` match the BEFORE capture byte-for-byte |
+| Negative cases hold | ☑ pass | All driven at the installer CLI. Identical content → `backup warn lines: 0`, no `.bak.1` bred on re-run. Existing `.bak` → next write went to `.bak.1`, original `.bak` still `5f5b262…` (never overwritten). Symlink → `templates.bak -> real_target`, link moved not followed, target intact. Type mismatch + spaced filename → both backed up, kit installed. **Failed backup** (`chmod 555 docs`) → `[error] Could not back up './docs/claude-md' … — nothing was replaced.`, **exit 1**, no `Setup complete`, original `precious.md` survived |
+| verify | ☑ pass | PASS — 2 confirm steps + 6 probes, all at the installer CLI. The guide's crux caveat is satisfied: the directory-wipe BEFORE was **reproduced live against `main`**, not restated from code reading. One ⚠️ finding carried as a follow-up row, not a blocker (below) |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Scoped to `main...feat/t112-backup-before-overwrite` — 6 commits, 8 files. Source surface is `lib/harness-fetch.sh` (+58) and `setup.sh` (+8) only; the rest is the new test, CI wiring, and D1–D4 docs |
 | Full smoke suite still green (no regression) | ☑ pass | Supervisor re-run: test_setup `18 passed, 0 failed`; test_install_update_smoke `9 passed, 0 failed`; test_harness_projection `41 passed, 0 failed`; test_t098_harness_presence `20 passed, 0 failed`; `shellcheck -x setup.sh lib/harness-fetch.sh tests/test_install_backups.sh` clean |
 | **Docs updated per guide's "Documentation to Update" (new text quoted)** | ☑ pass | D1–D2 PROJECT_SPEC.md, D3 site #install, D4 RUNBOOK.md — quoted below under the doc list |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | shell installer; no UI |
@@ -162,3 +162,34 @@ and never deletes it. Nothing is written outside the project directory.
 **CI edit approved**: `ci.yml` step for the new suite is required by `tests/test_ci_wires_shell_suites.py`.
 
 **Pending**: `/verify` (user-invoked).
+
+---
+
+## Stage 5 `/verify` follow-up (Supervisor, 2026-09-18) — not blocking
+
+⚠️ **The failed-backup message overstates its scope.** On an aborted run `harness_backup_path`
+prints *"nothing was replaced"*, but MANIFEST is processed in order, so paths **before** the
+failing one are already replaced. Measured with a project owning both `agents/` (early in
+MANIFEST) and an unwritable `docs/`:
+
+```
+[warn]  Backed up your existing './agents' to './agents.bak' before installing the kit's copy — ...
+[error] Could not back up './docs/claude-md' to './docs/claude-md.bak' — nothing was replaced. ...
+--- pre-failure path: backed up (safe) or destroyed? ---
+MY AGENT - earlier in MANIFEST than docs
+--- but agents/ is now the KIT's (partial install): ---
+backend.md
+common-infrastructure.md
+frontend.md
+```
+
+**No data is lost** — the pre-failure path was correctly backed up, which is the property T112
+actually claims — but the project is left half-installed while the message tells the user the
+opposite. Fix shape is wording, scoped to the one path: `'<path>' was not replaced`. Recorded as a
+follow-up row rather than reopening T112, because the data-safety claim itself holds under test.
+
+Two accepted observations, neither a defect:
+- The partial-install state has no rollback; re-running after fixing permissions is the recovery
+  path and works, but only "Fix the permissions, then re-run" says so.
+- Backups accumulate silently (`.bak`, `.bak.1`, `.bak.2`) with no outstanding-backup summary.
+  Correct per AC5 and the guide's cut list explicitly dropped a summary file — noted for visibility.
