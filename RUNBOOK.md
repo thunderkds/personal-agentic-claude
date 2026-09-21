@@ -54,10 +54,11 @@ Ordered steps to ship a release. Commands copy-pasteable.
    **Pass condition**: installer exits 0 and prints `Setup complete`; then
    ```sh
    test -f .claude/harness-lock.json && \
+   test ! -d .claude/hooks/tests && \
    grep -q "Complexity matrix in your role guide" templates/TASK_GUIDE_template.md && \
    grep -c '^| \*\*C[0-3]' .claude/agents/backend.md          # must print 4
    ```
-   all succeed. Then `rm -rf "$T"`.
+   all succeed (the `test ! -d` line fails the check if a release ships the kit's own test suite again). Then `rm -rf "$T"`.
 
 ---
 

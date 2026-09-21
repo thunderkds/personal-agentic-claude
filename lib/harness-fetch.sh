@@ -9,7 +9,11 @@
 #   harness_make_temp_dir              -> creates a temp dir, registers it, sets $HARNESS_TEMP_DIR
 #   harness_register_cleanup <dir>     -> register an existing dir for cleanup-on-exit
 #   harness_fetch <repo_url> <dest>    -> git clone --depth 1 <repo_url> into <dest>
-#   harness_manifest_path <line>       -> field 1 of a MANIFEST line (CR-stripped)
+#   harness_manifest_path <line>       -> field 1 of a MANIFEST line (CR-stripped; '' for `!` exclusions)
+#   harness_manifest_exclusions <manifest>
+#                                      -> the `!<path>` exclusions, one per line (T113)
+#   harness_is_excluded <manifest> <rel>
+#                                      -> 0 if <rel> is, or is under, an exclusion (T113)
 #   harness_manifest_dest <line> <harness>
 #                                      -> that line's destination for <harness> ('' if none)
 #   harness_copy_manifest <tmp> <target> <manifest>
@@ -131,6 +135,7 @@ harness_copy_manifest() {
     return 1
   fi
 
+  # shellcheck disable=SC2094  # read-only lookups of the MANIFEST the loop is reading
   while IFS= read -r _line; do
     # Field 1 only: an optional trailing destination column (T097) is not part
     # of the base install's path, so a mapped line copies exactly where it
@@ -146,8 +151,20 @@ harness_copy_manifest() {
       continue
     fi
 
+    # A path the MANIFEST excludes is left alone entirely (T113). This must
+    # come BEFORE harness_backup_path: backing up an excluded dest would move a
+    # project's own directory to <path>.bak and never put it back.
+    if harness_is_excluded "$_manifest_path" "$_line"; then
+      continue
+    fi
+
     _parent=$(dirname "$_dst")
     [ -d "$_parent" ] || mkdir -p "$_parent"
+    # An exclusion UNDER this path (T113): stage the kit's copy without it.
+    if [ -n "$(_harness_exclusions_under "$_manifest_path" "$_line")" ]; then
+      _harness_install_excluding "$_src" "$_dst" "$_line" "$_manifest_path" || return 1
+      continue
+    fi
     # Real copy (no symlink). A differing pre-existing dest is moved to a
     # backup first (T112); what is left is identical to the kit's, so removing
     # it lets a directory copy replace cleanly instead of nesting inside itself.
@@ -155,6 +172,56 @@ harness_copy_manifest() {
     { [ -e "$_dst" ] || [ -L "$_dst" ]; } && rm -rf "$_dst"
     cp -r "$_src" "$_dst"
   done < "$_manifest_path"
+}
+
+# _harness_exclusions_under <manifest_path> <rel> -> exclusions strictly under
+# <rel>, each made relative to it, one per line.
+_harness_exclusions_under() {
+  harness_manifest_exclusions "$1" | while IFS= read -r _eu_x; do
+    case "$_eu_x" in "$2"/*) printf '%s\n' "${_eu_x#"$2"/}" ;; esac
+  done
+}
+
+# _harness_install_excluding <src> <dst> <rel> <manifest_path>
+# Install <src> over <dst> as harness_copy_manifest does, when the MANIFEST
+# excludes a path under <rel> (T113): the kit's copy is staged without it and the
+# project's own excluded path is set aside for the duration, then put back — so
+# it is neither installed, backed up, nor compared.
+_harness_install_excluding() {
+  _ie_src="$1"
+  _ie_dst="$2"
+  _ie_subs=$(_harness_exclusions_under "$4" "$3")
+
+  _ie_work=$(mktemp -d "${TMPDIR:-/tmp}/harness-excl.XXXXXX") || return 1
+  cp -r "$_ie_src" "$_ie_work/stage"
+  _ie_can_hold=0
+  [ -d "$_ie_dst" ] && [ ! -L "$_ie_dst" ] && _ie_can_hold=1
+  _ie_list="$_ie_work/subs"
+  printf '%s\n' "$_ie_subs" > "$_ie_list"
+  while IFS= read -r _ie_sub; do
+    rm -rf "$_ie_work/stage/$_ie_sub"
+    if [ "$_ie_can_hold" -eq 1 ] && { [ -e "$_ie_dst/$_ie_sub" ] || [ -L "$_ie_dst/$_ie_sub" ]; }; then
+      mkdir -p "$_ie_work/held/$(dirname "$_ie_sub")"
+      mv "$_ie_dst/$_ie_sub" "$_ie_work/held/$_ie_sub"
+    fi
+  done < "$_ie_list"
+
+  _ie_rc=0
+  if harness_backup_path "$_ie_work/stage" "$_ie_dst"; then
+    { [ -e "$_ie_dst" ] || [ -L "$_ie_dst" ]; } && rm -rf "$_ie_dst"
+    cp -r "$_ie_work/stage" "$_ie_dst"
+  else
+    _ie_rc=1
+  fi
+
+  while IFS= read -r _ie_sub; do
+    if [ -e "$_ie_work/held/$_ie_sub" ] || [ -L "$_ie_work/held/$_ie_sub" ]; then
+      mkdir -p "$_ie_dst/$(dirname "$_ie_sub")"
+      mv "$_ie_work/held/$_ie_sub" "$_ie_dst/$_ie_sub"
+    fi
+  done < "$_ie_list"
+  rm -rf "$_ie_work"
+  return "$_ie_rc"
 }
 
 # harness_backup_path <src> <dst>
@@ -212,9 +279,28 @@ harness_backup_path() {
 # reads, so a line with no pairs behaves exactly as it did before T097 — that is
 # what makes a no-`--harness` install byte-identical to the old one.
 
-# harness_manifest_path <line> -> field 1, CR-stripped. Empty for a comment/blank.
+# harness_manifest_path <line> -> field 1, CR-stripped. Empty for a comment/blank
+# and for an exclusion line (`!<path>`, T113), so every consumer skips it as a path.
 harness_manifest_path() {
-  printf '%s' "$1" | tr -d '\r' | awk '$0 !~ /^[[:space:]]*(#|$)/ { print $1 }'
+  printf '%s' "$1" | tr -d '\r' | awk '$0 !~ /^[[:space:]]*(#|$|!)/ { print $1 }'
+}
+
+# harness_manifest_exclusions <manifest_path> -> one excluded path per line.
+# An exclusion is a literal path prefix (no globs): `!.claude/hooks/tests` drops
+# that directory and everything under it from install, lock and update.
+harness_manifest_exclusions() {
+  tr -d '\r' < "$1" | awk '$1 ~ /^![^[:space:]]/ { print substr($1, 2) }'
+}
+
+# harness_is_excluded <manifest_path> <rel_path>
+# 0 when <rel_path> equals an exclusion or sits under one. Matches whole path
+# segments: `!a/tests` does not exclude `a/tests_helper.py`.
+harness_is_excluded() {
+  _ie_rel="$2"
+  _ie_hit=$(harness_manifest_exclusions "$1" | while IFS= read -r _ie_ex; do
+    case "$_ie_rel" in "$_ie_ex"|"$_ie_ex"/*) echo 1; break ;; esac
+  done)
+  [ -n "$_ie_hit" ]
 }
 
 # harness_manifest_dest <line> <harness> -> the destination mapped to <harness>,

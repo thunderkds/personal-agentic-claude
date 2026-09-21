@@ -22,6 +22,13 @@
 # harness_install_canon_symlinks, not copies — a different mechanism, kept where
 # it already lives rather than folded into the copy-projection loop.
 #
+# ── Exclusions (T113) ────────────────────────────────────────────────────────
+# A line `!<path>` keeps <path> — and everything under it — out of the project: it is
+# not copied at install, not recorded in harness-lock.json, and not reported as a new
+# file on update. It is a literal path prefix matched on whole path segments (no
+# globs): `!.claude/hooks/tests` leaves `.claude/hooks/tests_helper.py` alone. A
+# project's own file at an excluded path is never touched, backed up, or deleted.
+#
 # `agents` has no `codex=` pair on purpose: Codex 0.149.1 has no agent-guide
 # directory it discovers, and DDR-0007/T097 forbid inventing one. Codex receives
 # the kit's role doctrine through AGENTS.md instead.
@@ -35,3 +42,4 @@ templates
 docs/claude-md
 AGENTS.md
 .cursor/rules
+!.claude/hooks/tests

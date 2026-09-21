@@ -381,12 +381,8 @@ if run_update "$T3"; then
   fi
   # Exactly one live set: after re-projection the vendor directory holds exactly
   # the fresh upstream's under-cap skills — no stale entry surviving beside them.
-  # Compared against UPSTREAM, not against the working copy's own skills/: per
-  # ADR-0001 update.sh deliberately never deletes a file dropped upstream from
-  # the canon ("leaving your local copy untouched (not deleted)"), so skills/
-  # legitimately still holds the pre-rename small-two. That pre-existing,
-  # documented behaviour is out of T097's scope; what T097 owns is that the
-  # PROJECTION is replaced wholesale and can never hold two live sets.
+  # Compared against UPSTREAM: the PROJECTION is replaced wholesale and can never
+  # hold two live sets.
   _upstream=$( cd "$FIXTURE/skills" && find . -mindepth 1 -maxdepth 1 -printf '%f\n' | LC_ALL=C sort | grep -v '^oversize-skill$' )
   _proj=$( cd "$T3/.codex/skills" && find . -mindepth 1 -maxdepth 1 -printf '%f\n' | LC_ALL=C sort )
   if [ "$_upstream" = "$_proj" ]; then
@@ -394,12 +390,13 @@ if run_update "$T3"; then
   else
     fail "AC9: projection diverges from upstream (upstream=[$_upstream] projection=[$_proj])"
   fi
-  # And state the canon's differing behaviour explicitly, so a future reader sees
-  # it was measured and accepted rather than overlooked.
-  if [ -d "$T3/skills/small-two" ]; then
-    pass "AC9: canon keeps the upstream-removed skill (ADR-0001 never deletes) — stated, not silent"
+  # T113 / ADR-0002 reverses ADR-0001's "never deletes": a skill the kit dropped
+  # and the user never edited is removed from the canon too, so the canon and
+  # the projection agree.
+  if [ ! -e "$T3/skills/small-two" ]; then
+    pass "AC9: canon drops the unedited upstream-removed skill (T113) — canon and projection agree"
   else
-    fail "AC9: update.sh deleted a canon skill, contradicting ADR-0001"
+    fail "AC9: update.sh left an unedited, upstream-removed skill in the canon"
   fi
 else
   fail "AC9: update.sh failed on a projected install"

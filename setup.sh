@@ -483,6 +483,7 @@ write_harness_lock() {
   # Enumerate every installed file: expand each MANIFEST dir to its files, add
   # the installed CLAUDE.md. Strip the leading ./, sort stably, de-duplicate.
   {
+    # shellcheck disable=SC2094  # read-only lookups of the MANIFEST the loop is reading
     while IFS= read -r _line; do
       # Field 1 only — the optional destination column (T097) is not a path, and
       # projected vendor dirs are generated + gitignored, never lock-tracked.
@@ -490,7 +491,9 @@ write_harness_lock() {
       [ -n "$_line" ] || continue
       [ -e "./$_line" ] || continue
       if [ -d "./$_line" ]; then
-        find "./$_line" -type f
+        find "./$_line" -type f | while IFS= read -r _f; do
+          harness_is_excluded "$_manifest" "${_f#./}" || printf '%s\n' "$_f"
+        done
       elif [ -f "./$_line" ]; then
         printf '%s\n' "./$_line"
       fi
