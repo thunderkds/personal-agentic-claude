@@ -57,5 +57,8 @@ jobs:
       - name: README-current test suite
         run: bash tests/test_readme_current.sh
 
+      - name: Update removals test suite (T113)
+        run: bash tests/test_update_removals.sh
+
       - name: CI wires every shell suite (drift guard)
         run: python3 tests/test_ci_wires_shell_suites.py
