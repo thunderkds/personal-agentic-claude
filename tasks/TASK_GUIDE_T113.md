@@ -5,7 +5,9 @@
 **Priority**: P2
 **Assigned agent**: Common-Infrastructure-Agent
 **Agent guide**: `agents/common-infrastructure.md`
-**Branch**: worktree off `feat/easy-kit-one-command`; merges back into it
+**Branch**: worktree off `main`; merges back into `main`. *(Retargeted 2026-09-18 — the integration branch
+`feat/easy-kit-one-command` is retired and is now a strict ancestor of `main`, same correction T112 took at
+`d1f91de`. Verified, not assumed: `git merge-base --is-ancestor` yes, 32 ahead / 0 behind.)*
 
 ---
 
@@ -143,7 +145,9 @@ T109's smoke-test defect happened.
 - [ ] Deleting a directory the user's shell is `cd`'d into is fine for a script, but never delete `skills/` or `agents/` roots themselves, even if empty
 - [ ] The `.claude/skills` → `../skills` symlink is re-created after pruning (existing step order must stay)
 - [ ] Hooks importing `tests/canon_paths.py` or any test helper → grep first; if found, that is a STOP-and-ask, not a silent move
-- [ ] **(From T109 Stage 4, P2-1)** `tests/test_install_update_smoke.sh` AC1 does NOT call `harness_manifest_path` — it carries its own copy of the field-1 awk rule (T109 fix). A new `!.claude/hooks/tests` MANIFEST line will make AC1 look for a path literally named `!.claude/hooks/tests` and fail. Update that copy in the same commit as the shared parser, or make the smoke suite source `lib/harness-fetch.sh` and call the function; either way prove it with the smoke suite green after the `!` line lands
+- [ ] **(From T109 Stage 4, P2-1)** `tests/test_install_update_smoke.sh` AC1 does NOT call `harness_manifest_path` — it carries its own copy of the field-1 awk rule (T109 fix), reading `$REPO_ROOT/MANIFEST` directly at `:102`. A new `!.claude/hooks/tests` MANIFEST line will make AC1 look for a path literally named `!.claude/hooks/tests` and fail. Update that copy in the same commit as the shared parser, or make the smoke suite source `lib/harness-fetch.sh` and call the function; either way prove it with the smoke suite green after the `!` line lands
+- [ ] **(Added 2026-09-18 — the guide under-scoped this.)** The smoke suite is **not the only** affected suite. Adding `!` changes the MANIFEST *grammar*, and **eight** suites write their own fixture MANIFEST: `test_harness_fetch.sh`, `test_harness_projection.sh`, `test_install_backups.sh`, `test_settings_merge.sh`, `test_setup.sh`, `test_t098_harness_presence.sh`, `test_update_claude_md.sh`, `test_update.sh`. None needs an exclusion line, but each must still **parse** one without treating `!path` as a literal path — verify by running all eight, not by reading them. T118 is the precedent to honour: a change that made `lib/merge-settings.py` a hard prerequisite left two fixture suites red because nobody ran them, and T111's Stage 4 ran neither suite its own change broke
+- [ ] **(Added 2026-09-18 — T112 interaction, new since this guide was written.)** `harness_copy_manifest` now calls `harness_backup_path` (`lib/harness-fetch.sh:154`) immediately after `harness_manifest_path` (`:138`). An excluded path must `continue` **before** the backup call — otherwise an excluded destination gets moved to `<path>.bak` and then never re-installed, which silently *renames* a user's directory instead of leaving it alone. Add a Success Criterion: install into a project that already has `.claude/hooks/tests/` → after install that directory is untouched and **no `.claude/hooks/tests.bak` exists**
 
 ---
 
@@ -177,7 +181,8 @@ T109's smoke-test defect happened.
 |------|--------|
 | `.claude/hooks/tests/**` | Stays in this repo; only its shipping changes |
 | `.claude/hooks/*.py` | Hook behaviour out of scope |
-| `install_claude`, `install_settings` | T110/T111/T112 edit those |
+| `install_claude`, `install_settings` | Out of scope. *(2026-09-18: the original reason — "T110/T111/T112 edit those" — is spent, all three are merged. The restriction stands on scope-locking alone, not on conflict avoidance.)* |
+| `harness_backup_path` | T112's, merged. T113 changes **when it is reached** (exclusions skip it), never its behaviour |
 
 ---
 
