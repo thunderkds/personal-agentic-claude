@@ -2478,3 +2478,28 @@ Supervisor to reconcile branches that are already one lineage, or to hold T114 b
 produced it. For a branch claim that is `git merge-base --is-ancestor` or `rev-list --left-right
 --count`, not reading the sentence again. If the check is not cheap enough to re-run, the bullet
 should name its evidence and its date so the next reader can tell measurement from assumption.
+
+## A batch guide ages against the tasks that merge after it, and the stalest part is its interactions (2026-09-21, T113)
+
+**Insight**: T113's guide was written 2026-09-12 as one of nine in the installer-rework batch, then sat
+unspawned while T109–T112 and T118 merged. By pickup three separate things in it were false, and they
+failed in increasing order of danger. The branch line named the retired integration branch — cheap, and
+the kind of drift a Supervisor already looks for. "Files Must NOT Touch" justified a restriction with
+"T110/T111/T112 edit those", a reason that expired when all three merged; the restriction was still
+right, but for a reason nobody had re-derived. The dangerous one was invisible from the guide entirely:
+T112 inserted a `harness_backup_path` call into `harness_copy_manifest` at exactly the point T113 must
+add its exclusion `continue`. An excluded path that reaches that call gets moved to `<path>.bak` and
+never re-installed — the installer silently renames a user's directory instead of leaving it alone. No
+amount of re-reading T113's guide surfaces that; only reading the call site it edits does.
+
+**Why it matters**: the batch-plus-queue shape guarantees this. A guide is a snapshot of a codebase at
+authoring time, and every sibling task that merges first invalidates part of it. The failure is
+asymmetric — branch and rationale drift are visible in the guide's own text, while interaction drift
+lives only in the code the guide points at, which is the drift that ships a destructive bug.
+
+**How to apply**: before spawning any guide written more than a merge ago, re-read the *call sites* the
+guide names, not just the guide. For each sibling task that merged since the authoring date, ask what it
+changed in this task's Files to Change. Write the answer into the guide as a dated correction and a new
+Success Criterion, and commit it before the spawn so the worktree can see it — a correction the agent
+cannot read is not a correction. Generalises [the handoff-warning entry above]: guide text, like a
+handoff bullet, is a measurement with a date on it.

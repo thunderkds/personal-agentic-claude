@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-09-12
+**Last updated**: 2026-09-21
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -22,7 +22,6 @@
 > is not Done. T115 adds `tests/test_docs_match_installer.py`; T116/T117 extend it, so a removed flag can't
 > creep back into a live doc.
 
-- [ ] **T113** — Update removes what upstream stopped shipping (unless edited), and kit tests stop shipping | Common-Infrastructure-Agent | C2 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_T113.md` | Review: `tasks/TASK_REVIEW_T113.md` | Depends on: T109 | Registered 2026-09-12
 - [ ] **T119** — An aborted install says what it actually did, not "nothing was replaced" | Common-Infrastructure-Agent | C0 | Risk: Low | P2 | Depends on: T112 | Registered 2026-09-18 from T112's `/verify`, measured not inferred. `harness_backup_path` aborts with *"Could not back up '<path>' … — nothing was replaced."* — true of that path, false of the run: `harness_copy_manifest` walks MANIFEST in order, so entries before the failing one are already replaced. Observed with a project owning `agents/` (early) and an unwritable `docs/` (late): the run printed `Backed up … './agents'`, then the error claiming nothing was replaced, and `agents/` afterwards held the kit's `backend.md`/`common-infrastructure.md`/`frontend.md` while `agents.bak/mine.md` survived. **No data loss — the data-safety contract T112 ships is intact**, which is why this is a separate P2 row and not a T112 re-open. Scope is the message wording, scoped to the one path (e.g. `'<path>' was not replaced; earlier paths in this run were already installed`) plus a test pinning it; **explicitly NOT a rollback** — rolling the run back is a larger design question and is not being smuggled in behind a wording fix. Two related observations recorded in `tasks/TASK_REVIEW_T112.md` and deliberately **not** in scope: the partial-install state has no rollback, and backups accumulate (`.bak`, `.bak.1`, …) with no outstanding-backup summary — the latter is an accepted cut on T112's own cut list
 - [ ] **T114** — One command — it detects the project, shows a menu, and asks before acting | Common-Infrastructure-Agent | C2 | Risk: Medium | P0 | HITL | Guide: `tasks/TASK_GUIDE_T114.md` | Review: `tasks/TASK_REVIEW_T114.md` | Depends on: T110, T111, T112, T113 | Registered 2026-09-12
 - [ ] **T115** — Choose CLIs and project type from a list — every install flag is gone, and the docs show one line | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | HITL | Guide: `tasks/TASK_GUIDE_T115.md` | Review: `tasks/TASK_REVIEW_T115.md` | Depends on: T114 | Registered 2026-09-12
@@ -65,6 +64,7 @@
 
 ### In Progress
 
+- [ ] **T113** — Update removes what upstream stopped shipping (unless edited), and kit tests stop shipping | Common-Infrastructure-Agent | C2 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_T113.md` | Review: `tasks/TASK_REVIEW_T113.md` | Depends on: T109 | Registered 2026-09-12 | **Stage 3 started 2026-09-21** — guide retargeted off `main` and corrected (`334ea79`: eight fixture suites must parse `!path`; excluded paths must `continue` before T112's `harness_backup_path`). `common-infrastructure` (sonnet, C2) in `wt-t113` on `fix/t113-update-removals`, spawned via Ghostty/`setsid`
 
 ### Ready for Review
 

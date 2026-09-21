@@ -47,6 +47,7 @@
      (mean 326, max 796). Reported by the size test, never enforced; /compact-memory's job. -->
 
 ### Decisions
+- [A batch guide ages against the tasks that merge after it, and the stalest part is its interactions](learnings.md) — T113: branch and rationale drift show in the guide's own text; the dangerous drift (T112 inserting `harness_backup_path` exactly where T113 must `continue`) is visible only at the call site. Re-read the call sites, not the guide, and commit the correction before the spawn.
 - [A handoff warning is a measurement, and editing the block around it does not refresh it](learnings.md) — the T110/T111 divergence bullet was carried forward verbatim under a new date while already false; re-run the check before re-asserting, don't re-read the sentence
 - [T112: install is backup-then-overwrite; `harness_backup_path` is public for T114](decisions.md) — a differing dest moves to `<path>.bak[.N]`, identical content is left alone, a symlink moves as the link, an existing backup is never overwritten, a failed mv aborts without replacing
 - [An identical-content short-circuit is what separates backup-on-install from backup-breeding](learnings.md) — judge a backup feature on run two: without it every update litters `.bak.N`; the happy-path "my data survived" assertion passes either way
