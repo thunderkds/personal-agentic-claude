@@ -75,8 +75,285 @@ exit=0
 > backup is the whole `skills/` directory (every skill), not the one edited file. `update.sh` is still
 > not runnable from a project (exit 2, "cannot open").
 
-**AFTER**: [menu transcripts]
+**AFTER** (implementer, 2026-09-22, commit `f2f6a03`; full transcripts from
+`EASYKIT_TRANSCRIPTS=<dir> bash tests/test_one_command_menu.sh`, ANSI colour codes and temp paths
+normalised). The blank lines at the top of SC1/SC3 are the pty echoing the queued answers — a test
+artifact, not installer output.
 
-**DELTA**: [one sentence]
+HITL — SC1 (empty repo, answers `⏎ ⏎ ⏎ ⏎`: Install, project type, packs, Proceed):
 
-**WITNESS**: [who ran it and when]
+```
+[info]  Using repo: file://<tmp>/kit
+[info]  Fetching (shallow clone): file://<tmp>/kit
+
+Easy Kit is not installed in <tmp>/sc1 yet.
+  1) Install
+  2) Cancel
+Choose [1]: [info]  Is this a greenfield (new) or brownfield (existing/legacy) project?
+        1) greenfield — use CLAUDE.md
+        2) brownfield — use CLAUDE_LEGACY.md
+        Choice [1/2]: [info]  Optional packs extend the core with domain-specific agents and skills.
+        Available packs:
+          1) mobile   — Flutter, React Native, Swift, Kotlin
+          2) data     — Pipelines, notebooks, ETL, dbt
+          3) devops   — Terraform, K8s, CI/CD, Docker
+          4) ai-agent — LLM apps, RAG, MCP servers, multi-agent
+          5) api      — REST/gRPC, OpenAPI, auth flows, SDK design
+        Enter numbers separated by spaces, or press Enter to skip: 
+Plan: Install Easy Kit into <tmp>/sc1
+  - CLI: Claude Code
+  - Project type: new project (CLAUDE.md)
+  - Copies in: agents, skills, .claude/hooks, templates, docs/claude-md, AGENTS.md, .cursor/rules, CLAUDE.md
+  - Existing paths that differ from the kit are moved aside first:
+      (none)
+  - Hooks: .claude/settings.json is created, or Easy Kit entries are merged into yours.
+Proceed? [Y/n] [info]  Installed .claude/settings.json (copy). Restart Claude Code to activate hooks.
+[info]  Wrote ./.claude/harness-lock.json (74 file hashes).
+[info]  Setup complete. Harness copied into <tmp>/sc1
+[info]  CLAUDE source: CLAUDE.md | lock: .claude/harness-lock.json
+[info]  Harnesses:claude
+```
+
+HITL — SC3 (installed repo, `skills/tdd/SKILL.md` edited, answers `2 ⏎ ⏎ ⏎`: Reinstall, type, packs, Proceed):
+
+```
+2
+
+
+
+[info]  Using repo: file://<tmp>/kit
+[info]  Fetching (shallow clone): file://<tmp>/kit
+
+Easy Kit is already installed in <tmp>/sc3.
+  1) Update (keeps your edits)
+  2) Reinstall (backs up your edits)
+  3) Cancel
+Choose [1]: [info]  Is this a greenfield (new) or brownfield (existing/legacy) project?
+        1) greenfield — use CLAUDE.md
+        2) brownfield — use CLAUDE_LEGACY.md
+        Choice [1/2]: [info]  Optional packs extend the core with domain-specific agents and skills.
+        Available packs:
+          1) mobile   — Flutter, React Native, Swift, Kotlin
+          2) data     — Pipelines, notebooks, ETL, dbt
+          3) devops   — Terraform, K8s, CI/CD, Docker
+          4) ai-agent — LLM apps, RAG, MCP servers, multi-agent
+          5) api      — REST/gRPC, OpenAPI, auth flows, SDK design
+        Enter numbers separated by spaces, or press Enter to skip: 
+Plan: Reinstall Easy Kit in <tmp>/sc3 (backs up your edits)
+  - Every kit file is replaced with a fresh copy, and the lock is rewritten.
+  - Project type: new project (CLAUDE.md)
+  - Your edited files are moved to <file>.bak first:
+      skills/tdd/SKILL.md
+  - Your own files that the kit does not ship are left alone.
+  - Hooks: Easy Kit entries are merged into .claude/settings.json (your own entries are kept).
+Proceed? [Y/n] [warn]  Backed up your existing './skills/tdd/SKILL.md' to './skills/tdd/SKILL.md.bak' before installing the kit's copy — compare and merge by hand, then delete the backup.
+[info]  Merged Easy Kit hooks into ./.claude/settings.json (your permissions and your own hook entries are kept).
+[info]  Harness 'claude': re-pointed .claude/{skills,agents} at the plain-root canon.
+[info]  Reinstall complete. Re-recorded ./.claude/harness-lock.json
+[info]  Setup complete. Harness copied into <tmp>/sc3
+[info]  CLAUDE source: CLAUDE.md | lock: .claude/harness-lock.json
+[info]  Harnesses:claude
+```
+
+HITL — SC6 (installed repo, same edit, `setsid -w sh setup.sh </dev/null`, exit 2):
+
+```
+[info]  Using repo: file://<tmp>/kit
+[info]  Fetching (shallow clone): file://<tmp>/kit
+[info]  No terminal — updating, keeping your edits (any file you edited is left as it is; re-run in a terminal to resolve).
+
+Plan: Update Easy Kit in <tmp>/sc6 (keeps your edits)
+  - Kit files you never edited are refreshed from upstream.
+  - Files to add or restore: 0
+  - You edited these; with no terminal they are kept as they are:
+      skills/tdd/SKILL.md
+  - Upstream no longer ships these and you never edited them; they will be removed:
+      (none)
+  - Upstream no longer ships these, but you edited them; they will be kept:
+      (none)
+  - Backed up: nothing. Update keeps your edits in place instead.
+  - Hooks: Easy Kit entries are merged into .claude/settings.json (your own entries are kept).
+[info]  No terminal — proceeding with the plan above.
+[warn]  conflict: 'skills/tdd/SKILL.md' has local changes since install
+[info]  diff (current vs upstream) for skills/tdd/SKILL.md:
+--- ./skills/tdd/SKILL.md	2026-09-22 13:43:11.512714179 +0700
++++ <fetch-tmp>/skills/tdd/SKILL.md	2026-09-22 13:43:11.790941217 +0700
+@@ -49,5 +49,3 @@
+ 
+ ### Communication Protocol
+ - **Default Notification**: "TDD complete for [Task ID]. N behaviors covered via vertical slices; all green. Refactors applied: [summary]."
+-
+-MY LOCAL EDIT
+  Resolve: [o]verwrite / [s]kip / [v]iew diff again: 
+[warn]  no input for 'skills/tdd/SKILL.md' — left your local version untouched; re-run interactively to resolve.
+[info]  Merged Easy Kit hooks into ./.claude/settings.json (your permissions and your own hook entries are kept).
+[info]  Harness 'claude': re-pointed .claude/{skills,agents} at the plain-root canon.
+[info]  Update complete. Re-recorded ./.claude/harness-lock.json
+[error] 1 conflict(s) could not be resolved (no interactive input). Re-run setup.sh in a terminal and choose Update to resolve them.
+```
+
+**DELTA**: re-running the one command in an installed project now asks — Update / Reinstall /
+Cancel, with a plan naming every backup and removal before `Proceed? [Y/n]` — instead of
+overwriting in place and moving the whole `skills/` directory aside; `sh update.sh` from a checkout
+runs that same Update, and alone it prints the install command (exit 1) instead of "cannot open".
+
+**WITNESS**: implementer (Common-Infrastructure-Agent, Claude Opus 5), 2026-09-22T06:45Z, in the
+worktree `wt-t114`. Not yet re-run by the Supervisor or the user.
+
+---
+
+## Implementer evidence (2026-09-22 — for the Stage 4 reviewer to re-run, not a ticked row)
+
+### Verification command, full output
+
+```
+Verification run 2026-09-22T06:45:23Z at f2f6a03 (shellcheck version: 0.11.0)
+$ bash tests/test_one_command_menu.sh -> exit 0 | ----- summary: 17 passed, 0 failed -----
+$ bash tests/test_setup.sh -> exit 0 | ----- summary: 18 passed, 0 failed -----
+$ bash tests/test_update.sh -> exit 0 | ----- summary: 31 passed, 0 failed -----
+$ bash tests/test_install_update_smoke.sh -> exit 0 | 9 passed, 0 failed
+$ bash tests/test_update_claude_md.sh -> exit 0 | ----- summary: 35 passed, 0 failed -----
+$ bash tests/test_settings_merge.sh -> exit 0 | --- 40 passed, 0 failed ---
+$ bash tests/test_install_backups.sh -> exit 0 | 13 passed, 0 failed
+$ bash tests/test_update_removals.sh -> exit 0 | 30 passed, 0 failed
+$ bash tests/test_t098_harness_presence.sh -> exit 0 | 20 passed, 0 failed
+$ bash tests/test_harness_projection.sh -> exit 0 | test_harness_projection.sh: 41 passed, 0 failed
+$ bash tests/test_harness_fetch.sh -> exit 0 | ----- summary: 9 passed, 0 failed -----
+$ bash tests/test_pack_choice_parsing.sh -> exit 0 | ----- summary: 15 passed, 0 failed -----
+$ bash tests/test_readme_current.sh -> exit 0 | 
+$ bash tests/test_shellcheck_clean.sh -> exit 0 | test_shellcheck_clean: PASS — exit 0, no output
+$ shellcheck -x setup.sh update.sh lib/harness-update.sh
+exit 0
+$ sh scripts/smoke-install.sh
+exit 0
+$ python3 tests/test_ci_wires_shell_suites.py
+----- summary: 4 passed, 0 failed -----
+```
+
+Every pre-existing suite's pass count equals its count on the pre-change tip `3612edc` (measured in a
+detached worktree at that commit before any edit): setup 18, update 31, smoke 9, CLAUDE.md 35,
+settings 40, backups 13, removals 30, t098 20, projection 41, fetch 9, pack parsing 15. No assertion
+was removed; converted suites now type their answers into a pty instead of stdin.
+
+`python3 -m pytest .claude/hooks/tests/ tests/ -q`: 843 passed, 6 failed — the same 6 fail on
+`3612edc` (memory budget ×5, `test_readme_is_at_most_75_lines`); none touch installer code.
+
+### New suite RED on the pre-change code
+
+`tests/test_one_command_menu.sh` + `tests/lib/pty.sh` copied into a worktree at `3612edc`:
+**1 passed, 16 failed**. The one pass is the MANIFEST-exclusion Reinstall case (a plain re-install
+already honoured `!` paths); M3 below is what proves that case discriminates.
+
+> Honest order note: the implementation was written before this suite, not strictly test-first; the
+> RED above was measured afterwards against the untouched pre-change commit.
+
+### Mutation controls (each applied, run, then reverted; revert byte-verified with `cmp`)
+
+M1 — `confirm_plan` returns 0 before reading input → **SC4 (the AC4 test) fails**:
+
+```
+== M1 (confirm_plan returns 0 before reading) 2026-09-22T06:41:19Z
+FAIL: SC1: default install via the menu (rc=0)
+PASS: SC2: 3) Cancel exits 0 with git status empty
+FAIL: SC4: plan rejection then cancel (rc=0)
+PASS: AC5: '9' and 'abc' each re-prompt; nothing changes
+PASS: AC5: invalid input on the install menu re-prompts; 2) Cancel writes nothing
+FAIL: SC3: reinstall backup (rc=0 plan-line=27 ask-line=0)
+PASS: SC3: exactly one backup made; lock rewritten with the kit's hash
+PASS: Reinstall leaves the project's own .claude/hooks/tests untouched; no tests.bak
+FAIL: AC3: Update plan contents (rc=2 rm=18 edit=16 ask=0)
+PASS: SC5: piped install read its answers from the terminal (brownfield took effect)
+PASS: SC6: no terminal -> Update, edit kept, exit 2, no menu, nothing reinstalled
+PASS: SC7: no terminal -> installs with the printed defaults, exit 0
+PASS: SC8: update.sh shows the same menu and runs Update (Enter, Enter)
+PASS: AC9: update.sh with no install exits 1 and writes nothing
+PASS: SC9: update.sh with no adjacent setup.sh prints the install command, exit 1
+PASS: AC9: update.sh is 8 lines of code (<= 15)
+PASS: seam: an unknown EASYKIT_ACTION is rejected before anything runs
+----- summary: 13 passed, 4 failed -----
+```
+
+M2 — `tty_read` reads stdin instead of `/dev/tty` → **SC5 (the AC7 test) fails**:
+
+```
+== M2 (tty_read reads stdin instead of /dev/tty) 2026-09-22T06:42:02Z
+PASS: SC1: Enter, Enter installs; menu showed Install/Cancel; plan confirmed
+PASS: SC2: 3) Cancel exits 0 with git status empty
+PASS: SC4: 'n' at the plan went back to the menu; Cancel left no change
+PASS: AC5: '9' and 'abc' each re-prompt; nothing changes
+PASS: AC5: invalid input on the install menu re-prompts; 2) Cancel writes nothing
+PASS: SC3: edit saved as skills/tdd/SKILL.md.bak, kit version installed, plan named it before Proceed
+PASS: SC3: exactly one backup made; lock rewritten with the kit's hash
+PASS: Reinstall leaves the project's own .claude/hooks/tests untouched; no tests.bak
+PASS: AC3: Update plan names the removal (skills/optimize) and the edited file before Proceed
+FAIL: SC5: piped install answers (rc=0)
+PASS: SC6: no terminal -> Update, edit kept, exit 2, no menu, nothing reinstalled
+PASS: SC7: no terminal -> installs with the printed defaults, exit 0
+PASS: SC8: update.sh shows the same menu and runs Update (Enter, Enter)
+PASS: AC9: update.sh with no install exits 1 and writes nothing
+PASS: SC9: update.sh with no adjacent setup.sh prints the install command, exit 1
+PASS: AC9: update.sh is 8 lines of code (<= 15)
+PASS: seam: an unknown EASYKIT_ACTION is rejected before anything runs
+----- summary: 16 passed, 1 failed -----
+
+```
+
+M3 (extra) — the fresh file list ignores MANIFEST `!` exclusions → the exclusion Reinstall test fails:
+
+```
+== M3 (fresh list ignores MANIFEST ! exclusions) 2026-09-22T06:42:30Z
+PASS: SC1: Enter, Enter installs; menu showed Install/Cancel; plan confirmed
+PASS: SC2: 3) Cancel exits 0 with git status empty
+FAIL: SC4: plan rejection then cancel (rc=0)
+PASS: AC5: '9' and 'abc' each re-prompt; nothing changes
+PASS: AC5: invalid input on the install menu re-prompts; 2) Cancel writes nothing
+PASS: SC3: edit saved as skills/tdd/SKILL.md.bak, kit version installed, plan named it before Proceed
+PASS: SC3: exactly one backup made; lock rewritten with the kit's hash
+FAIL: Reinstall touched an excluded path (rc=0)
+PASS: AC3: Update plan names the removal (skills/optimize) and the edited file before Proceed
+PASS: SC5: piped install read its answers from the terminal (brownfield took effect)
+PASS: SC6: no terminal -> Update, edit kept, exit 2, no menu, nothing reinstalled
+PASS: SC7: no terminal -> installs with the printed defaults, exit 0
+PASS: SC8: update.sh shows the same menu and runs Update (Enter, Enter)
+PASS: AC9: update.sh with no install exits 1 and writes nothing
+PASS: SC9: update.sh with no adjacent setup.sh prints the install command, exit 1
+PASS: AC9: update.sh is 8 lines of code (<= 15)
+PASS: seam: an unknown EASYKIT_ACTION is rejected before anything runs
+----- summary: 15 passed, 2 failed -----
+
+```
+
+### Docs updated (D1–D4), new text
+
+- **D1** `site/index.html` — install section lead: "To pull in newer Easy Kit changes later, run the
+  same command again from your repo root and choose **Update** (see below)." `#update-flow` opening:
+  "There is one command. Run the same install line again from inside your already-installed project
+  … Easy Kit sees it is installed and asks what to do:" + the menu, then "Before it changes anything
+  it shows a plan — the files it will ask you about, the files it will remove because the kit no
+  longer ships them, and anything it will back up — and ends with `Proceed? [Y/n]`. Answer `n` to go
+  back to the menu. **Cancel changes nothing.** With no terminal … it prints the safe default —
+  Update, keeping every edit — and takes it; Reinstall never runs without a terminal. (An existing
+  `update.sh` in a checkout still works: it runs the same Update action.)"
+- **D2** `RUNBOOK.md` Deploy step 4: "The installer shows a menu (`1) Install  2) Cancel`), then a plan
+  ending `Proceed? [Y/n]`: in a terminal, press Enter at every prompt to accept the defaults (Install,
+  new project, no packs, Proceed). To run the check with no terminal instead — it then prints and takes
+  the same defaults — prefix the line with `setsid -w` and append `</dev/null`."
+- **D3** `RUNBOOK.md` v2.0.0 rollback: "running an update (the one install command, action **Update**)
+  does **not** automatically turn those symlinks back …"; "then run the install command from the
+  restored `main` inside the repo. If it shows the action menu, choose **Reinstall**; v1's `setup.sh`
+  has no menu and reinstalls directly."; "Recovery there is the one install command against the
+  restored `main`, run inside the repo in a terminal, choosing **Update** — per-file, with the conflict
+  prompt." Failure Modes row: "An update exits 2 with 'conflict(s) could not be resolved' | Ran with no
+  terminal over locally-customized files (no terminal = Update, every edit kept) | Re-run the install
+  command in a real terminal, choose **Update**, and resolve per file".
+- **D4** `PROJECT_SPEC.md` Architecture Summary: "`setup.sh` is the one Easy Kit command (ADR-0002):
+  … detects whether Easy Kit is already installed (`.claude/harness-lock.json`), and offers a numbered
+  action menu … then a plan screen of what it will copy, back up and remove, and acts only after
+  `Proceed? [Y/n]`. Every prompt reads `/dev/tty`; with no terminal it prints and takes the safe
+  default (Install, or Update keeping every edit — never Reinstall). … `update.sh` is a thin alias for
+  the Update action."
+
+### Not verified here (stated, not claimed)
+
+- macOS / Windows Git Bash `/dev/tty` behaviour: untested (Linux, util-linux 2.39 `script`/`setsid` only).
+- CI itself: not run; `ci.yml` step added and the drift guard passes locally.
