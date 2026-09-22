@@ -279,6 +279,8 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agenti
 <ul class="lead">
   <li><strong>Untouched since install</strong> — silently overwritten with the latest upstream version.</li>
   <li><strong>Customized</strong> — shown a diff and prompted per file: overwrite / skip / view diff again.</li>
+  <li><strong>No longer shipped</strong> — a file the kit dropped is removed if you never edited it, and kept
+   (and named) if you did.</li>
   <li><strong><code>.claude/settings.json</code></strong> — not a <code>MANIFEST</code> file, so it is
     <em>merged</em> rather than copied: the kit's hooks are reconciled into it on install
     <em>and</em> on update, while your own permissions and your own hook entries are kept exactly as

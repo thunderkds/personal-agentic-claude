@@ -89,7 +89,7 @@ fi
 # harness_manifest_path() in lib/harness-fetch.sh.
 AC1_OK=1
 while IFS= read -r line; do
-  line=$(printf '%s' "$line" | tr -d '\r' | awk '$0 !~ /^[[:space:]]*(#|$)/ { print $1 }')
+  line=$(printf '%s' "$line" | tr -d '\r' | awk '$0 !~ /^[[:space:]]*(#|$|!)/ { print $1 }')
   case "$line" in '#'*|'') continue ;; esac
   installed_path="$TARGET1/$line"
   if [ ! -e "$installed_path" ]; then

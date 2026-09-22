@@ -232,12 +232,15 @@ build_fresh_file_list() {
   _manifest="$1"
   _out="$2"
   : > "$_out"
+  # shellcheck disable=SC2094  # read-only lookups of the MANIFEST the loop is reading
   while IFS= read -r _line; do
     _line=$(harness_manifest_path "$_line")   # field 1 only (T097)
     [ -n "$_line" ] || continue
     _src="$HARNESS_TEMP_DIR/$_line"
     if [ -d "$_src" ]; then
-      ( cd "$HARNESS_TEMP_DIR" && find "$_line" -type f ) >> "$_out"
+      ( cd "$HARNESS_TEMP_DIR" && find "$_line" -type f ) | while IFS= read -r _f; do
+        harness_is_excluded "$_manifest" "$_f" || printf '%s\n' "$_f"
+      done >> "$_out"
     elif [ -f "$_src" ]; then
       printf '%s\n' "$_line" >> "$_out"
     else
@@ -451,23 +454,106 @@ process_claude_md() {
   process_one_file "$_src" "$_dst" "CLAUDE.md" "$_lock" "$_decisions" "$_processed"
 }
 
-# ── Preserve lock entries not seen in this run (e.g. CLAUDE.md, removed-upstream)
-# Appends untouched prior entries to the decisions file so the rewritten lock
-# keeps them. Warns when an entry that WAS under a MANIFEST path is gone upstream.
+# ── Preserve, or remove, lock entries not seen in this run ───────────────────
+# A lock entry this run never processed is one upstream stopped shipping (or
+# CLAUDE.md, handled elsewhere). Under a MANIFEST path:
+#   - file unedited (hash == lock)  -> deleted, its now-empty dirs pruned, entry dropped
+#   - file edited                   -> kept, named, entry kept
+#   - already gone                  -> entry dropped
+# A user-added file is never in the lock, so it is never even considered.
+# Deletion is skipped (with an error, and DELETION_ABORTED=1) when the fresh
+# upstream looks corrupt: an empty file list, or a whole MANIFEST path missing.
+DELETION_ABORTED=0
+deletion_is_safe() {
+  _manifest="$1"
+  _fresh_list="$2"
+  [ -s "$_fresh_list" ] || return 1
+  while IFS= read -r _line; do
+    _line=$(harness_manifest_path "$_line")
+    [ -n "$_line" ] || continue
+    [ -e "$HARNESS_TEMP_DIR/$_line" ] || return 1
+  done < "$_manifest"
+  return 0
+}
+
+# Print the MANIFEST path that covers lock key $1 (empty if none).
+manifest_root_of() {
+  _k="$1"
+  _mf="$2"
+  while IFS= read -r _l; do
+    _l=$(harness_manifest_path "$_l")
+    [ -n "$_l" ] || continue
+    case "$_k" in "$_l"/*|"$_l") printf '%s' "$_l"; return 0 ;; esac
+  done < "$_mf"
+}
+
+# Remove now-empty directories above file $1, stopping before MANIFEST root $2.
+prune_empty_dirs() {
+  _d=$(dirname "$1")
+  while [ "$_d" != "$2" ] && [ "$_d" != "." ] && [ "$_d" != "/" ]; do
+    rmdir "./$_d" 2>/dev/null || break
+    _d=$(dirname "$_d")
+  done
+}
+
 carry_over_unprocessed() {
   _lock="$1"
   _manifest="$2"
   _decisions="$3"
   _processed="$4"
+  _fresh_list="$5"
+  _removed_units="$HARNESS_TEMP_DIR/.update-removed-units"
+  : > "$_removed_units"
+
+  _can_delete=1
+  if ! deletion_is_safe "$_manifest" "$_fresh_list"; then
+    _can_delete=0
+    DELETION_ABORTED=1
+    log_error "The fetched upstream looks incomplete (empty file list or a MANIFEST path missing) — nothing was removed. Re-run once the upstream is whole."
+  fi
 
   extract_lock_pairs "$_lock" | while IFS='	' read -r _k _h; do
     [ -n "$_k" ] || continue
     if grep -Fxq "$_k" "$_processed" 2>/dev/null; then
       continue
     fi
-    printf '%s\t%s\n' "$_k" "$_h" >> "$_decisions"
-    if is_under_manifest "$_k" "$_manifest"; then
-      log_warn "upstream no longer ships '$_k' — leaving your local copy untouched (not deleted)."
+    if ! is_under_manifest "$_k" "$_manifest"; then
+      printf '%s\t%s\n' "$_k" "$_h" >> "$_decisions"
+      continue
+    fi
+    # A lock value is untrusted the moment it becomes a path: never let an
+    # absolute path or a '..' segment reach rm.
+    case "$_k" in
+      /*|../*|*/../*|*/..|..)
+        printf '%s\t%s\n' "$_k" "$_h" >> "$_decisions"
+        log_warn "lock entry '$_k' is not a plain relative path — leaving it alone."
+        continue ;;
+    esac
+    if [ "$_can_delete" -ne 1 ]; then
+      printf '%s\t%s\n' "$_k" "$_h" >> "$_decisions"
+      continue
+    fi
+    if [ ! -e "./$_k" ] && [ ! -L "./$_k" ]; then
+      continue    # already gone: just drop the entry
+    fi
+    if [ -f "./$_k" ] && [ ! -L "./$_k" ] && [ "$(compute_file_hash "./$_k")" = "$_h" ]; then
+      rm -f "./$_k"
+      _root=$(manifest_root_of "$_k" "$_manifest")
+      prune_empty_dirs "$_k" "$_root"
+      # One "removed" line per unit: the top directory under the MANIFEST path
+      # (a skill), or the file itself when it sits directly in it.
+      _rest="${_k#"$_root"/}"
+      case "$_rest" in
+        */*) _unit="$_root/${_rest%%/*}" ;;
+        *)   _unit="$_k" ;;
+      esac
+      if ! grep -Fxq "$_unit" "$_removed_units" 2>/dev/null; then
+        printf '%s\n' "$_unit" >> "$_removed_units"
+        log_info "removed '$_unit' — upstream no longer ships it and you never edited it."
+      fi
+    else
+      printf '%s\t%s\n' "$_k" "$_h" >> "$_decisions"
+      log_warn "upstream no longer ships '$_k' — you edited it, so it is kept (delete it yourself if you no longer want it)."
     fi
   done
 }
@@ -619,7 +705,7 @@ main() {
   build_fresh_file_list "$manifest" "$fresh_list"
   process_files "$lock" "$fresh_list" "$decisions" "$processed"
   process_claude_md "$lock" "$decisions" "$processed"
-  carry_over_unprocessed "$lock" "$manifest" "$decisions" "$processed"
+  carry_over_unprocessed "$lock" "$manifest" "$decisions" "$processed" "$fresh_list"
   write_new_lock "$decisions" "$lock" "$FINAL_CLAUDE_MD_SOURCE"
 
   # Reconcile kit hook entries into the project's settings.json. Runs AFTER the
@@ -681,6 +767,11 @@ main() {
 
   if [ "$SETTINGS_FAILED" -ne 0 ]; then
     log_error "Update finished, but Easy Kit hooks were NOT merged (see the message above)."
+    exit 2
+  fi
+
+  if [ "$DELETION_ABORTED" -ne 0 ]; then
+    log_error "Update finished, but removal of files upstream no longer ships was skipped (see the message above)."
     exit 2
   fi
 }
