@@ -20,7 +20,7 @@
 
 ### ⚠️ Session handoff — read first (written 2026-09-22)
 
-- **T113 is Done, merged to `main` locally (2026-09-22, `8199feb`) — not yet pushed.** Stage 4
+- **T113 is Done, merged to `main` and pushed (2026-09-22, `8199feb`).** Stage 4
   clean, `/verify` PASS 2026-09-21. **T114 is now unblocked** (T110–T113 all Done).
 - **The T110/T111 branch divergence is RESOLVED — do not act on older handoffs that say otherwise.**
   Verified 2026-09-18: `feat/easy-kit-one-command` is a strict **ancestor** of `main`
