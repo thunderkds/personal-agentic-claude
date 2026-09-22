@@ -20,8 +20,8 @@
 
 ### ⚠️ Session handoff — read first (written 2026-09-22)
 
-- **T113 is Done, merged to `main` and pushed (2026-09-22, `8199feb`).** Stage 4
-  clean, `/verify` PASS 2026-09-21. **T114 is now unblocked** (T110–T113 all Done).
+- **T114 is Done, merged to `main` (2026-09-22, `d2642ea`).** One command with menu + plan screen;
+  `update.sh` is an alias. **Next: T115** (CLI/project-type menus, drop install flags), then T116 → T117; T119 anytime.
 - **The T110/T111 branch divergence is RESOLVED — do not act on older handoffs that say otherwise.**
   Verified 2026-09-18: `feat/easy-kit-one-command` is a strict **ancestor** of `main`
   (`git merge-base --is-ancestor` yes; 32 ahead / 0 behind). T111 merged to `main` at `4f766dd`,
@@ -38,6 +38,7 @@
   `lib/harness-fetch.sh` and T113 has landed — now unblocked.**
 
 
+- [T114: one command — menu, plan, confirm; Reinstall runs the removal pass](decisions.md) — prompts read /dev/tty before any write; no TTY never reinstalls; any lock rewrite must run carry_over first.
 - [T113: update removes unedited dropped files; MANIFEST `!` exclusions](decisions.md) — edited ones kept + named; no deletes on incomplete upstream; `!.claude/hooks/tests` stops kit tests shipping.
 
 <!-- Format: - [Title](cold-file.md#section) — one-line summary.

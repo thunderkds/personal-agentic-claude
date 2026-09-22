@@ -2184,5 +2184,21 @@ MANIFEST gains `!<path>` exclusions (whole-segment prefix) honoured by the parse
 update file list; an excluded path also skips the T112 backup, so a project's own dir is never
 renamed to `.bak`. `!.claude/hooks/tests` stops kit tests shipping into user projects.
 **Why**: ADR-0002 "No silent loss" — removal is safe only for bytes the kit provably still owns.
-**Files**: update.sh, lib/harness-fetch.sh, setup.sh, MANIFEST, tests/test_update_removals.sh (new),
+**Files**: update.sh (moved to lib/harness-update.sh by T114), lib/harness-fetch.sh, setup.sh, MANIFEST, tests/test_update_removals.sh (new),
 tests/test_harness_projection.sh (AC9 inverted), .github/workflows/ci.yml, RUNBOOK.md, site/index.html
+
+## T114: one command — detect, action menu, plan screen, confirm; update.sh is an alias (2026-09-22)
+**Decision**: `setup.sh` is the only command. It fetches first (temp dir only), then detects the lock:
+no lock → `1) Install 2) Cancel`; lock → `1) Update 2) Reinstall 3) Cancel`, default 1. A plan screen
+names backups, removals and kept-edited files, then `Proceed? [Y/n]`; `n` returns to the menu. Every
+prompt reads `/dev/tty` via `tty_read` (probe `( : </dev/tty )`, since the device can exist yet be
+unopenable); **all prompts precede any project write**, so Cancel/Ctrl-C/EOF change nothing. No TTY →
+safe default printed and taken (Install / Update keeping edits, exit 2 on unresolved), **never Reinstall**.
+Update's code moved verbatim to `lib/harness-update.sh`; `update.sh` is a 13-line alias via the internal
+undocumented `EASYKIT_ACTION=update` seam (unknown value = error).
+**Reinstall honours T113** (Stage 4 P1, fixed `9b3854c`): it runs `carry_over_unprocessed` before
+rewriting the lock — otherwise dropped kit files lost their lock entry and no Update could ever remove them.
+Any action that rewrites the lock from a fresh list must run the removal pass first.
+**Still on stdin**: `prompt_packs` (T115/T116 own it) — skipped silently under `curl | sh`.
+**Files**: setup.sh, lib/harness-update.sh (new), update.sh, tests/test_one_command_menu.sh (new),
+tests/lib/pty.sh (new), 10 suites converted to pty, ci.yml, RUNBOOK.md, site/index.html, PROJECT_SPEC.md
