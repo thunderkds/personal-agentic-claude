@@ -23,7 +23,6 @@
 > creep back into a live doc.
 
 - [ ] **T119** — An aborted install says what it actually did, not "nothing was replaced" | Common-Infrastructure-Agent | C0 | Risk: Low | P2 | Depends on: T112 | Registered 2026-09-18 from T112's `/verify`, measured not inferred. `harness_backup_path` aborts with *"Could not back up '<path>' … — nothing was replaced."* — true of that path, false of the run: `harness_copy_manifest` walks MANIFEST in order, so entries before the failing one are already replaced. Observed with a project owning `agents/` (early) and an unwritable `docs/` (late): the run printed `Backed up … './agents'`, then the error claiming nothing was replaced, and `agents/` afterwards held the kit's `backend.md`/`common-infrastructure.md`/`frontend.md` while `agents.bak/mine.md` survived. **No data loss — the data-safety contract T112 ships is intact**, which is why this is a separate P2 row and not a T112 re-open. Scope is the message wording, scoped to the one path (e.g. `'<path>' was not replaced; earlier paths in this run were already installed`) plus a test pinning it; **explicitly NOT a rollback** — rolling the run back is a larger design question and is not being smuggled in behind a wording fix. Two related observations recorded in `tasks/TASK_REVIEW_T112.md` and deliberately **not** in scope: the partial-install state has no rollback, and backups accumulate (`.bak`, `.bak.1`, …) with no outstanding-backup summary — the latter is an accepted cut on T112's own cut list
-- [ ] **T115** — Choose CLIs and project type from a list — every install flag is gone, and the docs show one line | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | HITL | Guide: `tasks/TASK_GUIDE_T115.md` | Review: `tasks/TASK_REVIEW_T115.md` | Depends on: T114 | Registered 2026-09-12
 - [ ] **T116** — Every pack ships as a dormant catalog; the broken install-time pack installer is removed | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T116.md` | Review: `tasks/TASK_REVIEW_T116.md` | Depends on: T115 (serialised — both rewrite `setup.sh` argument handling; approved breakdown said T114) | Registered 2026-09-12
 - [ ] **T117** — `select-packs` — the Supervisor recommends packs from the business domain and activates the ones the client approves | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | HITL | Guide: `tasks/TASK_GUIDE_T117.md` | Review: `tasks/TASK_REVIEW_T117.md` | Depends on: T116 | Registered 2026-09-12
 
@@ -63,6 +62,7 @@
 
 ### In Progress
 
+- [ ] **T115** — Choose CLIs and project type from a list — every install flag is gone, and the docs show one line | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | HITL | Guide: `tasks/TASK_GUIDE_T115.md` | Review: `tasks/TASK_REVIEW_T115.md` | Depends on: T114 | Registered 2026-09-12
 
 ### Ready for Review
 
