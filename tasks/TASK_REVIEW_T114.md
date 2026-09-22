@@ -8,17 +8,17 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | cancel = zero changes, invalid input, no-TTY never reinstalls, M1/M2 |
-| verify | ☐ pass / ☐ fail / ☐ N/A | |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **Docs updated per guide's "Documentation to Update" (new text quoted)** | ☐ pass / ☐ fail | D1 site #update-flow, D2–D3 RUNBOOK.md, D4 PROJECT_SPEC.md |
-| HITL: user reviewed menu transcripts (SC1, SC3, SC6) | ☐ pass / ☐ fail | |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | terminal text menu, no visual design surface; wording is reviewed through the HITL row above |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ N/A | no design system applies to plain terminal output |
-| **UI: Responsiveness at target viewports** | ☐ N/A | terminal output; no viewports |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_one_command_menu.sh` (+ `tests/lib/pty.sh`) — `22 passed, 0 failed` at `5dcf42b` (SC1–SC9, Reinstall removal P1 cases, no-TTY wording); 16/17 RED on pre-change code; output pasted below |
+| Verification command run | ☑ pass | Supervisor independent re-run 2026-09-22 at `9b3854c`: all 14 suites exit 0 + `shellcheck -x setup.sh update.sh lib/harness-update.sh` clean; implementer re-run at `5dcf42b` pasted below |
+| Negative cases hold | ☑ pass | cancel = zero changes, invalid input, no-TTY never reinstalls, M1/M2 RED (below); /verify probes: `9`/`abc` re-prompt, `n` back, Ctrl-C at confirm → porcelain empty |
+| verify | ☑ pass | /verify 2026-09-22, real `setup.sh` in a pty against a `file://` upstream: install, cancel, Reinstall `.bak`, dropped-file removal (unedited removed, edited kept + in lock), no-TTY exit 2 with edit kept, `cat setup.sh \| sh`, `update.sh` alone → rc 1. Two wording findings fixed in `5dcf42b` and re-checked live |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Supervisor Stage 4 2026-09-22: `main...feat/t114-one-command-menu` (setup.sh, lib/harness-update.sh, update.sh + callers). code-review: P1 1 (Reinstall skipped T113 removals) → fixed `9b3854c`; P3 2. security-review: no finding ≥8/10 |
+| Full smoke suite still green (no regression) | ☑ pass | `test_install_update_smoke.sh` 9/0; pytest 6 failures identical on `3612edc` (memory budget ×5, README length), none installer |
+| **Docs updated per guide's "Documentation to Update" (new text quoted)** | ☑ pass | D1 site #update-flow, D2–D3 RUNBOOK.md, D4 PROJECT_SPEC.md — quoted under "Docs updated (D1–D4)" |
+| HITL: user reviewed menu transcripts (SC1, SC3, SC6) | ☑ pass | User approved the wording 2026-09-22 ("approve"), after the two /verify wording fixes |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | terminal text menu, no visual design surface; wording is reviewed through the HITL row above |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | no design system applies to plain terminal output |
+| **UI: Responsiveness at target viewports** | ☑ N/A | terminal output; no viewports |
 
 ---
 
