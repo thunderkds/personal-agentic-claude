@@ -861,7 +861,7 @@ main() {
       reinstall)
         prompt_mode
         prompt_packs
-        plan_reinstall "$reinstall_backups" "$LOCK_FILE" "$fresh_list"
+        plan_reinstall "$reinstall_backups" "$LOCK_FILE" "$fresh_list" "$manifest"
         ;;
     esac
     confirm_plan && break

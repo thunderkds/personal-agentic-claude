@@ -357,3 +357,123 @@ PASS: seam: an unknown EASYKIT_ACTION is rejected before anything runs
 
 - macOS / Windows Git Bash `/dev/tty` behaviour: untested (Linux, util-linux 2.39 `script`/`setsid` only).
 - CI itself: not run; `ci.yml` step added and the drift guard passes locally.
+
+---
+
+## Stage 4 fix — BEFORE (P1: Reinstall skips the T113 removal contract)
+
+Repro on tip `1b11e7c`, before any code change: install, upstream stops shipping `skills/optimize` (never edited in the project), then Reinstall (menu choice 2). The plan does not mention it, the files survive, and the lock entry is gone — so no later Update can remove it.
+
+```text
+$ date -u; git rev-parse --short HEAD
+2026-09-22T08:02:27Z
+1b11e7c
+installed; lock has optimize: 1
+upstream dropped skills/optimize (unedited in project)
+reinstall rc=0
+23:Plan: Reinstall Easy Kit in /tmp/tmp.DmX2ixr2y2/proj (backs up your edits)
+24-  - Every kit file is replaced with a fresh copy, and the lock is rewritten.
+25-  - Project type: new project (CLAUDE.md)
+26-  - Your edited files are moved to <file>.bak first:
+27-      (none: no kit file has been edited)
+28-  - Your own files that the kit does not ship are left alone.
+29-  - Hooks: Easy Kit entries are merged into .claude/settings.json (your own entries are kept).
+30-Proceed? [Y/n] [info]  Merged Easy Kit hooks into ./.claude/settings.json (your permissions and your own hook entries are kept).
+31-[info]  Harness 'claude': re-pointed .claude/{skills,agents} at the plain-root canon.
+after reinstall: skills/optimize on disk: SKILL.md 
+after reinstall: lock entries for skills/optimize: 0
+```
+
+## Stage 4 fix — AFTER
+
+**Change.** `run_reinstall` now calls `carry_over_unprocessed` (processed list = the reinstall list: the fresh list + CLAUDE.md) before it rewrites the lock, and exits 2 when `DELETION_ABORTED` is set, the same way `run_update` does. `plan_update`'s classification loop and its removal lines were moved into `plan_removals` / `plan_print_removals`, which `plan_reinstall` now calls too (`setup.sh` passes it `$manifest`).
+
+**Test-harness note.** `tests/test_one_command_menu.sh:205` (the AC3 block, which was already there) ran `git revert -q`, which is not a valid flag, so the fixture restore always failed silently and `skills/optimize` stayed missing for every later block. I changed it to `git revert --no-edit HEAD >/dev/null`. The same bug is at line 306 (SC8, the last fixture change in the file); it does no harm there, so I left it alone.
+
+Same repro as BEFORE, on the fix:
+
+```text
+2026-09-22T08:08:56Z
+installed; lock has optimize: 1
+upstream dropped skills/optimize (unedited in project)
+reinstall rc=0
+23:Plan: Reinstall Easy Kit in /tmp/tmp.tyGhi9sfim/proj (backs up your edits)
+24-  - Every kit file is replaced with a fresh copy, and the lock is rewritten.
+25-  - Project type: new project (CLAUDE.md)
+26-  - Your edited files are moved to <file>.bak first:
+27-      (none: no kit file has been edited)
+28-  - Upstream no longer ships these and you never edited them; they will be removed:
+29-      skills/optimize
+30-  - Upstream no longer ships these, but you edited them; they will be kept:
+31-      (none)
+32-  - Your own files that the kit does not ship are left alone.
+33-  - Hooks: Easy Kit entries are merged into .claude/settings.json (your own entries are kept).
+34-Proceed? [Y/n] [info]  removed 'skills/optimize' — upstream no longer ships it and you never edited it.
+35-[info]  Merged Easy Kit hooks into ./.claude/settings.json (your permissions and your own hook entries are kept).
+36-[info]  Harness 'claude': re-pointed .claude/{skills,agents} at the plain-root canon.
+37-[info]  Reinstall complete. Re-recorded ./.claude/harness-lock.json
+after reinstall: skills/optimize on disk: 
+after reinstall: lock entries for skills/optimize: 0
+```
+
+RED (the new tests with the pre-fix `lib/harness-update.sh` + `setup.sh` from HEAD):
+
+```text
+2026-09-22T08:06:40Z
+$ bash tests/test_one_command_menu.sh   # lib/harness-update.sh + setup.sh at HEAD 1b11e7c, new tests applied
+PASS: SC1: Enter, Enter installs; menu showed Install/Cancel; plan confirmed
+PASS: SC2: 3) Cancel exits 0 with git status empty
+PASS: SC4: 'n' at the plan went back to the menu; Cancel left no change
+PASS: AC5: '9' and 'abc' each re-prompt; nothing changes
+PASS: AC5: invalid input on the install menu re-prompts; 2) Cancel writes nothing
+PASS: SC3: edit saved as skills/tdd/SKILL.md.bak, kit version installed, plan named it before Proceed
+PASS: SC3: exactly one backup made; lock rewritten with the kit's hash
+PASS: Reinstall leaves the project's own .claude/hooks/tests untouched; no tests.bak
+PASS: AC3: Update plan names the removal (skills/optimize) and the edited file before Proceed
+FAIL: Reinstall: unedited dropped file (rc=0 rm=0 ask=30)
+FAIL: Reinstall: edited dropped file (rc=0 keep=0 ask=30)
+FAIL: Reinstall: incomplete upstream (rc=0)
+PASS: SC5: piped install read its answers from the terminal (brownfield took effect)
+PASS: SC6: no terminal -> Update, edit kept, exit 2, no menu, nothing reinstalled
+PASS: SC7: no terminal -> installs with the printed defaults, exit 0
+PASS: SC8: update.sh shows the same menu and runs Update (Enter, Enter)
+PASS: AC9: update.sh with no install exits 1 and writes nothing
+PASS: SC9: update.sh with no adjacent setup.sh prints the install command, exit 1
+PASS: AC9: update.sh is 8 lines of code (<= 15)
+PASS: seam: an unknown EASYKIT_ACTION is rejected before anything runs
+----- summary: 17 passed, 3 failed -----
+```
+
+Mutation control (only the `carry_over_unprocessed` call removed from `run_reinstall`; the plan still names the files, but the run leaves them in place):
+
+```text
+2026-09-22T08:07:02Z
+$ bash tests/test_one_command_menu.sh   # MUTANT: carry_over_unprocessed call deleted from run_reinstall
+ lib/harness-update.sh | 90 ++++++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 60 insertions(+), 30 deletions(-)
+FAIL: Reinstall: unedited dropped file (rc=0 rm=29 ask=34)
+FAIL: Reinstall: edited dropped file (rc=0 keep=31 ask=34)
+FAIL: Reinstall: incomplete upstream (rc=0)
+----- summary: 17 passed, 3 failed -----
+```
+
+Full Verification Command list, on the fix:
+
+```text
+2026-09-22T08:07:33Z
+$ bash tests/test_one_command_menu.sh -> exit 0 | ----- summary: 20 passed, 0 failed -----
+$ bash tests/test_setup.sh -> exit 0 | ----- summary: 18 passed, 0 failed -----
+$ bash tests/test_update.sh -> exit 0 | ----- summary: 31 passed, 0 failed -----
+$ bash tests/test_install_update_smoke.sh -> exit 0 | 9 passed, 0 failed
+$ bash tests/test_update_claude_md.sh -> exit 0 | ----- summary: 35 passed, 0 failed -----
+$ bash tests/test_settings_merge.sh -> exit 0 | --- 40 passed, 0 failed ---
+$ bash tests/test_install_backups.sh -> exit 0 | 13 passed, 0 failed
+$ bash tests/test_update_removals.sh -> exit 0 | 30 passed, 0 failed
+$ bash tests/test_t098_harness_presence.sh -> exit 0 | 20 passed, 0 failed
+$ bash tests/test_harness_projection.sh -> exit 0 | test_harness_projection.sh: 41 passed, 0 failed
+$ bash tests/test_harness_fetch.sh -> exit 0 | ----- summary: 9 passed, 0 failed -----
+$ bash tests/test_pack_choice_parsing.sh -> exit 0 | ----- summary: 15 passed, 0 failed -----
+$ bash tests/test_readme_current.sh -> exit 0 | 
+$ bash tests/test_shellcheck_clean.sh -> exit 0 | 
+$ shellcheck -x setup.sh update.sh -> exit 0
+```

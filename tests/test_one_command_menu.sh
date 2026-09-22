@@ -202,7 +202,50 @@ if [ "$RC" -eq 0 ] && [ "$RM_AT" -gt 0 ] && [ "$RM_AT" -lt "$ASK_AT" ] \
 else
   fail "AC3: Update plan contents (rc=$RC rm=$RM_AT edit=$EDIT_AT ask=$ASK_AT)"; cat "$T.log" >&2
 fi
-git -C "$FIXTURE" revert -q --no-edit HEAD
+git -C "$FIXTURE" revert --no-edit HEAD >/dev/null
+
+# ── Stage 4 P1 — Reinstall keeps T113's removal contract (same as Update) ────
+# Upstream stops shipping skills/optimize (unedited) and, in the second repo,
+# the project has edited it. Reinstall removes the unedited one, keeps the edited
+# one in the lock, and names both on the plan before Proceed.
+lock_has() { grep -qF "\"$2\"" "$1"; }
+T=$(installed_repo rein-rm)
+T2=$(installed_repo rein-keep)
+printf '\nMY SKILL EDIT\n' >> "$T2/skills/optimize/SKILL.md"
+T3=$(installed_repo rein-incomplete)
+git -C "$FIXTURE" rm -q -r skills/optimize && git -C "$FIXTURE" commit -q -m "stop shipping optimize"
+pty_setup "$T" '2\n\n\n\n'; RC=$?
+RM_AT=$(line_of "$T.log" '      skills/optimize')
+ASK_AT=$(line_of "$T.log" 'Proceed? [Y/n]')
+if [ "$RC" -eq 0 ] && [ ! -e "$T/skills/optimize" ] \
+   && ! lock_has "$T/.claude/harness-lock.json" "skills/optimize/SKILL.md" \
+   && grep -q 'they will be removed' "$T.log" && [ "$RM_AT" -gt 0 ] && [ "$RM_AT" -lt "$ASK_AT" ]; then
+  pass "Reinstall: unedited file upstream dropped is removed, named on the plan, out of the lock"
+else
+  fail "Reinstall: unedited dropped file (rc=$RC rm=$RM_AT ask=$ASK_AT)"; cat "$T.log" >&2
+fi
+pty_setup "$T2" '2\n\n\n\n'; RC=$?
+KEEP_AT=$(line_of "$T2.log" '      skills/optimize/SKILL.md')
+ASK_AT=$(line_of "$T2.log" 'Proceed? [Y/n]')
+if [ "$RC" -eq 0 ] && grep -q 'MY SKILL EDIT' "$T2/skills/optimize/SKILL.md" \
+   && lock_has "$T2/.claude/harness-lock.json" "skills/optimize/SKILL.md" \
+   && grep -q 'you edited them; they will be kept' "$T2.log" \
+   && [ "$KEEP_AT" -gt 0 ] && [ "$KEEP_AT" -lt "$ASK_AT" ]; then
+  pass "Reinstall: edited file upstream dropped is kept, stays in the lock, named on the plan"
+else
+  fail "Reinstall: edited dropped file (rc=$RC keep=$KEEP_AT ask=$ASK_AT)"; cat "$T2.log" >&2
+fi
+# Incomplete upstream (a whole MANIFEST path gone): nothing removed, said so, exit 2.
+git -C "$FIXTURE" rm -q -r .cursor/rules && git -C "$FIXTURE" commit -q -m "incomplete upstream"
+pty_setup "$T3" '2\n\n\n\n'; RC=$?
+if [ "$RC" -eq 2 ] && [ -f "$T3/skills/optimize/SKILL.md" ] \
+   && lock_has "$T3/.claude/harness-lock.json" "skills/optimize/SKILL.md" \
+   && grep -q 'Removals skipped' "$T3.log" && grep -q 'nothing was removed' "$T3.log"; then
+  pass "Reinstall: incomplete upstream removes nothing, says so, exits 2 (as Update)"
+else
+  fail "Reinstall: incomplete upstream (rc=$RC)"; cat "$T3.log" >&2
+fi
+git -C "$FIXTURE" reset -q --hard HEAD~2
 
 # ── SC5 / AC7 — `cat setup.sh | sh`: prompts still reach the terminal ───────
 # Answers: Enter (Install), 2 (existing/legacy project), Enter (plan). The pack

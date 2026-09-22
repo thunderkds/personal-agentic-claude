@@ -552,6 +552,51 @@ reinstall_needs_backup() {
   return 0
 }
 
+# ── Plan: what upstream stopped shipping (shared by Update and Reinstall) ────
+# Same classification carry_over_unprocessed applies: an unedited file is listed
+# (once per unit) in $4 for removal, an edited one in $5 to keep. Sets _p_safe=0
+# when the fetched upstream looks incomplete, so nothing will be removed.
+plan_removals() {
+  _pr_lock="$1"
+  _pr_manifest="$2"
+  _pr_fresh="$3"
+  _pr_rm="$4"
+  _pr_keep="$5"
+  : > "$_pr_rm"; : > "$_pr_keep"
+  _p_safe=1
+  deletion_is_safe "$_pr_manifest" "$_pr_fresh" || _p_safe=0
+  extract_lock_pairs "$_pr_lock" | while IFS='	' read -r _k _h; do
+    [ -n "$_k" ] || continue
+    [ "$_k" = "CLAUDE.md" ] && continue
+    grep -Fxq "$_k" "$_pr_fresh" 2>/dev/null && continue
+    is_under_manifest "$_k" "$_pr_manifest" || continue
+    case "$_k" in /*|../*|*/../*|*/..|..) continue ;; esac
+    [ -e "./$_k" ] || [ -L "./$_k" ] || continue
+    if [ -f "./$_k" ] && [ ! -L "./$_k" ] && [ "$(compute_file_hash "./$_k")" = "$_h" ]; then
+      _root=$(manifest_root_of "$_k" "$_pr_manifest")
+      _rest="${_k#"$_root"/}"
+      case "$_rest" in
+        */*) _unit="$_root/${_rest%%/*}" ;;
+        *)   _unit="$_k" ;;
+      esac
+      grep -Fxq "$_unit" "$_pr_rm" 2>/dev/null || printf '%s\n' "$_unit" >> "$_pr_rm"
+    else
+      printf '%s\n' "$_k" >> "$_pr_keep"
+    fi
+  done
+}
+
+plan_print_removals() {
+  if [ "$_p_safe" -eq 1 ]; then
+    printf '  - Upstream no longer ships these and you never edited them; they will be removed:\n'
+    plan_list "$1" "(none)"
+  else
+    printf '  - Removals skipped: the fetched upstream looks incomplete, so nothing will be removed.\n'
+  fi
+  printf '  - Upstream no longer ships these, but you edited them; they will be kept:\n'
+  plan_list "$2" "(none)"
+}
+
 # ── Plan: Update ─────────────────────────────────────────────────────────────
 # Classifies with the same rules the run applies (process_one_file for the
 # fresh files, carry_over_unprocessed for what upstream stopped shipping), so
@@ -585,27 +630,7 @@ plan_update() {
     printf '%s\n' "CLAUDE.md" >> "$_p_ask"
   fi
 
-  _p_safe=1
-  deletion_is_safe "$_manifest" "$_fresh_list" || _p_safe=0
-  extract_lock_pairs "$_lock" | while IFS='	' read -r _k _h; do
-    [ -n "$_k" ] || continue
-    [ "$_k" = "CLAUDE.md" ] && continue
-    grep -Fxq "$_k" "$_fresh_list" 2>/dev/null && continue
-    is_under_manifest "$_k" "$_manifest" || continue
-    case "$_k" in /*|../*|*/../*|*/..|..) continue ;; esac
-    [ -e "./$_k" ] || [ -L "./$_k" ] || continue
-    if [ -f "./$_k" ] && [ ! -L "./$_k" ] && [ "$(compute_file_hash "./$_k")" = "$_h" ]; then
-      _root=$(manifest_root_of "$_k" "$_manifest")
-      _rest="${_k#"$_root"/}"
-      case "$_rest" in
-        */*) _unit="$_root/${_rest%%/*}" ;;
-        *)   _unit="$_k" ;;
-      esac
-      grep -Fxq "$_unit" "$_p_rm" 2>/dev/null || printf '%s\n' "$_unit" >> "$_p_rm"
-    else
-      printf '%s\n' "$_k" >> "$_p_keep"
-    fi
-  done
+  plan_removals "$_lock" "$_manifest" "$_fresh_list" "$_p_rm" "$_p_keep"
 
   printf '\n'
   printf 'Plan: Update Easy Kit in %s (keeps your edits)\n' "$(pwd)"
@@ -617,14 +642,7 @@ plan_update() {
     printf '  - You edited these; with no terminal they are kept as they are:\n'
   fi
   plan_list "$_p_ask" "(none)"
-  if [ "$_p_safe" -eq 1 ]; then
-    printf '  - Upstream no longer ships these and you never edited them; they will be removed:\n'
-    plan_list "$_p_rm" "(none)"
-  else
-    printf '  - Removals skipped: the fetched upstream looks incomplete, so nothing will be removed.\n'
-  fi
-  printf '  - Upstream no longer ships these, but you edited them; they will be kept:\n'
-  plan_list "$_p_keep" "(none)"
+  plan_print_removals "$_p_rm" "$_p_keep"
   printf '  - Backed up: nothing. Update keeps your edits in place instead.\n'
   printf '  - Hooks: Easy Kit entries are merged into .claude/settings.json (your own entries are kept).\n'
 }
@@ -636,6 +654,9 @@ plan_reinstall() {
   _backups="$1"
   _lock="$2"
   _fresh_list="$3"
+  _manifest="$4"
+  _p_rm="$HARNESS_TEMP_DIR/.plan-remove"
+  _p_keep="$HARNESS_TEMP_DIR/.plan-keep"
   : > "$_backups"
   while IFS= read -r _rel <&3; do
     [ -n "$_rel" ] || continue
@@ -644,6 +665,7 @@ plan_reinstall() {
   done 3< "$_fresh_list"
   reinstall_needs_backup "$HARNESS_TEMP_DIR/$CLAUDE_SRC" ./CLAUDE.md CLAUDE.md "$_lock" \
     && printf '%s\n' "CLAUDE.md" >> "$_backups"
+  plan_removals "$_lock" "$_manifest" "$_fresh_list" "$_p_rm" "$_p_keep"
 
   printf '\n'
   printf 'Plan: Reinstall Easy Kit in %s (backs up your edits)\n' "$(pwd)"
@@ -651,6 +673,7 @@ plan_reinstall() {
   printf '  - Project type: %s\n' "$(project_type_label)"
   printf '  - Your edited files are moved to <file>.bak first:\n'
   plan_list "$_backups" "(none: no kit file has been edited)"
+  plan_print_removals "$_p_rm" "$_p_keep"
   printf '  - Your own files that the kit does not ship are left alone.\n'
   printf '  - Hooks: Easy Kit entries are merged into .claude/settings.json (your own entries are kept).\n'
 }
@@ -726,7 +749,8 @@ run_update() {
 
 # ── The Reinstall action (T114) ──────────────────────────────────────────────
 # Backs up exactly the files plan_reinstall listed (T112 helper, per file), then
-# copies every fresh kit file and rewrites the lock from the fresh list — never
+# copies every fresh kit file, applies the removal contract (as Update), and
+# rewrites the lock from the fresh list plus what that keeps — never
 # from a disk scan, so a user's own file under a kit directory is not recorded
 # as the kit's (a later Update would otherwise delete it as "no longer shipped").
 # MANIFEST `!` exclusions are honoured because the fresh list already omits them.
@@ -750,6 +774,9 @@ run_reinstall() {
     install_file "$_src" "./$_rel"
     printf '%s\t%s\n' "$_rel" "$(compute_file_hash "$_src")" >> "$_decisions"
   done 3< "$HARNESS_TEMP_DIR/.reinstall-list"
+  # T113's contract, as in Update: what upstream stopped shipping is removed if
+  # unedited, kept (and kept in the lock) if edited; a non-MANIFEST entry stays.
+  carry_over_unprocessed "$_lock" "$_manifest" "$_decisions" "$HARNESS_TEMP_DIR/.reinstall-list" "$_fresh_list"
   write_new_lock "$_decisions" "$_lock" "$CLAUDE_SRC"
 
   update_settings
@@ -757,6 +784,10 @@ run_reinstall() {
   log_info "Reinstall complete. Re-recorded $_lock"
   if [ "$SETTINGS_FAILED" -ne 0 ]; then
     log_error "Reinstall finished, but Easy Kit hooks were NOT merged (see the message above)."
+    exit 2
+  fi
+  if [ "$DELETION_ABORTED" -ne 0 ]; then
+    log_error "Reinstall finished, but removal of files upstream no longer ships was skipped (see the message above)."
     exit 2
   fi
 }
