@@ -6,7 +6,8 @@
 **Type**: HITL — the user reviews the real menu transcript before Done
 **Assigned agent**: Common-Infrastructure-Agent
 **Agent guide**: `agents/common-infrastructure.md`
-**Branch**: worktree off `feat/easy-kit-one-command`; merges back into it
+**Branch**: worktree `../wt-t114` off `main` as branch `feat/t114-one-command-menu`; merges back into `main`
+  (retargeted 2026-09-22: `feat/easy-kit-one-command` is fully merged into `main`)
 
 ---
 
@@ -115,6 +116,10 @@ bash tests/test_install_backups.sh
 bash tests/test_update_removals.sh
 bash tests/test_t098_harness_presence.sh
 bash tests/test_harness_projection.sh
+bash tests/test_harness_fetch.sh
+bash tests/test_pack_choice_parsing.sh
+bash tests/test_readme_current.sh
+bash tests/test_shellcheck_clean.sh
 shellcheck -x setup.sh update.sh
 ```
 
@@ -133,7 +138,7 @@ shellcheck -x setup.sh update.sh
 
 ## Approach
 
-**Pattern reference**: `prompt_conflict` in `update.sh:196` — a `while` loop that re-prompts on invalid
+**Pattern reference**: `prompt_conflict` in `update.sh:258` — a `while` loop that re-prompts on invalid
 input and treats EOF as "no answer, take the safe path". That is the contract every menu in this task
 follows. For pty-driven tests, `memory/learnings.md` (T108): `script -qec` reaches `[ -t 0 ]`/`/dev/tty`
 prompts a pipe cannot.
@@ -167,6 +172,8 @@ one `/dev/tty` reader used by every prompt.
 - [ ] The fetch happens before the plan screen (the plan needs upstream content to know what will be backed up) — it writes only to the temp dir
 - [ ] Windows Git Bash / macOS `/dev/tty` behaviour — note as untested if not verifiable here; do not claim it
 - [ ] `setsid` is util-linux; tests needing it must skip with a named message where absent, never pass silently
+- [ ] **(Added 2026-09-22, T113 landed after this guide.)** Update now *removes* unedited files upstream stopped shipping. "Shows exactly what it will do" means the plan screen must list those removals too, alongside backups — not only backups (AC3)
+- [ ] **(Added 2026-09-22, T113.)** MANIFEST `!<path>` exclusions: Reinstall's backup pass must skip excluded paths exactly as install does (a project's own `.claude/hooks/tests` is never renamed to `.bak`)
 - [ ] Old `~/.supervisor` symlink-model install still refused with the migration message before any menu
 
 ---
@@ -180,7 +187,7 @@ one `/dev/tty` reader used by every prompt.
 
 | # | Doc | What is wrong today → what it must say |
 |---|-----|----------------------------------------|
-| D1 | `site/index.html` `#update-flow` opening (`:264-268`) | "`update.sh` is a separate script … `sh /path/to/personal-agentic-claude/update.sh`" → run the same one command inside the project and choose **Update**; describe the plan screen and that Cancel changes nothing |
+| D1 | `site/index.html` `#update-flow` opening (`:262-270`, incl. the `sh update.sh` lead just above it) | "`update.sh` is a separate script … `sh /path/to/personal-agentic-claude/update.sh`" → run the same one command inside the project and choose **Update**; describe the plan screen and that Cancel changes nothing |
 | D2 | `RUNBOOK.md` Deploy step 4 health check (`:49-60`) | The install line now shows a menu → state how the check answers it (accept defaults in a terminal, or run with no terminal to take the printed defaults) so the check stays runnable |
 | D3 | `RUNBOOK.md` v2.0.0 rollback exposure (`:91-102`) and Failure Modes row `:191` | `bash update.sh` / `bash setup.sh` instructions → the one command with the action to pick (Update / Reinstall); the "conflicts could not be resolved" remediation becomes "re-run in a terminal and choose Update" |
 | D4 | `PROJECT_SPEC.md` Architecture Summary (`:23`) | Describes `setup.sh` reading `MANIFEST` and a separate update → one command that detects install vs update and confirms before acting (ADR-0002) |
@@ -204,7 +211,7 @@ one `/dev/tty` reader used by every prompt.
 | File | Reason |
 |------|--------|
 | `--harness` / `--copy` / `--pack=` parsing, `prompt_packs`, `install_pack` | T115/T116 |
-| `README.md`, `site/index.html`, `RUNBOOK.md` | T115 |
+| `README.md`; the site's install/options sections | T115 — **the D1–D4 doc rows above are this task's and override this line** (corrected 2026-09-22: the row used to forbid the very files D1–D3 require) |
 | `lib/merge-settings.py`, backup helper internals | Owned by T111/T112 — call them, don't change them |
 
 ---
