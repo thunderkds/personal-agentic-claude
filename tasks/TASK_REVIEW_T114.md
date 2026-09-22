@@ -477,3 +477,92 @@ $ bash tests/test_readme_current.sh -> exit 0 |
 $ bash tests/test_shellcheck_clean.sh -> exit 0 | 
 $ shellcheck -x setup.sh update.sh -> exit 0
 ```
+
+---
+
+## /verify wording fixes — BEFORE
+
+Live run of `bash tests/test_one_command_menu.sh` at `9b3854c`, with the two new assertions added and no
+code changed (2026-09-22T08:38:53Z). Both lines are quoted from the real run output:
+
+```text
+FAIL: Reinstall plan: says 'no kit file has been edited' beside an edited file
+26:  - Your edited files are moved to <file>.bak first:
+27:      (none: no kit file has been edited)
+28:  - Upstream no longer ships these and you never edited them; they will be removed:
+30:  - Upstream no longer ships these, but you edited them; they will be kept:
+FAIL: SC6: no-terminal output prints the Resolve prompt
+27:  Resolve: [o]verwrite / [s]kip / [v]iew diff again: 
+28:[warn]  no input for 'skills/tdd/SKILL.md' — left your local version untouched; re-run interactively to resolve.
+----- summary: 20 passed, 2 failed -----
+```
+
+## /verify wording fixes — AFTER
+
+Changes: `plan_reinstall` empty-backup text is now "(none: no file the kit ships now has been edited)";
+`prompt_conflict` returns "eof" without printing the Resolve prompt when `TTY_OK` is not 1 (the caller's
+"[warn]  no input for …" line and the diff are unchanged). New assertions in `tests/test_one_command_menu.sh`
+(RED above, GREEN below). Note: the first GREEN attempt failed only on my own assertion, which looked for
+`+MY LOCAL EDIT`; the diff is current→upstream, so the edit reads `-MY LOCAL EDIT` — assertion corrected.
+
+```text
+PASS: Reinstall plan: empty-backup wording does not deny the edited file it lists
+PASS: SC6: no conflict prompt printed without a terminal; warning and diff kept
+```
+
+Full Verification Command list, on the fix:
+
+```text
+2026-09-22T08:41:02Z
+$ bash tests/test_one_command_menu.sh -> exit 0 | ----- summary: 22 passed, 0 failed -----
+$ bash tests/test_setup.sh -> exit 0 | ----- summary: 18 passed, 0 failed -----
+$ bash tests/test_update.sh -> exit 0 | ----- summary: 31 passed, 0 failed -----
+$ bash tests/test_install_update_smoke.sh -> exit 0 | 9 passed, 0 failed
+$ bash tests/test_update_claude_md.sh -> exit 0 | ----- summary: 35 passed, 0 failed -----
+$ bash tests/test_settings_merge.sh -> exit 0 | --- 40 passed, 0 failed ---
+$ bash tests/test_install_backups.sh -> exit 0 | 13 passed, 0 failed
+$ bash tests/test_update_removals.sh -> exit 0 | 30 passed, 0 failed
+$ bash tests/test_t098_harness_presence.sh -> exit 0 | 20 passed, 0 failed
+$ bash tests/test_harness_projection.sh -> exit 0 | test_harness_projection.sh: 41 passed, 0 failed
+$ bash tests/test_harness_fetch.sh -> exit 0 | ----- summary: 9 passed, 0 failed -----
+$ bash tests/test_pack_choice_parsing.sh -> exit 0 | ----- summary: 15 passed, 0 failed -----
+$ bash tests/test_readme_current.sh -> exit 0 |
+$ bash tests/test_shellcheck_clean.sh -> exit 0 |
+$ shellcheck -x setup.sh update.sh -> exit 0
+```
+
+HITL — SC6 after the fix (installed repo, one edit, `setsid -w sh setup.sh </dev/null`, exit 2):
+
+```text
+[info]  Using repo: file:///tmp/one-command-test.6pZgMT/kit
+[info]  Fetching (shallow clone): file:///tmp/one-command-test.6pZgMT/kit
+[info]  No terminal — updating, keeping your edits (any file you edited is left as it is; re-run in a terminal to resolve).
+
+Plan: Update Easy Kit in /tmp/one-command-test.6pZgMT/sc6 (keeps your edits)
+  - Kit files you never edited are refreshed from upstream.
+  - Files to add or restore: 0
+  - You edited these; with no terminal they are kept as they are:
+      skills/tdd/SKILL.md
+  - Upstream no longer ships these and you never edited them; they will be removed:
+      (none)
+  - Upstream no longer ships these, but you edited them; they will be kept:
+      (none)
+  - Backed up: nothing. Update keeps your edits in place instead.
+  - Hooks: Easy Kit entries are merged into .claude/settings.json (your own entries are kept).
+[info]  No terminal — proceeding with the plan above.
+[warn]  conflict: 'skills/tdd/SKILL.md' has local changes since install
+[info]  diff (current vs upstream) for skills/tdd/SKILL.md:
+--- ./skills/tdd/SKILL.md	2026-09-22 15:41:23.940727171 +0700
++++ /tmp/harness-fetch.gNLFq4/skills/tdd/SKILL.md	2026-09-22 15:41:24.220953831 +0700
+@@ -49,5 +49,3 @@
+ 
+ ### Communication Protocol
+ - **Default Notification**: "TDD complete for [Task ID]. N behaviors covered via vertical slices; all green. Refactors applied: [summary]."
+-
+-MY LOCAL EDIT
+[warn]  no input for 'skills/tdd/SKILL.md' — left your local version untouched; re-run interactively to resolve.
+[info]  Merged Easy Kit hooks into ./.claude/settings.json (your permissions and your own hook entries are kept).
+[info]  Harness 'claude': re-pointed .claude/{skills,agents} at the plain-root canon.
+[info]  Update complete. Re-recorded ./.claude/harness-lock.json
+[error] 1 conflict(s) could not be resolved (no interactive input). Re-run setup.sh in a terminal and choose Update to resolve them.
+```

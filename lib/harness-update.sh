@@ -141,6 +141,8 @@ CONFLICT_DECISION=""
 prompt_conflict() {
   _cur="$1"   # working-copy path
   _fresh="$2" # freshly-fetched upstream path
+  # No terminal: nobody to ask, so print no prompt — the caller's warning says it.
+  [ "$TTY_OK" -eq 1 ] || { CONFLICT_DECISION="eof"; return 0; }
   while :; do
     printf '  Resolve: [o]verwrite / [s]kip / [v]iew diff again: ' >&2
     if ! tty_read; then
@@ -672,7 +674,7 @@ plan_reinstall() {
   printf '  - Every kit file is replaced with a fresh copy, and the lock is rewritten.\n'
   printf '  - Project type: %s\n' "$(project_type_label)"
   printf '  - Your edited files are moved to <file>.bak first:\n'
-  plan_list "$_backups" "(none: no kit file has been edited)"
+  plan_list "$_backups" "(none: no file the kit ships now has been edited)"
   plan_print_removals "$_p_rm" "$_p_keep"
   printf '  - Your own files that the kit does not ship are left alone.\n'
   printf '  - Hooks: Easy Kit entries are merged into .claude/settings.json (your own entries are kept).\n'

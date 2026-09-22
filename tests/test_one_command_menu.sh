@@ -235,6 +235,13 @@ if [ "$RC" -eq 0 ] && grep -q 'MY SKILL EDIT' "$T2/skills/optimize/SKILL.md" \
 else
   fail "Reinstall: edited dropped file (rc=$RC keep=$KEEP_AT ask=$ASK_AT)"; cat "$T2.log" >&2
 fi
+# /verify: the empty-backup line must stay true when an edited file is kept.
+if grep -q 'Upstream no longer ships these, but you edited them' "$T2.log" \
+   && ! grep -q 'no kit file has been edited' "$T2.log"; then
+  pass "Reinstall plan: empty-backup wording does not deny the edited file it lists"
+else
+  fail "Reinstall plan: says 'no kit file has been edited' beside an edited file"; grep -n 'edited' "$T2.log" >&2
+fi
 # Incomplete upstream (a whole MANIFEST path gone): nothing removed, said so, exit 2.
 git -C "$FIXTURE" rm -q -r .cursor/rules && git -C "$FIXTURE" commit -q -m "incomplete upstream"
 pty_setup "$T3" '2\n\n\n\n'; RC=$?
@@ -273,6 +280,13 @@ if [ "$HAVE_SETSID" -eq 1 ]; then
     pass "SC6: no terminal -> Update, edit kept, exit 2, no menu, nothing reinstalled"
   else
     fail "SC6: no-terminal update (rc=$RC)"; cat "$T.log" >&2
+  fi
+  # /verify: with no terminal there is nobody to ask — no prompt line, only the warning.
+  if ! grep -qF 'Resolve: [o]verwrite' "$T.log" \
+     && grep -q "no input for '$EDITED'" "$T.log" && grep -qF -- '-MY LOCAL EDIT' "$T.log"; then
+    pass "SC6: no conflict prompt printed without a terminal; warning and diff kept"
+  else
+    fail "SC6: no-terminal output prints the Resolve prompt"; grep -n "Resolve\|no input" "$T.log" >&2
   fi
 else
   skip "SC6: setsid (util-linux) not found — cannot remove the controlling terminal"
