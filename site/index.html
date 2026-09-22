@@ -260,19 +260,31 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agenti
   <code>sh -c "$(curl ...)" --</code> form: a plain <code>curl ... | sh --harness codex</code> pipe
   does not work, for the same reason it does not work for <code>--pack</code> (see below).
 </p>
-<p class="lead">To pull in newer harness changes later, run the update script from your repo root:</p>
-<pre class="install">sh update.sh</pre>
+<p class="lead">To pull in newer Easy Kit changes later, run the same command again from your repo root and choose <strong>Update</strong> (see below).</p>
 </section>
 
 <section id="update-flow">
 <h2>Update flow</h2>
 <p class="lead">
-  <code>update.sh</code> is a separate script from <code>setup.sh</code> — run it from inside your
-  already-installed project, which must still be a git repository:
+  There is one command. Run the same install line again from inside your already-installed
+  project, which must still be a git repository. Easy Kit sees it is installed and asks what to do:
 </p>
-<pre class="install">sh /path/to/personal-agentic-claude/update.sh</pre>
+<pre class="install">Easy Kit is already installed in /path/to/your-project.
+  1) Update (keeps your edits)
+  2) Reinstall (backs up your edits)
+  3) Cancel
+Choose [1]:</pre>
 <p class="lead">
-  It re-fetches the framework fresh, then for every <code>MANIFEST</code> file — plus
+  Before it changes anything it shows a plan — the files it will ask you about, the files it will
+  remove because the kit no longer ships them, and anything it will back up — and ends with
+  <code>Proceed? [Y/n]</code>. Answer <code>n</code> to go back to the menu. <strong>Cancel changes
+  nothing.</strong> With no terminal (CI, containers, <code>ssh</code> without <code>-t</code>) there
+  is no menu: it prints the safe default — Update, keeping every edit — and takes it; Reinstall never
+  runs without a terminal. (An existing <code>update.sh</code> in a checkout still works: it runs the
+  same Update action.)
+</p>
+<p class="lead">
+  <strong>Update</strong> re-fetches the framework fresh, then for every <code>MANIFEST</code> file — plus
   <code>CLAUDE.md</code> — compares your project's current copy against the content hash recorded
   at the last install/update (<code>.claude/harness-lock.json</code>):
 </p>

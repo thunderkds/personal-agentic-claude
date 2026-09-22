@@ -16,6 +16,9 @@ set -u
 
 SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 REPO_ROOT=$(CDPATH='' cd -- "$SCRIPT_DIR/.." && pwd)
+# shellcheck source=tests/lib/pty.sh
+. "$SCRIPT_DIR/lib/pty.sh"
+detach_from_terminal "$0" "$@"
 SETUP="$REPO_ROOT/setup.sh"
 UPDATE="$REPO_ROOT/update.sh"
 
@@ -83,13 +86,22 @@ run_setup() {
          bash "$SETUP" </dev/null >"$WORK/setup.log" 2>&1 )
 }
 
-# Run update.sh with stdin from $2 (a file: /dev/null or a canned answer file).
+# Run update.sh. $2 = /dev/null: no terminal (the safe no-input path).
+# $2 = a canned answer file: the answers are typed into a real terminal (T114:
+# prompts read /dev/tty, never stdin) after accepting the action menu (Enter =
+# Update) and the plan (Enter = Proceed).
 run_update() {
   _target="$1"
   _stdin="$2"
-  ( cd "$_target" \
-      && SUPERVISOR_REPO="file://$FIXTURE" \
-         bash "$UPDATE" <"$_stdin" >"$WORK/update.log" 2>&1 )
+  if [ "$_stdin" = /dev/null ]; then
+    ( cd "$_target" \
+        && SUPERVISOR_REPO="file://$FIXTURE" \
+           bash "$UPDATE" <"$_stdin" >"$WORK/update.log" 2>&1 )
+  else
+    ( cd "$_target" \
+        && SUPERVISOR_REPO="file://$FIXTURE" \
+           run_in_pty "\n\n$(cat "$_stdin")\n" "bash '$UPDATE'" >"$WORK/update.log" 2>&1 )
+  fi
 }
 
 # Freshly install a target repo; returns via $NEW_TARGET.

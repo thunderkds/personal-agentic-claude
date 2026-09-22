@@ -27,6 +27,11 @@ SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 REPO_ROOT=$(CDPATH='' cd -- "$SCRIPT_DIR/.." && pwd)
 SETUP="$REPO_ROOT/setup.sh"
 UPDATE="$REPO_ROOT/update.sh"
+# T114: update.sh is a thin alias; the update logic lives in this library.
+UPDATE_LIB="$REPO_ROOT/lib/harness-update.sh"
+# shellcheck source=tests/lib/pty.sh
+. "$SCRIPT_DIR/lib/pty.sh"
+detach_from_terminal "$0" "$@"
 
 PASS=0
 FAIL=0
@@ -201,7 +206,7 @@ fi
 # Test 5 (AC5) — the special case is removed from resolve_projection_harnesses,
 # not shadowed by a parallel rule
 # =============================================================================
-RESOLVE_BODY=$(awk '/^resolve_projection_harnesses\(\) \{/,/^\}/' "$UPDATE")
+RESOLVE_BODY=$(awk '/^resolve_projection_harnesses\(\) \{/,/^\}/' "$UPDATE_LIB")
 if printf '%s' "$RESOLVE_BODY" | grep -q '\[ "\$_h" = "claude" \] && continue'; then
   fail "AC5: 'claude' special-case continue still present in resolve_projection_harnesses"
 else
@@ -211,18 +216,20 @@ fi
 # =============================================================================
 # Test 6 (AC6) — anti-vacuity: revert the fix in place, AC1 goes red again
 # =============================================================================
-# Reconstructs the pre-T098 update.sh by re-inserting the exact special case
+# Reconstructs the pre-T098 update logic by re-inserting the exact special case
 # this task removes and un-gating the symlink install call, via a literal
 # string substitution on the CURRENT fixed source (self-contained: does not
 # depend on git history staying in any particular shape).
-# update.sh sources lib/harness-fetch.sh relative to its OWN location
-# ($SCRIPT_DIR/lib/harness-fetch.sh), so the probe script must live in a
-# directory with a sibling lib/ — a symlink onto the real one is enough.
+# Since T114 that logic lives in lib/harness-update.sh, sourced by setup.sh
+# (which update.sh runs) relative to its OWN location — so the probe is a copy
+# of the kit's scripts with the mutated library as its lib/.
 REVERT_DIR="$WORK/revert-probe"
-mkdir -p "$REVERT_DIR"
-ln -s "$REPO_ROOT/lib" "$REVERT_DIR/lib"
+mkdir -p "$REVERT_DIR/lib"
+cp "$SETUP" "$UPDATE" "$REVERT_DIR/"
+cp "$REPO_ROOT/lib/"* "$REVERT_DIR/lib/"
 REVERTED_UPDATE="$REVERT_DIR/update.sh"
-python3 - "$UPDATE" "$REVERTED_UPDATE" <<'PYEOF'
+REVERTED_LIB="$REVERT_DIR/lib/harness-update.sh"
+python3 - "$UPDATE_LIB" "$REVERTED_LIB" <<'PYEOF'
 import sys
 src, dst = sys.argv[1], sys.argv[2]
 text = open(src).read()
@@ -232,20 +239,19 @@ replacement_a = '  for _h in $VALID_HARNESSES; do\n    [ "$_h" = "claude" ] && c
 assert text.count(needle_a) == 1, "resolve_projection_harnesses anchor not found exactly once"
 text = text.replace(needle_a, replacement_a, 1)
 
-needle_b = '  case " $PROJECTION_HARNESSES " in\n    *" claude "*) harness_install_canon_symlinks . ; claude_linked=1 ;;\n  esac\n'
-replacement_b = '  harness_install_canon_symlinks .\n  claude_linked=1\n'
+needle_b = '  case " $PROJECTION_HARNESSES " in\n    *" claude "*) harness_install_canon_symlinks . ; _rp_linked=1 ;;\n  esac\n'
+replacement_b = '  harness_install_canon_symlinks .\n  _rp_linked=1\n'
 assert text.count(needle_b) == 1, "symlink-install gate anchor not found exactly once"
 text = text.replace(needle_b, replacement_b, 1)
 
 open(dst, 'w').write(text)
 PYEOF
-if [ ! -s "$REVERTED_UPDATE" ]; then
+if [ ! -s "$REVERTED_LIB" ]; then
   fail "AC6: revert probe generation failed — see script output above"
 fi
-chmod +x "$REVERTED_UPDATE"
-if diff -q "$UPDATE" "$REVERTED_UPDATE" >/dev/null 2>&1; then
-  fail "AC6: revert probe is byte-identical to the fixed update.sh — probe is not testing anything"
-elif ! grep -q '\[ "\$_h" = "claude" \] && continue' "$REVERTED_UPDATE"; then
+if diff -q "$UPDATE_LIB" "$REVERTED_LIB" >/dev/null 2>&1; then
+  fail "AC6: revert probe is byte-identical to the fixed update logic — probe is not testing anything"
+elif ! grep -q '\[ "\$_h" = "claude" \] && continue' "$REVERTED_LIB"; then
   fail "AC6: revert probe does not contain the special case being tested against"
 fi
 

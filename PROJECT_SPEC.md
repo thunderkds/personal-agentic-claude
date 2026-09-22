@@ -20,7 +20,7 @@
 
 ## Architecture Summary
 
-The supervisor repo (`per-agentic-claude`) is a general framework. A `MANIFEST` file lists all resource paths to deploy. `setup.sh` reads `MANIFEST`, clones the repo to `~/.supervisor` (or `$SUPERVISOR_PATH`), symlinks each listed resource into the target project, prompts for greenfield vs brownfield, and seeds project-specific scaffold (`tasks/`, `memory/MEMORY.md`). `update.sh` pulls the latest from the central clone and reports changes. Both scripts are idempotent, POSIX-compatible, and emit colored output.
+The supervisor repo (`per-agentic-claude`) is a general framework. A `MANIFEST` file lists all resource paths to deploy. `setup.sh` is the one Easy Kit command (ADR-0002): run inside a git repository, it fetches the kit into a temp clone, detects whether Easy Kit is already installed (`.claude/harness-lock.json`), and offers a numbered action menu — `Install / Cancel`, or `Update (keeps your edits) / Reinstall (backs up your edits) / Cancel` — then a plan screen of what it will copy, back up and remove, and acts only after `Proceed? [Y/n]`. Every prompt reads `/dev/tty`; with no terminal it prints and takes the safe default (Install, or Update keeping every edit — never Reinstall). Install copies each MANIFEST path in as real files and records content hashes in the lock; Update (`lib/harness-update.sh`) refreshes unedited files, asks per edited file, and removes unedited files upstream stopped shipping. `update.sh` is a thin alias for the Update action. Scripts are POSIX sh and emit colored output.
 
 ---
 

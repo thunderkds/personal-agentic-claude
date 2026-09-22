@@ -17,8 +17,8 @@ if ! command -v "$SHELLCHECK" >/dev/null 2>&1; then
   exit 1
 fi
 
-# Same five files, same order, as .github/workflows/ci.yml's shellcheck step.
-if OUTPUT=$("$SHELLCHECK" -x setup.sh update.sh scripts/validate.sh \
+# Same six files, same order, as .github/workflows/ci.yml's shellcheck step.
+if OUTPUT=$("$SHELLCHECK" -x setup.sh update.sh lib/harness-update.sh scripts/validate.sh \
   scripts/smoke-install.sh tests/test_harness_projection.sh 2>&1); then
   STATUS=0
 else
