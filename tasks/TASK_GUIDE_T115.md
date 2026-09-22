@@ -6,7 +6,8 @@
 **Type**: HITL — the user reviews the menu transcript and the new install section before Done
 **Assigned agent**: Common-Infrastructure-Agent
 **Agent guide**: `agents/common-infrastructure.md`
-**Branch**: worktree off `feat/easy-kit-one-command`; merges back into it
+**Branch**: worktree `../wt-t115` off `main` as branch `feat/t115-cli-project-menus`; merges back into `main`
+  (retargeted 2026-09-22: `feat/easy-kit-one-command` is fully merged into `main`)
 
 ---
 
@@ -108,6 +109,14 @@ bash tests/test_t098_harness_presence.sh
 bash tests/test_setup.sh
 bash tests/test_update.sh
 bash tests/test_install_update_smoke.sh
+bash tests/test_update_claude_md.sh
+bash tests/test_settings_merge.sh
+bash tests/test_install_backups.sh
+bash tests/test_update_removals.sh
+bash tests/test_harness_fetch.sh
+bash tests/test_pack_choice_parsing.sh
+bash tests/test_readme_current.sh
+bash tests/test_shellcheck_clean.sh
 python3 -m pytest .claude/hooks/tests/ tests/ -q
 shellcheck -x setup.sh update.sh lib/harness-update.sh
 ```
@@ -128,7 +137,7 @@ shellcheck -x setup.sh update.sh lib/harness-update.sh
 ## Approach
 
 **Pattern reference**: T114's action menu + `/dev/tty` reader (same file, merged before this task) for the
-menus; `resolve_pack_choices` (`setup.sh:187`) for comma-tolerant number parsing — reuse its normalisation
+menus; `resolve_pack_choices` (`setup.sh:200`) for comma-tolerant number parsing — reuse its normalisation
 idea for the CLI multi-pick before T116 deletes it.
 
 **Vital slice**: the CLI multi-pick menu, the no-arguments rule, and the one-line docs.
@@ -146,6 +155,11 @@ idea for the CLI multi-pick before T116 deletes it.
 - [ ] `command -v` returning an alias/function in the user's shell — the script runs in `sh`, so only real executables count; fine, but test with a fake executable on a temp `PATH`
 - [ ] Site HTML still passes `tests/test_site_content.py` roster assertions
 - [ ] `SUPERVISOR_REPO` remains an undocumented dev/test seam — not mentioned in README/site
+- [ ] **(Added 2026-09-22, T114 landed after this guide.)** T114 already built the pieces this task extends — reuse, don't rebuild: `tty_read`/`TTY_OK`, `choose_action`, `confirm_plan`, the plan screens (`plan_install` in `setup.sh`; `plan_reinstall` in `lib/harness-update.sh`, which already print CLI + project type — AC4 is mostly wording), and the no-TTY line `No terminal — installing with the defaults: CLI …, new project (CLAUDE.md).` which must switch to the AC3/AC7 terms. The project-type prompt is still `prompt_mode` (greenfield/brownfield) — AC3 replaces its wording; it already reads `/dev/tty`
+- [ ] **(Added 2026-09-22, T114.)** Update's CLI set comes from `HARNESSES_REQUESTED` (the `--harness` flags) plus presence (T098). With flags gone, `HARNESSES_REQUESTED` is always empty on Update — keep presence-only behaviour and remove the dead variable; the "both links deleted" restore path becomes **Reinstall → pick Claude Code** (D3). Test it
+- [ ] **(Added 2026-09-22, T114.)** `update.sh` forwards `"$@"` to `setup.sh`, so `update.sh --harness claude` must hit the AC6 no-options error (exit 1, names the flag, nothing written). Add it to SC4
+- [ ] **(Added 2026-09-22, T114.)** `prompt_packs` still reads stdin (`[ -t 0 ]` + `read`) — T116's, leave it; but under a pty test it still asks, so feed it an Enter like T114's suites do
+- [ ] **Pre-existing red, not yours (2026-09-22):** full pytest on `main` has 6 failures — `test_readme_is_at_most_75_lines` (AC10 fixes it) and 5 memory-budget tests. The 5 memory-budget failures are expected to remain; record them as baseline, do not "fix" them
 - [ ] `memory/learnings.md`: ugrep wraps `grep` in this environment — use `command grep` in any grep-based test
 
 ---
@@ -158,7 +172,7 @@ idea for the CLI multi-pick before T116 deletes it.
 
 | # | Doc | What is wrong today → what it must say |
 |---|-----|----------------------------------------|
-| D1 | `README.md` install section (`:33-65`) | Two flag forms + `--harness` explanation → one line, one sentence on the menus (CLIs, project type); total file ≤ 75 lines (AC10) |
+| D1 | `README.md` install section (line refs in D1–D8 are from 2026-09-12 — locate by section anchor; T114 moved some) | Two flag forms + `--harness` explanation → one line, one sentence on the menus (CLIs, project type); total file ≤ 75 lines (AC10) |
 | D2 | `site/index.html` `#install` (`:235-260`) | `--harness` examples and the `sh -c "$(curl …)" --` note → one line + a short description of the three menus |
 | D3 | `site/index.html` `#update-flow` "Which harnesses get updated" (`:279-300`) | `--harness` wording → user word "CLIs"; adding a CLI later = run the command, choose **Reinstall**, pick the CLI; the both-links-deleted edge restored the same way |
 | D4 | `site/index.html` `#install-variants` (`:303-316`) | "brownfield … clone this repo somewhere, invoke that checkout's `setup.sh` by path" → project type is a menu choice that works under `curl \| sh`; keep the fork-install variant |
@@ -186,7 +200,7 @@ idea for the CLI multi-pick before T116 deletes it.
 | File | Reason |
 |------|--------|
 | `prompt_packs`, `resolve_pack_choices`, `install_pack`, `install_abs` | T116 |
-| `packs/**`, `templates/PACK_template.md`, `docs/claude-md/folder-structure.md` | T117 |
+| `packs/**`, `templates/PACK_template.md`; the **pack** wording in `docs/claude-md/folder-structure.md` | T117 — **D7's `--harness`/`update.sh` lines (`:80-99`) are this task's** (corrected 2026-09-22: the row used to forbid the file D7 requires) |
 | `tests/test_readme_slim.py` cap value | Must pass by shrinking the README, not by raising the cap |
 | `lib/harness-update.sh` update internals | T114-owned |
 
