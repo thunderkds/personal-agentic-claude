@@ -7,11 +7,13 @@
 #   - fresh install produces REAL file copies (not symlinks) of MANIFEST paths + CLAUDE.md
 #   - .claude/harness-lock.json is written with one hash entry per installed file
 #   - a non-git target directory is rejected non-zero, before any file is written
-#   - a second run overwrites edited files unconditionally (setup always overwrites)
+#   - a second run choosing Reinstall overwrites edited files with the kit's copy
+#     (T114: re-running on an installed project now asks first; the no-terminal
+#     default is Update, which keeps edits — see tests/test_one_command_menu.sh)
 #   - no $SUPERVISOR_PATH / ~/.supervisor directory is created or required
 #
-# Runs non-interactively by redirecting stdin from /dev/null (so setup.sh's
-# `[ -t 0 ]` prompts default to greenfield / no packs).
+# Runs non-interactively: stdin from /dev/null and no terminal (the suite detaches
+# itself, tests/lib/pty.sh), so setup.sh takes its printed safe defaults.
 #
 # Run: bash tests/test_setup.sh   (or: sh tests/test_setup.sh)
 set -u
@@ -19,6 +21,9 @@ set -u
 # ── Locate setup.sh under test (relative to this script) ─────────────────────
 SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 REPO_ROOT=$(CDPATH='' cd -- "$SCRIPT_DIR/.." && pwd)
+# shellcheck source=tests/lib/pty.sh
+. "$SCRIPT_DIR/lib/pty.sh"
+detach_from_terminal "$0" "$@"
 SETUP="$REPO_ROOT/setup.sh"
 
 if [ ! -f "$SETUP" ]; then
@@ -197,13 +202,17 @@ else
 fi
 
 # =============================================================================
-# Test 3 — re-run overwrites edited files unconditionally (AC #4)
+# Test 3 — re-run choosing Reinstall overwrites edited files (AC #4; T114)
 # =============================================================================
-# Corrupt an installed file, then re-run setup.sh and expect it restored.
+# Corrupt an installed file, then re-run setup.sh in a terminal, pick
+# 2) Reinstall, accept the project-type and pack prompts' defaults and the plan,
+# and expect it restored.
 printf 'USER LOCAL EDIT — should be clobbered\n' > "$TARGET1/agents/backend.md"
 
 T3_RC=0
-run_setup "$TARGET1" || T3_RC=$?
+( cd "$TARGET1" \
+    && SUPERVISOR_REPO="file://$FIXTURE" SUPERVISOR_PATH="$NO_CLONE" \
+       run_in_pty '2\n\n\n\n' "bash '$SETUP'" >"$WORK/setup.log" 2>&1 ) || T3_RC=$?
 
 if [ "$T3_RC" -eq 0 ]; then
   pass "test3: setup.sh re-run exited 0"
@@ -213,7 +222,7 @@ fi
 
 if grep -q 'backend-agent-content' "$TARGET1/agents/backend.md" \
    && ! grep -q 'USER LOCAL EDIT' "$TARGET1/agents/backend.md"; then
-  pass "test3: edited file overwritten back to upstream (always-overwrite)"
+  pass "test3: edited file overwritten back to upstream (Reinstall)"
 else
   fail "test3: edited file was not overwritten on re-run"
 fi

@@ -71,6 +71,9 @@ if [ ! -f "$HARNESS_LIB" ]; then
 fi
 # shellcheck source=lib/harness-fetch.sh
 . "$HARNESS_LIB"
+# The Update / Reinstall actions (T114: moved here from update.sh's body).
+# shellcheck source=lib/harness-update.sh
+. "$SCRIPT_DIR/lib/harness-update.sh"
 
 # ── Resolve GitHub username → repo URL ───────────────────────────────────────
 # Honors a pre-set SUPERVISOR_REPO (fork installs and offline/file:// testing);
@@ -149,8 +152,18 @@ for h in $HARNESSES; do
   fi
 done
 
+# Update re-derives its CLIs from what is present plus what was asked for
+# (T098), so it needs the request as given, before the install default below.
+HARNESSES_REQUESTED="$HARNESSES"
 # No --harness given => exactly today's install.
 [ -n "$HARNESSES" ] || HARNESSES="claude"
+
+# EASYKIT_ACTION is an internal seam for update.sh, the thin alias (T114). It is
+# not a user option and is never documented; an unknown value is an error.
+case "${EASYKIT_ACTION:-}" in
+  ''|update) ;;
+  *) log_error "Unknown EASYKIT_ACTION '$EASYKIT_ACTION'."; exit 1 ;;
+esac
 
 # ── Prerequisite: git installed ──────────────────────────────────────────────
 check_git() {
@@ -354,15 +367,36 @@ install_pack() {
   log_info "Pack '$pack_name' installed."
 }
 
+# ── Terminal input (T114) ────────────────────────────────────────────────────
+# Every prompt reads /dev/tty, never stdin: under `curl | sh`, stdin IS the
+# script, so a prompt reading it would never reach the user. The probe opens
+# /dev/tty in a subshell because the device can exist and still be unopenable
+# (no controlling terminal: CI, containers, `ssh` without -t, `setsid`).
+TTY_OK=0
+tty_probe() {
+  if ( : </dev/tty ) 2>/dev/null; then TTY_OK=1; else TTY_OK=0; fi
+}
+
+# Read one line from the terminal into TTY_ANSWER. Returns non-zero — "no
+# answer" — when there is no usable terminal or the user sent EOF; every caller
+# then takes its safe path instead of guessing.
+TTY_ANSWER=""
+tty_read() {
+  TTY_ANSWER=""
+  [ "$TTY_OK" -eq 1 ] || return 1
+  IFS= read -r TTY_ANSWER 2>/dev/null </dev/tty
+}
+
 # ── Prompt greenfield vs brownfield ──────────────────────────────────────────
-# Defaults to greenfield when stdin is not a TTY (e.g. curl | sh)
+# Defaults to greenfield when there is no terminal (e.g. CI, `setsid`)
 prompt_mode() {
-  if [ -t 0 ]; then
+  if [ "$TTY_OK" -eq 1 ]; then
     printf "[info]  Is this a greenfield (new) or brownfield (existing/legacy) project?\n"
     printf "        1) greenfield — use CLAUDE.md\n"
     printf "        2) brownfield — use CLAUDE_LEGACY.md\n"
     printf "        Choice [1/2]: "
-    read -r mode_choice
+    tty_read || true
+    mode_choice="$TTY_ANSWER"
   else
     # Non-interactive (piped install) — default to greenfield
     log_info "Non-interactive mode detected. Defaulting to greenfield (CLAUDE.md). Re-run interactively to choose brownfield."
@@ -597,22 +631,168 @@ EOF
   touch ./memory/learning-records/.gitkeep
 }
 
-# ── Main ──────────────────────────────────────────────────────────────────────
-main() {
-  check_git
-  check_target_is_git_repo   # BEFORE any file write (fetch writes only to temp)
-  resolve_repo_url
-  prompt_mode
-  prompt_packs
+# ── Action menu, plan screen, confirmation (T114, ADR-0002) ─────────────────
+LOCK_FILE="./.claude/harness-lock.json"
+ACTION=""
 
-  fetch_harness
+# User-facing names for the selected CLIs ("Claude Code, Codex").
+cli_names() {
+  _cn=""
+  for _h in $HARNESSES; do
+    case "$_h" in
+      claude) _cn="$_cn, Claude Code" ;;
+      codex)  _cn="$_cn, Codex" ;;
+      *)      _cn="$_cn, $_h" ;;
+    esac
+  done
+  printf '%s' "${_cn#, }"
+}
 
-  manifest="$HARNESS_TEMP_DIR/MANIFEST"
-  if [ ! -f "$manifest" ]; then
-    log_error "MANIFEST not found in fetched harness. The repo may be corrupt."
-    exit 1
+project_type_label() {
+  case "$CLAUDE_SRC" in
+    CLAUDE_LEGACY.md) printf 'existing/legacy project (CLAUDE_LEGACY.md)' ;;
+    *)                printf 'new project (CLAUDE.md)' ;;
+  esac
+}
+
+# Sets ACTION to install | update | reinstall | cancel. Enter takes the safe
+# default (1). Invalid input re-prompts; EOF at a terminal cancels. With no
+# terminal there is no menu: the safe default is printed and taken, and
+# Reinstall is never chosen.
+choose_action() {
+  if [ "$TTY_OK" -ne 1 ]; then
+    if [ -f "$LOCK_FILE" ]; then
+      log_info "No terminal — updating, keeping your edits (any file you edited is left as it is; re-run in a terminal to resolve)."
+      ACTION=update
+    else
+      log_info "No terminal — installing with the defaults: CLI $(cli_names), new project (CLAUDE.md)."
+      ACTION=install
+    fi
+    return
+  fi
+  printf '\n'
+  if [ -f "$LOCK_FILE" ]; then
+    printf 'Easy Kit is already installed in %s.\n' "$(pwd)"
+    printf '  1) Update (keeps your edits)\n'
+    printf '  2) Reinstall (backs up your edits)\n'
+    printf '  3) Cancel\n'
+  else
+    printf 'Easy Kit is not installed in %s yet.\n' "$(pwd)"
+    printf '  1) Install\n'
+    printf '  2) Cancel\n'
+  fi
+  while :; do
+    printf 'Choose [1]: '
+    if ! tty_read; then
+      printf '\n'
+      ACTION=cancel
+      return
+    fi
+    if [ -f "$LOCK_FILE" ]; then
+      case "$TTY_ANSWER" in
+        ''|1) ACTION=update; return ;;
+        2)    ACTION=reinstall; return ;;
+        3)    ACTION=cancel; return ;;
+      esac
+      printf 'Please enter 1, 2 or 3.\n'
+    else
+      case "$TTY_ANSWER" in
+        ''|1) ACTION=install; return ;;
+        2)    ACTION=cancel; return ;;
+      esac
+      printf 'Please enter 1 or 2.\n'
+    fi
+  done
+}
+
+# Returns 0 to act, 1 to go back to the action menu. EOF at a terminal cancels
+# (exit 0, nothing written). With no terminal the plan was already printed and
+# the safe default proceeds.
+confirm_plan() {
+  if [ "$TTY_OK" -ne 1 ]; then
+    log_info "No terminal — proceeding with the plan above."
+    return 0
+  fi
+  while :; do
+    printf 'Proceed? [Y/n] '
+    if ! tty_read; then
+      printf '\n'
+      cancel_run
+    fi
+    case "$TTY_ANSWER" in
+      ''|y|Y|yes|Yes) return 0 ;;
+      n|N|no|No)      return 1 ;;
+      *)              printf 'Please enter y or n.\n' ;;
+    esac
+  done
+}
+
+cancel_run() {
+  log_info "Cancelled — nothing was changed."
+  exit 0
+}
+
+# Would the install move this existing path aside? The same test
+# harness_backup_path applies (a link always; otherwise only when the content
+# differs), with the paths a MANIFEST `!` line keeps out removed from BOTH sides
+# first, because the install never touches them (T113).
+install_would_back_up() {
+  _iw_src="$1"
+  _iw_dst="$2"
+  _iw_rel="$3"
+  _iw_manifest="$4"
+  [ -e "$_iw_dst" ] || [ -L "$_iw_dst" ] || return 1
+  [ -L "$_iw_dst" ] && return 0
+  if [ -f "$_iw_src" ] && [ -f "$_iw_dst" ]; then
+    cmp -s "$_iw_src" "$_iw_dst" && return 1
+    return 0
+  fi
+  { [ -d "$_iw_src" ] && [ -d "$_iw_dst" ]; } || return 0
+  _iw_subs=$(_harness_exclusions_under "$_iw_manifest" "$_iw_rel")
+  [ -n "$_iw_subs" ] || { diff -rq "$_iw_src" "$_iw_dst" >/dev/null 2>&1 && return 1; return 0; }
+  _iw_work="$HARNESS_TEMP_DIR/.plan-excl"
+  rm -rf "$_iw_work"; mkdir -p "$_iw_work"
+  cp -r "$_iw_src" "$_iw_work/kit"; cp -r "$_iw_dst" "$_iw_work/project"
+  for _iw_sub in $_iw_subs; do
+    rm -rf "$_iw_work/kit/$_iw_sub" "$_iw_work/project/$_iw_sub"
+  done
+  _iw_rc=0
+  diff -rq "$_iw_work/kit" "$_iw_work/project" >/dev/null 2>&1 || _iw_rc=1
+  rm -rf "$_iw_work"
+  [ "$_iw_rc" -eq 1 ]
+}
+
+plan_install() {
+  _manifest="$1"
+  _p_bk="$HARNESS_TEMP_DIR/.plan-install-backups"
+  : > "$_p_bk"
+  # shellcheck disable=SC2094  # read-only lookups of the MANIFEST the loop is reading
+  while IFS= read -r _line; do
+    _line=$(harness_manifest_path "$_line")
+    [ -n "$_line" ] || continue
+    [ -e "$HARNESS_TEMP_DIR/$_line" ] || continue
+    harness_is_excluded "$_manifest" "$_line" && continue
+    if install_would_back_up "$HARNESS_TEMP_DIR/$_line" "./$_line" "$_line" "$_manifest"; then
+      printf '%s -> %s.bak\n' "$_line" "$_line" >> "$_p_bk"
+    fi
+  done < "$_manifest"
+  if install_would_back_up "$HARNESS_TEMP_DIR/$CLAUDE_SRC" ./CLAUDE.md CLAUDE.md "$_manifest"; then
+    printf '%s\n' "CLAUDE.md -> CLAUDE.md.bak" >> "$_p_bk"
   fi
 
+  printf '\n'
+  printf 'Plan: Install Easy Kit into %s\n' "$(pwd)"
+  printf '  - CLI: %s\n' "$(cli_names)"
+  printf '  - Project type: %s\n' "$(project_type_label)"
+  printf '  - Copies in: %s, CLAUDE.md\n' "$(grep -v '^[[:space:]]*[#!]' "$_manifest" | awk 'NF {print $1}' | paste -sd, - | sed 's/,/, /g')"
+  printf '  - Existing paths that differ from the kit are moved aside first:\n'
+  plan_list "$_p_bk" "(none)"
+  printf '  - Hooks: .claude/settings.json is created, or Easy Kit entries are merged into yours.\n'
+}
+
+# ── Install (the pre-T114 main body, after the fetch) ────────────────────────
+run_install() {
+  manifest="$1"
   # Copy every MANIFEST path as real files; differing pre-existing paths are
   # moved to <path>.bak[.N] first (T112).
   harness_copy_manifest "$HARNESS_TEMP_DIR" "." "$manifest"
@@ -635,6 +815,72 @@ main() {
   install_settings
   scaffold_project
   write_harness_lock "$manifest"
+}
+
+# ── Main ──────────────────────────────────────────────────────────────────────
+main() {
+  check_git
+  check_target_is_git_repo   # BEFORE any file write (fetch writes only to temp)
+  if [ "${EASYKIT_ACTION:-}" = "update" ] && [ ! -f "$LOCK_FILE" ]; then
+    log_error "No .claude/harness-lock.json found in this repo. Easy Kit is not installed here — run setup.sh to install it."
+    exit 1
+  fi
+  resolve_repo_url
+  tty_probe
+
+  # The fetch writes only to the temp clone; the plan needs upstream content to
+  # say what would be backed up or removed. Every prompt below comes BEFORE any
+  # write to the project, so Cancel (or Ctrl-C) leaves it untouched.
+  fetch_harness
+  manifest="$HARNESS_TEMP_DIR/MANIFEST"
+  if [ ! -f "$manifest" ]; then
+    log_error "MANIFEST not found in fetched harness. The repo may be corrupt."
+    exit 1
+  fi
+  fresh_list="$HARNESS_TEMP_DIR/.fresh-list"
+  reinstall_backups="$HARNESS_TEMP_DIR/.reinstall-backups"
+  if [ -f "$LOCK_FILE" ]; then
+    # Refuse an old symlink-model install before offering any action.
+    detect_symlinks "$manifest"
+    build_fresh_file_list "$manifest" "$fresh_list"
+  fi
+
+  CLAUDE_SRC="CLAUDE.md"
+  while :; do
+    choose_action
+    case "$ACTION" in
+      cancel) cancel_run ;;
+      update)
+        plan_update "$LOCK_FILE" "$manifest" "$fresh_list"
+        ;;
+      install)
+        prompt_mode
+        prompt_packs
+        plan_install "$manifest"
+        ;;
+      reinstall)
+        prompt_mode
+        prompt_packs
+        plan_reinstall "$reinstall_backups" "$LOCK_FILE" "$fresh_list" "$manifest"
+        ;;
+    esac
+    confirm_plan && break
+  done
+
+  case "$ACTION" in
+    update)
+      HARNESSES="$HARNESSES_REQUESTED"
+      run_update "$LOCK_FILE" "$manifest" "$fresh_list"
+      return
+      ;;
+    install)
+      run_install "$manifest"
+      ;;
+    reinstall)
+      run_reinstall "$LOCK_FILE" "$manifest" "$fresh_list" "$reinstall_backups"
+      scaffold_project
+      ;;
+  esac
 
   # Install selected packs (out of scope per ADR-0001 — unchanged behavior).
   for pack in $PACKS; do

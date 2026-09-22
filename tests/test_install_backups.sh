@@ -11,6 +11,9 @@ set -u
 
 SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 REPO_ROOT=$(CDPATH='' cd -- "$SCRIPT_DIR/.." && pwd)
+# shellcheck source=tests/lib/pty.sh
+. "$SCRIPT_DIR/lib/pty.sh"
+detach_from_terminal "$0" "$@"
 SETUP="$REPO_ROOT/setup.sh"
 
 PASS=0
@@ -73,8 +76,11 @@ run_setup "$T"; RC=$?
 if [ "$RC" -eq 0 ] \
    && [ "$(cat "$T/CLAUDE.md.bak")" = '# my project rules' ] \
    && grep -q 'Supervisor Guidelines' "$T/CLAUDE.md" \
-   && [ "$(grep -c 'CLAUDE.md.bak' "$T.log")" -eq 1 ]; then
-  pass "SC1: CLAUDE.md moved to CLAUDE.md.bak, kit installed, backup named once"
+   && [ "$(grep -c "Backed up your existing './CLAUDE.md'" "$T.log")" -eq 1 ] \
+   && grep -q 'CLAUDE.md -> CLAUDE.md.bak' "$T.log"; then
+  # T114: the plan screen names the backup before acting, and the backup
+  # itself is still reported exactly once.
+  pass "SC1: CLAUDE.md moved to CLAUDE.md.bak, kit installed, backup named once (and on the plan)"
 else
   fail "SC1: CLAUDE.md backup (rc=$RC)"; cat "$T.log" >&2
 fi
@@ -125,7 +131,9 @@ printf 'current\n'  > "$T/CLAUDE.md"
 printf 'older\n'    > "$T/CLAUDE.md.bak"
 run_setup "$T"; RC1=$?
 printf 'current2\n' > "$T/CLAUDE.md"
-run_setup "$T"; RC2=$?
+# Second run on an installed project (T114): choose 2) Reinstall in a terminal —
+# with no terminal the default is Update, which keeps the edit instead.
+( cd "$T" && SUPERVISOR_REPO="file://$FIXTURE" run_in_pty '2\n\n\n\n' "bash '$SETUP'" >"$T.log" 2>&1 ); RC2=$?
 if [ "$RC1" -eq 0 ] && [ "$RC2" -eq 0 ] \
    && [ "$(cat "$T/CLAUDE.md.bak")" = 'older' ] \
    && [ "$(cat "$T/CLAUDE.md.bak.1")" = 'current' ] \

@@ -51,6 +51,10 @@ Ordered steps to ship a release. Commands copy-pasteable.
    T=$(mktemp -d) && cd "$T" && git init -q . && git commit -q --allow-empty -m init
    bash <(curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh)
    ```
+   The installer shows a menu (`1) Install  2) Cancel`), then a plan ending `Proceed? [Y/n]`: in a
+   terminal, press Enter at every prompt to accept the defaults (Install, new project, no packs,
+   Proceed). To run the check with no terminal instead — it then prints and takes the same defaults —
+   prefix the line with `setsid -w` and append `</dev/null`.
    **Pass condition**: installer exits 0 and prints `Setup complete`; then
    ```sh
    test -f .claude/harness-lock.json && \
@@ -90,17 +94,19 @@ v2.0.0 moves canon from `.claude/agents/` and `.claude/skills/` to plain root an
 **relative symlinks** behind. That changes what a rollback has to restore in a downstream repo:
 
 - A v2 install replaced two real directories with symlinks. Rolling `main` back to `v1.1.0` and
-  re-running `update.sh` does **not** automatically turn those symlinks back into directories —
-  `update.sh` compares hashes per MANIFEST path, and a symlink is not a MANIFEST path.
+  running an update (the one install command, action **Update**) does **not** automatically turn
+  those symlinks back into directories — Update compares hashes per MANIFEST path, and a symlink is
+  not a MANIFEST path.
 - Recovery in an affected downstream repo is manual and must be done before re-running the v1
   installer: `rm .claude/agents .claude/skills` (they are symlinks — this removes the links, not
-  the canon), then `bash setup.sh` from the restored `main`.
+  the canon), then run the install command from the restored `main` inside the repo. If it shows the
+  action menu, choose **Reinstall**; v1's `setup.sh` has no menu and reinstalls directly.
 - **Check before you rollback**: `ls -l .claude/agents` in the downstream repo. A `->` in the
   output means the repo is on v2 layout and needs the manual step above.
 
 > **Downstream repos already updated are NOT rolled back by any of this.** They hold real copied
-> files. Recovery there is `bash update.sh` against the restored `main`, per-file, with the conflict
-> prompt.
+> files. Recovery there is the one install command against the restored `main`, run inside the repo
+> in a terminal, choosing **Update** — per-file, with the conflict prompt.
 
 ---
 
@@ -189,7 +195,7 @@ gitignored).
 |---------|-------------|-------------|
 | `curl \| sh` install prints "No local checkout detected" then works | Expected — `setup.sh` bootstraps a full clone because `$0` has no file location under a pipe (T038) | None; informational |
 | Install fails at clone | Network, or `SUPERVISOR_REPO` points at a bad URL | Re-run with an explicit `SUPERVISOR_REPO=<url>` |
-| `update.sh` exits non-zero with "conflict(s) could not be resolved" | Ran non-interactively over locally-customized files | Re-run `bash update.sh` in a real terminal and resolve per file |
+| An update exits 2 with "conflict(s) could not be resolved" | Ran with no terminal over locally-customized files (no terminal = Update, every edit kept) | Re-run the install command in a real terminal, choose **Update**, and resolve per file |
 | A fix to `CLAUDE.md` doesn't reach a project | `update.sh` (T110) delivers `CLAUDE.md` from the same source (`CLAUDE.md` or `CLAUDE_LEGACY.md`) the project was installed with, recorded as `claude_md_source` in `.claude/harness-lock.json`. It overwrites only when the project's `CLAUDE.md` is unedited since install; an edited `CLAUDE.md` goes through the same conflict prompt (`[o]/[s]/[v]`) as any other file | If prompted, `[v]iew` the diff and `[o]verwrite` to take the fix, or `[s]kip` to keep your edits and merge by hand |
 | `setup.sh`/`update.sh` exits 2 and prints a `"hooks"` block | `.claude/settings.json` is invalid JSON or a symlink, or `python3` is not on `PATH` (every kit hook runs as `python3 …`) | Fix the JSON / replace the symlink with a real file / install `python3`, then re-run. The file is left byte-identical, so the printed block can also be pasted in by hand |
 | `*.bak` files or folders (e.g. `CLAUDE.md.bak`, `templates.bak/`, `.bak.1`) appear after install | The project already had those paths with different content; install moved them aside instead of overwriting them (T112), and named each one in a `[warn]` line | Compare each backup with the kit's copy and merge what you need by hand, then delete the backup. If `.claude/hooks.bak` appears, repoint any of your own hook entries in `.claude/settings.json` at it |

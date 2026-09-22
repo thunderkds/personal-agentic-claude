@@ -20,9 +20,10 @@
 #   M2.  mutation: disable the recorded-source branch entirely -> SC7 must fail
 #   M3.  mutation: remove the allowlist check on the recorded source -> SC8 must fail
 #
-# Brownfield installs are driven through a real pty (`script -qec`) because
-# setup.sh's mode/pack prompts are `[ -t 0 ]`-gated and unreachable from a pipe
-# (memory/learnings.md).
+# Brownfield installs and conflict answers are driven through a real pty
+# (`script -qec`) because setup.sh's prompts read /dev/tty (T114) and are
+# unreachable from a pipe (memory/learnings.md). Mutants are built on
+# lib/harness-update.sh, where the update logic lives since T114.
 #
 # Run: bash tests/test_update_claude_md.sh   (or: sh tests/test_update_claude_md.sh)
 set -u
@@ -31,6 +32,10 @@ SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 REPO_ROOT=$(CDPATH='' cd -- "$SCRIPT_DIR/.." && pwd)
 SETUP="$REPO_ROOT/setup.sh"
 UPDATE="$REPO_ROOT/update.sh"
+UPDATE_LIB="$REPO_ROOT/lib/harness-update.sh"
+# shellcheck source=tests/lib/pty.sh
+. "$SCRIPT_DIR/lib/pty.sh"
+detach_from_terminal "$0" "$@"
 
 for f in "$SETUP" "$UPDATE"; do
   if [ ! -f "$f" ]; then
@@ -91,21 +96,40 @@ run_setup_greenfield() {
       >"$WORK/setup.log" 2>&1 )
 }
 
-# Brownfield install driven through a real pty: answer "2" (brownfield), then
-# Enter (skip packs). `[ -t 0 ]`-gated prompts are unreachable from a pipe.
+# Brownfield install driven through a real pty: Enter (1) Install), "2"
+# (brownfield), Enter (skip packs), Enter (accept the plan). /dev/tty prompts
+# are unreachable from a pipe.
 run_setup_brownfield() {
   _target="$1"
-  ( cd "$_target" && printf '2\n\n' | script -qec \
+  ( cd "$_target" && printf '\n2\n\n\n' | SHELL=/bin/sh script -qec \
       "SUPERVISOR_REPO=file://$FIXTURE bash $SETUP" "$WORK/brownfield.typescript" \
       >"$WORK/setup.log" 2>&1 )
 }
 
-# Run update.sh with stdin from $2 (a file: /dev/null or a canned answer file).
+# Run update.sh. $2 = /dev/null: no terminal. $2 = a canned answer file: typed
+# into a real terminal after accepting the menu (Enter = Update) and the plan
+# (Enter = Proceed) — prompts read /dev/tty since T114, never stdin.
 run_update() {
   _target="$1"
   _stdin="$2"
-  ( cd "$_target" && SUPERVISOR_REPO="file://$FIXTURE" bash "$UPDATE" <"$_stdin" \
-      >"$WORK/update.log" 2>&1 )
+  if [ "$_stdin" = /dev/null ]; then
+    ( cd "$_target" && SUPERVISOR_REPO="file://$FIXTURE" bash "$UPDATE" <"$_stdin" \
+        >"$WORK/update.log" 2>&1 )
+  else
+    ( cd "$_target" && SUPERVISOR_REPO="file://$FIXTURE" \
+        run_in_pty "\n\n$(cat "$_stdin")\n" "bash '$UPDATE'" >"$WORK/update.log" 2>&1 )
+  fi
+}
+
+# make_mutant <name> <sed-expr> -> prints the path of a kit copy whose
+# lib/harness-update.sh has the sed applied; run its update.sh.
+make_mutant() {
+  _md="$WORK/$1"
+  mkdir -p "$_md/lib"
+  cp "$SETUP" "$UPDATE" "$_md/"
+  cp "$REPO_ROOT/lib/"* "$_md/lib/"
+  sed "$2" "$UPDATE_LIB" > "$_md/lib/harness-update.sh"
+  printf '%s' "$_md"
 }
 
 printf 's\n' > "$WORK/skip.in"
@@ -415,23 +439,17 @@ else
 fi
 
 # =============================================================================
-# M1 — mutation control: patch update.sh so resolve_claude_md_source always
+# M1 — mutation control: patch the update logic so resolve_claude_md_source always
 # resolves "CLAUDE.md" regardless of the recorded/inferred source. SC2 (the
 # brownfield-propagation assertion) must then fail, proving SC2 actually
 # exercises the source-selection logic rather than passing vacuously.
 # =============================================================================
-MUTANT="$WORK/update.mutant.sh"
-sed 's/CLAUDE_MD_SOURCE="\$_recorded"/CLAUDE_MD_SOURCE="CLAUDE.md"/' "$UPDATE" > "$MUTANT"
-chmod +x "$MUTANT"
-# The mutant sources lib/harness-fetch.sh relative to its OWN location
-# (SCRIPT_DIR=dirname "$0"), so a bare copy in $WORK can't find it — mirror the
-# lib/ dir alongside it.
-mkdir -p "$WORK/lib"
-cp "$REPO_ROOT/lib/harness-fetch.sh" "$WORK/lib/harness-fetch.sh"
-if cmp -s "$UPDATE" "$MUTANT"; then
-  fail "M1: mutation did not change update.sh — sed pattern did not match"
+M1_DIR=$(make_mutant mutant1 's/CLAUDE_MD_SOURCE="\$_recorded"/CLAUDE_MD_SOURCE="CLAUDE.md"/')
+MUTANT="$M1_DIR/update.sh"
+if cmp -s "$UPDATE_LIB" "$M1_DIR/lib/harness-update.sh"; then
+  fail "M1: mutation did not change the update logic — sed pattern did not match"
 else
-  pass "M1: mutation landed (mutant differs from update.sh)"
+  pass "M1: mutation landed (mutant differs from lib/harness-update.sh)"
 fi
 
 T7="$WORK/t7-mutation"
@@ -457,13 +475,12 @@ fi
 # upstream heading, so the diff/overwrite falls back to greenfield CLAUDE.md
 # instead of the recorded CLAUDE_LEGACY.md.
 # =============================================================================
-MUTANT2="$WORK/update.mutant2.sh"
-sed 's/if \[ -n "\$_recorded" \]; then/if false; then/' "$UPDATE" > "$MUTANT2"
-chmod +x "$MUTANT2"
-if cmp -s "$UPDATE" "$MUTANT2"; then
-  fail "M2: mutation did not change update.sh — sed pattern did not match"
+M2_DIR=$(make_mutant mutant2 's/if \[ -n "\$_recorded" \]; then/if false; then/')
+MUTANT2="$M2_DIR/update.sh"
+if cmp -s "$UPDATE_LIB" "$M2_DIR/lib/harness-update.sh"; then
+  fail "M2: mutation did not change the update logic — sed pattern did not match"
 else
-  pass "M2: mutation landed (mutant differs from update.sh)"
+  pass "M2: mutation landed (mutant differs from lib/harness-update.sh)"
 fi
 
 T9="$WORK/t9-m2-mutation"
@@ -473,7 +490,8 @@ if run_setup_brownfield "$T9"; then
   { printf '# USER EDITED FIRST LINE\n'; tail -n +2 "$T9/CLAUDE.md"; } \
     > "$T9/CLAUDE.md.new" && mv "$T9/CLAUDE.md.new" "$T9/CLAUDE.md"
   bump_fixture_file CLAUDE_LEGACY.md "MARKER-M2-LEGACY"
-  ( cd "$T9" && SUPERVISOR_REPO="file://$FIXTURE" bash "$MUTANT2" <"$WORK/overwrite.in" \
+  ( cd "$T9" && SUPERVISOR_REPO="file://$FIXTURE" \
+      run_in_pty "\n\n$(cat "$WORK/overwrite.in")\n" "bash '$MUTANT2'" \
       >"$WORK/mutant2-update.log" 2>&1 )
   if grep -q "GREENFIELD SUPERVISOR RULES" "$T9/CLAUDE.md" 2>/dev/null \
      && ! grep -q "MARKER-M2-LEGACY" "$T9/CLAUDE.md" 2>/dev/null; then
@@ -490,13 +508,12 @@ fi
 # claude_md_source value, as round 1 did). SC8 must then fail: the untrusted
 # lock value's file content lands directly in CLAUDE.md.
 # =============================================================================
-MUTANT3="$WORK/update.mutant3.sh"
-sed 's/CLAUDE\.md|CLAUDE_LEGACY\.md)/*)/' "$UPDATE" > "$MUTANT3"
-chmod +x "$MUTANT3"
-if cmp -s "$UPDATE" "$MUTANT3"; then
-  fail "M3: mutation did not change update.sh — sed pattern did not match"
+M3_DIR=$(make_mutant mutant3 's/CLAUDE\.md|CLAUDE_LEGACY\.md)/*)/')
+MUTANT3="$M3_DIR/update.sh"
+if cmp -s "$UPDATE_LIB" "$M3_DIR/lib/harness-update.sh"; then
+  fail "M3: mutation did not change the update logic — sed pattern did not match"
 else
-  pass "M3: mutation landed (mutant differs from update.sh)"
+  pass "M3: mutation landed (mutant differs from lib/harness-update.sh)"
 fi
 
 T10="$WORK/t10-m3-mutation"

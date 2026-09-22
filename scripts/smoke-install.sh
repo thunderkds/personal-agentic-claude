@@ -18,6 +18,11 @@
 set -eu
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# No terminal for the installer's /dev/tty prompts, even from a dev shell (T114):
+# the install below must take the printed no-terminal defaults.
+# shellcheck source=tests/lib/pty.sh
+. "$ROOT/tests/lib/pty.sh"
+detach_from_terminal "$0" "$@"
 SETUP="$ROOT/setup.sh"
 
 if [ ! -f "$SETUP" ]; then

@@ -10,6 +10,10 @@ set -u
 
 SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 REPO_ROOT=$(CDPATH='' cd -- "$SCRIPT_DIR/.." && pwd)
+# No terminal for the installer's /dev/tty prompts, even from a dev shell (T114).
+# shellcheck source=tests/lib/pty.sh
+. "$SCRIPT_DIR/lib/pty.sh"
+detach_from_terminal "$0" "$@"
 SETUP="$REPO_ROOT/setup.sh"
 UPDATE="$REPO_ROOT/update.sh"
 

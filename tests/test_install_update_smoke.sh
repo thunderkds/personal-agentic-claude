@@ -24,6 +24,9 @@
 #      writing anything.
 
 REPO_ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+# shellcheck source=tests/lib/pty.sh
+. "$REPO_ROOT/tests/lib/pty.sh"
+detach_from_terminal "$0" "$@"
 SETUP="$REPO_ROOT/setup.sh"
 UPDATE="$REPO_ROOT/update.sh"
 
@@ -144,10 +147,12 @@ if [ ! -f "$EDIT_FILE" ]; then
 else
   ORIGINAL_CONTENT=$(cat "$EDIT_FILE")
 
+  # Both sub-cases type into a real terminal (T114: prompts read /dev/tty, not
+  # stdin): Enter accepts Update, Enter accepts the plan, then the answer.
   # ── 3a: overwrite branch ───────────────────────────────────────────────────
   printf '\nSMOKE_TEST_LOCAL_EDIT_MARKER_OVERWRITE\n' >> "$EDIT_FILE"
 
-  OVERWRITE_OUT=$(cd "$TARGET1" && printf 'o\n' | bash "$UPDATE" 2>&1)
+  OVERWRITE_OUT=$(cd "$TARGET1" && run_in_pty '\n\no\n' "bash '$UPDATE'" 2>&1)
   OVERWRITE_STATUS=$?
 
   if [ "$OVERWRITE_STATUS" -ne 0 ]; then
@@ -166,7 +171,7 @@ else
   printf '\nSMOKE_TEST_LOCAL_EDIT_MARKER_SKIP\n' >> "$EDIT_FILE"
   EXPECTED_SKIP_CONTENT=$(cat "$EDIT_FILE")
 
-  SKIP_OUT=$(cd "$TARGET1" && printf 's\n' | bash "$UPDATE" 2>&1)
+  SKIP_OUT=$(cd "$TARGET1" && run_in_pty '\n\ns\n' "bash '$UPDATE'" 2>&1)
   SKIP_STATUS=$?
 
   if [ "$SKIP_STATUS" -ne 0 ]; then
