@@ -18,14 +18,10 @@
 
 ## Index
 
-### ⚠️ Session handoff — read first (written 2026-09-18)
+### ⚠️ Session handoff — read first (written 2026-09-22)
 
-- **T112 is Done, merged to `main` and pushed** (2026-09-18). `/verify` PASS at the installer CLI
-  with `main` as a live control. The 2026-09-16 handoff's "next task is T112" is spent; its
-  directory-wipe caveat was honoured and independently re-reproduced, so do not re-litigate it.
-- **Next task is T113**, deliberately held serial behind T112 — both edit `lib/harness-fetch.sh`,
-  and the trace state file is shared across worktrees (concurrent verification mis-attributes Bash
-  calls between tasks). T114 depends on T110, T111, T112, T113.
+- **T113 is Done, merged to `main` locally (2026-09-22, `8199feb`) — not yet pushed.** Stage 4
+  clean, `/verify` PASS 2026-09-21. **T114 is now unblocked** (T110–T113 all Done).
 - **The T110/T111 branch divergence is RESOLVED — do not act on older handoffs that say otherwise.**
   Verified 2026-09-18: `feat/easy-kit-one-command` is a strict **ancestor** of `main`
   (`git merge-base --is-ancestor` yes; 32 ahead / 0 behind). T111 merged to `main` at `4f766dd`,
@@ -39,8 +35,10 @@
   silently removed by the ownership rule, while the comparable `drop_dangling` case warns.
   (3) fold the ~35 duplicated lines of `merge_settings`/`settings_merge_refused` out of
   `setup.sh`/`update.sh` into a shared helper — **T112 has now stopped editing
-  `lib/harness-fetch.sh`, so this unblocks once T113 lands.**
+  `lib/harness-fetch.sh` and T113 has landed — now unblocked.**
 
+
+- [T113: update removes unedited dropped files; MANIFEST `!` exclusions](decisions.md) — edited ones kept + named; no deletes on incomplete upstream; `!.claude/hooks/tests` stops kit tests shipping.
 
 <!-- Format: - [Title](cold-file.md#section) — one-line summary.
      Target ≤150 chars/entry: an ASPIRATION, not a gate — 130 of 146 entries exceed it

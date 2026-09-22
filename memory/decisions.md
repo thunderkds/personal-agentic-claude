@@ -2175,3 +2175,14 @@ replaced" while MANIFEST-earlier paths already were — see `learnings.md`, same
 the wording is wrong at run scope.
 **Files**: lib/harness-fetch.sh, setup.sh, tests/test_install_backups.sh, .github/workflows/ci.yml,
 PROJECT_SPEC.md, RUNBOOK.md, site/index.html
+
+## T113: update removes what upstream dropped (unless edited); MANIFEST `!` exclusions (2026-09-22)
+**Decision**: `update.sh` deletes a lock entry that upstream no longer ships **only when its hash still
+matches the lock** (unedited); an edited one is kept and named. Empty dirs left behind are pruned,
+never the MANIFEST root. Nothing is deleted on an empty/incomplete upstream or a `..` key.
+MANIFEST gains `!<path>` exclusions (whole-segment prefix) honoured by the parser, copy, lock and
+update file list; an excluded path also skips the T112 backup, so a project's own dir is never
+renamed to `.bak`. `!.claude/hooks/tests` stops kit tests shipping into user projects.
+**Why**: ADR-0002 "No silent loss" — removal is safe only for bytes the kit provably still owns.
+**Files**: update.sh, lib/harness-fetch.sh, setup.sh, MANIFEST, tests/test_update_removals.sh (new),
+tests/test_harness_projection.sh (AC9 inverted), .github/workflows/ci.yml, RUNBOOK.md, site/index.html
