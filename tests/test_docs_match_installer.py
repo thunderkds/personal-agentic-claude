@@ -21,7 +21,19 @@ LIVE_DOCS = [
     *sorted(str(p.relative_to(ROOT)) for p in (ROOT / "docs" / "claude-md").glob("*.md")),
 ]
 
-FORBIDDEN = ["--harness", "--copy", "update.sh --", 'sh -c "$(curl']
+FORBIDDEN = [
+    "--harness", "--copy", "update.sh --", 'sh -c "$(curl',
+    # T116: the install-time pack installer and its central clone are gone.
+    "SUPERVISOR_PATH", "~/.supervisor", "--pack=",
+]
+
+# Hits a later task owns, each pinned to the exact line that still carries it.
+# T117 rewrites pack doctrine (docs/claude-md/folder-structure.md is on T116's
+# Must-NOT-Touch list); test_owned_exemptions_are_still_needed fails the moment
+# that line is fixed, so the exemption is deleted with it rather than left open.
+OWNED_EXEMPTIONS = {
+    ("docs/claude-md/folder-structure.md", "--pack="): "T117",
+}
 
 # RUNBOOK.md ends with a release log table: a historical record, never rewritten.
 RUNBOOK_HISTORY_HEADING = re.compile(r"^## Release Log", re.MULTILINE)
@@ -44,9 +56,15 @@ def test_live_docs_show_no_install_flags():
     for rel in LIVE_DOCS:
         for n, line in enumerate(_live_text(rel).splitlines(), 1):
             for bad in FORBIDDEN:
-                if bad in line:
+                if bad in line and (rel, bad) not in OWNED_EXEMPTIONS:
                     hits.append(f"{rel}:{n}: {bad!r}")
     assert not hits, "live docs still document a removed install flag:\n" + "\n".join(hits)
+
+
+def test_owned_exemptions_are_still_needed():
+    stale = [f"{rel}: {bad!r} ({owner})" for (rel, bad), owner in OWNED_EXEMPTIONS.items()
+             if bad not in _live_text(rel)]
+    assert not stale, "exemption no longer needed — delete it from OWNED_EXEMPTIONS:\n" + "\n".join(stale)
 
 
 def test_live_docs_show_the_one_line_command():

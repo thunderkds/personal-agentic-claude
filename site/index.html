@@ -471,7 +471,8 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <h2>Packs (optional domain extensions)</h2>
 <p class="lead">
   The core framework ships four agents for every project. Packs add domain-specific agents and
-  skills on top — selected at install time, never replacing core resources.
+  skills on top, never replacing core resources. Every project ships all packs, inactive: they sit in
+  <code>packs/</code> and no CLI loads them.
 </p>
 <div class="table-wrap">
 <table>
@@ -486,10 +487,9 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 </table>
 </div>
 <p class="lead">
-  Packs are chosen from the pack menu the installer shows on Install / Reinstall (there is no pack
-  option to type). Packs still require a persistent local clone at <code>~/.supervisor</code> (or
-  <code>$SUPERVISOR_PATH</code>) — unlike core resources, packs are not created automatically by a
-  piped install.
+  The installer never asks about packs. Your Supervisor recommends packs for your project from its
+  business domain, and activates each pack you approve by copying it into <code>agents/</code> and
+  <code>skills/</code>. Update keeps the <code>packs/</code> catalog current like any other kit file.
 </p>
 </section>
 
@@ -580,7 +580,6 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <thead><tr><th>Environment variable</th><th>Default</th><th>Purpose</th></tr></thead>
 <tbody>
 <tr><td><code>GITHUB_USERNAME</code></td><td><code>thunderkds</code></td><td>Install/update from a fork instead of the canonical repo</td></tr>
-<tr><td><code>SUPERVISOR_PATH</code></td><td><code>~/.supervisor</code></td><td><strong>Packs only</strong> — location of the persistent clone. Not used, created, or required by the core install</td></tr>
 </tbody>
 </table>
 </div>

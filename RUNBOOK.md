@@ -54,8 +54,8 @@ Ordered steps to ship a release. Commands copy-pasteable.
    The installer takes no options. It shows a menu (`1) Install  2) Cancel`), the CLI menu
    (`1) Claude Code  2) Codex`), the project-type menu (`1) New project  2) Existing / legacy
    project`), then a plan ending `Proceed? [Y/n]`: in a terminal, press Enter at every prompt to accept
-   the defaults (Install, the CLIs found on `PATH` — Claude Code if none — New project, no packs,
-   Proceed). To run the check with no terminal instead — it then prints and takes the same defaults —
+   the defaults (Install, the CLIs found on `PATH` — Claude Code if none — New project, Proceed).
+   There is no packs question: every pack ships inactive in `packs/` (T116). To run the check with no terminal instead — it then prints and takes the same defaults —
    wrap the same line: `setsid -w sh -c '<the line above>' </dev/null`.
    **Pass condition**: installer exits 0 and prints `Setup complete`; then
    ```sh

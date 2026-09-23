@@ -80,7 +80,7 @@ The supervisor repo (`per-agentic-claude`) is a general framework. A `MANIFEST` 
 | Area | Risk Level | Reason | Files |
 |------|-----------|--------|-------|
 | Copy install over existing paths | Medium | Install copies kit files over paths the project may already own; a silent replace would destroy project data. Mitigated by `harness_backup_path`, which moves a differing path to `<name>.bak[.N]` and names it — see `docs/adr/0002-one-confirmed-menu-driven-installer.md` ("No silent loss") | `setup.sh`, `lib/harness-fetch.sh` |
-| SUPERVISOR_PATH handling | Low | Path may not exist; must be created gracefully | `setup.sh`, `update.sh` |
+| Pack activation name collision | Medium | An activated pack's agent or skill name could collide with a core one in `agents/` or `skills/`; ADR-0002 requires activation to refuse, never overwrite. The shipped catalog itself is inert (T116: `packs` carries no MANIFEST destination pair) — activation is owned by T117 | `packs/`, `agents/`, `skills/` |
 | WSL symlink behavior | Low | Linux symlinks in WSL filesystems behave correctly; Windows NTFS symlinks may not | `setup.sh` |
 
 ---

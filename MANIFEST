@@ -34,6 +34,10 @@
 # `agents` has no `codex=` pair on purpose: Codex 0.149.1 has no agent-guide
 # directory it discovers, and DDR-0007/T097 forbid inventing one. Codex receives
 # the kit's role doctrine through AGENTS.md instead.
+#
+# `packs` carries NO pair, and never may (ADR-0002, T116): it ships as a dormant
+# Pack catalog that no CLI loads. A pack reaches a CLI only when the Supervisor
+# activates it by copying it into agents/ and skills/.
 
 # NOTE: .claude/settings.json is deployed by setup.sh as a per-project COPY
 # (projects append their own permissions to it), not listed here.
@@ -42,6 +46,7 @@ skills          codex=.codex/skills
 .claude/hooks
 templates
 docs/claude-md
+packs
 AGENTS.md
 .cursor/rules
 !.claude/hooks/tests
