@@ -43,9 +43,10 @@
 - [T113: update removes unedited dropped files; MANIFEST `!` exclusions](decisions.md) — edited ones kept + named
 
 <!-- Format: - [Title](cold-file.md#section) — one-line summary.
-     Target ≤150 chars/entry: an ASPIRATION, not a gate. Measured 2026-09-23 after a
-     compact-memory pass: 232 entries, 122 over target, mean 156, max 263, file 39,019 chars
-     against a 42,000 budget. Figures expire — re-measure, don't re-read. -->
+     Target ≤150 chars/entry: an ASPIRATION, not a gate, and many entries exceed it.
+     No count is written here on purpose — a figure in this header froze twice and went
+     stale. The live numbers are printed by the size test (hot_tier_entry_report) on every
+     run; read them there. The enforced gate is the whole-file character budget above. -->
 
 ### Decisions
 - [A batch guide ages against the tasks that merge after it, and the stalest part is its interactions](learnings.md) — Re-read the call sites, not the guide, and commit the correction before the spawn
@@ -298,6 +299,8 @@
 - [A control RED before *and* after the mutation proves nothing](learnings.md) — T115: the second hit masked the first
 - [A menu answer that word-splits also globs](learnings.md) — unquoted `$(...)` into a `for` loop consults the filesystem; Use `set -f` around the split
 - [Check `main` before filing a Stage 5 defect](learnings.md) — "found while verifying X" ≠ "caused by X"
+
+- [The next free task ID isn't derivable from git log or tasks/](learnings.md) — scan the whole board for the highest **Txxx**; a Todo row can exist with no guide, branch or commit (T119 collision)
 
 ### Glossary
 - [Report / Report Slot / Scoring Dimension / Report Session](glossary.md) — canonical terms for the html-report skill and Stage 4 reporting system

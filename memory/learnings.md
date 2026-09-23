@@ -2575,3 +2575,18 @@ Two lessons, and the second is the one that generalises:
 
 T115 also made it *visible*: it gave two menus graceful cancels, so the third one's silence started
 reading as a crash. **Improving the neighbours of a rough edge can surface it without causing it.**
+
+## The next free task ID is not derivable from git log or the guides on disk (2026-09-23)
+
+Registering T115's two Stage 5 follow-ups reused **T119**, which already existed on the board. The
+next ID was taken from recent `git log` subjects and the `TASK_GUIDE_T*.md` filenames in `tasks/` —
+both of which top out at the last task that was *worked*, not the last that was *registered*. A Todo
+row can sit on the board for weeks with no guide, no branch and no commit, and T119 was exactly that.
+
+**Scan `PROJECT_KANBAN.md` itself for the highest `**Txxx**` across every section — Todo, Done,
+Closed and Blocked — immediately before writing a new row.** The board is the registry; everything
+else is a trace of execution. A collision is cheap to fix the same day and expensive later, because
+the ID is the join key between the row, the guide, the branch, the review and the memory entries.
+
+Related: the two IDs were also written into four files in the same commit, so the correction had to
+touch all four. Register the row first, then reference it.
