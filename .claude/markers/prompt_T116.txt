@@ -1,0 +1,44 @@
+Task ID: T116
+
+You are the Common-Infrastructure-Agent. Work only in your worktree:
+/home/hungnguyenhuu/workspace/pets/wt-t116 (branch feat/t116-pack-catalog, off main).
+
+## Read first, in this order
+1. /home/hungnguyenhuu/workspace/pets/wt-t116/PROJECT_SPEC.md (glossary: "Pack catalog", "Activated pack")
+2. /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/memory/MEMORY.md — read it IN FULL from that path. It is not pasted here.
+3. /home/hungnguyenhuu/workspace/pets/wt-t116/tasks/TASK_GUIDE_T116.md — completely, including the section "Drift since this guide was written (added 2026-09-23)". That section corrects the guide's own probe; read it before trusting any output quoted there.
+4. /home/hungnguyenhuu/workspace/pets/wt-t116/agents/common-infrastructure.md
+5. /home/hungnguyenhuu/workspace/pets/wt-t116/memory/codebase-map.md (C2, multi-file)
+6. /home/hungnguyenhuu/workspace/pets/wt-t116/docs/adr/0002-one-confirmed-menu-driven-installer.md ("Packs: a dormant catalog")
+
+This is C2 / Medium Risk / P1. Apply the C2 process from the Complexity matrix in your role guide.
+
+## Restated intent (verbatim from the guide)
+> Every Easy Kit project receives all packs as an inactive catalog that no CLI loads, update keeps that
+> catalog current, and the installer no longer asks about, or pretends to install, packs.
+
+Out of scope: recommending or activating packs (T117); changing any pack's content; `packs/*/PACK.md` wording (T117).
+
+## Demonstration BEFORE capture — do this before your first implementation commit
+Fill the `## Demonstration` BEFORE field in
+/home/hungnguyenhuu/workspace/pets/wt-t116/tasks/TASK_REVIEW_T116.md
+(the guide carries only a `> **Moved.**` pointer). This task changes executable code, so run the
+commands and paste real, timestamped output. A BEFORE captured after the change is not a BEFORE and
+there is no N/A path.
+
+Note the guide's drift section: `--pack=mobile` is NOT reproducible any more (T115 made every
+argument exit 1 before anything is written). Capture the BEFORE from the paths that still exist —
+the interactive packs menu reached on Install/Reinstall with a terminal, and its no-terminal line.
+Both still run and both still install nothing. Use a pty (`script -qec`) for the interactive path;
+piping cannot reach a `[ -t 0 ]`-gated prompt.
+
+## Trace attribution — before running any test or verification command
+mkdir -p /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state && printf '%s\n%s\n' "T116" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state/active_task
+
+Do this once at the start. Do NOT use `CLAUDE_ACTIVE_TASK=T116 <cmd>` inside a Bash call and do NOT
+use a relative path or $CLAUDE_PROJECT_DIR — neither reaches the hook.
+
+## Finish
+Commit your work on feat/t116-pack-catalog before you exit. An agent that exits with work
+uncommitted reads as an agent that did nothing — this happened on T115 and cost a full review cycle.
+Fill tasks/TASK_REVIEW_T116.md as you go, and report your Task ID in any status message.
