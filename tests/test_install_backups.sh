@@ -133,7 +133,7 @@ run_setup "$T"; RC1=$?
 printf 'current2\n' > "$T/CLAUDE.md"
 # Second run on an installed project (T114): choose 2) Reinstall in a terminal —
 # with no terminal the default is Update, which keeps the edit instead.
-( cd "$T" && SUPERVISOR_REPO="file://$FIXTURE" run_in_pty '2\n\n\n\n' "bash '$SETUP'" >"$T.log" 2>&1 ); RC2=$?
+( cd "$T" && SUPERVISOR_REPO="file://$FIXTURE" run_in_pty '2\n\n\n\n\n' "bash '$SETUP'" >"$T.log" 2>&1 ); RC2=$?
 if [ "$RC1" -eq 0 ] && [ "$RC2" -eq 0 ] \
    && [ "$(cat "$T/CLAUDE.md.bak")" = 'older' ] \
    && [ "$(cat "$T/CLAUDE.md.bak.1")" = 'current' ] \

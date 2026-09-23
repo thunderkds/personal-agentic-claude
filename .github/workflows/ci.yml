@@ -63,5 +63,8 @@ jobs:
       - name: One-command menu test suite (T114)
         run: bash tests/test_one_command_menu.sh
 
+      - name: CLI and project-type menus test suite (T115)
+        run: bash tests/test_cli_and_project_menus.sh
+
       - name: CI wires every shell suite (drift guard)
         run: python3 tests/test_ci_wires_shell_suites.py

@@ -49,12 +49,14 @@ Ordered steps to ship a release. Commands copy-pasteable.
 4. **Post-deploy health check** — install from the *published remote*, not a local path
    ```sh
    T=$(mktemp -d) && cd "$T" && git init -q . && git commit -q --allow-empty -m init
-   bash <(curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh)
+   curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh
    ```
-   The installer shows a menu (`1) Install  2) Cancel`), then a plan ending `Proceed? [Y/n]`: in a
-   terminal, press Enter at every prompt to accept the defaults (Install, new project, no packs,
+   The installer takes no options. It shows a menu (`1) Install  2) Cancel`), the CLI menu
+   (`1) Claude Code  2) Codex`), the project-type menu (`1) New project  2) Existing / legacy
+   project`), then a plan ending `Proceed? [Y/n]`: in a terminal, press Enter at every prompt to accept
+   the defaults (Install, the CLIs found on `PATH` — Claude Code if none — New project, no packs,
    Proceed). To run the check with no terminal instead — it then prints and takes the same defaults —
-   prefix the line with `setsid -w` and append `</dev/null`.
+   wrap the same line: `setsid -w sh -c '<the line above>' </dev/null`.
    **Pass condition**: installer exits 0 and prints `Setup complete`; then
    ```sh
    test -f .claude/harness-lock.json && \

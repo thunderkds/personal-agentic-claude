@@ -3,11 +3,12 @@
 # presence-detects `claude` like every other harness instead of installing
 # the canon symlinks unconditionally.
 #
-#   AC1 setup.sh --harness codex then a no-flag update.sh: symlinks stay absent
+#   AC1 install picking Codex, then an update.sh: symlinks stay absent
 #   AC2 claude install then update.sh: symlinks present, are symlinks, relative
 #   AC3 repair path: a stale real .claude/skills dir is restored to a symlink
-#   AC4 update.sh --harness claude installs symlinks on a project that never
-#       had them, regardless of presence
+#   AC4 Reinstall + picking Claude Code installs symlinks on a project that
+#       never had them, regardless of presence (was update.sh --harness claude
+#       until T115 removed every option)
 #   AC5 the special case is removed from resolve_projection_harnesses, not
 #       shadowed (grep on update.sh's own source)
 #   AC6 anti-vacuity: reverting the fix in place makes AC1 go red again
@@ -89,6 +90,19 @@ run_setup() {
       && SUPERVISOR_REPO="file://$FIXTURE" SUPERVISOR_PATH="$NO_CLONE" \
          bash "$SETUP" "$@" </dev/null >"$WORK/last.log" 2>&1 )
 }
+# pick_setup <target> <CLIs>: install in a pty (tests/lib/pty.sh), answering the
+# CLI menu with <CLIs> ("1" = Claude Code, "2" = Codex, "1 2" = both) and taking
+# every other default. pick_reinstall does the same through 2) Reinstall.
+pick_setup() {
+  ( cd "$1" \
+      && SUPERVISOR_REPO="file://$FIXTURE" SUPERVISOR_PATH="$NO_CLONE" \
+         run_in_pty "\\n$2\\n\\n\\n\\n" "bash '$SETUP'" >"$WORK/last.log" 2>&1 )
+}
+pick_reinstall() {
+  ( cd "$1" \
+      && SUPERVISOR_REPO="file://$FIXTURE" SUPERVISOR_PATH="$NO_CLONE" \
+         run_in_pty "2\\n$2\\n\\n\\n\\n" "bash '$SETUP'" >"$WORK/last.log" 2>&1 )
+}
 run_update() {
   _target="$1"; shift
   ( cd "$_target" \
@@ -100,9 +114,9 @@ run_update() {
 # Test 1 (AC1) — codex-only project: symlinks stay absent across a no-flag update
 # =============================================================================
 T1=$(new_target target-codex-only)
-if run_setup "$T1" --harness codex; then
+if pick_setup "$T1" 2; then
   if [ ! -e "$T1/.claude/skills" ] && [ ! -e "$T1/.claude/agents" ]; then
-    pass "AC1: symlinks absent immediately after setup.sh --harness codex"
+    pass "AC1: symlinks absent immediately after an install picking Codex"
   else
     fail "AC1: symlinks unexpectedly present right after setup"
   fi
@@ -116,14 +130,14 @@ if run_setup "$T1" --harness codex; then
     fail "AC1: update.sh failed — see $WORK/last.log"; cat "$WORK/last.log" >&2
   fi
 else
-  fail "AC1: setup.sh --harness codex failed"; cat "$WORK/last.log" >&2
+  fail "AC1: install picking Codex failed"; cat "$WORK/last.log" >&2
 fi
 
 # =============================================================================
 # Test 2 (AC2) — claude install: symlinks present, ARE symlinks, relative targets
 # =============================================================================
 T2=$(new_target target-claude)
-if run_setup "$T2" --harness claude && run_update "$T2"; then
+if pick_setup "$T2" 1 && run_update "$T2"; then
   if [ -L "$T2/.claude/skills" ] && [ -L "$T2/.claude/agents" ]; then
     pass "AC2: .claude/skills and .claude/agents are symlinks after update"
   else
@@ -144,7 +158,7 @@ fi
 # Test 3 (AC3) — repair path: a stale real dir is restored to a correct symlink
 # =============================================================================
 T3=$(new_target target-repair)
-if run_setup "$T3" --harness claude; then
+if pick_setup "$T3" 1; then
   rm "$T3/.claude/skills"
   mkdir -p "$T3/.claude/skills"
   printf 'stale\n' > "$T3/.claude/skills/stale.txt"
@@ -158,7 +172,7 @@ if run_setup "$T3" --harness claude; then
     fail "AC3: update.sh failed on the repair case"; cat "$WORK/last.log" >&2
   fi
 else
-  fail "AC3: setup.sh --harness claude failed"; cat "$WORK/last.log" >&2
+  fail "AC3: install picking Claude Code failed"; cat "$WORK/last.log" >&2
 fi
 
 # =============================================================================
@@ -167,7 +181,7 @@ fi
 # link since it follows the target — this asserts the -L fallback is in place.
 # =============================================================================
 T3B=$(new_target target-repair-broken-link)
-if run_setup "$T3B" --harness claude; then
+if pick_setup "$T3B" 1; then
   rm "$T3B/.claude/agents"
   ln -s "../nonexistent-target" "$T3B/.claude/agents"
   if run_update "$T3B"; then
@@ -180,26 +194,26 @@ if run_setup "$T3B" --harness claude; then
     fail "AC3: update.sh failed on the broken-symlink repair case"; cat "$WORK/last.log" >&2
   fi
 else
-  fail "AC3: setup.sh --harness claude failed (broken-link case)"; cat "$WORK/last.log" >&2
+  fail "AC3: install picking Claude Code failed (broken-link case)"; cat "$WORK/last.log" >&2
 fi
 
 # =============================================================================
-# Test 4 (AC4) — explicit --harness claude installs symlinks regardless of
-# prior presence, on a project that never had claude
+# Test 4 (AC4) — picking Claude Code on Reinstall installs symlinks regardless
+# of prior presence, on a project that never had claude
 # =============================================================================
 T4=$(new_target target-explicit-claude)
-if run_setup "$T4" --harness codex; then
-  if run_update "$T4" --harness claude; then
+if pick_setup "$T4" 2; then
+  if pick_reinstall "$T4" '1 2'; then
     if [ -L "$T4/.claude/skills" ] && [ -L "$T4/.claude/agents" ]; then
-      pass "AC4: 'update.sh --harness claude' installs symlinks on a codex-only project"
+      pass "AC4: Reinstall + picking Claude Code installs symlinks on a codex-only project"
     else
-      fail "AC4: symlinks not installed despite explicit --harness claude"
+      fail "AC4: symlinks not installed despite picking Claude Code"
     fi
   else
-    fail "AC4: 'update.sh --harness claude' failed"; cat "$WORK/last.log" >&2
+    fail "AC4: Reinstall picking Claude Code failed"; cat "$WORK/last.log" >&2
   fi
 else
-  fail "AC4: setup.sh --harness codex failed"; cat "$WORK/last.log" >&2
+  fail "AC4: install picking Codex failed"; cat "$WORK/last.log" >&2
 fi
 
 # =============================================================================
@@ -256,7 +270,7 @@ elif ! grep -q '\[ "\$_h" = "claude" \] && continue' "$REVERTED_LIB"; then
 fi
 
 T6=$(new_target target-anti-vacuity)
-if run_setup "$T6" --harness codex; then
+if pick_setup "$T6" 2; then
   ( cd "$T6" && SUPERVISOR_REPO="file://$FIXTURE" bash "$REVERTED_UPDATE" </dev/null >"$WORK/last.log" 2>&1 )
   if [ -e "$T6/.claude/skills" ] || [ -e "$T6/.claude/agents" ]; then
     pass "AC6: reverting the fix in place makes AC1 go red again (symlinks reappear)"
@@ -264,7 +278,7 @@ if run_setup "$T6" --harness codex; then
     fail "AC6: anti-vacuity probe did not reproduce the original defect — probe is not testing the real branch"
   fi
 else
-  fail "AC6: setup.sh --harness codex failed for the anti-vacuity probe"; cat "$WORK/last.log" >&2
+  fail "AC6: install picking Codex failed for the anti-vacuity probe"; cat "$WORK/last.log" >&2
 fi
 
 # =============================================================================
@@ -272,8 +286,7 @@ fi
 # =============================================================================
 T7=$(new_target target-abort)
 RC=0
-( cd "$T7" && HARNESS_SKILL_BODY_CAP=abc SUPERVISOR_REPO="file://$FIXTURE" SUPERVISOR_PATH="$NO_CLONE" \
-    bash "$SETUP" --harness codex </dev/null >"$WORK/last.log" 2>&1 ) || RC=$?
+( HARNESS_SKILL_BODY_CAP=abc; export HARNESS_SKILL_BODY_CAP; pick_setup "$T7" 2 ) || RC=$?
 if [ "$RC" -ne 0 ]; then
   pass "AC7: setup.sh exits non-zero (rc=$RC) on a bad HARNESS_SKILL_BODY_CAP"
 else
@@ -290,8 +303,7 @@ fi
 # =============================================================================
 T8A=$(new_target target-negative-cap)
 RC=0
-( cd "$T8A" && HARNESS_SKILL_BODY_CAP="-1" SUPERVISOR_REPO="file://$FIXTURE" SUPERVISOR_PATH="$NO_CLONE" \
-    bash "$SETUP" --harness codex </dev/null >"$WORK/last.log" 2>&1 ) || RC=$?
+( HARNESS_SKILL_BODY_CAP="-1"; export HARNESS_SKILL_BODY_CAP; pick_setup "$T8A" 2 ) || RC=$?
 if [ "$RC" -ne 0 ]; then
   pass "AC8: a non-integer HARNESS_SKILL_BODY_CAP ('-1') is still rejected by name (rc=$RC)"
 else
@@ -304,8 +316,7 @@ else
 fi
 
 T8B=$(new_target target-cap-zero)
-if ( cd "$T8B" && HARNESS_SKILL_BODY_CAP=0 SUPERVISOR_REPO="file://$FIXTURE" SUPERVISOR_PATH="$NO_CLONE" \
-       bash "$SETUP" --harness codex </dev/null >"$WORK/last.log" 2>&1 ); then
+if ( HARNESS_SKILL_BODY_CAP=0; export HARNESS_SKILL_BODY_CAP; pick_setup "$T8B" 2 ); then
   pass "AC8: HARNESS_SKILL_BODY_CAP=0 still disables the check (setup succeeds)"
 else
   fail "AC8: HARNESS_SKILL_BODY_CAP=0 unexpectedly failed"; cat "$WORK/last.log" >&2
@@ -316,12 +327,13 @@ fi
 # happen. `claude` is resolved into PROJECTION_HARNESSES but deliberately
 # skipped by the projection loop, so naming it under "Re-projected harness(es)"
 # is a false statement about work performed (found at the CLI during /verify).
+# Since T115 the summary line reads "Refreshed: <CLI names>".
 # =============================================================================
 T9=$(new_target target-summary-claude)
 if run_setup "$T9"; then
   if run_update "$T9"; then
-    if grep -q "Re-projected harness(es):.*claude" "$WORK/last.log"; then
-      fail "AC9: summary claims 'Re-projected harness(es): claude' but claude is never projected"
+    if grep -q "Refreshed:.*Claude Code" "$WORK/last.log"; then
+      fail "AC9: summary claims 'Refreshed: Claude Code' but claude is never projected"
     else
       pass "AC9: claude is not listed as re-projected"
     fi
@@ -337,12 +349,12 @@ fi
 
 # A codex+claude project must still name codex (and only codex) as projected.
 T9B=$(new_target target-summary-both)
-if run_setup "$T9B" --harness claude --harness codex && run_update "$T9B"; then
-  if grep -q "Re-projected harness(es): codex$" "$WORK/last.log"; then
+if pick_setup "$T9B" '1 2' && run_update "$T9B"; then
+  if grep -q "Refreshed: Codex$" "$WORK/last.log"; then
     pass "AC9: a claude+codex project reports exactly the projected set (codex)"
   else
     fail "AC9: projected-set summary wrong for claude+codex"
-    grep "Re-projected" "$WORK/last.log" >&2 || true
+    grep "Refreshed" "$WORK/last.log" >&2 || true
   fi
 fi
 
@@ -350,23 +362,24 @@ fi
 # Test 10 (AC10) — both canon links deleted on a claude project: the links
 # correctly stay absent (fully-absent is indistinguishable from "never had
 # claude"), but the run must say so and name the way back, instead of printing
-# a bare "Update complete" with no hint that --harness claude would restore it.
+# a bare "Update complete" with no hint of the way back (since T115: run the
+# command again, choose Reinstall, pick the CLI).
 # =============================================================================
 T10=$(new_target target-empty-set)
 if run_setup "$T10"; then
   rm -f "$T10/.claude/skills" "$T10/.claude/agents"
   if run_update "$T10"; then
-    if grep -q "No harness detected in this project" "$WORK/last.log"; then
+    if grep -q "No CLI is set up in this project" "$WORK/last.log"; then
       pass "AC10: an empty resolved set is reported, not silent"
     else
       fail "AC10: nothing reported when no harness was requested or present"
       cat "$WORK/last.log" >&2
     fi
-    if grep -q -- "--harness <name>" "$WORK/last.log" \
-       && grep -q "Valid harnesses: claude codex" "$WORK/last.log"; then
-      pass "AC10: the message names the remedy and the valid harnesses"
+    if grep -q "choose Reinstall, and pick it from the CLI menu" "$WORK/last.log" \
+       && grep -q "no .claude/skills or .claude/agents, no .codex/skills" "$WORK/last.log"; then
+      pass "AC10: the message names the remedy (Reinstall + CLI menu) and what was looked for"
     else
-      fail "AC10: the message does not name --harness or the valid values"
+      fail "AC10: the message does not name the Reinstall remedy or what was looked for"
     fi
     if [ ! -e "$T10/.claude/skills" ] && [ ! -e "$T10/.claude/agents" ]; then
       pass "AC10: the links still stay absent (behaviour unchanged, only reporting added)"

@@ -361,12 +361,11 @@ fi
 # =============================================================================
 # Test 8 — correct-shape install with the canon link DELETED: update.sh
 # restores it when claude is requested this run (AC13, T096). T098 changed
-# the no-flag case: with the links fully absent AND no --harness claude on
-# this run, a plain `update.sh` no longer manufactures them back in — that is
-# the presence-detection fix T098 was registered for, so the old "restore
-# unconditionally" expectation here would now be wrong. An explicit
-# `--harness claude` still restores them, same as any explicit request
-# (T098 AC4).
+# the plain case: with the links fully absent, `update.sh` no longer
+# manufactures them back in — that is the presence-detection fix T098 was
+# registered for, so the old "restore unconditionally" expectation here would
+# now be wrong. Picking Claude Code on Reinstall still restores them (T098 AC4;
+# it was `update.sh --harness claude` until T115 removed every option).
 # =============================================================================
 if fresh_target "target8"; then
   T8="$NEW_TARGET"
@@ -380,19 +379,20 @@ if fresh_target "target8"; then
     fail "test8: update.sh returned non-zero ($RC) — see $WORK/update.log"
   fi
   if [ ! -e "$T8/.claude/skills" ] && [ ! -e "$T8/.claude/agents" ]; then
-    pass "test8: no-flag update.sh leaves fully-deleted, unrequested canon links absent (T098)"
+    pass "test8: plain update.sh leaves fully-deleted, unrequested canon links absent (T098)"
   else
     fail "test8: canon symlinks were re-established without being requested or present (T098 regression)"
   fi
 
   RC=0
-  ( cd "$T8" && SUPERVISOR_REPO="file://$FIXTURE" bash "$UPDATE" --harness claude </dev/null >"$WORK/update.log" 2>&1 ) || RC=$?
+  ( cd "$T8" && SUPERVISOR_REPO="file://$FIXTURE" \
+      run_in_pty '2\n1\n\n\n\n' "bash '$SETUP'" >"$WORK/update.log" 2>&1 ) || RC=$?
   if [ "$RC" -eq 0 ] \
      && [ "$(readlink "$T8/.claude/skills")" = "../skills" ] \
      && [ "$(readlink "$T8/.claude/agents")" = "../agents" ]; then
-    pass "test8: 'update.sh --harness claude' re-establishes both canon symlinks on explicit request"
+    pass "test8: Reinstall + picking Claude Code re-establishes both canon symlinks"
   else
-    fail "test8: 'update.sh --harness claude' did not restore the canon symlinks"
+    fail "test8: Reinstall + picking Claude Code did not restore the canon symlinks"
   fi
 fi
 

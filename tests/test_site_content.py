@@ -214,7 +214,7 @@ def test_every_pack_appears_on_page():
 README_PROMISED_TOPICS = {
     "packs": "pack",
     "update flow": "harness-lock",
-    "options table": "SUPERVISOR_REPO",
+    "options table": "Environment variable",  # T115: SUPERVISOR_REPO row removed (undocumented seam)
     "repository layout": "Repository layout",
     "memory system": "Memory System",
     "fork install": "GITHUB_USERNAME",
@@ -424,24 +424,30 @@ def test_layout_table_names_canon_root_and_relative_symlinks():
         ), f"Repository layout table has no dedicated row for canon root path {canon_dir}"
 
 
-def test_options_table_has_harness_row():
-    """AC3: T097 added a --harness install-time flag; setup.sh's own
-    VALID_HARNESSES is the source of truth for the accepted values."""
+def test_install_section_names_every_cli_and_options_table_has_no_flags():
+    """T115 (was T097 AC3's --harness row): setup.sh takes no options, so the
+    Options table documents no flag; the CLIs are chosen from a menu, and the
+    #install section names each one setup.sh's VALID_HARNESSES offers, in the
+    user's words (ADR-0002: "CLI", never "harness")."""
     with open(SETUP_SH, encoding="utf-8") as f:
         setup_text = f.read()
     match = re.search(r'^VALID_HARNESSES="([^"]+)"', setup_text, re.MULTILINE)
     assert match, "could not parse VALID_HARNESSES out of setup.sh"
     valid_harnesses = match.group(1).split()
     assert valid_harnesses, "VALID_HARNESSES parsed empty — fixture broken"
+    user_names = {"claude": "Claude Code", "codex": "Codex"}
 
     text = _page_text()
     options_section = re.search(r'<section id="options">(.*?)</section>', text, re.DOTALL)
     assert options_section, "page has no options section"
-    table = options_section.group(1)
-    assert re.search(r"<code>--harness\b", table), "Options table has no --harness row"
+    assert not re.search(r"<code>--", options_section.group(1)), "Options table still lists a flag"
+
+    install = re.search(r'<section id="install">(.*?)</section>', text, re.DOTALL)
+    assert install, "page has no install section"
     for harness in valid_harnesses:
-        assert _word_present(table, harness), (
-            f"Options table's --harness row does not name valid value {harness}"
+        assert harness in user_names, f"no user-facing name for CLI {harness!r} — add it here"
+        assert user_names[harness] in install.group(1), (
+            f"#install does not name the CLI {user_names[harness]!r} the menu offers"
         )
 
 
