@@ -66,5 +66,8 @@ jobs:
       - name: CLI and project-type menus test suite (T115)
         run: bash tests/test_cli_and_project_menus.sh
 
+      - name: MANIFEST exclusions test suite (T122)
+        run: bash tests/test_manifest_exclusions.sh
+
       - name: CI wires every shell suite (drift guard)
         run: python3 tests/test_ci_wires_shell_suites.py
