@@ -24,7 +24,60 @@
 
 ## Demonstration
 
-**BEFORE** (Supervisor, 2026-09-12, `main` `8115bc9`, before any implementation commit):
+**BEFORE** (Common-Infrastructure-Agent, 2026-09-23T06:17:46Z–06:18:02Z, branch head `e893453`,
+before any implementation commit). Kit = `git archive HEAD` committed into a scratch repo, served as
+`SUPERVISOR_REPO=file://…/kit`; target = empty scratch git repo; interactive path driven through a
+pty (`run_in_pty` from `tests/lib/pty.sh` = `script -qec`), answers `1` Install, `1` Claude Code,
+`1` New project, `1, 5` packs, Enter to Proceed. `--pack=mobile` is not reproduced: since T115 every
+argument exits 1 before anything is written (guide, *Drift* §1).
+
+**B1 — interactive menu, machine with no central clone** (`SUPERVISOR_PATH=<nonexistent>`, the case
+every post-ADR-0001 user is in), rc=0:
+```
+        Enter numbers separated by spaces, or press Enter to skip:
+Plan: Install Easy Kit into …/scratchpad/before/clean
+  - CLIs: Claude Code
+  - Project type: New project (CLAUDE.md)
+  - Copies in: agents, skills, .claude/hooks, templates, docs/claude-md, AGENTS.md, .cursor/rules, CLAUDE.md
+  …
+Proceed? [Y/n] [info]  Installed .claude/settings.json (copy). Restart Claude Code to activate hooks.
+[info]  Wrote ./.claude/harness-lock.json (74 file hashes).
+[warn]  Pack 'mobile' not found in central clone (…/before/no-clone/packs/mobile) — skipping.
+[warn]  Pack 'api' not found in central clone (…/before/no-clone/packs/api) — skipping.
+[info]  Setup complete. Easy Kit copied into …/scratchpad/before/clean
+[info]  CLAUDE source: CLAUDE.md | lock: .claude/harness-lock.json
+[info]  CLIs: Claude Code
+[info]  Packs requested: mobile api
+$ ls agents | grep -cE 'mobile|api-'   → 0
+$ ls -d packs                          → No such file or directory
+```
+
+**B2 — same answers, default `SUPERVISOR_PATH` on this machine, where a v1 `~/.supervisor` clone
+still exists.** Worse than "installs nothing": the pack path writes **absolute symlinks out of the
+project** into the canon, through the `.claude/agents -> ../agents` link, none of them in the lock:
+```
+[info]  Pack 'mobile' installed.
+[info]  Pack 'api' installed.
+[info]  Packs requested: mobile api
+agents/api-designer.md     -> /home/hungnguyenhuu/.supervisor/packs/api/agents/api-designer.md
+agents/mobile-developer.md -> /home/hungnguyenhuu/.supervisor/packs/mobile/agents/mobile-developer.md
+skills/auth-checklist      -> /home/hungnguyenhuu/.supervisor/packs/api/skills/auth-checklist/
+skills/contract-review     -> /home/hungnguyenhuu/.supervisor/packs/api/skills/contract-review/
+skills/platform-compatibility -> /home/hungnguyenhuu/.supervisor/packs/mobile/skills/platform-compatibility/
+skills/ui-accessibility    -> /home/hungnguyenhuu/.supervisor/packs/mobile/skills/ui-accessibility/
+```
+
+**B3 — no terminal** (`setsid -w sh setup.sh </dev/null`), rc=0:
+```
+[info]  No terminal — no packs installed. Re-run in a terminal to pick packs from the menu.
+…
+[info]  Setup complete. Easy Kit copied into …/scratchpad/before/notty
+$ ls -d packs → No such file or directory
+```
+
+In every BEFORE run the project receives **no `packs/` directory**: no catalog exists.
+
+*Historical, not reproducible since T115* — Supervisor probe, 2026-09-12, `main` `8115bc9`:
 
 `--pack=mobile`:
 ```
