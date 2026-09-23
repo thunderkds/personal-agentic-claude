@@ -115,3 +115,63 @@ extra `!` line cannot break it.
 **Registered out of scope, not built:** wiring pytest into CI (the guide's named T109 follow-up).
 It is still open, and the Supervisor should give it its own board row. I cannot edit
 `PROJECT_KANBAN.md`.
+
+---
+
+## Stage 4 — Supervisor review (2026-09-23)
+
+Scope: `main...HEAD`, 6 files. **0 P0 / 0 P1 / 0 P2 / 0 P3 — no findings.**
+security-review scoped manually to the branch diff (12th recorded over-scope avoidance): the change
+is two awk character-class additions, one new test and one CI step. No input handling, no new
+execution path, no network, no filesystem write outside the test's own `mktemp -d`. Nothing to report.
+
+"No findings" is only useful if it says what was actually checked, so:
+
+- **Re-ran everything independently, not read from the table above**: 16/16 shell suites OK,
+  **853 pytest passed / 0 failed**, `validate.sh` exit 0, `smoke-install.sh` PASS.
+- **Re-ran the two load-bearing mutation controls myself, confirming each mutation landed before
+  trusting its result** — the failure mode the implementer itself hit and reported. Reverting
+  `validate.sh`'s filter → `5 passed, 3 failed`; reverting `harness_manifest_dest`'s → `7 passed,
+  1 failed`; restored → `8 passed, 0 failed`, tree clean. Both reproduce the implementer's numbers
+  exactly.
+- **Checked the new suite for vacuity.** SC5 is two-sided: it first asserts a normal path line *does*
+  map `.codex/skills`, then that a `!` line maps nothing. A filter that over-matched and returned
+  empty for everything would fail the control, not pass it. This is the shape the vacuous-assertion
+  family (8 instances) keeps missing.
+
+### The implementer corrected the guide, and was right
+
+The guide's reader table called `harness_manifest_dest` **latent** — reachable only through callers
+that already drop `!` lines. **That premise was wrong and the implementer disproved it rather than
+obeying it**: `resolve_projection_harnesses` (`lib/harness-update.sh:506`, also reached from
+`setup.sh`'s `default_clis` on Reinstall) reads **raw** MANIFEST lines and hands each to
+`harness_manifest_dest`. Verified independently by the Supervisor at the call site. Pre-fix,
+`harness_manifest_dest '!skills codex=.codex/skills' codex` returned `.codex/skills`, so an
+exclusion line carrying a destination pair would have counted toward "this CLI is present" while
+`harness_project_manifest` would never project it — the same syntax-reached-some-consumers defect,
+one level down.
+
+Its severity call is also right and deliberately not rounded up: today's MANIFEST has no `!` line
+with a pair, so **nothing misbehaves now** — this is a trap for the next such line, not a live bug.
+Recorded that way rather than inflated.
+
+It also surveyed nine readers the guide never listed, and noticed that **M2 as the guide worded it
+does not test SC3** (it turns the AC1/AC2 cases red instead, because SC3 supplies its own missing
+path), then added M3 to cover the gap. The guide's control design was weaker than its author
+thought; this is the second time this session an implementer caught a Supervisor planning error.
+
+### Process, recorded as a positive
+
+Every Evidence row is left unticked and every note prefixed "Implementer:", and **the `verify` row
+is untouched**. Contrast with T116, whose agent forged a user-invoked `/verify` the same day. The
+difference is that this spawn prompt named the rule explicitly — which is evidence the instruction
+channel works, not that the model changed.
+
+### Merge-order note (not a finding)
+T116 also edits `.github/workflows/ci.yml`, replacing the pack-choice step mid-file; T122 appends
+before the drift guard. Different hunks, so they combine without conflict. T116 additionally deletes
+`tests/test_pack_choice_parsing.sh`, whose CI step it removes in the same edit, and
+`tests/test_ci_wires_shell_suites.py` gates any mismatch either way.
+
+### Gates still open
+- `verify` — user-run only. Correctly left untouched by the implementer.
