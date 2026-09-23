@@ -371,7 +371,7 @@ harness_project_manifest() {
   _manifest_path="$3"
   _harness="$4"
   if [ -z "$_src_dir" ] || [ -z "$_target_dir" ] || [ -z "$_manifest_path" ] || [ -z "$_harness" ]; then
-    _harness_log_error "harness_project_manifest: usage: harness_project_manifest <src_dir> <target_dir> <manifest_path> <harness>"
+    _harness_log_error "harness_project_manifest: usage: harness_project_manifest <src_dir> <target_dir> <manifest_path> <cli>"
     return 2
   fi
   if [ ! -f "$_manifest_path" ]; then
@@ -395,7 +395,7 @@ harness_project_manifest() {
 
     _src="$_src_dir/$_rel"
     if [ ! -e "$_src" ]; then
-      _harness_log_warn "MANIFEST entry '$_rel' not found in fetched clone — skipping for harness '$_harness'."
+      _harness_log_warn "MANIFEST entry '$_rel' not found in fetched clone — skipping for '$_harness'."
       continue
     fi
 
@@ -404,7 +404,7 @@ harness_project_manifest() {
     # and write outside the user's project.
     case "$_dest" in
       /*|*/../*|*/..|../*|..)
-        _harness_log_error "MANIFEST destination '$_dest' for harness '$_harness' must be a relative path inside the project (no leading '/' and no '..' segment) — skipping."
+        _harness_log_error "MANIFEST destination '$_dest' for '$_harness' must be a relative path inside the project (no leading '/' and no '..' segment) — skipping."
         continue ;;
     esac
     _dst="$_target_dir/$_dest"
@@ -435,7 +435,7 @@ harness_project_manifest() {
     done
   done < "$_manifest_path"
 
-  _harness_log_info "Projected $_projected item(s) for harness '$_harness'."
+  _harness_log_info "Projected $_projected item(s) for '$_harness'."
   if [ "$HARNESS_PROJECT_SKIPPED" -gt 0 ]; then
     _harness_log_warn "$HARNESS_PROJECT_SKIPPED skill(s) were SKIPPED for '$_harness' because their body exceeds the ${_cap}-byte cap (named above). They are absent, not truncated."
   fi

@@ -15,8 +15,8 @@
 # Files upstream stopped shipping are removed if unedited, kept if edited (T113).
 # The lock is then re-recorded to reflect what the user accepted.
 #
-# Harness projections (T097/T098): a harness is re-projected if it was passed via
-# --harness on this run OR if its destination directory already exists in the
+# Harness projections (T097/T098): a harness is re-projected if it was picked in
+# the CLI menu on this run (Reinstall) OR if its destination directory already exists in the
 # project; re-projection replaces the destination wholesale so nothing upstream
 # removed survives as an orphan. `.claude/{skills,agents}` are re-pointed at the
 # canon; a pre-T096 real directory there is moved to `<link>.bak`.
@@ -333,7 +333,7 @@ process_claude_md() {
   FINAL_CLAUDE_MD_SOURCE="$CLAUDE_MD_SOURCE"
   _src="$HARNESS_TEMP_DIR/$CLAUDE_MD_SOURCE"
   if [ ! -f "$_src" ]; then
-    log_error "CLAUDE.md source '$CLAUDE_MD_SOURCE' not found in fetched harness — leaving your CLAUDE.md untouched."
+    log_error "CLAUDE.md source '$CLAUDE_MD_SOURCE' not found in the fetched Easy Kit — leaving your CLAUDE.md untouched."
     return
   fi
   process_one_file "$_src" "$_dst" "CLAUDE.md" "$_lock" "$_decisions" "$_processed"
@@ -479,9 +479,9 @@ write_new_lock() {
 }
 
 # ── Which harnesses does this run re-project? ────────────────────────────────
-# Requested on the command line, plus every harness whose destination directory
-# is already present — so an install made with `setup.sh --harness codex` stays
-# up to date under a plain `bash update.sh` without any new state to keep.
+# Picked in the CLI menu (Reinstall; Update picks nothing), plus every harness
+# whose destination directory is already present — so a Codex-only install stays
+# Codex-only across Updates without any new state to keep.
 # `claude` is resolved by this same "requested or present" rule as every other
 # harness (T098) — it just checks presence at the two symlink destinations
 # rather than at a MANIFEST dest column, because claude has no MANIFEST=dest
@@ -672,6 +672,7 @@ plan_reinstall() {
   printf '\n'
   printf 'Plan: Reinstall Easy Kit in %s (backs up your edits)\n' "$(pwd)"
   printf '  - Every kit file is replaced with a fresh copy, and the lock is rewritten.\n'
+  plan_cli_lines "$_manifest"
   printf '  - Project type: %s\n' "$(project_type_label)"
   printf '  - Your edited files are moved to <file>.bak first:\n'
   plan_list "$_backups" "(none: no file the kit ships now has been edited)"
@@ -690,9 +691,9 @@ reproject_harnesses() {
     # claude has no MANIFEST=dest pairs to project — its install is the symlink
     # step below, so it is not added to the "re-projected" summary.
     [ "$_rp_h" = "claude" ] && continue
-    log_info "Re-projecting canon for harness '$_rp_h'."
+    log_info "Refreshing $(cli_names "$_rp_h"): copying the kit's skills into its folder."
     harness_project_manifest "$HARNESS_TEMP_DIR" "." "$_manifest" "$_rp_h" || {
-      log_error "Update aborted: harness projection for '$_rp_h' failed. The target tree may be partial."
+      log_error "Update aborted: refreshing $(cli_names "$_rp_h") failed. The target tree may be partial."
       exit 2
     }
     _rp_done="$_rp_done $_rp_h"
@@ -704,14 +705,14 @@ reproject_harnesses() {
     *" claude "*) harness_install_canon_symlinks . ; _rp_linked=1 ;;
   esac
   if [ -n "$_rp_done" ]; then
-    log_info "Re-projected harness(es):$_rp_done"
+    log_info "Refreshed: $(cli_names "$_rp_done")"
   fi
   if [ "$_rp_linked" -eq 1 ]; then
-    log_info "Harness 'claude': re-pointed .claude/{skills,agents} at the plain-root canon."
+    log_info "Claude Code: re-pointed .claude/{skills,agents} at the plain-root canon."
   fi
   if [ -z "$PROJECTION_HARNESSES" ]; then
-    log_info "No harness detected in this project — none requested, none already present."
-    log_info "Run 'update.sh --harness <name>' to install one. Valid harnesses: $VALID_HARNESSES"
+    log_info "No CLI is set up in this project (no .claude/skills or .claude/agents, no .codex/skills)."
+    log_info "To add one, run the command again, choose Reinstall, and pick it from the CLI menu."
   fi
 }
 

@@ -1,6 +1,6 @@
 #!/bin/sh
 # setup.sh — Easy Kit installer (direct-to-repo, ADR-0001)
-# Usage: bash setup.sh [--copy] [--pack=<name>] [--harness <name>]...
+# Usage: curl -fsSL …/setup.sh | sh   (takes no options — everything is a menu, T115)
 #
 # Fresh-install model (ADR-0001): fetch the harness into a temp clone via
 # lib/harness-fetch.sh, copy every MANIFEST path + CLAUDE.md/CLAUDE_LEGACY.md into
@@ -14,10 +14,10 @@
 #   SUPERVISOR_PATH   — legacy central-clone location, still used ONLY by packs
 #                       (install_pack), which stay out of scope per ADR-0001
 #
-# Harness selection (T097 / DDR-0007): --harness <name> is repeatable and picks
-# which CLIs this project receives directories for. With NO --harness flag the
-# selection is exactly `claude`, which is the pre-T097 install unchanged — a
-# project only ever gains vendor directories it explicitly asked for.
+# CLI selection (T097 / DDR-0007, menu since T115): on Install / Reinstall the
+# user picks which CLIs this project receives directories for from a numbered
+# list; a project only ever gains vendor directories the user picked. Update
+# asks nothing and keeps every CLI already present.
 set -e
 
 # Legacy central-clone path — referenced only by the (unchanged, out-of-scope)
@@ -38,6 +38,15 @@ fi
 log_info()  { printf "${GREEN}[info]${RESET}  %s\n"  "$*"; }
 log_warn()  { printf "${YELLOW}[warn]${RESET}  %s\n" "$*" >&2; }
 log_error() { printf "${RED}[error]${RESET} %s\n"   "$*" >&2; }
+
+# ── Easy Kit takes no options (T115, ADR-0002 "Removed") ──────────────────────
+# Checked before anything else, the bootstrap clone included, so a stale
+# `--harness codex` from old docs fails loudly with nothing written.
+if [ "$#" -gt 0 ] && [ -z "${SETUP_SH_DEFINE_ONLY:-}" ]; then
+  log_error "Easy Kit takes no options (got: $*). Run it and choose from the menus:"
+  log_error "  curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh"
+  exit 1
+fi
 
 # ── Source the shared temp-clone-copy-discard fetch library (T031) ───────────
 HARNESS_LIB="$SCRIPT_DIR/lib/harness-fetch.sh"
@@ -86,77 +95,14 @@ resolve_repo_url() {
   log_info "Using repo: $SUPERVISOR_REPO"
 }
 
-# ── Parse flags ───────────────────────────────────────────────────────────────
-# --copy is retained for backward-compat: the base install is ALWAYS a real copy
-# now (no symlink mode), so --copy is a no-op there. It still selects copy-vs-
-# symlink for out-of-scope packs (install_pack), whose behavior is unchanged.
+# ── Selections ────────────────────────────────────────────────────────────────
+# USE_COPY and PACKS stay only for the pack installer (install_abs / prompt_packs,
+# T116's): the flags that set them are gone, so they keep their defaults.
 USE_COPY=0
 PACKS=""  # space-separated list of packs to install (e.g. " mobile data")
-# Harnesses to install for. Empty here means "not specified" so the default can
-# be applied AFTER parsing; it becomes "claude" (today's behaviour) below.
+# The CLIs to set up, as internal names; chosen by prompt_clis.
 HARNESSES=""
 VALID_HARNESSES="claude codex"
-# EXPECT_HARNESS carries the "previous arg was a bare --harness" state into the
-# catch-all branch, so the value of `--harness <name>` is consumed there rather
-# than by a pre-case guard — that keeps `case "$arg" in` adjacent to the loop
-# header, which tests/test_pack_docs_flags.py parses to enumerate valid flags.
-EXPECT_HARNESS=0
-for arg in "$@"; do
-  case "$arg" in
-    --copy) USE_COPY=1 ;;
-    --pack=*) pack_val="${arg#--pack=}"; PACKS="$PACKS $pack_val" ;;
-    --harness) EXPECT_HARNESS=1 ;;
-    --harness=*)
-      # An empty value must be rejected here. It cannot be caught later: the
-      # validation loop below word-splits $HARNESSES, so an empty entry vanishes
-      # and validates zero names, while the string itself stays non-empty and so
-      # suppresses the default-to-claude fallback. The result would be an install
-      # with NO harness directories at all, which is the silently-empty install
-      # --harness exists to prevent.
-      _hv="${arg#--harness=}"
-      if [ -z "$_hv" ]; then
-        log_error "--harness requires a non-empty value. Valid harnesses: $VALID_HARNESSES"
-        exit 1
-      fi
-      HARNESSES="$HARNESSES $_hv"
-      ;;
-    *)
-      if [ "$EXPECT_HARNESS" -eq 1 ]; then
-        if [ -z "$arg" ]; then
-          log_error "--harness requires a non-empty value. Valid harnesses: $VALID_HARNESSES"
-          exit 1
-        fi
-        HARNESSES="$HARNESSES $arg"; EXPECT_HARNESS=0
-      else
-        log_error "Unknown flag: $arg. Valid flags: --copy, --pack=<name>, --harness <name>"
-        exit 1
-      fi
-      ;;
-  esac
-done
-if [ "$EXPECT_HARNESS" -eq 1 ]; then
-  log_error "--harness requires a value. Valid harnesses: $VALID_HARNESSES"
-  exit 1
-fi
-
-# Validate every requested harness BEFORE any file is written. An unknown name
-# must fail loudly rather than silently produce an install with nothing in it.
-for h in $HARNESSES; do
-  _known=0
-  for v in $VALID_HARNESSES; do
-    [ "$h" = "$v" ] && _known=1
-  done
-  if [ "$_known" -eq 0 ]; then
-    log_error "Unknown harness: '$h'. Valid harnesses: $VALID_HARNESSES"
-    exit 1
-  fi
-done
-
-# Update re-derives its CLIs from what is present plus what was asked for
-# (T098), so it needs the request as given, before the install default below.
-HARNESSES_REQUESTED="$HARNESSES"
-# No --harness given => exactly today's install.
-[ -n "$HARNESSES" ] || HARNESSES="claude"
 
 # EASYKIT_ACTION is an internal seam for update.sh, the thin alias (T114). It is
 # not a user option and is never documented; an unknown value is an error.
@@ -253,7 +199,7 @@ install_canon_symlinks() {
   harness_install_canon_symlinks .
 }
 
-# ── Was a harness requested on this run? ─────────────────────────────────────
+# ── Was this CLI picked on this run? ─────────────────────────────────────
 harness_selected() {
   for _h in $HARNESSES; do
     [ "$_h" = "$1" ] && return 0
@@ -289,13 +235,13 @@ install_harness_projections() {
   _manifest="$1"
   for _h in $HARNESSES; do
     [ "$_h" = "claude" ] && continue
-    log_info "Projecting canon for harness '$_h'."
+    log_info "Setting up $(cli_names "$_h"): copying the kit's skills into its folder."
     harness_project_manifest "$HARNESS_TEMP_DIR" "." "$_manifest" "$_h" || {
-      log_error "Setup aborted: harness projection for '$_h' failed. The target tree may be partial."
+      log_error "Setup aborted: setting up $(cli_names "$_h") failed. The target tree may be partial."
       exit 2
     }
     case "$_h" in
-      codex) ensure_gitignore_entry ".codex/skills/" "generated by setup.sh --harness codex (T097); regenerate, do not commit" ;;
+      codex) ensure_gitignore_entry ".codex/skills/" "generated by Easy Kit for Codex (T097); regenerate, do not commit" ;;
     esac
   done
 }
@@ -387,20 +333,100 @@ tty_read() {
   IFS= read -r TTY_ANSWER 2>/dev/null </dev/tty
 }
 
-# ── Prompt greenfield vs brownfield ──────────────────────────────────────────
-# Defaults to greenfield when there is no terminal (e.g. CI, `setsid`)
+# ── Menu: which CLIs (T115) ──────────────────────────────────────────────────
+# Pre-selection for Install: every CLI found on PATH (a real executable — the
+# script runs in sh, so shell aliases/functions never count); Claude Code when
+# neither is found. Reinstall pre-selects what the project already has instead,
+# so Enter never adds a CLI the project did not have.
+default_clis() {
+  _dc_manifest="$1"
+  _dc=""
+  if [ "$ACTION" = "reinstall" ]; then
+    _dc_saved="$HARNESSES"; HARNESSES=""
+    resolve_projection_harnesses "$_dc_manifest"
+    HARNESSES="$_dc_saved"
+    _dc="$PROJECTION_HARNESSES"
+  fi
+  if [ -z "$_dc" ]; then
+    for _h in $VALID_HARNESSES; do
+      command -v "$_h" >/dev/null 2>&1 && _dc="$_dc $_h"
+    done
+  fi
+  [ -n "$_dc" ] || _dc="claude"
+  printf '%s' "${_dc# }"
+}
+
+# Menu number <-> internal name, in VALID_HARNESSES order.
+cli_numbers() {
+  _cnum=""
+  _i=0
+  for _v in $VALID_HARNESSES; do
+    _i=$((_i + 1))
+    for _h in $1; do [ "$_h" = "$_v" ] && _cnum="$_cnum $_i"; done
+  done
+  printf '%s' "${_cnum# }"
+}
+
+# Sets HARNESSES. Enter keeps the pre-selection; numbers may be separated by
+# spaces or commas ("1 2", "1,2" — T108's lesson). A line with separators but no
+# number re-prompts "pick at least one"; anything else unknown re-prompts. EOF
+# at the terminal cancels, as the action menu does. No terminal: the default.
+prompt_clis() {
+  _pc_default=$(default_clis "$1")
+  HARNESSES="$_pc_default"
+  [ "$TTY_OK" -eq 1 ] || return 0
+  printf '\nWhich CLIs should Easy Kit set up?\n'
+  printf '  1) Claude Code  2) Codex\n'
+  while :; do
+    printf 'Choose one or more [%s]: ' "$(cli_numbers "$_pc_default")"
+    if ! tty_read; then
+      printf '\n'
+      cancel_run
+    fi
+    [ -n "$TTY_ANSWER" ] && [ -z "$(printf '%s' "$TTY_ANSWER" | tr -d ' \t')" ] && TTY_ANSWER=""
+    [ -n "$TTY_ANSWER" ] || return 0
+    _pc_picked=""
+    _pc_bad=0
+    for _pc_n in $(printf '%s' "$TTY_ANSWER" | tr ',' ' '); do
+      case "$_pc_n" in
+        1) _pc_picked="$_pc_picked claude" ;;
+        2) _pc_picked="$_pc_picked codex" ;;
+        *) _pc_bad=1 ;;
+      esac
+    done
+    if [ "$_pc_bad" -eq 1 ]; then
+      printf 'Please enter 1, 2 or both (e.g. 1 2).\n'
+    elif [ -z "$_pc_picked" ]; then
+      printf 'Pick at least one CLI.\n'
+    else
+      # Menu order, each once, whatever order or repeats were typed.
+      HARNESSES=""
+      for _v in $VALID_HARNESSES; do
+        case " $_pc_picked " in *" $_v "*) HARNESSES="$HARNESSES $_v" ;; esac
+      done
+      HARNESSES="${HARNESSES# }"
+      return 0
+    fi
+  done
+}
+
+# ── Menu: project type (T115 wording; was greenfield / brownfield) ───────────
+# Defaults to New project when there is no terminal (e.g. CI, `setsid`) or at EOF.
 prompt_mode() {
+  mode_choice=1
   if [ "$TTY_OK" -eq 1 ]; then
-    printf "[info]  Is this a greenfield (new) or brownfield (existing/legacy) project?\n"
-    printf "        1) greenfield — use CLAUDE.md\n"
-    printf "        2) brownfield — use CLAUDE_LEGACY.md\n"
-    printf "        Choice [1/2]: "
-    tty_read || true
-    mode_choice="$TTY_ANSWER"
-  else
-    # Non-interactive (piped install) — default to greenfield
-    log_info "Non-interactive mode detected. Defaulting to greenfield (CLAUDE.md). Re-run interactively to choose brownfield."
-    mode_choice=1
+    printf '\nIs this a new or an existing project?\n'
+    printf '  1) New project\n'
+    printf '  2) Existing / legacy project\n'
+    while :; do
+      printf 'Choose [1]: '
+      tty_read || { printf '\n'; break; }
+      case "$TTY_ANSWER" in
+        ''|1) mode_choice=1; break ;;
+        2)    mode_choice=2; break ;;
+      esac
+      printf 'Please enter 1 or 2.\n'
+    done
   fi
 
   case "$mode_choice" in
@@ -415,7 +441,7 @@ install_claude() {
   dst="./CLAUDE.md"
 
   if [ ! -e "$src" ]; then
-    log_error "Source '$CLAUDE_SRC' not found in fetched harness. Aborting."
+    log_error "Source '$CLAUDE_SRC' not found in the fetched Easy Kit. Aborting."
     exit 1
   fi
 
@@ -477,7 +503,7 @@ install_settings() {
   dst="./.claude/settings.json"
 
   if [ ! -e "$src" ]; then
-    log_warn ".claude/settings.json not found in fetched harness — hooks will not be wired."
+    log_warn ".claude/settings.json not found in the fetched Easy Kit — hooks will not be wired."
     return
   fi
   if [ -e "$dst" ] || [ -L "$dst" ]; then
@@ -638,7 +664,7 @@ ACTION=""
 # User-facing names for the selected CLIs ("Claude Code, Codex").
 cli_names() {
   _cn=""
-  for _h in $HARNESSES; do
+  for _h in ${1-$HARNESSES}; do
     case "$_h" in
       claude) _cn="$_cn, Claude Code" ;;
       codex)  _cn="$_cn, Codex" ;;
@@ -648,14 +674,31 @@ cli_names() {
   printf '%s' "${_cn#, }"
 }
 
+# Plan lines for the CLIs (Install and Reinstall). Reinstall never removes a CLI
+# the project already has: one present but not picked is kept and refreshed
+# (the Update presence rule, T098), and the plan says so — never a silent orphan.
+plan_cli_lines() {
+  printf '  - CLIs: %s\n' "$(cli_names)"
+  [ "$ACTION" = "reinstall" ] || return 0
+  _pk_saved="$HARNESSES"; HARNESSES=""
+  resolve_projection_harnesses "$1"
+  HARNESSES="$_pk_saved"
+  _pk_kept=""
+  for _h in $PROJECTION_HARNESSES; do
+    case " $HARNESSES " in *" $_h "*) ;; *) _pk_kept="$_pk_kept $_h" ;; esac
+  done
+  [ -n "$_pk_kept" ] || return 0
+  printf '  - Already set up here, not picked, kept and refreshed: %s (to remove one, delete its folder).\n' "$(cli_names "$_pk_kept")"
+}
+
 project_type_label() {
   case "$CLAUDE_SRC" in
-    CLAUDE_LEGACY.md) printf 'existing/legacy project (CLAUDE_LEGACY.md)' ;;
-    *)                printf 'new project (CLAUDE.md)' ;;
+    CLAUDE_LEGACY.md) printf 'Existing / legacy project (CLAUDE_LEGACY.md)' ;;
+    *)                printf 'New project (CLAUDE.md)' ;;
   esac
 }
 
-# Sets ACTION to install | update | reinstall | cancel. Enter takes the safe
+# Sets ACTION to install | update | reinstall | cancel ($1: the MANIFEST). Enter takes the safe
 # default (1). Invalid input re-prompts; EOF at a terminal cancels. With no
 # terminal there is no menu: the safe default is printed and taken, and
 # Reinstall is never chosen.
@@ -665,7 +708,7 @@ choose_action() {
       log_info "No terminal — updating, keeping your edits (any file you edited is left as it is; re-run in a terminal to resolve)."
       ACTION=update
     else
-      log_info "No terminal — installing with the defaults: CLI $(cli_names), new project (CLAUDE.md)."
+      log_info "No terminal — installing with the defaults: $(cli_names "$(default_clis "$1")"), New project (CLAUDE.md)."
       ACTION=install
     fi
     return
@@ -782,7 +825,7 @@ plan_install() {
 
   printf '\n'
   printf 'Plan: Install Easy Kit into %s\n' "$(pwd)"
-  printf '  - CLI: %s\n' "$(cli_names)"
+  plan_cli_lines "$_manifest"
   printf '  - Project type: %s\n' "$(project_type_label)"
   printf '  - Copies in: %s, CLAUDE.md\n' "$(grep -v '^[[:space:]]*[#!]' "$_manifest" | awk 'NF {print $1}' | paste -sd, - | sed 's/,/, /g')"
   printf '  - Existing paths that differ from the kit are moved aside first:\n'
@@ -799,13 +842,12 @@ run_install() {
 
   # Canon now lands at plain root (skills/, agents/); Claude Code still reads
   # .claude/. Must run before install_pack so packs writing to .claude/agents/
-  # resolve through the link into agents/. Skipped when Claude was not among the
-  # selected harnesses — the point of --harness is that a project receives only
-  # the directories for CLIs it actually uses.
+  # resolve through the link into agents/. Skipped when Claude Code was not
+  # picked — a project receives only the directories for CLIs it actually uses.
   if harness_selected claude; then
     install_canon_symlinks
   else
-    log_info "Harness 'claude' not selected — skipping .claude/{skills,agents} symlinks."
+    log_info "Claude Code not picked — skipping .claude/{skills,agents} symlinks."
   fi
 
   # Real-copy projections for every other selected harness (e.g. .codex/skills).
@@ -834,7 +876,7 @@ main() {
   fetch_harness
   manifest="$HARNESS_TEMP_DIR/MANIFEST"
   if [ ! -f "$manifest" ]; then
-    log_error "MANIFEST not found in fetched harness. The repo may be corrupt."
+    log_error "MANIFEST not found in the fetched Easy Kit. The repo may be corrupt."
     exit 1
   fi
   fresh_list="$HARNESS_TEMP_DIR/.fresh-list"
@@ -847,18 +889,20 @@ main() {
 
   CLAUDE_SRC="CLAUDE.md"
   while :; do
-    choose_action
+    choose_action "$manifest"
     case "$ACTION" in
       cancel) cancel_run ;;
       update)
         plan_update "$LOCK_FILE" "$manifest" "$fresh_list"
         ;;
       install)
+        prompt_clis "$manifest"
         prompt_mode
         prompt_packs
         plan_install "$manifest"
         ;;
       reinstall)
+        prompt_clis "$manifest"
         prompt_mode
         prompt_packs
         plan_reinstall "$reinstall_backups" "$LOCK_FILE" "$fresh_list" "$manifest"
@@ -869,7 +913,8 @@ main() {
 
   case "$ACTION" in
     update)
-      HARNESSES="$HARNESSES_REQUESTED"
+      # Update asks for no CLI: it keeps exactly what is present (T098).
+      HARNESSES=""
       run_update "$LOCK_FILE" "$manifest" "$fresh_list"
       return
       ;;
@@ -887,9 +932,9 @@ main() {
     install_pack "$pack"
   done
 
-  log_info "Setup complete. Harness copied into $(pwd)"
+  log_info "Setup complete. Easy Kit copied into $(pwd)"
   log_info "CLAUDE source: $CLAUDE_SRC | lock: .claude/harness-lock.json"
-  log_info "Harnesses:$HARNESSES"
+  log_info "CLIs: $(cli_names)"
   if [ -n "$PACKS" ]; then
     log_info "Packs requested:$PACKS"
   fi
