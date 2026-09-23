@@ -2220,11 +2220,11 @@ git. The Supervisor read the diff, committed it, and re-verified rather than acc
 the numbers held (848/5 vs `main`'s 843/6). **An exited agent is not a committed agent — check
 `git log` on the branch before reading its review.**
 
-Stage 4: 0 P0 / 3 P1 (all fixed) / 1 P2 (accepted, split out as T119). Root cause of all three P1s
+Stage 4: 0 P0 / 3 P1 (all fixed) / 1 P2 (accepted, split out as T121). Root cause of all three P1s
 is one gap, generalised in `learnings.md`: the docs-agreement gate checked the docs and not the
 installer's own output. Stage 5 `/verify`: PASS at the real CLI surface — PTY and no-terminal
 installs from a `file://` fixture, **no suite run as evidence**, with both real CLIs on `PATH`.
 
-Carried off rather than folded in: **T119** (`^D` at the packs prompt aborts silently, exit 1 —
+Carried off rather than folded in: **T121** (`^D` at the packs prompt aborts silently, exit 1 —
 verified identical on `main`, so pre-existing) and **T120** (Reinstall's closing summary reports the
 picked CLIs, not the projected ones, so it under-reports a kept CLI the plan disclosed correctly).

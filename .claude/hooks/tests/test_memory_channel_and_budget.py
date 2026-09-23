@@ -382,7 +382,33 @@ def test_ac12_memory_md_header_rules_state_the_budget_and_the_channel():
 
 
 def test_ac4_documented_per_entry_limit_is_labelled_an_aspiration():
-    """Silently keeping ≤150 while 89% violate it is not acceptable (AC4)."""
-    header = _read("memory/MEMORY.md").split("### Decisions")[0]
+    """Silently keeping <=150 while most entries violate it is not acceptable (AC4).
+
+    The header must label the limit an aspiration AND state how far reality is
+    from it. It used to pin the literal string "130 of 146 entries exceed it",
+    which froze a measurement: a *correct* compact-memory pass turned this red
+    with nothing wrong (2026-09-23). So assert the shape and then check the
+    stated figures against the live file — the header may be any numbers, but
+    it may not be numbers that disagree with the index it describes.
+    """
+    text = _read("memory/MEMORY.md")
+    header = text.split("### Decisions")[0]
     assert "ASPIRATION" in header
-    assert "130 of 146 entries exceed it" in header
+
+    m = re.search(r"(\d[\d,]*) entries, (\d[\d,]*) over target", header)
+    assert m, (
+        "header must state '<N> entries, <M> over target' so the aspiration is "
+        "reported against reality, not merely named"
+    )
+    claimed_total, claimed_over = (int(g.replace(",", "")) for g in m.groups())
+
+    entries = [ln for ln in text.splitlines() if ln.startswith("- [")]
+    actual_over = sum(1 for ln in entries if len(ln) > 150)
+    assert claimed_total == len(entries), (
+        f"header claims {claimed_total} entries, file has {len(entries)} — "
+        "re-measure, don't re-read"
+    )
+    assert claimed_over == actual_over, (
+        f"header claims {claimed_over} over target, actual {actual_over} — "
+        "re-measure, don't re-read"
+    )

@@ -674,7 +674,7 @@ decision, not a review fix.
 > message, output stops mid-line**, nothing written. The root cause is
 > `prompt_packs` using a bare `read -r` under `set -e`, not `prompt_mode`.
 > `main` behaves identically, so it is **pre-existing, not a T115 regression**
-> — which is why Stage 5 is PASS. It is registered as **T119**. The claim was
+> — which is why Stage 5 is PASS. It is registered as **T121**. The claim was
 > written from reading the code and was not verified at the surface until
 > Stage 5; recorded here rather than silently edited.
 
@@ -755,11 +755,11 @@ Plan: Reinstall Easy Kit in …/proj1 (backs up your edits)
 `.codex/skills` still present. Disclosed **before** `Proceed?`, never a silent orphan.
 
 **7. Probe — `^D` at each menu.** CLI menu: `Cancelled — nothing was changed`,
-0 files written. Project-type menu: **exit 1, silent** — see T119 below.
+0 files written. Project-type menu: **exit 1, silent** — see T121 below.
 
 ### Findings carried off this task (registered, not folded in)
 
-- **T119** — `^D` at the project-type/packs prompt aborts silently, exit 1, output
+- **T121** — `^D` at the project-type/packs prompt aborts silently, exit 1, output
   stops mid-line. Root cause `prompt_packs`' bare `read -r` under `set -e`.
   **Verified identical on `main`** (exit 1, silent, nothing written) → pre-existing,
   not a T115 regression. T115 is what made it visible, by giving the two menus

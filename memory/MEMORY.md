@@ -18,32 +18,34 @@
 
 ## Index
 
-### ⚠️ Session handoff — read first (written 2026-09-22)
+### ⚠️ Session handoff — read first (written 2026-09-23)
 
-- **T114 is Done, merged to `main` (2026-09-22, `d2642ea`).** One command with menu + plan screen;
-  `update.sh` is an alias. **Next: T115** (CLI/project-type menus, drop install flags), then T116 → T117; T119 anytime.
+- **T115 is Done, merged and pushed to `main` (2026-09-23, `306c2cc`).** The installer takes no
+  options: any argument exits 1 before anything is cloned or written, and CLIs + project type are
+  numbered menus. **Next: T116** (packs ship dormant, the broken install-time pack installer is
+  removed), then **T117** (`select-packs`). **T119 / T120 / T121 are small and unblocked — take any
+  of them anytime.**
+- **ID collision corrected 2026-09-23, do not re-introduce it.** T115's two Stage 5 follow-ups were
+  first registered as T119/T120 while a **T119 already existed** ("an aborted install says what it
+  actually did"). The `^D` follow-up is now **T121**; T120 is unambiguous. **Scan the whole board
+  for the highest ID before registering a row — `git log` and the guide filenames in `tasks/` are
+  not enough**, because a Todo row can exist with no guide on disk, which is exactly what hid T119.
 - **The T110/T111 branch divergence is RESOLVED — do not act on older handoffs that say otherwise.**
-  Verified 2026-09-18: `feat/easy-kit-one-command` is a strict **ancestor** of `main`
-  (`git merge-base --is-ancestor` yes; 32 ahead / 0 behind). T111 merged to `main` at `4f766dd`,
-  `lib/merge-settings.py` is on `main`, and its board row reads `[x]`. The 2026-09-16 warning was
-  true when written and is now spent; it was **re-asserted in error on 2026-09-18** by a Supervisor
-  editing this block without re-checking it. T114's dependencies T110/T111/T112 are all Done — only
-  **T113** remains before T114 is unblocked.
-- **Three follow-ups recorded, none blocking**: (1) `TASK_REVIEW_T112.md` — the abort message says
-  "nothing was replaced" while MANIFEST-earlier paths already were; wording fix scoped to one path.
-  (2) `TASK_REVIEW_T111.md` — a user's own entry whose command contains `.claude/hooks/` is
-  silently removed by the ownership rule, while the comparable `drop_dangling` case warns.
-  (3) fold the ~35 duplicated lines of `merge_settings`/`settings_merge_refused` out of
-  `setup.sh`/`update.sh` into a shared helper — **T112 has now stopped editing
-  `lib/harness-fetch.sh` and T113 has landed — now unblocked.**
-
+  Verified 2026-09-18: `feat/easy-kit-one-command` is a strict **ancestor** of `main`. It was
+  **re-asserted in error on 2026-09-18** by a Supervisor editing this block without re-checking it.
+- **Follow-ups recorded, none blocking**: (1) **T119** — T112's abort says "nothing was replaced"
+  while MANIFEST-earlier paths already were. (2) `TASK_REVIEW_T111.md` — a user entry whose command
+  contains `.claude/hooks/` is silently removed by the ownership rule, while `drop_dangling` warns.
+  (3) fold the ~35 duplicated `merge_settings` lines out of `setup.sh`/`update.sh` into a shared
+  helper — unblocked. (4) ~35 stale worktrees under `pets/wt-*` are un-pruned.
 
 - [T114: one command — menu, plan, confirm; Reinstall runs the removal pass](decisions.md) — prompts read /dev/tty before any write; any lock rewrite must run carry_over first
 - [T113: update removes unedited dropped files; MANIFEST `!` exclusions](decisions.md) — edited ones kept + named
 
 <!-- Format: - [Title](cold-file.md#section) — one-line summary.
-     Target ≤150 chars/entry: an ASPIRATION, not a gate — 130 of 146 entries exceed it
-     (mean 326, max 796). Reported by the size test, never enforced; /compact-memory's job. -->
+     Target ≤150 chars/entry: an ASPIRATION, not a gate. Measured 2026-09-23 after a
+     compact-memory pass: 232 entries, 122 over target, mean 156, max 263, file 39,019 chars
+     against a 42,000 budget. Figures expire — re-measure, don't re-read. -->
 
 ### Decisions
 - [A batch guide ages against the tasks that merge after it, and the stalest part is its interactions](learnings.md) — Re-read the call sites, not the guide, and commit the correction before the spawn
