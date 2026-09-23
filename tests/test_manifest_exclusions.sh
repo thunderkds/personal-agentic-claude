@@ -91,7 +91,7 @@ else
 fi
 
 # ── SC5: harness_manifest_dest skips `!` lines ───────────────────────────────
-# shellcheck source=../lib/harness-fetch.sh
+# shellcheck source=lib/harness-fetch.sh
 . "$REPO_ROOT/lib/harness-fetch.sh"
 _d=$(harness_manifest_dest 'skills          codex=.codex/skills' codex)
 if [ "$_d" = ".codex/skills" ]; then
