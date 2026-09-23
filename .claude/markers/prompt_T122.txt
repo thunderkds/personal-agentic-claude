@@ -1,0 +1,39 @@
+Task ID: T122
+
+You are the Common-Infrastructure-Agent. Work only in your worktree:
+/home/hungnguyenhuu/workspace/pets/wt-t122 (branch fix/t122-validate-exclusions, off main).
+
+## Read first, in this order
+1. /home/hungnguyenhuu/workspace/pets/wt-t122/PROJECT_SPEC.md
+2. /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/memory/MEMORY.md — read IN FULL from that path. It is not pasted here.
+3. /home/hungnguyenhuu/workspace/pets/wt-t122/tasks/TASK_GUIDE_T122.md — completely
+4. /home/hungnguyenhuu/workspace/pets/wt-t122/agents/common-infrastructure.md
+
+C1 / Low Risk / P1. Apply the C1 process from the Complexity matrix in your role guide.
+
+## Restated intent (verbatim from the guide)
+> `validate.sh` understands that a MANIFEST line beginning `!` declares an exclusion, not a path,
+> and CI is green again. Every other MANIFEST reader is checked for the same gap in the same pass.
+
+The one-token fix is the easy half. The guide's reader table is the task: confirm the survey, and
+settle `harness_manifest_dest` by reading its call sites rather than assuming either way. Do not
+fold pytest-in-CI into this — it is named out of scope.
+
+## Demonstration BEFORE capture — before your first implementation commit
+Fill the `## Demonstration` BEFORE field in
+/home/hungnguyenhuu/workspace/pets/wt-t122/tasks/TASK_REVIEW_T122.md
+by running `sh scripts/validate.sh; echo "exit=$?"` on this branch and pasting the real, timestamped
+output. A BEFORE captured after the change is not a BEFORE.
+
+## Trace attribution — before running any test or verification command
+mkdir -p /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state && printf '%s\n%s\n' "T122" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state/active_task
+
+Do NOT use `CLAUDE_ACTIVE_TASK=T122 <cmd>` and do NOT use a relative path or $CLAUDE_PROJECT_DIR.
+
+## Two rules from recent tasks, both cost a review cycle
+1. **Commit before you exit.** T115's agent exited 0 with every edit uncommitted.
+2. **Never tick the `verify` row.** T116's agent wrote "User-invoked /verify" for a run no user made.
+   `/verify` is user-only. Leave that row untouched, and prefix your own Evidence notes
+   "Implementer:" — you are not the reviewer.
+
+Report your Task ID in any status message.
