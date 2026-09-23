@@ -74,7 +74,7 @@ notty_setup() {
 # installed_repo <name> -> repo with Easy Kit installed and committed (clean)
 installed_repo() {
   _ir=$(new_repo "$1")
-  pty_setup "$_ir" '\n\n\n\n' >/dev/null 2>&1
+  pty_setup "$_ir" '\n\n\n\n\n' >/dev/null 2>&1
   git -C "$_ir" add -A >/dev/null 2>&1
   git -C "$_ir" commit -q -m "install easy kit" >/dev/null 2>&1
   printf '%s' "$_ir"
@@ -95,7 +95,7 @@ EDITED=skills/tdd/SKILL.md
 
 # ── SC1 / AC1 — no lock: 1) Install 2) Cancel, Enter accepts ────────────────
 T=$(new_repo sc1)
-pty_setup "$T" '\n\n\n\n'; RC=$?
+pty_setup "$T" '\n\n\n\n\n'; RC=$?
 keep_transcript "$T.log" SC1.txt
 if [ "$RC" -eq 0 ] && [ -f "$T/.claude/harness-lock.json" ] \
    && grep -q '1) Install' "$T.log" && grep -q '2) Cancel' "$T.log" \
@@ -153,7 +153,7 @@ fi
 # ── SC3 / AC3 / AC6 — Reinstall backs up the edited file, named on the plan ──
 T=$(installed_repo sc3)
 printf '\nMY LOCAL EDIT\n' >> "$T/$EDITED"
-pty_setup "$T" '2\n\n\n\n'; RC=$?
+pty_setup "$T" '2\n\n\n\n\n'; RC=$?
 keep_transcript "$T.log" SC3.txt
 PLAN_AT=$(line_of "$T.log" "      $EDITED")
 ASK_AT=$(line_of "$T.log" 'Proceed? [Y/n]')
@@ -177,7 +177,7 @@ T=$(installed_repo excl)
 mkdir -p "$T/.claude/hooks/tests"
 printf 'my own test\n' > "$T/.claude/hooks/tests/test_mine.py"
 git -C "$T" add -A && git -C "$T" commit -q -m "project's own hook tests"
-pty_setup "$T" '2\n\n\n\n'; RC=$?
+pty_setup "$T" '2\n\n\n\n\n'; RC=$?
 if [ "$RC" -eq 0 ] && [ "$(cat "$T/.claude/hooks/tests/test_mine.py")" = 'my own test' ] \
    && [ ! -e "$T/.claude/hooks/tests.bak" ] \
    && ! grep -q '.claude/hooks/tests' "$T/.claude/harness-lock.json" \
@@ -214,7 +214,7 @@ T2=$(installed_repo rein-keep)
 printf '\nMY SKILL EDIT\n' >> "$T2/skills/optimize/SKILL.md"
 T3=$(installed_repo rein-incomplete)
 git -C "$FIXTURE" rm -q -r skills/optimize && git -C "$FIXTURE" commit -q -m "stop shipping optimize"
-pty_setup "$T" '2\n\n\n\n'; RC=$?
+pty_setup "$T" '2\n\n\n\n\n'; RC=$?
 RM_AT=$(line_of "$T.log" '      skills/optimize')
 ASK_AT=$(line_of "$T.log" 'Proceed? [Y/n]')
 if [ "$RC" -eq 0 ] && [ ! -e "$T/skills/optimize" ] \
@@ -224,7 +224,7 @@ if [ "$RC" -eq 0 ] && [ ! -e "$T/skills/optimize" ] \
 else
   fail "Reinstall: unedited dropped file (rc=$RC rm=$RM_AT ask=$ASK_AT)"; cat "$T.log" >&2
 fi
-pty_setup "$T2" '2\n\n\n\n'; RC=$?
+pty_setup "$T2" '2\n\n\n\n\n'; RC=$?
 KEEP_AT=$(line_of "$T2.log" '      skills/optimize/SKILL.md')
 ASK_AT=$(line_of "$T2.log" 'Proceed? [Y/n]')
 if [ "$RC" -eq 0 ] && grep -q 'MY SKILL EDIT' "$T2/skills/optimize/SKILL.md" \
@@ -244,7 +244,7 @@ else
 fi
 # Incomplete upstream (a whole MANIFEST path gone): nothing removed, said so, exit 2.
 git -C "$FIXTURE" rm -q -r .cursor/rules && git -C "$FIXTURE" commit -q -m "incomplete upstream"
-pty_setup "$T3" '2\n\n\n\n'; RC=$?
+pty_setup "$T3" '2\n\n\n\n\n'; RC=$?
 if [ "$RC" -eq 2 ] && [ -f "$T3/skills/optimize/SKILL.md" ] \
    && lock_has "$T3/.claude/harness-lock.json" "skills/optimize/SKILL.md" \
    && grep -q 'Removals skipped' "$T3.log" && grep -q 'nothing was removed' "$T3.log"; then
@@ -255,14 +255,14 @@ fi
 git -C "$FIXTURE" reset -q --hard HEAD~2
 
 # ── SC5 / AC7 — `cat setup.sh | sh`: prompts still reach the terminal ───────
-# Answers: Enter (Install), 2 (existing/legacy project), Enter (plan). The pack
+# Answers: Enter (Install), Enter (CLIs), 2 (existing / legacy project), Enter (plan). The pack
 # prompt is stdin-gated (T115's) and is skipped because stdin is the script.
 T=$(new_repo sc5)
-pty_setup "$T" '\n2\n\n' "cat '$SETUP' | sh"; RC=$?
+pty_setup "$T" '\n\n2\n\n' "cat '$SETUP' | sh"; RC=$?
 if [ "$RC" -eq 0 ] && grep -q 'bootstrapping a full checkout' "$T.log" \
    && grep -q '"claude_md_source": "CLAUDE_LEGACY.md"' "$T/.claude/harness-lock.json" 2>/dev/null \
    && cmp -s "$FIXTURE/CLAUDE_LEGACY.md" "$T/CLAUDE.md"; then
-  pass "SC5: piped install read its answers from the terminal (brownfield took effect)"
+  pass "SC5: piped install read its answers from the terminal (existing / legacy project took effect)"
 else
   fail "SC5: piped install answers (rc=$RC)"; cat "$T.log" >&2
 fi
@@ -297,7 +297,7 @@ if [ "$HAVE_SETSID" -eq 1 ]; then
   T=$(new_repo sc7)
   notty_setup "$T"; RC=$?
   if [ "$RC" -eq 0 ] && [ -f "$T/.claude/harness-lock.json" ] \
-     && grep -q 'No terminal — installing with the defaults: CLI Claude Code, new project (CLAUDE.md)' "$T.log" \
+     && grep -q 'No terminal — installing with the defaults: Claude Code, New project (CLAUDE.md)' "$T.log" \
      && ! grep -q 'Choose \[1\]' "$T.log"; then
     pass "SC7: no terminal -> installs with the printed defaults, exit 0"
   else

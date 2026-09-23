@@ -96,12 +96,12 @@ run_setup_greenfield() {
       >"$WORK/setup.log" 2>&1 )
 }
 
-# Brownfield install driven through a real pty: Enter (1) Install), "2"
-# (brownfield), Enter (skip packs), Enter (accept the plan). /dev/tty prompts
+# Brownfield install driven through a real pty: Enter (1) Install), Enter (CLIs), "2"
+# (existing / legacy project), Enter (skip packs), Enter (accept the plan). /dev/tty prompts
 # are unreachable from a pipe.
 run_setup_brownfield() {
   _target="$1"
-  ( cd "$_target" && printf '\n2\n\n\n' | SHELL=/bin/sh script -qec \
+  ( cd "$_target" && printf '\n\n2\n\n\n' | SHELL=/bin/sh script -qec \
       "SUPERVISOR_REPO=file://$FIXTURE bash $SETUP" "$WORK/brownfield.typescript" \
       >"$WORK/setup.log" 2>&1 )
 }

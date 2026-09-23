@@ -1,15 +1,16 @@
 #!/bin/sh
 # tests/test_harness_projection.sh — POSIX-sh tests for T097's per-harness
-# install projection, the `--harness` flag, and the AGENTS.md correction.
+# install projection, picking a CLI (a flag until T115, now the CLI menu), and the
+# AGENTS.md correction.
 #
 # Hard-Stop Gate 5 coverage — at least one automated test per defect plus the
 # criteria the guide singles out:
 #   Defect A (AGENTS.md stated a falsehood about Codex)      -> Test 1
 #   Defect B (no projection mechanism existed)               -> Test 3  (AC2)
-#   AC1  no --harness flag => today's install, unchanged     -> Test 2
+#   AC1  default CLI pick => today's install, unchanged      -> Test 2
 #   AC4  oversize skill fails LOUDLY and by name             -> Test 4
 #   AC5  anti-vacuity: cap disabled => installs silently     -> Test 5
-#   AC6  unknown harness name exits non-zero, names valid    -> Test 6
+#   AC6  any argument exits non-zero, writes nothing (T115)  -> Test 6
 #   AC7  a second identical run is idempotent                -> Test 7
 #   AC8  projections are gitignored downstream               -> Test 8
 #   AC9  update.sh leaves exactly one live set of skills     -> Test 9
@@ -106,11 +107,20 @@ new_target() {
 }
 
 # Run setup.sh non-interactively in $1, extra args after; log to $WORK/last.log.
+# With no terminal it takes the defaults (Claude Code, or an existing install's
+# Update); args exist only to prove they are refused (T115).
 run_setup() {
   _target="$1"; shift
   ( cd "$_target" \
       && SUPERVISOR_REPO="file://$FIXTURE" SUPERVISOR_PATH="$NO_CLONE" \
          bash "$SETUP" "$@" </dev/null >"$WORK/last.log" 2>&1 )
+}
+# pick_setup <target> <CLI-menu answer>: install in a pty, choosing those CLIs
+# (e.g. "2" = Codex) and taking every other default.
+pick_setup() {
+  ( cd "$1" \
+      && SUPERVISOR_REPO="file://$FIXTURE" SUPERVISOR_PATH="$NO_CLONE" \
+         run_in_pty "\\n$2\\n\\n\\n\\n" "bash '$SETUP'" >"$WORK/last.log" 2>&1 )
 }
 run_update() {
   _target="$1"; shift
@@ -150,7 +160,7 @@ else
 fi
 
 # =============================================================================
-# Test 2 (AC1) — no --harness flag => today's install, no vendor dirs
+# Test 2 (AC1) — default CLI pick => today's install, no vendor dirs
 # =============================================================================
 T2=$(new_target target-default)
 if run_setup "$T2"; then
@@ -176,10 +186,10 @@ else
 fi
 
 # =============================================================================
-# Test 3 (Defect B / AC2) — --harness codex projects real copies
+# Test 3 (Defect B / AC2) — picking Codex projects real copies
 # =============================================================================
 T3=$(new_target target-codex)
-if run_setup "$T3" --harness codex; then
+if pick_setup "$T3" 2; then
   if [ -d "$T3/.codex/skills/small-one" ] && [ -d "$T3/.codex/skills/small-two" ]; then
     pass "AC2: .codex/skills/ contains every under-cap skill"
   else
@@ -197,7 +207,7 @@ if run_setup "$T3" --harness codex; then
     fail "AC2: .claude/skills was created for a harness that was not selected"
   fi
 else
-  fail "AC2: setup.sh --harness codex failed"
+  fail "AC2: setup.sh picking Codex failed"
 fi
 
 # =============================================================================
@@ -239,7 +249,7 @@ T5=$(new_target target-nocap)
 if ( cd "$T5" \
       && SUPERVISOR_REPO="file://$FIXTURE" SUPERVISOR_PATH="$NO_CLONE" \
          HARNESS_SKILL_BODY_CAP=0 \
-         bash "$SETUP" --harness codex </dev/null >"$WORK/nocap.log" 2>&1 ); then
+         run_in_pty '\n2\n\n\n\n' "bash '$SETUP'" >"$WORK/nocap.log" 2>&1 ); then
   if [ -f "$T5/.codex/skills/oversize-skill/SKILL.md" ]; then
     pass "AC5: with the cap disabled the oversize skill installs — the check is load-bearing"
   else
@@ -262,7 +272,9 @@ else
 fi
 
 # =============================================================================
-# Test 6 (AC6) — an unknown harness name exits non-zero and names the valid set
+# Test 6 (AC6) — any argument (the old --harness forms included) exits non-zero,
+# names what it saw and writes nothing. Until T115 these were flag-validation
+# cases; each shape is kept as a regression case for the no-options rule.
 # =============================================================================
 T6=$(new_target target-unknown)
 if run_setup "$T6" --harness banana; then
@@ -270,10 +282,10 @@ if run_setup "$T6" --harness banana; then
 else
   pass "AC6: --harness banana exits non-zero"
 fi
-if grep -q "banana" "$WORK/last.log" && grep -q "claude codex" "$WORK/last.log"; then
-  pass "AC6: the error names the bad value and the valid harnesses"
+if grep -q -- "--harness banana" "$WORK/last.log" && grep -q "takes no options" "$WORK/last.log"; then
+  pass "AC6: the error names what it saw and says Easy Kit takes no options"
 else
-  fail "AC6: the error does not name the bad value and/or the valid harnesses"
+  fail "AC6: the error does not name the argument and/or the no-options rule"
 fi
 # It must fail BEFORE writing anything — not produce a silently empty install.
 if [ ! -e "$T6/.codex" ] && [ ! -e "$T6/skills" ] && [ ! -e "$T6/CLAUDE.md" ]; then
@@ -318,7 +330,7 @@ for _empty_form in '--harness ""' '--harness='; do
 done
 # update.sh must reject the same shape rather than silently doing nothing.
 T6D=$(new_target target-empty-update)
-run_setup "$T6D" --harness codex
+pick_setup "$T6D" 2
 if run_update "$T6D" --harness ""; then
   fail "AC6: update.sh --harness \"\" exited 0"
 else
@@ -330,24 +342,24 @@ fi
 # =============================================================================
 SNAP1="$WORK/snap1"; SNAP2="$WORK/snap2"
 ( cd "$T3" && find .codex -type f -exec sha256sum {} \; | LC_ALL=C sort ) > "$SNAP1"
-if run_setup "$T3" --harness codex; then
+if run_setup "$T3"; then
   ( cd "$T3" && find .codex -type f -exec sha256sum {} \; | LC_ALL=C sort ) > "$SNAP2"
   if diff -q "$SNAP1" "$SNAP2" >/dev/null 2>&1; then
-    pass "AC7: a second --harness codex run is byte-for-byte idempotent"
+    pass "AC7: a second run on the Codex project is byte-for-byte idempotent"
   else
     fail "AC7: the second run changed .codex/ contents"
     diff -u "$SNAP1" "$SNAP2" >&2
   fi
   # No orphan: a file that vanishes upstream must not survive a re-projection.
   printf 'stale\n' > "$T3/.codex/skills/orphan-marker"
-  run_setup "$T3" --harness codex
+  run_setup "$T3"
   if [ ! -e "$T3/.codex/skills/orphan-marker" ]; then
     pass "AC7: re-projection removes orphaned files rather than accumulating them"
   else
     fail "AC7: an orphaned file survived re-projection"
   fi
 else
-  fail "AC7: the second setup.sh --harness codex run failed"
+  fail "AC7: the second setup.sh run on the Codex project failed"
 fi
 
 # =============================================================================
@@ -379,7 +391,7 @@ git -C "$FIXTURE" mv skills/small-two skills/renamed-two
 git -C "$FIXTURE" commit -q -m "rename small-two -> renamed-two"
 if run_update "$T3"; then
   if [ -d "$T3/.codex/skills/renamed-two" ] && [ ! -e "$T3/.codex/skills/small-two" ]; then
-    pass "AC9: update.sh re-projects an already-present harness with no --harness flag"
+    pass "AC9: update.sh re-projects an already-present CLI without being asked"
   else
     fail "AC9: update.sh left the old skill name live alongside the new one"
   fi

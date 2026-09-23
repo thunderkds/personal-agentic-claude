@@ -205,14 +205,14 @@ fi
 # Test 3 — re-run choosing Reinstall overwrites edited files (AC #4; T114)
 # =============================================================================
 # Corrupt an installed file, then re-run setup.sh in a terminal, pick
-# 2) Reinstall, accept the project-type and pack prompts' defaults and the plan,
+# 2) Reinstall, accept the CLI, project-type and pack prompts' defaults and the plan,
 # and expect it restored.
 printf 'USER LOCAL EDIT — should be clobbered\n' > "$TARGET1/agents/backend.md"
 
 T3_RC=0
 ( cd "$TARGET1" \
     && SUPERVISOR_REPO="file://$FIXTURE" SUPERVISOR_PATH="$NO_CLONE" \
-       run_in_pty '2\n\n\n\n' "bash '$SETUP'" >"$WORK/setup.log" 2>&1 ) || T3_RC=$?
+       run_in_pty '2\n\n\n\n\n' "bash '$SETUP'" >"$WORK/setup.log" 2>&1 ) || T3_RC=$?
 
 if [ "$T3_RC" -eq 0 ]; then
   pass "test3: setup.sh re-run exited 0"

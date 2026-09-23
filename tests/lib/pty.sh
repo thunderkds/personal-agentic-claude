@@ -13,6 +13,31 @@
 #     cannot (memory/learnings.md, T108). Answers are queued up front; each prompt
 #     reads one line.
 
+#
+# Sourcing this file also runs hide_real_clis: since T115 the CLI menu
+# pre-selects whichever of `claude` / `codex` is on PATH, so a developer machine
+# with either installed would silently change every suite's defaults. Suites
+# that need a CLI "installed" put a fake executable on PATH themselves.
+
+hide_real_clis() {
+  _hc_new=""
+  _hc_ifs=$IFS
+  IFS=:
+  for _hc_d in $PATH; do
+    if [ -x "$_hc_d/claude" ] || [ -x "$_hc_d/codex" ]; then continue; fi
+    _hc_new="${_hc_new:+$_hc_new:}$_hc_d"
+  done
+  IFS=$_hc_ifs
+  PATH=$_hc_new
+  export PATH
+  for _hc_t in git python3 script sh mktemp; do
+    command -v "$_hc_t" >/dev/null 2>&1 && continue
+    printf 'FATAL: hiding claude/codex from PATH also hid %s (same directory). Move one of them, then re-run.\n' "$_hc_t" >&2
+    exit 2
+  done
+}
+hide_real_clis
+
 # usage: detach_from_terminal "$0" "$@"   (call once, near the top of a suite)
 detach_from_terminal() {
   [ -n "${EASYKIT_TEST_DETACHED:-}" ] && return 0
