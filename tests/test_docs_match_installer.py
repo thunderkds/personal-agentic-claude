@@ -89,6 +89,27 @@ def test_installer_user_strings_say_cli_not_harness():
     assert not hits, "user-facing installer output says 'harness' (say CLI / Easy Kit):\n" + "\n".join(hits)
 
 
+def test_installer_user_strings_show_no_removed_flag():
+    """The installer's own output must not tell a user to type a flag.
+
+    D9's FORBIDDEN check covers the live docs; without this one it did not
+    cover the installer, and `prompt_packs` shipped
+    'Re-run with --pack=<name> to add packs' on the no-terminal path — the
+    primary `curl … | sh` install — pointing the user at a command that now
+    exits 1 with "Easy Kit takes no options".
+    """
+    hits = []
+    for rel in INSTALLER_SCRIPTS:
+        for n, s in _user_strings(rel):
+            for bad in ("--pack", "--copy", "--harness"):
+                if bad in s:
+                    hits.append(f"{rel}:{n}: {bad!r} in {s!r}")
+    assert not hits, (
+        "installer output still tells the user to type a removed flag:\n"
+        + "\n".join(hits)
+    )
+
+
 def test_user_string_scan_is_not_vacuous():
     """Guards the regexes above: they must find real strings to check."""
     found = [s for rel in INSTALLER_SCRIPTS for _, s in _user_strings(rel)]

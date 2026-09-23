@@ -159,15 +159,16 @@ resolve_pack_choices() {
   printf '%s' "${_rpc_out# }"
 }
 
-# ── Prompt pack selection (interactive only, skipped if --pack= flags given) ──
+# ── Prompt pack selection (terminal only) ────────────────────────────────────
 prompt_packs() {
-  # Skip if packs were already specified via --pack= flags
+  # Skip if packs are already selected. No flag sets PACKS since T115; kept for
+  # the out-of-scope pack installer's own callers.
   if [ -n "$PACKS" ]; then
     return
   fi
-  # Skip in non-interactive mode
+  # Skip when there is no terminal to show the menu on.
   if [ ! -t 0 ]; then
-    log_info "Non-interactive mode: no packs installed. Re-run with --pack=<name> to add packs."
+    log_info "No terminal — no packs installed. Re-run in a terminal to pick packs from the menu."
     return
   fi
 
@@ -259,7 +260,7 @@ install_abs() {
 
   if [ $USE_COPY -eq 1 ]; then
     if [ -L "$dst" ]; then
-      log_warn "'$dst' is a symlink from a previous install. Remove it manually to switch to --copy mode."
+      log_warn "'$dst' is a symlink from a previous install. Remove it manually to replace it with a real copy."
       return
     fi
     if [ -e "$dst" ]; then
