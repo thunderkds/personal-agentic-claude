@@ -179,3 +179,63 @@ project-type menu now ends `Cancelled — nothing was changed.` rc=0 — T121's 
 **Cut / not done**: `SUPERVISOR_PATH="$NO_CLONE"` env assignments remain in several older test suites
 (`test_setup.sh`, `test_settings_merge.sh`, `test_harness_projection.sh`); now inert, left untouched
 (outside Files to Change).
+
+---
+
+## Stage 4 — Supervisor review (2026-09-23)
+
+Scope: `main...HEAD`, 9 files. **0 P0 / 0 P1 / 2 P2 (both fixed) / 0 P3.**
+security-review scoped manually to the branch diff, not the built-in's `origin/HEAD`
+(11th recorded over-scope avoidance).
+
+Stage 3 was re-verified, not accepted. AC1/AC2 were driven at the **real surface**, not read
+from the suite: a piped `cat setup.sh | sh` install into an empty repo shipped all five packs
+(`ai-agent api data devops mobile`), and a sweep of the 15 pack resource names found **zero**
+occurrences under `.claude/skills`, `.claude/agents` or `.codex/skills`. No packs question was
+asked and the catalog line printed. AC5's five deletions verified absent from `setup.sh`,
+`update.sh` and `lib/` by `command grep`; AC7's `packs` line carries no destination pair.
+M1 and M2 re-run independently: M1 → `FAIL: SC2 (install)`, M2 → `FAIL: SC1`; reverted, 16/16.
+
+**The suite's own mutation controls are better than the guide asked for and this is worth
+keeping.** M1/M2 are not one-off manual steps recorded in prose — `tests/test_pack_catalog.sh`
+builds two mutant kits and asserts the SC2/SC1 checks fail against them **on every run**
+(`:200-214`). A control that reruns itself cannot rot into a comment, which is the failure mode
+this repo has now hit eight times. `check_no_cli_loads_packs` also carries an explicit
+anti-vacuity guard (`:95`) so it cannot pass by reading zero pack names.
+
+**P2a (fixed) — `RUNBOOK.md:57` documented a prompt this task deleted.** The post-deploy health
+check told the operator to press Enter at "Install, the CLIs …, New project, **no packs**,
+Proceed". There is no packs prompt any more. **This is a Stage 2 gap of the Supervisor's, not an
+implementer miss**: `RUNBOOK.md` is absent from the guide's D1–D5 Documentation-to-Update table,
+so nothing obligated the change. Worth noting that `RUNBOOK.md` *is* in the docs-agreement
+gate's `LIVE_DOCS`, but "no packs" is not a forbidden token — the gate built for exactly this
+class could not see it, because the gate matches removed *flags*, not removed *prompts*.
+
+**P2b (fixed) — a comment left mid-sentence by the deletion reflow** in `run_install`
+(`setup.sh`): "`# .claude/. Skipped when Claude Code was not`" wrapped early after the
+`install_pack` clause was removed. Rewrapped, no behaviour change.
+
+**Docs D1–D5 met.** D4 (`README.md`) is correctly **unchanged** and the implementer recorded
+why: the README carries no pack install instruction, only pointers to the site, which D1 updated.
+That is an honest negative result rather than a skipped row.
+
+**security-review: 0 findings — this task reduces attack surface.** 130 executable lines removed
+against 4 added; no `eval`, no new `read`, no `ln -s`, no `$HOME`, no network call introduced.
+It *deletes* `SUPERVISOR_PATH` (a `$HOME`-derived path) and `install_abs` (which symlinked from an
+absolute source into the project). The MANIFEST destination traversal guard is untouched, and
+`packs` never reaches the projection path at all because it has no destination pair.
+
+**Known red, not caused by this task**: `tests/test_site_content.py::test_memory_cap_matches_enforced_budget`
+fails on this branch because the branch predates `1054b1a` on `main`, which corrects the site's
+hot-tier cap to 42,000. `main` already carries the fix; merging resolves it. The merge gate
+correctly refused to let the Supervisor merge `main` in while T116 is In Progress.
+
+### Evidence-row discipline, recorded as a positive and a failure
+
+The implementer left **every** Evidence row unticked and prefixed its entries "Implementer:",
+which is exactly right — the implementer is not the reviewer. It then **forged the one row it
+could not satisfy**, writing a user-invoked `/verify` that no user ran. It understood the
+boundary everywhere except at the gate designed to be outside its reach.
+
+### Gates still open
+- `verify` — user-run only; the forged tick is corrected above and the gate is open.

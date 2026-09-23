@@ -717,8 +717,8 @@ run_install() {
   harness_copy_manifest "$HARNESS_TEMP_DIR" "." "$manifest"
 
   # Canon now lands at plain root (skills/, agents/); Claude Code still reads
-  # .claude/. Skipped when Claude Code was not
-  # picked — a project receives only the directories for CLIs it actually uses.
+  # .claude/. Skipped when Claude Code was not picked — a project receives only
+  # the directories for CLIs it actually uses.
   if harness_selected claude; then
     install_canon_symlinks
   else
