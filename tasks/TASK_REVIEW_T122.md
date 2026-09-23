@@ -74,6 +74,9 @@ exit=0
 again. The MANIFEST `!` exclusion no longer reads as a missing path, and a truly missing entry
 still fails the step.
 
+**WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
+implementing agent alone]
+
 ---
 
 ## Implementer notes — MANIFEST reader survey (AC5)
@@ -112,6 +115,3 @@ extra `!` line cannot break it.
 **Registered out of scope, not built:** wiring pytest into CI (the guide's named T109 follow-up).
 It is still open, and the Supervisor should give it its own board row. I cannot edit
 `PROJECT_KANBAN.md`.
-
-**WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
-implementing agent alone]
