@@ -388,6 +388,11 @@ prompt_clis() {
     [ -n "$TTY_ANSWER" ] || return 0
     _pc_picked=""
     _pc_bad=0
+    # `set -f` for the split: the answer is unquoted here so it word-splits,
+    # which also makes it glob. Without this, typing `*` in a project that
+    # happens to hold files named `1` or `2` expands to those names and is
+    # accepted as a selection instead of re-prompting.
+    set -f
     for _pc_n in $(printf '%s' "$TTY_ANSWER" | tr ',' ' '); do
       case "$_pc_n" in
         1) _pc_picked="$_pc_picked claude" ;;
@@ -395,6 +400,7 @@ prompt_clis() {
         *) _pc_bad=1 ;;
       esac
     done
+    set +f
     if [ "$_pc_bad" -eq 1 ]; then
       printf 'Please enter 1, 2 or both (e.g. 1 2).\n'
     elif [ -z "$_pc_picked" ]; then

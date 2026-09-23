@@ -169,6 +169,21 @@ else
   fail "AC2: EOF at the CLI menu (rc=$RC)"; git -C "$T" status --porcelain >&2; cat "$T.log" >&2
 fi
 
+# Stage 4: the answer word-splits, so it also globs. In a project holding
+# files named 1 and 2, `*` expanded to them and was accepted as a selection
+# instead of re-prompting. Only `*` is typed here; the re-prompt then gets a
+# real answer, so a regression selects both CLIs while the fix installs Codex.
+T=$(new_repo ac2-glob)
+: >"$T/1"; : >"$T/2"
+commit_all "$T" "files named 1 and 2"
+pty_setup "$T" '\n*\n2\n\n\n\n'; RC=$?
+if [ "$RC" -eq 0 ] && has_codex "$T" && no_claude_links "$T" \
+   && grep -q 'Please enter 1, 2 or both' "$T.log"; then
+  pass "AC2: '*' re-prompts; it never globs to the files named 1 and 2"
+else
+  fail "AC2: glob in CLI answer (rc=$RC)"; cat "$T.log" >&2
+fi
+
 # ── SC3 / AC3 / AC4 — project type 2 = CLAUDE_LEGACY.md; plan shows both ────
 T=$(new_repo sc3)
 pty_setup "$T" '\n1 2\n2\n\n\n'; RC=$?
