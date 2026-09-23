@@ -5,7 +5,8 @@
 **Priority**: P1
 **Assigned agent**: Common-Infrastructure-Agent
 **Agent guide**: `agents/common-infrastructure.md`
-**Branch**: worktree off `feat/easy-kit-one-command`; merges back into it
+**Branch**: worktree off `main`; merges back into `main`
+**Stage 2 drift correction, 2026-09-23** — see *Drift since this guide was written* below before trusting any quoted output.
 
 ---
 
@@ -36,6 +37,34 @@ and installed nothing. `install_pack` (`setup.sh:327`) reads `$SUPERVISOR_PATH/p
 ADR-0001 removed; ADR-0001 deferred packs and no follow-up ever ran. User decision, 2026-09-12: packs are
 **not chosen at install** — "the packs should be identified from the biz domain … Agent will analyze and
 suggest the good packs" — and the catalog ships with the project.
+
+### Drift since this guide was written (added 2026-09-23, read before the probe above)
+
+This guide was written 2026-09-12 against `main` `8115bc9`. **T115 has merged since and invalidates
+the probe quoted above — the task itself is unchanged and still correct.**
+
+1. **`--pack=mobile` is no longer reachable.** T115 removed every installer flag: `setup.sh` now
+   rejects *any* argument with `[error] Easy Kit takes no options` and exits 1 before it clones or
+   writes anything. Do not try to reproduce the flag half of the probe; it cannot be reproduced.
+   Capture your BEFORE from the paths that **do** still exist: the interactive packs menu
+   (`prompt_packs`, reached on Install/Reinstall with a terminal) and its no-terminal line. Both
+   still run, and both still install nothing — that is the live defect this task removes.
+2. **`prompt_packs`' no-terminal message changed** and no longer names a flag. It now reads
+   `No terminal — no packs installed. Re-run in a terminal to pick packs from the menu.` AC4 is
+   unaffected: that line disappears with the function.
+3. **AC5's deletion set was re-verified on 2026-09-23 and is safe.** `install_abs` has exactly two
+   callers, both inside `install_pack` (`setup.sh:301,310`), and `USE_COPY` is read only by
+   `install_abs`. Nothing outside the pack path depends on any of the five names. Delete them as
+   written rather than re-litigating it.
+4. **Two tests T115 added constrain this work.** `tests/test_docs_match_installer.py` holds a
+   `FORBIDDEN` list containing `--pack`/`--copy`/`--harness`, applied to both the live docs and —
+   since T115's Stage 4 — the installer's own user-facing strings
+   (`test_installer_user_strings_show_no_removed_flag`). Removing pack wording can only help these,
+   but **any new string you add must not name a flag**, and `packs/*/PACK.md` is deliberately still
+   out of scope (T117 rewrites it and extends `LIVE_DOCS` then).
+5. **AC6 retirement is three edits, not one**: delete `tests/test_pack_choice_parsing.sh`, remove its
+   step from `.github/workflows/ci.yml`, and keep `tests/test_ci_wires_shell_suites.py` green — that
+   drift guard asserts CI wires every suite, so a leftover step for a deleted file turns it red.
 
 **Restated intent**:
 > Every Easy Kit project receives all packs as an inactive catalog that no CLI loads, update keeps that
