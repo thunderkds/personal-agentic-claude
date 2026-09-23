@@ -33,8 +33,25 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: Implementer: captured 2026-09-23T08:20:50Z on `fix/t122-validate-exclusions` at
+`04d0ab7`, before any implementation commit. `sh scripts/validate.sh; echo "exit=$?"` (MANIFEST
+section and result line shown; the one other `FAIL`-matching line in the full output is the final
+`validate.sh: FAIL` — every other section is `[ok]`):
+
+```
+== MANIFEST entries resolve on disk ==
+  [ok]   agents
+  [ok]   skills
+  [ok]   .claude/hooks
+  [ok]   templates
+  [ok]   docs/claude-md
+  [ok]   AGENTS.md
+  [ok]   .cursor/rules
+  [FAIL] MANIFEST entry not found: !.claude/hooks/tests
+...
+validate.sh: FAIL
+exit=1
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
