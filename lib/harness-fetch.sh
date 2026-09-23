@@ -304,10 +304,11 @@ harness_is_excluded() {
 }
 
 # harness_manifest_dest <line> <harness> -> the destination mapped to <harness>,
-# or the empty string when this line maps nothing for it.
+# or the empty string when this line maps nothing for it (always, for a `!` line:
+# resolve_projection_harnesses passes raw MANIFEST lines here).
 harness_manifest_dest() {
   printf '%s' "$1" | tr -d '\r' | awk -v h="$2" '
-    $0 ~ /^[[:space:]]*(#|$)/ { next }
+    $0 ~ /^[[:space:]]*(#|$|!)/ { next }
     { for (i = 2; i <= NF; i++) {
         eq = index($i, "=")
         if (eq > 1 && substr($i, 1, eq - 1) == h) { print substr($i, eq + 1); exit }

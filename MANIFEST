@@ -28,6 +28,8 @@
 # file on update. It is a literal path prefix matched on whole path segments (no
 # globs): `!.claude/hooks/tests` leaves `.claude/hooks/tests_helper.py` alone. A
 # project's own file at an excluded path is never touched, backed up, or deleted.
+# An exclusion is not an entry: every MANIFEST reader (installer, update, projection,
+# scripts/validate.sh) must skip `!` lines when it reads paths or destinations.
 #
 # `agents` has no `codex=` pair on purpose: Codex 0.149.1 has no agent-guide
 # directory it discovers, and DDR-0007/T097 forbid inventing one. Codex receives
