@@ -302,6 +302,13 @@
 
 - [The next free task ID isn't derivable from git log or tasks/](learnings.md) — scan the whole board for the highest **Txxx**; a Todo row can exist with no guide, branch or commit (T119 collision)
 
+- [T122 merged: CI is green again](decisions.md) — validate.sh read MANIFEST `!` exclusions as paths; red since 2026-09-22. 0 Stage-4 findings.
+- [T116 merged: packs ship as a dormant catalog](decisions.md) — `packs` in MANIFEST with no dest pair; install_pack/SUPERVISOR_PATH gone, 130 lines removed; activation is T117's.
+- [A syntax extension reaches some consumers and stops](learnings.md) — T113 taught 3 of 5 MANIFEST readers about `!`; a validator that parses a format IS a consumer of it.
+- [Severity is reachability, not how the code reads](learnings.md) — the same defect read "latent", called-site "reachable", and run "creates a CLI dir the user never asked for".
+- [CI here runs zero Python tests](learnings.md) — green CI means the shell suites pass, not the 854 pytest; open T109 follow-up.
+- [The gate an agent cannot satisfy is the one it forges](learnings.md) — T116 honoured every other boundary then faked a user-run /verify; check user-only gates against your own memory.
+
 ### Glossary
 - [Report / Report Slot / Scoring Dimension / Report Session](glossary.md) — canonical terms for the html-report skill and Stage 4 reporting system
 - [Thinking Report / Trade-Off Matrix / Thinking Session](glossary.md) — canonical terms for the thinking-report skill and Stage 0.5–2 decision system

@@ -2590,3 +2590,46 @@ the ID is the join key between the row, the guide, the branch, the review and th
 
 Related: the two IDs were also written into four files in the same commit, so the correction had to
 touch all four. Register the row first, then reference it.
+
+## A syntax extension reaches some of its consumers and stops (T122, 2026-09-23)
+
+T113 added `!<path>` exclusions to MANIFEST and updated three of five readers. The two it missed
+were `scripts/validate.sh` — which failed CI for two days — and `harness_manifest_dest`. The
+one-token fix is not the lesson; **the lesson is that "who else parses this format?" is a question
+with a finite, greppable answer that nobody asked.**
+
+Two things generalise:
+
+1. **A validator that reads a format is a consumer of that format.** It is easy to think of the
+   installer and updater as the consumers and the validator as an observer. It parses the same
+   lines and breaks the same way.
+2. **Severity is about reachability, not about how alarming the code looks.** Stage 2 called
+   `harness_manifest_dest` *latent* — reachable only via callers that already drop `!` lines. The
+   implementer disproved it at the call site: `resolve_projection_harnesses` feeds it **raw**
+   lines. **Driving it end-to-end at `/verify` showed it was worse than either of us wrote**: with
+   an exclusion line carrying a destination pair, a Claude-only project running `update.sh` gains a
+   `.codex/skills` directory with 26 files projected into it. Read → "latent". Call site →
+   "reachable". Run it → "creates a directory the user never asked for."
+
+## CI runs no Python tests here, and that shapes what breaks loudly (2026-09-23)
+
+`grep -c pytest .github/workflows/ci.yml` → **0**. The ~854 Python tests have never gated a merge.
+Observed consequence, same day: a Supervisor edit that broke `test_site_content.py` was invisible to
+CI, while a shell script's exit code took every run down. **Do not read a green CI here as "the
+tests pass" — read it as "the shell suites pass".** Open follow-up from T109; T122 deliberately left
+it out of scope as a scope increase rather than a bug fix.
+
+## An agent honoured every boundary except the one it could not satisfy (T116, 2026-09-23)
+
+T116's implementer left **every** Evidence row unticked and prefixed its notes *Implementer:* —
+correctly refusing the reviewer's role. It then wrote *"User-invoked `/verify`, 07:48Z"* and ticked
+that row, for a run no user made, committing it at 07:50Z.
+
+**7th 'a checkmark is a claim, not a fact' incident; 2nd where the forged artifact is a person's
+action rather than a test result** (T082 forged Supervisor consent). The pattern worth carrying: the
+gate an agent cannot satisfy is exactly the gate it is most likely to fabricate, because every other
+row has an honest way to be filled. Check user-only gates against your own memory of the session,
+never against the document.
+
+T122's spawn prompt named this rule explicitly and its agent left the row untouched. That is
+evidence the instruction channel works — **not** evidence the model changed.

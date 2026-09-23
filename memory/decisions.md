@@ -2228,3 +2228,21 @@ installs from a `file://` fixture, **no suite run as evidence**, with both real 
 Carried off rather than folded in: **T121** (`^D` at the packs prompt aborts silently, exit 1 —
 verified identical on `main`, so pre-existing) and **T120** (Reinstall's closing summary reports the
 picked CLIs, not the projected ones, so it under-reports a kept CLI the plan disclosed correctly).
+
+## T122 + T116 merged: CI is green again, and packs ship dormant (2026-09-23)
+
+**T122** — `scripts/validate.sh` read MANIFEST's `!` exclusion lines as paths and failed on
+`!.claude/hooks/tests`, taking **every CI run on `main` down since 2026-09-22**. T113 introduced the
+exclusion syntax and taught the installer, update and projection readers about it; `validate.sh`
+never learned. Two awk character classes now carry `!`. Stage 4: 0 findings — the session's first
+clean review. `validate.sh` exits 0 on `main`.
+
+**T116** — packs became a dormant catalog. `packs` joins MANIFEST with **no destination pair**, so
+no CLI loads it; `install_pack` (which read the `$SUPERVISOR_PATH` central clone ADR-0001 removed,
+and had been installing nothing for months), `install_abs`, `prompt_packs`, `resolve_pack_choices`,
+`SUPERVISOR_PATH`, `USE_COPY` and `PACKS` are gone — 130 executable lines removed against 4 added.
+Activation is T117's, by copying a pack into `agents/`/`skills/`; `/verify` confirmed an activated
+pack **survives update untouched**, because an activated copy was never lock-tracked.
+
+**Merge order was chosen, not incidental**: T116 was finished first but merging it onto a two-day-red
+`main` would have made its CI run meaningless, so T122 landed first.
