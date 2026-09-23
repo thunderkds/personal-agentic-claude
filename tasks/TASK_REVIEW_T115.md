@@ -11,11 +11,11 @@
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass / ☐ fail | New: `tests/test_cli_and_project_menus.sh` (23 cases: SC1–SC6, SC8, AC1–AC7, Reinstall pre-select + deselect, D3 restore), `tests/test_docs_match_installer.py` (D9 + AC8 grep + anti-vacuity). Output under **Verification output** below |
 | Verification command run | ☑ pass / ☐ fail | All 15 shell suites rc=0; pytest 847 passed / 5 failed = the 5 pre-existing memory-budget baseline failures (unchanged from `main`); shellcheck exit 0 |
 | Negative cases hold | ☑ pass / ☐ fail | any argument → exit 1 no write (5 forms + `update.sh --harness claude`); `,` → "Pick at least one CLI"; `3`/`abc` re-prompt; ^D cancels; M1 observed RED then reverted |
-| verify | ☐ pass / ☐ fail / ☐ N/A | |
+| verify | ☑ pass / ☐ fail / ☐ N/A | **User-run `/verify` 2026-09-23: PASS.** Driven at the real CLI surface — the installer run under a PTY (`script -qec`) and under `setsid` with no terminal, installing from a `file://` fixture into throwaway git repos; **no test suite was run as evidence**. Both real `claude` and `codex` were on `PATH`, so pre-selection was exercised for real. 7 steps, 3 of them probes — full transcripts under **Stage 5 verification** below |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | (Stage 4 reviewer) |
 | Full smoke suite still green (no regression) | ☑ pass / ☐ fail | every installer suite green; no assertion weakened (retargeted assertions listed below) |
 | **Docs updated per guide's "Documentation to Update" (new text quoted)** | ☑ pass / ☐ fail | D1 README, D2–D5 site, D6 AGENTS.md, D7 folder-structure.md, D8 RUNBOOK.md, D9 docs-agreement test + mutation control — new text quoted under **Docs AFTER** |
-| HITL: user reviewed menu transcript + README install section | ☐ pass / ☐ fail | |
+| HITL: user reviewed menu transcript + README install section | ☑ pass / ☐ fail | **Approved by the user 2026-09-23.** Scope of what was actually shown, recorded precisely rather than rounded up: the Stage 5 Step-1 menu transcript (action → CLI → project-type → plan → `Proceed? [Y/n]`) and `README.md:26-45` were both displayed inline in the session, and the user replied to proceed. No wording changes were requested. This is approval on the artifacts as shown, not a line-by-line copy edit of every doc surface (D1–D8) |
 | `tests/test_pack_docs_flags.py` retired/rewritten — reason | ☑ pass / ☐ fail | Retired: it compared `packs/*/PACK.md` against setup.sh's `case "$arg" in` flag parser, which no longer exists; the no-flags rule for live docs now lives in `tests/test_docs_match_installer.py`, which T117 extends to PACK.md when it rewrites that pack wording |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | terminal menus + Markdown/HTML doc text edits in existing sections; wording reviewed via HITL row; site layout untouched |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ N/A | no CSS or markup structure changes |
@@ -663,10 +663,20 @@ Demonstrated, then fixed with `set -f` around the split only. New case
 `ac2-glob`; deleting the two `set -f` lines turns it RED.
 
 **P2 accepted, not fixed — EOF is inconsistent across the three menus.**
-`choose_action` and `prompt_clis` cancel the run at `^D`; `prompt_mode` breaks
-to New project and installs. Defensible (it matches the no-terminal default)
-but undesigned, and no test pins either behaviour. Recorded as a candidate row
-rather than changed here — it is a behaviour decision, not a review fix.
+`choose_action` and `prompt_clis` cancel the run at `^D`; `prompt_mode` does
+not. Recorded as a candidate row rather than changed here — it is a behaviour
+decision, not a review fix.
+
+> **Corrected at Stage 5 (2026-09-23) — this paragraph was wrong as first
+> written.** It claimed `prompt_mode` "breaks to New project and installs".
+> Running it shows it does not install: `^D` at the project-type menu falls
+> through to New project and then **dies at the packs prompt — exit 1, no
+> message, output stops mid-line**, nothing written. The root cause is
+> `prompt_packs` using a bare `read -r` under `set -e`, not `prompt_mode`.
+> `main` behaves identically, so it is **pre-existing, not a T115 regression**
+> — which is why Stage 5 is PASS. It is registered as **T119**. The claim was
+> written from reading the code and was not verified at the surface until
+> Stage 5; recorded here rather than silently edited.
 
 No new injection surface: `TTY_ANSWER` is only ever matched against the
 literals `1`/`2` in a `case` and never executed; `log_error` passes `$*`
@@ -676,3 +686,89 @@ the bootstrap clone, so a stale flag now fails with nothing written.
 ### Gates still open
 - `verify` — user-run only; Supervisor cannot run it.
 - HITL — user reviews the SC1 transcript and the README install section.
+
+---
+
+## Stage 5 — user-run `/verify` (2026-09-23): **PASS**
+
+Method: cold start, no verifier skill. Fixture kit = this branch's working tree,
+committed; installed over `file://` into throwaway git repos. Menu paths driven
+under a PTY (`script -qec`), the pipe path under `setsid` with no terminal.
+Both real `claude` and `codex` were on `PATH`. **No test suite was run as
+evidence** — the suites are the author's, CI runs them.
+
+**1. Defaults, Enter at every prompt** — both CLIs pre-selected from `PATH`:
+```
+Which CLIs should Easy Kit set up?
+  1) Claude Code  2) Codex
+Choose one or more [1 2]:
+  - CLIs: Claude Code, Codex
+  - Project type: New project (CLAUDE.md)
+[info]  Setup complete. Easy Kit copied into …/proj1
+```
+Landed: `.claude/{skills,agents}` symlinks, real `.codex/skills`, `CLAUDE.md`,
+`.gitignore` reading `generated by Easy Kit for Codex (T097)`.
+
+**2. Deselection** — `2` at the CLI menu with Claude Code on `PATH` and
+pre-selected, `2` at project type:
+```
+[info]  Claude Code not picked — skipping .claude/{skills,agents} symlinks.
+  - CLIs: Codex
+  - Project type: Existing / legacy project (CLAUDE_LEGACY.md)
+```
+No `.claude/skills`; `head -1 CLAUDE.md` = `# CLAUDE LEGACY SUPERVISOR`.
+
+**3. Probe — every argument form rejected, nothing written, no clone:**
+```
+--harness codex rc=1 | --harness=codex rc=1 | --copy rc=1 | --pack=mobile rc=1
+-h rc=1 | --help rc=1 | install rc=1
+[error] Easy Kit takes no options (got: --harness codex). Run it and choose from the menus:
+git status --porcelain → (empty)
+```
+
+**4. Probe — the glob trap, at the surface.** Project containing files literally
+named `1` and `2`; typed `*`, `,`, `9`, `abc`, then `1`:
+```
+Choose one or more [1 2]: Please enter 1, 2 or both (e.g. 1 2).
+Choose one or more [1 2]: Pick at least one CLI.
+Choose one or more [1 2]: Please enter 1, 2 or both (e.g. 1 2).
+Choose one or more [1 2]: Please enter 1, 2 or both (e.g. 1 2).
+  - CLIs: Claude Code
+```
+The Stage 4 `set -f` fix holds in a real install, not only in the suite.
+
+**5. True `cat setup.sh | sh`, no terminal** — the P1 fix confirmed where it
+actually surfaces; no `--` flag anywhere in the output:
+```
+[info]  No terminal — installing with the defaults: Claude Code, Codex, New project (CLAUDE.md).
+[info]  No terminal — no packs installed. Re-run in a terminal to pick packs from the menu.
+```
+
+**6. Reinstall deselect — the load-bearing new logic.** proj1 has both CLIs;
+picked only Claude Code:
+```
+Plan: Reinstall Easy Kit in …/proj1 (backs up your edits)
+  - CLIs: Claude Code
+  - Already set up here, not picked, kept and refreshed: Codex (to remove one, delete its folder).
+[info]  Refreshed: Codex
+```
+`.codex/skills` still present. Disclosed **before** `Proceed?`, never a silent orphan.
+
+**7. Probe — `^D` at each menu.** CLI menu: `Cancelled — nothing was changed`,
+0 files written. Project-type menu: **exit 1, silent** — see T119 below.
+
+### Findings carried off this task (registered, not folded in)
+
+- **T119** — `^D` at the project-type/packs prompt aborts silently, exit 1, output
+  stops mid-line. Root cause `prompt_packs`' bare `read -r` under `set -e`.
+  **Verified identical on `main`** (exit 1, silent, nothing written) → pre-existing,
+  not a T115 regression. T115 is what made it visible, by giving the two menus
+  above it graceful cancels.
+- **T120** — Reinstall's closing summary prints `CLIs: Claude Code` after also
+  refreshing Codex. The plan discloses it correctly, so nothing is hidden before
+  the user commits; the after-the-fact summary and the plan disagree.
+- Not fixed, recorded: `--help`/`-h` get the generic no-options error rather than
+  usage; the packs prompt is `[info]`-prefixed and visually out of step with the
+  T114/T115 menus.
+- Not exercised: real network install from GitHub (`file://` throughout) and pack
+  installation (`install_pack` unchanged by this task).
