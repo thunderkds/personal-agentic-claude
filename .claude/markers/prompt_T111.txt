@@ -1,0 +1,59 @@
+Task ID: T111
+
+You are the Common-Infrastructure-Agent. Your worktree is /home/hungnguyenhuu/workspace/pets/wt-t111 on branch
+feat/t111-settings-merge (created off feat/easy-kit-one-command). Work only inside that worktree. Commit on that
+branch. Do not merge, do not push, do not touch main.
+
+**Your guide**: tasks/TASK_GUIDE_T111.md — read it completely before any code. Your role guide is
+agents/common-infrastructure.md. Read memory/MEMORY.md in full (it is a path to read, not pasted here) — it is the
+hot-tier index and links to the cold files you may need. This is C2, so also read memory/codebase-map.md, and read
+docs/adr/0002-one-confirmed-menu-driven-installer.md plus the 2026-08-17 T074 entries in memory/learnings.md (a
+settings.json hook entry pointing at a missing file bricks every Bash call).
+
+**Restated intent** (verbatim from the guide):
+> After install or update, `.claude/settings.json` contains every hook the kit ships, keeps everything the user
+> added, never points at a hook file that does not exist, and any case the installer cannot merge is reported
+> loudly with the exact block to add.
+
+The Supervisor's decided ownership rule is in the guide's Approach section and is not yours to relitigate: an entry
+is the kit's if its `command` references a path under `.claude/hooks/`. Kit entries are reconciled against the
+upstream file's entries; every other entry belongs to the user and is never modified or removed.
+
+**Demonstration BEFORE capture**: the BEFORE field in
+/home/hungnguyenhuu/workspace/pets/wt-t111/tasks/TASK_REVIEW_T111.md is **already filled** by the Supervisor
+(2026-09-12, main 8115bc9) — do not overwrite it and do not re-capture it. You fill AFTER, DELTA and WITNESS only,
+after your implementation, with real timestamped output from the same probe.
+
+**Trace attribution**: before running any test or verification command, write the active-task state file so the
+trace hook can attribute your Bash calls:
+mkdir -p /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state && printf '%s\n%s\n' "T111" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state/active_task
+Do this once at the start of your session. Do NOT try `CLAUDE_ACTIVE_TASK=T111 <cmd>` inside a Bash call and do NOT
+write a cwd-relative path — neither reaches the hook.
+
+**Build it test-first** (Karpathy Task Transformation): write tests/test_settings_merge.sh covering Success Criteria
+SC1–SC8 and mutation control M1 first, watch them fail, then make them pass. M1 is not optional — you must paste the
+observed failure, not assert it.
+
+Work the guide's Edge Case Checklist explicitly — the symlink refusal, the atomic temp-file+rename write, the
+empty/null event list, and non-ASCII preservation are each a real case, not a formality.
+
+The three "Documentation to Update" rows (D1 site #update-flow, D2 site #hooks, D3 RUNBOOK.md) are **acceptance
+criteria**, not a nice-to-have. Read each target section before editing it — D2 explicitly says do not assume its
+content. Quote the new text in tasks/TASK_REVIEW_T111.md.
+
+**Verification command** (exact, from the guide — run all of it and paste real output):
+  bash tests/test_settings_merge.sh
+  bash tests/test_setup.sh
+  bash tests/test_update.sh
+  bash tests/test_install_update_smoke.sh
+  shellcheck -x setup.sh update.sh
+  python3 -m pytest .claude/hooks/tests/ -q
+
+Fill the Evidence table in tasks/TASK_REVIEW_T111.md with pasted output — a ticked box with no output is treated as
+unticked. Respect the guide's "Files Must NOT Touch" table; T112/T113 edit lib/harness-fetch.sh, so stay out of it.
+
+Stop and report to the Supervisor if any ambiguity or contradiction between acceptance criteria appears — do not
+silently satisfy the ones you can and stay quiet about the rest.
+
+When done, report: what you changed, the test output, which ACs are proven and by which test, and anything you
+deliberately did not build.

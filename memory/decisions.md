@@ -2202,3 +2202,29 @@ Any action that rewrites the lock from a fresh list must run the removal pass fi
 **Still on stdin**: `prompt_packs` (T115/T116 own it) — skipped silently under `curl | sh`.
 **Files**: setup.sh, lib/harness-update.sh (new), update.sh, tests/test_one_command_menu.sh (new),
 tests/lib/pty.sh (new), 10 suites converted to pty, ci.yml, RUNBOOK.md, site/index.html, PROJECT_SPEC.md
+
+## T115 merged: the installer takes no options (2026-09-23)
+
+`feat/t115-cli-project-menus` merged to `main`. ADR-0002 is now shipped, not proposed: `setup.sh`
+rejects **every** argument with exit 1 before the bootstrap clone, so a stale `--harness codex` from
+old docs fails loudly with nothing written. CLIs and project type are numbered menus. Pre-selection
+is from `PATH` on Install and from **what the project already has** on Reinstall, so Enter never adds
+a CLI the project did not have; a present-but-unpicked CLI is kept and refreshed, disclosed in the
+plan before `Proceed?` rather than silently orphaned. Update asks nothing and keeps what is present
+(T098's rule, unchanged).
+
+**Process note, recorded because it is the second time a claim outran the artifact.** The agent
+exited 0 with a fully ticked TASK_REVIEW and **every implementation edit uncommitted** — one commit
+on the branch, 20 modified files in the worktree. The review described work that did not exist in
+git. The Supervisor read the diff, committed it, and re-verified rather than accepting the ticks;
+the numbers held (848/5 vs `main`'s 843/6). **An exited agent is not a committed agent — check
+`git log` on the branch before reading its review.**
+
+Stage 4: 0 P0 / 3 P1 (all fixed) / 1 P2 (accepted, split out as T119). Root cause of all three P1s
+is one gap, generalised in `learnings.md`: the docs-agreement gate checked the docs and not the
+installer's own output. Stage 5 `/verify`: PASS at the real CLI surface — PTY and no-terminal
+installs from a `file://` fixture, **no suite run as evidence**, with both real CLIs on `PATH`.
+
+Carried off rather than folded in: **T119** (`^D` at the packs prompt aborts silently, exit 1 —
+verified identical on `main`, so pre-existing) and **T120** (Reinstall's closing summary reports the
+picked CLIs, not the projected ones, so it under-reports a kept CLI the plan disclosed correctly).

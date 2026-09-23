@@ -1,0 +1,67 @@
+Task ID: T115
+
+You are the Common-Infrastructure-Agent implementing T115 in the worktree
+/home/hungnguyenhuu/workspace/pets/wt-t115 (branch `feat/t115-cli-project-menus`, cut from `main`).
+Work ONLY inside that worktree.
+
+## Read before anything else
+
+1. `tasks/TASK_GUIDE_T115.md` — in full. Written 2026-09-12 and **corrected 2026-09-22**; the corrections
+   are marked with that date and are load-bearing.
+2. `agents/common-infrastructure.md` — your role guide.
+3. `memory/MEMORY.md` — read it in full (the path, not a paste). The T114 decision entry in
+   `memory/decisions.md` describes the menu/plan/tty code you are extending.
+4. `PROJECT_SPEC.md`, `memory/codebase-map.md`, and
+   `docs/adr/0002-one-confirmed-menu-driven-installer.md` (menus 2–3, "Removed", user-facing terms).
+
+## Requirement (Restated Intent, verbatim from the guide)
+
+> The one command takes no options. On install or reinstall the user picks which CLIs to set up and whether
+> the project is new or existing from numbered lists; everything the docs tell a user to type is a single
+> line.
+
+Out of scope: pack behaviour (`prompt_packs`, `resolve_pack_choices`, `install_pack` — T116); pack wording
+in `packs/**` and folder-structure.md (T117); renaming internal identifiers.
+
+## Demonstration BEFORE capture
+
+Before your first implementation commit, fill the `## Demonstration` BEFORE field in
+`/home/hungnguyenhuu/workspace/pets/wt-t115/tasks/TASK_REVIEW_T115.md`. This task changes executable code:
+run the guide's Test Plan commands and paste real, timestamped output — `sh setup.sh --harness codex`
+accepted, and `tests/test_readme_slim.py` red. For the docs rows, BEFORE is the verbatim current text
+you are about to change. A BEFORE captured after the change is not a BEFORE — there is no `N/A` path.
+
+## Trace attribution
+
+Before running any test or verification command:
+
+mkdir -p /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state && printf '%s\n%s\n' "T115" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state/active_task
+
+Do this once at the start (valid 6h; re-run if longer). Do NOT try `CLAUDE_ACTIVE_TASK=T115 <cmd>` inside a
+Bash tool call, and do NOT write a cwd-relative path.
+
+## The 2026-09-22 corrections, in short (details in the guide's Edge Case Checklist)
+
+1. **Reuse T114, don't rebuild**: `tty_read`/`TTY_OK`, `choose_action`, `confirm_plan`, `plan_install`,
+   `plan_reinstall` already exist and already print CLI + project type. `prompt_mode` becomes the AC3 menu.
+2. **`HARNESSES_REQUESTED` goes dead on Update** once flags are gone — keep presence-only behaviour, remove
+   the dead variable, and test the "both links deleted → Reinstall → pick Claude Code" restore path.
+3. **`update.sh` forwards `"$@"`**: `update.sh --harness claude` must hit the AC6 error (exit 1, names the
+   flag, nothing written). Add it to SC4.
+4. **Docs D7 is yours** (only the `--harness`/`update.sh` lines of folder-structure.md); pack wording is T117's.
+5. **Pytest baseline**: 5 memory-budget failures are pre-existing on `main` and must stay recorded as
+   baseline — do not touch them. `test_readme_is_at_most_75_lines` must go green by shrinking the README.
+
+## How to work
+
+- Test-first: failing pty test, then implementation. `prompt_packs` still reads stdin (T116's) — feed it an
+  Enter in pty tests as T114's suites do.
+- The Reinstall "deselect a CLI" edge case needs a decision: state it on the plan screen, test it, and
+  record the choice in the review file. Never silently orphan a projection.
+- Mutation controls are mandatory (M1 and D9's `AGENTS.md` control) — observe RED, then revert.
+- C2 / Medium Risk. If the guide is ambiguous or factually wrong, STOP and report to the Supervisor.
+- HITL: paste the SC1 transcript and the new README install section into the review file for the user.
+  Do not mark HITL done yourself.
+
+When finished, commit on `feat/t115-cli-project-menus`, paste the full verification output into
+`tasks/TASK_REVIEW_T115.md`, and report that T115 is ready for Stage 4 review.

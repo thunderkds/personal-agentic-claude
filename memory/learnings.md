@@ -1462,6 +1462,13 @@ All five `packs/*/PACK.md` documented `setup.sh --pack <name>`. The parser accep
 presumably since packs shipped. It survived because the pre-slim `README.md` had the `=` form right
 throughout: two documents disagreed, and only the widely-read one was ever exercised.
 
+> **Superseded 2026-09-23 (T115) as to the instrument, not the lesson.**
+> `tests/test_pack_docs_flags.py` was **retired**: it parsed `setup.sh`'s `case "$arg" in` flag
+> parser, and T115 deleted that parser — the installer now takes no options at all. The
+> docs-vs-source agreement check lives in `tests/test_docs_match_installer.py`. The lesson below
+> survives intact and T115 proved it twice more; see *"An agreement gate that checks the docs but
+> not the product is half a gate"*.
+
 **The fix that matters is not the five one-token edits — it is that something now reads one file
 against the other.** `tests/test_pack_docs_flags.py` parses `setup.sh`'s own `case "$arg" in` block at
 test time and checks every documented invocation against it with `fnmatch` (the patterns are globs —
@@ -2503,3 +2510,68 @@ changed in this task's Files to Change. Write the answer into the guide as a dat
 Success Criterion, and commit it before the spawn so the worktree can see it — a correction the agent
 cannot read is not a correction. Generalises [the handoff-warning entry above]: guide text, like a
 handoff bullet, is a measurement with a date on it.
+
+## An agreement gate that checks the docs but not the product is half a gate (T115, 2026-09-23)
+
+T115 removed every installer flag and shipped `tests/test_docs_match_installer.py` to keep the docs
+honest: a `FORBIDDEN` list of dead flags, checked against an explicit `LIVE_DOCS` list. It worked —
+and it still let **two** live instances through, because `FORBIDDEN` was only ever applied to
+`LIVE_DOCS`, never to `INSTALLER_SCRIPTS`. The docs were checked for removed flags; the product's own
+output was not.
+
+Both escapes were on paths a real user hits:
+
+- `prompt_packs` printed `Re-run with --pack=<name> to add packs` **on the no-terminal path — the
+  primary `curl … | sh` install** — pointing at a command that now exits 1.
+- `install_abs` warned `Remove it manually to switch to --copy mode`, a mode that no longer exists.
+
+The generalisation: **when a change removes a vocabulary, the docs are the easy half. The binary
+speaks that vocabulary too** — error strings, hints, warnings, `--help` text, log lines. A user
+reads the product's output *at the moment of failure*, which is exactly when a stale hint does the
+most damage. If a gate enumerates surfaces, the executable is a surface.
+
+Two smaller things worth keeping:
+
+- The scan already had the right machinery — a `_user_strings()` extractor over `INSTALLER_SCRIPTS`,
+  used by a *different* assertion (the "say CLI, not harness" check). The data was in hand and the
+  new assertion was six lines. The gap was not effort, it was not asking "what else should this
+  list apply to?"
+- **A control that is RED both before and after the mutation proves nothing.** Adding the assertion
+  turned the suite red, the mutation was applied, and it was *still* red — which initially looked
+  like a working control. It was a second, unrelated hit. Each message had to be restored
+  separately before either mutation meant anything. Always confirm the control is GREEN at rest.
+
+## A menu answer that word-splits also globs (T115, 2026-09-23)
+
+`for _pc_n in $(printf '%s' "$TTY_ANSWER" | tr ',' ' ')` is unquoted on purpose — that is how `1 2`
+becomes two tokens. Word splitting and pathname expansion are the *same* unquoted-expansion step in
+sh, so the answer globs too. In a project that happens to hold files named `1` or `2`, typing `*`
+expanded to those filenames and was accepted as a CLI selection instead of re-prompting: a silently
+wrong selection, in the feature the task existed to ship.
+
+`set -f` around the split only, `set +f` after. The regression case has to **build the trap** — a
+repo containing files named `1` and `2` — or it passes for the wrong reason.
+
+The shape to watch: **any unquoted `$(...)` taking user input into a `for` loop.** Reading it as
+"this word-splits" is half the story; it also consults the filesystem. This is the third input-
+parsing defect in this installer's menus (T108's comma forms, T115's glob), all from the same place:
+the answer is a string, and sh's default handling of a bare string is generous.
+
+## Verifying at the surface turned a plausible review claim into a wrong one (T115, 2026-09-23)
+
+Stage 4 recorded, from reading the code, that `^D` at the project-type menu "breaks to New project
+and installs" — coherent, matched the source, and was **wrong**. Run, it exits 1 silently with
+nothing written and no message, and the cause is a *different* function: `prompt_packs`' bare
+`read -r` under `set -e`, one prompt further on.
+
+Two lessons, and the second is the one that generalises:
+
+1. A behavioural claim written from the source is a hypothesis. It reads as a finding once it is in
+   a review document, and nothing downstream distinguishes the two.
+2. **Checking `main` is what decided the verdict.** The same probe on `main` behaved identically, so
+   the defect was pre-existing and T115 was PASS rather than FAIL. Before filing a defect found at
+   Stage 5, run the same probe against the base — "found while verifying X" and "caused by X" are
+   different claims, and only one of them blocks a merge.
+
+T115 also made it *visible*: it gave two menus graceful cancels, so the third one's silence started
+reading as a crash. **Improving the neighbours of a rough edge can surface it without causing it.**

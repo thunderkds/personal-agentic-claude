@@ -1,0 +1,63 @@
+Task ID: T109
+
+You are the Common-Infrastructure-Agent. Your worktree is /home/hungnguyenhuu/workspace/pets/wt-t109 on branch
+fix/t109-ci-suites (cut from the integration branch feat/easy-kit-one-command). Work only inside that worktree.
+Commit on fix/t109-ci-suites. Do not merge, do not push, do not touch main.
+
+**Demonstration BEFORE capture**: before your first implementation commit, fill the ## Demonstration BEFORE
+field in /home/hungnguyenhuu/workspace/pets/wt-t109/tasks/TASK_REVIEW_T109.md (the guide carries only a
+"See tasks/TASK_REVIEW_T109.md" pointer). The Supervisor pre-filled a BEFORE from a 2026-09-12 probe on main;
+re-run it yourself now, in your worktree, before any edit, and paste your own timestamped output underneath:
+run each of bash tests/test_setup.sh, bash tests/test_update.sh, bash tests/test_install_update_smoke.sh,
+bash tests/test_t098_harness_presence.sh, bash tests/test_pack_choice_parsing.sh separately and record each
+exit status, plus the FAIL line from the smoke suite. A BEFORE captured after the change is not a BEFORE;
+there is no N/A path.
+
+**Trace attribution**: before running any test or verification command, write the active-task state file so
+the trace hook can attribute your Bash calls:
+  mkdir -p /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state && printf '%s\n%s\n' "T109" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state/active_task
+Do this once at the start of your session. Do NOT use CLAUDE_ACTIVE_TASK=T109 <cmd>, and do NOT write a
+cwd-relative path — neither reaches the hook, and both leave your evidence unattributed.
+
+Read in full before anything else:
+  1. /home/hungnguyenhuu/workspace/pets/wt-t109/tasks/TASK_GUIDE_T109.md — the contract
+  2. /home/hungnguyenhuu/workspace/pets/wt-t109/agents/common-infrastructure.md — your role guide
+  3. /home/hungnguyenhuu/workspace/pets/wt-t109/memory/MEMORY.md — read it in full at this path; it is not pasted here
+  4. /home/hungnguyenhuu/workspace/pets/wt-t109/PROJECT_SPEC.md
+  5. /home/hungnguyenhuu/workspace/pets/wt-t109/docs/adr/0002-one-confirmed-menu-driven-installer.md — this task is its Follow-up (1)
+
+Restated intent, verbatim from the guide:
+> Every shell test suite for the installer runs in CI as its own named step, all of them are green, and
+> a new suite added later cannot silently stay out of CI.
+
+**Supervisor approval for the CI change (your role guide requires it):** you are explicitly approved to edit
+.github/workflows/ci.yml for this task — adding one named step per suite, as the guide's AC2/AC3 describe.
+That approval covers new test steps only. Do NOT change the existing shellcheck step's file list (ci.yml:19)
+or tests/test_shellcheck_clean.sh — they are a mirrored pair and out of scope.
+
+Decided, not yours to relitigate:
+1. The one red suite is a TEST defect, not an installer defect: tests/test_install_update_smoke.sh reads
+   MANIFEST lines raw, so the destination column `codex=.codex/skills` becomes part of the path. Fix the test to
+   read field 1 only, the same rule as harness_manifest_path in lib/harness-fetch.sh. Do not edit MANIFEST,
+   setup.sh, update.sh or lib/harness-fetch.sh.
+2. The drift test must read the real ci.yml and glob the real tests/*.sh at test time — never a copied list of
+   suite names (memory/learnings.md: a test that mirrors another file's list by copying it is a comment).
+3. Three more suites exist outside CI: tests/test_harness_fetch.sh, tests/test_readme_current.sh,
+   tests/test_shellcheck_clean.sh. Each is your call — wire it as its own step, or exclude it in the drift test
+   with a checkable one-line reason. Run each first. If one is red, STOP and report to the Supervisor; do not
+   fix unrelated code to make it pass.
+4. tests/test_readme_slim.py is red on main already (README 83 > 75 lines). It is T115's. Do not touch README.md
+   or that test; it is the one expected failure in the full Python suite.
+
+Working rules for this task:
+- Read every command's own exit status. Never judge a suite through `| tail` — the pipe masks failure.
+- Run the mutation controls M1 and M2 from the guide, confirm each mutation actually landed (git diff) before
+  reading the result, and commit your fix BEFORE mutating so a restore cannot erase it.
+- In this environment `grep` wraps ugrep; the Python drift test must not shell out to grep.
+- Do not modify any existing test's assertions. If an existing test seems wrong, STOP and report.
+- Fill the Evidence table in /home/hungnguyenhuu/workspace/pets/wt-t109/tasks/TASK_REVIEW_T109.md with pasted real
+  output for every row you can run. Leave the verify row for the Supervisor/user (verify is user-run).
+- Do not write to memory/ (Supervisor-only). Put learnings for the Supervisor in your final message.
+
+When finished: make sure `git -C /home/hungnguyenhuu/workspace/pets/wt-t109 status --short` is clean and every change is
+committed, then end with a short report — commits, each AC's result, mutation-control results, anything you stopped on.

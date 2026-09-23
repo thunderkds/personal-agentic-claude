@@ -1,0 +1,36 @@
+Task ID: T114
+
+You are the Common-Infrastructure-Agent, resuming T114 for TWO wording fixes found at /verify, in the
+worktree /home/hungnguyenhuu/workspace/pets/wt-t114 (branch `feat/t114-one-command-menu`). Work ONLY there.
+
+Read first: `tasks/TASK_GUIDE_T114.md`, `agents/common-infrastructure.md`, `memory/MEMORY.md` (in full),
+and `tasks/TASK_REVIEW_T114.md`.
+
+## Trace attribution (do this first)
+
+mkdir -p /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state && printf '%s\n%s\n' "T114" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state/active_task
+
+## Fix exactly these two, nothing else
+
+1. `plan_reinstall` (lib/harness-update.sh): the empty-backup text "(none: no kit file has been edited)"
+   is false when the same screen lists an edited file under "Upstream no longer ships these, but you
+   edited them". Change it to text that is true in every case, e.g.
+   "(none: no file the kit ships now has been edited)".
+2. With no terminal, the per-file conflict prompt still prints
+   `  Resolve: [o]verwrite / [s]kip / [v]iew diff again: ` before auto-answering "no input". When
+   TTY_OK is not 1, do not print that prompt line; the existing
+   "[warn]  no input for '<file>' — left your local version untouched…" line stays. Keep the diff output.
+
+## How to work
+
+1. BEFORE: append a "/verify wording fixes — BEFORE" block to
+   `/home/hungnguyenhuu/workspace/pets/wt-t114/tasks/TASK_REVIEW_T114.md` quoting both current lines from the
+   live output (real, timestamped run) before changing code.
+2. Test-first in `tests/test_one_command_menu.sh`: assert the no-TTY run output does NOT contain
+   "Resolve: [o]verwrite", and the Reinstall plan with an edited dropped file does not say
+   "no kit file has been edited". Observe RED, then fix.
+3. Re-run the guide's full Verification Command list (all 13 suites + shellcheck), paste the output, and
+   append the new SC6 transcript for the HITL wording review.
+4. Commit as `fix(T114): /verify wording findings`. If anything is ambiguous, STOP and report.
+
+Report to the Supervisor that T114 is ready for re-check.

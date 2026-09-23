@@ -1,0 +1,71 @@
+Task ID: T109
+
+ROUND 2. You are the Common-Infrastructure-Agent. Your worktree is /home/hungnguyenhuu/workspace/pets/wt-t109 on branch
+fix/t109-ci-suites, which already holds round 1 (c4b8eaa, 37a2435, 813902a). Work only inside that worktree. Commit on
+that branch. Do not merge, do not push, do not touch main.
+
+**Why round 2**: the user-run /verify returned **FAIL**. Read the full report in
+/home/hungnguyenhuu/workspace/pets/wt-t109/tasks/TASK_REVIEW_T109.md (verify row + "Round 2" section) and the new
+AC8–AC12 in /home/hungnguyenhuu/workspace/pets/wt-t109/tasks/TASK_GUIDE_T109.md before anything else. Round 1's wiring
+is correct and stays: a fresh-container replay of every ci.yml run: step passed, and breaking a wired suite failed the
+job at that named step. Two defects remain:
+
+1. **The drift guard never runs in CI.** A replay with an unwired, always-failing tests/test_zz_unwired.sh reported
+   JOB RESULT: success — nothing in ci.yml runs tests/test_ci_wires_shell_suites.py (or any pytest). The intent "a new
+   suite added later cannot silently stay out of CI" is therefore not met at CI.
+2. **The guard counts any `tests/X.sh` text anywhere in ci.yml as wired.** `re.findall(r"tests/…\.sh", text)` matched
+   (a) the shellcheck argument list at ci.yml:19 — deleting the run step for test_harness_projection.sh left the guard
+   at 3 passed — and (b) a YAML comment `# TODO later: tests/test_zz_comment_only.sh` — also 3 passed.
+
+**Demonstration BEFORE capture** (round 2): before your first round-2 implementation commit, append a
+"BEFORE (round 2)" block to the ## Demonstration section of
+/home/hungnguyenhuu/workspace/pets/wt-t109/tasks/TASK_REVIEW_T109.md with real, timestamped output you run now, before
+any edit: (i) probe A — delete the "Per-harness projection tests (T097)" step from ci.yml, run the guard, paste the
+result, restore; (ii) probe B — add an always-failing tests/test_zz_comment_only.sh plus the comment line above, run the
+guard, paste, remove both; (iii) the line from ci.yml proving no step runs the guard. A BEFORE captured after the change
+is not a BEFORE; there is no N/A path.
+
+**Trace attribution**: before running any test or verification command, write the active-task state file:
+  mkdir -p /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state && printf '%s\n%s\n' "T109" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state/active_task
+Do NOT use CLAUDE_ACTIVE_TASK=T109 <cmd>, and do NOT write a cwd-relative path.
+
+Also read: /home/hungnguyenhuu/workspace/pets/wt-t109/agents/common-infrastructure.md and
+/home/hungnguyenhuu/workspace/pets/wt-t109/memory/MEMORY.md (read it at this path; not pasted here).
+
+Restated intent, verbatim from the guide:
+> Every shell test suite for the installer runs in CI as its own named step, all of them are green, and
+> a new suite added later cannot silently stay out of CI.
+
+Decided by the Supervisor — not yours to relitigate:
+1. **CI runs the guard as a plain script, no pytest dependency.** Add one named ci.yml step running
+   `python3 tests/test_ci_wires_shell_suites.py`. Give the file an `if __name__ == "__main__":` block that runs every
+   `test_*` function, prints each result, and exits non-zero on any failure. It must stay collectable by pytest
+   unchanged. Reason: the replay container's python3 had no pytest, and Ubuntu 24.04 refuses `pip install` system-wide
+   (PEP 668) — a pip step would add a network dependency and a new failure mode.
+2. **"Wired" means a `run:` line that directly invokes the suite**: `run: bash tests/<name>.sh` or `run: sh tests/<name>.sh`
+   (optionally with trailing whitespace) — nothing else. A suite named in any other command (the shellcheck argument
+   list), in a comment, or in a step name does not count. Parse ci.yml line by line with `re`; do not add PyYAML.
+3. **The guard must check that CI runs the guard itself**: a new test asserts ci.yml has a run: step invoking
+   `python3 tests/test_ci_wires_shell_suites.py`. Without it, deleting that step silently disables everything.
+4. Supervisor approval for the CI change stands: you may add this one step to ci.yml. Do NOT change the shellcheck step
+   (ci.yml:19) or tests/test_shellcheck_clean.sh.
+5. Correct the review file's DELTA: round 1 claimed the smoke suite "now gates every future push" — true only for suites
+   already wired. State what is actually guaranteed after round 2, no more.
+
+Mutation controls (guide AC12) — each must be observed failing, mutation confirmed landed via git diff first, and your
+fix committed BEFORE you mutate so a restore cannot erase it:
+- M3: probe A (shellcheck-only mention) → guard fails naming test_harness_projection.sh
+- M4: probe B (comment-only mention) → guard fails naming the comment-only suite
+- M5: delete the new guard step from ci.yml → the self-check test fails
+- M6: run the guard as CI will (`python3 tests/test_ci_wires_shell_suites.py`, read its own exit status, no pipe) with an
+  unwired always-failing tests/test_zz_unwired.sh present → exit non-zero
+Also re-run round 1's M1/M2 controls and confirm they still fail as before.
+
+Working rules (unchanged from round 1): read every command's own exit status, never through `| tail`; `grep` here is
+ugrep, so the guard must not shell out to grep; do not modify any existing test's assertions without STOPping to report;
+do not write to memory/; leave the verify row to the Supervisor/user. Update the Evidence rows you can run with round-2
+output (keep round-1 output, label rounds).
+
+When finished: `git -C /home/hungnguyenhuu/workspace/pets/wt-t109 status --short` clean, every change committed, then end
+with a short report — commits, AC8–AC12 results, M3–M6 and M1/M2 results, anything you stopped on. Then exit the session
+(type /exit) so completion is recorded.

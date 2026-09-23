@@ -291,6 +291,12 @@
 - [A guide's acceptance numbers can be arithmetic on a broken run](learnings.md) — T118's AC said 15/38 (passed+failed of the red runs); the real green counts were 20/41. Take the target from the last green commit.
 - [Verify a test-only diff at the product's surface](learnings.md) — T118: hand-build the fixture, drive the real installer, mutate the one thing the task added — re-running the suite would only re-run CI.
 
+- [T115 merged: the installer takes no options](decisions.md) — ADR-0002 shipped; menus for CLIs + project type, any argument exits 1 before writing; agent exited 0 with the work uncommitted.
+- [An agreement gate that checks the docs but not the product is half a gate](learnings.md) — T115's FORBIDDEN list ran on LIVE_DOCS only; the binary speaks the dead vocabulary too (error strings, hints, --help).
+- [A control RED before *and* after the mutation proves nothing](learnings.md) — T115: the second hit masked the first; confirm the control is GREEN at rest.
+- [A menu answer that word-splits also globs](learnings.md) — unquoted `$(...)` into a `for` loop consults the filesystem; `*` selected CLIs from files named 1 and 2. Use `set -f` around the split.
+- [Check `main` before filing a Stage 5 defect](learnings.md) — "found while verifying X" ≠ "caused by X"; the same probe on main made T115 PASS, not FAIL.
+
 ### Glossary
 - [Report / Report Slot / Scoring Dimension / Report Session](glossary.md) — canonical terms for the html-report skill and Stage 4 reporting system
 - [Thinking Report / Trade-Off Matrix / Thinking Session](glossary.md) — canonical terms for the thinking-report skill and Stage 0.5–2 decision system

@@ -1,0 +1,24 @@
+You are the Common-Infrastructure-Agent working task T118 in an isolated git worktree.
+
+**Task ID**: T118
+**Guide**: tasks/TASK_GUIDE_T118.md — read it completely before anything else.
+**Agent guide**: agents/common-infrastructure.md — read this too; it is your role contract.
+**Memory**: read memory/MEMORY.md in full (the path, read it yourself — it is not pasted here).
+**Worktree**: /home/hungnguyenhuu/workspace/pets/wt-t118 on branch fix/t118-fixture-merge-settings. Work only here.
+
+**Demonstration BEFORE capture** (do this before your first implementation commit): fill the `## Demonstration` BEFORE field in /home/hungnguyenhuu/workspace/pets/wt-t118/tasks/TASK_REVIEW_T118.md (the guide carries only a `> **Moved.**` pointer). This task changes executable code, so run the exact commands named in the guide's Test Plan step 1 and paste the real, timestamped output — the current red output of both suites. A BEFORE captured after the change is not a BEFORE; there is no N/A path.
+
+**Trace attribution**: before running any test or verification command, write the active-task state file so the trace hook can attribute your Bash calls:
+mkdir -p /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state && printf '%s\n%s\n' "T118" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state/active_task
+Do this once at the start of your session. Do NOT try `CLAUDE_ACTIVE_TASK=T118 <cmd>` inside a Bash call and do NOT use a relative path or $CLAUDE_PROJECT_DIR — neither reaches the hook.
+
+**Restated intent** (from the guide, verbatim):
+> A fixture repo must be a believable Easy Kit. It has to carry the files the installers hard-require, so these suites test what they claim to test instead of failing at a missing prerequisite — and `main`'s CI goes green again.
+
+Two CI-wired suites are red on main since T111 merged: tests/test_t098_harness_presence.sh (8 passed, 7 failed) and tests/test_harness_projection.sh (35 passed, 3 failed). Both build synthetic fixture repos that omit lib/merge-settings.py, which T111 made a hard prerequisite of both installers, so every update.sh call in them aborts at exit 2.
+
+**The fixture-vs-product design question is already settled in the guide's Approach section: fixture-side.** setup.sh and update.sh are in Files Must NOT Touch. If you find evidence that the installers should degrade instead, STOP and ask the Supervisor — do not switch approach on your own.
+
+Read the guide's Edge Case Checklist carefully before editing; several of those cases (provision before the fixture's `git add -A`; do not leak lib/ into MANIFEST) will silently produce a passing-but-wrong fix if missed.
+
+When done: report status to the Supervisor with the Task ID, the AFTER output of both suites, and the AC4 mutation output in both directions. Do not edit PROJECT_KANBAN.md or memory/ — those are Supervisor-owned.

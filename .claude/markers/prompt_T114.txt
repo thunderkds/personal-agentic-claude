@@ -1,0 +1,67 @@
+Task ID: T114
+
+You are the Common-Infrastructure-Agent implementing T114 in the worktree
+/home/hungnguyenhuu/workspace/pets/wt-t114 (branch `feat/t114-one-command-menu`, cut from `main`).
+Work ONLY inside that worktree.
+
+## Read before anything else
+
+1. `tasks/TASK_GUIDE_T114.md` — your task guide, in full. Written 2026-09-12 and **corrected
+   2026-09-22**; the corrections are marked with that date and are load-bearing.
+2. `agents/common-infrastructure.md` — your role guide.
+3. `memory/MEMORY.md` — read it in full (the path, not a paste).
+4. `PROJECT_SPEC.md`, `memory/codebase-map.md`, and
+   `docs/adr/0002-one-confirmed-menu-driven-installer.md` — the authority for this task.
+
+## Requirement (Restated Intent, verbatim from the guide)
+
+> A user runs the one published command in any project. Easy Kit works out whether it is already installed,
+> offers a numbered action list with a safe default, shows exactly what it will do, and acts only after
+> the user accepts — or picks another action. With no terminal it takes the safe path and says so.
+
+Out of scope (T115): CLI/project-type menus, removing `--harness`/`--copy`/`--pack=`, README and the
+site's install/options sections. Packs (T116/T117).
+
+## Demonstration BEFORE capture
+
+Before your first implementation commit, fill the `## Demonstration` BEFORE field in
+`/home/hungnguyenhuu/workspace/pets/wt-t114/tasks/TASK_REVIEW_T114.md` (the guide carries only a pointer).
+This task changes executable code: run the exact commands named in the guide's Test Plan and paste real,
+timestamped output — `sh ./update.sh` failing in an installed project, and re-running `setup.sh` on an
+installed, edited project silently overwriting the edit. A BEFORE captured after the change is not a
+BEFORE — there is no `N/A` path.
+
+## Trace attribution
+
+Before running any test or verification command, write the active-task state file:
+
+mkdir -p /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state && printf '%s\n%s\n' "T114" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state/active_task
+
+Do this once at the start (valid 6h; re-run if your session runs longer). Do NOT try
+`CLAUDE_ACTIVE_TASK=T114 <cmd>` inside a Bash tool call, and do NOT write a cwd-relative path.
+
+## Corrections to the guide you must honour (added 2026-09-22)
+
+1. **T113 landed after this guide was written.** Update now DELETES unedited files upstream stopped
+   shipping. The plan screen (AC3) must list those removals as well as backups — "shows exactly what it
+   will do" is not met by listing backups alone.
+2. **MANIFEST `!<path>` exclusions** (T113): Reinstall's backup pass must skip excluded paths exactly as
+   install does. Add a test: Reinstall in a project that has its own `.claude/hooks/tests/` leaves it
+   untouched and creates no `.claude/hooks/tests.bak`.
+3. **Docs D1–D4 are yours.** An older Must-NOT-Touch row forbade `site/index.html` and `RUNBOOK.md`,
+   contradicting D1–D3; it is corrected. Only README and the site's install/options sections are T115's.
+4. **Every installer suite must be RUN, not read.** The verification list now includes all 13 suites plus
+   shellcheck. Converting stdin-piping suites to a pty must not weaken any assertion.
+
+## How to work
+
+- Test-first: write the failing pty test, then make it pass. `script -qec` reaches `/dev/tty` prompts a
+  pipe cannot (learnings, T108). `setsid` tests must skip with a named message where absent.
+- All prompts happen BEFORE any write; the fetch before the plan screen writes only to the temp dir.
+- Mutation controls M1/M2 are mandatory — observe each RED, then revert.
+- C2 / Medium Risk, P0. If the guide is ambiguous or factually wrong, STOP and report to the Supervisor.
+- HITL: capture full terminal transcripts of SC1, SC3 and SC6 into the review file for the user's
+  wording review. Do not mark HITL done yourself.
+
+When finished, commit on `feat/t114-one-command-menu`, paste the full verification output into
+`tasks/TASK_REVIEW_T114.md`, and report that T114 is ready for Stage 4 review.

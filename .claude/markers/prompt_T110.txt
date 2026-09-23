@@ -1,0 +1,68 @@
+Task ID: T110
+
+You are the Common-Infrastructure-Agent. Your worktree is /home/hungnguyenhuu/workspace/pets/wt-t110 on branch
+fix/t110-update-claude-md (cut from feat/easy-kit-one-command @ 992e293, which equals main after PR #84/#85). Work only
+inside that worktree. Commit on that branch. Do not merge, do not push, do not touch main.
+
+**Demonstration BEFORE capture**: before your first implementation commit, fill the ## Demonstration BEFORE field in
+/home/hungnguyenhuu/workspace/pets/wt-t110/tasks/TASK_REVIEW_T110.md (the guide carries only a "See tasks/TASK_REVIEW_T110.md"
+pointer). The Supervisor pre-filled a BEFORE from a 2026-09-12 probe on main; re-run the probe yourself now, in scratch git
+repos, before any edit, and paste your own timestamped output underneath: install from a local upstream clone
+(SUPERVISOR_REPO=file://...), change upstream CLAUDE.md, CLAUDE_LEGACY.md and a skill, commit upstream, run update.sh
+</dev/null, and show that the skill updates while CLAUDE.md does not — for both a new-project (greenfield) and an
+existing-project (brownfield, answer 2 through a pty with `script -qec`) install. A BEFORE captured after the change is not a
+BEFORE; there is no N/A path.
+
+**Trace attribution**: before running any test or verification command, write the active-task state file so the trace hook can
+attribute your Bash calls:
+  mkdir -p /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state && printf '%s\n%s\n' "T110" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state/active_task
+Do this once at the start of your session. Do NOT use CLAUDE_ACTIVE_TASK=T110 <cmd>, and do NOT write a cwd-relative path —
+neither reaches the hook, and both leave your evidence unattributed.
+
+Read in full before anything else:
+  1. /home/hungnguyenhuu/workspace/pets/wt-t110/tasks/TASK_GUIDE_T110.md — the contract, including "Documentation to Update"
+  2. /home/hungnguyenhuu/workspace/pets/wt-t110/agents/common-infrastructure.md — your role guide
+  3. /home/hungnguyenhuu/workspace/pets/wt-t110/memory/MEMORY.md — read it in full at this path; it is not pasted here
+  4. /home/hungnguyenhuu/workspace/pets/wt-t110/PROJECT_SPEC.md (glossary: Greenfield, Brownfield, harness-lock.json, Easy Kit, CLI)
+  5. /home/hungnguyenhuu/workspace/pets/wt-t110/docs/adr/0002-one-confirmed-menu-driven-installer.md — "No silent loss"
+
+Restated intent, verbatim from the guide:
+> Updating an Easy Kit project delivers the current `CLAUDE.md` rules from the same source the project
+> was installed with, overwriting only when the user has not edited the file, and asking otherwise.
+
+Decided by the Supervisor — not yours to relitigate (they are in the guide's Approach; restated because they are the easy ones to
+get wrong):
+1. **Record the install source in the lock** as a top-level non-hex field, e.g. "claude_md_source": "CLAUDE_LEGACY.md". Old readers
+   (extract_lock_pairs, lookup_lock_hash) must see no change (AC6). write_new_lock rebuilds the lock from hash pairs only today —
+   it MUST re-emit the field, or the source is lost on the first update (AC4).
+2. **Old locks without the field**: infer the source by comparing CLAUDE.md's first line with the first line of each candidate in
+   the fetched temp clone — no heading text hardcoded. Neither matches → the conflict path (AC5). Never silently overwrite.
+3. **Do not add CLAUDE.md to MANIFEST.** It has two sources and one destination; reuse process_files' comparison + prompt instead
+   of copying that logic.
+4. **Documentation rows D1 and D2 are acceptance criteria**: RUNBOOK.md's "A fix to CLAUDE.md never appears downstream … by
+   design" row becomes false and must be replaced; site/index.html #update-flow must say CLAUDE.md is covered and brownfield keeps
+   its CLAUDE_LEGACY.md source. Quote the new text in the review file. Leave #update-flow's command lines alone (T114's).
+5. **CI (lesson from T109, not in the guide)**: your new suite tests/test_update_claude_md.sh must be wired into
+   .github/workflows/ci.yml as its own named step, `run: bash tests/test_update_claude_md.sh` on a single line. T109's drift guard
+   (python3 tests/test_ci_wires_shell_suites.py) fails the build for any unwired tests/*.sh — run it and read its own exit status.
+   You are explicitly approved to add that one ci.yml step and nothing else in ci.yml.
+
+Working rules:
+- Read every command's own exit status. Never judge a suite through `| tail` — the pipe masks failure.
+- Brownfield cases must drive the real prompt through a pty (`script -qec "sh setup.sh" /dev/null` with piped answers);
+  `[ -t 0 ]`-gated prompts are unreachable from a pipe (memory/learnings.md).
+- A subshell `cd` does not wrap a pipeline written outside it — assert where the install actually landed (memory/learnings.md, T108).
+- Run mutation control M1 from the guide; confirm the mutation landed via git diff before reading the result, and commit your fix
+  BEFORE mutating so a restore cannot erase it.
+- `grep` in this environment wraps ugrep — use `command grep` in shell tests.
+- Do not modify any existing test's assertions. If an existing test seems wrong, STOP and report.
+- `shellcheck` is not installed locally; run it via `docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:stable -x setup.sh update.sh`
+  (that image is cached).
+- Fill every Evidence row you can run in /home/hungnguyenhuu/workspace/pets/wt-t110/tasks/TASK_REVIEW_T110.md with pasted real
+  output, including the Docs row. Leave the verify row to the Supervisor/user.
+- Do not write to memory/ (Supervisor-only). Put learnings for the Supervisor in your final message.
+
+When finished: `git -C /home/hungnguyenhuu/workspace/pets/wt-t110 status --short` must be clean with every change committed. End
+with a short report — commits, each AC's and D-row's result, M1 result, anything you stopped on. **Then type /exit to end the
+session** — the Supervisor tracks completion by the session ending; an idle session looks like unfinished work (T109 lost 3 hours
+this way).

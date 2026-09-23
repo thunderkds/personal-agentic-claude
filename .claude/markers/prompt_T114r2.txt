@@ -1,0 +1,41 @@
+Task ID: T114
+
+You are the Common-Infrastructure-Agent, resuming T114 for ONE Stage 4 fix, in the worktree
+/home/hungnguyenhuu/workspace/pets/wt-t114 (branch `feat/t114-one-command-menu`). Work ONLY there.
+
+Read first: `tasks/TASK_GUIDE_T114.md`, `agents/common-infrastructure.md`, `memory/MEMORY.md` (in full),
+and your own `tasks/TASK_REVIEW_T114.md`.
+
+## Trace attribution (do this first)
+
+mkdir -p /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state && printf '%s\n%s\n' "T114" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state/active_task
+
+## The Stage 4 finding (P1, confidence 100) — fix only this
+
+`run_reinstall` (lib/harness-update.sh) skips T113's removal contract. It rewrites the lock from the fresh
+list + CLAUDE.md only, so a kit file upstream stopped shipping stays on disk AND loses its lock entry —
+after which no Update can ever remove it (Update only removes lock-listed files). The plan screen does
+not mention these files, and no test covers the case.
+
+Required behaviour (same contract as Update, T113):
+- Unedited file upstream dropped → removed (empty dirs pruned exactly as Update does).
+- Edited file upstream dropped → kept on disk AND kept in the lock, and named.
+- Incomplete upstream (`deletion_is_safe` fails) → nothing removed, said so, same exit behaviour as Update.
+- A lock entry outside the MANIFEST → carried over unchanged, as Update does.
+- `plan_reinstall` lists the removals and the kept-edited files the way `plan_update` does, so the
+  screen names exactly what the run does. Prefer reusing `carry_over_unprocessed` (with a processed list
+  = the reinstall list) and the classification `plan_update` already has, over new logic.
+
+## How to work
+
+1. Demonstration: append a "Stage 4 fix — BEFORE" block to `/home/hungnguyenhuu/workspace/pets/wt-t114/tasks/TASK_REVIEW_T114.md`
+   with real, timestamped output of the bug on the current tip (a dropped unedited skill surviving
+   Reinstall and missing from the lock) BEFORE changing code.
+2. Test-first in `tests/test_one_command_menu.sh`: unedited-dropped removed; edited-dropped kept + still
+   in lock + named on the plan screen; incomplete upstream removes nothing. Observe RED, then fix.
+3. Mutation control: revert only the reinstall removal call → the new test must fail. Record it.
+4. Re-run the guide's full Verification Command list (all 13 suites + shellcheck) and paste the output.
+5. Commit as `fix: address Stage 4 review findings (P1)`. Touch nothing else. If anything is ambiguous,
+   STOP and report instead of guessing.
+
+Report to the Supervisor that T114 is ready for Stage 4 re-review.

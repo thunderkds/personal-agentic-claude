@@ -27,7 +27,8 @@
 
 - **Harness** — internal term for a CLI/agent runtime the kit installs into (Claude Code, Codex); N=2
   by decision (DDR-0006 follow-up). **Users see "CLI"**, picked from a numbered menu at install
-  (ADR-0002, proposed 2026-09-12), replacing `setup.sh --harness <name>`. Legacy identifiers
+  (ADR-0002) — **shipped in T115, merged 2026-09-23**; `setup.sh --harness <name>` is gone and any
+  argument now exits 1 before anything is cloned or written. Legacy identifiers
   (`harness-lock.json`, `lib/harness-fetch.sh`) use "harness" for the *kit* itself and are
   deliberately not renamed — never show the word to users.
 - **Canon** — the single tracked source of truth for skills and agent guides: real directories at

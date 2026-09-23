@@ -1,0 +1,81 @@
+Task ID: T110
+
+ROUND 2. You are the Common-Infrastructure-Agent. Your worktree is /home/hungnguyenhuu/workspace/pets/wt-t110 on branch
+fix/t110-update-claude-md, which already holds round 1 (a993ff6, 2b6effe, 9319d09). Work only inside that worktree. Commit on
+that branch. Do not merge, do not push, do not touch main.
+
+**Why round 2**: Stage 4 review (Supervisor, 2026-09-14). Round 1's implementation is correct and stays — the Supervisor re-ran
+all four suites independently (23/23, 31/31, 18/18, 9/9) and security-review found no vulnerability at confidence >= 8. The
+findings to close:
+
+1. **P1 — no test proves the recorded claude_md_source is honoured.** The Supervisor patched resolve_claude_md_source so the
+   `if [ -n "$_recorded" ]` branch never runs (inference always used). SC1–SC6 all still PASSED; only M1 failed, and only because
+   its own sed patch no longer matched. In every existing scenario heading inference picks the same file the lock records, so the
+   field that AC4 exists for is untested. The divergent case is real: a brownfield project whose user edited line 1 of CLAUDE.md.
+   With the record honoured, the conflict prompt diffs against CLAUDE_LEGACY.md and [o] installs the legacy rules; with the record
+   ignored, inference says "conflict", forces the greenfield CLAUDE.md, and [o] silently turns a brownfield project greenfield.
+2. **P2 — the recorded value is used unvalidated as a path.** `_src="$HARNESS_TEMP_DIR/$CLAUDE_MD_SOURCE"` accepts anything the
+   lock says, e.g. "README.md" or "../../home/<user>/.aws/credentials", and copies it into CLAUDE.md (silently if the hash
+   matches). The lock is committed to the user's repo, so its content is data, not trusted config.
+3. **P2 — shellcheck evidence.** The review row says "shellcheck clean" but pastes no output; paste the real run.
+4. **P3 (optional, do it only if it is a few lines)** — fieldless lock + user-deleted CLAUDE.md falls back to greenfield
+   CLAUDE.md even for a brownfield install. If you skip it, say so in the report; do not expand scope beyond that.
+
+**Demonstration BEFORE capture** (round 2): before your first round-2 implementation commit, append a "BEFORE (round 2)" block to
+the ## Demonstration section of /home/hungnguyenhuu/workspace/pets/wt-t110/tasks/TASK_REVIEW_T110.md with real, timestamped output
+you run now, before any edit: (i) the brownfield first-line-edited scenario in scratch git repos (install answering 2 through a
+pty with `script -qec`, edit CLAUDE.md line 1, change upstream CLAUDE_LEGACY.md, commit upstream, run update answering o through
+a pty) — paste what CLAUDE.md contains afterwards and what the lock records; (ii) set "claude_md_source" in a lock to a value
+outside {CLAUDE.md, CLAUDE_LEGACY.md} (e.g. a path to a file in your scratch dir) and run update — paste what landed in CLAUDE.md.
+A BEFORE captured after the change is not a BEFORE; there is no N/A path.
+
+**Trace attribution**: before running any test or verification command, write the active-task state file so the trace hook can
+attribute your Bash calls:
+  mkdir -p /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state && printf '%s\n%s\n' "T110" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state/active_task
+Do this once at the start of your session. Do NOT use CLAUDE_ACTIVE_TASK=T110 <cmd>, and do NOT write a cwd-relative path.
+
+Read in full before anything else:
+  1. /home/hungnguyenhuu/workspace/pets/wt-t110/tasks/TASK_GUIDE_T110.md — the contract
+  2. /home/hungnguyenhuu/workspace/pets/wt-t110/tasks/TASK_REVIEW_T110.md — your round-1 evidence
+  3. /home/hungnguyenhuu/workspace/pets/wt-t110/agents/common-infrastructure.md — your role guide
+  4. /home/hungnguyenhuu/workspace/pets/wt-t110/memory/MEMORY.md — read it in full at this path; it is not pasted here
+
+Restated intent, verbatim from the guide:
+> Updating an Easy Kit project delivers the current `CLAUDE.md` rules from the same source the project
+> was installed with, overwriting only when the user has not edited the file, and asking otherwise.
+
+Decided by the Supervisor — not yours to relitigate:
+1. **Allowlist, not sanitising.** A recorded claude_md_source is used only if it is exactly `CLAUDE.md` or `CLAUDE_LEGACY.md`.
+   Any other value → log_warn naming the rejected value, then fall through to the existing heading inference (and from there,
+   the existing conflict path). Do not try to strip `../` or normalise paths.
+2. **New scenario SC7** in tests/test_update_claude_md.sh: brownfield install, edit line 1 of CLAUDE.md, change upstream
+   CLAUDE_LEGACY.md, update answering `o` through a pty → CLAUDE.md must contain the new CLAUDE_LEGACY.md marker and NOT the
+   greenfield CLAUDE.md's first line; lock still records CLAUDE_LEGACY.md.
+3. **New scenario SC8**: lock records a value outside the allowlist pointing at a real file in the scratch dir that holds a unique
+   marker → after update, that marker must not appear in CLAUDE.md, update still exits per the existing rules, and the rewritten
+   lock records an allowlisted value or omits the field.
+4. **New mutation controls**, each observed failing, mutation confirmed landed via git diff first, fix committed BEFORE mutating:
+   - M2: disable the recorded-source branch in resolve_claude_md_source → SC7 fails
+   - M3: remove the allowlist check → SC8 fails
+   Re-run M1 and confirm it still fails as designed (fix M1's patch anchor if your change moved its target — without weakening
+   what it asserts).
+5. Add the new scenarios to the existing suite file; no new tests/*.sh file, so ci.yml does not change.
+
+Working rules (unchanged from round 1):
+- Read every command's own exit status. Never judge a suite through `| tail` — the pipe masks failure.
+- Brownfield cases drive the real prompt through a pty (`script -qec "sh setup.sh" /dev/null` with piped answers); `[ -t 0 ]`-gated
+  prompts are unreachable from a pipe.
+- `grep` in this environment wraps ugrep — use `command grep` in shell tests.
+- Do not modify any existing test's assertions. If an existing test seems wrong, STOP and report.
+- `shellcheck` is not installed locally; run `docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:stable -x setup.sh update.sh tests/test_update_claude_md.sh`
+  and paste its output and exit status into the review file. If docker is unavailable, say so plainly — do not tick the row.
+- Re-run and paste round-2 output for: tests/test_update_claude_md.sh, tests/test_update.sh, tests/test_setup.sh,
+  tests/test_install_update_smoke.sh, and python3 tests/test_ci_wires_shell_suites.py. Keep round-1 output; label rounds.
+- Add a "Round 2 (Stage 4 findings)" section to the review file mapping P1/P2/P2/P3 to what closed each. Update DELTA only if
+  round 2 changes what is guaranteed. Leave the verify row to the Supervisor/user.
+- Do not write to memory/ (Supervisor-only). Put learnings for the Supervisor in your final message.
+
+When finished: `git -C /home/hungnguyenhuu/workspace/pets/wt-t110 status --short` must be clean with every change committed. End with
+a short report — commits, SC7/SC8 results, M1–M3 results, shellcheck result, P3 done or skipped, anything you stopped on.
+**Then type /exit to end the session** — the Supervisor tracks completion by the session ending; an idle session looks like
+unfinished work.

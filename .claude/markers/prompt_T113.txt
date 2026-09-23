@@ -1,0 +1,81 @@
+Task ID: T113
+
+You are the Common-Infrastructure-Agent implementing T113 in the worktree
+/home/hungnguyenhuu/workspace/pets/wt-t113 (branch `fix/t113-update-removals`, cut from `main`).
+Work ONLY inside that worktree.
+
+## Read before anything else
+
+1. `tasks/TASK_GUIDE_T113.md` — your task guide, in full. It was written 2026-09-12 and
+   **corrected 2026-09-18**; the corrections are marked with that date and are load-bearing.
+2. `agents/common-infrastructure.md` — your role guide.
+3. `memory/MEMORY.md` — read it in full (the path, not a paste). It is the project's hot-tier
+   memory and several entries bear directly on this task.
+4. `PROJECT_SPEC.md`, `memory/codebase-map.md` (C2, multi-file), and
+   `docs/adr/0002-one-confirmed-menu-driven-installer.md` — the authority for this task.
+
+## Requirement (Restated Intent, verbatim from the guide)
+
+> After an update, a project holds only what the kit currently ships plus whatever the user changed — an
+> unedited file the kit dropped is removed, an edited one is kept and named — and the kit's own test suite
+> is never installed.
+
+Out of scope, per the guide: moving `.claude/hooks/tests/` elsewhere in this repo; Codex projections;
+activated pack files (T117). Do not add special handling for any of them.
+
+## Demonstration BEFORE capture
+
+Before your first implementation commit, fill the `## Demonstration` BEFORE field in
+`/home/hungnguyenhuu/workspace/pets/wt-t113/tasks/TASK_REVIEW_T113.md` (the guide carries only a
+`> **Moved.**` pointer). This task changes executable code, so run the exact command(s) named in the
+guide's Demonstration section and paste the real, timestamped output. A BEFORE captured after the
+change is not a BEFORE — there is no `N/A` path.
+
+Concretely, the two behaviours to capture live, before you change anything:
+- an upstream-deleted unedited skill surviving an update (the `carry_over_unprocessed` warn line), and
+- a fresh install landing `.claude/hooks/tests/` into the target project (count the files).
+
+## Trace attribution
+
+Before running any test or verification command, write the active-task state file so the trace hook can
+attribute your `Bash` calls:
+
+mkdir -p /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state && printf '%s\n%s\n' "T113" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state/active_task
+
+Do this once at the start of your session. Do NOT try `CLAUDE_ACTIVE_TASK=T113 <cmd>` inside a Bash tool
+call, and do NOT write a cwd-relative path — neither reaches the hook.
+
+## Three corrections to the guide you must honour (added 2026-09-18)
+
+These are new since the guide was written and are the most likely places to get this wrong:
+
+1. **Eight suites write their own fixture MANIFEST.** Adding `!` changes the MANIFEST *grammar*, so
+   `test_harness_fetch.sh`, `test_harness_projection.sh`, `test_install_backups.sh`,
+   `test_settings_merge.sh`, `test_setup.sh`, `test_t098_harness_presence.sh`,
+   `test_update_claude_md.sh` and `test_update.sh` must all still parse a MANIFEST containing one.
+   **Run all eight**, do not read them and conclude. T118 exists precisely because a change made a new
+   hard prerequisite and nobody ran the two fixture suites it broke.
+
+2. **T112's backup call is now in your path.** `harness_copy_manifest` calls `harness_backup_path`
+   (`lib/harness-fetch.sh:154`) right after `harness_manifest_path` (`:138`). An excluded path must
+   `continue` BEFORE the backup call — otherwise an excluded destination is moved to `<path>.bak` and
+   never re-installed, silently renaming a user's directory instead of leaving it alone. Add the
+   Success Criterion the guide names: install into a project that already has `.claude/hooks/tests/`
+   → that directory is untouched afterwards and **no `.claude/hooks/tests.bak` exists**.
+
+3. **Safety abort.** Per the guide's edge-case list: if the fresh upstream file list is empty, or a whole
+   MANIFEST path is missing upstream, abort deletion with an error rather than delete everything under
+   it. A corrupt or half-fetched clone must never become a mass-delete.
+
+## How to work
+
+- Test-first per the Karpathy Task Transformation Table: write the failing test, then make it pass.
+- Scope-lock to the guide's "Files to Change"; honour "Files Must NOT Touch".
+- The guide's mutation controls M1/M2 are mandatory — observe each one RED, then revert it.
+- This is **C2 / Medium Risk**: the installer will now DELETE files. Treat every deletion path as the
+  dangerous surface it is, and prefer aborting over guessing.
+- If the guide is ambiguous or you find it factually wrong, STOP and report to the Supervisor rather
+  than resolving it yourself. The guide has already been wrong twice about this codebase.
+
+When you finish, commit your work on `fix/t113-update-removals`, paste the full verification output into
+`tasks/TASK_REVIEW_T113.md`, and report to the Supervisor that T113 is ready for Stage 4 review.
