@@ -169,6 +169,13 @@ behaviour a user will not yet get — the Supervisor should decide whether T116 
 - `tests/test_site_content.py` kept passing for everything T116 touches (the singular "pack" token the
   README-promised-topics test needs is kept in D1).
 
+**Stage 4 code-review (self-run, 2026-09-23)**: 0 P0 / 1 P1 (fixed) / 1 P2 / 3 P3. P1: no test covered a
+pre-catalog project gaining `packs/` on Update — the path every existing user takes. Probed first
+(pre-T116 install from `e893453`, then Update to HEAD: rc=0, 20 `new file installed: packs/…`, 20 lock
+entries), then added as a suite case → `16 passed, 0 failed`; mutated to update against the no-packs
+kit → `15 passed, 1 failed` naming that case. Side effect observed: with `prompt_packs` gone, `^D` at the
+project-type menu now ends `Cancelled — nothing was changed.` rc=0 — T121's silent exit is gone.
+
 **Cut / not done**: `SUPERVISOR_PATH="$NO_CLONE"` env assignments remain in several older test suites
 (`test_setup.sh`, `test_settings_merge.sh`, `test_harness_projection.sh`); now inert, left untouched
 (outside Files to Change).

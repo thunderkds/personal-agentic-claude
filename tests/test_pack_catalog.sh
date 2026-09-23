@@ -148,6 +148,21 @@ else
 fi
 verdict "SC2: no CLI directory holds a pack item after update" "SC2 (update)" check_no_cli_loads_packs "$T"
 
+# A project installed before the catalog existed (kit-m2 = MANIFEST without the
+# packs line) receives it on its next Update — the path every existing user takes.
+T_UP=$(new_repo pre-catalog)
+( cd "$T_UP" && SUPERVISOR_REPO="file://$WORK/kit-m2" sh "$WORK/kit-m2/setup.sh" </dev/null >"$T_UP.log" 2>&1 )
+if [ ! -e "$T_UP/packs" ]; then
+  update_notty "$T_UP" "$KIT"; RC=$?
+  if [ "$RC" -eq 0 ] && check_catalog_present "$T_UP"; then
+    pass "SC3: a pre-catalog project receives the whole catalog, hash-locked, on update"
+  else
+    fail "SC3: update did not deliver the catalog to a pre-catalog project (rc=$RC)"; cat "$T_UP.update.log" >&2
+  fi
+else
+  fail "SC3: the pre-catalog fixture already has packs/ — the upgrade case is not exercised"
+fi
+
 printf '\nmy local note\n' >> "$T/packs/api/PACK.md"
 printf '\nsecond upstream edit\n' >> "$KIT/packs/api/PACK.md"
 git -C "$KIT" commit -q -am "upstream: edit packs/api/PACK.md again"
