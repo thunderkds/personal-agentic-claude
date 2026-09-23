@@ -249,16 +249,24 @@
   and each backup is listed in the install output. Identical files are left alone.
 </p>
 <p class="lead">
-  This installs for <strong>Claude Code</strong> by default. To install for a different CLI, pass
-  <code>--harness</code> (repeat it to select more than one):
+  The command takes no options — you choose from numbered menus, and <strong>Enter</strong> takes the
+  default each time:
 </p>
-<pre class="install">sh -c "$(curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh)" -- --harness codex
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh)" -- --harness claude --harness codex</pre>
+<ul class="lead">
+  <li><strong>What to do</strong> — <code>1) Install  2) Cancel</code> (or Update / Reinstall / Cancel
+    where Easy Kit is already installed).</li>
+  <li><strong>Which CLIs</strong> — <code>1) Claude Code  2) Codex</code>. Pick one or both
+    (<code>1 2</code> or <code>1,2</code>); the ones found on your <code>PATH</code> are pre-selected,
+    and Claude Code when neither is.</li>
+  <li><strong>New or existing project</strong> — <code>1) New project  2) Existing / legacy
+    project</code>. An existing / legacy project gets <code>CLAUDE_LEGACY.md</code>'s rules as its
+    <code>CLAUDE.md</code>.</li>
+</ul>
 <p class="lead">
-  Valid harnesses are <code>claude</code> and <code>codex</code>. An unknown or empty value is
-  rejected by name and the installer exits non-zero — nothing is written. Note the
-  <code>sh -c "$(curl ...)" --</code> form: a plain <code>curl ... | sh --harness codex</code> pipe
-  does not work, for the same reason it does not work for <code>--pack</code> (see below).
+  A plan then lists the CLIs, the project type and anything that will be backed up, and asks
+  <code>Proceed? [Y/n]</code> before a single file changes. With no terminal (CI, containers) there are
+  no menus: the defaults are printed and taken. Pass it anything on the command line and it stops with
+  nothing written.
 </p>
 <p class="lead">To pull in newer Easy Kit changes later, run the same command again from your repo root and choose <strong>Update</strong> (see below).</p>
 </section>
@@ -305,11 +313,11 @@ Choose [1]:</pre>
   greenfield <code>CLAUDE.md</code> — recorded per project in <code>.claude/harness-lock.json</code>.
 </p>
 
-<h3>Which harnesses get updated</h3>
+<h3>Which CLIs get updated</h3>
 <p class="lead">
-  <code>update.sh</code> stores no harness state of its own. It re-derives the set on every run: a
-  harness is updated when you name it with <code>--harness</code> on that run, <em>or</em> when its
-  directory is already present in the project. That means:
+  Easy Kit stores no list of CLIs. <strong>Update</strong> asks no CLI question: it refreshes every CLI
+  whose directory is already present in the project. <strong>Reinstall</strong> shows the CLI menu,
+  pre-selecting the CLIs the project already has. That means:
 </p>
 <ul class="lead">
   <li>A <strong>Codex-only</strong> project refreshes <code>.codex/skills/</code> and is not given
@@ -317,15 +325,15 @@ Choose [1]:</pre>
   <li>A <strong>Claude</strong> project keeps its <code>.claude/{skills,agents}</code> links
     repaired — including when a link has gone missing, stale, absolute, or been replaced by a real
     directory.</li>
-  <li>Adding a harness later is one explicit run:
-    <code>sh update.sh --harness codex</code>.</li>
+  <li>Adding a CLI later: run the same command, choose <strong>Reinstall</strong>, and pick the CLI.
+    A CLI already set up that you do not pick is kept and refreshed, and the plan says so — to drop
+    one, delete its folder.</li>
 </ul>
 <p class="lead">
   One edge worth knowing: if <em>both</em> <code>.claude/skills</code> and
-  <code>.claude/agents</code> are deleted outright, a plain <code>sh update.sh</code> leaves them
-  absent — with nothing present, the project is indistinguishable from one that never selected
-  Claude. Restore them with <code>sh update.sh --harness claude</code>, which installs on explicit
-  request regardless of what is present.
+  <code>.claude/agents</code> are deleted outright, Update leaves them absent — with nothing present,
+  the project is indistinguishable from one that never picked Claude Code. Restore them the same way:
+  run the command, choose <strong>Reinstall</strong>, and pick Claude Code.
 </p>
 </section>
 
@@ -335,12 +343,11 @@ Choose [1]:</pre>
 <pre class="install">export GITHUB_USERNAME=your-username
 curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-claude/main/setup.sh | sh</pre>
 <p class="lead">
-  <strong>Greenfield vs. brownfield</strong> — chosen interactively during <code>setup.sh</code>.
-  Piped installs are non-interactive and default to greenfield (<code>CLAUDE.md</code>). For a
-  brownfield project (an existing codebase), clone this repo somewhere, <code>cd</code> into your
-  target project, invoke that checkout's <code>setup.sh</code> by path, and choose the brownfield
-  option — it uses <code>CLAUDE_LEGACY.md</code>, which adds legacy-codebase guidance (risk
-  hotspots, strangler-fig patterns).
+  <strong>New vs. existing (brownfield) project</strong> — a menu choice in the same
+  <code>curl … | sh</code> line: the menus read your terminal, not the pipe. Choose
+  <code>2) Existing / legacy project</code> for an existing codebase — it uses
+  <code>CLAUDE_LEGACY.md</code>, which adds legacy-codebase guidance (risk hotspots, strangler-fig
+  patterns). With no terminal the default is <code>1) New project</code> (<code>CLAUDE.md</code>).
 </p>
 </section>
 
@@ -478,20 +485,11 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 </tbody>
 </table>
 </div>
-<p class="lead">Install a pack into an existing project — run <code>setup.sh</code> from a persistent local clone (not piped through <code>curl</code>):</p>
-<pre class="install">sh ~/.supervisor/setup.sh --pack=mobile
-sh ~/.supervisor/setup.sh --pack=mobile --pack=api   # multiple packs</pre>
 <p class="lead">
-  Packs still require a persistent local clone at <code>~/.supervisor</code> (or
+  Packs are chosen from the pack menu the installer shows on Install / Reinstall (there is no pack
+  option to type). Packs still require a persistent local clone at <code>~/.supervisor</code> (or
   <code>$SUPERVISOR_PATH</code>) — unlike core resources, packs are not created automatically by a
-  piped install. If bootstrapping a brand-new project and wanting packs on first run, use the
-  <code>sh -c "$(curl ...)" -- --pack=&lt;name&gt;</code> form:
-</p>
-<pre class="install">sh -c "$(curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh)" -- --pack=mobile</pre>
-<p class="lead">
-  A plain pipe like <code>curl ... | sh --pack=mobile</code> does <strong>not</strong> work: <code>sh</code>
-  parses its own flags before it ever reads the piped script, so <code>--pack=mobile</code> is
-  rejected as an unrecognized <code>sh</code> option, not passed through to <code>setup.sh</code>.
+  piped install.
 </p>
 </section>
 
@@ -514,7 +512,7 @@ sh ~/.supervisor/setup.sh --pack=mobile --pack=api   # multiple packs</pre>
 </div>
 <p class="lead">
   Codex executes the kit's skills directly, by name, from a projected <code>.codex/skills/</code>
-  directory (<code>setup.sh --harness codex</code>) — it is not left with doctrine alone. Each
+  directory (choose Codex in the installer's CLI menu) — it is not left with doctrine alone. Each
   skill's body is capped at <strong>8 KB</strong> per Codex's own limit; a skill over the cap is
   <strong>skipped with a named, loud warning</strong> rather than truncated. Four of this kit's
   skills currently exceed it and are skipped for Codex: <code>bugfix</code>,
@@ -579,14 +577,10 @@ sh ~/.supervisor/setup.sh --pack=mobile --pack=api   # multiple packs</pre>
 <h2>Options</h2>
 <div class="table-wrap">
 <table>
-<thead><tr><th>Variable / Flag</th><th>Default</th><th>Purpose</th></tr></thead>
+<thead><tr><th>Environment variable</th><th>Default</th><th>Purpose</th></tr></thead>
 <tbody>
-<tr><td><code>SUPERVISOR_REPO</code></td><td>built from <code>GITHUB_USERNAME</code></td><td>Full git URL to fetch — set directly for a non-GitHub fork, private remote, or local test fixture</td></tr>
 <tr><td><code>GITHUB_USERNAME</code></td><td><code>thunderkds</code></td><td>Install/update from a fork instead of the canonical repo</td></tr>
 <tr><td><code>SUPERVISOR_PATH</code></td><td><code>~/.supervisor</code></td><td><strong>Packs only</strong> — location of the persistent clone. Not used, created, or required by the core install</td></tr>
-<tr><td><code>--pack=&lt;name&gt;</code></td><td>none</td><td>Install one or more domain packs (repeatable)</td></tr>
-<tr><td><code>--harness &lt;name&gt;</code></td><td><code>claude</code></td><td>Select which CLI(s) to install for at setup/update time (repeatable). Valid values: <code>claude</code>, <code>codex</code></td></tr>
-<tr><td><code>--copy</code></td><td>no-op for core</td><td>No effect on core resources — always copied as real files. Retained for backward-compatibility with pack installs</td></tr>
 </tbody>
 </table>
 </div>

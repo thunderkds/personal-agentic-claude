@@ -28,17 +28,17 @@ Before any work:
 
 ## What Codex does have here
 Codex **does** read SKILL.md skills, from `.codex/skills/` (project scope) and `~/.codex/skills/`
-(personal), with an **8 KB skill-body cap**. `setup.sh --harness codex` projects this kit's canonical
-`skills/` into `.codex/skills/`; a skill whose body exceeds the cap is skipped with a named warning,
+(personal), with an **8 KB skill-body cap**. Choosing **Codex** in the installer's CLI menu projects
+this kit's canonical `skills/` into `.codex/skills/`; a skill whose body exceeds the cap is skipped with a named warning,
 never truncated. Verified against Codex 0.149.1: `.codex/skills/` is the only project directory Codex
 discovers — a plain-root `skills/` and `.claude/skills/` are both invisible to it. Codex has no
 agent-guide directory, so `agents/` is not projected; your role doctrine reaches Codex through this
 file.
 
-A Codex-only install **stays** Codex-only: `update.sh` re-derives its harness set from what you pass
-on that run plus what is already present in the project, so a plain `update.sh` refreshes
-`.codex/skills/` and does not create the `.claude/{skills,agents}` links this project never asked
-for. Adding Claude later is an explicit `update.sh --harness claude`.
+A Codex-only install **stays** Codex-only: **Update** asks for no CLI and refreshes exactly what is
+already present in the project, so it refreshes `.codex/skills/` and does not create the
+`.claude/{skills,agents}` links this project never asked for. Adding Claude Code later: run the
+install command again, choose **Reinstall**, and pick Claude Code in the CLI menu.
 
 ## What Codex cannot enforce here
 Codex has no equivalent of Claude Code's hooks or its `Skill`/`Agent` tooling. It cannot run

@@ -78,25 +78,25 @@ real directory, or acquires an absolute target.
 
 Downstream installs get the same shape, but only for projects that actually use Claude Code.
 `setup.sh` copies the canon to plain root from `MANIFEST` and then re-creates both links via
-`harness_install_canon_symlinks` in `lib/harness-fetch.sh` — unless `--harness` selected a set that
-excludes `claude`, in which case it says so and skips them.
+`harness_install_canon_symlinks` in `lib/harness-fetch.sh` — unless Claude Code was not picked in the
+installer's CLI menu, in which case it says so and skips them.
 
-`update.sh` calls the same function, gated on the rule every harness shares (T098): install for
-`claude` when it was **requested this run** (`update.sh --harness claude`) or is **already
-present**. Presence is checked at the two link destinations rather than at a `MANIFEST` destination
-column, because `claude` alone ships as symlinks rather than as a projected copy — and it tests
+Update and Reinstall call the same function, gated on the rule every harness shares (T098): install
+for `claude` when it was **picked this run** (Reinstall, Claude Code in the CLI menu) or is **already
+present** (Update picks nothing: it keeps what is there). Presence is checked at the two link
+destinations rather than at a `MANIFEST` destination column, because `claude` alone ships as symlinks rather than as a projected copy — and it tests
 `-e` *or* `-L`, since `-e` follows a symlink and would read a broken link as absent instead of as
 something to repair.
 
 The practical consequences:
 
 - An existing Claude install whose link is missing, stale, absolute, or a leftover real directory is
-  still repaired on every plain `update.sh`, so an upgrade from a pre-relocation install cannot
-  leave Claude Code reading a stale `.claude/skills`.
-- A `setup.sh --harness codex` project no longer acquires `.claude/{skills,agents}` it never asked
-  for the next time someone runs `update.sh`.
-- If **both** links are deleted outright, a plain `update.sh` leaves them absent — fully-absent is
-  indistinguishable from "never had claude". Restore them with `update.sh --harness claude`, which
+  still repaired on every Update, so an upgrade from a pre-relocation install cannot leave Claude
+  Code reading a stale `.claude/skills`.
+- A Codex-only project no longer acquires `.claude/{skills,agents}` it never asked for the next time
+  someone runs Update.
+- If **both** links are deleted outright, Update leaves them absent — fully-absent is
+  indistinguishable from "never had claude". Restore them with Reinstall, picking Claude Code, which
   installs on explicit request regardless of presence.
 
 A real directory found at either path is moved aside to `<link>.bak`; if that fails, the installer

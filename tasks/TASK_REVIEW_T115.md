@@ -8,15 +8,15 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | |
-| Verification command run | ☐ pass / ☐ fail | |
-| Negative cases hold | ☐ pass / ☐ fail | any argument → exit 1 no write, empty CLI pick re-prompts, M1 |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass / ☐ fail | New: `tests/test_cli_and_project_menus.sh` (23 cases: SC1–SC6, SC8, AC1–AC7, Reinstall pre-select + deselect, D3 restore), `tests/test_docs_match_installer.py` (D9 + AC8 grep + anti-vacuity). Output under **Verification output** below |
+| Verification command run | ☑ pass / ☐ fail | All 15 shell suites rc=0; pytest 847 passed / 5 failed = the 5 pre-existing memory-budget baseline failures (unchanged from `main`); shellcheck exit 0 |
+| Negative cases hold | ☑ pass / ☐ fail | any argument → exit 1 no write (5 forms + `update.sh --harness claude`); `,` → "Pick at least one CLI"; `3`/`abc` re-prompt; ^D cancels; M1 observed RED then reverted |
 | verify | ☐ pass / ☐ fail / ☐ N/A | |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **Docs updated per guide's "Documentation to Update" (new text quoted)** | ☐ pass / ☐ fail | D1 README, D2–D5 site, D6 AGENTS.md, D7 folder-structure.md, D8 RUNBOOK.md, D9 docs-agreement test + mutation control |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | (Stage 4 reviewer) |
+| Full smoke suite still green (no regression) | ☑ pass / ☐ fail | every installer suite green; no assertion weakened (retargeted assertions listed below) |
+| **Docs updated per guide's "Documentation to Update" (new text quoted)** | ☑ pass / ☐ fail | D1 README, D2–D5 site, D6 AGENTS.md, D7 folder-structure.md, D8 RUNBOOK.md, D9 docs-agreement test + mutation control — new text quoted under **Docs AFTER** |
 | HITL: user reviewed menu transcript + README install section | ☐ pass / ☐ fail | |
-| `tests/test_pack_docs_flags.py` retired/rewritten — reason | ☐ pass / ☐ fail | |
+| `tests/test_pack_docs_flags.py` retired/rewritten — reason | ☑ pass / ☐ fail | Retired: it compared `packs/*/PACK.md` against setup.sh's `case "$arg" in` flag parser, which no longer exists; the no-flags rule for live docs now lives in `tests/test_docs_match_installer.py`, which T117 extends to PACK.md when it rewrites that pack wording |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | terminal menus + Markdown/HTML doc text edits in existing sections; wording reviewed via HITL row; site layout untouched |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ N/A | no CSS or markup structure changes |
 | **UI: Responsiveness at target viewports** | ☐ N/A | no layout changes |
@@ -216,8 +216,414 @@ sh ~/.supervisor/setup.sh --pack=mobile --pack=api   # multiple packs</pre>
    T=$(mktemp -d) && cd "$T" && git init -q . && git commit -q --allow-empty -m init
 ```
 
-**AFTER**: [menu transcript; `sh setup.sh --harness codex` → no-options message; README test pass]
+**AFTER** (Common-Infrastructure-Agent, 2026-09-22T10:44:21Z, working tree of `feat/t115-cli-project-menus`):
 
-**DELTA**: [one sentence]
+RED first — `tests/test_cli_and_project_menus.sh` against the pre-change `setup.sh` (the EOF case hung
+on a pty that never delivered EOF and was killed, hence rc=143; the test now sends `^D`):
 
-**WITNESS**: [who ran it and when]
+```
+FAIL: SC1: PATH pre-selection (rc=0)
+FAIL: AC1: fallback pre-selection (rc=0)
+FAIL: AC1: both pre-selected (rc=0)
+FAIL: SC2/AC2: input '1,2' (rc=0, wanted both)
+FAIL: SC2/AC2: input '1 2' (rc=0, wanted both)
+FAIL: SC2/AC2: input '2' (rc=0, wanted codex)
+PASS: SC2/AC2: input '1' selects claude
+FAIL: AC2: cleared/invalid CLI input (rc=0)
+FAIL: AC2: EOF at the CLI menu (rc=143)
+FAIL: AC3: project-type default (rc=0)
+FAIL: SC4/AC6: 'setup.sh --harness codex' (rc=0)
+FAIL: SC4/AC6: 'setup.sh --harness=codex' (rc=0)
+FAIL: SC4/AC6: 'setup.sh --copy' (rc=0)
+FAIL: SC4/AC6: 'setup.sh --pack=mobile' (rc=0)
+FAIL: SC4/AC6: 'setup.sh install' (rc=1)
+FAIL: SC4/AC6: update.sh --harness claude (rc=0)
+FAIL: SC5/AC5: Update on a Codex-only repo (rc=0)
+FAIL: Reinstall: pre-selection from presence (rc=0)
+FAIL: Reinstall deselect (rc=0 note=0 ask=35)
+PASS: D3: both links deleted -> Update leaves them absent; Reinstall + Claude Code restores
+FAIL: SC6/AC7: no-terminal defaults (rc=0)
+FAIL: SC8/D9: tests/test_docs_match_installer.py
+FAILED tests/test_docs_match_installer.py::test_live_docs_show_no_install_flags
+FAILED tests/test_docs_match_installer.py::test_live_docs_show_the_one_line_command
+2 passed, 21 failed
+```
+
+SC1 transcript (HITL) — empty repo, fake `codex` on `PATH`, Enter at every prompt:
+
+```
+
+
+
+
+
+[info]  Using repo: file:///tmp/cli-menus-test.uOwNj2/kit
+[info]  Fetching (shallow clone): file:///tmp/cli-menus-test.uOwNj2/kit
+
+Easy Kit is not installed in /tmp/cli-menus-test.uOwNj2/sc1 yet.
+  1) Install
+  2) Cancel
+Choose [1]: 
+Which CLIs should Easy Kit set up?
+  1) Claude Code  2) Codex
+Choose one or more [2]: 
+Is this a new or an existing project?
+  1) New project
+  2) Existing / legacy project
+Choose [1]: [info]  Optional packs extend the core with domain-specific agents and skills.
+        Available packs:
+          1) mobile   — Flutter, React Native, Swift, Kotlin
+          2) data     — Pipelines, notebooks, ETL, dbt
+          3) devops   — Terraform, K8s, CI/CD, Docker
+          4) ai-agent — LLM apps, RAG, MCP servers, multi-agent
+          5) api      — REST/gRPC, OpenAPI, auth flows, SDK design
+        Enter numbers separated by spaces, or press Enter to skip: 
+Plan: Install Easy Kit into /tmp/cli-menus-test.uOwNj2/sc1
+  - CLIs: Codex
+  - Project type: New project (CLAUDE.md)
+  - Copies in: agents, skills, .claude/hooks, templates, docs/claude-md, AGENTS.md, .cursor/rules, CLAUDE.md
+  - Existing paths that differ from the kit are moved aside first:
+      (none)
+  - Hooks: .claude/settings.json is created, or Easy Kit entries are merged into yours.
+Proceed? [Y/n] [info]  Claude Code not picked — skipping .claude/{skills,agents} symlinks.
+[info]  Setting up Codex: copying the kit's skills into its folder.
+[warn]  codex: skill 'bugfix' has a 10175-byte body, over the 8192-byte codex cap — SKIPPED, not truncated. Shorten or split skills/bugfix/SKILL.md, then re-run.
+[warn]  codex: skill 'craft-spawn-prompt' has a 10109-byte body, over the 8192-byte codex cap — SKIPPED, not truncated. Shorten or split skills/craft-spawn-prompt/SKILL.md, then re-run.
+[warn]  codex: skill 'diagnose' has a 13548-byte body, over the 8192-byte codex cap — SKIPPED, not truncated. Shorten or split skills/diagnose/SKILL.md, then re-run.
+[warn]  codex: skill 'write-better-skill' has a 14568-byte body, over the 8192-byte codex cap — SKIPPED, not truncated. Shorten or split skills/write-better-skill/SKILL.md, then re-run.
+[info]  Projected 26 item(s) for 'codex'.
+[warn]  4 skill(s) were SKIPPED for 'codex' because their body exceeds the 8192-byte cap (named above). They are absent, not truncated.
+[info]  Added '.codex/skills/' to .gitignore (generated by Easy Kit for Codex (T097); regenerate, do not commit).
+[info]  Installed .claude/settings.json (copy). Restart Claude Code to activate hooks.
+[info]  Wrote ./.claude/harness-lock.json (74 file hashes).
+[info]  Setup complete. Easy Kit copied into /tmp/cli-menus-test.uOwNj2/sc1
+[info]  CLAUDE source: CLAUDE.md | lock: .claude/harness-lock.json
+[info]  CLIs: Codex
+```
+
+`sh setup.sh --harness codex` now (from the suite, SC4): exit 1, `git status --porcelain` empty,
+`[error] Easy Kit takes no options (got: --harness codex). Run it and choose from the menus:` followed
+by the one install line. README test: `tests/test_readme_slim.py` 4 passed (README 73 lines, cap 75
+unchanged).
+
+**DELTA**: `setup.sh` went from accepting `--harness codex` (Codex-only install, exit 0) to refusing
+every argument with nothing written, while the same choices are now numbered CLI and project-type
+menus; the README went from 83 lines (red) to 73 (green).
+
+**WITNESS**: Common-Infrastructure-Agent, 2026-09-22T10:44:21Z. Stage 4 reviewer and the user (HITL, `/verify`)
+still to witness.
+
+### Verification output
+
+```
+$ date -u   → 2026-09-22T10:44:21Z
+$ runall (each suite of the guide's Verification Command, in parallel)
+test_cli_and_project_menus rc=0  0fails
+test_harness_fetch rc=0  0fails
+test_harness_projection rc=0  0fails
+test_install_backups rc=0  0fails
+test_install_update_smoke rc=0  0fails
+test_one_command_menu rc=0  0fails
+test_pack_choice_parsing rc=0  0fails
+test_readme_current rc=0  0fails
+test_settings_merge rc=0  0fails
+test_setup rc=0  0fails
+test_shellcheck_clean rc=0  0fails
+test_t098_harness_presence rc=0  0fails
+test_update rc=0  0fails
+test_update_claude_md rc=0  0fails
+test_update_removals rc=0  0fails
+
+last line of each suite:
+test_cli_and_project_menus: 23 passed, 0 failed
+test_harness_fetch: ----- summary: 9 passed, 0 failed -----
+test_harness_projection: test_harness_projection.sh: 41 passed, 0 failed
+test_install_backups: 13 passed, 0 failed
+test_install_update_smoke: 9 passed, 0 failed
+test_one_command_menu: ----- summary: 22 passed, 0 failed -----
+test_pack_choice_parsing: ----- summary: 15 passed, 0 failed -----
+test_readme_current: test_readme_current: ALL PASS
+test_settings_merge: --- 40 passed, 0 failed ---
+test_setup: ----- summary: 18 passed, 0 failed -----
+test_shellcheck_clean: test_shellcheck_clean: PASS — exit 0, no output
+test_t098_harness_presence: 20 passed, 0 failed
+test_update: ----- summary: 31 passed, 0 failed -----
+test_update_claude_md: ----- summary: 35 passed, 0 failed -----
+test_update_removals: 30 passed, 0 failed
+
+$ python3 -m pytest .claude/hooks/tests/ tests/ -q   (tail)
+=========================== short test summary info ============================
+FAILED .claude/hooks/tests/test_memory_channel_and_budget.py::test_live_memory_md_is_within_budget_today
+FAILED .claude/hooks/tests/test_memory_channel_and_budget.py::test_ac10_growth_in_chars_without_growth_in_lines_turns_the_gate_red
+FAILED .claude/hooks/tests/test_memory_channel_and_budget.py::test_ac11_many_short_lines_past_200_stay_green_while_under_budget
+FAILED .claude/hooks/tests/test_memory_channel_and_budget.py::test_ac3_per_entry_report_is_advisory_and_never_fails
+FAILED .claude/hooks/tests/test_token_audit_format.py::test_memory_md_hot_tier_stays_within_char_budget
+5 failed, 847 passed in 11.93s
+$ shellcheck -x setup.sh update.sh lib/harness-update.sh
+exit=0
+```
+
+`tests/test_cli_and_project_menus.sh` in full:
+
+```
+PASS: SC1: codex on PATH -> Codex pre-selected; Enter installs Codex only
+PASS: AC1: no CLI on PATH -> Claude Code pre-selected
+PASS: AC1: both on PATH -> both pre-selected
+PASS: SC2/AC2: input '1,2' selects both
+PASS: SC2/AC2: input '1 2' selects both
+PASS: SC2/AC2: input '2' selects codex
+PASS: SC2/AC2: input '1' selects claude
+PASS: AC2: ',' -> pick at least one; '3' and 'abc' re-prompt; then '2' takes
+PASS: AC2: EOF at the CLI menu cancels; nothing written
+PASS: SC3/AC3/AC4: '2' installs CLAUDE_LEGACY.md; plan names CLIs + project type before Proceed
+PASS: AC3: Enter = New project (CLAUDE.md); '9' re-prompts
+PASS: SC4/AC6: 'setup.sh --harness codex' -> exit 1, names '--harness', nothing written
+PASS: SC4/AC6: 'setup.sh --harness=codex' -> exit 1, names '--harness=codex', nothing written
+PASS: SC4/AC6: 'setup.sh --copy' -> exit 1, names '--copy', nothing written
+PASS: SC4/AC6: 'setup.sh --pack=mobile' -> exit 1, names '--pack=mobile', nothing written
+PASS: SC4/AC6: 'setup.sh install' -> exit 1, names 'install', nothing written
+PASS: SC4/AC6: 'update.sh --harness claude' -> exit 1, names the flag, nothing written
+PASS: SC5/AC5: Update shows no menus 2-3; Codex re-projected; no Claude links
+PASS: Reinstall: Codex-only project pre-selects [2]; Enter keeps it Codex-only
+PASS: Reinstall deselect: Codex not picked is kept and refreshed, stated on the plan
+PASS: D3: both links deleted -> Update leaves them absent; Reinstall + Claude Code restores
+PASS: SC6/AC7: no terminal -> prints 'Claude Code' + 'New project' defaults and installs
+PASS: SC8/D9: installer strings and live docs are flag-free and say CLI, not harness
+
+23 passed, 0 failed
+```
+
+The 5 pytest failures are the recorded baseline (memory-budget tests, red on `main` before T115,
+untouched here per the guide).
+
+### Mutation controls
+
+M1 — `setup.sh` mutated to re-accept `--harness` (`case "${1:-}" in --harness*) set -- ;; esac` before
+the no-options check), suite run, then reverted (`git diff setup.sh | grep -c M1` → 0):
+
+```
+FAIL: SC4/AC6: 'setup.sh --harness codex' (rc=0)
+FAIL: SC4/AC6: 'setup.sh --harness=codex' (rc=0)
+PASS: SC4/AC6: 'setup.sh --copy' -> exit 1, names '--copy', nothing written
+PASS: SC4/AC6: 'setup.sh --pack=mobile' -> exit 1, names '--pack=mobile', nothing written
+PASS: SC4/AC6: 'setup.sh install' -> exit 1, names 'install', nothing written
+FAIL: SC4/AC6: update.sh --harness claude (rc=0)
+20 passed, 3 failed
+```
+
+D9 — `` (`setup.sh --harness codex`) `` put back into `AGENTS.md:32`, then reverted:
+
+```
+$ (mutant: '--harness codex' put back in AGENTS.md) python3 -m pytest tests/test_docs_match_installer.py -q
+E         AGENTS.md:32: '--harness'
+E       assert not ["AGENTS.md:32: '--harness'"]
+1 failed, 3 passed in 0.03s
+$ (reverted) python3 -m pytest tests/test_docs_match_installer.py -q
+4 passed in 0.02s
+```
+
+### Decisions (for Stage 4)
+
+- **Reinstall deselect → kept, and said.** A CLI already set up in the project but not picked on
+  Reinstall is kept *and refreshed* (the T098 presence rule `reproject_harnesses` already applies);
+  the plan prints `- Already set up here, not picked, kept and refreshed: Codex (to remove one, delete
+  its folder).` before `Proceed?`. Chosen over removal because Reinstall's contract is "backs up your
+  edits", never deletes, and removal would need new delete code for a path the next Update would not
+  re-create anyway. Tested: "Reinstall deselect" case.
+- **Reinstall pre-selects what is present**, not what is on `PATH` (falls back to the PATH rule when
+  nothing is present), so Enter never adds a CLI the project did not have. Tested.
+- **EOF at the CLI menu cancels** (exit 0, nothing written), like T114's menus; the project-type menu
+  keeps its pre-T115 EOF → default behaviour; an invalid project-type answer now re-prompts.
+- **`HARNESSES_REQUESTED` removed**; Update runs with `HARNESSES=""` → presence only.
+- **`lib/harness-update.sh` touched despite "T114-owned update internals"**: strings only (AC8) plus
+  one `plan_cli_lines` call in `plan_reinstall` (AC4) and two comments; no update logic changed.
+  `lib/harness-fetch.sh`: four message strings.
+- **`tests/lib/pty.sh` now hides real `claude`/`codex` from `PATH`** (with a loud FATAL if that would
+  also hide git/python3/script/sh/mktemp) — the dev machine has both installed, which would otherwise
+  change every suite's defaults.
+- **Site pack section**: the `--pack=` / `sh -c "$(curl …)" --` instructions would now hit the
+  no-options error, so they were replaced by one paragraph ("Packs are chosen from the pack menu");
+  pack *behaviour* is untouched (T116). `prompt_packs`' own "Re-run with --pack=<name>" message is
+  T116's and still says that.
+- **Retargeted (not weakened) assertions**: `test_site_content.py` `--harness` row test → "Options
+  table lists no flag + #install names every VALID_HARNESSES CLI"; its README-topic keyword
+  `SUPERVISOR_REPO` → `Environment variable` (row removed per D5); `test_harness_projection.sh` AC6 and
+  `test_t098_harness_presence.sh` AC4/AC9/AC10 now assert the no-options error / Reinstall path / new
+  wording. Every other converted case keeps its assertions and only changes how the CLI is chosen.
+- Known leftover: projection warnings still name the internal value (`codex: skill 'bugfix' …`,
+  `Projected 26 item(s) for 'codex'`) — lowercase CLI id, no "harness"; left as is.
+
+### Docs AFTER (new text)
+
+D1 `README.md:41-57`
+```
+The command takes no options. It asks from numbered lists: what to do (**Install**, or **Update** /
+**Reinstall** where Easy Kit is already installed), **which CLIs** to set up (`1) Claude Code  2) Codex`;
+those found on your `PATH` are pre-selected), and whether this is a **new or an existing / legacy
+project**. It shows a plan and asks `Proceed? [Y/n]` before it changes anything.
+
+Codex caps a skill body at 8 KB. A skill whose body currently exceeds that cap is **skipped**
+entirely on a Codex install — never truncated — with a named, loud warning. Skills currently
+affected:
+
+- `bugfix`
+- `craft-spawn-prompt`
+- `diagnose`
+- `write-better-skill`
+
+To update, run the same line again and choose **Update** — it keeps the CLIs your project already has,
+so a Codex-only install stays Codex-only. To add a CLI later, choose **Reinstall** and pick it. Fork
+installs, packs and the full Update flow: see the [site](https://personal-agentic-claude.vercel.app/).
+```
+
+D6 `AGENTS.md:29-41`
+```
+## What Codex does have here
+Codex **does** read SKILL.md skills, from `.codex/skills/` (project scope) and `~/.codex/skills/`
+(personal), with an **8 KB skill-body cap**. Choosing **Codex** in the installer's CLI menu projects
+this kit's canonical `skills/` into `.codex/skills/`; a skill whose body exceeds the cap is skipped with a named warning,
+never truncated. Verified against Codex 0.149.1: `.codex/skills/` is the only project directory Codex
+discovers — a plain-root `skills/` and `.claude/skills/` are both invisible to it. Codex has no
+agent-guide directory, so `agents/` is not projected; your role doctrine reaches Codex through this
+file.
+
+A Codex-only install **stays** Codex-only: **Update** asks for no CLI and refreshes exactly what is
+already present in the project, so it refreshes `.codex/skills/` and does not create the
+`.claude/{skills,agents}` links this project never asked for. Adding Claude Code later: run the
+install command again, choose **Reinstall**, and pick Claude Code in the CLI menu.
+```
+
+D7 `docs/claude-md/folder-structure.md:79-100`
+```
+Downstream installs get the same shape, but only for projects that actually use Claude Code.
+`setup.sh` copies the canon to plain root from `MANIFEST` and then re-creates both links via
+`harness_install_canon_symlinks` in `lib/harness-fetch.sh` — unless Claude Code was not picked in the
+installer's CLI menu, in which case it says so and skips them.
+
+Update and Reinstall call the same function, gated on the rule every harness shares (T098): install
+for `claude` when it was **picked this run** (Reinstall, Claude Code in the CLI menu) or is **already
+present** (Update picks nothing: it keeps what is there). Presence is checked at the two link
+destinations rather than at a `MANIFEST` destination column, because `claude` alone ships as symlinks rather than as a projected copy — and it tests
+`-e` *or* `-L`, since `-e` follows a symlink and would read a broken link as absent instead of as
+something to repair.
+
+The practical consequences:
+
+- An existing Claude install whose link is missing, stale, absolute, or a leftover real directory is
+  still repaired on every Update, so an upgrade from a pre-relocation install cannot leave Claude
+  Code reading a stale `.claude/skills`.
+- A Codex-only project no longer acquires `.claude/{skills,agents}` it never asked for the next time
+  someone runs Update.
+- If **both** links are deleted outright, Update leaves them absent — fully-absent is
+  indistinguishable from "never had claude". Restore them with Reinstall, picking Claude Code, which
+  installs on explicit request regardless of presence.
+```
+
+D2 `site/index.html:251-270` (#install)
+```
+<p class="lead">
+  The command takes no options — you choose from numbered menus, and <strong>Enter</strong> takes the
+  default each time:
+</p>
+<ul class="lead">
+  <li><strong>What to do</strong> — <code>1) Install  2) Cancel</code> (or Update / Reinstall / Cancel
+    where Easy Kit is already installed).</li>
+  <li><strong>Which CLIs</strong> — <code>1) Claude Code  2) Codex</code>. Pick one or both
+    (<code>1 2</code> or <code>1,2</code>); the ones found on your <code>PATH</code> are pre-selected,
+    and Claude Code when neither is.</li>
+  <li><strong>New or existing project</strong> — <code>1) New project  2) Existing / legacy
+    project</code>. An existing / legacy project gets <code>CLAUDE_LEGACY.md</code>'s rules as its
+    <code>CLAUDE.md</code>.</li>
+</ul>
+<p class="lead">
+  A plan then lists the CLIs, the project type and anything that will be backed up, and asks
+  <code>Proceed? [Y/n]</code> before a single file changes. With no terminal (CI, containers) there are
+  no menus: the defaults are printed and taken. Pass it anything on the command line and it stops with
+  nothing written.
+</p>
+```
+
+D3 `site/index.html:316-338` (#update-flow)
+```
+<h3>Which CLIs get updated</h3>
+<p class="lead">
+  Easy Kit stores no list of CLIs. <strong>Update</strong> asks no CLI question: it refreshes every CLI
+  whose directory is already present in the project. <strong>Reinstall</strong> shows the CLI menu,
+  pre-selecting the CLIs the project already has. That means:
+</p>
+<ul class="lead">
+  <li>A <strong>Codex-only</strong> project refreshes <code>.codex/skills/</code> and is not given
+    <code>.claude/{skills,agents}</code> it never asked for.</li>
+  <li>A <strong>Claude</strong> project keeps its <code>.claude/{skills,agents}</code> links
+    repaired — including when a link has gone missing, stale, absolute, or been replaced by a real
+    directory.</li>
+  <li>Adding a CLI later: run the same command, choose <strong>Reinstall</strong>, and pick the CLI.
+    A CLI already set up that you do not pick is kept and refreshed, and the plan says so — to drop
+    one, delete its folder.</li>
+</ul>
+<p class="lead">
+  One edge worth knowing: if <em>both</em> <code>.claude/skills</code> and
+  <code>.claude/agents</code> are deleted outright, Update leaves them absent — with nothing present,
+  the project is indistinguishable from one that never picked Claude Code. Restore them the same way:
+  run the command, choose <strong>Reinstall</strong>, and pick Claude Code.
+</p>
+</section>
+```
+
+D4 `site/index.html:345-351` (#install-variants), packs `:488-493`, providers `:515`
+```
+<p class="lead">
+  <strong>New vs. existing (brownfield) project</strong> — a menu choice in the same
+  <code>curl … | sh</code> line: the menus read your terminal, not the pipe. Choose
+  <code>2) Existing / legacy project</code> for an existing codebase — it uses
+  <code>CLAUDE_LEGACY.md</code>, which adds legacy-codebase guidance (risk hotspots, strangler-fig
+  patterns). With no terminal the default is <code>1) New project</code> (<code>CLAUDE.md</code>).
+</p>
+...
+<p class="lead">
+  Packs are chosen from the pack menu the installer shows on Install / Reinstall (there is no pack
+  option to type). Packs still require a persistent local clone at <code>~/.supervisor</code> (or
+  <code>$SUPERVISOR_PATH</code>) — unlike core resources, packs are not created automatically by a
+  piped install.
+</p>
+...
+  directory (choose Codex in the installer's CLI menu) — it is not left with doctrine alone. Each
+```
+
+D5 `site/index.html:576-587` (#options)
+```
+<section id="options">
+<h2>Options</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Environment variable</th><th>Default</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td><code>GITHUB_USERNAME</code></td><td><code>thunderkds</code></td><td>Install/update from a fork instead of the canonical repo</td></tr>
+<tr><td><code>SUPERVISOR_PATH</code></td><td><code>~/.supervisor</code></td><td><strong>Packs only</strong> — location of the persistent clone. Not used, created, or required by the core install</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+```
+
+D8 `RUNBOOK.md:49-60`
+```
+4. **Post-deploy health check** — install from the *published remote*, not a local path
+   ```sh
+   T=$(mktemp -d) && cd "$T" && git init -q . && git commit -q --allow-empty -m init
+   curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh
+   ```
+   The installer takes no options. It shows a menu (`1) Install  2) Cancel`), the CLI menu
+   (`1) Claude Code  2) Codex`), the project-type menu (`1) New project  2) Existing / legacy
+   project`), then a plan ending `Proceed? [Y/n]`: in a terminal, press Enter at every prompt to accept
+   the defaults (Install, the CLIs found on `PATH` — Claude Code if none — New project, no packs,
+   Proceed). To run the check with no terminal instead — it then prints and takes the same defaults —
+   wrap the same line: `setsid -w sh -c '<the line above>' </dev/null`.
+   **Pass condition**: installer exits 0 and prints `Setup complete`; then
+```
+
+D9 `tests/test_docs_match_installer.py` — live-doc list and forbidden strings; mutation control above.
+
+### HITL — for the user (not marked done)
+
+Please review (1) the SC1 transcript above and (2) the new README install section (D1 above).
