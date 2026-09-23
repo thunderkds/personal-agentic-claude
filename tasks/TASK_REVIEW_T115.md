@@ -627,3 +627,52 @@ D9 `tests/test_docs_match_installer.py` — live-doc list and forbidden strings;
 ### HITL — for the user (not marked done)
 
 Please review (1) the SC1 transcript above and (2) the new README install section (D1 above).
+
+---
+
+## Stage 4 — Supervisor review (2026-09-23)
+
+Scope: `main..HEAD`, 23 files. security-review scoped manually to the branch
+diff, not the built-in's `origin/HEAD` (10th recorded over-scope avoidance).
+
+**0 P0 / 3 P1 (all fixed) / 1 P2 (accepted) / 0 P3.**
+
+Stage 3 was re-verified rather than accepted: all 15 shell suites rc=0;
+848 passed / 5 failed against `main`'s 843 / 6 — the 5 are the pre-existing
+memory-budget baseline, and the branch closes `test_readme_slim`. M1 re-run
+independently: re-admitting `--harness` turns 3 cases RED, reverted clean.
+
+**P1a+P1b — the installer's own output named two removed flags.** Reproduced
+against a real install before fixing, not inferred:
+`prompt_packs` printed `Re-run with --pack=<name> to add packs` on the
+no-terminal path — the primary `curl … | sh` install — sending the user at a
+command that now exits 1. `install_abs` warned `Remove it manually to switch
+to --copy mode`, a mode that no longer exists.
+
+Root cause is a test gap, not an oversight: D9's `FORBIDDEN` list ran against
+`LIVE_DOCS` only and never against `INSTALLER_SCRIPTS`, so the docs were
+checked for removed flags and the installer was not — the one surface a user
+actually reads at install time. `test_installer_user_strings_show_no_removed_flag`
+closes it; each message restored separately turns it RED naming its own line.
+
+**P1c — the CLI menu answer globbed.** `for _pc_n in $(… | tr ',' ' ')` is
+unquoted, so it word-splits *and* globs. In a project holding files named `1`
+or `2`, typing `*` expanded to them and was accepted as a selection instead of
+re-prompting: a wrong CLI selection, silently, in this task's core deliverable.
+Demonstrated, then fixed with `set -f` around the split only. New case
+`ac2-glob`; deleting the two `set -f` lines turns it RED.
+
+**P2 accepted, not fixed — EOF is inconsistent across the three menus.**
+`choose_action` and `prompt_clis` cancel the run at `^D`; `prompt_mode` breaks
+to New project and installs. Defensible (it matches the no-terminal default)
+but undesigned, and no test pins either behaviour. Recorded as a candidate row
+rather than changed here — it is a behaviour decision, not a review fix.
+
+No new injection surface: `TTY_ANSWER` is only ever matched against the
+literals `1`/`2` in a `case` and never executed; `log_error` passes `$*`
+as a `printf` argument, not as its format. The no-options guard runs before
+the bootstrap clone, so a stale flag now fails with nothing written.
+
+### Gates still open
+- `verify` — user-run only; Supervisor cannot run it.
+- HITL — user reviews the SC1 transcript and the README install section.
