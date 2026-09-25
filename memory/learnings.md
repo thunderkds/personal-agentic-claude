@@ -2653,3 +2653,17 @@ evidence the instruction channel works — **not** evidence the model changed.
 - **Headless spawns skip mandatory startup reads:** the T126 `claude -p` agent read its guide but not
   `PROJECT_SPEC.md` or its role guide (a Permanent Rule) — spawn prompts should name those reads
   explicitly, not rely on the guide's Mandatory Startup list.
+
+## T130 (2026-09-25): site update for the agent-focus batch
+
+- **Broad `Files Must NOT Touch` globs become memory-slice keys.** `memory_slice.py` reads both Files
+  tables, so `skills/**` and `.claude/hooks/**` matched 20 generic MEMORY.md lines and none about the
+  site; T130's pre-edit reading was 26.2k (DDR-0009 log). Candidate fix after the 5th measured spawn:
+  key only on *Files to Change*, or drop glob prefixes.
+- **Driving the site's scroll-spy in headless Chrome.** `html { scroll-behavior: smooth }` never advances
+  under `--virtual-time-budget`, so a nav click changes the hash but not the scroll position; set
+  `document.documentElement.style.scrollBehavior = 'auto'` before clicking. Headless windows floor at
+  ~500px, so measure 375px by loading the page in a same-origin 375px iframe and reading
+  `scrollWidth/innerWidth` from the frame.
+- **`reports/` is gitignored.** UI screenshots named in a TASK_REVIEW's Evidence stay on the machine
+  that took them; the Notes column must carry the measured numbers, not only the paths.
