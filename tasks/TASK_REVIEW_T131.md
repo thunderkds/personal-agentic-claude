@@ -14,15 +14,15 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_site_content.py` — 4 new tests (headers, six names, three credits, no `%`). RED first: `3 failed, 27 passed` (headers, names, credits); after: `30 passed in 0.05s` |
+| Verification command run | ☑ pass | `tests/test_site_content.py` 30 passed; `.claude/hooks/tests tests` `977 passed in 14.25s`; `validate.sh: PASS` |
 | Negative cases hold | ☐ pass / ☐ fail | |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
 | Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ pass (by diff) | `git diff 3d76f9b -- site/index.html`: only the `#agent-focus` section changed (17 lines). Screenshots `reports/t131/{before,page}-1280.png` (gitignored) only show the page top — headless ignored the `#agent-focus` fragment, so they are not evidence of the section; the diff is |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ pass | `<style>` block extracted from 3d76f9b and HEAD: identical (`style identical: True`); no new classes used (`table-wrap`, `code`, `strong` already present) |
+| **UI: Responsiveness at target viewports** | ☑ pass | 375px same-origin iframe (Chrome headless, `reports/t131/probe.html`): `innerWidth 375`, doc `scrollWidth 360` (≤375), `.table-wrap` clientWidth 326 / scrollWidth 640, `overflow-x: auto` — table scrolls inside its wrapper |
 
 ---
 
@@ -50,9 +50,19 @@
 </div>
 ```
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**: `#agent-focus` in `site/index.html` now has headers `We apply | To save | Idea from` and six rows (Memory slice, Startup reads list, Response Standard, Over-engineering reviewer, Measured compact-advisor, Measure before keeping); credits headroom, caveman, ponytail.
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+**DELTA**: A reader sees, for each mechanism, what the kit applies and what it saves, and which repo the idea came from.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
+
+## Mutation controls (M1–M3)
+
+| Mutation | Result |
+|---|---|
+| M1 rename "To save" header | RED: `test_agent_focus_table_reads_we_apply_to_save_idea_from` — `1 failed, 29 passed` |
+| M2 drop ponytail credit | RED: `test_agent_focus_credits_the_three_source_repos` — `1 failed, 29 passed` |
+| M3 add "40%" to a row | RED: `test_agent_focus_states_purpose_not_figures` — `1 failed, 29 passed` |
+
+All restored; GREEN `30 passed`. AC4(v): the "about 1%" was written "about 1 percent", so the test bans every `%` with no exception.

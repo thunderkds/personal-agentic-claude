@@ -120,7 +120,7 @@ sh scripts/validate.sh
 
 ## Completion Checklist
 
-- [ ] Implementation done; AC4 tests observed RED first
-- [ ] M1–M3 pasted in `tasks/TASK_REVIEW_T131.md`
-- [ ] UI Evidence rows filled with measured numbers (Hard-Stop Gate 6)
+- [x] Implementation done; AC4 tests observed RED first
+- [x] M1–M3 pasted in `tasks/TASK_REVIEW_T131.md`
+- [x] UI Evidence rows filled with measured numbers (Hard-Stop Gate 6)
 - [ ] `/verify` — user-run

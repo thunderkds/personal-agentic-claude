@@ -471,18 +471,19 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <section id="agent-focus">
 <h2>Agent focus</h2>
 <p class="lead">
-  Each sub-agent starts from a spawn prompt built to keep it on its own request, and replies are
-  kept short without losing exact detail.
+  Each row is a mechanism the kit applies, and the cost or waste it saves. Where the idea came from
+  one of three open-source repos, the last column says which.
 </p>
 <div class="table-wrap">
 <table>
-<thead><tr><th>Mechanism</th><th>What it does</th></tr></thead>
+<thead><tr><th>We apply</th><th>To save</th><th>Idea from</th></tr></thead>
 <tbody>
-<tr><td>Memory slice</td><td>The spawn prompt pastes only the <code>memory/MEMORY.md</code> index lines that name the task's files, dependencies or ID, capped at 30 lines / 4,000 characters (lines with the fewest matches are dropped first and the header says how many)</td></tr>
-<tr><td>Startup reads</td><td>The spawn prompt lists what the agent must read first — <code>PROJECT_SPEC.md</code>, its TASK_GUIDE and its role guide — and the agent ends its report with a <code>Startup reads:</code> line naming what it read</td></tr>
-<tr><td>Response Standard</td><td>Replies lead with the answer and stay short, but code, exact error text, file paths, commands and security warnings are quoted verbatim. The audit trail — board rows, guides and their Evidence, decisions, commit messages — stays fully detailed, and a report points to evidence by <code>path:line</code> instead of pasting logs</td></tr>
-<tr><td>Stage 4 review</td><td><code>code-review</code> runs an over-engineering reviewer on any diff that adds a function, class, module, dependency or config option, and compares the agent's <code>Startup reads:</code> line with its spawn prompt — a missing required read is a P1 process finding</td></tr>
-<tr><td>Measuring</td><td>A claim that a change saves or costs tokens is measured from session transcripts before it is kept (DDR-0009), never estimated by eye. No savings figure is published here</td></tr>
+<tr><td><strong>Memory slice</strong> — the spawn prompt pastes only the <code>memory/MEMORY.md</code> lines about the task's own files, capped at 30 lines / 4,000 characters</td><td>Every agent reading the whole memory index before it starts</td><td>headroom</td></tr>
+<tr><td><strong>Startup reads list</strong> — the spawn prompt names what to read first, and the agent ends its report with a <code>Startup reads:</code> line</td><td>Rework from an agent that skipped the rules it must follow</td><td>—</td></tr>
+<tr><td><strong>Response Standard</strong> — replies lead with the answer and stay short, but code, exact error text, file paths, commands and security warnings are quoted verbatim; reports point to <code>path:line</code>. The audit trail stays fully detailed</td><td>Output tokens, and the Supervisor carrying pasted logs for the rest of its session</td><td>caveman</td></tr>
+<tr><td><strong>Over-engineering reviewer</strong> — <code>code-review</code> checks any diff that adds a function, class, module, dependency or config option</td><td>Code nobody asked for, which someone must then review and maintain</td><td>ponytail</td></tr>
+<tr><td><strong>Measured <code>compact-advisor</code></strong> — quotes the session's measured context size before judging whether to compact</td><td>Re-reading a long conversation on every call, the largest cost measured</td><td>—</td></tr>
+<tr><td><strong>Measure before keeping</strong> — a claimed saving is measured from session transcripts first (DDR-0009)</td><td>Building what doesn't pay: a headroom-style Bash-output compressor was measured at about 1 percent of spend and parked</td><td>—</td></tr>
 </tbody>
 </table>
 </div>
