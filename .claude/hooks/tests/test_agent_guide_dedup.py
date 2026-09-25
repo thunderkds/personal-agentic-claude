@@ -105,7 +105,9 @@ T069_BASELINE_REF = "8d6d56b"
 # rule and one pointer line to CLAUDE.md, so `b1da25a` is now the file's own unfixed state. CLAUDE.md
 # stays at its 200-line cap (the compact-advisor paragraph was tightened to make room). Repointed,
 # NOT deleted, assertion body untouched; the agent guides gain only the same one rule line.
-T070_BASELINE_REF = "998166d"
+# Repointed once more at T127's Stage 4 (`998166d` -> `05bb7fe`): review restored the dropped
+# "judgment call, not a rigid step/token trigger" clause in the same two lines (still 200 lines).
+T070_BASELINE_REF = "05bb7fe"
 
 # T082's own edit commit (same commit as the repoint above). T082 adds a mandatory Base Rule bullet
 # to `general-agent-template.md` too (the same untrusted-content pointer) — a legitimate, required
