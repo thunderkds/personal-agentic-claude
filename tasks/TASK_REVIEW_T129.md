@@ -17,7 +17,7 @@
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_spawn_startup_reads.py` (SC4–5), `.claude/hooks/tests/test_pre_agent_validate_guide.py` (SC1–3 + independence edge): 19 passed — pass |
 | Verification command run | ☑ pass | 19 passed; `python3 -m pytest .claude/hooks/tests tests -q` → 932 passed; `sh scripts/validate.sh` → PASS (2026-09-25, on the T129 commit) — pass |
 | Negative cases hold | ☑ pass | prose-only mention warns (SC1), no-guide prompt silent (SC3), each warning fires independently — pass |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
+| verify | ☑ pass | User-run `/verify` 2026-09-25 — pass. Live `claude -p` (haiku) in `wt-t129`, branch hooks loaded, three real spawns naming `TASK_GUIDE_T129.md` with a memory slice: A (no block) → "Spawn prompt names a TASK_GUIDE but has no `**Startup reads**` block … (craft-spawn-prompt element 8)"; B (block present) → no hook message; C (prose "the startup reads matter", no block line) → the same warning — prose does not satisfy it. All three spawns proceeded (never blocks) |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Supervisor Stage 4 (2026-09-25): `git diff tokenization-refactor...feat/t129-startup-reads` — 6 files, all read. |
 | Full smoke suite still green (no regression) | ☑ pass | 932 passed; validate.sh PASS — pass |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
