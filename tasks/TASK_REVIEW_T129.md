@@ -18,7 +18,7 @@
 | Verification command run | ☑ pass | 19 passed; `python3 -m pytest .claude/hooks/tests tests -q` → 932 passed; `sh scripts/validate.sh` → PASS (2026-09-25, on the T129 commit) — pass |
 | Negative cases hold | ☑ pass | prose-only mention warns (SC1), no-guide prompt silent (SC3), each warning fires independently — pass |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Supervisor Stage 4 (2026-09-25): `git diff tokenization-refactor...feat/t129-startup-reads` — 6 files, all read. |
 | Full smoke suite still green (no regression) | ☑ pass | 932 passed; validate.sh PASS — pass |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
@@ -89,3 +89,18 @@ FAILED .claude/hooks/tests/test_pre_agent_validate_guide.py::test_t129_sc1_prose
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
+
+## Supervisor Stage 4 (2026-09-25)
+
+**`code-review`: 0 P0 / 0 P1 / 1 P2 / 1 P3.** Re-run under T129 attribution: `932 passed`, `validate.sh: PASS`. `security-review`: not required (Risk Low) — the hook adds a regex over the prompt and a fixed warning string, never blocks.
+
+| Sev | Finding | Conf. | Outcome |
+|---|---|---|---|
+| P2 | `skills/craft-spawn-prompt/SKILL.md` is now exactly at its 80-line cap (`test_spawn_prompt_cache_note.py`); the next addition to the skill must raise the cap or compact | 100 | Noted for the next task that touches the skill |
+| P3 | Element numbered 8 but placed after element 1 — keeps "element 4 = memory slice" citations valid; documented in the row | 100 | Accepted |
+
+**The new Stage 4 check applied to this spawn:** the agent's report line `Startup reads: PROJECT_SPEC.md, tasks/TASK_GUIDE_T129.md, agents/common-infrastructure.md, …` names all three Permanent-Rule reads ✓ (the prompt carried a hand-written block, as T129 now prescribes).
+
+BEFORE (08:55:57Z at `edf37a7`) predates the implementation commit `d3b2ed5`. ✓
+
+**Remaining:** Stage 5 user-run `/verify` — a live headless spawn: warning without the block, silence with it.
