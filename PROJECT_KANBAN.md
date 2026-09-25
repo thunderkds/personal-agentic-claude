@@ -12,7 +12,6 @@
 > `docs/token-focus-finding-2026-09-25.md`. All four build on the integration branch `tokenization-refactor` cut from `main` (`4f43bcf`);
 > each task worktree branches from it and merges back; `main` receives the set in one merge after the batch passes Stage 5.
 
-- [ ] **T126** — The Supervisor can see its own context size — compact-advisor decides on a measurement, not a feeling | Common-Infrastructure-Agent | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T126.md` | Review: `tasks/TASK_REVIEW_T126.md` | Depends on: T124 | Registered 2026-09-25. Supervisor sessions are 92% of spend; 34% of their calls carry >150k context. Target ≤25% over the next ≥5 sessions; nothing compacts automatically.
 
 > **Batch 2026-09-12 — Easy Kit installer rework (T109–T117).** Authority: `docs/adr/0002-one-confirmed-menu-driven-installer.md`
 > (Accepted), `BRAINSTORMING_LOG.md`. All nine build on the integration branch `feat/easy-kit-one-command`
@@ -73,6 +72,7 @@
 
 
 ### In Progress
+- [ ] **T126** — The Supervisor can see its own context size — compact-advisor decides on a measurement, not a feeling | Common-Infrastructure-Agent | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T126.md` | Review: `tasks/TASK_REVIEW_T126.md` | Depends on: T124 | Registered 2026-09-25. Supervisor sessions are 92% of spend; 34% of their calls carry >150k context. Target ≤25% over the next ≥5 sessions; nothing compacts automatically. | **Stage 3 started 2026-09-25** — worktree `../wt-t126`, branch `feat/t126-measured-compact-advisor`; Ghostty window running headless `claude -p` (sonnet, stream view) so the spawn leaves a transcript; first spawn with a memory slice (T125 AC9).
 
 
 
