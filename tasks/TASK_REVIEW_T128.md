@@ -14,12 +14,12 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | pass | `tests/test_token_meter.py` (T128 block: SC1–SC6, 37 new cases). `python3 -m pytest tests/test_token_meter.py -q` → `74 passed in 3.39s` (2026-09-25) |
+| Verification command run | pass | `python3 -m pytest .claude/hooks/tests tests -q \| tail -1` → `960 passed in 18.66s`; `python3 scripts/token_meter.py --task T126` → see AFTER |
+| Negative cases hold | pass | state file, `/dev/null`, `2>&1`, `/tmp`, quoted `>`, read-only `python3 -c` are not edits (SC3/SC4, 14 params); sentinel in a Bash write never printed (SC6) |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| Full smoke suite still green (no regression) | pass | 960 passed (above) |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
 | **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
@@ -41,9 +41,45 @@ $ python3 scripts/token_meter.py --task T126
   T126       12      4,351     30,002       14,423        12           -     1.09    18.6  4b9912b3-d928-46f5-8277-5ddacaf63f23.jsonl  (no edit: whole session is pre-edit)
 ```
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER** (2026-09-25T08:57:57Z, working tree on top of `edf37a7`):
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```
+$ python3 scripts/token_meter.py --task T126
+  T126       12      4,351     30,002       13,333         4      51,515     1.09    17.4  4b9912b3-d928-46f5-8277-5ddacaf63f23.jsonl  (first edit via bash)
+$ ... --json  -> {'calls_before_edit': 4, 'pre_edit_tokens': 13333, 'edit_via': 'bash', 'context_at_edit': 51515}
+```
+
+AC5 note: the meter's convention is the 0-based index of the editing call, so the guide's "call 6" is reported
+as `4`, not `5`: transcript call 4 (0-based) is the `python3 - <<EOF ... open(p,'w')` that writes
+`TASK_REVIEW_T126.md`, followed by `git commit`. Pre-edit is 13,333 tokens (13.3k, within 5 pct). Call 0 wrote
+`active_task` (excluded); calls 1-3 only read.
+
+#### Mutation controls (captured 2026-09-25T08:58:26Z, edits to `scripts/token_meter.py`, run `tests/test_token_meter.py`, restore)
+
+```
+## M1 drop state-path exclusion — RED (mutated)
+FAILED tests/test_token_meter.py::test_t128_sc3_sc4_state_and_read_only_look_alikes_are_not_edits[cmd 2>/dev/null]
+FAILED tests/test_token_meter.py::test_t128_sc3_sc4_state_and_read_only_look_alikes_are_not_edits[mkdir -p /abs/repo/.claude/hooks/.state]
+FAILED tests/test_token_meter.py::test_t128_sc3_sc4_state_and_read_only_look_alikes_are_not_edits[ls | tee /dev/null]
+7 failed, 67 passed in 3.29s
+## M1 drop state-path exclusion — GREEN (reverted)
+74 passed in 3.17s
+## M2 any > is a write (ignore quotes) — RED (mutated)
+FAILED tests/test_token_meter.py::test_t128_sc3_sc4_state_and_read_only_look_alikes_are_not_edits[grep '>' f]
+FAILED tests/test_token_meter.py::test_t128_sc3_sc4_state_and_read_only_look_alikes_are_not_edits[echo "a > b"]
+2 failed, 72 passed in 3.46s
+## M2 any > is a write (ignore quotes) — GREEN (reverted)
+74 passed in 3.26s
+## M3 Bash detection off — RED (mutated)
+FAILED tests/test_token_meter.py::test_t128_sc2_each_write_form_is_detected[python3
+FAILED tests/test_token_meter.py::test_t128_sc2_each_write_form_is_detected[cd d && git status; echo x > f]
+FAILED tests/test_token_meter.py::test_t128_sc5_bash_write_first_wins_over_a_later_edit_tool
+21 failed, 53 passed in 3.53s
+## M3 Bash detection off — GREEN (reverted)
+74 passed in 3.39s
+```
+
+**DELTA**: The meter reports the real pre-edit reading (13.3k, not 14.4k) for an agent that edits through Bash, and says whether the edit was found via a tool or Bash.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
