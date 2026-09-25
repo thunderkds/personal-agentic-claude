@@ -2690,3 +2690,9 @@ evidence the instruction channel works — **not** evidence the model changed.
   them. Until then: treat every push to `main` as a production site deploy. Whether `.vercelignore` applies to Git-connected builds is **not
   established** — Vercel's docs say only the built-in default exclusions are CLI-only and are silent on
   `.vercelignore` (T132 Stage 4 caught the Supervisor asserting it; check with a deployment's `/_src`).
+- **Check a platform claim against its docs before writing it into an Acceptance Criterion** (T132
+  Stage 4 P1). The Supervisor's guide had the agent write "`.vercelignore` governs CLI uploads only" as
+  fact; Vercel's docs say that only of the built-in default exclusions. An AC is copied faithfully by
+  the implementer, so an unverified claim in the guide ships as documentation. `/_src` on the
+  production domain redirects anonymous visitors to Vercel's login — the source check needs the
+  operator's account.
