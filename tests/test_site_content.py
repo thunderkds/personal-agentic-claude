@@ -564,3 +564,87 @@ def test_site_names_the_version_it_actually_ships_with():
         f"footer does not name the shipping version {version} (from RUNBOOK.md's "
         f"Release Log, newest row)"
     )
+
+
+# ---------------------------------------------------------------------------
+# T130 — the page describes the agent-focus mechanisms (memory slice, startup
+# reads, Response Standard). The slice caps are read from memory_slice.py at
+# test time, never hardcoded (the T089 AC8 pattern above).
+# ---------------------------------------------------------------------------
+
+MEMORY_SLICE_SCRIPT = os.path.join(
+    ROOT, "skills", "craft-spawn-prompt", "scripts", "memory_slice.py"
+)
+MANIFEST_PATH = os.path.join(ROOT, "MANIFEST")
+
+
+def _table_row(text, needle):
+    rows = [r for r in re.findall(r"<tr>.*?</tr>", text, re.DOTALL) if needle in r]
+    assert rows, f"no table row on the page contains {needle!r}"
+    return rows[0]
+
+
+def _slice_caps_from_source():
+    with open(MEMORY_SLICE_SCRIPT, encoding="utf-8") as f:
+        src = f.read()
+    caps = {}
+    for name in ("MAX_LINES", "MAX_CHARS"):
+        m = re.search(rf"^{name}\s*=\s*([\d_]+)", src, re.MULTILINE)
+        assert m, f"could not parse {name} out of memory_slice.py"
+        caps[name] = int(m.group(1).replace("_", ""))
+    return caps
+
+
+def _agent_focus_body():
+    m = re.search(r'<section id="agent-focus">(.*?)</section>', _page_text(), re.DOTALL)
+    assert m, 'page has no <section id="agent-focus">'
+    return m.group(1)
+
+
+def test_memory_md_row_describes_the_memory_slice_not_the_old_behaviour():
+    row = _table_row(_page_text(), "<code>memory/MEMORY.md</code>")
+    assert "memory slice" in row.lower(), "MEMORY.md row does not mention the memory slice"
+    assert "not pasted" not in _page_text().lower(), (
+        "page still says the memory index is 'not pasted' — every spawn prompt now "
+        "carries a pasted memory slice"
+    )
+
+
+def test_spawn_hook_row_names_memory_slice_and_startup_reads():
+    row = _table_row(_page_text(), "<code>pre_agent_validate_guide.py</code>").lower()
+    assert "memory slice" in row, "hook row does not mention the memory-slice advisory"
+    assert "startup reads" in row, "hook row does not mention the Startup-reads advisory"
+    assert "tag-block" in row, "hook row lost its blocks tag"
+    assert "tag-advise" in row, "hook row has no advises tag"
+
+
+def test_slice_caps_on_page_match_memory_slice_source():
+    caps = _slice_caps_from_source()
+    body = _agent_focus_body()
+    assert re.search(rf"\b{caps['MAX_LINES']}\s+lines", body), (
+        f"agent-focus section does not publish the {caps['MAX_LINES']}-line slice cap"
+    )
+    chars = caps["MAX_CHARS"]
+    assert _word_present(body, f"{chars:,}") or _word_present(body, str(chars)), (
+        f"agent-focus section does not publish the {chars:,}-character slice cap"
+    )
+
+
+def _manifest_ships_scripts():
+    with open(MANIFEST_PATH, encoding="utf-8") as f:
+        for line in f:
+            fields = line.split()
+            if not fields or fields[0].startswith(("#", "!")):
+                continue
+            if fields[0].rstrip("/") == "scripts" or fields[0].startswith("scripts/"):
+                return True
+    return False
+
+
+def test_page_does_not_name_token_meter_while_scripts_are_not_shipped():
+    if _manifest_ships_scripts():
+        return
+    assert "token_meter" not in _page_text(), (
+        "page names token_meter, but MANIFEST does not ship scripts/ — an install "
+        "would not get it"
+    )

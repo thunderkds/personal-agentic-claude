@@ -2251,3 +2251,20 @@ pack **survives update untouched**, because an activated copy was never lock-tra
 `.claude/hooks/.state/output/<session>/`, by user choice over the Supervisor's outside-repo
 recommendation (manageability). Accepted costs: secrets in the working tree for ≤ 24 h, commit safety
 resting on `.gitignore:52`, a hook-owned prune, and a `grep -r` path filter. → see DDR-0008
+
+**T124 re-planned (2026-09-25) — token work is measured from session transcripts and aimed at focus.**
+The user named evaluation as the hard part. Claude Code transcripts record per-call `usage` (cache
+write/read split), which is the automatic cost source DDR-0002 asked for. Replay over 73 transcripts /
+$389: the planned Bash-compression hook would have saved **~1%** (11% recall risk) → parked, DDR-0008
+deferred. The load is elsewhere: Supervisor sessions **92%** of spend (34% of calls > 150k context);
+spawned agents read **16.8k tokens before the first edit** (`MEMORY.md` most often, 17% of spawn spend).
+New plan: T124 meter → T125 memory slice in the spawn prompt → T126 compact-advisor reads measured
+context → T127 verbatim rule + over-engineering reviewer (carried D9/D10). DDR-0004 does not cover
+T125: it measured spawn-*prompt* size, not the agent's own reads. → see DDR-0009,
+`docs/token-focus-finding-2026-09-25.md`
+
+**T128/T129 registered on `tokenization-refactor` (2026-09-25), by user choice over a separate branch.**
+Both close gaps the batch's own measurement found on the first slice-carrying spawn (T126): the meter's
+first-edit boundary ignored Bash writes (T128), and a headless agent skipped Permanent-Rule startup reads
+(T129: explicit `**Startup reads**` block + non-blocking spawn warning + report line checked at Stage 4).
+The batch merges to `main` only after both, so `main` never carries a known-inaccurate metric.

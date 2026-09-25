@@ -2633,3 +2633,37 @@ never against the document.
 
 T122's spawn prompt named this rule explicitly and its agent left the row untouched. That is
 evidence the instruction channel works — **not** evidence the model changed.
+
+**Tokenization batch (T124/T125/T127, 2026-09-25) — four gotchas measured, not inferred.**
+- **Interactive Ghostty spawns leave no transcript** (T124/T127 sessions `23a73238…`: `session-env/` and
+  `file-history/` exist, no `.jsonl`), while in-process `Agent()` spawns and headless `claude -p` runs
+  (incl. their sub-agents) do. Anything measured with `scripts/token_meter.py` must be spawned one of
+  those two ways, or it is invisible.
+- **The merge/push gate is board-wide:** one task In Progress blocks every merge and push, not just its
+  own; and a Ready-for-Review task needs a passing test-runner `Bash` call in the *main checkout's*
+  `memory/event-trace/Txxx.jsonl` — an implementer's runs land in its worktree's trace, so re-run the
+  suite from the Supervisor with `active_task` set to that task, then hand the file back.
+- **Two tasks repointing the same byte pin (`T070_BASELINE_REF`) always conflict at merge.** Resolve by
+  keeping both comment histories and pinning to the merge commit in a follow-up commit.
+- **`memory_slice.py` needs Files *tables*:** a guide that lists files as bullets (T123) yields no keys
+  and an empty slice even when MEMORY.md has relevant lines.
+- **The merge gate reads the main checkout's board and blocks the whole Bash call before it runs**, so a
+  compound "write evidence && commit && merge" loses the evidence write too. Commit the evidence in one
+  call, merge in the next. (T126, 2026-09-25.)
+- **Headless spawns skip mandatory startup reads:** the T126 `claude -p` agent read its guide but not
+  `PROJECT_SPEC.md` or its role guide (a Permanent Rule) — spawn prompts should name those reads
+  explicitly, not rely on the guide's Mandatory Startup list.
+
+## T130 (2026-09-25): site update for the agent-focus batch
+
+- **Broad `Files Must NOT Touch` globs become memory-slice keys.** `memory_slice.py` reads both Files
+  tables, so `skills/**` and `.claude/hooks/**` matched 20 generic MEMORY.md lines and none about the
+  site; T130's pre-edit reading was 26.2k (DDR-0009 log). Candidate fix after the 5th measured spawn:
+  key only on *Files to Change*, or drop glob prefixes.
+- **Driving the site's scroll-spy in headless Chrome.** `html { scroll-behavior: smooth }` never advances
+  under `--virtual-time-budget`, so a nav click changes the hash but not the scroll position; set
+  `document.documentElement.style.scrollBehavior = 'auto'` before clicking. Headless windows floor at
+  ~500px, so measure 375px by loading the page in a same-origin 375px iframe and reading
+  `scrollWidth/innerWidth` from the frame.
+- **`reports/` is gitignored.** UI screenshots named in a TASK_REVIEW's Evidence stay on the machine
+  that took them; the Notes column must carry the measured numbers, not only the paths.

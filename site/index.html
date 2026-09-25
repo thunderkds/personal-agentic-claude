@@ -195,6 +195,7 @@
       <li><a href="#agent-roles">Agent roles</a></li>
       <li><a href="#skills">Skills</a></li>
       <li><a href="#hooks">Hooks</a></li>
+      <li><a href="#agent-focus">Agent focus</a></li>
     </ul>
     <p class="nav-group-title">Reference</p>
     <ul>
@@ -454,7 +455,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <table>
 <thead><tr><th>Event</th><th>Matcher</th><th>Script</th><th>Behavior</th></tr></thead>
 <tbody>
-<tr><td>PreToolUse</td><td><code>Agent</code></td><td><code>pre_agent_validate_guide.py</code></td><td><span class="tag tag-block">blocks</span> spawn if the TASK_GUIDE is missing</td></tr>
+<tr><td>PreToolUse</td><td><code>Agent</code></td><td><code>pre_agent_validate_guide.py</code></td><td><span class="tag tag-block">blocks</span> spawn if the TASK_GUIDE is missing; <span class="tag tag-advise">advises</span> (never blocks) when the spawn prompt has no memory slice or no <code>**Startup reads**</code> block, when a <code>Depends on</code> task is not Done, or when a task's Demonstration BEFORE is still blank</td></tr>
 <tr><td>PreToolUse</td><td><code>Bash</code></td><td><code>pre_bash_block_unsafe_merge.py</code></td><td><span class="tag tag-block">blocks</span> git push/merge if pipeline gates are unsatisfied</td></tr>
 <tr><td>PreToolUse</td><td><code>.*</code></td><td><code>pre_agent_step_limit.py</code></td><td><span class="tag tag-block">blocks</span> a task's tool call once it exceeds the step limit (default <strong>90</strong>) — self-clearing on the very next call</td></tr>
 <tr><td>PostToolUse</td><td><code>Write</code></td><td><code>post_write_register_task.py</code></td><td><span class="tag tag-advise">advises</span> — auto-registers new TASK_GUIDE files on the board</td></tr>
@@ -462,6 +463,26 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <tr><td>PostToolUse</td><td><code>Bash</code></td><td><code>post_bash_memory_update.py</code></td><td><span class="tag tag-advise">advises</span> — prompts a diff-driven memory-update pass after git push/merge/pull</td></tr>
 <tr><td>PostToolUse</td><td><code>.*</code></td><td><code>post_tool_trace.py</code></td><td><span class="tag tag-advise">advises</span> — appends every tool call to <code>memory/event-trace/&lt;task&gt;.jsonl</code></td></tr>
 <tr><td>Stop</td><td>—</td><td><code>stop_review_reminder.py</code></td><td><span class="tag tag-advise">advises</span> — reminds the Supervisor to run Stage 4 review for pending tasks</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section id="agent-focus">
+<h2>Agent focus</h2>
+<p class="lead">
+  Each sub-agent starts from a spawn prompt built to keep it on its own request, and replies are
+  kept short without losing exact detail.
+</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Mechanism</th><th>What it does</th></tr></thead>
+<tbody>
+<tr><td>Memory slice</td><td>The spawn prompt pastes only the <code>memory/MEMORY.md</code> index lines that name the task's files, dependencies or ID, capped at 30 lines / 4,000 characters (lines with the fewest matches are dropped first and the header says how many)</td></tr>
+<tr><td>Startup reads</td><td>The spawn prompt lists what the agent must read first — <code>PROJECT_SPEC.md</code>, its TASK_GUIDE and its role guide — and the agent ends its report with a <code>Startup reads:</code> line naming what it read</td></tr>
+<tr><td>Response Standard</td><td>Replies lead with the answer and stay short, but code, exact error text, file paths, commands and security warnings are quoted verbatim. The audit trail — board rows, guides and their Evidence, decisions, commit messages — stays fully detailed, and a report points to evidence by <code>path:line</code> instead of pasting logs</td></tr>
+<tr><td>Stage 4 review</td><td><code>code-review</code> runs an over-engineering reviewer on any diff that adds a function, class, module, dependency or config option, and compares the agent's <code>Startup reads:</code> line with its spawn prompt — a missing required read is a P1 process finding</td></tr>
+<tr><td>Measuring</td><td>A claim that a change saves or costs tokens is measured from session transcripts before it is kept (DDR-0009), never estimated by eye. No savings figure is published here</td></tr>
 </tbody>
 </table>
 </div>
@@ -563,7 +584,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <table>
 <thead><tr><th>File</th><th>Tier</th><th>Holds</th></tr></thead>
 <tbody>
-<tr><td><code>memory/MEMORY.md</code></td><td>Hot</td><td>≤42,000 characters, referenced by path in every sub-agent spawn prompt and read by the agent — not pasted</td></tr>
+<tr><td><code>memory/MEMORY.md</code></td><td>Hot</td><td>≤42,000 characters. Each sub-agent spawn prompt carries a pasted <strong>memory slice</strong> — the index lines naming the task's files, dependencies or ID — and the agent reads the whole file only if its work reaches what the slice misses</td></tr>
 <tr><td><code>memory/decisions.md</code></td><td>Cold</td><td>Architectural and infrastructure decisions</td></tr>
 <tr><td><code>memory/glossary.md</code></td><td>Cold</td><td>Canonical domain terms and core domain models</td></tr>
 <tr><td><code>memory/learnings.md</code></td><td>Cold</td><td>Spec clarifications, patterns, gotchas</td></tr>

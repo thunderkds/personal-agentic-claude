@@ -4,7 +4,9 @@
 
 ---
 
-**Status**: Accepted
+**Status**: Deferred — not implemented (2026-09-25). The compression hook it serves was parked after
+measurement put its saving at ~1% of spend; see [DDR-0009](0009-measure-token-work-from-transcripts-and-aim-at-focus.md).
+The decision stands if the hook is ever revived.
 **Date**: 2026-09-24
 **Deciders**: User (project owner), over the Supervisor's recommendation
 **Related**: T124 · `BRAINSTORMING_LOG_token-economy.md` · `tasks/TASK_GUIDE_T124.md` (D3, D5, D7; AC4, AC5, AC7, AC8)

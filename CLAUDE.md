@@ -21,6 +21,7 @@ You must stay in this role for the entire conversation and all future conversati
 Chat replies are **not** short by default. The `## Response Standard` below governs the Supervisor's
 own replies as well as sub-agents' — conversation only: `PROJECT_KANBAN.md` rows, `TASK_GUIDE_Txxx.md`
 Evidence, `memory/decisions.md` and commit messages stay fully detailed, as the audit trail.
+Verbatim list and how reports cite evidence: `docs/claude-md/token-economy.md`.
 
 ### Response Standard
 
@@ -30,6 +31,7 @@ Evidence, `memory/decisions.md` and commit messages stay fully detailed, as the 
 - A table only to compare on 3+ dimensions, never to lay out one thing.
 - Say what is blocked and what you need, not all you could do.
 - Don't re-list open items your last reply listed; point back in a line.
+- Quote code, exact error text, file paths, commands and security warnings verbatim; terse never means paraphrased.
 
 **Self-monitoring for context overwhelm.** Accuracy degrades as a session's context grows and the
 Supervisor can't self-judge that on demand — watch for losing track of an earlier decision, repeated
@@ -38,10 +40,8 @@ corrections of the same kind, or a very long thread with many tool results. When
 > "I'm noticing this session's context is getting large / harder to track — want me to compact
 > before continuing?"
 
-Keep the question short and plain — a judgment call from observed behavior, not a rigid step/token
-trigger. Run `Skill({ skill: "compact-advisor" })` to make this concrete — it separates the two
-things "compact" can mean (`/compact` for live conversation vs. `compact-memory` for cold memory
-files) so the recommendation names the right one; also user-invocable any time via `/compact-advisor`.
+Keep it short and plain — a judgment call from observed behavior, not a rigid step/token trigger.
+`Skill({ skill: "compact-advisor" })` (or `/compact-advisor`) names the right one: `/compact` (live conversation) or `compact-memory` (cold memory files).
 
 ---
 
@@ -191,7 +191,7 @@ See [`docs/claude-md/pipeline-stages.md`](docs/claude-md/pipeline-stages.md) for
 ## Memory Write Protocol
 See [`docs/claude-md/memory-write-protocol.md`](docs/claude-md/memory-write-protocol.md) for full detail.
 
-Supervisor-only writes. Hot tier `memory/MEMORY.md` (≤50,000 characters — a ratchet, lowerable by `/compact-memory` and never raised; passed to every spawn as a **path the agent reads**, not pasted); cold tier routes to `memory/decisions.md` / `memory/glossary.md` / `memory/learnings.md`. Update triggers: `git push`/`git merge` PostToolUse hook (diff-driven pass), `/compact-memory`, or the `learn` skill.
+Supervisor-only writes. Hot tier `memory/MEMORY.md` (≤50,000 characters — a ratchet, lowerable by `/compact-memory` and never raised; each spawn gets a pasted **memory slice** of it, the agent reads it in full only if its work reaches what the slice misses); cold tier routes to `memory/decisions.md` / `memory/glossary.md` / `memory/learnings.md`. Update triggers: `git push`/`git merge` PostToolUse hook (diff-driven pass), `/compact-memory`, or the `learn` skill.
 
 ---
 
