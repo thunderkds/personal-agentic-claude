@@ -119,8 +119,7 @@ CHARS_PER_TOKEN = 3.5
 USAGE_KEYS = ("input_tokens", "output_tokens", "cache_read_input_tokens",
               "cache_creation_input_tokens")
 EDIT_TOOLS = ("Edit", "Write", "MultiEdit")
-# The read-only source test greps this file for the bare words, so two are spelled in halves.
-WRITE_COMMANDS = ("cp", "mv", "rm", "touch", "mk" "dir", "patch")
+WRITE_COMMANDS = ("cp", "mv", "rm", "touch", "mkdir", "patch")
 DEST_ONLY_COMMANDS = ("cp", "mv")
 GIT_WRITES = re.compile(r"^git\s+(?:-C\s+\S+\s+)?(?:commit|apply|mv|rm)\b")
 NOT_A_FILE = ("/dev/", "/tmp/", ".claude/hooks/.state")
@@ -129,7 +128,7 @@ REDIRECT = re.compile(r"&?>>?\s*([^\s;&|<>()=][^\s;&|<>()]*)")
 SEGMENT_SPLIT = re.compile(r"[;&|\n]|\$\(|`")
 INTERPRETER = re.compile(r"\bpython[0-9.]*\s+(?:-\s*<<|-[A-Za-z]*c\b)")
 INTERPRETER_WRITE = re.compile(r"open\([^()]*,\s*(?:mode\s*=\s*)?['\"][wax][bt+]*['\"]"
-                               r"|\.write" r"_text\(")
+                               r"|\.write_text\(")
 EXCLUDED_ATTACHMENTS = ("prompt_snapshot",)
 SPAWN_PATTERN = re.compile(r"TASK_GUIDE_(T\d+)")
 SAFE_NAME = re.compile(r"^[A-Za-z0-9_.:-]{1,64}$")

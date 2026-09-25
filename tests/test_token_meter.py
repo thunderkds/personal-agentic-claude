@@ -294,9 +294,11 @@ def test_sc10_source_never_writes():
     source = SCRIPT.read_text()
     assert not re.search(r"open\([^)]*['\"][wax]\+?b?['\"]", source)
     assert not re.search(r"mode\s*=\s*['\"][wax]", source)
-    for forbidden in ("mkdir", "makedirs", "write_text", "write_bytes", ".write(", "shutil",
-                      "os.remove", "os.unlink", "os.rename", "os.replace"):
-        assert forbidden not in source, forbidden
+    # Write *calls*, not bare words: the Bash-write detector (T128) legitimately holds the
+    # strings "mkdir" and "write_text" as patterns it looks for in other programs' commands.
+    for forbidden in (r"\bos\.(?:mkdir|makedirs|remove|unlink|rename|replace)\(",
+                      r"\.write_(?:text|bytes)\(", r"(?<!stdout)\.write\(", r"\bshutil\b"):
+        assert not re.search(forbidden, source), forbidden
 
 
 def test_run_leaves_fixture_tree_unchanged():
