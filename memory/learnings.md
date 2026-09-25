@@ -2667,3 +2667,17 @@ evidence the instruction channel works — **not** evidence the model changed.
   `scrollWidth/innerWidth` from the frame.
 - **`reports/` is gitignored.** UI screenshots named in a TASK_REVIEW's Evidence stay on the machine
   that took them; the Notes column must carry the measured numbers, not only the paths.
+
+## T131 (2026-09-25): "we apply A to save B" + DDR-0009 window closed
+
+- **A skill can ship while the script it runs does not.** `compact-advisor` (shipped via `skills/`)
+  runs `python3 scripts/token_meter.py`, but `MANIFEST` never ships `scripts/` — every installed
+  project takes the judgment fallback. The site row first claimed measuring for everyone (T131 Stage 4
+  P1). Check `MANIFEST` before describing a skill's behaviour to installers.
+- **A presence test over a whole section passes on prose.** T131's credit test found "headroom" in
+  row 6's "headroom-style" after row 1's credit was removed; assert on the specific column/cell.
+- **Mobile tables hide the point of the row.** At 375px the `.table-wrap` shows only the first column;
+  for a two-part "A → B" table the B half is off-screen until scrolled. Site-wide pattern (Hooks too).
+- **DDR-0009 window closed at 5 spawns:** median pre-edit 19.8k vs 16.8k baseline — the memory slice
+  removes the MEMORY.md read but mandatory reads dominate; narrowing a guide's Files-Must-NOT-Touch to
+  exact paths cut T131's slice from 20 generic lines to 14 (still none on-topic).
