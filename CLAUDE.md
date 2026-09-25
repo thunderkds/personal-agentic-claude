@@ -40,8 +40,8 @@ corrections of the same kind, or a very long thread with many tool results. When
 > "I'm noticing this session's context is getting large / harder to track — want me to compact
 > before continuing?"
 
-Keep it short and plain. `Skill({ skill: "compact-advisor" })` (or `/compact-advisor`) splits `/compact`
-(live conversation) from `compact-memory` (cold memory files) so the recommendation names the right one.
+Keep it short and plain — a judgment call from observed behavior, not a rigid step/token trigger.
+`Skill({ skill: "compact-advisor" })` (or `/compact-advisor`) names the right one: `/compact` (live conversation) or `compact-memory` (cold memory files).
 
 ---
 
