@@ -137,10 +137,16 @@ project-management file stay off the public URL because they are outside `site/`
 Vercel is trusted to guess correctly.
 
 **Scope of what gets uploaded is a separate question, and `outputDirectory` does not answer it.**
-**`.vercelignore` governs CLI uploads only.** On the automatic Git path Vercel clones the full
-repository on its own side, so `memory/`, `tasks/` and the rest already reach Vercel's build
-infrastructure on every push to `main`; still only `site/` is served. The operator may disconnect
-the Git integration (Vercel dashboard) to stop that, or accept it — this file does not choose.
+**On the automatic Git path, whether `.vercelignore` limits what Vercel keeps is not established.**
+Vercel builds from its own clone of the GitHub repository. Its docs say the *built-in* default
+exclusions (`.git`, `.env.local`, …) apply only to CLI deployments
+([build features](https://vercel.com/docs/builds/build-features#ignored-files-and-folders)); the
+[`.vercelignore` page](https://vercel.com/docs/deployments/vercel-ignore) does not say whether it is
+applied to Git deployments. Check it on a real deployment: open the deployment in the Vercel
+dashboard and append `/_src` to its URL (Source view, team-only) — if `memory/` or `tasks/` appear
+there, the repository's full contents are retained by Vercel on every push to `main`. Either way
+only `site/` is served. If they appear, the operator may disconnect the Git integration or accept
+it — this file does not choose.
 For the manual CLI route below, the Vercel CLI transmits the project source tree to Vercel's build infrastructure on every deploy;
 `outputDirectory` governs only what is *served* from the result. Without `.vercelignore`, this
 repo's `memory/` (project decisions, learnings, event traces), `tasks/`, and `docs/` would be sent
