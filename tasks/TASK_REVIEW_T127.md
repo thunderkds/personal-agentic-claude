@@ -33,8 +33,31 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (non-executable change; verbatim prior content, captured 2026-09-25 before any implementation commit, from `CLAUDE.md:25-33`, identical in `agents/general-agent-template.md`, and `skills/code-review/SKILL.md:57-63`):
+
+```
+### Response Standard
+
+- Lead with the answer or verdict; method and caveats come after.
+- Asking for a decision: recommendation first, alternatives one line each.
+- Cut sentences restating the question or narrating what you read.
+- A table only to compare on 3+ dimensions, never to lay out one thing.
+- Say what is blocked and what you need, not all you could do.
+- Don't re-list open items your last reply listed; point back in a line.
+```
+
+```
+#### Conditional reviewers (activate based on diff content)
+| Persona | Activate when diff contains… |
+|---|---|
+| **security-reviewer** | Auth logic, input handling, secrets, permissions, SQL/shell |
+| **performance-reviewer** | DB queries, loops over large collections, cache logic, network calls |
+| **migration-reviewer** | Schema changes, data migrations, seed files |
+| **adversarial-reviewer** | ≥ 50 changed lines, or any security-reviewer activation |
+| **api-reviewer** | Public API changes, endpoint signatures, OpenAPI/schema files |
+```
+
+`docs/claude-md/token-economy.md` and `tests/test_token_economy_docs.py`: absent.
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
