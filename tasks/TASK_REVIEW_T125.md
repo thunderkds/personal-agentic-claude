@@ -33,8 +33,30 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured 2026-09-25T05:51:32Z at `598cc02`, before any T125 implementation commit):
+
+1. `skills/craft-spawn-prompt/SKILL.md` element 4, verbatim as it exists at `598cc02` (line 33):
+
+   > \| 4 \| Memory reference \| The **path** `memory/MEMORY.md`, with an instruction to read it in full. Do **not** paste its contents \| same \|
+
+2. Baseline row, `docs/token-focus-finding-2026-09-25.md` § 3 (14 spawns, medians):
+
+   > \| **Read before the first Edit/Write** \| **16.8k tokens over 8 calls** \| — most-read file before
+   > the first edit: `memory/MEMORY.md` (6 of 14; 41k chars ≈ 12k tokens).
+
+3. The slice command does not exist, and the spawn hook says nothing about a missing slice:
+
+```
+$ date -u; git rev-parse --short HEAD
+2026-09-25T05:51:32Z
+598cc02
+$ python3 scripts/memory_slice.py tasks/TASK_GUIDE_T125.md; echo exit=$?
+python3: can't open file '/home/hungnguyenhuu/workspace/pets/wt-t125/scripts/memory_slice.py': [Errno 2] No such file or directory
+exit=2
+$ printf %s '{"tool_name":"Agent","tool_input":{"prompt":"Task ID: T125\nRead tasks/TASK_GUIDE_T125.md"}}' | python3 .claude/hooks/pre_agent_validate_guide.py; echo exit=$?
+{"hookSpecificOutput": {"hookEventName": "PreToolUse", "additionalContext": "[hook:pre_agent] Advisory warning (not blocking):\n  \u2022 T125 declares 'Depends on: T124', which is currently 'Ready for Review' (not Done). Confirm this is intentional (e.g. parallel stub work) before proceeding.\n  \u2022 T125's Demonstration BEFORE field is blank. Capture it BEFORE your first implementation commit \u2014 a BEFORE taken after the change is not a BEFORE, and there is no N/A path."}}
+exit=0
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
