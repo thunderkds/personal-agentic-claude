@@ -12,7 +12,7 @@
 
 Before writing any code:
 1. Read `PROJECT_SPEC.md`
-2. Read `memory/MEMORY.md`
+2. Read the memory slice in your spawn prompt (`<!-- memory-slice -->`). Read `memory/MEMORY.md` in full only if your work reaches a file, hook, skill or decision the slice does not cover
 3. Read this file completely
 4. Read `agents/[agent-file].md`
 5. Note the **Complexity Level** above and apply the matching process (brainstorm / decompose / verify depth / model) from the Complexity matrix in your role guide (`agents/[agent-file].md`)

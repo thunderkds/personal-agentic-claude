@@ -107,7 +107,15 @@ T069_BASELINE_REF = "8d6d56b"
 # NOT deleted, assertion body untouched; the agent guides gain only the same one rule line.
 # Repointed once more at T127's Stage 4 (`998166d` -> `05bb7fe`): review restored the dropped
 # "judgment call, not a rigid step/token trigger" clause in the same two lines (still 200 lines).
-T070_BASELINE_REF = "05bb7fe"
+#
+# REPOINTED AGAIN by T125 (`b1da25a` -> `2e5331e`): T125's AC6 rewrites the one `## Memory Write
+# Protocol` line from "passed to every spawn as a **path the agent reads**" to a pasted memory slice
+# plus a full read on need, so `b1da25a` is now the file's own unfixed state. `2e5331e` is T125's
+# CLAUDE.md edit commit. Repointed, NOT deleted, assertion body untouched: one line replaced in
+# place, CLAUDE.md stays at 200 lines, no other rule reworded, nothing collapsed into agent guides.
+# Merged on `tokenization-refactor` (T127 + T125 both edit CLAUDE.md in disjoint lines): the pin
+# moves to the merge commit that carries the combined file (set in the commit after the merge).
+T070_BASELINE_REF = "MERGE_PENDING"
 
 # T082's own edit commit (same commit as the repoint above). T082 adds a mandatory Base Rule bullet
 # to `general-agent-template.md` too (the same untrusted-content pointer) — a legitimate, required

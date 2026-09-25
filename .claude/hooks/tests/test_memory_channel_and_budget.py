@@ -191,9 +191,14 @@ def test_ac5_and_ac6_the_contract_now_states_the_path_channel():
     assert "Do **not** paste its contents" in skill
 
     stages = _read("docs/claude-md/pipeline-stages.md")
-    assert "**the agent must read it itself**" in stages, (
+    # T125 AC7: this pinned "**the agent must read it itself**" — the unconditional
+    # full read that T125 replaces with a pasted slice plus a full read on need. What
+    # T065 guarded is kept: the sentence still tells the agent nothing loads the file
+    # for it (inverting T063's "must not re-read it"), and the whole file is not pasted.
+    assert "nothing loads it for the agent" in stages, (
         "pipeline-stages.md must invert the old 'must not re-read it' sentence (AC6)"
     )
+    assert "**memory slice**" in stages and "in full only if" in stages
 
     template = _read("agents/general-agent-template.md")
     assert "read `memory/MEMORY.md` yourself" in template

@@ -15,8 +15,8 @@ description: Base template inherited by all sub-agents. Contains the universal b
 
 - Strictly follow all Karpathy Engineering Principles (compact table in your own role guide — full version with rationale in `CLAUDE.md`, keep both in sync on edit)
 - Never assume context — always derive it from the startup reads your role guide lists. In
-  particular, **read `memory/MEMORY.md` yourself**: the spawn prompt gives you its path, not its
-  contents, so nothing loads it for you
+  particular, your prompt pastes a **memory slice**; read `memory/MEMORY.md` yourself in full only if
+  your work needs more
 - Communicate clearly with the Supervisor and other agents
 - Update the Memory/Insights section of `PROJECT_SPEC.md` with key learnings after task completion
 - Pause and ask the Supervisor if any ambiguity or error occurs

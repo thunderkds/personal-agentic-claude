@@ -30,7 +30,7 @@ Both shapes reuse the same checklist proven in `bugfix` Step 4; only element 2 a
 | 1 | Guide pointer | `tasks/TASK_GUIDE_Txxx.md` path | same |
 | 2 | Orienting content | Guide's Restated Intent / Requirement section, verbatim | Confirmed Mental Model section, verbatim |
 | 3 | First-action skill invocation | Only if the task explicitly requires one (e.g. `migration-safety` for schema work) — otherwise omit | `Skill({ skill: "diagnose" })` as the first action — always present |
-| 4 | Memory reference | The **path** `memory/MEMORY.md`, with an instruction to read it in full. Do **not** paste its contents | same |
+| 4 | Memory slice | Run `python3 skills/craft-spawn-prompt/scripts/memory_slice.py <guide-path>` and paste its output **verbatim** (the `<!-- memory-slice:Txxx -->` block: index lines naming the guide's Files-table paths, `Depends on` tasks or ID — T069: paste what must arrive), then this line verbatim: *Read `memory/MEMORY.md` in full only if your work reaches a file, hook, skill or decision the slice does not cover.* The **path** `memory/MEMORY.md` stays that fallback. Do **not** paste its contents | same |
 | 5 | Agent-guide pointer | `agents/<role>.md` from the guide's `**Agent guide**` field | same |
 | 6 | Trace-attribution instruction | The active-task state-file line below, verbatim | same |
 | 7 | Demonstration BEFORE-capture instruction | The BEFORE-capture line below, verbatim | same — for a bugfix guide, this is naturally satisfied by the Phase 1 repro loop the `diagnose` first action already builds; the instruction still restates the rule so the agent doesn't skip it under time pressure |
@@ -60,6 +60,7 @@ Since T064 the block lives in the sibling `tasks/TASK_REVIEW_Txxx.md`, not in th
 #### 4. Pre-flight structural-reference check
 Read `extract_structural_task_ids()` directly from `.claude/hooks/pre_agent_validate_guide.py` — do not re-derive or approximate the pattern, it must stay byte-for-byte in sync with what the hook enforces. Run it against the assembled prompt text:
 - For every extracted task ID, confirm `tasks/TASK_GUIDE_T<id>.md` exists on disk.
+- If the prompt names a `TASK_GUIDE_Txxx.md` but has no `<!-- memory-slice:` marker, **flag** it as "memory slice missing — element 4 not run". The spawn hook warns on the same condition; it never blocks.
 - If any extracted ID has no matching file, **flag** it in the output as "would be rejected by the spawn hook" — do not alter the prompt to work around it.
 - Prose-only `Txxx` mentions (e.g. in an orienting-content excerpt) that don't match either structural marker (a `TASK_GUIDE_Txxx.md` reference, or a `Task ID:` declaration line) are correctly ignored by the hook and must not be flagged here.
 
