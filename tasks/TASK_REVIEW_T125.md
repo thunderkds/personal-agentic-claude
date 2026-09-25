@@ -221,3 +221,25 @@ Real guides, real MEMORY.md: T126 → 7 of 239 lines / 1,342 chars (vs 41k for t
 **`security-review` (Medium): no findings.** Hook change = a regex over the prompt and a fixed warning string, never blocks, never rewrites; `memory_slice.py` reads the CLI-named guide and `memory/MEMORY.md`, no exec, no writes; output is repo-authored index lines intended for the prompt.
 
 **Remaining:** Stage 5 user-run `/verify` (surface: a real spawn prompt built with the slice) and AC9's live-spawn measurement with `token_meter.py --task` after T124 merges.
+
+## AC9 — first real spawn with a memory slice (Supervisor, 2026-09-25)
+
+Spawn: T126, headless `claude -p` (sonnet) in a Ghostty window, transcript `4b9912b3…`. Prompt carried
+`memory_slice.py tasks/TASK_GUIDE_T126.md` (7 of 237 index lines, 1,342 chars) + the full-file-on-need line.
+
+| Measure | Baseline (14 spawns) | T126 |
+|---|---|---|
+| Opened full `memory/MEMORY.md` | 6 of 14 before first edit | **no** (no command touched it) |
+| Read before first write | 16.8k tokens (median) | **13.3k tokens** (calls 1–5, 46,665 chars) — −21% |
+
+**Read with care — one spawn, two confounders:**
+1. `token_meter.py --task T126` reports this spawn as "no edit: whole session is pre-edit" (14.4k): the
+   agent read **and wrote only through Bash** (`cat`, `cat >`, `python3 - <<EOF`), so the meter's
+   first-`Edit`/`Write` boundary never fired. The 13.3k above marks the first write by hand (call 6).
+   The meter's pre-edit metric under-detects Bash-editing agents → follow-up task.
+2. The agent **skipped two mandatory startup reads** (`PROJECT_SPEC.md` 19k chars, `agents/common-infrastructure.md`
+   6.9k chars — a Permanent Rule), which lowers its number for a reason unrelated to the slice. It read the guide.
+
+Most of the 13.3k is task-specific (`scripts/token_meter.py` ≈ 7k tokens). Verdict: the slice replaced
+the MEMORY.md read as designed; the −50% target is not shown by one spawn and stays with the evaluation
+window (≥5 spawns), once the meter's edit boundary is fixed.
