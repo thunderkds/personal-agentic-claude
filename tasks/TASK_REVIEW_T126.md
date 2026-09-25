@@ -18,7 +18,7 @@
 | Verification command run | pass | `pytest tests/test_token_meter.py tests/test_compact_advisor_measures.py -q` → `40 passed in 1.83s`; `pytest .claude/hooks/tests tests -q` → `922 passed in 20.87s` |
 | Negative cases hold | pass | Mutation controls (RED then GREEN, same run): M1 oldest-file → `test_current_picks_newest…` FAILED; M2 include subagents/ → same test FAILED; M3 restore "no tool exposes your own context size" → `test_sc6_no_longer_claims…` FAILED; restored → `40 passed`. Also: missing slug dir exit 2 naming path; SENTINEL absent from text+JSON output |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Supervisor Stage 4 (2026-09-25): `git diff tokenization-refactor...feat/t126-measured-compact-advisor` — 5 files, all read; `--current` driven live against two real sessions. |
 | Full smoke suite still green (no regression) | pass | 922 passed (above) |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
@@ -64,3 +64,17 @@ Skill step 2a now opens with "**Measure first**: run `python3 scripts/token_mete
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
+
+## Supervisor Stage 4 (2026-09-25)
+
+**`code-review`: 0 P0 / 1 P1 (fixed) / 2 P2 / 0 P3.** `security-review`: not required (Risk Low); the change adds a directory lookup under the transcript root and prints only aggregates (T124 SC5 still green).
+
+| Sev | Finding | Conf. | Outcome |
+|---|---|---|---|
+| P1 | `top_content_kinds` was `list(composition.items())[:3]` — first-seen order, not carry share. Live on the Supervisor session it printed `user_text 9%, attachment:environment 0%, attachment:model 0%` while Bash output (10%) was the real #1 — and compact-advisor quotes this field | 100 | **Fixed**: rank once, reuse for `top_content_kinds` and `composition`. `test_top_content_kinds_are_ranked_by_share_not_first_seen` RED without the fix (`1 failed`), GREEN with it; suite `923 passed`. Live after: `tool_result:Bash 10%, user_text 9%, tool_input 8%` |
+| P2 | `compact-advisor` ships to installed projects but `scripts/token_meter.py` does not (see T125's placement note), so downstream the command fails and the documented fallback applies | 75 | Accepted — fallback is explicit in the skill; revisit if the meter should ship |
+| P2 | Slug rule (`/` and `.` → `-`) verified against real directory names, but none contain `_` or other punctuation | 75 | Accepted — `--current` fails loudly (exit 2 naming the directory) if the rule ever misses |
+
+Live: `--current` from the main checkout → this Supervisor session, `context now: 427,883 | calls over 150k: 138 of 174`; with `--cwd ../wt-t126` → the T126 agent's own session, `64,052`, 0 of 12.
+
+**Remaining:** Stage 5 user-run `/verify` — `/compact-advisor` in a live session quoting a measured `context_now`.
