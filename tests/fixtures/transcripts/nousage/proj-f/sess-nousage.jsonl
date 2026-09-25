@@ -1,0 +1,3 @@
+{"type": "user", "message": {"role": "user", "content": "hi"}}
+{"type": "assistant", "message": {"id": "n1", "role": "assistant", "content": [{"type": "text", "text": "x"}]}}
+{"type": "assistant", "message": {"id": "n2", "role": "assistant", "content": [{"type": "text", "text": "y"}], "usage": {"tokens": 5}}}
