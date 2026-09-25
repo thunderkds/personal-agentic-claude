@@ -72,6 +72,7 @@
 
 
 ### In Progress
+- [ ] **T131** — The Agent focus section says "we apply A to save B" | Frontend-Implementer | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T131.md` | Review: `tasks/TASK_REVIEW_T131.md` | Depends on: T130 | Registered 2026-09-25 from the user's "we apply A for the save B" | **In Progress** — Stage 3 started 2026-09-25, worktree `wt-t131` on `feat/t131-apply-to-save`, branched from `tokenization-refactor`
 
 
 
