@@ -407,3 +407,23 @@ def test_current_never_prints_transcript_content(tmp_path):
 
 def test_current_rejects_combination_with_session(tmp_path):
     assert run("--current", "--session", tmp_path / "x.jsonl").returncode == 2
+
+
+def test_top_content_kinds_are_ranked_by_share_not_first_seen(tmp_path):
+    """T126 Stage 4 finding: the top kinds were the first three kinds seen, not the largest."""
+    usage = {"input_tokens": 1, "output_tokens": 1, "cache_read_input_tokens": 1000,
+             "cache_creation_input_tokens": 1000}
+    def call(i, content):
+        return {"type": "assistant", "message": {"id": f"m{i}", "usage": usage, "content": content}}
+    lines = [
+        {"type": "user", "message": {"role": "user", "content": "hi"}},                   # small, first seen
+        call(1, [{"type": "tool_use", "id": "t1", "name": "Bash", "input": {}}]),
+        {"type": "user", "message": {"role": "user", "content": [
+            {"type": "tool_result", "tool_use_id": "t1", "content": "x" * 50_000}]}},  # large, seen later
+        call(2, []), call(3, []),
+    ]
+    path = tmp_path / "s.jsonl"
+    path.write_text("\n".join(json.dumps(line) for line in lines) + "\n")
+    top = run_json("--session", path)["session"]["top_content_kinds"]
+    assert top[0]["kind"] == "tool_result:Bash"
+    assert [k["share_pct"] for k in top] == sorted((k["share_pct"] for k in top), reverse=True)

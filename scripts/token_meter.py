@@ -512,6 +512,7 @@ def analyse_session(path, prices):
     for row in composition.values():
         row["tokens"] = round(row["tokens"])
         row["share_pct"] = pct(row["carry_usd"], spend)
+    ranked = sorted(composition.items(), key=lambda kv: -kv[1]["carry_usd"])
     return {"session": {
         "transcript": t.basename,
         "calls": len(t.calls),
@@ -521,8 +522,8 @@ def analyse_session(path, prices):
         "context_peak": max(context_of(u) for u in t.calls),
         "calls_over_150k": sum(1 for u in t.calls if context_of(u) > REFERENCE_CONTEXT),
         "top_content_kinds": [{"kind": k, "share_pct": row["share_pct"]}
-                              for k, row in list(composition.items())[:TOP_KINDS]],
-        "composition": dict(sorted(composition.items(), key=lambda kv: -kv[1]["carry_usd"])),
+                              for k, row in ranked[:TOP_KINDS]],
+        "composition": dict(ranked),
         "malformed_lines": t.malformed,
     }}
 
