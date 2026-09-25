@@ -72,7 +72,6 @@
 
 
 ### In Progress
-- [ ] **T128** — The token meter sees an agent's first edit even when it edits through Bash | Common-Infrastructure-Agent | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T128.md` | Review: `tasks/TASK_REVIEW_T128.md` | Depends on: T124 | Registered 2026-09-25 on `tokenization-refactor` (user: "do it in this branch"). The T126 spawn edited only via Bash, so the meter reported "no edit" (14.4k) instead of 13.3k at call 6; unblocks T125's evaluation window. | **Stage 3 started 2026-09-25** — worktree `../wt-t128`, branch `feat/t128-meter-bash-edits`; headless `claude -p` (sonnet) in Ghostty, memory-slice prompt + explicit startup reads; T125 evaluation spawn.
 
 
 
@@ -81,6 +80,7 @@
 
 
 ### Ready for Review
+- [ ] **T128** — The token meter sees an agent's first edit even when it edits through Bash | Common-Infrastructure-Agent | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T128.md` | Review: `tasks/TASK_REVIEW_T128.md` | Depends on: T124 | Registered 2026-09-25 on `tokenization-refactor` (user: "do it in this branch"). The T126 spawn edited only via Bash, so the meter reported "no edit" (14.4k) instead of 13.3k at call 6; unblocks T125's evaluation window. | **Stage 3 started 2026-09-25** — worktree `../wt-t128`, branch `feat/t128-meter-bash-edits`; headless `claude -p` (sonnet) in Ghostty, memory-slice prompt + explicit startup reads; T125 evaluation spawn. | Stage 4 2026-09-25: 1 P1 fixed (source split words to dodge the read-only test; test now matches write calls); T126 re-measured 13,333 via bash; awaiting user `/verify`.
 - [ ] **T129** — Spawn prompts name the mandatory startup reads, and the agent confirms them | Common-Infrastructure-Agent | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T129.md` | Review: `tasks/TASK_REVIEW_T129.md` | Depends on: T125 | Registered 2026-09-25 on `tokenization-refactor`. The headless T126 agent skipped `PROJECT_SPEC.md` and its role guide (Permanent Rule); prompt gets an explicit `**Startup reads**` block, a non-blocking spawn warning, and a `Startup reads:` report line checked at Stage 4. | **Stage 3 started 2026-09-25** — worktree `../wt-t129`, branch `feat/t129-startup-reads`; headless `claude -p` (sonnet) in Ghostty, memory-slice prompt + explicit startup reads; T125 evaluation spawn. | Stage 4 clean 2026-09-25: 0 P0/P1; 1 P2 (craft-spawn-prompt SKILL.md at its 80-line cap); awaiting user `/verify`.
 
 
