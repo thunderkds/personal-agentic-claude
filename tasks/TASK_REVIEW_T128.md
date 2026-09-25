@@ -33,8 +33,13 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (2026-09-25T08:55:57Z at `edf37a7`, before any implementation commit):
+
+```
+$ python3 scripts/token_meter.py --task T126
+  task    calls  prompt_ch prefix_tok pre_edit_tok calls_pre ctx_at_edit   cost_$ carry_%  transcript
+  T126       12      4,351     30,002       14,423        12           -     1.09    18.6  4b9912b3-d928-46f5-8277-5ddacaf63f23.jsonl  (no edit: whole session is pre-edit)
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
