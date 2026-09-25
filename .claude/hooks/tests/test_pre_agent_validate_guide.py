@@ -146,6 +146,7 @@ import json
 import subprocess
 
 SLICE_MARKER = "<!-- memory-slice:T125 -->"
+READS_BLOCK = "**Startup reads** (before anything else, in this order):\n- PROJECT_SPEC.md"
 
 
 def _run_hook(prompt):
@@ -168,7 +169,7 @@ def test_t125_sc5_guide_without_slice_marker_warns_and_is_allowed():
 
 
 def test_t125_sc5_guide_with_slice_marker_is_silent_about_it():
-    prompt = ("Task ID: T125\nRead tasks/TASK_GUIDE_T125.md\n"
+    prompt = ("Task ID: T125\nRead tasks/TASK_GUIDE_T125.md\n" + READS_BLOCK + "\n"
               + SLICE_MARKER + "\nmemory/MEMORY.md — 0 of 1\n<!-- /memory-slice -->")
     result = _run_hook(prompt)
     assert result.returncode == 0
@@ -197,3 +198,47 @@ if __name__ == "__main__":
         print(f"\n{failures} test(s) failed")
         sys.exit(1)
     print(f"\nAll {len(tests)} tests passed")
+
+
+# --------------------------------------------------------------------------
+# T129 SC1-3 — a spawn prompt that names a guide but has no `**Startup reads**`
+# block gets a non-blocking warning, independent of the memory-slice one.
+# --------------------------------------------------------------------------
+SLICE_BLOCK = SLICE_MARKER.replace("T125", "T129") + "\nx\n<!-- /memory-slice -->"
+
+
+def test_t129_sc1_guide_without_startup_reads_warns_and_is_allowed():
+    result = _run_hook("Task ID: T129\nRead tasks/TASK_GUIDE_T129.md\n" + SLICE_BLOCK)
+    assert result.returncode == 0
+    assert "startup-reads" in result.stderr, result.stderr
+    out = json.loads(result.stdout)
+    assert "decision" not in out, "the startup-reads check must never block"
+    assert "**Startup reads**" in out["hookSpecificOutput"]["additionalContext"]
+
+
+def test_t129_sc1_prose_mention_does_not_count_as_the_block():
+    prompt = ("Task ID: T129\nRead tasks/TASK_GUIDE_T129.md\n"
+              "Remember your startup reads, please.\n" + SLICE_BLOCK)
+    assert hook.check_startup_reads_warning(prompt) != []
+    assert hook.check_startup_reads_warning(
+        "Read tasks/TASK_GUIDE_T129.md\nsee **Startup reads** above") != []
+
+
+def test_t129_sc2_guide_with_startup_reads_is_silent_about_it():
+    result = _run_hook("Task ID: T129\nRead tasks/TASK_GUIDE_T129.md\n"
+                       + READS_BLOCK + "\n" + SLICE_BLOCK)
+    assert result.returncode == 0
+    assert "startup-reads" not in result.stderr
+    assert "Startup reads" not in result.stdout
+    assert '"decision"' not in result.stdout
+
+
+def test_t129_sc3_prompt_naming_no_guide_is_not_asked_for_startup_reads():
+    assert hook.check_startup_reads_warning("Task ID: T129\nno guide path here") == []
+
+
+def test_t129_edge_each_warning_fires_independently():
+    no_slice = "Read tasks/TASK_GUIDE_T129.md\n" + READS_BLOCK
+    no_reads = "Read tasks/TASK_GUIDE_T129.md\n" + SLICE_BLOCK
+    assert hook.check_memory_slice_warning(no_slice) and not hook.check_startup_reads_warning(no_slice)
+    assert hook.check_startup_reads_warning(no_reads) and not hook.check_memory_slice_warning(no_reads)

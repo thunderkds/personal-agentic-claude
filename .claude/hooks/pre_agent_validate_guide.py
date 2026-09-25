@@ -15,6 +15,10 @@ Also warns — non-blocking — when a prompt names a TASK_GUIDE but carries no
 `<!-- memory-slice:` marker (T125): craft-spawn-prompt element 4 was skipped, so
 the agent gets no memory lines about its task. The hook never inserts the
 slice itself; hooks do not rewrite spawn prompts.
+
+Likewise warns — non-blocking — when a prompt names a TASK_GUIDE but has no
+`**Startup reads**` block (T129): the agent was never told to read PROJECT_SPEC.md
+and its role guide first.
 """
 import json
 import os
@@ -228,6 +232,22 @@ def check_memory_slice_warning(prompt):
     ]
 
 
+# A line that *starts* with the bold label — a prose mention does not count.
+STARTUP_READS_RE = re.compile(r"^\*\*Startup reads\*\*", re.MULTILINE)
+
+
+def check_startup_reads_warning(prompt):
+    """T129: a prompt naming a TASK_GUIDE without a `**Startup reads**` block gets one
+    non-blocking warning. Independent of the memory-slice check."""
+    if not re.search(r"TASK_GUIDE_T\d+", prompt) or STARTUP_READS_RE.search(prompt):
+        return []
+    return [
+        "Spawn prompt names a TASK_GUIDE but has no `**Startup reads**` block, so the "
+        "agent is not told to read PROJECT_SPEC.md, its guide and its role guide first "
+        "(craft-spawn-prompt element 8)."
+    ]
+
+
 def main():
     try:
         event = json.load(sys.stdin)
@@ -269,12 +289,17 @@ def main():
         warnings += check_demonstration_warnings(task_ids)
         slice_warnings = check_memory_slice_warning(prompt)
         warnings += slice_warnings
+        reads_warnings = check_startup_reads_warning(prompt)
+        warnings += reads_warnings
     except Exception:
         # Fail-open: an advisory path must never block a spawn.
         sys.exit(0)
 
     for warning in slice_warnings:
         print(f"[hook:pre_agent] memory-slice missing: {warning}", file=sys.stderr)
+
+    for warning in reads_warnings:
+        print(f"[hook:pre_agent] startup-reads missing: {warning}", file=sys.stderr)
 
     if warnings:
         print(json.dumps({
