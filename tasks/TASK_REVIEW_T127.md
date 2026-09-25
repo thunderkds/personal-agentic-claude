@@ -18,11 +18,11 @@
 | Verification command run | ☑ pass | `python3 -m pytest .claude/hooks/tests tests -q` → `858 passed in 11.98s`; `sh scripts/validate.sh` → `validate.sh: PASS` |
 | Negative cases hold | ☑ pass | M1 RED `test_sc2_claude_md_points_and_does_not_carry_the_body` (1 failed, 7 passed); M2 RED `test_t103_ac1_ac4_…byte_identical_to_the_template` (1 failed, 7 passed); M3 RED `test_sc4_code_review_has_the_over_engineering_persona` (1 failed, 7 passed); restored, GREEN `8 passed in 0.03s`, `git status --short` empty |
 | verify | ☐ N/A | Implementer cannot run `/verify` (user-only); no runtime surface — instruction text only. Supervisor to decide SKIP or user-run |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pending | Reviewer. Implementer notes: touched files are exactly the Files-to-Change table plus the repointed test below |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Supervisor Stage 4 (2026-09-25): `git diff tokenization-refactor...docs/t127-terse-verbatim` — all 8 files read; the three repointed test pins examined line by line (below). |
 | Full smoke suite still green (no regression) | ☑ pass | 858 passed (above); before the repoints it was 4 failed / 854 passed |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | No UI component — instruction text, a doc and a skill row. |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | No UI component. |
+| **UI: Responsiveness at target viewports** | ☑ N/A | No UI component. |
 
 ---
 
@@ -76,3 +76,18 @@ Existing tests changed beyond AC1's count/wording (AC5 asks each be named with i
 - `test_vital_slice.py` cap not touched: CLAUDE.md was already at 200/200, so the paragraph "Keep the question short and plain…" was tightened (same meaning, 4→2 lines) instead of raising the cap. The scope sentence is preserved exactly.
 - `tests/test_response_standard.py` function names still say "six"; only counts/messages changed.
 - `scripts/token_meter.py` does not exist in this branch (T124); `token-economy.md` names it as specified. `test_provider_adapters.py` did not require a mirror in `AGENTS.md`/`.cursor/rules/agent-base.mdc`.
+
+## Supervisor Stage 4 (2026-09-25)
+
+**`code-review`: 0 P0 / 1 P1 (fixed) / 1 P2 / 0 P3.** `security-review`: not required (Risk Low).
+
+| Sev | Finding | Conf. | Outcome |
+|---|---|---|---|
+| P1 | To stay within CLAUDE.md's 200 lines, the self-monitoring paragraph was rewritten and **dropped the rule** "a judgment call from observed behavior, not a rigid step/token trigger" — outside T127's scope (Surgical Changes) and the premise T126 builds on | 100 | **Fixed** `05bb7fe`: clause restored in the same two lines (still 200). CLAUDE.md byte pin `T070_BASELINE_REF` repointed `998166d → 05bb7fe` in `f9862b0` (RED before: `1 failed, 55 passed`); suite `858 passed`, `validate.sh: PASS` |
+| P2 | AC9 pair-size baseline repointed `T082 → T127` for **all** roles, resetting the 620-char growth budget for backend/frontend/qa too, where AC4 asked for the breached role only. The growth is one legitimate 110-char rule line per pair; backend sat at 617/620 before it | 75 | Accepted for this task (the rule must reach every role); noted so the next growth is measured from `998166d`, not T082 |
+
+**Test pins reviewed:** (1) `T070_BASELINE_REF` CLAUDE.md byte pin — legitimate repoint, assertion
+unchanged; (2) `AC7_ROLE_BASELINE["c-infra"]` → T127 — +110 chars, c-infra only, backend/frontend/qa keep
+T066's strict floor ✓; (3) AC9 pair baseline — see P2. No assertion body was weakened.
+
+**Remaining:** Stage 5 — no runtime surface (instruction text only); `/verify` expected to SKIP.
