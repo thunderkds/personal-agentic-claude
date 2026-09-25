@@ -134,3 +134,25 @@ Files that **must not** be touched:
 - [ ] Coexistence: the other Bash PostToolUse hooks still fire and still see the original `tool_response`.
 - [ ] Sub-agent worktrees: path is relative to `$CLAUDE_PROJECT_DIR`, so each worktree keeps its own logs.
 - [ ] Stats row carries counts only — test asserts no command text / stdout substring appears in `stats.tsv`.
+
+---
+
+## Amendment 2026-09-25 — measured, then re-aimed
+
+**Trigger:** the user: *"the hard things relate to 124 is the evaluation … the focusing on price
+decrease"*, then *"we have the strategy to send out prompt from agent to agent … keep the agent focus
+on the request, no overwhelm of content"*.
+
+**Measurement** (`docs/token-focus-finding-2026-09-25.md`): the chosen path A (line selector) saves
+~1% of spend at 200 lines, 4.7% even at 50 lines, with an 11% chance the agent needs an elided line.
+The load sits in Supervisor sessions (92%) and in spawned agents' pre-edit reading (17% of spawn spend).
+
+**Paths considered for the re-aim:**
+
+| Path | Idea | Adversarial review | Verdict |
+|---|---|---|---|
+| A′ | Keep compression, lower threshold to 50 | Still < 5% (DDR-0001's rollback bar); recall risk grows as threshold drops | Rejected |
+| B′ | Meter only, change nothing | Honest but ignores the user's focus vision and the measured 17% / 92% | Rejected as the whole answer; kept as step 1 |
+| **C′** | **Meter → memory slice for spawns → measured compact-advisor → carried output rule/persona** | Slice may omit a relevant decision (omission risk) — mitigated by the full-file escape hatch, spawn-time marker warning, and a revert trigger on Stage 4 / `/verify` quality | **Chosen** (T124–T127) |
+
+Edge cases for the new tasks are in each guide's checklist.
