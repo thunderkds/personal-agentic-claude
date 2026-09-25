@@ -100,7 +100,14 @@ T069_BASELINE_REF = "8d6d56b"
 # T103's CLAUDE.md edit commit. Repointed, NOT deleted, assertion body untouched: CLAUDE.md stays at
 # 200 lines and the six rules replace a pointer + tightened adjacent prose — nothing was collapsed
 # into the agent guides, which T103 leaves byte-unchanged.
-T070_BASELINE_REF = "b1da25a"
+#
+# REPOINTED AGAIN by T127 (`b1da25a` -> `998166d`): T127's AC1 adds the seventh Response Standard
+# rule and one pointer line to CLAUDE.md, so `b1da25a` is now the file's own unfixed state. CLAUDE.md
+# stays at its 200-line cap (the compact-advisor paragraph was tightened to make room). Repointed,
+# NOT deleted, assertion body untouched; the agent guides gain only the same one rule line.
+# Repointed once more at T127's Stage 4 (`998166d` -> `05bb7fe`): review restored the dropped
+# "judgment call, not a rigid step/token trigger" clause in the same two lines (still 200 lines).
+T070_BASELINE_REF = "05bb7fe"
 
 # T082's own edit commit (same commit as the repoint above). T082 adds a mandatory Base Rule bullet
 # to `general-agent-template.md` too (the same untrusted-content pointer) — a legitimate, required
@@ -405,7 +412,12 @@ def loaded_chars(role: str) -> int:
 # would still hide the next role to breach. `c87097e` is T100's template edit commit.
 T100_BASELINE_REF = "c87097e"
 
-AC7_ROLE_BASELINE = {"c-infra": T100_BASELINE_REF}  # key must match ROLE_GUIDES above
+# REPOINTED by T127 for `c-infra` only: the seventh Response Standard rule adds 110 chars to the
+# TEMPLATE (c-infra 10,944 -> 11,054, +110 vs its T100 floor). backend/frontend/qa keep T066's
+# floor and strict `<`. `998166d` is T127's edit commit.
+T127_BASELINE_REF = "998166d"
+
+AC7_ROLE_BASELINE = {"c-infra": T127_BASELINE_REF}  # key must match ROLE_GUIDES above
 
 
 def baseline_loaded_chars(role: str) -> int:
@@ -629,7 +641,7 @@ def test_t069_ac9_report_per_role_pair_size(capsys):
         print("\n  role      | before | after  | delta")
         print("  ----------|--------|--------|------")
         for role in sorted(ROLE_GUIDES):
-            before, after = pair_chars(role, T082_BASELINE_REF), pair_chars(role)
+            before, after = pair_chars(role, T127_BASELINE_REF), pair_chars(role)
             print(f"  {role:<10}| {before:>6,} | {after:>6,} | {after - before:+,}")
     # Reporting, with ONE assertion, and deliberately not `after <= before`: that would be a
     # scope guard committed as an invariant (T065 AC12) — correct today, and a blocker on the
@@ -643,8 +655,10 @@ def test_t069_ac9_report_per_role_pair_size(capsys):
     # Repointed T069_BASELINE_REF -> T082_BASELINE_REF for the same reason as AC7 above: T082 adds
     # a legitimate sentence to the template, and re-measuring drift from that new floor (rather
     # than from T069's tip) is what keeps this a live guard instead of a fossil.
+    # Repointed again, T082 -> T127: the seventh Response Standard rule adds 110 chars to every pair
+    # (backend +727 vs the 620-char budget), a legitimate one-line rule, not a copied table.
     for role in sorted(ROLE_GUIDES):
-        delta = pair_chars(role) - pair_chars(role, T082_BASELINE_REF)
+        delta = pair_chars(role) - pair_chars(role, T127_BASELINE_REF)
         assert abs(delta) < len(KARPATHY_TABLE), (
             f"{role}: pair moved {delta:+,} chars, which is a whole copy of the "
             f"{len(KARPATHY_TABLE):,}-char table. Either the removal from the template did not "

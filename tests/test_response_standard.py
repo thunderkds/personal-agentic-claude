@@ -72,8 +72,8 @@ def test_t103_ac1_ac4_claude_md_carries_the_six_rules_byte_identical_to_the_temp
 
     # Anti-vacuity: if the section moved or was renamed in the template, this
     # test would otherwise compare two empty lists and pass saying nothing.
-    assert len(template_rules) == 6, (
-        f"expected 6 Response Standard bullet lines in {TEMPLATE.name}, found "
+    assert len(template_rules) == 7, (
+        f"expected 7 Response Standard bullet lines in {TEMPLATE.name}, found "
         f"{len(template_rules)}: {template_rules}"
     )
 
@@ -90,8 +90,8 @@ def test_t103_ac2_claude_md_states_the_rules_it_does_not_merely_point():
     text = CLAUDE_MD.read_text(encoding="utf-8")
 
     # Positive: the rules are actually present, as their own lines.
-    assert len(_rule_lines(text)) == 6, (
-        "CLAUDE.md does not carry the six Response Standard rule lines; a pointer is not enough "
+    assert len(_rule_lines(text)) == 7, (
+        "CLAUDE.md does not carry the seven Response Standard rule lines; a pointer is not enough "
         "for the Supervisor, whose session the harness does not auto-inject the template into."
     )
 
@@ -117,6 +117,6 @@ def test_t103_ac3_template_still_carries_the_standard_for_sub_agents():
         "the '## Response Standard' section is gone from the template — sub-agents receive it as "
         "their system prompt and would silently lose it"
     )
-    assert len(_rule_lines(template)) == 6, (
-        "the template's Response Standard section no longer lists all six rules"
+    assert len(_rule_lines(template)) == 7, (
+        "the template's Response Standard section no longer lists all seven rules"
     )
