@@ -67,3 +67,12 @@ affects correctness. `security-review`: not required (Risk Low).
 The workflow must be pushed or run by the user so the actual `ubuntu-latest`
 job can confirm package installation and the steps after the formerly failing
 menu suite. This local evidence does not claim GitHub CI is green.
+
+## GitHub CI evidence (2026-09-25)
+
+Merged to `main` via PR #91 (`157a752`). GitHub Actions run
+https://github.com/thunderkds/personal-agentic-claude/actions/runs/36091700102
+(push, `main`): **completed / success — job "Framework integrity + install smoke test", 24/24 steps
+success**. Previous `main` run (`657dce9`, run 35849016542) was **failure**. User-run `/verify`
+(2026-09-25): PASS in a fresh `ubuntu:24.04` replay (20/20 `run:` steps rc=0; control without
+`python3-pytest` fails step 18 with `No module named pytest`). **Status: Done.**
