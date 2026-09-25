@@ -58,6 +58,7 @@ fenced `## Output Format` block, never the block.
 - A table only to compare on 3+ dimensions, never to lay out one thing.
 - Say what is blocked and what you need, not all you could do.
 - Don't re-list open items your last reply listed; point back in a line.
+- Quote code, exact error text, file paths, commands and security warnings verbatim; terse never means paraphrased.
 
 ---
 

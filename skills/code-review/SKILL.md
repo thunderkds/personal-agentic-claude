@@ -61,6 +61,7 @@ Stage 4 review gatekeeper: run a structured, multi-perspective review of the cur
 | **migration-reviewer** | Schema changes, data migrations, seed files |
 | **adversarial-reviewer** | ≥ 50 changed lines, or any security-reviewer activation |
 | **api-reviewer** | Public API changes, endpoint signatures, OpenAPI/schema files |
+| **over-engineering-reviewer** | Any diff that adds a new function, class, module, dependency or config option. Flags: a new abstraction with one caller; a new dependency replacing ≤ 10 lines; speculative config or flags nothing sets; duplication of an existing helper or the stdlib. Apply "Search Before You Build" (`agents/general-agent-template.md`) by name — do not restate its rungs |
 
 ---
 
