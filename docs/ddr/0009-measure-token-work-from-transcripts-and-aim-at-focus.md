@@ -78,8 +78,9 @@ request without being overwhelmed by content.
 | 2026-09-25 | T128 | all (explicit block) | 19.8k (via tool) | slice matched only broad dir keys (18 lines) |
 | 2026-09-25 | T129 | all (explicit block) | 20.0k (via tool) | |
 | 2026-09-25 | T130 | all (explicit block) | 26.2k (via bash) | site task: guide required 2 specs + 7 source files; slice matched 20 generic lines, 0 about the site — broad `Files Must NOT Touch` globs (`skills/**`, `.claude/hooks/**`) act as slice keys |
+| 2026-09-25 | T131 | all (explicit block) | 13.2k (via bash) | guide's Files-Must-NOT-Touch narrowed to exact paths; slice 14 lines, still no site lines |
 
-**Interim reading (4 of ≥5):** the slice removes the `MEMORY.md` read (~12k) as designed, but pre-edit
+**Window closed (5 of ≥5), 2026-09-25:** median pre-edit **19.8k** vs baseline 16.8k (+18%); the −50% target is not met. Decision pending with the user. Earlier interim reading: the slice removes the `MEMORY.md` read (~12k) as designed, but pre-edit
 totals are dominated by mandatory reads (`PROJECT_SPEC.md` ≈ 5.4k tokens, role guide ≈ 2k) and task
 files; with all startup reads done the median is above baseline. The −50% target looks unreachable
 through the memory slice alone; the next measured lever is `PROJECT_SPEC.md` itself. Decide after ≥5.
