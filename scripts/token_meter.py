@@ -44,7 +44,10 @@ Rules
   prompt, already in the fixed prefix. Thinking blocks and images count 0.
 * **Spawned agent** — a transcript whose first non-meta user message names
   `TASK_GUIDE_T<digits>`. Pre-edit reading = tool results received before the
-  first `Edit`/`Write`/`MultiEdit` call; an agent that never edits reports its
+  first edit — an `Edit`/`Write`/`MultiEdit` call, or a Bash command that clearly
+  writes (redirection to a file, `tee`, `sed -i`, cp/mv/rm/touch, `git commit`, an
+  inline interpreter body opening a file for writing; `.claude/hooks/.state/`, `/tmp/`
+  and `/dev/` do not count; T128); `edit_via` says which. An agent that never edits reports its
   whole session as pre-edit (`edited: false`). Spawns with < 3 calls are listed
   but excluded from medians.
 * **Counterfactual** (`--bash-lines N`) — every Bash stdout (`toolUseResult.stdout`;
@@ -69,8 +72,8 @@ Directory mode::
      "spawns": {"items": [{"transcript", "task", "calls", "spawn_prompt_chars",
                            "fixed_prefix_tokens", "pre_edit_tokens",
                            "calls_before_edit", "context_at_edit" (null if no edit),
-                           "edited", "cost_usd", "pre_edit_carry_share_pct",
-                           "in_medians"}],
+                           "edited", "edit_via" ("tool"|"bash"|null), "cost_usd",
+                           "pre_edit_carry_share_pct", "in_medians"}],
                 "median": {same numeric keys, over spawns with >= 3 calls} | null,
                 "excluded_short": int},
      "counterfactual": null | {"bash_lines", "bash_outputs", "qualifying",
@@ -102,6 +105,10 @@ import re
 import statistics
 import sys
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                os.pardir, ".claude", "hooks", "lib"))
+from shell_data import strip_heredoc_bodies, strip_quoted_spans  # noqa: E402
+
 PRICE_IN_PER_MTOK = 5.0     # claude-opus-5, $ per million input tokens
 PRICE_OUT_PER_MTOK = 25.0   # claude-opus-5, $ per million output tokens
 WRITE_1H = 2.0
@@ -112,6 +119,16 @@ CHARS_PER_TOKEN = 3.5
 USAGE_KEYS = ("input_tokens", "output_tokens", "cache_read_input_tokens",
               "cache_creation_input_tokens")
 EDIT_TOOLS = ("Edit", "Write", "MultiEdit")
+WRITE_COMMANDS = ("cp", "mv", "rm", "touch", "mkdir", "patch")
+DEST_ONLY_COMMANDS = ("cp", "mv")
+GIT_WRITES = re.compile(r"^git\s+(?:-C\s+\S+\s+)?(?:commit|apply|mv|rm)\b")
+NOT_A_FILE = ("/dev/", "/tmp/", ".claude/hooks/.state")
+REDIRECT_TO_FD = re.compile(r"\d*>&-?\d*")
+REDIRECT = re.compile(r"&?>>?\s*([^\s;&|<>()=][^\s;&|<>()]*)")
+SEGMENT_SPLIT = re.compile(r"[;&|\n]|\$\(|`")
+INTERPRETER = re.compile(r"\bpython[0-9.]*\s+(?:-\s*<<|-[A-Za-z]*c\b)")
+INTERPRETER_WRITE = re.compile(r"open\([^()]*,\s*(?:mode\s*=\s*)?['\"][wax][bt+]*['\"]"
+                               r"|\.write_text\(")
 EXCLUDED_ATTACHMENTS = ("prompt_snapshot",)
 SPAWN_PATTERN = re.compile(r"TASK_GUIDE_(T\d+)")
 SAFE_NAME = re.compile(r"^[A-Za-z0-9_.:-]{1,64}$")
@@ -121,6 +138,48 @@ RECALL_WINDOW, RECALL_MIN_CHARS = 3, 25
 MIN_CALLS_FOR_MEDIAN = 3
 REFERENCE_CONTEXT = 150_000
 TOP_KINDS = 3
+
+
+def _is_file(path):
+    return not any(marker in path for marker in NOT_A_FILE)
+
+
+def _segment_writes(segment):
+    words = segment.split()
+    while words and re.match(r"^[A-Za-z_]\w*=", words[0]):
+        words = words[1:]
+    if not words:
+        return False
+    if GIT_WRITES.match(" ".join(words)):
+        return True
+    name = os.path.basename(words[0])
+    args = [w for w in words[1:] if not w.startswith("-")]
+    if name == "sed":
+        return any(w == "--in-place" or re.match(r"^-[A-Za-z]*i", w) for w in words[1:])
+    if name == "tee":
+        return any(_is_file(a) for a in args)
+    if name == "patch":
+        return True
+    if name in DEST_ONLY_COMMANDS:
+        return bool(args) and _is_file(args[-1])
+    return name in WRITE_COMMANDS and any(_is_file(a) for a in args)
+
+
+def bash_writes_file(command):
+    """True when a Bash command clearly changes a file. Heuristic, matched in memory only.
+
+    An interpreter body is read *before* heredoc stripping (its body is the write);
+    redirections and command names are read after quoted data is removed.
+    """
+    if not isinstance(command, str):
+        return False
+    bare = strip_quoted_spans(strip_heredoc_bodies(command))
+    if INTERPRETER.search(bare) and INTERPRETER_WRITE.search(command):
+        return True
+    without_fds = REDIRECT_TO_FD.sub(" ", bare)
+    if any(_is_file(target) for target in REDIRECT.findall(without_fds)):
+        return True
+    return any(_segment_writes(seg) for seg in SEGMENT_SPLIT.split(without_fds))
 
 
 class Prices:
@@ -206,6 +265,7 @@ class Transcript:
         self.pre_edit = {}         # first_call_index -> chars of tool results before first edit
         self.edited = False
         self.edit_call = None
+        self.edit_via = None       # "tool" | "bash" | None
         self.bash_outputs = 0
         self.bash_saved = {}       # first_call_index -> elided chars
         self.qualifying = 0
@@ -272,10 +332,23 @@ class Transcript:
                 self._add("tool_input", len(serialized))
                 output_text.append(serialized)
                 self._tool_names[block.get("id")] = block.get("name")
-                if block.get("name") in EDIT_TOOLS and not self.edited:
-                    self.edited = True
-                    self.edit_call = index
+                if not self.edited:
+                    via = self._edit_via(block)
+                    if via:
+                        self.edited = True
+                        self.edit_call = index
+                        self.edit_via = via
         self._check_recall(index, "\n".join(output_text))
+
+    @staticmethod
+    def _edit_via(block):
+        if block.get("name") in EDIT_TOOLS:
+            return "tool"
+        params = block.get("input")
+        if block.get("name") == "Bash" and isinstance(params, dict) \
+                and bash_writes_file(params.get("command")):
+            return "bash"
+        return None
 
     def _check_recall(self, index, output):
         if not output:
@@ -407,6 +480,7 @@ def spawn_row(t, prices):
         "calls_before_edit": edit_call if t.edited else len(t.calls),
         "context_at_edit": context_of(t.calls[edit_call]) if t.edited else None,
         "edited": t.edited,
+        "edit_via": t.edit_via,
         "cost_usd": cost,
         "pre_edit_carry_share_pct": pct(carry, cost),
         "in_medians": len(t.calls) >= MIN_CALLS_FOR_MEDIAN,
@@ -568,7 +642,8 @@ def render_directory(data):
                 num(r["fixed_prefix_tokens"]), num(r["pre_edit_tokens"]),
                 num(r["calls_before_edit"]), num(r["context_at_edit"]), r["cost_usd"],
                 r["pre_edit_carry_share_pct"], r["transcript"],
-                "" if r["edited"] else "  (no edit: whole session is pre-edit)"))
+                "  (first edit via %s)" % r["edit_via"] if r["edited"]
+                else "  (no edit: whole session is pre-edit)"))
         m = sp["median"]
         if m:
             out.append("  %-6s %6s %10s %10s %12s %9s %11s %8.2f %7.1f" % (

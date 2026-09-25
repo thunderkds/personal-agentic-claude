@@ -266,7 +266,7 @@ def test_sc9_json_keys_are_as_documented():
     assert set(data["spawns"]) == {"items", "median", "excluded_short"}
     assert set(data["spawns"]["items"][0]) == {
         "transcript", "task", "calls", "spawn_prompt_chars", "fixed_prefix_tokens",
-        "pre_edit_tokens", "calls_before_edit", "context_at_edit", "edited", "cost_usd",
+        "pre_edit_tokens", "calls_before_edit", "context_at_edit", "edited", "edit_via", "cost_usd",
         "pre_edit_carry_share_pct", "in_medians"}
     assert set(data["counterfactual"]) == {"bash_lines", "bash_outputs", "qualifying",
                                            "saved_tokens", "saving_usd", "saving_share_pct",
@@ -294,9 +294,11 @@ def test_sc10_source_never_writes():
     source = SCRIPT.read_text()
     assert not re.search(r"open\([^)]*['\"][wax]\+?b?['\"]", source)
     assert not re.search(r"mode\s*=\s*['\"][wax]", source)
-    for forbidden in ("mkdir", "makedirs", "write_text", "write_bytes", ".write(", "shutil",
-                      "os.remove", "os.unlink", "os.rename", "os.replace"):
-        assert forbidden not in source, forbidden
+    # Write *calls*, not bare words: the Bash-write detector (T128) legitimately holds the
+    # strings "mkdir" and "write_text" as patterns it looks for in other programs' commands.
+    for forbidden in (r"\bos\.(?:mkdir|makedirs|remove|unlink|rename|replace)\(",
+                      r"\.write_(?:text|bytes)\(", r"(?<!stdout)\.write\(", r"\bshutil\b"):
+        assert not re.search(forbidden, source), forbidden
 
 
 def test_run_leaves_fixture_tree_unchanged():
@@ -427,3 +429,85 @@ def test_top_content_kinds_are_ranked_by_share_not_first_seen(tmp_path):
     top = run_json("--session", path)["session"]["top_content_kinds"]
     assert top[0]["kind"] == "tool_result:Bash"
     assert [k["share_pct"] for k in top] == sorted((k["share_pct"] for k in top), reverse=True)
+
+
+# --- T128 — a Bash command that writes is the agent's first edit -------------------
+
+STATE_WRITE = "printf '%s\\n' T900 > /abs/repo/.claude/hooks/.state/active_task"
+
+
+def _bash_spawn(tmp_path, commands, tools=None):
+    """A T900 spawn issuing one call per entry; call 0's Bash result is 700 chars, later 350."""
+    lines = [json.dumps({"type": "user", "message": {"content": "Read TASK_GUIDE_T900 now"}})]
+    for i, command in enumerate(commands):
+        name, payload = (tools or {}).get(i, ("Bash", {"command": command}))
+        lines.append(json.dumps({"type": "assistant", "message": {
+            "id": "m%d" % i, "usage": _usage(1000 * (i + 1)),
+            "content": [{"type": "tool_use", "id": "t%d" % i, "name": name, "input": payload}]}}))
+        lines.append(json.dumps({"type": "user", "message": {"content": [
+            {"type": "tool_result", "tool_use_id": "t%d" % i,
+             "content": "r" * (700 if i == 0 else 350)}]}}))
+    directory = tmp_path / "proj"
+    directory.mkdir()
+    (directory / "agent-w1.jsonl").write_text("\n".join(lines) + "\n")
+    return run_json("--projects-dir", tmp_path, "--task", "T900")["spawns"]["items"][0]
+
+
+def test_t128_sc1_bash_write_is_the_first_edit(tmp_path):
+    row = _bash_spawn(tmp_path, ["cat f", "cat > x.py <<'EOF'\nprint(1)\nEOF", "cat x.py"])
+    assert row["edited"] is True and row["edit_via"] == "bash"
+    assert row["calls_before_edit"] == 1
+    assert row["pre_edit_tokens"] == 200      # only the first result (700 chars / 3.5)
+
+
+WRITES = [
+    "echo hi > out.txt", "echo hi >> out.txt", "echo hi &> out.txt", "ls | tee out.txt",
+    "sed -i 's/a/b/' f", "cp a b", "mv a b", "rm -f a", "touch a", "m" "kdir -p d",
+    "git commit -m msg", "git apply p.diff", "git mv a b", "git rm a", "patch -p1 < p.diff",
+    "python3 - <<'EOF'\np = 'f'\nopen(p, 'w').write('x')\nEOF",
+    "python3 -c \"open('f', 'a').write('x')\"",
+    "python3 - <<'EOF'\nfrom pathlib import Path\nPath('f').write" "_text('x')\nEOF",
+    "cd d && git status; echo x > f",
+]
+
+
+@pytest.mark.parametrize("command", WRITES)
+def test_t128_sc2_each_write_form_is_detected(tmp_path, command):
+    row = _bash_spawn(tmp_path, ["cat f", command])
+    assert row["edit_via"] == "bash", command
+    assert row["calls_before_edit"] == 1
+
+
+NOT_WRITES = [
+    STATE_WRITE, "echo x > /dev/null", "cmd 2>&1", "cmd >&2", "cmd &>/dev/null",
+    "grep x f > /tmp/out", "cmd 2>/dev/null", "mkdir -p /abs/repo/.claude/hooks/.state",
+    "grep '>' f", 'echo "a > b"', "git log", "git status",
+    "python3 -c \"print(open('f').read())\"", "ls | tee /dev/null",
+]
+
+
+@pytest.mark.parametrize("command", NOT_WRITES)
+def test_t128_sc3_sc4_state_and_read_only_look_alikes_are_not_edits(tmp_path, command):
+    row = _bash_spawn(tmp_path, ["cat f", command, "cat g"])
+    assert row["edited"] is False and row["edit_via"] is None, command
+
+
+def test_t128_sc5_edit_tool_first_wins_over_a_later_bash_write(tmp_path):
+    row = _bash_spawn(tmp_path, ["cat f", "ignored", "echo x > f"],
+                      tools={1: ("Edit", {"file_path": "f"})})
+    assert row["edit_via"] == "tool" and row["calls_before_edit"] == 1
+
+
+def test_t128_sc5_bash_write_first_wins_over_a_later_edit_tool(tmp_path):
+    row = _bash_spawn(tmp_path, ["cat f", "echo x > f", "ignored"],
+                      tools={2: ("Edit", {"file_path": "f"})})
+    assert row["edit_via"] == "bash" and row["calls_before_edit"] == 1
+
+
+def test_t128_sc6_sentinel_in_a_bash_write_is_never_printed(tmp_path):
+    _bash_spawn(tmp_path, ["cat f", "echo %s > out.txt" % SENTINEL])
+    for extra in ([], ["--json"]):
+        result = run("--projects-dir", tmp_path, "--task", "T900", *extra)
+        assert result.returncode == 0, result.stderr
+        assert SENTINEL not in result.stdout + result.stderr
+        assert "T900" in result.stdout
