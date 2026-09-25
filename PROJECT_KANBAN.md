@@ -74,8 +74,6 @@
 
 
 ### In Progress
-- [ ] **T124** — Token meter — measure spend and agent focus from session transcripts | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T124.md` | Review: `tasks/TASK_REVIEW_T124.md` | Depends on: none | Registered 2026-09-24; **re-planned 2026-09-25** after the user named evaluation as the hard part. Transcript replay (`docs/token-focus-finding-2026-09-25.md`) put the original compression hook at **~1% of spend** with an 11% recall risk, so it is parked (DDR-0009, DDR-0008 deferred). T124 is now the tested, read-only meter every token/focus change is judged by; it must reproduce the finding's numbers on real transcripts. | **Stage 3 started 2026-09-25** — worktree `../wt-t124`, branch `feat/t124-token-meter` from `tokenization-refactor`; spawned in Ghostty (opus, `--permission-mode auto`).
-- [ ] **T127** — Terse but verbatim — replies and sub-agent reports keep code, errors and paths exact; review catches over-engineering | Common-Infrastructure-Agent | C1 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_T127.md` | Review: `tasks/TASK_REVIEW_T127.md` | Depends on: none | Registered 2026-09-25, carrying the user's 2026-09-24 decisions D9 (verbatim-preserve rule, reports point to evidence) and D10 (`over-engineering-reviewer` persona). No saving claimed. | **Stage 3 started 2026-09-25** — worktree `../wt-t127`, branch `docs/t127-terse-verbatim` from `tokenization-refactor`; spawned in Ghostty (sonnet, `--permission-mode auto`).
 
 
 
@@ -84,6 +82,8 @@
 
 
 ### Ready for Review
+- [ ] **T124** — Token meter — measure spend and agent focus from session transcripts | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T124.md` | Review: `tasks/TASK_REVIEW_T124.md` | Depends on: none | Registered 2026-09-24; **re-planned 2026-09-25** after the user named evaluation as the hard part. Transcript replay (`docs/token-focus-finding-2026-09-25.md`) put the original compression hook at **~1% of spend** with an 11% recall risk, so it is parked (DDR-0009, DDR-0008 deferred). T124 is now the tested, read-only meter every token/focus change is judged by; it must reproduce the finding's numbers on real transcripts. | **Stage 3 started 2026-09-25** — worktree `../wt-t124`, branch `feat/t124-token-meter` from `tokenization-refactor`; spawned in Ghostty (opus, `--permission-mode auto`). | Stage 4 clean 2026-09-25: 1 P1 fixed (`843508f`, id-less entries), security-review no findings; awaiting user `/verify` (AC11).
+- [ ] **T127** — Terse but verbatim — replies and sub-agent reports keep code, errors and paths exact; review catches over-engineering | Common-Infrastructure-Agent | C1 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_T127.md` | Review: `tasks/TASK_REVIEW_T127.md` | Depends on: none | Registered 2026-09-25, carrying the user's 2026-09-24 decisions D9 (verbatim-preserve rule, reports point to evidence) and D10 (`over-engineering-reviewer` persona). No saving claimed. | **Stage 3 started 2026-09-25** — worktree `../wt-t127`, branch `docs/t127-terse-verbatim` from `tokenization-refactor`; spawned in Ghostty (sonnet, `--permission-mode auto`). | Stage 4 clean 2026-09-25: 1 P1 fixed (`05bb7fe`, restored the judgment-call clause); awaiting Stage 5 (no runtime surface → SKIP).
 
 
 ### Done

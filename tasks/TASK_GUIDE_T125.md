@@ -86,7 +86,7 @@ often; that reading is **17%** of spawn spend and a third of the context at the 
 | 9 | **Measured on a live spawn** (Stage 5): one real spawn through the new element 4, measured with `token_meter.py --task`; its pre-edit reading and whether it opened the full `MEMORY.md` are recorded next to the baseline | "ability to test this update" |
 
 **Evaluation window (after Done, recorded in DDR-0009 follow-up — not a Done blocker):** the next ≥ 5
-spawns. **Target:** median pre-edit reading ≤ 8.4k tokens (−50% of 16.8k). **Quality guard:** Stage 4
+spawns — counted as spawns whose prompt carries a `Task ID:` line (T124 Stage 4 P2: the meter's first-message rule also admits Supervisor sessions that name a guide; filter those out), and in-process `Agent()` spawns if Ghostty-spawned sessions still leave no transcript. **Target:** median pre-edit reading ≤ 8.4k tokens (−50% of 16.8k). **Quality guard:** Stage 4
 P0+P1 findings per task and `/verify` first-pass rate no worse than the last 10 Done tasks. **Revert
 trigger:** target missed, or the guard worsens, or a Stage 4 finding traces to a memory decision the
 slice omitted.
