@@ -645,9 +645,13 @@ def test_agent_focus_names_all_six_mechanisms():
 
 
 def test_agent_focus_credits_the_three_source_repos():
-    body = _agent_focus_body().lower()
+    # Read the "Idea from" column only: prose elsewhere in the section (row 6 says
+    # "headroom-style") must not satisfy a credit that was dropped from its row.
+    rows = re.findall(r"<tr>(.*?)</tr>", _agent_focus_body(), re.DOTALL)
+    credits = [re.findall(r"<td>(.*?)</td>", r, re.DOTALL)[-1].strip().lower()
+               for r in rows if "<td>" in r]
     for repo in ("headroom", "caveman", "ponytail"):
-        assert repo in body, f"agent-focus section does not credit {repo}"
+        assert repo in credits, f"no agent-focus row credits {repo} in its Idea-from column"
 
 
 def test_agent_focus_states_purpose_not_figures():

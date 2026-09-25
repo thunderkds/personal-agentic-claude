@@ -479,10 +479,10 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <thead><tr><th>We apply</th><th>To save</th><th>Idea from</th></tr></thead>
 <tbody>
 <tr><td><strong>Memory slice</strong> — the spawn prompt pastes only the <code>memory/MEMORY.md</code> lines about the task's own files, capped at 30 lines / 4,000 characters</td><td>Every agent reading the whole memory index before it starts</td><td>headroom</td></tr>
-<tr><td><strong>Startup reads list</strong> — the spawn prompt names what to read first, and the agent ends its report with a <code>Startup reads:</code> line</td><td>Rework from an agent that skipped the rules it must follow</td><td>—</td></tr>
+<tr><td><strong>Startup reads list</strong> — the spawn prompt names what to read first, and the agent ends its report with a <code>Startup reads:</code> line that Stage 4 review checks</td><td>Rework from an agent that skipped the rules it must follow</td><td>—</td></tr>
 <tr><td><strong>Response Standard</strong> — replies lead with the answer and stay short, but code, exact error text, file paths, commands and security warnings are quoted verbatim; reports point to <code>path:line</code>. The audit trail stays fully detailed</td><td>Output tokens, and the Supervisor carrying pasted logs for the rest of its session</td><td>caveman</td></tr>
 <tr><td><strong>Over-engineering reviewer</strong> — <code>code-review</code> checks any diff that adds a function, class, module, dependency or config option</td><td>Code nobody asked for, which someone must then review and maintain</td><td>ponytail</td></tr>
-<tr><td><strong>Measured <code>compact-advisor</code></strong> — quotes the session's measured context size before judging whether to compact</td><td>Re-reading a long conversation on every call, the largest cost measured</td><td>—</td></tr>
+<tr><td><strong>Measured <code>compact-advisor</code></strong> — quotes the session's measured context size before judging whether to compact, where the kit repository's transcript meter is present; an installed project falls back to judgment</td><td>Re-reading a long conversation on every call, the largest cost measured</td><td>—</td></tr>
 <tr><td><strong>Measure before keeping</strong> — a claimed saving is measured from session transcripts first (DDR-0009)</td><td>Building what doesn't pay: a headroom-style Bash-output compressor was measured at about 1 percent of spend and parked</td><td>—</td></tr>
 </tbody>
 </table>
