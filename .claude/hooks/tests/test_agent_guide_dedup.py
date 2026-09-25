@@ -114,8 +114,8 @@ T069_BASELINE_REF = "8d6d56b"
 # CLAUDE.md edit commit. Repointed, NOT deleted, assertion body untouched: one line replaced in
 # place, CLAUDE.md stays at 200 lines, no other rule reworded, nothing collapsed into agent guides.
 # Merged on `tokenization-refactor` (T127 + T125 both edit CLAUDE.md in disjoint lines): the pin
-# moves to the merge commit that carries the combined file (set in the commit after the merge).
-T070_BASELINE_REF = "MERGE_PENDING"
+# moves to the merge commit that carries the combined file (`cb2163a`, set in the commit after it).
+T070_BASELINE_REF = "cb2163a"
 
 # T082's own edit commit (same commit as the repoint above). T082 adds a mandatory Base Rule bullet
 # to `general-agent-template.md` too (the same untrusted-content pointer) — a legitimate, required
