@@ -18,7 +18,7 @@
 | Verification command run | ☑ pass / ☐ fail | Implementer run @ `a224e1e`: `pytest tests/test_token_meter.py -q` → `29 passed in 1.19s`; `pytest .claude/hooks/tests tests -q \| tail -1` → `884 passed in 14.73s`; `sh scripts/validate.sh` → `validate.sh: PASS`. The 4th command (real transcripts, AC11) is Stage 5 — pre-check numbers below, not a substitute. |
 | Negative cases hold | ☑ pass / ☐ fail | No-usage dir → exit 2 naming `usage` (SC7); empty/missing dir → exit 2; malformed line skipped+counted (SC8); unparsed file listed by basename; symlinked dir outside root not followed; sentinel absent in 8 output modes (SC5); source has no write/mkdir (SC10); fixture tree unchanged after a run. |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Supervisor Stage 4 (2026-09-25): `git diff tokenization-refactor...feat/t124-token-meter` — `scripts/token_meter.py` read in full, `tests/test_token_meter.py`, fixtures. No callers outside the diff (new standalone script). Docs/board excluded. |
 | Full smoke suite still green (no regression) | ☑ pass / ☐ fail | Implementer run: 884 passed (855 before + 29 new), 0 failed; `validate.sh: PASS`. Reviewer to re-run. |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☑ N/A | No UI component — stdout CLI script. |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☑ N/A | No UI component — stdout CLI script. |
@@ -86,3 +86,26 @@ exit=2
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
+
+## Supervisor Stage 4 (2026-09-25)
+
+**`code-review`: 0 P0 / 1 P1 (fixed) / 1 P2 / 1 P3.**
+
+| Sev | Finding | Conf. | Outcome |
+|---|---|---|---|
+| P1 | Assistant entries without `message.id` were merged into one API call (`_index[None]`, and the cross-file `seen` set) — a silent undercount on format drift, against AC10's "loud, not silent". Probe: 3 id-less entries → `api_calls = 1` | 100 | **Fixed** `843508f`: an id-less entry is its own call. New test `test_entries_without_message_id_are_separate_calls` RED without the fix (`1 failed`), GREEN with it; suite `885 passed`. Real-transcript numbers unchanged (45 qualifying, 1.07%, pre-edit median 16,835.5) |
+| P2 | Spawn detection (first user message names `TASK_GUIDE_Txxx`) admits Supervisor sessions whose first prompt names a guide — `81df10d0…` (T001, 61-char prompt, $11.21) is almost certainly one. This is the Supervisor's own AC5 rule, not an implementation defect | 75 | Carried to T125: its evaluation window should count only spawns whose prompt carries the `Task ID:` line (or sub-agent transcripts) |
+| P3 | Error-line regex (`error|fail|exception|traceback|fatal|panic`) differs from the finding doc's (`error|fail|warn|traceback|assert`); AC7 did not pin it and the counts still match | 75 | Suggestion only |
+
+Entry point `scripts/token_meter.py` present. Tests invoke the script via `subprocess` (T085/T093) ✓.
+
+**`security-review` (Medium risk, scoped manually to the T124 diff): no HIGH/MEDIUM findings.** No
+deserialisation beyond `json.loads`, no subprocess/shell, no writes; symlinked dirs not followed and
+out-of-root files skipped; printed strings limited to paths, basenames, `T\d+` task IDs and
+allow-listed tool/attachment names (`SAFE_NAME`); SC5 sentinel test covers 8 output modes.
+
+**Observation for T125 (not a T124 defect):** the two Ghostty-spawned sessions of this batch (T124
+`23a73238…`, T127) left no `.jsonl` transcript under `~/.claude-personal/projects/`, while in-process
+`Agent()` spawns do. Terminal spawns may be invisible to the meter — to confirm from outside the sandbox.
+
+**Remaining:** Stage 5 `/verify` (user-run) incl. AC11 on real transcripts.
