@@ -18,7 +18,7 @@
 | Verification command run | ☐ pass / ☐ fail | Implementer run pasted under Implementer notes → AFTER (4th command uses the relocated script path) |
 | Negative cases hold | ☐ pass / ☐ fail | M1–M5 (M3 split into M3a script / M3b hook) each RED mutated, GREEN reverted — Implementer notes → Mutation controls |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Supervisor Stage 4 (2026-09-25): `git diff tokenization-refactor...feat/t125-focused-handoff` — 18 files; `memory_slice.py` and the hook change read in full; doc/template/skill/stub edits checked for one consistent rule. |
 | Full smoke suite still green (no regression) | ☐ pass / ☐ fail | Implementer: 855 passed at `598cc02` → 879 passed at `e481526` (+24 new, 0 failed); `validate.sh: PASS` |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☑ N/A — no UI component | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☑ N/A — no UI component | [method used + output] |
@@ -205,3 +205,19 @@ exit=0
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
+
+## Supervisor Stage 4 (2026-09-25)
+
+**`code-review`: 0 P0 / 0 P1 / 2 P2 / 1 P3.** Re-run: targeted `44 passed`, full `879 passed`, `validate.sh: PASS`, CLAUDE.md 200 lines; tests drive the script and hook via `subprocess`.
+
+| Sev | Finding | Conf. | Outcome |
+|---|---|---|---|
+| P2 | Broad directory prefixes from *Files Must NOT Touch* globs (`memory/**`, `skills/**`, `.claude/hooks/**`) become keys that match generic lines; on large guides they push toward the 30-line cap (T124: 21 of 239 lines, T116: 24 → capped). The hit-count ranking keeps specific lines first, so it is noise, not omission | 75 | Suggestion: skip bare top-level directory prefixes from the Must-NOT-Touch table, or rank Files-to-Change keys above them. Decide after the evaluation window shows whether it matters |
+| P2 | **Merge conflict ahead:** T125 and T127 both repoint `T070_BASELINE_REF` (the CLAUDE.md byte pin) and both edit CLAUDE.md | 100 | Resolve at merge: combine both CLAUDE.md edits, then repoint the pin to the merge commit that carries the combined file |
+| P3 | Script location deviates from the guide (`skills/craft-spawn-prompt/scripts/` vs `scripts/`) | 100 | Accepted — documented as user-decided at Stage 3 (`scripts/` does not ship to installs) |
+
+Real guides, real MEMORY.md: T126 → 7 of 239 lines / 1,342 chars (vs 41k for the full file), including the push-gate/trace lesson the task needs; T122 → 3 lines; T124 → 21 lines / 3,527 chars; T116 → capped at 30 / 3,920 chars.
+
+**`security-review` (Medium): no findings.** Hook change = a regex over the prompt and a fixed warning string, never blocks, never rewrites; `memory_slice.py` reads the CLI-named guide and `memory/MEMORY.md`, no exec, no writes; output is repo-authored index lines intended for the prompt.
+
+**Remaining:** Stage 5 user-run `/verify` (surface: a real spawn prompt built with the slice) and AC9's live-spawn measurement with `token_meter.py --task` after T124 merges.
