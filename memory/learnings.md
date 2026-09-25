@@ -2633,3 +2633,17 @@ never against the document.
 
 T122's spawn prompt named this rule explicitly and its agent left the row untouched. That is
 evidence the instruction channel works — **not** evidence the model changed.
+
+**Tokenization batch (T124/T125/T127, 2026-09-25) — four gotchas measured, not inferred.**
+- **Interactive Ghostty spawns leave no transcript** (T124/T127 sessions `23a73238…`: `session-env/` and
+  `file-history/` exist, no `.jsonl`), while in-process `Agent()` spawns and headless `claude -p` runs
+  (incl. their sub-agents) do. Anything measured with `scripts/token_meter.py` must be spawned one of
+  those two ways, or it is invisible.
+- **The merge/push gate is board-wide:** one task In Progress blocks every merge and push, not just its
+  own; and a Ready-for-Review task needs a passing test-runner `Bash` call in the *main checkout's*
+  `memory/event-trace/Txxx.jsonl` — an implementer's runs land in its worktree's trace, so re-run the
+  suite from the Supervisor with `active_task` set to that task, then hand the file back.
+- **Two tasks repointing the same byte pin (`T070_BASELINE_REF`) always conflict at merge.** Resolve by
+  keeping both comment histories and pinning to the merge commit in a follow-up commit.
+- **`memory_slice.py` needs Files *tables*:** a guide that lists files as bullets (T123) yields no keys
+  and an empty slice even when MEMORY.md has relevant lines.
