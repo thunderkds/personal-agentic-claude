@@ -26,7 +26,7 @@ Rules
 * **API call** — an assistant entry whose `message.usage` has integer
   `input_tokens`, `output_tokens`, `cache_read_input_tokens`,
   `cache_creation_input_tokens`. De-duplicated by `message.id` (streamed chunks
-  share one; the last entry wins). Summary totals de-duplicate across files too
+  share one; the last entry wins; an entry without an id is its own call). Summary totals de-duplicate across files too
   (a continued session re-records history); per-transcript views are per file.
 * **Cost** — (input + 2 x 1h-write + 1.25 x 5m-write + 0.1 x read) x input price
   + output x output price. With no `cache_creation` split, all writes are 5m.
@@ -238,14 +238,16 @@ class Transcript:
         if usage is None:
             return
         mid = message.get("id")
-        if mid in self._index:
+        if mid is not None and mid in self._index:
             index = self._index[mid]
             self.calls[index] = usage
         else:
             index = len(self.calls)
-            self._index[mid] = index
+            if mid is not None:
+                self._index[mid] = index
             self.calls.append(usage)
-            self.call_ids.append(mid)
+            # an entry without an id is its own call, never merged (here or across files)
+            self.call_ids.append(mid if mid is not None else (self.path, index))
         output_text = []
         for block in message.get("content") or []:
             if not isinstance(block, dict):

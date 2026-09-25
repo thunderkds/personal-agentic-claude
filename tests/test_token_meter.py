@@ -303,3 +303,16 @@ def test_run_leaves_fixture_tree_unchanged():
     before = snapshot()
     run("--projects-dir", FIX, "--bash-lines", "200")
     assert snapshot() == before
+
+
+def test_entries_without_message_id_are_separate_calls(tmp_path):
+    """Stage 4 finding: id-less entries once collapsed into one call (silent undercount)."""
+    usage = {"input_tokens": 10, "output_tokens": 10,
+             "cache_read_input_tokens": 0, "cache_creation_input_tokens": 0}
+    for name in ("a", "b"):
+        project = tmp_path / name
+        project.mkdir()
+        lines = [json.dumps({"type": "assistant", "message": {"usage": usage, "content": []}})] * 3
+        (project / "s.jsonl").write_text("\n".join(lines) + "\n")
+    data = run_json("--projects-dir", tmp_path)
+    assert data["summary"]["api_calls"] == 6
