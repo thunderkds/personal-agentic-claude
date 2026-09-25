@@ -33,8 +33,16 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured by the T124 implementing agent in `wt-t124`, before any implementation commit;
+HEAD = `0f275fa` on `feat/t124-token-meter`):
+
+```
+$ date -u; git rev-parse --short HEAD; python3 scripts/token_meter.py
+2026-09-25T04:28:27Z
+0f275fa
+python3: can't open file '/home/hungnguyenhuu/workspace/pets/wt-t124/scripts/token_meter.py': [Errno 2] No such file or directory
+exit=2
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
