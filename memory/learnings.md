@@ -2687,5 +2687,6 @@ evidence the instruction channel works — **not** evidence the model changed.
 - The Vercel project is Git-connected: `git push github …:main` (`be1b10a..4639ea3`) put the new page
   live within seconds with no CLI run (`curl` of the live URL `diff -q` `main`'s `site/index.html` →
   identical). RUNBOOK and `PROJECT_SPEC_SITE.md` still say the deploy is operator-only — T132 corrects
-  them. Until then: treat every push to `main` as a production site deploy, and note that
-  `.vercelignore` only limits CLI uploads, not what a Git-connected build clones.
+  them. Until then: treat every push to `main` as a production site deploy. Whether `.vercelignore` applies to Git-connected builds is **not
+  established** — Vercel's docs say only the built-in default exclusions are CLI-only and are silent on
+  `.vercelignore` (T132 Stage 4 caught the Supervisor asserting it; check with a deployment's `/_src`).
