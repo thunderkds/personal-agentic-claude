@@ -33,8 +33,22 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (verbatim T130 `#agent-focus` table, `site/index.html` at 3d76f9b, captured 2026-09-25 before any implementation commit):
+
+```html
+<div class="table-wrap">
+<table>
+<thead><tr><th>Mechanism</th><th>What it does</th></tr></thead>
+<tbody>
+<tr><td>Memory slice</td><td>The spawn prompt pastes only the <code>memory/MEMORY.md</code> index lines that name the task's files, dependencies or ID, capped at 30 lines / 4,000 characters (lines with the fewest matches are dropped first and the header says how many)</td></tr>
+<tr><td>Startup reads</td><td>The spawn prompt lists what the agent must read first — <code>PROJECT_SPEC.md</code>, its TASK_GUIDE and its role guide — and the agent ends its report with a <code>Startup reads:</code> line naming what it read</td></tr>
+<tr><td>Response Standard</td><td>Replies lead with the answer and stay short, but code, exact error text, file paths, commands and security warnings are quoted verbatim. The audit trail — board rows, guides and their Evidence, decisions, commit messages — stays fully detailed, and a report points to evidence by <code>path:line</code> instead of pasting logs</td></tr>
+<tr><td>Stage 4 review</td><td><code>code-review</code> runs an over-engineering reviewer on any diff that adds a function, class, module, dependency or config option, and compares the agent's <code>Startup reads:</code> line with its spawn prompt — a missing required read is a P1 process finding</td></tr>
+<tr><td>Measuring</td><td>A claim that a change saves or costs tokens is measured from session transcripts before it is kept (DDR-0009), never estimated by eye. No savings figure is published here</td></tr>
+</tbody>
+</table>
+</div>
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
