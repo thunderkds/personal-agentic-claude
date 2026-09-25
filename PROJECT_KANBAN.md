@@ -12,7 +12,6 @@
 > `docs/token-focus-finding-2026-09-25.md`. All four build on the integration branch `tokenization-refactor` cut from `main` (`4f43bcf`);
 > each task worktree branches from it and merges back; `main` receives the set in one merge after the batch passes Stage 5.
 
-- [ ] **T125** — Focused handoff — a spawned agent gets the memory lines its task touches, not the whole index | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T125.md` | Review: `tasks/TASK_REVIEW_T125.md` | Depends on: T124 | Registered 2026-09-25. Baseline: spawned agents read a median 16.8k tokens before the first edit (`MEMORY.md` most often), 17% of spawn spend. Target −50% over the next ≥5 spawns, with a Stage 4 / `/verify` quality guard and a revert trigger.
 - [ ] **T126** — The Supervisor can see its own context size — compact-advisor decides on a measurement, not a feeling | Common-Infrastructure-Agent | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T126.md` | Review: `tasks/TASK_REVIEW_T126.md` | Depends on: T124 | Registered 2026-09-25. Supervisor sessions are 92% of spend; 34% of their calls carry >150k context. Target ≤25% over the next ≥5 sessions; nothing compacts automatically.
 
 > **Batch 2026-09-12 — Easy Kit installer rework (T109–T117).** Authority: `docs/adr/0002-one-confirmed-menu-driven-installer.md`
@@ -74,6 +73,7 @@
 
 
 ### In Progress
+- [ ] **T125** — Focused handoff — a spawned agent gets the memory lines its task touches, not the whole index | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T125.md` | Review: `tasks/TASK_REVIEW_T125.md` | Depends on: T124 | Registered 2026-09-25. Baseline: spawned agents read a median 16.8k tokens before the first edit (`MEMORY.md` most often), 17% of spawn spend. Target −50% over the next ≥5 spawns, with a Stage 4 / `/verify` quality guard and a revert trigger. | **Stage 3 started 2026-09-25** — worktree `../wt-t125`, branch `feat/t125-focused-handoff` from `tokenization-refactor`; Ghostty, opus, `--permission-mode auto`.
 
 
 
