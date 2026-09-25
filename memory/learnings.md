@@ -2647,3 +2647,9 @@ evidence the instruction channel works — **not** evidence the model changed.
   keeping both comment histories and pinning to the merge commit in a follow-up commit.
 - **`memory_slice.py` needs Files *tables*:** a guide that lists files as bullets (T123) yields no keys
   and an empty slice even when MEMORY.md has relevant lines.
+- **The merge gate reads the main checkout's board and blocks the whole Bash call before it runs**, so a
+  compound "write evidence && commit && merge" loses the evidence write too. Commit the evidence in one
+  call, merge in the next. (T126, 2026-09-25.)
+- **Headless spawns skip mandatory startup reads:** the T126 `claude -p` agent read its guide but not
+  `PROJECT_SPEC.md` or its role guide (a Permanent Rule) — spawn prompts should name those reads
+  explicitly, not rely on the guide's Mandatory Startup list.
