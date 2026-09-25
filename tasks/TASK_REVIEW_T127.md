@@ -17,7 +17,7 @@
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_token_economy_docs.py` (new: SC2, SC3, SC4); `tests/test_response_standard.py` six→seven (SC1). Targeted run: `8 passed in 0.03s` |
 | Verification command run | ☑ pass | `python3 -m pytest .claude/hooks/tests tests -q` → `858 passed in 11.98s`; `sh scripts/validate.sh` → `validate.sh: PASS` |
 | Negative cases hold | ☑ pass | M1 RED `test_sc2_claude_md_points_and_does_not_carry_the_body` (1 failed, 7 passed); M2 RED `test_t103_ac1_ac4_…byte_identical_to_the_template` (1 failed, 7 passed); M3 RED `test_sc4_code_review_has_the_over_engineering_persona` (1 failed, 7 passed); restored, GREEN `8 passed in 0.03s`, `git status --short` empty |
-| verify | ☐ N/A | Implementer cannot run `/verify` (user-only); no runtime surface — instruction text only. Supervisor to decide SKIP or user-run |
+| verify | ☑ N/A | `/verify` SKIP — no runtime surface: instruction text, a doc and a skill table row only (user-confirmed approach 2026-09-25); structural tests + mutation controls carry the evidence. Stage 5 pass on suite: `858 passed`, `validate.sh: PASS` |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Supervisor Stage 4 (2026-09-25): `git diff tokenization-refactor...docs/t127-terse-verbatim` — all 8 files read; the three repointed test pins examined line by line (below). |
 | Full smoke suite still green (no regression) | ☑ pass | 858 passed (above); before the repoints it was 4 failed / 854 passed |
 | **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | No UI component — instruction text, a doc and a skill row. |
