@@ -33,8 +33,24 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured 2026-09-25T08:38:06Z, before any implementation commit; `python3 scripts/token_meter.py --current`):
+
+```
+usage: token_meter.py [-h] [--projects-dir PROJECTS_DIR] [--session SESSION]
+                      [--task TASK] [--bash-lines BASH_LINES]
+                      [--price-in PRICE_IN] [--price-out PRICE_OUT] [--json]
+token_meter.py: error: unrecognized arguments: --current
+exit=2
+```
+
+`skills/compact-advisor/SKILL.md` prior text, verbatim:
+
+> - **Ask vs. Guess**: This is a judgment call based on observed session behavior, not a measurable
+>   token count — no tool exposes your own context size. Never claim a precise number; report what you
+>   actually observed.
+>
+> **a. Live conversation context** (`/compact` territory — user-invoked only):
+> - Have you had to ask the user to re-state or re-confirm something from earlier this session?
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
