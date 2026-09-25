@@ -10,6 +10,11 @@ Also reads the target guide's `Depends on:` field (if present) and warns
 PROJECT_KANBAN.md, or doesn't exist at all. This is advisory only: it
 never sets "decision": "block", so intentional parallel/stub work is
 never prevented.
+
+Also warns — non-blocking — when a prompt names a TASK_GUIDE but carries no
+`<!-- memory-slice:` marker (T125): craft-spawn-prompt element 4 was skipped, so
+the agent gets no memory lines about its task. The hook never inserts the
+slice itself; hooks do not rewrite spawn prompts.
 """
 import json
 import os
@@ -207,6 +212,22 @@ def check_demonstration_warnings(task_ids, tasks_dir=None):
     return warnings
 
 
+MEMORY_SLICE_MARKER = "<!-- memory-slice:"
+
+
+def check_memory_slice_warning(prompt):
+    """T125: a prompt naming a TASK_GUIDE without a memory-slice block gets one
+    non-blocking warning. Keyed on a guide *path*, not a bare `Task ID:` line."""
+    if not re.search(r"TASK_GUIDE_T\d+", prompt) or MEMORY_SLICE_MARKER in prompt:
+        return []
+    return [
+        "Spawn prompt names a TASK_GUIDE but has no `<!-- memory-slice:` marker, so "
+        "the agent gets none of the memory lines its task touches. Run "
+        "`python3 skills/craft-spawn-prompt/scripts/memory_slice.py <guide>` and paste "
+        "its output verbatim (craft-spawn-prompt element 4)."
+    ]
+
+
 def main():
     try:
         event = json.load(sys.stdin)
@@ -246,9 +267,14 @@ def main():
     try:
         warnings = check_dependency_warnings(task_ids)
         warnings += check_demonstration_warnings(task_ids)
+        slice_warnings = check_memory_slice_warning(prompt)
+        warnings += slice_warnings
     except Exception:
         # Fail-open: an advisory path must never block a spawn.
         sys.exit(0)
+
+    for warning in slice_warnings:
+        print(f"[hook:pre_agent] memory-slice missing: {warning}", file=sys.stderr)
 
     if warnings:
         print(json.dumps({

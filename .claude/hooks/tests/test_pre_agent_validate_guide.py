@@ -136,6 +136,53 @@ def test_synthetic_missing_guide_reference_still_blocks():
     assert ids == ["999"], ids
 
 
+
+# --------------------------------------------------------------------------
+# T125 SC5 — a spawn prompt that names a guide but carries no memory slice
+# gets a non-blocking warning; with the marker the hook says nothing about it.
+# Driven through the hook's real stdin protocol, against a real guide.
+# --------------------------------------------------------------------------
+import json
+import subprocess
+
+SLICE_MARKER = "<!-- memory-slice:T125 -->"
+
+
+def _run_hook(prompt):
+    event = {"tool_name": "Agent", "tool_input": {"prompt": prompt}}
+    return subprocess.run(
+        [sys.executable, HOOK_PATH], input=json.dumps(event),
+        capture_output=True, text=True, timeout=30,
+    )
+
+
+def test_t125_sc5_guide_without_slice_marker_warns_and_is_allowed():
+    result = _run_hook("Task ID: T125\nRead tasks/TASK_GUIDE_T125.md")
+    assert result.returncode == 0
+    assert "memory-slice" in result.stderr, result.stderr
+    out = json.loads(result.stdout)
+    assert "decision" not in out, "the missing-slice check must never block"
+    context = out["hookSpecificOutput"]["additionalContext"]
+    assert "no `<!-- memory-slice:` marker" in context
+    assert "memory_slice.py" in context
+
+
+def test_t125_sc5_guide_with_slice_marker_is_silent_about_it():
+    prompt = ("Task ID: T125\nRead tasks/TASK_GUIDE_T125.md\n"
+              + SLICE_MARKER + "\nmemory/MEMORY.md — 0 of 1\n<!-- /memory-slice -->")
+    result = _run_hook(prompt)
+    assert result.returncode == 0
+    assert result.stderr == ""
+    assert "memory-slice" not in result.stdout
+    assert '"decision"' not in result.stdout
+
+
+def test_t125_sc5_task_id_only_prompt_is_not_asked_for_a_slice():
+    """AC5 keys on a named TASK_GUIDE — a bare `Task ID:` line is not a guide path."""
+    assert hook.check_memory_slice_warning("Task ID: T125\nno guide path here") == []
+    assert hook.check_memory_slice_warning("Read tasks/TASK_GUIDE_T125.md") != []
+
+
 if __name__ == "__main__":
     tests = [obj for name, obj in list(globals().items()) if name.startswith("test_")]
     failures = 0

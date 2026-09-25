@@ -474,7 +474,8 @@ scaffold_project() {
 
 > **Rules**: Supervisor-only writes. Max 42,000 characters — a ratchet: `/compact-memory` may lower
 > it, never raise it to fit growth. One-line summaries + links to cold files.
-> Passed to every sub-agent as a path to read; the contents are not pasted into the spawn prompt.
+> Each spawn prompt carries a slice of these lines (craft-spawn-prompt's memory_slice.py) and this
+> path to read in full only when the slice falls short; the whole file is not pasted.
 > Updated by the Supervisor — prompted by the PostToolUse hook on `git push` / `git merge` (diff-driven pass), or via the `/compact-memory` skill.
 
 ---
