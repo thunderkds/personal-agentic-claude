@@ -100,7 +100,13 @@ T069_BASELINE_REF = "8d6d56b"
 # T103's CLAUDE.md edit commit. Repointed, NOT deleted, assertion body untouched: CLAUDE.md stays at
 # 200 lines and the six rules replace a pointer + tightened adjacent prose — nothing was collapsed
 # into the agent guides, which T103 leaves byte-unchanged.
-T070_BASELINE_REF = "b1da25a"
+#
+# REPOINTED AGAIN by T125 (`b1da25a` -> `2e5331e`): T125's AC6 rewrites the one `## Memory Write
+# Protocol` line from "passed to every spawn as a **path the agent reads**" to a pasted memory slice
+# plus a full read on need, so `b1da25a` is now the file's own unfixed state. `2e5331e` is T125's
+# CLAUDE.md edit commit. Repointed, NOT deleted, assertion body untouched: one line replaced in
+# place, CLAUDE.md stays at 200 lines, no other rule reworded, nothing collapsed into agent guides.
+T070_BASELINE_REF = "2e5331e"
 
 # T082's own edit commit (same commit as the repoint above). T082 adds a mandatory Base Rule bullet
 # to `general-agent-template.md` too (the same untrusted-content pointer) — a legitimate, required
