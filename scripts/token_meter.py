@@ -14,6 +14,7 @@ Usage::
 
     token_meter.py [--projects-dir DIR] [--task Txxx] [--bash-lines N] [--json]
     token_meter.py --session PATH [--json]
+    token_meter.py --current [--cwd DIR] [--projects-dir DIR] [--json]
     (both take --price-in / --price-out, $ per MTok)
 
 Transcript root: `--projects-dir`, else `$CLAUDE_CONFIG_DIR/projects`, else
@@ -83,6 +84,15 @@ Session mode (`--session PATH`)::
                  "composition": {kind: {"tokens", "carry_usd", "share_pct"}},
                  "malformed_lines"}}
 
+Session mode adds `context_now` (context of the last call), `context_peak`,
+`calls_over_150k` and `top_content_kinds` ([{"kind", "share_pct"}], top 3 by carry share).
+
+`--current` (T126) analyses the running session: the most recently modified
+top-level `*.jsonl` in `<root>/<slug>/`, `<slug>` = the absolute working directory
+(`--cwd`, default cwd) with every `/` and `.` replaced by `-`. Newest-modified is a
+heuristic — with two sessions open in one project it may pick the other one. Never
+looks at other projects or at `subagents/`. Not found -> exit 2 naming the directory.
+
 Exit codes: 0 ok; 2 no transcripts, no parseable API call, or bad arguments.
 """
 import argparse
@@ -109,6 +119,8 @@ ERROR_LINE = re.compile(r"error|fail|exception|traceback|fatal|panic", re.IGNORE
 KEEP_HEAD, KEEP_TAIL, ERROR_CAP = 40, 60, 60
 RECALL_WINDOW, RECALL_MIN_CHARS = 3, 25
 MIN_CALLS_FOR_MEDIAN = 3
+REFERENCE_CONTEXT = 150_000
+TOP_KINDS = 3
 
 
 class Prices:
@@ -370,6 +382,17 @@ def default_root():
     return os.path.join(base, "projects")
 
 
+def current_transcript(root, cwd):
+    directory = os.path.join(root, re.sub(r"[/.]", "-", os.path.abspath(cwd)))
+    if not os.path.isdir(directory):
+        fail("no session directory: looked in %s" % directory)
+    files = [os.path.join(directory, n) for n in os.listdir(directory)
+             if n.endswith(".jsonl") and os.path.isfile(os.path.join(directory, n))]
+    if not files:
+        fail("no top-level *.jsonl transcript in %s" % directory)
+    return max(files, key=lambda f: (os.path.getmtime(f), f))
+
+
 def spawn_row(t, prices):
     cost = t.cost(prices)
     carry = sum(t.carry(chars, index, prices) for index, chars in t.pre_edit.items())
@@ -494,6 +517,11 @@ def analyse_session(path, prices):
         "calls": len(t.calls),
         "spend_usd": spend,
         "latest_context_tokens": context_of(t.calls[-1]),
+        "context_now": context_of(t.calls[-1]),
+        "context_peak": max(context_of(u) for u in t.calls),
+        "calls_over_150k": sum(1 for u in t.calls if context_of(u) > REFERENCE_CONTEXT),
+        "top_content_kinds": [{"kind": k, "share_pct": row["share_pct"]}
+                              for k, row in list(composition.items())[:TOP_KINDS]],
         "composition": dict(sorted(composition.items(), key=lambda kv: -kv[1]["carry_usd"])),
         "malformed_lines": t.malformed,
     }}
@@ -566,6 +594,10 @@ def render_directory(data):
 def render_session(data):
     s = data["session"]
     out = ["token_meter --session %s" % s["transcript"],
+           "context now: %s | peak: %s | calls over 150k: %s of %s | top: %s"
+           % (num(s["context_now"]), num(s["context_peak"]), num(s["calls_over_150k"]),
+              num(s["calls"]), ", ".join("%s %.0f%%" % (k["kind"], k["share_pct"])
+                                         for k in s["top_content_kinds"]) or "-"),
            "API calls: %s | spend: $%.2f | latest context: %s tokens | malformed lines: %d"
            % (num(s["calls"]), s["spend_usd"], num(s["latest_context_tokens"]), s["malformed_lines"]),
            "Composition (carry-weighted share of this session's spend; prompt_snapshot excluded):",
@@ -587,6 +619,10 @@ def main(argv=None):
     parser.add_argument("--projects-dir", help="transcript root (default: $CLAUDE_CONFIG_DIR/projects "
                                                "or ~/.claude/projects)")
     parser.add_argument("--session", help="report one transcript")
+    parser.add_argument("--current", action="store_true",
+                        help="report the running session (newest top-level transcript for --cwd)")
+    parser.add_argument("--cwd", help="working directory whose session --current reports "
+                                      "(default: cwd)")
     parser.add_argument("--task", help="only spawns for this task ID, e.g. T124")
     parser.add_argument("--bash-lines", type=int, help="replay the Bash compression rule at N lines")
     parser.add_argument("--price-in", type=float, default=PRICE_IN_PER_MTOK, help="$ per MTok input")
@@ -596,10 +632,19 @@ def main(argv=None):
     if args.bash_lines is not None and args.bash_lines < 0:
         parser.error("--bash-lines must be >= 0")
 
+    if args.current and args.session:
+        parser.error("--current and --session are mutually exclusive")
+    if args.cwd and not args.current:
+        parser.error("--cwd only applies to --current")
+
     prices = Prices(args.price_in, args.price_out)
     price_info = {"input_per_mtok": args.price_in, "output_per_mtok": args.price_out}
-    if args.session:
-        data = analyse_session(args.session, prices)
+    if args.session or args.current:
+        path = args.session
+        if args.current:
+            root = args.projects_dir or default_root()
+            path = current_transcript(root, args.cwd or os.getcwd())
+        data = analyse_session(path, prices)
         data["prices"] = price_info
         render = render_session
     else:

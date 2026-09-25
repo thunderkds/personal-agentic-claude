@@ -14,12 +14,12 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | pass | tests/test_token_meter.py (test_current_*), tests/test_compact_advisor_measures.py (SC6) — 40 passed |
+| Verification command run | pass | `pytest tests/test_token_meter.py tests/test_compact_advisor_measures.py -q` → `40 passed in 1.83s`; `pytest .claude/hooks/tests tests -q` → `922 passed in 20.87s` |
+| Negative cases hold | pass | Mutation controls (RED then GREEN, same run): M1 oldest-file → `test_current_picks_newest…` FAILED; M2 include subagents/ → same test FAILED; M3 restore "no tool exposes your own context size" → `test_sc6_no_longer_claims…` FAILED; restored → `40 passed`. Also: missing slug dir exit 2 naming path; SENTINEL absent from text+JSON output |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| Full smoke suite still green (no regression) | pass | 922 passed (above) |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
 | **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
@@ -52,9 +52,15 @@ exit=2
 > **a. Live conversation context** (`/compact` territory — user-invoked only):
 > - Have you had to ask the user to re-state or re-confirm something from earlier this session?
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER** (2026-09-25, this worktree's live session; `python3 scripts/token_meter.py --current`):
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```
+token_meter --session 4b9912b3-d928-46f5-8277-5ddacaf63f23.jsonl
+context now: 55,864 | peak: 55,864 | calls over 150k: 0 of 7 | top: user_text 2%, attachment:environment 0%, attachment:model 0%
+```
+Skill step 2a now opens with "**Measure first**: run `python3 scripts/token_meter.py --current --json`…". The `/compact-advisor` live run is the user's `/verify`.
+
+**DELTA**: `/compact-advisor` can quote the live session's measured context size and top content kind instead of guessing.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
