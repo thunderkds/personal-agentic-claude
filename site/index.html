@@ -455,7 +455,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <table>
 <thead><tr><th>Event</th><th>Matcher</th><th>Script</th><th>Behavior</th></tr></thead>
 <tbody>
-<tr><td>PreToolUse</td><td><code>Agent</code></td><td><code>pre_agent_validate_guide.py</code></td><td><span class="tag tag-block">blocks</span> spawn if the TASK_GUIDE is missing; <span class="tag tag-advise">advises</span> (never blocks) when the spawn prompt has no memory slice or no <code>**Startup reads**</code> block, or a <code>Depends on</code> task is not Done</td></tr>
+<tr><td>PreToolUse</td><td><code>Agent</code></td><td><code>pre_agent_validate_guide.py</code></td><td><span class="tag tag-block">blocks</span> spawn if the TASK_GUIDE is missing; <span class="tag tag-advise">advises</span> (never blocks) when the spawn prompt has no memory slice or no <code>**Startup reads**</code> block, when a <code>Depends on</code> task is not Done, or when a task's Demonstration BEFORE is still blank</td></tr>
 <tr><td>PreToolUse</td><td><code>Bash</code></td><td><code>pre_bash_block_unsafe_merge.py</code></td><td><span class="tag tag-block">blocks</span> git push/merge if pipeline gates are unsatisfied</td></tr>
 <tr><td>PreToolUse</td><td><code>.*</code></td><td><code>pre_agent_step_limit.py</code></td><td><span class="tag tag-block">blocks</span> a task's tool call once it exceeds the step limit (default <strong>90</strong>) — self-clearing on the very next call</td></tr>
 <tr><td>PostToolUse</td><td><code>Write</code></td><td><code>post_write_register_task.py</code></td><td><span class="tag tag-advise">advises</span> — auto-registers new TASK_GUIDE files on the board</td></tr>
