@@ -84,6 +84,8 @@ Read the task's `TASK_GUIDE_Txxx.md` `## Dependencies & Reachability` section (`
 
 Completion criterion: reachability check run (or explicitly skipped as N/A) and its result folded into the Phase 1 findings set.
 
+**Startup-reads check (T129).** Compare the implementing agent's final-report line `Startup reads: <paths>` against the spawn prompt's `**Startup reads**` block. A Permanent-Rule read (`PROJECT_SPEC.md`, the TASK_GUIDE, the `agents/` role guide) missing from the line is a **P1 process finding**; a missing line counts as all missing. Lives here because Phase 0.5 already checks spawn/guide conformance before the reviewers run.
+
 ---
 
 #### Phase 1 — Run Always-On Reviewers
