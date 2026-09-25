@@ -8,7 +8,6 @@
 ## Board
 
 ### Todo
-- [ ] **T130** — The site describes the agent-focus work (T124–T129) and stops contradicting it | Frontend-Implementer | C1 | Risk: Low | P1
 > **Batch 2026-09-25 — tokenization refactor (T124–T127).** Authority: `docs/ddr/0009-measure-token-work-from-transcripts-and-aim-at-focus.md`,
 > `docs/token-focus-finding-2026-09-25.md`. All four build on the integration branch `tokenization-refactor` cut from `main` (`4f43bcf`);
 > each task worktree branches from it and merges back; `main` receives the set in one merge after the batch passes Stage 5.
@@ -73,6 +72,7 @@
 
 
 ### In Progress
+- [ ] **T130** — The site describes the agent-focus work (T124–T129) and stops contradicting it | Frontend-Implementer | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T130.md` | Review: `tasks/TASK_REVIEW_T130.md` | Depends on: T125, T127, T129 | Registered 2026-09-25 from the user's "update the site for this improvement" | **In Progress** — Stage 3 started 2026-09-25, worktree `wt-t130` on `feat/t130-site-agent-focus`, branched from `tokenization-refactor`
 
 
 
