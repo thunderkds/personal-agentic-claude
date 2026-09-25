@@ -2262,3 +2262,9 @@ New plan: T124 meter → T125 memory slice in the spawn prompt → T126 compact-
 context → T127 verbatim rule + over-engineering reviewer (carried D9/D10). DDR-0004 does not cover
 T125: it measured spawn-*prompt* size, not the agent's own reads. → see DDR-0009,
 `docs/token-focus-finding-2026-09-25.md`
+
+**T128/T129 registered on `tokenization-refactor` (2026-09-25), by user choice over a separate branch.**
+Both close gaps the batch's own measurement found on the first slice-carrying spawn (T126): the meter's
+first-edit boundary ignored Bash writes (T128), and a headless agent skipped Permanent-Rule startup reads
+(T129: explicit `**Startup reads**` block + non-blocking spawn warning + report line checked at Stage 4).
+The batch merges to `main` only after both, so `main` never carries a known-inaccurate metric.
