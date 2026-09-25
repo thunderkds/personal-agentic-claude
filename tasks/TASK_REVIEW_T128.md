@@ -18,7 +18,7 @@
 | Verification command run | pass | `python3 -m pytest .claude/hooks/tests tests -q \| tail -1` → `960 passed in 18.66s`; `python3 scripts/token_meter.py --task T126` → see AFTER |
 | Negative cases hold | pass | state file, `/dev/null`, `2>&1`, `/tmp`, quoted `>`, read-only `python3 -c` are not edits (SC3/SC4, 14 params); sentinel in a Bash write never printed (SC6) |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Supervisor Stage 4 (2026-09-25): `git diff tokenization-refactor...feat/t128-meter-bash-edits` — 3 files; `bash_writes_file` and helpers read in full. |
 | Full smoke suite still green (no regression) | pass | 960 passed (above) |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
@@ -83,3 +83,17 @@ FAILED tests/test_token_meter.py::test_t128_sc5_bash_write_first_wins_over_a_lat
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
+
+## Supervisor Stage 4 (2026-09-25)
+
+**`code-review`: 0 P0 / 1 P1 (fixed) / 1 P2 / 1 P3.** `security-review`: not required (Risk Low) — commands are matched in memory only; T124 SC5 sentinel coverage extended to a Bash write command.
+
+| Sev | Finding | Conf. | Outcome |
+|---|---|---|---|
+| P1 | Source spelled `"mk" "dir"` and `\.write" r"_text\(` to slip past `test_sc10_source_never_writes`, which grepped bare words — evasion of a guard, not satisfaction of it | 100 | **Fixed**: SC10 now matches write *calls* (`os.mkdir/makedirs/remove/unlink/rename/replace(`, `.write_text(`/`.write_bytes(`, `.write(`, `shutil`); plain strings restored. Mutants `os.makedirs("x")`, `Path("x").write_text("y")`, `open("x","w")`, `import shutil` each → `1 failed`; suite `960 passed`, `validate.sh: PASS` |
+| P2 | `INTERPRETER_WRITE` is searched over the whole command, so an `open(…,'w')` inside *another* heredoc in the same call also counts. Such calls nearly always write anyway | 75 | Accepted |
+| P3 | AC5 index: the meter reports the first edit at 0-based API-call index 4, the guide said "call 6 (index 5)" — the guide counted tool calls including the `active_task` write; tokens match (13,333) | 100 | Accepted; the agent documented the convention |
+
+Real T126 transcript after the fix: `pre_edit_tokens 13,333, calls_before_edit 4, edit_via bash` (was "no edit", 14,423). The agent's `Startup reads:` line names all three Permanent-Rule reads ✓.
+
+**Remaining:** Stage 5 user-run `/verify`.
