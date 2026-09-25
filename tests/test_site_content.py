@@ -630,6 +630,35 @@ def test_slice_caps_on_page_match_memory_slice_source():
     )
 
 
+def test_agent_focus_table_reads_we_apply_to_save_idea_from():
+    headers = re.findall(r"<th>(.*?)</th>", _agent_focus_body(), re.DOTALL)
+    assert headers == ["We apply", "To save", "Idea from"], (
+        f"agent-focus table headers are {headers}, want We apply / To save / Idea from"
+    )
+
+
+def test_agent_focus_names_all_six_mechanisms():
+    body = _agent_focus_body().lower()
+    for name in ("memory slice", "startup reads", "response standard",
+                 "over-engineering reviewer", "compact-advisor", "measure before keeping"):
+        assert name in body, f"agent-focus section does not name the mechanism {name!r}"
+
+
+def test_agent_focus_credits_the_three_source_repos():
+    # Read the "Idea from" column only: prose elsewhere in the section (row 6 says
+    # "headroom-style") must not satisfy a credit that was dropped from its row.
+    rows = re.findall(r"<tr>(.*?)</tr>", _agent_focus_body(), re.DOTALL)
+    credits = [re.findall(r"<td>(.*?)</td>", r, re.DOTALL)[-1].strip().lower()
+               for r in rows if "<td>" in r]
+    for repo in ("headroom", "caveman", "ponytail"):
+        assert repo in credits, f"no agent-focus row credits {repo} in its Idea-from column"
+
+
+def test_agent_focus_states_purpose_not_figures():
+    body = _agent_focus_body()
+    assert "%" not in body, "agent-focus section carries a percent figure; write words, not numbers"
+
+
 def _manifest_ships_scripts():
     with open(MANIFEST_PATH, encoding="utf-8") as f:
         for line in f:
