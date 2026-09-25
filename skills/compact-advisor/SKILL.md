@@ -12,9 +12,9 @@ form the user can invoke directly instead of waiting for you to notice.
 
 ### Karpathy Operational Commands
 
-- **Ask vs. Guess**: This is a judgment call based on observed session behavior, not a measurable
-  token count — no tool exposes your own context size. Never claim a precise number; report what you
-  actually observed.
+- **Ask vs. Guess**: Your context size is measurable — the session transcript records every call's
+  size — so quote the measured number, never an estimate of it. The verdict stays a judgment call:
+  the number informs it, it does not decide it.
 - **Simplicity First**: One verdict, one reason, one recommended action. No score, no dashboard.
 - **Surgical Changes**: This skill only produces a recommendation. It never calls `/compact` or
   `compact-memory` itself — both are user-invoked; you cannot trigger either programmatically.
@@ -38,6 +38,12 @@ form the user can invoke directly instead of waiting for you to notice.
 These are different mechanisms with different scope. Answer both, independently:
 
 **a. Live conversation context** (`/compact` territory — user-invoked only):
+- **Measure first**: run `python3 scripts/token_meter.py --current --json` and quote `context_now`
+  and the top entry of `top_content_kinds` (e.g. "180k tokens, 40% Bash output"). If the command
+  fails, say so in one line and fall back to the judgment signals below. 150k is a **reference
+  point** — a third of past Supervisor calls ran above it — not a trigger: a large number with no
+  sign of losing track can still be "looks fine". With two sessions open in one project the newest
+  transcript may be the other one; say so if the numbers look wrong.
 - Have you had to ask the user to re-state or re-confirm something from earlier this session?
 - Has the user corrected the same *kind* of thing more than once?
 - Is this session covering multiple unrelated tasks/topics end-to-end (a sign it's overdue for a

@@ -274,7 +274,8 @@ def test_sc9_json_keys_are_as_documented():
     session = run_json("--session", FIX / "session" / "proj-e" / "sess-comp.jsonl")
     assert set(session) == {"prices", "session"}
     assert set(session["session"]) == {"transcript", "calls", "spend_usd", "latest_context_tokens",
-                                       "composition", "malformed_lines"}
+                                       "context_now", "context_peak", "calls_over_150k",
+                                       "top_content_kinds", "composition", "malformed_lines"}
 
 
 def test_every_json_key_is_documented_in_the_module_docstring():
@@ -282,7 +283,8 @@ def test_every_json_key_is_documented_in_the_module_docstring():
     docstring = source.split('"""')[1]
     for key in ("projects_dir", "prices", "summary", "spawns", "counterfactual", "session",
                 "pre_edit_carry_share_pct", "recall_risk_pct", "latest_context_tokens",
-                "composition", "excluded_short", "unparsed"):
+                "composition", "excluded_short", "unparsed", "context_now", "context_peak",
+                "calls_over_150k", "top_content_kinds"):
         assert key in docstring, key
 
 
@@ -316,3 +318,112 @@ def test_entries_without_message_id_are_separate_calls(tmp_path):
         (project / "s.jsonl").write_text("\n".join(lines) + "\n")
     data = run_json("--projects-dir", tmp_path)
     assert data["summary"]["api_calls"] == 6
+
+
+# --- T126 — --current resolves the running session's transcript -------------------
+
+def _usage(ctx_read):
+    return {"input_tokens": 1, "output_tokens": 1, "cache_read_input_tokens": ctx_read,
+            "cache_creation_input_tokens": 0}
+
+
+def _call(mid, ctx, text="x", tool=None):
+    block = ({"type": "tool_use", "id": "t_" + mid, "name": "Bash", "input": {"command": text}}
+             if tool else {"type": "text", "text": text})
+    return json.dumps({"type": "assistant", "message": {"id": mid, "usage": _usage(ctx - 1),
+                                                          "content": [block]}})
+
+
+def _slug_dir(tmp_path, cwd):
+    root = tmp_path / "projects"
+    slug = re.sub(r"[/.]", "-", str(cwd))
+    (root / slug).mkdir(parents=True)
+    return root, root / slug
+
+
+def _set_mtime(path, t):
+    os.utime(path, (t, t))
+
+
+def test_current_picks_newest_top_level_transcript_and_ignores_subagents(tmp_path):
+    """SC1 + SC2. M1 (oldest) and M2 (include subagents/) turn this RED."""
+    cwd = tmp_path / "work.dir" / "wt"
+    cwd.mkdir(parents=True)
+    root, slug = _slug_dir(tmp_path, cwd)
+    (slug / "a.jsonl").write_text(_call("m1", 100000) + "\n")
+    (slug / "b.jsonl").write_text(_call("m2", 100000) + "\n")
+    (slug / "b").mkdir()
+    (slug / "b" / "subagents").mkdir()
+    (slug / "b" / "subagents" / "agent-z.jsonl").write_text(_call("m3", 100000) + "\n")
+    _set_mtime(slug / "a.jsonl", 1000)
+    _set_mtime(slug / "b.jsonl", 2000)
+    _set_mtime(slug / "b" / "subagents" / "agent-z.jsonl", 3000)
+    data = run_json("--current", "--cwd", cwd, "--projects-dir", root)
+    assert data["session"]["transcript"] == "b.jsonl"
+
+
+def test_current_missing_slug_dir_exits_2_naming_the_path(tmp_path):
+    """SC3."""
+    root = tmp_path / "projects"
+    root.mkdir()
+    result = run("--current", "--cwd", tmp_path / "nowhere", "--projects-dir", root)
+    assert result.returncode == 2
+    assert str(root / re.sub(r"[/.]", "-", str(tmp_path / "nowhere"))) in result.stderr
+
+
+def test_current_reports_context_now_peak_and_over_150k(tmp_path):
+    """SC4: contexts 100k, 160k, 170k -> now 170k, peak 170k, over-150k 2."""
+    cwd = tmp_path / "w"
+    cwd.mkdir()
+    root, slug = _slug_dir(tmp_path, cwd)
+    (slug / "s.jsonl").write_text("\n".join(
+        [_call("m1", 100000), _call("m2", 160000), _call("m3", 170000)]) + "\n")
+    s = run_json("--current", "--cwd", cwd, "--projects-dir", root)["session"]
+    assert (s["context_now"], s["context_peak"], s["calls_over_150k"]) == (170000, 170000, 2)
+    assert len(s["top_content_kinds"]) <= 3
+
+
+def test_current_peak_can_exceed_now(tmp_path):
+    cwd = tmp_path / "w"
+    cwd.mkdir()
+    root, slug = _slug_dir(tmp_path, cwd)
+    (slug / "s.jsonl").write_text("\n".join([_call("m1", 200000), _call("m2", 50000)]) + "\n")
+    s = run_json("--current", "--cwd", cwd, "--projects-dir", root)["session"]
+    assert (s["context_now"], s["context_peak"], s["calls_over_150k"]) == (50000, 200000, 1)
+
+
+def test_current_never_prints_transcript_content(tmp_path):
+    """SC5: extends T124 SC5 to --current."""
+    cwd = tmp_path / "w"
+    cwd.mkdir()
+    root, slug = _slug_dir(tmp_path, cwd)
+    (slug / "s.jsonl").write_text(_call("m1", 1000, SENTINEL, tool=True) + "\n"
+                                  + _call("m2", 2000, SENTINEL) + "\n")
+    for extra in ([], ["--json"]):
+        result = run("--current", "--cwd", cwd, "--projects-dir", root, *extra)
+        assert result.returncode == 0, result.stderr
+        assert SENTINEL not in result.stdout + result.stderr
+
+
+def test_current_rejects_combination_with_session(tmp_path):
+    assert run("--current", "--session", tmp_path / "x.jsonl").returncode == 2
+
+
+def test_top_content_kinds_are_ranked_by_share_not_first_seen(tmp_path):
+    """T126 Stage 4 finding: the top kinds were the first three kinds seen, not the largest."""
+    usage = {"input_tokens": 1, "output_tokens": 1, "cache_read_input_tokens": 1000,
+             "cache_creation_input_tokens": 1000}
+    def call(i, content):
+        return {"type": "assistant", "message": {"id": f"m{i}", "usage": usage, "content": content}}
+    lines = [
+        {"type": "user", "message": {"role": "user", "content": "hi"}},                   # small, first seen
+        call(1, [{"type": "tool_use", "id": "t1", "name": "Bash", "input": {}}]),
+        {"type": "user", "message": {"role": "user", "content": [
+            {"type": "tool_result", "tool_use_id": "t1", "content": "x" * 50_000}]}},  # large, seen later
+        call(2, []), call(3, []),
+    ]
+    path = tmp_path / "s.jsonl"
+    path.write_text("\n".join(json.dumps(line) for line in lines) + "\n")
+    top = run_json("--session", path)["session"]["top_content_kinds"]
+    assert top[0]["kind"] == "tool_result:Bash"
+    assert [k["share_pct"] for k in top] == sorted((k["share_pct"] for k in top), reverse=True)
