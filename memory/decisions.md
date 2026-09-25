@@ -2246,3 +2246,8 @@ pack **survives update untouched**, because an activated copy was never lock-tra
 
 **Merge order was chosen, not incidental**: T116 was finished first but merging it onto a two-day-red
 `main` would have made its CI run meaningless, so T122 landed first.
+
+**T124 (planned 2026-09-24)** — saved originals of compressed Bash output live **inside the repo** at
+`.claude/hooks/.state/output/<session>/`, by user choice over the Supervisor's outside-repo
+recommendation (manageability). Accepted costs: secrets in the working tree for ≤ 24 h, commit safety
+resting on `.gitignore:52`, a hook-owned prune, and a `grep -r` path filter. → see DDR-0008

@@ -110,6 +110,15 @@ def test_ci_runs_the_drift_guard_itself():
     )
 
 
+def test_ci_installs_pytest_for_shell_suite_dependency():
+    """The menu shell suite invokes pytest and must have it on the runner."""
+    text = _ci_yml_text()
+    assert "python3-pytest" in text, (
+        "ci.yml must install python3-pytest because "
+        "test_cli_and_project_menus.sh invokes python3 -m pytest"
+    )
+
+
 def test_excluded_suites_still_exist_and_are_really_excluded():
     """An EXCLUDED_SUITES entry for a file that was deleted, or that ci.yml
     quietly started wiring anyway, is a stale exclusion — catch it rather
