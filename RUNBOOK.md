@@ -117,6 +117,14 @@ v2.0.0 moves canon from `.claude/agents/` and `.claude/skills/` to plain root an
 **Deployed URL**: [`https://personal-agentic-claude.vercel.app/`](https://personal-agentic-claude.vercel.app/)
 (verified live 2026-09-06 — HTTP 200, served HTML byte-identical to this repo's `site/index.html`).
 
+**A push to `main` on GitHub deploys production automatically** (Vercel Git integration).
+Observed 2026-09-25: `git push github tokenization-refactor:main` moved `main` `be1b10a..4639ea3`,
+and seconds later the live URL served a page byte-identical to `main`'s `site/index.html` — with no
+Vercel CLI involved (it is not installed on the pushing machine). Anything merged to `main` is
+therefore public at once. **That path has no preview step**: nothing is staged before production.
+To get a preview, push a non-`main` branch — Vercel builds a preview per branch *if* the
+integration's defaults are on (confirm in the Vercel dashboard; not verified here).
+
 Separate from the harness's own release above: this deploys `site/index.html` (the public marketing
 page) to Vercel. Config lives in `vercel.json` at the repo root; it declares `site` as the
 **output directory only** and sets no build/install/framework command — this is a static-file
@@ -129,7 +137,11 @@ project-management file stay off the public URL because they are outside `site/`
 Vercel is trusted to guess correctly.
 
 **Scope of what gets uploaded is a separate question, and `outputDirectory` does not answer it.**
-The Vercel CLI transmits the project source tree to Vercel's build infrastructure on every deploy;
+**`.vercelignore` governs CLI uploads only.** On the automatic Git path Vercel clones the full
+repository on its own side, so `memory/`, `tasks/` and the rest already reach Vercel's build
+infrastructure on every push to `main`; still only `site/` is served. The operator may disconnect
+the Git integration (Vercel dashboard) to stop that, or accept it — this file does not choose.
+For the manual CLI route below, the Vercel CLI transmits the project source tree to Vercel's build infrastructure on every deploy;
 `outputDirectory` governs only what is *served* from the result. Without `.vercelignore`, this
 repo's `memory/` (project decisions, learnings, event traces), `tasks/`, and `docs/` would be sent
 to a third party and retained there on every `vercel` invocation — never at a public URL, but off
@@ -138,8 +150,9 @@ a bare `*` and re-admits only `site/` and `vercel.json`. A denylist was rejected
 open the first time anyone adds a directory. `tests/test_vercel_config.py` asserts the allowlist
 form and asserts that `memory/`, `tasks/`, `docs/`, and `PROJECT_KANBAN*` are never re-admitted.
 
-**This deploy is operator-run.** No agent, hook, or CI workflow triggers any of the commands below.
-The operator runs them by hand from a terminal with the Vercel CLI installed and authenticated.
+**Manual / rollback route.** The commands below are not the normal path — a push to `main` already
+deploys. They are for a deliberate hand-run deploy or a rollback, from a terminal with the Vercel CLI
+installed and authenticated.
 
 1. **One-time link** (per machine, per project) — associates this repo with a Vercel project:
    ```sh
