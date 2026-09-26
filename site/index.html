@@ -203,6 +203,7 @@
       <li><a href="#providers">Providers</a></li>
       <li><a href="#repository-layout">Repository layout</a></li>
       <li><a href="#memory-system">Memory system</a></li>
+      <li><a href="#verifier">easy-verifier-mcp</a></li>
       <li><a href="#options">Options</a></li>
     </ul>
   </nav>
@@ -593,6 +594,21 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 </tbody>
 </table>
 </div>
+</section>
+
+<section id="verifier">
+<h2>easy-verifier-mcp</h2>
+<p class="lead">
+  A separate companion tool, not part of this kit: a no-LLM evidence engine you can run alongside Stage 4 review.
+</p>
+<ul>
+  <li>No LLM and no model API key — ratings are deterministic rules over cited metrics</li>
+  <li>Seven independently callable dimensions, from architecture to blast-radius</li>
+  <li>Auditable coverage — a "found 4/6" always shows the sources it did not find</li>
+  <li>Read-only and local — never runs the target repo's code, no outbound network</li>
+  <li>Kit-aware mode treats this kit's specs, task guides and memory as ground truth</li>
+</ul>
+<p><a href="https://github.com/thunderkds/easy-verifier-mcp" target="_blank" rel="noopener noreferrer">easy-verifier-mcp on GitHub</a></p>
 </section>
 
 <section id="options">

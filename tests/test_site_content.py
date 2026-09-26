@@ -677,3 +677,52 @@ def test_page_does_not_name_token_meter_while_scripts_are_not_shipped():
         "page names token_meter, but MANIFEST does not ship scripts/ — an install "
         "would not get it"
     )
+
+
+# ---------------------------------------------------------------------------
+# T135 — the Reference section introducing easy-verifier-mcp as a companion
+# tool. The kit does not call it anywhere, so the section must not claim so.
+# ---------------------------------------------------------------------------
+
+VERIFIER_REPO_URL = "https://github.com/thunderkds/easy-verifier-mcp"
+
+
+def _verifier_section_body():
+    m = re.search(r'<section id="verifier">(.*?)</section>', _page_text(), re.DOTALL)
+    assert m, 'page has no <section id="verifier">'
+    return m.group(1)
+
+
+def test_verifier_section_is_linked_from_the_reference_nav_group():
+    text = _page_text()
+    nav = re.search(r"<nav\b[^>]*>(.*?)</nav>", text, re.DOTALL).group(1)
+    reference = nav[nav.index("Reference"):]
+    assert 'href="#verifier"' in reference, "Reference nav group has no #verifier link"
+    assert _top_level_section_ids().index("verifier") == (
+        _top_level_section_ids().index("memory-system") + 1
+    ), "#verifier must sit right after #memory-system (before #options)"
+    assert _top_level_section_ids().index("options") == (
+        _top_level_section_ids().index("verifier") + 1
+    )
+
+
+def test_verifier_section_names_the_tool_and_links_the_repo_safely():
+    body = _verifier_section_body()
+    assert re.search(r"<h2>[^<]*easy-verifier-mcp[^<]*</h2>", body), "h2 must name easy-verifier-mcp"
+    assert (
+        f'href="{VERIFIER_REPO_URL}" target="_blank" rel="noopener noreferrer"' in body
+    ), "section must link the repo with target=_blank rel=noopener noreferrer"
+
+
+def test_verifier_section_is_short_with_four_to_six_highlights():
+    body = _verifier_section_body()
+    highlights = re.findall(r"<li>", body)
+    assert 4 <= len(highlights) <= 6, f"expected 4-6 highlights, found {len(highlights)}"
+    assert len(body.strip().splitlines()) <= 20, "verifier section must stay within ~20 lines"
+
+
+def test_verifier_section_does_not_claim_the_kit_uses_it():
+    body = _verifier_section_body().lower()
+    assert "separate" in body, "section must say it is a separate tool"
+    for phrase in ("the kit uses", "ships with", "built in", "required"):
+        assert phrase not in body, f"verifier section must not say {phrase!r}"
