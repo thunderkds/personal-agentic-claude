@@ -70,3 +70,27 @@
 ```
 - Write for a reader who hasn't followed the project, above all when asking them to decide: plain words, a task ID or internal term gets a few words saying what it is, the one thing to read or act on in bold, technical depth only when asked.
 ```
+
+**AFTER**: `CLAUDE.md:35-36` and `agents/general-agent-template.md:62-63` (commit `0025d19`), byte-identical: the eighth line reworded per R1 (three clauses split by `;`, bold clause moved to the ninth) and the ninth added per R2. `CLAUDE.md` is 202 lines (<= 202, R4).
+
+**Tests**: RED before the edit: `4 failed, 2 passed` (`tests/test_response_standard.py`, pins 8 -> 9, presence test probes both lines). Baseline repoints, each commented `T133 round 2`, only where a test broke: `T070_BASELINE_REF` and `T133_BASELINE_REF` -> `0025d19` in `test_agent_guide_dedup.py`; `CLAUDE.md` line cap 201 -> 202 in `test_vital_slice.py`. Full suite `python3 -m pytest tests/ .claude/hooks/tests/ -q` -> `979 passed in 12.70s`.
+
+**Mutation controls (R5)**, pasted output:
+
+```
+$ M1: delete ninth line from CLAUDE.md only
+201 CLAUDE.md
+FAILED tests/test_response_standard.py::test_t103_ac1_ac4_claude_md_carries_the_six_rules_byte_identical_to_the_template
+FAILED tests/test_response_standard.py::test_t103_ac2_claude_md_states_the_rules_it_does_not_merely_point
+FAILED tests/test_response_standard.py::test_t133_plain_language_rule_is_in_both_channels
+3 failed, 3 passed in 0.02s
+$ M2: delete ninth line from both
+E           AssertionError: the plain-language rule (probe 'One focus per reply: bold only the one thing') is not a Response Standard bullet in general-agent-template.md
+FAILED tests/test_response_standard.py::test_t103_ac1_ac4_claude_md_carries_the_six_rules_byte_identical_to_the_template
+FAILED tests/test_response_standard.py::test_t103_ac2_claude_md_states_the_rules_it_does_not_merely_point
+FAILED tests/test_response_standard.py::test_t103_ac3_template_still_carries_the_standard_for_sub_agents
+FAILED tests/test_response_standard.py::test_t133_plain_language_rule_is_in_both_channels
+4 failed, 2 passed in 0.03s
+$ restored
+979 passed in 12.70s
+```
