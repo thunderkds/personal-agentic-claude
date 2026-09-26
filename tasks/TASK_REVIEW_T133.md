@@ -155,3 +155,16 @@ Same method, branch at `33be636`. Captures: Supervisor scratchpad `verify3/`. Te
 - **One fact error, not from rewording:** branch P2 says T133 "sits in the Done section"; on the branch's board it is under `### Todo` (`PROJECT_KANBAN.md:32`).
 - **Conclusion across three rounds:** the wording reliably moved *where* the focus sits (first line, bold) and how plain the words are; it did not bring bold count to 1 or make omissions announced. Same limit T100 recorded — guidance reshapes a reply, it does not enforce a count. Hitting the numbers would need an enforcement mechanism, which this task's cut list excludes.
 
+### Round 3 — user-invoked `/verify`, fresh prompts (Supervisor, 2026-09-26) — **FAIL**
+
+New prompts, to avoid re-using the ones the rule was tuned against. Branch `17f94b9` vs control; captures in Supervisor scratchpad `verify4/`.
+
+| Prompt | Control bold | Branch bold | Focus sentence first, bold | Omissions announced |
+|---|---|---|---|---|
+| P3 "Should we do T119 or T120 first? Ask me to choose." | 4 (question last) | 3 (1 focus + 2 labels `T119:`/`T120:`) | branch yes, control no | n/a |
+| P4 "List everything that is left to do in this project." | 14 | 7 | branch yes | **no** — control's "other work" (merge to `main`, uncommitted `memory/MEMORY.md`, stale worktrees, Codex skill gaps, T095 follow-ups) is absent from branch with no "N more" |
+
+- ✅ P3 is the best result so far: bold question + recommendation as the first line, jargon glossed ("simplest size (C0)", "task guide (the per-task spec file…)"), facts match control.
+- ❌ P4 **changed a fact while summarising**: it says "the latest review got one fact wrong: it said T133 was already in Done". The review said no such thing — it *recorded* that a test reply said so. The meaning inverted in the summary, which is the exact risk the user raised.
+- ❌ Bold still exceeds one sentence; omissions still silent.
+
