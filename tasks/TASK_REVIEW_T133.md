@@ -60,3 +60,13 @@
 **DELTA**: asked "what's the state of the project?", the Supervisor now explains each task it names in plain words instead of listing internal shorthand, and a decision question to the user opens with the decision in bold.
 
 **WITNESS**: Supervisor session, 2026-09-26, on the user's `/verify` invocation — four headless Supervisor runs (2 control, 2 branch), independent of the implementing agent.
+
+---
+
+### Round 2
+
+**BEFORE** (non-executable change; verbatim prior content, captured 2026-09-26 before any round 2 implementation commit). `CLAUDE.md:35` and `agents/general-agent-template.md:62`, the eighth rule, with no ninth line after it; `CLAUDE.md` is 201 lines; tests pin `== 8` rule lines:
+
+```
+- Write for a reader who hasn't followed the project, above all when asking them to decide: plain words, a task ID or internal term gets a few words saying what it is, the one thing to read or act on in bold, technical depth only when asked.
+```
