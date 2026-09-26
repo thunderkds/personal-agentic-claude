@@ -195,3 +195,25 @@ on the Supervisor's own replies (Success Criterion 5).
 - [ ] Tests written AND pass — output pasted into `tasks/TASK_REVIEW_T133.md` (Hard-Stop Gate 5)
 - [ ] `/verify` run by the user — Supervisor A/B on a real status question
 - [ ] Supervisor notified: task ready for Stage 4 review
+
+---
+
+## Round 2 — tighten the rule (user, 2026-09-26, after Stage 5)
+
+Stage 5 passed, but the A/B showed two gaps, and the user asked for them to be closed before merge:
+- **Too much bold.** The branch reply bolded list labels (`Done:`, `T117:`) as well as its main point, so nothing stood out.
+- **Long sentences and meaning.** The user asked how a reworded long sentence keeps its meaning. The rule said nothing about it.
+
+User's direction: one focus per reply; split long sentences, never cut them; don't pile up things to focus on.
+
+**Round 2 ACs** (AC1–AC7 above still hold; AC1's "at most two lines" budget now uses both):
+
+| # | Criterion | Traces to |
+|---|-----------|-----------|
+| R1 | The eighth rule line becomes exactly: `- Write for a reader who hasn't followed the project, above all when asking them to decide: plain words; a task ID or internal term gets a few words saying what it is; technical depth only when asked.` | user: plain words, questions first |
+| R2 | A ninth line is added, exactly: `- One focus per reply: bold only the one thing to decide or do (else a one-line summary), never labels; show at most three items and offer the rest; split a long sentence rather than cut it, keeping every number and "not/only/unless".` | user: one focus, split not cut, too much highlighting |
+| R3 | Both lines are byte-identical in `CLAUDE.md` and `agents/general-agent-template.md`; count pins 8 → 9; the presence test probes both lines. | T103 two channels |
+| R4 | `CLAUDE.md` ≤ 202 lines (AC6). Baseline repoints only where a test actually breaks, each commented T133 round 2. | AC6/AC7 |
+| R5 | Mutation controls re-run: delete the ninth line from `CLAUDE.md` only → RED; from both → RED. Output pasted into `TASK_REVIEW_T133.md` under a `Round 2` note. | Gate 5 |
+
+**Round 2 Stage 5** (Supervisor, re-run on the user's authority): the same two prompts, old vs new. Count the bold items in each reply (target 1) and the listed items (target ≤3), and compare the replies fact by fact: any fact lost or changed = FAIL.
