@@ -94,3 +94,21 @@ FAILED tests/test_response_standard.py::test_t133_plain_language_rule_is_in_both
 $ restored
 979 passed in 12.70s
 ```
+
+---
+
+## Round 2 — Stage 5 re-run (Supervisor, 2026-09-26) — **FAIL against the round 2 target; meaning held**
+
+Same method as round 1: fresh headless Supervisor (`claude -p --permission-mode plan`), control = main checkout (7 rules), branch = `wt-t133` at `3619061` (9 rules), same two prompts, n=1 per arm. Captures: Supervisor scratchpad `verify2/{old,new}_p{1,2}.txt`.
+
+| Measure | Target | Control P1 / P2 | Branch P1 / P2 |
+|---|---|---|---|
+| Bold spans | 1 | 8 / 7 | 4 / 4 |
+| Listed items | ≤ 3 | 3-step plan + 2 options / 7+ | 3 / 3 |
+| Facts lost or changed by rewording | 0 | — | P1: 0. P2: 0 changed; 3 dropped without "ask for the rest" (uncommitted `memory/MEMORY.md`, ~44 stale worktrees, T132's open `/_src` check) |
+
+- **Bold: not met.** The branch halves bold use but still bolds 3 extras: in P1 the labels `Why:` / `Before closing:` / `Alternative:` — which the rule names ("never labels") — and in P2 the lead sentence of each bullet.
+- **"Offer the rest": not met.** P2 capped the list at three but did not say more exists; three facts the control reported vanished silently. That is the meaning-loss the user asked about, arriving through omission rather than rewording.
+- **Meaning under rewording: held.** P1 facts match the control one for one (T116 removed `prompt_packs`; all terminal reads go through `tty_read`; `^D` at the project-type menu defaults to New project, deliberate per `setup.sh:290`; `Proceed?` still follows). P2's "`main` is frozen, `v2` is the working branch" is not a rewording error — it restates `memory/MEMORY.md:74`.
+- **Control contamination (note):** the control P2 was already fairly plain and led with a bold summary. It read the T133 guide and board describing the rule, so a status question is no longer a clean control for this task.
+
