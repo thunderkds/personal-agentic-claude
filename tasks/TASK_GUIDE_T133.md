@@ -217,3 +217,18 @@ User's direction: one focus per reply; split long sentences, never cut them; don
 | R5 | Mutation controls re-run: delete the ninth line from `CLAUDE.md` only → RED; from both → RED. Output pasted into `TASK_REVIEW_T133.md` under a `Round 2` note. | Gate 5 |
 
 **Round 2 Stage 5** (Supervisor, re-run on the user's authority): the same two prompts, old vs new. Count the bold items in each reply (target 1) and the listed items (target ≤3), and compare the replies fact by fact: any fact lost or changed = FAIL.
+
+---
+
+## Round 3 — make the focus rule concrete (user, 2026-09-26)
+
+Round 2's re-check (`TASK_REVIEW_T133.md`, Round 2 section) failed two targets: 4 bold spans per reply against a target of 1 (labels still bolded), and three facts dropped from a status reply without saying more existed. The user chose another round over accepting it.
+
+| # | Criterion | Traces to |
+|---|-----------|-----------|
+| R3-1 | The ninth rule line becomes exactly: `- One focus per reply: the only bold text is one sentence — the thing to decide or do (else a one-line summary); show at most three items, and if you leave any out, say how many and offer them; split a long sentence rather than cut it, keeping every number and "not/only/unless".` The eighth line is unchanged. | round 2 FAIL: bold, silent drops |
+| R3-2 | Byte-identical in `CLAUDE.md` and `agents/general-agent-template.md`; still 9 rule lines; `CLAUDE.md` ≤ 202 lines. The presence test's probe for the ninth line moves to text that exists only in the new wording (so the old wording fails it). | T103, AC6 |
+| R3-3 | Mutation: restoring the round 2 ninth line in both files → RED. Output pasted under a `### Round 3` note. | Gate 5 |
+
+**Round 3 Stage 5**: same two prompts and the same measures as round 2 (bold spans = 1, items ≤ 3, any omitted item announced with a count, no fact changed).
+
