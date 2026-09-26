@@ -90,3 +90,27 @@ def test_sensitive_dirs_not_admitted_by_vercelignore():
             f".vercelignore re-admits {leaked[1:]!r} — that path would be "
             f"uploaded to Vercel on every deploy"
         )
+
+
+RUNBOOK = os.path.join(ROOT, "RUNBOOK.md")
+
+
+def _landing_site_section():
+    with open(RUNBOOK, encoding="utf-8") as f:
+        text = f.read()
+    start = text.index("## Deploying the landing site")
+    end = text.find("\n## ", start + 1)
+    return text[start:end if end != -1 else len(text)]
+
+
+def test_runbook_says_push_to_main_deploys():
+    """T132 — the Vercel project is Git-connected, so a push to `main` deploys
+    production. The RUNBOOK must say so and must not call the deploy operator-run."""
+    section = _landing_site_section()
+    assert "push to `main`" in section and "deploys production" in section, (
+        "RUNBOOK § Deploying the landing site must state that a push to `main` "
+        "deploys production"
+    )
+    assert "operator-run" not in section.lower(), (
+        "RUNBOOK calls the deploy operator-run, but a push to `main` deploys it"
+    )

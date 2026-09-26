@@ -115,7 +115,11 @@ T069_BASELINE_REF = "8d6d56b"
 # place, CLAUDE.md stays at 200 lines, no other rule reworded, nothing collapsed into agent guides.
 # Merged on `tokenization-refactor` (T127 + T125 both edit CLAUDE.md in disjoint lines): the pin
 # moves to the merge commit that carries the combined file (`cb2163a`, set in the commit after it).
-T070_BASELINE_REF = "cb2163a"
+#
+# REPOINTED AGAIN by T133 (`cb2163a` -> `274a52a`): T133 adds the eighth Response Standard rule
+# (one line) to CLAUDE.md, so `cb2163a` is now the file's own unfixed state. Repointed, NOT
+# deleted, assertion body untouched; CLAUDE.md gains that one line only.
+T070_BASELINE_REF = "c3016fa"  # T133 round 3: ninth line reworded (same line count)
 
 # T082's own edit commit (same commit as the repoint above). T082 adds a mandatory Base Rule bullet
 # to `general-agent-template.md` too (the same untrusted-content pointer) — a legitimate, required
@@ -425,7 +429,12 @@ T100_BASELINE_REF = "c87097e"
 # floor and strict `<`. `998166d` is T127's edit commit.
 T127_BASELINE_REF = "998166d"
 
-AC7_ROLE_BASELINE = {"c-infra": T127_BASELINE_REF}  # key must match ROLE_GUIDES above
+# REPOINTED AGAIN by T133 for `c-infra` only: the eighth Response Standard rule adds ~240 chars to
+# the TEMPLATE, breaching c-infra's T127 floor. backend/frontend/qa keep T066's floor and strict
+# `<`. `274a52a` is T133's edit commit.
+T133_BASELINE_REF = "c3016fa"  # T133 round 3: ninth line is longer than round 2's
+
+AC7_ROLE_BASELINE = {"c-infra": T133_BASELINE_REF}  # key must match ROLE_GUIDES above
 
 
 def baseline_loaded_chars(role: str) -> int:

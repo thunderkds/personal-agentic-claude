@@ -59,7 +59,7 @@ LINE_CAPS = {
     "agents/frontend.md": 142,
     "agents/common-infrastructure.md": 137,
     "agents/qa.md": 129,
-    "CLAUDE.md": 200,
+    "CLAUDE.md": 202,  # T133 round 2: ninth Response Standard rule (guide AC6 allows <=202)
     TASK_GUIDE_TEMPLATE: 197,
 }
 

@@ -2681,3 +2681,18 @@ evidence the instruction channel works — **not** evidence the model changed.
 - **DDR-0009 window closed at 5 spawns:** median pre-edit 19.8k vs 16.8k baseline — the memory slice
   removes the MEMORY.md read but mandatory reads dominate; narrowing a guide's Files-Must-NOT-Touch to
   exact paths cut T131's slice from 20 generic lines to 14 (still none on-topic).
+
+## Pushing `main` deploys the site (2026-09-25, T132 filed)
+
+- The Vercel project is Git-connected: `git push github …:main` (`be1b10a..4639ea3`) put the new page
+  live within seconds with no CLI run (`curl` of the live URL `diff -q` `main`'s `site/index.html` →
+  identical). RUNBOOK and `PROJECT_SPEC_SITE.md` still say the deploy is operator-only — T132 corrects
+  them. Until then: treat every push to `main` as a production site deploy. Whether `.vercelignore` applies to Git-connected builds is **not
+  established** — Vercel's docs say only the built-in default exclusions are CLI-only and are silent on
+  `.vercelignore` (T132 Stage 4 caught the Supervisor asserting it; check with a deployment's `/_src`).
+- **Check a platform claim against its docs before writing it into an Acceptance Criterion** (T132
+  Stage 4 P1). The Supervisor's guide had the agent write "`.vercelignore` governs CLI uploads only" as
+  fact; Vercel's docs say that only of the built-in default exclusions. An AC is copied faithfully by
+  the implementer, so an unverified claim in the guide ships as documentation. `/_src` on the
+  production domain redirects anonymous visitors to Vercel's login — the source check needs the
+  operator's account.

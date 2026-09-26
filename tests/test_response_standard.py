@@ -72,8 +72,8 @@ def test_t103_ac1_ac4_claude_md_carries_the_six_rules_byte_identical_to_the_temp
 
     # Anti-vacuity: if the section moved or was renamed in the template, this
     # test would otherwise compare two empty lists and pass saying nothing.
-    assert len(template_rules) == 7, (
-        f"expected 7 Response Standard bullet lines in {TEMPLATE.name}, found "
+    assert len(template_rules) == 9, (
+        f"expected 9 Response Standard bullet lines in {TEMPLATE.name}, found "
         f"{len(template_rules)}: {template_rules}"
     )
 
@@ -90,8 +90,8 @@ def test_t103_ac2_claude_md_states_the_rules_it_does_not_merely_point():
     text = CLAUDE_MD.read_text(encoding="utf-8")
 
     # Positive: the rules are actually present, as their own lines.
-    assert len(_rule_lines(text)) == 7, (
-        "CLAUDE.md does not carry the seven Response Standard rule lines; a pointer is not enough "
+    assert len(_rule_lines(text)) == 9, (
+        "CLAUDE.md does not carry the nine Response Standard rule lines; a pointer is not enough "
         "for the Supervisor, whose session the harness does not auto-inject the template into."
     )
 
@@ -117,6 +117,26 @@ def test_t103_ac3_template_still_carries_the_standard_for_sub_agents():
         "the '## Response Standard' section is gone from the template — sub-agents receive it as "
         "their system prompt and would silently lose it"
     )
-    assert len(_rule_lines(template)) == 7, (
-        "the template's Response Standard section no longer lists all seven rules"
+    assert len(_rule_lines(template)) == 9, (
+        "the template's Response Standard section no longer lists all nine rules"
     )
+
+
+# --------------------------------------------------------------------------
+# T133 — replies read plainly; the rule reaches both channels.
+# --------------------------------------------------------------------------
+def test_t133_plain_language_rule_is_in_both_channels():
+    probes = [
+        "technical depth only when asked",  # T133 round 2: the eighth line
+        "the only bold text is one sentence",  # T133 round 3: the ninth line (round 2 probe was "bold only the one thing")
+    ]
+    template_rules = _rule_lines(TEMPLATE.read_text(encoding="utf-8"))
+    claude_rules = _rule_lines(CLAUDE_MD.read_text(encoding="utf-8"))
+    # Anti-vacuity: a template that lost a rule must fail here, not skip.
+    for probe in probes:
+        assert any(probe in ln for ln in template_rules), (
+            f"the plain-language rule (probe {probe!r}) is not a Response Standard bullet in {TEMPLATE.name}"
+        )
+        assert any(probe in ln for ln in claude_rules), (
+            f"the plain-language rule (probe {probe!r}) is not a Response Standard bullet in CLAUDE.md"
+        )

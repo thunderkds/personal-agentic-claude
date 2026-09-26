@@ -29,7 +29,7 @@ assume they know nothing about this repo's pipeline, agents, or vocabulary.
 - No search, no client-side routing, no framework, no build step, no package.json.
 - No per-skill detail pages — one line per skill on one page.
 - No analytics, no cookies, no forms, no external asset hosts.
-- No automated deploy from CI. The operator runs the deploy.
+- No CI workflow in this repo deploys the site. Deploy is Vercel's Git integration: a push to `main` deploys production. The CLI steps in `RUNBOOK.md` are the manual/rollback route.
 
 ## Stack decision
 
