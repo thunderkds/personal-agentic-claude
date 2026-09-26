@@ -112,3 +112,27 @@ Same method as round 1: fresh headless Supervisor (`claude -p --permission-mode 
 - **Meaning under rewording: held.** P1 facts match the control one for one (T116 removed `prompt_packs`; all terminal reads go through `tty_read`; `^D` at the project-type menu defaults to New project, deliberate per `setup.sh:290`; `Proceed?` still follows). P2's "`main` is frozen, `v2` is the working branch" is not a rewording error — it restates `memory/MEMORY.md:74`.
 - **Control contamination (note):** the control P2 was already fairly plain and led with a bold summary. It read the T133 guide and board describing the rule, so a status question is no longer a clean control for this task.
 
+
+---
+
+### Round 3
+
+**BEFORE** (verbatim round 2 ninth line, `CLAUDE.md:36`, `agents/general-agent-template.md:63`):
+
+```
+- One focus per reply: bold only the one thing to decide or do (else a one-line summary), never labels; show at most three items and offer the rest; split a long sentence rather than cut it, keeping every number and "not/only/unless".
+```
+
+**Mutation control R3-3**: round 2 ninth line put back in both files, then restored.
+
+```
+$ python3 -m pytest tests/test_response_standard.py -q
+tests/test_response_standard.py:137: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_response_standard.py::test_t133_plain_language_rule_is_in_both_channels
+1 failed, 5 passed in 0.02s
+$ restored
+979 passed in 14.01s
+```
+
+Baselines repointed (T133 round 3) to edit commit `c3016fa` in `.claude/hooks/tests/test_agent_guide_dedup.py` lines 122, 435: the CLAUDE.md byte-identity check and c-infra size floor both broke on the longer ninth line. `CLAUDE.md` = 202 lines. Round 3 Stage 5 re-run: not done here (Supervisor).

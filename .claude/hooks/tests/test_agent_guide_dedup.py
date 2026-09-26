@@ -119,7 +119,7 @@ T069_BASELINE_REF = "8d6d56b"
 # REPOINTED AGAIN by T133 (`cb2163a` -> `274a52a`): T133 adds the eighth Response Standard rule
 # (one line) to CLAUDE.md, so `cb2163a` is now the file's own unfixed state. Repointed, NOT
 # deleted, assertion body untouched; CLAUDE.md gains that one line only.
-T070_BASELINE_REF = "58a5001"  # T133 round 3: ninth line reworded (same line count)
+T070_BASELINE_REF = "c3016fa"  # T133 round 3: ninth line reworded (same line count)
 
 # T082's own edit commit (same commit as the repoint above). T082 adds a mandatory Base Rule bullet
 # to `general-agent-template.md` too (the same untrusted-content pointer) — a legitimate, required
@@ -432,7 +432,7 @@ T127_BASELINE_REF = "998166d"
 # REPOINTED AGAIN by T133 for `c-infra` only: the eighth Response Standard rule adds ~240 chars to
 # the TEMPLATE, breaching c-infra's T127 floor. backend/frontend/qa keep T066's floor and strict
 # `<`. `274a52a` is T133's edit commit.
-T133_BASELINE_REF = "58a5001"  # T133 round 3: ninth line is longer than round 2's
+T133_BASELINE_REF = "c3016fa"  # T133 round 3: ninth line is longer than round 2's
 
 AC7_ROLE_BASELINE = {"c-infra": T133_BASELINE_REF}  # key must match ROLE_GUIDES above
 
