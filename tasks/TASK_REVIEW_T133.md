@@ -33,8 +33,21 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (non-executable change; verbatim prior content, captured 2026-09-26 before any implementation commit). `CLAUDE.md:26-34` and `agents/general-agent-template.md:49-61` end the Response Standard list with the seventh rule and nothing about vocabulary or highlighting:
+
+```
+### Response Standard
+
+- Lead with the answer or verdict; method and caveats come after.
+- Asking for a decision: recommendation first, alternatives one line each.
+- Cut sentences restating the question or narrating what you read.
+- A table only to compare on 3+ dimensions, never to lay out one thing.
+- Say what is blocked and what you need, not all you could do.
+- Don't re-list open items your last reply listed; point back in a line.
+- Quote code, exact error text, file paths, commands and security warnings verbatim; terse never means paraphrased.
+```
+
+`CLAUDE.md` is 200 lines. `tests/test_response_standard.py` pins `== 7` rule lines (three places).
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 

@@ -32,6 +32,7 @@ Verbatim list and how reports cite evidence: `docs/claude-md/token-economy.md`.
 - Say what is blocked and what you need, not all you could do.
 - Don't re-list open items your last reply listed; point back in a line.
 - Quote code, exact error text, file paths, commands and security warnings verbatim; terse never means paraphrased.
+- Write for a reader who hasn't followed the project, above all when asking them to decide: plain words, a task ID or internal term gets a few words saying what it is, the one thing to read or act on in bold, technical depth only when asked.
 
 **Self-monitoring for context overwhelm.** Accuracy degrades as a session's context grows and the
 Supervisor can't self-judge that on demand — watch for losing track of an earlier decision, repeated

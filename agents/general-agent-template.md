@@ -59,6 +59,7 @@ fenced `## Output Format` block, never the block.
 - Say what is blocked and what you need, not all you could do.
 - Don't re-list open items your last reply listed; point back in a line.
 - Quote code, exact error text, file paths, commands and security warnings verbatim; terse never means paraphrased.
+- Write for a reader who hasn't followed the project, above all when asking them to decide: plain words, a task ID or internal term gets a few words saying what it is, the one thing to read or act on in bold, technical depth only when asked.
 
 ---
 
