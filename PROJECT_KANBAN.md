@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-09-25
+**Last updated**: 2026-09-26
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -28,6 +28,8 @@
 > creep back into a live doc.
 
 
+
+- [ ] **T133** — **Replies to the user read plainly — technical detail on request.** Registered 2026-09-26 by the user: *"make the response from agent look more human reading, not the technical response in some case."* T100/T103 fixed a reply's *shape*; nothing governs its *vocabulary*, so a well-shaped reply still reads as an engineering log (bare task IDs, project shorthand, hook names). Observed on the Supervisor's own `/wake` reply the same day, which obeyed all seven rules. User chose at Stage 2: **scope = replies to the user only** (Kanban, Evidence, `memory/`, commits stay technical — the audit trail; HTML reports and the `wake` format are out) and **default = plain first, detail on request** (gloss task IDs/internal terms, keep code/errors/paths verbatim). User note, same day: the rule applies **above all to questions put to the user** (chat questions, `AskUserQuestion` prompts/options), and a plain reply **bolds the one thing the user must read or act on**. Vital slice: ≤2 rule lines, byte-identical in `CLAUDE.md` and the template, test-pinned. Stage 5 must be a user-run `/verify` A/B on the Supervisor's own replies — T103's lesson: that is the only surface where the rule differs | Common-Infrastructure-Agent | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T133.md` | Registered 2026-09-26
 
 - [ ] **T121** — **`^D` at the packs prompt aborts the installer silently: exit 1, no message, output stops mid-line.** Found at T115's Stage 5 `/verify` by probing `^D` at each of the three menus, and **verified pre-existing on `main`** (same exit 1, same silence, nothing written) — so this is not a T115 regression and was deliberately not folded into it. Root cause is not the menu it appears at: `^D` at the project-type menu falls through to New project and then dies at `prompt_packs`, whose bare `read -r pack_choices` returns non-zero under `set -e` and kills the script before the plan is ever shown. T115 is what made this *visible* — it gave `choose_action` and `prompt_clis` graceful `Cancelled — nothing was changed` handling, so two menus now cancel cleanly and the third dies mute, which reads as a crash rather than a cancel. Nothing is written either way, so this is a UX/consistency defect, not data loss. Fix shape is almost certainly to give `prompt_packs` the same `tty_read`/`cancel_run` treatment the other two prompts already have, rather than a bare `read -r`; confirm whether any other bare `read` survives in the installer while there. **Do not assume the `set -e` interaction without re-observing it** — the T115 review recorded a plausible-sounding but wrong account of this same behaviour from reading the code, corrected only when it was actually run | Common-Infrastructure-Agent | C1 | Risk: Low | P2 | Registered 2026-09-23 from T115 Stage 5
 
