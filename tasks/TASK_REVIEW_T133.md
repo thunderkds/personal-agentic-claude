@@ -136,3 +136,22 @@ $ restored
 ```
 
 Baselines repointed (T133 round 3) to edit commit `c3016fa` in `.claude/hooks/tests/test_agent_guide_dedup.py` lines 122, 435: the CLAUDE.md byte-identity check and c-infra size floor both broke on the longer ninth line. `CLAUDE.md` = 202 lines. Round 3 Stage 5 re-run: not done here (Supervisor).
+
+---
+
+## Round 3 — Stage 5 re-run (Supervisor, 2026-09-26) — **FAIL against the numeric targets; direction holds**
+
+Same method, branch at `33be636`. Captures: Supervisor scratchpad `verify3/`. Tests: `979 passed`; Supervisor mutation (round 2 ninth line restored in both files) → `1 failed, 5 passed`.
+
+| Measure | Target | Control P1 / P2 | Branch P1 / P2 |
+|---|---|---|---|
+| Bold spans | 1 | 8 / 14 | 8 / 4 |
+| Listed items | ≤ 3 | 4 steps + 3 options / 10+ | 4 steps + 2 options / 3 |
+| Omitted items announced with a count | yes | — | P2: no (Todo backlog, stale handoff note, worktrees dropped silently) |
+| Opens with the one focus, bolded | — | P1 no / P2 yes | **P1 yes / P2 yes** |
+
+- **What moved:** both branch replies now open with the decision or next step as a bold sentence (P1: "Decide whether to close T121 as already fixed, or narrow it…"; P2: "Next step: you run `/verify` on this branch…"). P2 bold fell 14 → 4 and its list is 3 items.
+- **What did not:** P1 still bolds each plan step's lead sentence (8 spans, same as control) and lists 4 steps + 2 options. P2 still bolds bullet labels and drops items without saying so.
+- **One fact error, not from rewording:** branch P2 says T133 "sits in the Done section"; on the branch's board it is under `### Todo` (`PROJECT_KANBAN.md:32`).
+- **Conclusion across three rounds:** the wording reliably moved *where* the focus sits (first line, bold) and how plain the words are; it did not bring bold count to 1 or make omissions announced. Same limit T100 recorded — guidance reshapes a reply, it does not enforce a count. Hitting the numbers would need an enforcement mechanism, which this task's cut list excludes.
+
