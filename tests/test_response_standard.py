@@ -128,7 +128,7 @@ def test_t103_ac3_template_still_carries_the_standard_for_sub_agents():
 def test_t133_plain_language_rule_is_in_both_channels():
     probes = [
         "technical depth only when asked",  # T133 round 2: the eighth line
-        "One focus per reply: bold only the one thing",  # T133 round 2: the ninth line
+        "the only bold text is one sentence",  # T133 round 3: the ninth line (round 2 probe was "bold only the one thing")
     ]
     template_rules = _rule_lines(TEMPLATE.read_text(encoding="utf-8"))
     claude_rules = _rule_lines(CLAUDE_MD.read_text(encoding="utf-8"))

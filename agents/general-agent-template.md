@@ -60,7 +60,7 @@ fenced `## Output Format` block, never the block.
 - Don't re-list open items your last reply listed; point back in a line.
 - Quote code, exact error text, file paths, commands and security warnings verbatim; terse never means paraphrased.
 - Write for a reader who hasn't followed the project, above all when asking them to decide: plain words; a task ID or internal term gets a few words saying what it is; technical depth only when asked.
-- One focus per reply: bold only the one thing to decide or do (else a one-line summary), never labels; show at most three items and offer the rest; split a long sentence rather than cut it, keeping every number and "not/only/unless".
+- One focus per reply: the only bold text is one sentence — the thing to decide or do (else a one-line summary); show at most three items, and if you leave any out, say how many and offer them; split a long sentence rather than cut it, keeping every number and "not/only/unless".
 
 ---
 
