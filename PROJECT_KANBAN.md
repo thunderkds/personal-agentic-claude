@@ -74,6 +74,7 @@
 
 
 ### In Progress
+- [ ] **T136** — The spawn model is picked per CLI from the task's Complexity, never hard-coded to Claude names | Common-Infrastructure-Agent | C2 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T136.md` | Review: `tasks/TASK_REVIEW_T136.md` | Depends on: none | Registered 2026-09-28 by the user: switching the implementer to Codex left the Supervisor's "sonnet" pick unusable — `craft-spawn-prompt` step 5 maps C0–C3 to Claude-only names. Fix: a `## CLI Model Table` in PROJECT_SPEC.md (row per CLI, column per level), filled at Stage 1; the spawn step looks it up and STOPs to ask when a row or cell is missing | **In Progress (round 2)** — `/verify` 2026-09-28 FAIL: with no CLI named the skill silently assumed `claude` (`claude · C2 → sonnet`); named CLIs all correct. Round 2 adds AC10 (no CLI → STOP and ask) + M4. Round 1: Stage 3 `b4698eb`, Stage 4 P1 fixed `ef6e194`
 
 
 
@@ -82,7 +83,6 @@
 
 
 ### Ready for Review
-- [ ] **T136** — The spawn model is picked per CLI from the task's Complexity, never hard-coded to Claude names | Common-Infrastructure-Agent | C2 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T136.md` | Review: `tasks/TASK_REVIEW_T136.md` | Depends on: none | Registered 2026-09-28 by the user: switching the implementer to Codex left the Supervisor's "sonnet" pick unusable — `craft-spawn-prompt` step 5 maps C0–C3 to Claude-only names. Fix: a `## CLI Model Table` in PROJECT_SPEC.md (row per CLI, column per level), filled at Stage 1; the spawn step looks it up and STOPs to ask when a row or cell is missing | **Ready for Review** — Stage 3 2026-09-28 by `common-infrastructure` (sonnet) in `wt-t136` (`b4698eb`); Stage 4 2026-09-28: P1 ×1 fixed (`ef6e194`), P2 ×1 + P3 ×2 noted, 991 passed with the current board; awaiting user `/verify`
 
 
 ### Done
