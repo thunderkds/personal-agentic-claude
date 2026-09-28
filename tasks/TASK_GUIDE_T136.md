@@ -43,6 +43,13 @@ User, 2026-09-28: *"when the claude generate the Taskguide, it will contains the
 3. `craft-spawn-prompt` step 5 takes the CLI as an input, looks up the cell, and its output + Default Notification name both CLI and level (`codex · C1 → <model>`), no longer `[haiku/sonnet/opus]`.
 4. The three stale/hard-coded places above are corrected to point at the table.
 
+**Round 2 (2026-09-28, from the user's `/verify`):** FAIL — every named-CLI case worked
+(`claude · C2 → sonnet`, `claude · C0 → haiku`, codex/gemini → STOP), but a call that names **no**
+CLI silently assumed `claude` and returned `claude · C2 → sonnet` with no warning — the original
+defect one step earlier. Fix: AC10 + M4 only. Keep the round-1 work as is; the three Stage 4 P2/P3
+notes (dead code in the AC8 test, step 6 reflow, AC5 duplicate `or`) may be cleaned up in the same
+commit since they sit in the same two files — nothing else.
+
 **Out of scope:**
 - `model:` in `agents/*.md` frontmatter — it is Claude Code's own default for that agent and the spawn step overrides it; left as is.
 - `scripts/token_audit.py` and its tests (`haiku|sonnet|opus` tier regexes) — a reporting tool; register a follow-up if it matters, don't change it here.
@@ -81,11 +88,13 @@ User, 2026-09-28: *"when the claude generate the Taskguide, it will contains the
 | 7 | `templates/TASK_GUIDE_template.md` Mandatory Startup item 5 no longer tells the agent to take a *model* from the role-guide matrix | detail 4 |
 | 8 | Outside `tasks/`, `memory/`, `reports/`, `docs/adr/`, `docs/ddr/`, `CLAUDE_LEGACY.md`, `scripts/token_audit.py`, `.claude/hooks/tests/test_token_audit_*`, and `agents/*.md` frontmatter, `git grep -nE 'C[0-3] ?→ ?(haiku\|sonnet\|opus)'` returns nothing | detail 4 |
 | 9 | New `tests/test_cli_model_table.py` asserts AC1–AC8 as text checks (style of `tests/test_spawn_startup_reads.py`) | drift guard |
+| 10 | **Round 2.** Step 5 states: **no CLI named** by the caller → STOP and ask which CLI will run the task; never assume `claude` (or any CLI). The Default Notification's STOP form covers it (e.g. `STOP: no CLI named — ask which CLI runs <Task ID>`). A new test in `tests/test_cli_model_table.py` asserts it | `/verify` 2026-09-28 step 5: with no CLI named the skill silently returned `claude · C2 → sonnet` |
 
 **Mutation controls** (paste results in the review's "Negative cases hold" row):
 **M1** — re-add `C0→haiku, C1→sonnet` to step 5 → AC3/AC8 test RED.
 **M2** — delete the STOP-and-ask sentence from step 5 → AC4 test RED.
 **M3** — delete the `## CLI Model Table` heading from the template → AC1 test RED.
+**M4** (round 2) — delete the no-CLI-named STOP sentence from step 5 → AC10 test RED.
 
 ### Verification Command (exact, runnable)
 
