@@ -8,6 +8,10 @@
 ## Board
 
 ### Todo
+> **Batch 2026-09-25 — tokenization refactor (T124–T127).** Authority: `docs/ddr/0009-measure-token-work-from-transcripts-and-aim-at-focus.md`,
+> `docs/token-focus-finding-2026-09-25.md`. All four build on the integration branch `tokenization-refactor` cut from `main` (`4f43bcf`);
+> each task worktree branches from it and merges back; `main` receives the set in one merge after the batch passes Stage 5.
+
 
 > **Batch 2026-09-12 — Easy Kit installer rework (T109–T117).** Authority: `docs/adr/0002-one-confirmed-menu-driven-installer.md`
 > (Accepted), `BRAINSTORMING_LOG.md`. All nine build on the integration branch `feat/easy-kit-one-command`
@@ -24,8 +28,6 @@
 > creep back into a live doc.
 
 
-
-- [ ] **T136** — The spawn model is picked per CLI from the task's Complexity, never hard-coded to Claude names | Common-Infrastructure-Agent | C2 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T136.md` | Review: `tasks/TASK_REVIEW_T136.md` | Depends on: none | Registered 2026-09-28 by the user: switching the implementer to Codex left the Supervisor's "sonnet" pick unusable — `craft-spawn-prompt` step 5 maps C0–C3 to Claude-only names. Fix: a `## CLI Model Table` in PROJECT_SPEC.md (row per CLI, column per level), filled at Stage 1; the spawn step looks it up and STOPs to ask when a row or cell is missing
 
 - [ ] **T133** — **Replies to the user read plainly — technical detail on request.** Registered 2026-09-26 by the user: *"make the response from agent look more human reading, not the technical response in some case."* T100/T103 fixed a reply's *shape*; nothing governs its *vocabulary*, so a well-shaped reply still reads as an engineering log (bare task IDs, project shorthand, hook names). Observed on the Supervisor's own `/wake` reply the same day, which obeyed all seven rules. User chose at Stage 2: **scope = replies to the user only** (Kanban, Evidence, `memory/`, commits stay technical — the audit trail; HTML reports and the `wake` format are out) and **default = plain first, detail on request** (gloss task IDs/internal terms, keep code/errors/paths verbatim). User note, same day: the rule applies **above all to questions put to the user** (chat questions, `AskUserQuestion` prompts/options), and a plain reply **bolds the one thing the user must read or act on**. Vital slice: ≤2 rule lines, byte-identical in `CLAUDE.md` and the template, test-pinned. Stage 5 must be a user-run `/verify` A/B on the Supervisor's own replies — T103's lesson: that is the only surface where the rule differs | Common-Infrastructure-Agent | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T133.md` | Registered 2026-09-26
 
@@ -72,11 +74,7 @@
 
 
 ### In Progress
-- [ ] **T136** — The spawn model is picked per CLI from the task's Complexity, never hard-coded to Claude names | Common-Infrastructure-Agent | C2 | Risk: Low | P1
-> **Batch 2026-09-25 — tokenization refactor (T124–T127).** Authority: `docs/ddr/0009-measure-token-work-from-transcripts-and-aim-at-focus.md`,
-> `docs/token-focus-finding-2026-09-25.md`. All four build on the integration branch `tokenization-refactor` cut from `main` (`4f43bcf`);
-> each task worktree branches from it and merges back; `main` receives the set in one merge after the batch passes Stage 5. | **In Progress** — Stage 3 started 2026-09-28: `common-infrastructure` (sonnet) in `wt-t136`, branch `feat/t136-cli-model-table`
-
+- [ ] **T136** — The spawn model is picked per CLI from the task's Complexity, never hard-coded to Claude names | Common-Infrastructure-Agent | C2 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T136.md` | Review: `tasks/TASK_REVIEW_T136.md` | Depends on: none | Registered 2026-09-28 by the user: switching the implementer to Codex left the Supervisor's "sonnet" pick unusable — `craft-spawn-prompt` step 5 maps C0–C3 to Claude-only names. Fix: a `## CLI Model Table` in PROJECT_SPEC.md (row per CLI, column per level), filled at Stage 1; the spawn step looks it up and STOPs to ask when a row or cell is missing | **In Progress** — Stage 3 started 2026-09-28: `common-infrastructure` (sonnet) in `wt-t136`, branch `feat/t136-cli-model-table`
 
 
 
