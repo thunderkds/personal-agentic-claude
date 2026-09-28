@@ -75,6 +75,48 @@ Worked lookup, read off this repo's `PROJECT_SPEC.md` `## CLI Model Table` for T
 
 Repo-wide grep after the edits (`git grep -nE 'C[0-3] ?→ ?(haiku|sonnet|opus)'`, same excluded-paths filter as AC8): zero hits outside `tests/test_cli_model_table.py` itself.
 
+---
+
+## Round 2 (AC10 — no CLI named → STOP and ask)
+
+**BEFORE** (doc-only change — verbatim prior content, captured 2026-09-28 before any round-2 implementation commit):
+
+`skills/craft-spawn-prompt/SKILL.md` `#### 5. Recommend spawn model` (round-1 final state, i.e. round-2's BEFORE):
+```
+#### 5. Recommend spawn model
+Takes the CLI as input; look up the guide's `**Complexity Level**` (C0–C3) in that CLI's row in
+`PROJECT_SPEC.md`'s `## CLI Model Table` — that cell is the model. No row/empty cell → **STOP and
+ask the user** (suggest `templates/PROJECT_SPEC_template.md`); never fall back to another CLI's model, never invent one. A two-model cell (`sonnet or opus`) isn't ambiguity — pick per Risk.
+```
+No sentence here covers the caller naming **no CLI at all** — confirmed by re-reading the block above verbatim before editing.
+
+**AFTER**: step 5, post-edit:
+```
+#### 5. Recommend spawn model
+Takes the CLI as input; look up the guide's `**Complexity Level**` (C0–C3) in that CLI's row in
+`PROJECT_SPEC.md`'s `## CLI Model Table` — that cell is the model. No row/empty cell → **STOP and
+ask the user** (suggest `templates/PROJECT_SPEC_template.md`); never fall back to another CLI's model, never invent one. A two-model cell (`sonnet or opus`) isn't ambiguity — pick per Risk. **No CLI named** by the caller at all → **STOP and ask which CLI will run the task**; never assume `claude` or any other CLI as a default.
+```
+Default Notification also updated to name the new STOP form (`STOP: no CLI named — ask which CLI runs <Task ID>`).
+
+**DELTA**: A `craft-spawn-prompt` call with no CLI argument at all now stops and asks instead of silently defaulting to `claude` — closing the exact gap `/verify` caught (`claude · C2 → sonnet` returned with no warning when no CLI was named).
+
+**WITNESS**: common-infrastructure agent, T136 round 2, 2026-09-28 — ran all commands above directly (`Bash` tool calls tagged via `.claude/hooks/.state/active_task`).
+
+### Round 2 Evidence
+
+| Check | Result | Notes / output snippet |
+|-------|--------|------------------------|
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_cli_model_table.py::test_ac10_step5_stops_and_asks_when_no_cli_named` — observed RED before the step-5 edit (`1 failed, 8 passed`), GREEN after (`9 passed in 0.04s`) |
+| Verification command run | ☑ pass | `python3 -m pytest tests/test_cli_model_table.py -q` → `9 passed`; `python3 -m pytest .claude/hooks/tests tests -q \| tail -1` → `1 failed, 991 passed in 12.24s` (same pre-existing out-of-scope `test_find_kanban_section_on_real_current_board` PROJECT_KANBAN.md drift as round 1 — reproduces on the unmodified tree, KANBAN is Files-Must-NOT-Touch); `sh scripts/validate.sh` → `validate.sh: PASS` |
+| Negative cases hold | ☑ pass | **M4** (delete the no-CLI-named STOP sentence) → AC10 RED as predicted (`1 failed, 8 passed`), restored → `9 passed`. Re-ran **M1** (re-add `C0→haiku` map) → AC3+AC8 RED (`2 failed, 7 passed`), **M2** (delete STOP-and-ask sentence) → AC4 RED (`1 failed, 8 passed`), **M3** (delete `## CLI Model Table` heading) → AC1 RED (`1 failed, 8 passed`) — all three still hold unchanged from round 1; all restored, suite re-confirmed GREEN (`9 passed`) |
+| verify | ☐ N/A | User-run per `memory/MEMORY.md` (`verify` skill is user-only) — not run by this agent |
+| Full smoke suite still green (no regression) | ☑ pass | `991 passed, 1 failed` — the 1 failure is the pre-existing, out-of-scope Kanban drift noted above; no regression from this task's diff. Fixing round 2 also required re-tightening `#### 6. Output` back to single-line prose (kept, not reflowed to a numbered list as the round-1 P3 note suggested) and merging the new STOP sentence onto the existing line, to stay within `.claude/hooks/tests/test_spawn_prompt_cache_note.py`'s 80-line `SKILL.md` cap (`test_ac4_added_lines_within_cap_and_no_new_heading` — file is exactly 80 lines; confirmed passing) |
+| Applied same-commit cleanups (optional, per guide) | ☑ done — 2 of 3 | AC8 test's dead code (unused first `git grep` call, dead `"frontmatter" in path` clause, duplicate exclusion check) removed; AC5 test's duplicate `... in skill or ... in skill` simplified to a single check. Step 6 Output reflow **not** applied — restoring it to a numbered list pushed `SKILL.md` over the 80-line cap (`test_ac4_added_lines_within_cap_and_no_new_heading` went RED at 84 then 81 lines); left as single-line prose to keep the suite green, since this cleanup was explicitly optional and the cap test is not |
+| **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | No UI component — doctrine/template text only |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ N/A | Same reason |
+| **UI: Responsiveness at target viewports** | ☐ N/A | Same reason |
+
 **DELTA**: The Supervisor no longer needs Claude installed to pick a spawn model for a Codex (or any other) CLI task — it reads the model straight from that CLI's own row/column in `PROJECT_SPEC.md`, and is forced to stop and ask (never guess a Claude-only name) the moment that CLI has no row or an empty cell for the task's Complexity level.
 
 **WITNESS**: common-infrastructure agent, T136, 2026-09-28 — ran all commands above directly (`Bash` tool calls tagged via `.claude/hooks/.state/active_task`); `memory/event-trace/T136.jsonl` was empty of Bash-tagged entries at the time this file was filled (only pre-verification `Read` calls had landed), so this WITNESS line is the agent's own contemporaneous record, to be cross-checked against the trace by the Stage 4 reviewer.

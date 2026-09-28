@@ -80,7 +80,7 @@ def test_ac4_step5_stops_and_asks_when_no_row_or_empty_cell():
 def test_ac5_output_and_notification_report_cli_and_level():
     skill = _read("skills", "craft-spawn-prompt", "SKILL.md")
     assert "[haiku/sonnet/opus]" not in skill
-    assert "<cli> · <Cn> → <model>" in skill or "<cli> · <Cn> → <model>" in skill
+    assert "<cli> · <Cn> → <model>" in skill
 
 
 def test_ac6_pipeline_stages_points_at_table():
@@ -100,16 +100,21 @@ def test_ac7_task_guide_template_drops_model_from_startup_item5():
     assert "model" not in item5.lower()
 
 
+def test_ac10_step5_stops_and_asks_when_no_cli_named():
+    skill = _read("skills", "craft-spawn-prompt", "SKILL.md")
+    step5 = skill.split("#### 5.", 1)[1].split("#### 6.", 1)[0]
+    assert "no cli named" in step5.lower()
+    assert "stop" in step5.lower() and "ask" in step5.lower()
+    assert "never assume" in step5.lower()
+    assert "claude" in step5.lower().split("no cli named", 1)[1][:200]
+
+
 def test_ac8_no_hardcoded_map_outside_excluded_paths():
     excluded_prefixes = (
         "tasks/", "memory/", "reports/", "docs/adr/", "docs/ddr/",
         "CLAUDE_LEGACY.md", "scripts/token_audit.py",
         ".claude/hooks/tests/test_token_audit_",
         "tests/test_cli_model_table.py",
-    )
-    out = subprocess.run(
-        ["git", "grep", "-nE", r"C[0-3] ?\xe2\x86\x92 ?(haiku|sonnet|opus)"],
-        cwd=ROOT, capture_output=True, text=True,
     )
     # git grep with -E and a unicode arrow needs the literal; use a python-side regex instead
     # to avoid shell/locale issues with the arrow character.
@@ -118,8 +123,6 @@ def test_ac8_no_hardcoded_map_outside_excluded_paths():
     pattern = re.compile(r"C[0-3] ?→ ?(haiku|sonnet|opus)")
     hits = []
     for path in files:
-        if path.startswith(excluded_prefixes) or "agents/" in path and path.endswith(".md") and "frontmatter" in path:
-            continue
         if any(path.startswith(p) for p in excluded_prefixes):
             continue
         full = os.path.join(ROOT, path)

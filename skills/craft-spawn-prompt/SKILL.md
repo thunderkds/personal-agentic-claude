@@ -68,7 +68,7 @@ Read `extract_structural_task_ids()` directly from `.claude/hooks/pre_agent_vali
 #### 5. Recommend spawn model
 Takes the CLI as input; look up the guide's `**Complexity Level**` (C0–C3) in that CLI's row in
 `PROJECT_SPEC.md`'s `## CLI Model Table` — that cell is the model. No row/empty cell → **STOP and
-ask the user** (suggest `templates/PROJECT_SPEC_template.md`); never fall back to another CLI's model, never invent one. A two-model cell (`sonnet or opus`) isn't ambiguity — pick per Risk.
+ask the user** (suggest `templates/PROJECT_SPEC_template.md`); never fall back to another CLI's model, never invent one. A two-model cell (`sonnet or opus`) isn't ambiguity — pick per Risk. **No CLI named** by the caller at all → **STOP and ask which CLI will run the task**; never assume `claude` or any other CLI as a default.
 
 #### 6. Output
 Return: 1. the assembled prompt (fenced, ready for `Agent({ subagent_type, prompt })`); 2. the
@@ -77,4 +77,4 @@ pre-flight verdict; 3. the recommended spawn model as `<cli> · <Cn> → <model>
 The Supervisor reads this output and issues the `Agent()` call itself; this skill never calls it.
 
 ### Communication Protocol
-- **Default Notification**: "craft-spawn-prompt complete for [Task ID]. Flavor: [standard/bugfix]. Pre-flight: [safe/flagged: ...]. Recommended model: [<cli> · <Cn> → <model>, or STOP: no row/cell for <cli>]."
+- **Default Notification**: "craft-spawn-prompt complete for [Task ID]. Flavor: [standard/bugfix]. Pre-flight: [safe/flagged: ...]. Recommended model: [<cli> · <Cn> → <model>, or STOP: no row/cell for <cli>, or STOP: no CLI named — ask which CLI runs <Task ID>]."
