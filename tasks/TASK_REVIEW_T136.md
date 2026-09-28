@@ -120,3 +120,13 @@ Default Notification also updated to name the new STOP form (`STOP: no CLI named
 **DELTA**: The Supervisor no longer needs Claude installed to pick a spawn model for a Codex (or any other) CLI task — it reads the model straight from that CLI's own row/column in `PROJECT_SPEC.md`, and is forced to stop and ask (never guess a Claude-only name) the moment that CLI has no row or an empty cell for the task's Complexity level.
 
 **WITNESS**: common-infrastructure agent, T136, 2026-09-28 — ran all commands above directly (`Bash` tool calls tagged via `.claude/hooks/.state/active_task`); `memory/event-trace/T136.jsonl` was empty of Bash-tagged entries at the time this file was filled (only pre-verification `Read` calls had landed), so this WITNESS line is the agent's own contemporaneous record, to be cross-checked against the trace by the Stage 4 reviewer.
+
+---
+
+## Supervisor Stage 4 — round 2 (2026-09-28)
+
+- Round 2 commit `66b6614` (agent): step 5 gains "**No CLI named** … → **STOP and ask which CLI will run the task**; never assume `claude`"; Default Notification gains `STOP: no CLI named — ask which CLI runs <Task ID>`; new `test_ac10_step5_stops_and_asks_when_no_cli_named`; AC8 dead code and AC5 duplicate `or` cleaned. Step 6 left as one line (optional note, not taken).
+- Supervisor re-ran **M4** (delete the no-CLI sentence) → `1 failed, 8 passed`; restored → `9 passed`. **M1** after the fix below → `2 failed, 7 passed`.
+- **P1 found and fixed** (`60ce88a`): AC8 scanned `PROJECT_KANBAN.md`, and `main`'s board row quotes the `/verify` result (`claude · C2 → sonnet`) — the merged tree would have gone red (`1 failed, 991 passed` with `main`'s board). Boards are records like `tasks/`; added to the exclusions, and the guide's AC8 says so (`8bc1f3b` on `main`).
+- Full suite with `main`'s board swapped in: `992 passed in 12.87s`. `validate.sh: PASS`.
+- Surface re-probe (headless `claude -p`, skill invoked with no CLI named) → `Recommended model: STOP: no CLI named — ask which CLI runs T136.` (round 1: `claude · C2 → sonnet`).
