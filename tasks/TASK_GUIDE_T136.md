@@ -86,7 +86,7 @@ commit since they sit in the same two files — nothing else.
 | 5 | The skill's Output and Default Notification report `<cli> · <Cn> → <model>`; the string `[haiku/sonnet/opus]` is gone | detail 3 |
 | 6 | `docs/claude-md/pipeline-stages.md` Stage 1 item 2 asks, per CLI, for its model at each level C0–C3 and records them in the table; Stage 3 (~line 153) points at the table instead of a hard-coded map | details 1, 4 |
 | 7 | `templates/TASK_GUIDE_template.md` Mandatory Startup item 5 no longer tells the agent to take a *model* from the role-guide matrix | detail 4 |
-| 8 | Outside `tasks/`, `memory/`, `reports/`, `docs/adr/`, `docs/ddr/`, `CLAUDE_LEGACY.md`, `scripts/token_audit.py`, `.claude/hooks/tests/test_token_audit_*`, and `agents/*.md` frontmatter, `git grep -nE 'C[0-3] ?→ ?(haiku\|sonnet\|opus)'` returns nothing | detail 4 |
+| 8 | Outside `tasks/`, `memory/`, `reports/`, the `PROJECT_KANBAN*.md` boards (records that quote results), `docs/adr/`, `docs/ddr/`, `CLAUDE_LEGACY.md`, `scripts/token_audit.py`, `.claude/hooks/tests/test_token_audit_*`, and `agents/*.md` frontmatter, `git grep -nE 'C[0-3] ?→ ?(haiku\|sonnet\|opus)'` returns nothing | detail 4 |
 | 9 | New `tests/test_cli_model_table.py` asserts AC1–AC8 as text checks (style of `tests/test_spawn_startup_reads.py`) | drift guard |
 | 10 | **Round 2.** Step 5 states: **no CLI named** by the caller → STOP and ask which CLI will run the task; never assume `claude` (or any CLI). The Default Notification's STOP form covers it (e.g. `STOP: no CLI named — ask which CLI runs <Task ID>`). A new test in `tests/test_cli_model_table.py` asserts it | `/verify` 2026-09-28 step 5: with no CLI named the skill silently returned `claude · C2 → sonnet` |
 

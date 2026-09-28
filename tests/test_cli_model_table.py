@@ -111,7 +111,7 @@ def test_ac10_step5_stops_and_asks_when_no_cli_named():
 
 def test_ac8_no_hardcoded_map_outside_excluded_paths():
     excluded_prefixes = (
-        "tasks/", "memory/", "reports/", "docs/adr/", "docs/ddr/",
+        "tasks/", "memory/", "reports/", "docs/adr/", "docs/ddr/", "PROJECT_KANBAN",
         "CLAUDE_LEGACY.md", "scripts/token_audit.py",
         ".claude/hooks/tests/test_token_audit_",
         "tests/test_cli_model_table.py",
