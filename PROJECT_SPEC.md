@@ -95,6 +95,20 @@ The supervisor repo (`per-agentic-claude`) is a general framework. A `MANIFEST` 
 
 ---
 
+## CLI Model Table
+
+> Filled at Stage 1. One row per authenticated CLI, one column per Complexity level. At spawn
+> time, `craft-spawn-prompt` looks the task's Complexity Level up in the row for the CLI that will
+> run it and reports `<cli> · <Cn> → <model>`. No row for the CLI, or an empty cell → STOP and ask
+> the user; never fall back to another CLI's model, never invent one.
+
+| CLI | Run command | C0 | C1 | C2 | C3 |
+|---|---|---|---|---|---|
+| claude | `claude` | haiku | sonnet | sonnet or opus | opus |
+| codex | `codex` | | | | |
+
+---
+
 ## Tasks
 
 | ID | Title | Status | Assigned Agent | Complexity | Risk | Priority |

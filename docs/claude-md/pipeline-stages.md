@@ -47,8 +47,12 @@ Guide the user through this checklist step by step.
    - `Skill({ skill: "update-config" })` — configure any automated hooks (e.g. "always run brainstorming before /plan")
 
 2. **Multi-CLI Authentication**
-   Please list every agentic CLI you have authenticated and the exact command to run it.
-   Example: "Claude: claude | Codex: codex | Gemini: gemini"
+   Please list every agentic CLI you have authenticated, the exact command to run it, and which
+   model it should spawn at each Complexity level (C0–C3). Record this as the `## CLI Model Table`
+   in `PROJECT_SPEC.md` (from `templates/PROJECT_SPEC_template.md`): one row per CLI, one column
+   per level. Example: "Claude: claude — C0 haiku, C1 sonnet, C2 sonnet/opus, C3 opus | Codex: codex
+   — [ask the user; never guess a Codex/Gemini model name]". A CLI with no row, or an empty cell for
+   a level, means `craft-spawn-prompt` will STOP and ask rather than pick a model for it.
 
    *(Optional)* For non-trivial codebases, a structural code-graph approach — building a dependency graph of the code — can auto-compute hub/centrality (→ Risk, Stage 2) and a change's code-dependency blast radius (→ review scope, Stage 4). It's optional: if absent, those signals stay manual judgment. See the same note in `CLAUDE_LEGACY.md`.
 
@@ -150,7 +154,7 @@ For every task moved to In Progress:
 - **Pillar 1 gate (before any code):** the spawned agent must confirm the **Requirement Fidelity Gate** in its `TASK_GUIDE_Txxx.md` is checked — restated intent matches the request, terms align with the glossary, and every Acceptance Criterion traces to the requirement. If not, the agent STOPs and asks the Supervisor instead of guessing.
 - **Pillar 2 (implementation):** build the slice test-first (`tdd`), touching only the predicted files. If the slice adds or changes a **DB schema/migration**, run `Skill({ skill: "migration-safety" })` and pass its go/no-go gate **before** the implementation gate goes green.
 - The TASK_GUIDE_Txxx.md already exists in tasks/ — no need to regenerate it.
-- Invoke `Skill({ skill: "craft-spawn-prompt" })` with the task's guide path first — it assembles the spawn prompt, pre-flight-checks it against the spawn hook, and recommends the model per the task's **Complexity** (C0→haiku, C1→sonnet, C2→sonnet/opus, C3→opus). Then issue the `Agent()` call in that worktree using its output.
+- Invoke `Skill({ skill: "craft-spawn-prompt" })` with the task's guide path and the CLI that will run it — it assembles the spawn prompt, pre-flight-checks it against the spawn hook, and recommends the model by looking the task's **Complexity** up in `PROJECT_SPEC.md`'s `## CLI Model Table` for that CLI (no row/empty cell → it stops and asks, never a Claude-name fallback). Then issue the `Agent()` call in that worktree using its output.
 - The sub-agent must read both its TASK_GUIDE_Txxx.md (from tasks/) and the relevant agent guide from agents/.
 - **Memory injection**: Paste the task's **memory slice** in every sub-agent spawn prompt, after the task pointer — the output of `python3 skills/craft-spawn-prompt/scripts/memory_slice.py <guide>`, verbatim: the `memory/MEMORY.md` index lines that name the guide's files, its `Depends on` tasks or its ID (T125). Then the fallback: *"Read `memory/MEMORY.md` in full only if your work reaches a file, hook, skill or decision the slice does not cover."* Do **not** paste the whole hot-tier index (≤50,000 characters); nothing loads it for the agent, so the full file is read only when the slice falls short.
 
