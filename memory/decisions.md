@@ -2268,3 +2268,14 @@ Both close gaps the batch's own measurement found on the first slice-carrying sp
 first-edit boundary ignored Bash writes (T128), and a headless agent skipped Permanent-Rule startup reads
 (T129: explicit `**Startup reads**` block + non-blocking spawn warning + report line checked at Stage 4).
 The batch merges to `main` only after both, so `main` never carries a known-inaccurate metric.
+
+**T136 merged (2026-09-29): the spawn model is picked per CLI, never hard-coded to Claude names.**
+User, switching the implementer to Codex: the Supervisor's "sonnet" pick had no meaning there. The task
+guide already carried only the CLI-neutral Complexity (C0–C3); the Claude-only map lived in
+`craft-spawn-prompt` step 5 and `pipeline-stages.md` Stage 3. Now `PROJECT_SPEC.md` (and its template)
+carry a `## CLI Model Table` (row per CLI, column per level) filled at Stage 1; step 5 looks the cell up
+for the CLI that will run the task and STOPs to ask on no CLI named, no row, or an empty cell — never a
+Claude fallback, never an invented name. This repo's `codex` row is deliberately blank for the user.
+`agents/*.md` `model:` frontmatter and `scripts/token_audit.py` tiers left as is (cut list).
+**Files**: skills/craft-spawn-prompt/SKILL.md, skills/bugfix/SKILL.md, docs/claude-md/pipeline-stages.md,
+templates/PROJECT_SPEC_template.md, templates/TASK_GUIDE_template.md, PROJECT_SPEC.md, tests/test_cli_model_table.py

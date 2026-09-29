@@ -2696,3 +2696,11 @@ evidence the instruction channel works — **not** evidence the model changed.
   the implementer, so an unverified claim in the guide ships as documentation. `/_src` on the
   production domain redirects anonymous visitors to Vercel's login — the source check needs the
   operator's account.
+- **A rule keyed on an input needs a "no input" case** (T136). Nine ACs covered every *named* CLI —
+  row, no row, empty cell — and all passed; the user's `/verify` found that a call naming **no** CLI
+  made the agent silently assume `claude`, the original defect one step earlier. When a step starts
+  "takes X as input", write the missing-X behaviour into the step and an AC for it.
+- **A "string must not appear anywhere" test must skip record files** (T136 Stage 4 P1). AC8 scanned
+  every tracked file for `C2 → sonnet`-style maps; the Supervisor's own KANBAN row quoted the verify
+  result and would have turned `main` red after merge. Boards, like `tasks/` and `memory/`, quote
+  results — exclude them up front.
