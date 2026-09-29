@@ -145,6 +145,7 @@
 - [optimize skill](decisions.md) — optional metric-driven iteration loop; baseline → hypothesis backlog → experiments → converge; hard + judge metrics
 - [code-review project override](decisions.md) — .claude/skills/code-review/SKILL.md overrides built-in
 - [brainstorming upgrade](decisions.md) — added scope tiers (lightweight/standard/deep), one-question-per-turn gate, visual probe gate, claim verification before doc-write
+- [T136 merged: spawn model picked per CLI via `## CLI Model Table`](decisions.md) — C0–C3 stays in the guide; `craft-spawn-prompt` looks up the CLI's row and STOPs on no CLI / no row / empty cell
 
 ### Patterns & Gotchas
 - [v1-site release lessons: evidence, publishing, planning](learnings.md) — a green mutation control means "my mutation didn't land" before "vacuous test", and for "doc D matches source S" the control changes **S**
@@ -251,6 +252,8 @@
 - [LR numbering at write time](learnings.md) — scan directory for highest LR-NNNN immediately before each Write call
 - [user type → LR only](learnings.md) — user-preference insights never route to cold files; scope-creep guard in routing table
 - [skill promotion: code block only](learnings.md) — never auto-save SKILL.md stub; output fenced block and stop; user saves + registers manually
+- [A rule keyed on an input needs a "no input" case](learnings.md) — T136: 9 ACs covered named CLIs; no CLI named silently fell back to claude
+- [A "must not appear" test must skip record files](learnings.md) — T136: AC8 tripped on the KANBAN row quoting the verify result
 
 ### Learning Records
 <!-- One-liner per active LR: - [LR-NNNN slug](memory/learning-records/LR-NNNN-slug.md) — summary -->
