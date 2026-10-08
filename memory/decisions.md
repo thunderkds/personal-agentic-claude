@@ -2279,3 +2279,22 @@ Claude fallback, never an invented name. This repo's `codex` row is deliberately
 `agents/*.md` `model:` frontmatter and `scripts/token_audit.py` tiers left as is (cut list).
 **Files**: skills/craft-spawn-prompt/SKILL.md, skills/bugfix/SKILL.md, docs/claude-md/pipeline-stages.md,
 templates/PROJECT_SPEC_template.md, templates/TASK_GUIDE_template.md, PROJECT_SPEC.md, tests/test_cli_model_table.py
+
+**T137 merged (2026-10-08): a backup is named after the kit version it replaces; Update's `[o]verwrite` backs up too.**
+User: *"update the version for backup file when update"*. Read from source first: backups were counter-named
+(`.bak`, `.bak.N`), the lock recorded no kit version, and Update `o` on a customized file kept **no backup** —
+an ADR-0002 "No silent loss" gap. Now every install/update writes top-level `"kit_commit"` (short SHA of the
+`--depth 1` clone) to `.claude/harness-lock.json`; `setup.sh` reads the *previous* one before the lock is
+rewritten (`HARNESS_PREV_COMMIT`), and `harness_backup_path` names backups `<dst>.bak-<prev>` — date
+`YYYYMMDD` fallback when the lock has none, `.N` on collision. The lock value is project-controlled, so it is
+admitted only as pure hex (no `/` or `..` reaches a path). Update `o` aborts the overwrite if the backup fails.
+Semantics to know: the suffix is "the last kit installed here", not the edit's origin — after `[s]kip` the
+lock still advances (T141 documents it).
+**Files**: lib/harness-fetch.sh, lib/harness-update.sh, setup.sh, tests/test_install_backups.sh,
+tests/test_update.sh, site/index.html, RUNBOOK.md, docs/adr/0002-one-confirmed-menu-driven-installer.md, PROJECT_SPEC.md
+
+**T138 merged (2026-10-08): the site's Overview carries an inline-SVG pipeline diagram.**
+One node per `## Stage` heading of `docs/claude-md/pipeline-stages.md` plus Phase 0, drift-tested in
+`tests/test_site_content.py` (reads the headings at test time). No return arrow: the doc says findings are
+addressed before Stage 5, not sent back to Stage 3. Vertical layout so 320 px needs no second layout.
+**Files**: site/index.html, tests/test_site_content.py

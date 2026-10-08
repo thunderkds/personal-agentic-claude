@@ -2704,3 +2704,12 @@ evidence the instruction channel works — **not** evidence the model changed.
   every tracked file for `C2 → sonnet`-style maps; the Supervisor's own KANBAN row quoted the verify
   result and would have turned `main` red after merge. Boards, like `tasks/` and `memory/`, quote
   results — exclude them up front.
+- **A short git SHA is hex, so the lock's hash-pair regex reads it as a file entry** (T137 Stage 2).
+  `extract_lock_pairs` matched `"<key>": "<hex>"` anywhere in `harness-lock.json`; a top-level
+  `"kit_commit": "abc1234"` would have become a file named `./kit_commit` to Update's removal logic.
+  Fixed by scoping readers to the `"files"` block (`lookup_lock_field` for top-level keys). Any new
+  top-level lock field must stay outside that block — or be non-hex.
+- **Writing a TASK_GUIDE already puts its row in Todo** (T137/T138). `post_write_register_task.py`
+  auto-registers every new `tasks/TASK_GUIDE_Txxx.md` under `### Todo`. Inserting a fresh row under
+  In Progress left a duplicate, and `test_find_kanban_section_on_real_current_board` went red. When
+  spawning, *move* the auto-registered row (and enrich it) instead of adding one.
