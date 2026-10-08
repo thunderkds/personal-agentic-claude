@@ -134,3 +134,16 @@ came from.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
+
+---
+
+## Stage 4 — Supervisor review (2026-10-08)
+
+**code-review: 0 P0 / 0 P1 / 1 P2 / 2 P3.** Supervisor re-ran every suite independently in `wt-t137`: install_backups 17/0, update 38/0, update_removals 30/0, install_update_smoke 9/0, one_command_menu 22/0, pack_catalog 16/0, `validate.sh` rc=0, shellcheck rc=0, pytest `991 passed, 1 failed` — the 1 failure was the Supervisor's own duplicate board rows (Todo stubs from the plan commit), fixed on the integration branch in `board(T137,T138): drop duplicate Todo stubs`; 19/19 after.
+- **P2**: AC1's *Update* path (`write_new_lock`) has no automated `kit_commit` assertion. Verified by hand-probe instead: install `kit_commit=d82da61`, kit advanced, `EASYKIT_ACTION=update` → lock `kit_commit=2cb8fe3`, rc=0. Follow-up, not blocking.
+- **P3**: `PROJECT_SPEC.md:74,82` stale `.bak[.N]` — fixed by the Supervisor (`dcd7845`, spec is Supervisor-owned).
+- **P3**: Update-`o` backup failure exits 2 with summary "(no interactive input)" — wording inaccurate for that cause; accepted.
+- Changes to three pre-existing suites reviewed: rename to the new backup names, and two negative assertions widened (`find … 'tests.bak*'`) — stronger, not weaker.
+- Entry point `harness_backup_path`: present.
+
+**security-review: PASS, 0 actionable** — run manually, scoped to `feat/t137-t138-backups-diagram..feat/t137-versioned-backups` (built-in over-scopes to `origin/HEAD`, recorded repeatedly). `HARNESS_PREV_COMMIT` comes from the project-controlled lock and is admitted only as pure hex (`case ''|*[!0-9a-f]*`), so no `/`/`..` reaches a path; an over-long value fails `mv` closed (file untouched). Update-`o` aborts the overwrite on backup failure (`fd05b16`). Lock lookups now use awk `ENVIRON` exact-key match — no shell interpolation. No new network surface.
