@@ -33,8 +33,19 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured 2026-10-08T15:03:44Z, before any implementation commit, branch `feat/t138-pipeline-diagram` @ 792b486):
+
+```
+$ grep -c 'pipeline-diagram' site/index.html
+0
+$ python3 -m pytest tests/test_site_content.py -q
+34 passed in 0.08s
+$ python3 -m pytest tests/ .claude/hooks/tests/ -q
+FAILED .claude/hooks/tests/test_kanban_section_parsing.py::test_find_kanban_section_on_real_current_board
+1 failed, 991 passed in 14.29s
+```
+
+`#what-you-get` is prose only (verbatim): `<section id="what-you-get"><h2>What you get</h2><p class="lead">A base team of four spawnable sub-agent roles, ...</p></section>` — no diagram. The 1 failure is pre-existing (unrelated to the site; present before my change).
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
