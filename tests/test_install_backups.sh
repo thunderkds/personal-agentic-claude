@@ -4,7 +4,9 @@
 #
 # Self-contained, offline: builds a local fixture "kit" repo and runs the real
 # setup.sh against scratch git repos under mktemp -d via a file:// URL.
-# Covers SC1–SC7 of tasks/TASK_GUIDE_T112.md plus mutation control M1.
+# Covers SC1–SC7 of tasks/TASK_GUIDE_T112.md plus mutation control M1, and
+# T137: a backup is named after the kit version it replaces (<dst>.bak-<commit>),
+# or today's date when the lock records none (a first install, a pre-T137 lock).
 #
 # Run: bash tests/test_install_backups.sh   (or: sh tests/test_install_backups.sh)
 set -u
@@ -22,6 +24,9 @@ pass() { PASS=$((PASS + 1)); printf 'PASS: %s\n' "$1"; }
 fail() { FAIL=$((FAIL + 1)); printf 'FAIL: %s\n' "$1" >&2; }
 
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/backup-test.XXXXXX")
+# A first install has no lock, so no kit version to name a backup after (T137).
+TODAY=$(date +%Y%m%d)
+B=".bak-$TODAY"
 trap 'rm -rf "$WORK"' EXIT INT TERM HUP
 
 # ── Fixture kit repo ─────────────────────────────────────────────────────────
@@ -74,13 +79,13 @@ T=$(new_repo sc1)
 printf '# my project rules\n' > "$T/CLAUDE.md"
 run_setup "$T"; RC=$?
 if [ "$RC" -eq 0 ] \
-   && [ "$(cat "$T/CLAUDE.md.bak")" = '# my project rules' ] \
+   && [ "$(cat "$T/CLAUDE.md$B")" = '# my project rules' ] \
    && grep -q 'Supervisor Guidelines' "$T/CLAUDE.md" \
    && [ "$(grep -c "Backed up your existing './CLAUDE.md'" "$T.log")" -eq 1 ] \
-   && grep -q 'CLAUDE.md -> CLAUDE.md.bak' "$T.log"; then
+   && grep -qF "CLAUDE.md -> CLAUDE.md$B" "$T.log"; then
   # T114: the plan screen names the backup before acting, and the backup
   # itself is still reported exactly once.
-  pass "SC1: CLAUDE.md moved to CLAUDE.md.bak, kit installed, backup named once (and on the plan)"
+  pass "SC1: CLAUDE.md moved to CLAUDE.md$B, kit installed, backup named once (and on the plan)"
 else
   fail "SC1: CLAUDE.md backup (rc=$RC)"; cat "$T.log" >&2
 fi
@@ -90,10 +95,10 @@ T=$(new_repo sc2)
 printf '# my agents\n' > "$T/AGENTS.md"
 run_setup "$T"; RC=$?
 if [ "$RC" -eq 0 ] \
-   && [ "$(cat "$T/AGENTS.md.bak")" = '# my agents' ] \
+   && [ "$(cat "$T/AGENTS.md$B")" = '# my agents' ] \
    && [ "$(cat "$T/AGENTS.md")" = '# AGENTS.md' ] \
-   && grep -q 'AGENTS.md.bak' "$T.log"; then
-  pass "SC2: AGENTS.md moved to AGENTS.md.bak, kit installed, backup named"
+   && grep -qF "AGENTS.md$B" "$T.log"; then
+  pass "SC2: AGENTS.md moved to AGENTS.md$B, kit installed, backup named"
 else
   fail "SC2: AGENTS.md backup (rc=$RC)"; cat "$T.log" >&2
 fi
@@ -104,11 +109,11 @@ mkdir -p "$T/templates"
 printf 'my own template\n' > "$T/templates/mine.md"
 run_setup "$T"; RC=$?
 if [ "$RC" -eq 0 ] \
-   && [ "$(cat "$T/templates.bak/mine.md" 2>/dev/null)" = 'my own template' ] \
+   && [ "$(cat "$T/templates$B/mine.md" 2>/dev/null)" = 'my own template' ] \
    && [ -f "$T/templates/TASK_GUIDE_template.md" ] \
    && [ ! -e "$T/templates/mine.md" ] \
-   && grep -q 'templates.bak' "$T.log"; then
-  pass "SC3: templates/ moved to templates.bak/ with mine.md intact; kit templates/ installed"
+   && grep -qF "templates$B" "$T.log"; then
+  pass "SC3: templates/ moved to templates$B/ with mine.md intact; kit templates/ installed"
 else
   fail "SC3: directory backup (rc=$RC)"; cat "$T.log" >&2
 fi
@@ -125,21 +130,24 @@ else
   fail "SC4: identical content produced a backup (rc=$RC)"; cat "$T.log" >&2
 fi
 
-# ── SC5 — existing .bak is never overwritten; next free .bak.N is used ──────
+# ── SC5 — existing backups are never overwritten; the next free .N is used ──
 T=$(new_repo sc5)
 printf 'current\n'  > "$T/CLAUDE.md"
 printf 'older\n'    > "$T/CLAUDE.md.bak"
+printf 'oldest\n'   > "$T/CLAUDE.md$B"
 run_setup "$T"; RC1=$?
 printf 'current2\n' > "$T/CLAUDE.md"
+sed -i.orig '/"kit_commit"/d' "$T/.claude/harness-lock.json"   # dated name again
 # Second run on an installed project (T114): choose 2) Reinstall in a terminal —
 # with no terminal the default is Update, which keeps the edit instead.
 ( cd "$T" && SUPERVISOR_REPO="file://$FIXTURE" run_in_pty '2\n\n\n\n\n' "bash '$SETUP'" >"$T.log" 2>&1 ); RC2=$?
 if [ "$RC1" -eq 0 ] && [ "$RC2" -eq 0 ] \
    && [ "$(cat "$T/CLAUDE.md.bak")" = 'older' ] \
-   && [ "$(cat "$T/CLAUDE.md.bak.1")" = 'current' ] \
-   && [ "$(cat "$T/CLAUDE.md.bak.2")" = 'current2' ] \
-   && grep -q 'CLAUDE.md.bak.2' "$T.log"; then
-  pass "SC5: CLAUDE.md.bak untouched; backups went to .bak.1 then .bak.2"
+   && [ "$(cat "$T/CLAUDE.md$B")" = 'oldest' ] \
+   && [ "$(cat "$T/CLAUDE.md$B.1")" = 'current' ] \
+   && [ "$(cat "$T/CLAUDE.md$B.2")" = 'current2' ] \
+   && grep -qF "CLAUDE.md$B.2" "$T.log"; then
+  pass "SC5: CLAUDE.md.bak and CLAUDE.md$B untouched; backups went to $B.1 then $B.2"
 else
   fail "SC5: backup numbering (rc=$RC1/$RC2)"; cat "$T.log" >&2
 fi
@@ -161,7 +169,7 @@ fi
 # Reuses SC1–SC3 targets, which all hold backups next to kit files.
 LOCK_BAD=0
 for _n in sc1 sc2 sc3 sc5; do
-  if grep -Eq '\.bak(\.[0-9]+)?"|\.bak(\.[0-9]+)?/' "$WORK/$_n/.claude/harness-lock.json"; then
+  if grep -Eq '\.bak(-[0-9a-f]+)?(\.[0-9]+)?"|\.bak(-[0-9a-f]+)?(\.[0-9]+)?/' "$WORK/$_n/.claude/harness-lock.json"; then
     LOCK_BAD=1
   fi
 done
@@ -186,11 +194,11 @@ mkdir -p "$T/elsewhere"
 printf 'target file\n' > "$T/elsewhere/keep.md"
 ln -s elsewhere "$T/templates"
 run_setup "$T"; RC=$?
-if [ "$RC" -eq 0 ] && [ -L "$T/templates.bak" ] && [ ! -L "$T/templates" ] \
+if [ "$RC" -eq 0 ] && [ -L "$T/templates$B" ] && [ ! -L "$T/templates" ] \
    && [ -f "$T/templates/TASK_GUIDE_template.md" ] \
    && [ "$(cat "$T/elsewhere/keep.md")" = 'target file' ] \
    && [ ! -e "$T/elsewhere/TASK_GUIDE_template.md" ]; then
-  pass "edge: symlinked templates -> link moved to templates.bak, target untouched"
+  pass "edge: symlinked templates -> link moved to templates$B, target untouched"
 else
   fail "edge: symlink handling (rc=$RC)"; cat "$T.log" >&2
 fi
@@ -200,8 +208,8 @@ T=$(new_repo hooks)
 mkdir -p "$T/.claude/hooks"
 printf 'mine\n' > "$T/.claude/hooks/my hook.py"
 run_setup "$T"; RC=$?
-if [ "$RC" -eq 0 ] && [ -f "$T/.claude/hooks.bak/my hook.py" ] \
-   && grep -q "Your own hooks now live in '\./\.claude/hooks\.bak'" "$T.log"; then
+if [ "$RC" -eq 0 ] && [ -f "$T/.claude/hooks$B/my hook.py" ] \
+   && grep -qF "Your own hooks now live in './.claude/hooks$B'" "$T.log"; then
   pass "edge: own .claude/hooks (spaced filename) backed up, settings.json warning printed"
 else
   fail "edge: .claude/hooks backup (rc=$RC)"; cat "$T.log" >&2
@@ -211,7 +219,7 @@ fi
 T=$(new_repo typeswap)
 printf 'not a dir\n' > "$T/templates"
 run_setup "$T"; RC=$?
-if [ "$RC" -eq 0 ] && [ "$(cat "$T/templates.bak")" = 'not a dir' ] \
+if [ "$RC" -eq 0 ] && [ "$(cat "$T/templates$B")" = 'not a dir' ] \
    && [ -f "$T/templates/TASK_GUIDE_template.md" ]; then
   pass "edge: file at a directory path -> backed up, kit directory installed"
 else
@@ -239,6 +247,83 @@ else
   fail "edge: unwritable backup reported success: $RO_OUT"
 fi
 
+# ══ T137 — a backup is named after the kit version it replaces ═══════════════
+# kit_commit <lock> -> the lock's top-level "kit_commit" value ('' if absent)
+kit_commit() {
+  sed -n 's/^  "kit_commit": "\([^"]*\)",*$/\1/p' "$1" 2>/dev/null
+}
+# reinstall <target> -> choose 2) Reinstall in a terminal, accept every default
+reinstall() {
+  ( cd "$1" && SUPERVISOR_REPO="file://$FIXTURE" run_in_pty '2\n\n\n\n\n' "bash '$SETUP'" >"$1.log" 2>&1 )
+}
+A=$(git -C "$FIXTURE" rev-parse --short HEAD)
+
+# ── T137 SC1 / AC1 / AC2 / AC7 — Reinstall names the backup after the old kit ─
+T=$(new_repo t137-sc1)
+run_setup "$T"; RC1=$?
+GOT_A=$(kit_commit "$T/.claude/harness-lock.json")
+printf '# my rules at A\n' > "$T/CLAUDE.md"
+printf 'kit-template v2\n' > "$FIXTURE/templates/TASK_GUIDE_template.md"
+git -C "$FIXTURE" commit -q -am "fixture kit B"
+KIT_B=$(git -C "$FIXTURE" rev-parse --short HEAD)
+reinstall "$T"; RC2=$?
+if [ "$RC1" -eq 0 ] && [ "$RC2" -eq 0 ] && [ "$GOT_A" = "$A" ] && [ "$A" != "$KIT_B" ] \
+   && [ "$(cat "$T/CLAUDE.md.bak-$A" 2>/dev/null)" = '# my rules at A' ] \
+   && [ "$(kit_commit "$T/.claude/harness-lock.json")" = "$KIT_B" ] \
+   && grep -qF "to './CLAUDE.md.bak-$A'" "$T.log" \
+   && grep -qF "moved to <file>.bak-$A first" "$T.log"; then
+  pass "T137 SC1: install records kit_commit=$A; Reinstall at $KIT_B backs up to CLAUDE.md.bak-$A (plan names it); lock now $KIT_B"
+else
+  fail "T137 SC1: versioned Reinstall backup (rc=$RC1/$RC2 lock-before=$GOT_A A=$A B=$KIT_B)"
+  ls -a "$T" >&2; cat "$T.log" >&2
+fi
+
+# ── T137 SC3 / AC3 — a lock with no kit_commit (pre-T137) falls back to the date
+T=$(new_repo t137-sc3)
+run_setup "$T"; RC1=$?
+sed -i.orig '/"kit_commit"/d' "$T/.claude/harness-lock.json"; rm -f "$T/.claude/harness-lock.json.orig"
+printf '# pre-T137 edit\n' > "$T/CLAUDE.md"
+reinstall "$T"; RC2=$?
+if [ "$RC1" -eq 0 ] && [ "$RC2" -eq 0 ] \
+   && [ "$(cat "$T/CLAUDE.md$B" 2>/dev/null)" = '# pre-T137 edit' ] \
+   && [ -z "$(find "$T" -maxdepth 1 -name 'CLAUDE.md.bak-*' ! -name "CLAUDE.md$B")" ] \
+   && [ "$(kit_commit "$T/.claude/harness-lock.json")" = "$KIT_B" ]; then
+  pass "T137 SC3: lock without kit_commit -> backup is CLAUDE.md$B; lock gains kit_commit"
+else
+  fail "T137 SC3: date fallback (rc=$RC1/$RC2)"; ls -a "$T" >&2; cat "$T.log" >&2
+fi
+
+# ── T137 SC4 / AC5 — a taken versioned name is never overwritten ─────────────
+T=$(new_repo t137-sc4)
+run_setup "$T"; RC0=$?
+printf 'edit one\n' > "$T/CLAUDE.md"; reinstall "$T"; RC1=$?
+SUM1=$(cksum < "$T/CLAUDE.md.bak-$KIT_B" 2>/dev/null)
+printf 'edit two\n' > "$T/CLAUDE.md"; reinstall "$T"; RC2=$?
+printf 'edit three\n' > "$T/CLAUDE.md"; reinstall "$T"; RC3=$?
+if [ "$RC0$RC1$RC2$RC3" = 0000 ] \
+   && [ "$(cat "$T/CLAUDE.md.bak-$KIT_B")" = 'edit one' ] \
+   && [ "$(cksum < "$T/CLAUDE.md.bak-$KIT_B")" = "$SUM1" ] \
+   && [ "$(cat "$T/CLAUDE.md.bak-$KIT_B.1" 2>/dev/null)" = 'edit two' ] \
+   && [ "$(cat "$T/CLAUDE.md.bak-$KIT_B.2" 2>/dev/null)" = 'edit three' ]; then
+  pass "T137 SC4: same version backed up 3x -> .bak-$KIT_B (unchanged), .bak-$KIT_B.1, .bak-$KIT_B.2"
+else
+  fail "T137 SC4: collision numbering (rc=$RC0/$RC1/$RC2/$RC3)"; ls -a "$T" >&2
+fi
+
+# ── T137 edge — a lock value that is not a plain commit ID never shapes a path
+T=$(new_repo t137-hostile)
+run_setup "$T"
+sed -i.orig "s|^  \"kit_commit\": \"[^\"]*\"|  \"kit_commit\": \"../../escape\"|" "$T/.claude/harness-lock.json"
+rm -f "$T/.claude/harness-lock.json.orig"
+printf '# hostile-lock edit\n' > "$T/CLAUDE.md"
+reinstall "$T"; RC=$?
+if [ "$RC" -eq 0 ] && [ "$(cat "$T/CLAUDE.md$B" 2>/dev/null)" = '# hostile-lock edit' ] \
+   && [ ! -e "$WORK/escape" ] && [ -z "$(find "$WORK" -maxdepth 2 -name '*escape*')" ]; then
+  pass "T137 edge: a non-hex kit_commit in the lock is ignored -> dated backup, nothing written outside"
+else
+  fail "T137 edge: hostile kit_commit (rc=$RC)"; ls -a "$T" >&2; cat "$T.log" >&2
+fi
+
 # ── M1 — mutation: restore the plain rm -rf → the SC3 check must fail ───────
 MUT="$WORK/mutant"
 mkdir -p "$MUT/lib"
@@ -254,7 +339,7 @@ else
   mkdir -p "$T/templates"
   printf 'my own template\n' > "$T/templates/mine.md"
   run_setup "$T" "$MUT/setup.sh"
-  if [ ! -e "$T/templates.bak/mine.md" ] && [ ! -e "$T/templates/mine.md" ]; then
+  if [ ! -e "$T/templates$B/mine.md" ] && [ ! -e "$T/templates/mine.md" ]; then
     pass "M1: with the rm -rf restored, mine.md is destroyed — SC3 would fail"
   else
     fail "M1: mutant still preserved mine.md — SC3 is not load-bearing"

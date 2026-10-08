@@ -160,7 +160,7 @@ run_setup "$P7" "$U7" || { fail "sc7: setup failed"; cat "$WORK/setup.log" >&2; 
 [ "$(cat "$P7/.claude/hooks/tests/mine.py" 2>/dev/null)" = "my own test" ] \
   && [ "$(ls "$P7/.claude/hooks/tests" | wc -l | tr -d ' ')" = "1" ] \
   && pass "sc7: project's own tests dir untouched" || fail "sc7: project's tests dir was changed"
-[ ! -e "$P7/.claude/hooks/tests.bak" ] && [ ! -e "$P7/.claude/hooks.bak/tests" ] \
+[ -z "$(find "$P7/.claude" -name 'tests.bak*')" ] && [ -z "$(find "$P7/.claude" -path '*/hooks.bak*/tests')" ] \
   && pass "sc7: no tests.bak, tests not swept into a hooks backup" || fail "sc7: tests was backed up"
 [ -f "$P7/.claude/hooks/example_hook.py" ] && pass "sc7: kit hooks installed" || fail "sc7: kit hooks missing"
 
@@ -196,7 +196,7 @@ mkdir -p "$P10/templates/extra"; printf 'mine\n' > "$P10/templates/extra/mine.md
 run_setup "$P10" "$U10" || { fail "sc10: setup failed"; cat "$WORK/setup.log" >&2; }
 { [ "$(cat "$P10/templates/extra/mine.md" 2>/dev/null)" = "mine" ] && [ ! -e "$P10/templates/extra/x.md" ]; } \
   && pass "sc10: excluded MANIFEST path left exactly as the project had it" || fail "sc10: excluded path changed"
-[ ! -e "$P10/templates/extra.bak" ] && pass "sc10: no .bak created for an excluded path" || fail "sc10: excluded path was backed up"
+[ -z "$(find "$P10/templates" -name 'extra.bak*')" ] && pass "sc10: no .bak created for an excluded path" || fail "sc10: excluded path was backed up"
 
 # ── SC6: every hook in an installed (real-kit) project runs without tests/ ───
 U6="$WORK/up6"; mkdir -p "$U6"

@@ -146,8 +146,12 @@
 - [code-review project override](decisions.md) — .claude/skills/code-review/SKILL.md overrides built-in
 - [brainstorming upgrade](decisions.md) — added scope tiers (lightweight/standard/deep), one-question-per-turn gate, visual probe gate, claim verification before doc-write
 - [T136 merged: spawn model picked per CLI via `## CLI Model Table`](decisions.md) — C0–C3 stays in the guide; `craft-spawn-prompt` looks up the CLI's row and STOPs on no CLI / no row / empty cell
+- [T137 merged: backups named `<file>.bak-<prev kit_commit>`, Update `o` backs up](decisions.md) — lock gains `kit_commit`; date fallback; hex-only from the lock; suffix = last kit installed, not edit origin
+- [T138 merged: inline-SVG pipeline diagram in site Overview](decisions.md) — one node per `## Stage` heading, drift-tested
 
 ### Patterns & Gotchas
+- [A short SHA is hex — lock pair regex would read `kit_commit` as a file](learnings.md) — scope lock readers to the `"files"` block (T137)
+- [Writing a TASK_GUIDE auto-adds a Todo row](learnings.md) — `post_write_register_task.py`; move that row to In Progress at spawn, never add a second
 - [v1-site release lessons: evidence, publishing, planning](learnings.md) — a green mutation control means "my mutation didn't land" before "vacuous test", and for "doc D matches source S" the control changes **S**
 - [The merge gate reads one board by name](learnings.md) — `pre_bash_block_unsafe_merge.py` checks `PROJECT_KANBAN.md` only, so T083's site board was ungated at merge
 - [`pytest tests/ -q` runs 8 tests, not 688](learnings.md) — the suite lives in `.claude/hooks/tests/` and bare pytest skips hidden dirs; Always `python3 -m pytest .claude/hooks/tests/ tests/ -q` in guides

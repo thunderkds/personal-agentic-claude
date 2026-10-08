@@ -150,6 +150,14 @@
     white-space: pre-wrap; overflow-wrap: anywhere;
   }
 
+  /* ---- pipeline diagram -------------------------------------------- */
+  svg.pipeline { display: block; width: 100%; max-width: 26rem; height: auto; margin: 1.25rem auto; }
+  svg.pipeline .node rect { fill: var(--surface); stroke: var(--cyan); stroke-width: 1.5; }
+  svg.pipeline .node-title { fill: var(--text); font-size: 13px; font-weight: 700; font-family: inherit; }
+  svg.pipeline .node-out { fill: var(--muted); font-size: 11px; font-family: inherit; }
+  svg.pipeline .arrow { stroke: var(--cyan); stroke-width: 1.5; fill: none; }
+  svg.pipeline .arrow-head { stroke: var(--cyan); stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
   footer { color: var(--muted); font-size: .8rem; margin: 3rem 0 1.5rem; }
 
   /* ---- mobile ------------------------------------------------------ */
@@ -232,6 +240,57 @@
   and a set of enforcement hooks that gate merges and spawns automatically — so "write a test
   first" and "update the board" are not just written down, they are checked.
 </p>
+<svg id="pipeline-diagram" class="pipeline" role="img" viewBox="0 0 320 558" xmlns="http://www.w3.org/2000/svg" aria-labelledby="pipeline-diagram-title pipeline-diagram-desc">
+  <title id="pipeline-diagram-title">The Easy Kit pipeline</title>
+  <desc id="pipeline-diagram-desc">Eight steps in order, top to bottom: Phase 0 initiation, Stage 0.5 grilling and brainstorming, Stage 1 environment setup, Stage 1.5 sub-agent team, Stage 2 planning, Stage 3 parallel execution, Stage 4 review, Stage 5 integration. Each step hands its output to the next.</desc>
+  <g class="node" data-stage="0">
+    <rect x="10" y="2" width="300" height="50" rx="8"/>
+    <text class="node-title" x="160" y="23" text-anchor="middle">Phase 0 · Initiation</text>
+    <text class="node-out" x="160" y="41" text-anchor="middle">PRD.md</text>
+  </g>
+  <path class="arrow" d="M160 54 V67"/><path class="arrow-head" d="M155 66 L160 72 L165 66"/>
+  <g class="node" data-stage="0.5">
+    <rect x="10" y="74" width="300" height="50" rx="8"/>
+    <text class="node-title" x="160" y="95" text-anchor="middle">Stage 0.5 · Grill + brainstorm</text>
+    <text class="node-out" x="160" y="113" text-anchor="middle">BRAINSTORMING_LOG.md</text>
+  </g>
+  <path class="arrow" d="M160 126 V139"/><path class="arrow-head" d="M155 138 L160 144 L165 138"/>
+  <g class="node" data-stage="1">
+    <rect x="10" y="146" width="300" height="50" rx="8"/>
+    <text class="node-title" x="160" y="167" text-anchor="middle">Stage 1 · Environment setup</text>
+    <text class="node-out" x="160" y="185" text-anchor="middle">codebase map, CLI table</text>
+  </g>
+  <path class="arrow" d="M160 198 V211"/><path class="arrow-head" d="M155 210 L160 216 L165 210"/>
+  <g class="node" data-stage="1.5">
+    <rect x="10" y="218" width="300" height="50" rx="8"/>
+    <text class="node-title" x="160" y="239" text-anchor="middle">Stage 1.5 · Sub-agent team</text>
+    <text class="node-out" x="160" y="257" text-anchor="middle">agent roster</text>
+  </g>
+  <path class="arrow" d="M160 270 V283"/><path class="arrow-head" d="M155 282 L160 288 L165 282"/>
+  <g class="node" data-stage="2">
+    <rect x="10" y="290" width="300" height="50" rx="8"/>
+    <text class="node-title" x="160" y="311" text-anchor="middle">Stage 2 · Plan</text>
+    <text class="node-out" x="160" y="329" text-anchor="middle">PROJECT_SPEC + TASK_GUIDEs</text>
+  </g>
+  <path class="arrow" d="M160 342 V355"/><path class="arrow-head" d="M155 354 L160 360 L165 354"/>
+  <g class="node" data-stage="3">
+    <rect x="10" y="362" width="300" height="50" rx="8"/>
+    <text class="node-title" x="160" y="383" text-anchor="middle">Stage 3 · Parallel execution</text>
+    <text class="node-out" x="160" y="401" text-anchor="middle">code in isolated worktrees</text>
+  </g>
+  <path class="arrow" d="M160 414 V427"/><path class="arrow-head" d="M155 426 L160 432 L165 426"/>
+  <g class="node" data-stage="4">
+    <rect x="10" y="434" width="300" height="50" rx="8"/>
+    <text class="node-title" x="160" y="455" text-anchor="middle">Stage 4 · Review</text>
+    <text class="node-out" x="160" y="473" text-anchor="middle">findings + Evidence</text>
+  </g>
+  <path class="arrow" d="M160 486 V499"/><path class="arrow-head" d="M155 498 L160 504 L165 498"/>
+  <g class="node" data-stage="5">
+    <rect x="10" y="506" width="300" height="50" rx="8"/>
+    <text class="node-title" x="160" y="527" text-anchor="middle">Stage 5 · Integrate</text>
+    <text class="node-out" x="160" y="545" text-anchor="middle">verify, merge, release plan</text>
+  </g>
+</svg>
 </section>
 
 <section id="install">
@@ -247,8 +306,11 @@
 </p>
 <p class="lead">
   Installing into an existing project never deletes what is already there: a file or folder the kit
-  would replace is first moved to a backup (<code>CLAUDE.md.bak</code>, <code>templates.bak/</code>, …),
-  and each backup is listed in the install output. Identical files are left alone.
+  would replace is first moved to a backup named after the kit version it replaces
+  (<code>CLAUDE.md.bak-&lt;commit&gt;</code>, <code>templates.bak-&lt;commit&gt;/</code>, …; today's date,
+  such as <code>CLAUDE.md.bak-20261008</code>, when no earlier version is recorded, as on a first
+  install), and each backup is listed in the install output. A name already taken gets
+  <code>.1</code>, <code>.2</code>, … so no backup is ever overwritten. Identical files are left alone.
 </p>
 <p class="lead">
   The command takes no options — you choose from numbered menus, and <strong>Enter</strong> takes the
@@ -296,11 +358,14 @@ Choose [1]:</pre>
 <p class="lead">
   <strong>Update</strong> re-fetches the framework fresh, then for every <code>MANIFEST</code> file — plus
   <code>CLAUDE.md</code> — compares your project's current copy against the content hash recorded
-  at the last install/update (<code>.claude/harness-lock.json</code>):
+  at the last install/update (<code>.claude/harness-lock.json</code>, which also records the kit's
+  commit ID as <code>kit_commit</code>):
 </p>
 <ul class="lead">
   <li><strong>Untouched since install</strong> — silently overwritten with the latest upstream version.</li>
-  <li><strong>Customized</strong> — shown a diff and prompted per file: overwrite / skip / view diff again.</li>
+  <li><strong>Customized</strong> — shown a diff and prompted per file: overwrite / skip / view diff again.
+    Overwrite first moves your version to <code>&lt;file&gt;.bak-&lt;commit&gt;</code>, named after the
+    kit version it replaces; skip keeps it in place.</li>
   <li><strong>No longer shipped</strong> — a file the kit dropped is removed if you never edited it, and kept
    (and named) if you did.</li>
   <li><strong><code>.claude/settings.json</code></strong> — not a <code>MANIFEST</code> file, so it is

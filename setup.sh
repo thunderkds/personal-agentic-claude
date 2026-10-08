@@ -124,6 +124,10 @@ check_target_is_git_repo() {
 fetch_harness() {
   harness_make_temp_dir              # sets $HARNESS_TEMP_DIR, registers cleanup traps
   harness_fetch "$SUPERVISOR_REPO" "$HARNESS_TEMP_DIR"
+  # The kit's version is its commit ID (T137): recorded in the lock as
+  # "kit_commit", and what the NEXT run names its backups after. Empty if
+  # rev-parse fails — the lock then omits it and backups fall back to the date.
+  HARNESS_KIT_COMMIT=$(git -C "$HARNESS_TEMP_DIR" rev-parse --short HEAD 2>/dev/null || true)
 }
 
 # ── Point .claude/{skills,agents} at the plain-root canon ────────────────────
@@ -443,6 +447,9 @@ write_harness_lock() {
     printf '{\n'
     _esc_src=$(printf '%s' "$CLAUDE_SRC" | sed 's/\\/\\\\/g; s/"/\\"/g')
     printf '  "claude_md_source": "%s",\n' "$_esc_src"
+    if [ -n "$HARNESS_KIT_COMMIT" ]; then
+      printf '  "kit_commit": "%s",\n' "$HARNESS_KIT_COMMIT"
+    fi
     printf '  "files": {\n'
     _first=1
     while IFS= read -r _rel; do
@@ -693,11 +700,11 @@ plan_install() {
     [ -e "$HARNESS_TEMP_DIR/$_line" ] || continue
     harness_is_excluded "$_manifest" "$_line" && continue
     if install_would_back_up "$HARNESS_TEMP_DIR/$_line" "./$_line" "$_line" "$_manifest"; then
-      printf '%s -> %s.bak\n' "$_line" "$_line" >> "$_p_bk"
+      printf '%s -> %s\n' "$_line" "$(harness_backup_name "$_line")" >> "$_p_bk"
     fi
   done < "$_manifest"
   if install_would_back_up "$HARNESS_TEMP_DIR/$CLAUDE_SRC" ./CLAUDE.md CLAUDE.md "$_manifest"; then
-    printf '%s\n' "CLAUDE.md -> CLAUDE.md.bak" >> "$_p_bk"
+    printf '%s -> %s\n' CLAUDE.md "$(harness_backup_name CLAUDE.md)" >> "$_p_bk"
   fi
 
   printf '\n'
@@ -714,7 +721,7 @@ plan_install() {
 run_install() {
   manifest="$1"
   # Copy every MANIFEST path as real files; differing pre-existing paths are
-  # moved to <path>.bak[.N] first (T112).
+  # moved to <path>.bak-<id>[.N] first (T112, T137).
   harness_copy_manifest "$HARNESS_TEMP_DIR" "." "$manifest"
 
   # Canon now lands at plain root (skills/, agents/); Claude Code still reads
@@ -757,7 +764,11 @@ main() {
   fi
   fresh_list="$HARNESS_TEMP_DIR/.fresh-list"
   reinstall_backups="$HARNESS_TEMP_DIR/.reinstall-backups"
+  HARNESS_PREV_COMMIT=""
   if [ -f "$LOCK_FILE" ]; then
+    # The kit version this run replaces names every backup it makes (T137).
+    # Read now, before any action rewrites the lock with the new one.
+    HARNESS_PREV_COMMIT=$(lookup_lock_field "$LOCK_FILE" kit_commit)
     # Refuse an old symlink-model install before offering any action.
     detect_symlinks "$manifest"
     build_fresh_file_list "$manifest" "$fresh_list"
