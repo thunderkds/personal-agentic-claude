@@ -8,8 +8,6 @@
 ## Board
 
 ### Todo
-- [ ] **T138** — The site's Overview shows the pipeline as a workflow diagram | Frontend-Implementer | C1 | Risk: Low | P2
-- [ ] **T137** — A backup is named after the kit version it replaces, and Update's "overwrite" takes one too | Common-Infrastructure-Agent | C2 | Risk: Medium | P1
 > **Batch 2026-09-25 — tokenization refactor (T124–T127).** Authority: `docs/ddr/0009-measure-token-work-from-transcripts-and-aim-at-focus.md`,
 > `docs/token-focus-finding-2026-09-25.md`. All four build on the integration branch `tokenization-refactor` cut from `main` (`4f43bcf`);
 > each task worktree branches from it and merges back; `main` receives the set in one merge after the batch passes Stage 5.
