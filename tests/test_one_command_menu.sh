@@ -157,10 +157,12 @@ pty_setup "$T" '2\n\n\n\n\n'; RC=$?
 keep_transcript "$T.log" SC3.txt
 PLAN_AT=$(line_of "$T.log" "      $EDITED")
 ASK_AT=$(line_of "$T.log" 'Proceed? [Y/n]')
-if [ "$RC" -eq 0 ] && grep -q 'MY LOCAL EDIT' "$T/$EDITED.bak" \
+# T137: the backup is named after the kit commit the lock recorded at install.
+KIT_AT=$(git -C "$FIXTURE" rev-parse --short HEAD)
+if [ "$RC" -eq 0 ] && grep -q 'MY LOCAL EDIT' "$T/$EDITED.bak-$KIT_AT" \
    && cmp -s "$FIXTURE/$EDITED" "$T/$EDITED" \
    && [ "$PLAN_AT" -gt 0 ] && [ "$PLAN_AT" -lt "$ASK_AT" ]; then
-  pass "SC3: edit saved as $EDITED.bak, kit version installed, plan named it before Proceed"
+  pass "SC3: edit saved as $EDITED.bak-$KIT_AT, kit version installed, plan named it before Proceed"
 else
   fail "SC3: reinstall backup (rc=$RC plan-line=$PLAN_AT ask-line=$ASK_AT)"; cat "$T.log" >&2
 fi

@@ -10,6 +10,8 @@
 #   4. edited file (conflict)     -> prompt fires; [s]kip keeps the edit + prior lock hash
 #   5. edited file (conflict)     -> [o]verwrite restores upstream + updates lock hash
 #   6. conflict with no input     -> non-zero exit, file left untouched
+#  T137: [o]verwrite first moves the edit to <file>.bak-<old kit commit>; [s]kip
+#        and no-input make no backup; the lock's "kit_commit" is never a file.
 #
 # Run: bash tests/test_update.sh   (or: sh tests/test_update.sh)
 set -u
@@ -113,6 +115,15 @@ fresh_target() {
   run_setup "$NEW_TARGET" || {
     fail "setup failed for $1 — see $WORK/setup.log"; cat "$WORK/setup.log" >&2; return 1
   }
+}
+
+# no_bak <target> -> true when no backup path exists anywhere in <target>
+no_bak() {
+  [ -z "$(find "$1" -name '*.bak*' -not -path '*/.git/*' | head -n 1)" ]
+}
+# kit_commit <lock> -> the lock's top-level "kit_commit" value ('' if absent)
+kit_commit() {
+  sed -n 's/^  "kit_commit": "\([^"]*\)",*$/\1/p' "$1" 2>/dev/null
 }
 
 # Canned stdin answers.
@@ -260,6 +271,12 @@ if fresh_target "target4"; then
   else
     fail "test4: sibling file handling incorrect"
   fi
+  # T137 SC6 / AC9: [s]kip keeps the file in place, so there is nothing to back up.
+  if no_bak "$T4"; then
+    pass "test4 (T137 SC6): [s]kip made no backup"
+  else
+    fail "test4 (T137 SC6): [s]kip created a backup"; find "$T4" -name '*.bak*' -not -path '*/.git/*' >&2
+  fi
 fi
 
 # =============================================================================
@@ -315,6 +332,11 @@ if fresh_target "target6"; then
     pass "test6: instructed the user to re-run interactively"
   else
     fail "test6: no 're-run interactively' guidance emitted"
+  fi
+  if no_bak "$T6"; then
+    pass "test6 (T137 AC9): no input made no backup"
+  else
+    fail "test6 (T137 AC9): no input created a backup"; find "$T6" -name '*.bak*' -not -path '*/.git/*' >&2
   fi
 fi
 
@@ -417,6 +439,66 @@ if fresh_target "target9"; then
     pass "test9: no 'Update complete' printed over a stale canon"
   else
     fail "test9: printed 'Update complete' over a stale canon"
+  fi
+fi
+
+# =============================================================================
+# T137 SC2 / AC1 / AC4 — Update [o]verwrite backs up the edit under the kit
+# version it replaces, BEFORE the kit copy lands, and names it in a [warn] line.
+# =============================================================================
+if fresh_target "t137-sc2"; then
+  TO="$NEW_TARGET"
+  KIT_A=$(git -C "$FIXTURE" rev-parse --short HEAD)
+  LOCK_A=$(kit_commit "$TO/.claude/harness-lock.json")
+  printf 'MY EDIT AT A\n' > "$TO/agents/backend.md"
+  printf 'backend-agent-content-B\n' > "$FIXTURE/agents/backend.md"
+  git -C "$FIXTURE" commit -q -am "upstream: backend.md at B"
+  KIT_B=$(git -C "$FIXTURE" rev-parse --short HEAD)
+
+  RC=0
+  run_update "$TO" "$WORK/overwrite.in" || RC=$?
+  if [ "$RC" -eq 0 ] && [ "$LOCK_A" = "$KIT_A" ] \
+     && [ "$(cat "$TO/agents/backend.md.bak-$KIT_A" 2>/dev/null)" = 'MY EDIT AT A' ] \
+     && [ "$(cat "$TO/agents/backend.md")" = 'backend-agent-content-B' ]; then
+    pass "T137 SC2: [o]verwrite moved the edit to agents/backend.md.bak-$KIT_A, then installed kit $KIT_B"
+  else
+    fail "T137 SC2: [o]verwrite backup (rc=$RC lock-before=$LOCK_A A=$KIT_A)"
+    ls -a "$TO/agents" >&2; cat "$WORK/update.log" >&2
+  fi
+  if tr -d '\r' < "$WORK/update.log" | grep -F '[warn]' | grep -qF "agents/backend.md.bak-$KIT_A"; then
+    pass "T137 AC4: a [warn] line names the backup"
+  else
+    fail "T137 AC4: no [warn] line names agents/backend.md.bak-$KIT_A"
+  fi
+  if [ "$(kit_commit "$TO/.claude/harness-lock.json")" = "$KIT_B" ]; then
+    pass "T137 AC1: Update re-records kit_commit=$KIT_B"
+  else
+    fail "T137 AC1: Update lock kit_commit is '$(kit_commit "$TO/.claude/harness-lock.json")', want $KIT_B"
+  fi
+  printf 'backend-agent-content\n' > "$FIXTURE/agents/backend.md"
+  git -C "$FIXTURE" commit -q -am "upstream: restore backend.md to V1"
+fi
+
+# =============================================================================
+# T137 SC5 / AC6 — the lock's "kit_commit" is hex like a file hash, but it is
+# never read as a file entry: nothing is created, removed or prompted about,
+# and the rewritten lock holds it once, at the top level only.
+# =============================================================================
+if fresh_target "t137-sc5"; then
+  TK="$NEW_TARGET"
+  sed -i.orig 's/^  "kit_commit": "[^"]*"/  "kit_commit": "abc1234"/' "$TK/.claude/harness-lock.json"
+  rm -f "$TK/.claude/harness-lock.json.orig"
+  RC=0
+  run_update "$TK" /dev/null || RC=$?
+  _files_block=$(sed -n '/"files"/,$p' "$TK/.claude/harness-lock.json")
+  if [ "$RC" -eq 0 ] && [ ! -e "$TK/kit_commit" ] \
+     && ! grep -q 'kit_commit' "$WORK/update.log" \
+     && ! printf '%s' "$_files_block" | grep -q 'kit_commit' \
+     && [ "$(grep -c '"kit_commit"' "$TK/.claude/harness-lock.json")" -eq 1 ]; then
+    pass "T137 SC5: kit_commit not treated as a file (no path, no prompt/removal line, not in \"files\")"
+  else
+    fail "T137 SC5: kit_commit leaked into the file entries (rc=$RC)"
+    cat "$TK/.claude/harness-lock.json" >&2; cat "$WORK/update.log" >&2
   fi
 fi
 
