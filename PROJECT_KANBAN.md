@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-09-28
+**Last updated**: 2026-10-08
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -8,6 +8,8 @@
 ## Board
 
 ### Todo
+- [ ] **T138** — The site's Overview shows the pipeline as a workflow diagram | Frontend-Implementer | C1 | Risk: Low | P2
+- [ ] **T137** — A backup is named after the kit version it replaces, and Update's "overwrite" takes one too | Common-Infrastructure-Agent | C2 | Risk: Medium | P1
 > **Batch 2026-09-25 — tokenization refactor (T124–T127).** Authority: `docs/ddr/0009-measure-token-work-from-transcripts-and-aim-at-focus.md`,
 > `docs/token-focus-finding-2026-09-25.md`. All four build on the integration branch `tokenization-refactor` cut from `main` (`4f43bcf`);
 > each task worktree branches from it and merges back; `main` receives the set in one merge after the batch passes Stage 5.
@@ -74,6 +76,8 @@
 
 
 ### In Progress
+- [ ] **T137** — A backup is named after the kit version it replaces, and Update's "overwrite" takes one too | Common-Infrastructure-Agent | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T137.md` | Review: `tasks/TASK_REVIEW_T137.md` | Depends on: none | Registered 2026-10-08 by the user: *"checking the posible to update the version for backup file when update"*. Read from source: backups are counter-named (`.bak`, `.bak.1`), the lock records no kit version, and Update's `o` (overwrite) on a customized file keeps **no backup at all**. Fix records `kit_commit` in the lock and names backups `<dst>.bak-<old-commit>` (date fallback). Stage 2 found a trap: a short SHA is hex, so `extract_lock_pairs` would read `kit_commit` as a file entry — AC6/M2 pin it | Integration branch `feat/t137-t138-backups-diagram`
+- [ ] **T138** — The site's Overview shows the pipeline as a workflow diagram | Frontend-Implementer | C1 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_T138.md` | Review: `tasks/TASK_REVIEW_T138.md` | Depends on: none | Registered 2026-10-08 by the user: *"create the workflow graph for the overview steps and attach to the page"*; user picked the 5-stage pipeline in `#what-you-get`. Inline SVG, one node per `## Stage` heading in `docs/claude-md/pipeline-stages.md`, drift-tested | Integration branch `feat/t137-t138-backups-diagram`
 
 
 
