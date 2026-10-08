@@ -480,6 +480,33 @@ if fresh_target "t137-sc2"; then
 fi
 
 # =============================================================================
+# T137 edge — [o]verwrite when the backup cannot be made (folder not writable):
+# the user's file stays as it is, never overwritten without a backup. A plain
+# `cp` over the still-writable file WOULD succeed here, so only the guard keeps it.
+# =============================================================================
+if fresh_target "t137-robak"; then
+  TR="$NEW_TARGET"
+  printf 'EDIT THAT CANNOT BE BACKED UP\n' > "$TR/agents/backend.md"
+  printf 'backend-agent-content-RO\n' > "$FIXTURE/agents/backend.md"
+  git -C "$FIXTURE" commit -q -am "upstream: backend.md RO"
+  chmod a-w "$TR/agents"
+  RC=0
+  run_update "$TR" "$WORK/overwrite.in" || RC=$?
+  chmod u+w "$TR/agents"
+  if [ "$(id -u)" -eq 0 ]; then
+    pass "T137 edge: unwritable backup on [o]verwrite — skipped (root ignores directory permissions)"
+  elif [ "$RC" -ne 0 ] \
+       && [ "$(cat "$TR/agents/backend.md")" = 'EDIT THAT CANNOT BE BACKED UP' ] \
+       && grep -q 'Could not back up' "$WORK/update.log"; then
+    pass "T137 edge: failed backup on [o]verwrite -> edit kept, error named, non-zero exit (rc=$RC)"
+  else
+    fail "T137 edge: failed backup on [o]verwrite (rc=$RC)"; cat "$WORK/update.log" >&2
+  fi
+  printf 'backend-agent-content\n' > "$FIXTURE/agents/backend.md"
+  git -C "$FIXTURE" commit -q -am "upstream: restore backend.md to V1"
+fi
+
+# =============================================================================
 # T137 SC5 / AC6 — the lock's "kit_commit" is hex like a file hash, but it is
 # never read as a file entry: nothing is created, removed or prompted about,
 # and the rewritten lock holds it once, at the top level only.
