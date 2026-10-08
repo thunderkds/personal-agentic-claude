@@ -726,3 +726,61 @@ def test_verifier_section_does_not_claim_the_kit_uses_it():
     assert "separate" in body, "section must say it is a separate tool"
     for phrase in ("the kit uses", "ships with", "built in", "required"):
         assert phrase not in body, f"verifier section must not say {phrase!r}"
+
+
+# ---------------------------------------------------------------------------
+# T138 — the Overview's pipeline diagram follows docs/claude-md/pipeline-stages.md
+# ---------------------------------------------------------------------------
+
+PIPELINE_DOC = os.path.join(ROOT, "docs", "claude-md", "pipeline-stages.md")
+
+
+def _pipeline_stage_numbers():
+    """Phase 0 first (it has no `## Stage` heading), then the number of every
+    `## Stage N:` heading in document order, read at test time."""
+    with open(PIPELINE_DOC, encoding="utf-8") as f:
+        text = f.read()
+    return ["0"] + re.findall(r"^## Stage (\d+(?:\.\d+)?)\b", text, re.MULTILINE)
+
+
+def _pipeline_svg():
+    match = re.search(
+        r'<svg\b[^>]*\bid="pipeline-diagram"[^>]*>.*?</svg>', _page_text(), re.DOTALL
+    )
+    assert match, 'no <svg id="pipeline-diagram"> on the page'
+    return match.group(0)
+
+
+def test_pipeline_diagram_is_inside_the_overview_section():
+    body = re.search(
+        r'<section id="what-you-get">(.*?)</section>', _page_text(), re.DOTALL
+    )
+    assert body and 'id="pipeline-diagram"' in body.group(1)
+
+
+def test_pipeline_diagram_is_accessible_svg():
+    svg = _pipeline_svg()
+    assert 'role="img"' in svg and "<title" in svg and "<desc" in svg
+    assert "viewBox=" in svg
+
+
+def test_pipeline_diagram_has_one_node_per_stage_in_document_order():
+    svg = _pipeline_svg()
+    nodes = re.findall(r'<g class="node" data-stage="([^"]+)">(.*?)</g>', svg, re.DOTALL)
+    assert [n for n, _ in nodes] == _pipeline_stage_numbers()
+    for number, body in nodes:
+        label = "Phase 0" if number == "0" else f"Stage {number} "
+        assert label in body, f"node {number} does not show its stage label"
+
+
+def test_pipeline_diagram_joins_every_node_with_an_arrow():
+    svg = _pipeline_svg()
+    assert svg.count('class="arrow-head"') == len(_pipeline_stage_numbers()) - 1
+
+
+def test_pipeline_diagram_uses_tokens_and_no_script_or_external_ref():
+    svg = _pipeline_svg()
+    assert "<script" not in svg and not re.search(r'(?:href|src)\s*=', svg)
+    assert not re.search(r"#[0-9a-fA-F]{3,8}\b", svg)
+    css = re.search(r"svg\.pipeline.*?(?=footer \{)", _page_text(), re.DOTALL).group(0)
+    assert not re.search(r"#[0-9a-fA-F]{3,8}\b", css)

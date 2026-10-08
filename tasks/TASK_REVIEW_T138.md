@@ -1,4 +1,4 @@
-# TASK_REVIEW — T138: [Short Title]
+# TASK_REVIEW — T138: Pipeline workflow diagram on the site Overview
 
 > Sibling of `tasks/TASK_GUIDE_T138.md`. Everything here is **filled by the reviewer at Stage
 > 4/5** — it is deliberately NOT in the guide, because the implementing agent re-reads the guide on
@@ -14,15 +14,15 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_site_content.py` — 5 new tests (`test_pipeline_diagram_*`): in `#what-you-get`; role/title/desc/viewBox; node order == `## Stage` headings read at test time (+ Phase 0); one arrow-head per gap; no hex/script/href. `39 passed in 0.06s` (was 34) |
+| Verification command run | ☑ pass | `tests/test_site_content.py`: 39 passed. Full: `1 failed, 996 passed in 13.74s`; the 1 failure `test_kanban_section_parsing.py::test_find_kanban_section_on_real_current_board` is **pre-existing** (same failure in BEFORE capture, untouched file). 3 screenshots written (320/768/1280). |
+| Negative cases hold | ☑ pass | M1 (delete node 1.5): `AssertionError ... At index 3 diff: '2' != '1.5' / Right contains one more item: '5'` → 1 failed, 38 passed. M2 (swap 3↔4): `At index 5 diff: '4' != '3'` → RED. Both reverted via `git checkout`. |
+| verify | ☑ pass | **User-run `/verify` (2026-10-08): PASS.** `site/` served over HTTP (`python3 -m http.server`, as Vercel serves `outputDirectory: site`), 39,860 B, 200; rendered in headless Chrome. 1280px: 8 nodes Phase 0 → Stage 5 in order under "What you get", arrows between each, labels unclipped. 375px and 280px: diagram scales inside the column, no horizontal scroll. Probe — JavaScript disabled via profile (`javascript: 2`): DOM stays `<html class="no-js">`, diagram renders identically. Findings (non-blocking): at 280px the grey sub-labels render ≈7px — legible only zoomed; the header prose says "a 5-stage pipeline (plan → spawn → review → integrate → ship)" directly above a diagram of 8 boxes, which a first-time reader may find inconsistent. Screenshots: `/tmp/claude-1000/v138/{desk-anchor,phone,narrow280,nojs}.png`. |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | Implementer self-check only: diff touches `site/index.html` (`#what-you-get` + one CSS block), `tests/test_site_content.py`; `#install`/`#update-flow` untouched. `code-review` skill left to Stage 4. |
+| Full smoke suite still green (no regression) | ☑ pass | 996 passed; only failure is the pre-existing one above |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ pass | Inspected `t138-320.png`, `t138-1280.png` (768 written, not viewed): all 8 nodes + 7 arrows visible, no clipped labels, rest of page unchanged. Files in session scratchpad `.../scratchpad/t138-{320,768,1280}.png`. |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ pass | `git diff 792b486 -- site/index.html \| grep '^+' \| grep -c '#[0-9a-fA-F]{3,6}'` → `0`; fills/strokes are `var(--surface/--cyan/--text/--muted)`; `font-family: inherit`; width capped at 26rem inside `--measure`. |
+| **UI: Responsiveness at target viewports** | ☑ pass | 320/768/1280 rendered; `viewBox` + `width:100%`, vertical layout; no horizontal overflow at 320 (text scales to ~10px, legible). JS-off: SVG is static markup, no script involved (inspection, not separately screenshotted). |
 
 ---
 
@@ -33,12 +33,43 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured 2026-10-08T15:03:44Z, before any implementation commit, branch `feat/t138-pipeline-diagram` @ 792b486):
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+```
+$ grep -c 'pipeline-diagram' site/index.html
+0
+$ python3 -m pytest tests/test_site_content.py -q
+34 passed in 0.08s
+$ python3 -m pytest tests/ .claude/hooks/tests/ -q
+FAILED .claude/hooks/tests/test_kanban_section_parsing.py::test_find_kanban_section_on_real_current_board
+1 failed, 991 passed in 14.29s
+```
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+`#what-you-get` is prose only (verbatim): `<section id="what-you-get"><h2>What you get</h2><p class="lead">A base team of four spawnable sub-agent roles, ...</p></section>` — no diagram. The 1 failure is pre-existing (unrelated to the site; present before my change).
 
-**WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
-implementing agent alone]
+**AFTER**: `grep -c pipeline-diagram site/index.html` → `3`; `python3 -m pytest tests/test_site_content.py -q` → `39 passed in 0.06s`. `#what-you-get` now ends with `<svg id="pipeline-diagram" role="img">` holding 8 nodes (Phase 0, Stage 0.5, 1, 1.5, 2, 3, 4, 5), each "stage · name" + main output, joined by 7 arrows.
+
+**DELTA**: A reader of the Overview sees the pipeline's order and each stage's output in one diagram before any prose.
+
+**WITNESS**: [Supervisor to fill from `memory/event-trace/T138.jsonl`; implementer ran the commands above 2026-10-08.]
+
+## AC notes
+
+- AC4 (return arrow): **none drawn.** `docs/claude-md/pipeline-stages.md:205` says only "Address all findings before moving to Stage 5" — it does not say findings go back to Stage 3, so a return arrow would be invented flow.
+- Process note: I wrote the SVG before the test (not strictly test-first); mutation controls M1/M2 above confirm the test fails when the diagram drifts.
+- Cut list unchanged from guide (no hover, links, animation, second diagram).
+
+## Open questions
+
+None.
+
+---
+
+## Stage 4 — Supervisor review (2026-10-08)
+
+**code-review: 0 P0 / 0 P1 / 0 P2 / 2 P3.** Supervisor re-ran `tests/test_site_content.py` in `wt-t138`: 39 passed. Entry point `id="pipeline-diagram"`: present. AC4 decision (no return arrow, citing `pipeline-stages.md:205`) accepted.
+- **UI sign-off by the Supervisor (Gate 6)**: own headless-Chrome screenshots at 320 / 768 / 1280 px inspected — 8 nodes in document order, arrows between each, no clipping, no horizontal scroll; colours only `var(--…)` tokens; rest of page unchanged.
+- **P3**: at 320 px the 11px sub-labels render ≈8px — legible but small; optional bump.
+- **P3**: SVG written before the test (self-reported); M1/M2 RED confirm the test discriminates.
+
+security-review: not required (Low risk); static SVG, no script, no external ref (asserted by test).
