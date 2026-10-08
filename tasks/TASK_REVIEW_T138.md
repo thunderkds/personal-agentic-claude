@@ -62,3 +62,14 @@ FAILED .claude/hooks/tests/test_kanban_section_parsing.py::test_find_kanban_sect
 ## Open questions
 
 None.
+
+---
+
+## Stage 4 — Supervisor review (2026-10-08)
+
+**code-review: 0 P0 / 0 P1 / 0 P2 / 2 P3.** Supervisor re-ran `tests/test_site_content.py` in `wt-t138`: 39 passed. Entry point `id="pipeline-diagram"`: present. AC4 decision (no return arrow, citing `pipeline-stages.md:205`) accepted.
+- **UI sign-off by the Supervisor (Gate 6)**: own headless-Chrome screenshots at 320 / 768 / 1280 px inspected — 8 nodes in document order, arrows between each, no clipping, no horizontal scroll; colours only `var(--…)` tokens; rest of page unchanged.
+- **P3**: at 320 px the 11px sub-labels render ≈8px — legible but small; optional bump.
+- **P3**: SVG written before the test (self-reported); M1/M2 RED confirm the test discriminates.
+
+security-review: not required (Low risk); static SVG, no script, no external ref (asserted by test).
