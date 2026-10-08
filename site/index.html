@@ -247,8 +247,11 @@
 </p>
 <p class="lead">
   Installing into an existing project never deletes what is already there: a file or folder the kit
-  would replace is first moved to a backup (<code>CLAUDE.md.bak</code>, <code>templates.bak/</code>, …),
-  and each backup is listed in the install output. Identical files are left alone.
+  would replace is first moved to a backup named after the kit version it replaces
+  (<code>CLAUDE.md.bak-&lt;commit&gt;</code>, <code>templates.bak-&lt;commit&gt;/</code>, …; today's date,
+  such as <code>CLAUDE.md.bak-20261008</code>, when no earlier version is recorded, as on a first
+  install), and each backup is listed in the install output. A name already taken gets
+  <code>.1</code>, <code>.2</code>, … so no backup is ever overwritten. Identical files are left alone.
 </p>
 <p class="lead">
   The command takes no options — you choose from numbered menus, and <strong>Enter</strong> takes the
@@ -296,11 +299,14 @@ Choose [1]:</pre>
 <p class="lead">
   <strong>Update</strong> re-fetches the framework fresh, then for every <code>MANIFEST</code> file — plus
   <code>CLAUDE.md</code> — compares your project's current copy against the content hash recorded
-  at the last install/update (<code>.claude/harness-lock.json</code>):
+  at the last install/update (<code>.claude/harness-lock.json</code>, which also records the kit's
+  commit ID as <code>kit_commit</code>):
 </p>
 <ul class="lead">
   <li><strong>Untouched since install</strong> — silently overwritten with the latest upstream version.</li>
-  <li><strong>Customized</strong> — shown a diff and prompted per file: overwrite / skip / view diff again.</li>
+  <li><strong>Customized</strong> — shown a diff and prompted per file: overwrite / skip / view diff again.
+    Overwrite first moves your version to <code>&lt;file&gt;.bak-&lt;commit&gt;</code>, named after the
+    kit version it replaces; skip keeps it in place.</li>
   <li><strong>No longer shipped</strong> — a file the kit dropped is removed if you never edited it, and kept
    (and named) if you did.</li>
   <li><strong><code>.claude/settings.json</code></strong> — not a <code>MANIFEST</code> file, so it is
