@@ -71,18 +71,28 @@ detect_symlinks() {
 
 # ── Look up a file's recorded hash in the lock (empty string if absent) ───────
 # Lock lines look like:     "path": "hash"
-# The leading double-quote anchors the key so one path is not matched as a
-# substring of a longer one. Always exits 0 (last pipeline stage is sed).
+# Only the "files" block is searched (extract_lock_pairs), and the key must
+# match whole, so one path is not matched as part of a longer one, nor as a
+# top-level field. Always exits 0 (last pipeline stage is awk).
 lookup_lock_hash() {
-  _lk="$1"
-  _key="$2"
-  grep -F "\"$_key\": \"" "$_lk" 2>/dev/null | head -n1 | sed -e 's/.*: "//' -e 's/".*//'
+  extract_lock_pairs "$1" | _LK_KEY="$2" awk -F '	' '$1 == ENVIRON["_LK_KEY"] { print $2; exit }'
+}
+
+# ── Look up a top-level lock field ("claude_md_source", "kit_commit") ─────────
+# Both writers put these before the "files" block, so that block is cut off
+# first: a file entry can never be read as one. Empty string if absent.
+lookup_lock_field() {
+  sed '/"files"[[:space:]]*:/,$d' "$1" 2>/dev/null | grep -F "\"$2\": \"" | head -n1 \
+    | sed -e 's/.*: "//' -e 's/".*//'
 }
 
 # ── Emit key<TAB>hash for every file entry in the lock ────────────────────────
-# Skips the top-level "files": { line (its value is `{`, not a hex hash).
+# Reads the "files" block only: "kit_commit" (T137) is a top-level field whose
+# value is hex just like a hash, and read as an entry it would be a file named
+# ./kit_commit. The block's own "files": { line is skipped (its value is `{`).
 extract_lock_pairs() {
-  grep -E '^[[:space:]]*"[^"]+"[[:space:]]*:[[:space:]]*"[0-9a-f]+"[[:space:]]*,?[[:space:]]*$' "$1" 2>/dev/null \
+  sed -n '/"files"[[:space:]]*:/,$p' "$1" 2>/dev/null \
+    | grep -E '^[[:space:]]*"[^"]+"[[:space:]]*:[[:space:]]*"[0-9a-f]+"[[:space:]]*,?[[:space:]]*$' \
     | sed -E 's/^[[:space:]]*"([^"]+)"[[:space:]]*:[[:space:]]*"([0-9a-f]+)".*/\1	\2/'
 }
 
@@ -225,6 +235,15 @@ process_one_file() {
   prompt_conflict "$_dst" "$_src"
   case "$CONFLICT_DECISION" in
     o)
+      # The user's version is moved aside first (T137); if that fails, it stays
+      # where it is — never overwritten without a backup.
+      if ! harness_backup_path "$_src" "$_dst"; then
+        UNRESOLVED=$((UNRESOLVED + 1))
+        if [ -n "$_rec_hash" ]; then
+          printf '%s\t%s\n' "$_rel" "$_rec_hash" >> "$_decisions"
+        fi
+        return
+      fi
       install_file "$_src" "$_dst"
       LAST_FILE_INSTALLED=1
       printf '%s\t%s\n' "$_rel" "$_fresh_hash" >> "$_decisions"
@@ -274,7 +293,7 @@ CLAUDE_MD_SOURCE=""
 resolve_claude_md_source() {
   _lock="$1"
   _dst="$2"
-  _recorded=$(lookup_lock_hash "$_lock" "claude_md_source")
+  _recorded=$(lookup_lock_field "$_lock" "claude_md_source")
   if [ -n "$_recorded" ]; then
     case "$_recorded" in
       CLAUDE.md|CLAUDE_LEGACY.md)
@@ -444,7 +463,9 @@ carry_over_unprocessed() {
 }
 
 # ── Rewrite .claude/harness-lock.json from the decisions file ────────────────
-# Same JSON shape setup.sh writes: { "claude_md_source": "...", "files": { ... } }.
+# Same JSON shape setup.sh writes:
+#   { "claude_md_source": "...", "kit_commit": "...", "files": { ... } }.
+# kit_commit (T137) is the fetched kit's short commit ID, omitted if unknown.
 # _claude_md_source may be empty (T110 AC5: still unresolved this run) — in
 # that case the field is simply omitted, same as an old pre-T110 lock, so the
 # next update retries inference rather than recording a guess.
@@ -461,6 +482,9 @@ write_new_lock() {
     if [ -n "$_claude_md_source" ]; then
       _esc_src=$(printf '%s' "$_claude_md_source" | sed 's/\\/\\\\/g; s/"/\\"/g')
       printf '  "claude_md_source": "%s",\n' "$_esc_src"
+    fi
+    if [ -n "${HARNESS_KIT_COMMIT:-}" ]; then
+      printf '  "kit_commit": "%s",\n' "$HARNESS_KIT_COMMIT"
     fi
     printf '  "files": {\n'
     _first=1
@@ -639,13 +663,18 @@ plan_update() {
   printf '  - Kit files you never edited are refreshed from upstream.\n'
   printf '  - Files to add or restore: %s\n' "$_p_new"
   if [ "$TTY_OK" -eq 1 ]; then
-    printf '  - You edited these; you will be asked about each one ([o]verwrite / [s]kip):\n'
+    printf '  - You edited these; you will be asked about each one ([o]verwrite / [s]kip).\n'
+    printf '    [o]verwrite moves your version to <file>.%s first:\n' "$(harness_backup_suffix)"
   else
     printf '  - You edited these; with no terminal they are kept as they are:\n'
   fi
   plan_list "$_p_ask" "(none)"
   plan_print_removals "$_p_rm" "$_p_keep"
-  printf '  - Backed up: nothing. Update keeps your edits in place instead.\n'
+  if [ "$TTY_OK" -eq 1 ]; then
+    printf '  - Backed up: only a file you choose to [o]verwrite. [s]kip keeps your edit in place.\n'
+  else
+    printf '  - Backed up: nothing. Update keeps your edits in place instead.\n'
+  fi
   printf '  - Hooks: Easy Kit entries are merged into .claude/settings.json (your own entries are kept).\n'
 }
 
@@ -674,7 +703,7 @@ plan_reinstall() {
   printf '  - Every kit file is replaced with a fresh copy, and the lock is rewritten.\n'
   plan_cli_lines "$_manifest"
   printf '  - Project type: %s\n' "$(project_type_label)"
-  printf '  - Your edited files are moved to <file>.bak first:\n'
+  printf '  - Your edited files are moved to <file>.%s first:\n' "$(harness_backup_suffix)"
   plan_list "$_backups" "(none: no file the kit ships now has been edited)"
   plan_print_removals "$_p_rm" "$_p_keep"
   printf '  - Your own files that the kit does not ship are left alone.\n'

@@ -179,8 +179,9 @@ T_OWN=$(new_repo own-packs)
 mkdir -p "$T_OWN/packs/mine"
 printf 'my pack\n' > "$T_OWN/packs/mine/NOTES.md"
 ( cd "$T_OWN" && SUPERVISOR_REPO="file://$KIT" sh "$KIT/setup.sh" </dev/null >"$T_OWN.log" 2>&1 )
-if grep -q 'my pack' "$T_OWN/packs.bak/mine/NOTES.md" 2>/dev/null && [ ! -e "$T_OWN/packs/mine" ]; then
-  pass "edge: a pre-existing packs/ is moved to packs.bak before the catalog lands"
+# A first install has no recorded kit version, so the backup is dated (T137).
+if grep -q 'my pack' "$T_OWN/packs.bak-$(date +%Y%m%d)/mine/NOTES.md" 2>/dev/null && [ ! -e "$T_OWN/packs/mine" ]; then
+  pass "edge: a pre-existing packs/ is moved to packs.bak-<date> before the catalog lands"
 else
   fail "edge: a pre-existing packs/ was not backed up"
 fi

@@ -69,6 +69,8 @@ A plan screen then lists what will be written and what will be backed up, and as
 - Every path, install included, goes through the hash-lock conflict rule ADR-0001 designed for update.
 - A pre-existing, non-kit `CLAUDE.md` / `AGENTS.md` is saved as `<name>.bak` before the kit copy, and
   the plan screen shows it.
+  *Amended by T137:* the backup is `<name>.bak-<kit commit being replaced>` (the date when the lock
+  records none), and Update's `[o]verwrite` now takes one too.
 - `CLAUDE.md` and `.claude/settings.json` are covered by update. `settings.json` is **merged** with
   `python3`, a hard prerequisite already, because every wired hook runs as `python3 …`. Kit hook entries
   are added and user permissions are left alone; if `python3` is missing, the hook step fails loudly.

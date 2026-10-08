@@ -18,7 +18,9 @@
 #                                      -> that line's destination for <harness> ('' if none)
 #   harness_copy_manifest <tmp> <target> <manifest>
 #                                      -> copy each MANIFEST-listed path from <tmp> into <target>
-#   harness_backup_path <src> <dst>    -> move a differing <dst> aside to <dst>.bak[.N] (T112)
+#   harness_backup_suffix              -> bak-<old kit commit>, or bak-<YYYYMMDD> (T137)
+#   harness_backup_name <dst>          -> the first free <dst>.<suffix>[.N] (T137)
+#   harness_backup_path <src> <dst>    -> move a differing <dst> aside to that name (T112)
 #   harness_project_manifest <src> <target> <manifest> <harness>
 #                                      -> project MANIFEST paths into <harness>'s own directories
 #   harness_install_canon_symlinks [target]
@@ -224,20 +226,46 @@ _harness_install_excluding() {
   return "$_ie_rc"
 }
 
+# harness_backup_suffix -> bak-<id> (T137), where <id> is the kit version being
+# replaced — $HARNESS_PREV_COMMIT, the "kit_commit" setup.sh read from the lock
+# before this run rewrote it — or today's date (YYYYMMDD) when there is none (a
+# first install, or a lock written before T137). The lock is the project's file,
+# so anything but a plain hex commit ID is ignored rather than let into a path.
+harness_backup_suffix() {
+  case "${HARNESS_PREV_COMMIT:-}" in
+    ''|*[!0-9a-f]*) printf 'bak-%s\n' "$(date +%Y%m%d)" ;;
+    *)              printf 'bak-%s\n' "$HARNESS_PREV_COMMIT" ;;
+  esac
+}
+
+# harness_backup_name <dst> -> the first free of <dst>.<suffix>, <dst>.<suffix>.1,
+# <dst>.<suffix>.2, ... — a taken name is never reused.
+harness_backup_name() {
+  _bn_base="$1.$(harness_backup_suffix)"
+  _bn_to="$_bn_base"
+  _bn_n=0
+  while [ -e "$_bn_to" ] || [ -L "$_bn_to" ]; do
+    _bn_n=$((_bn_n + 1))
+    _bn_to="$_bn_base.$_bn_n"
+  done
+  printf '%s\n' "$_bn_to"
+}
+
 # harness_backup_path <src> <dst>
 # Before the kit replaces <dst> with <src>, move a pre-existing <dst> aside so
 # install never destroys a project's own files (T112 / ADR-0002 "No silent loss").
 #   missing                         -> nothing
 #   identical to <src> (not a link) -> nothing; no backup, no output
 #   anything else (file, directory, symlink, type mismatch)
-#                                   -> moved to the first free of <dst>.bak,
-#                                      <dst>.bak.1, <dst>.bak.2, ... and named
-#                                      in a [warn] line. An existing backup is
-#                                      never overwritten. A symlink is moved as
-#                                      the link itself, its target untouched.
-# Public on purpose: T114's "Reinstall (backs up your edits)" calls this rather
-# than re-implementing it. Unlike harness_install_canon_symlinks, an existing
-# .bak does not fail the run — the next free number keeps both backups.
+#                                   -> moved to harness_backup_name <dst>
+#                                      (<dst>.bak-<id>, or the next free
+#                                      <dst>.bak-<id>.N) and named in a [warn]
+#                                      line. An existing backup is never
+#                                      overwritten. A symlink is moved as the
+#                                      link itself, its target untouched.
+# Public on purpose: Reinstall (T114) and Update's [o]verwrite (T137) call this
+# rather than re-implementing it. Unlike harness_install_canon_symlinks, an
+# existing backup does not fail the run — the next free number keeps both.
 # Returns 1 (after an [error] line) if the move fails; the caller must then not
 # replace <dst>.
 harness_backup_path() {
@@ -254,12 +282,7 @@ harness_backup_path() {
     fi
   fi
 
-  _bk_to="$_bk_dst.bak"
-  _bk_n=0
-  while [ -e "$_bk_to" ] || [ -L "$_bk_to" ]; do
-    _bk_n=$((_bk_n + 1))
-    _bk_to="$_bk_dst.bak.$_bk_n"
-  done
+  _bk_to=$(harness_backup_name "$_bk_dst")
   # Checked explicitly: a caller in an `if`/`&&` context runs without set -e,
   # and reporting success here would send it on to rm -rf the unsaved original.
   if ! mv "$_bk_dst" "$_bk_to"; then
