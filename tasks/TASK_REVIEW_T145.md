@@ -18,7 +18,7 @@
 | Verification command run | ☑ pass | `python3 -m pytest tests/test_memory_slice.py -q` -> `29 passed`; live T137 run (2026-10-17T05:10:22Z) ends with `- **T137 merged (2026-10-08): a backup is named after the kit version it replaces; Update's `[o]verwrite` backs up too.** → memory/decisions.md`; **fix round 1** (P2: hot at cap hid matched cold entries): `python3 -m pytest tests/test_memory_slice.py -q` -> `30 passed in 0.71s` (new `test_t145_fix1_hot_at_cap_still_reports_dropped_cold_entries`) -- pass
 | Negative cases hold | ☑ pass | prose-only mention and no-Files-line entries not selected; missing decisions.md silent. Mutation (cold pass disabled): `5 failed, 24 passed`, SC1 RED |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | `feat/t144-t145-t148-t149...feat/t145-decision-slice`: memory_slice.py, tests/test_memory_slice.py, skills/compound/SKILL.md, skills/craft-spawn-prompt/SKILL.md |
 | Full smoke suite still green (no regression) | ☐ fail (pre-existing) | `.claude/hooks/tests/ tests/`: 5 failed / 1044 passed; same 5 MEMORY.md hot-tier budget tests fail on the untouched base (5 failed / 1036 passed) -- not caused by T145 |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
@@ -64,3 +64,11 @@ memory/MEMORY.md — 12 of 249 index lines matched on: lib/harness-fetch.sh, set
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
+
+## Stage 4 — code-review (Supervisor, 2026-10-17)
+
+Scope: `feat/t144-t145-t148-t149...feat/t145-decision-slice` (4 files). lane_check: `lane: C1, 4 files, 196 lines, FITS`.
+- **P2 (100) — fixed in round 1, `077f926`**: when the hot section already filled the cap, every matched decisions.md entry was dropped with no trace in the output. That is the omission risk the docstring names. The hot header now says `decisions.md: N entries matched …, all dropped by the cap`, room is reserved for that note, and there is a new test → `30 passed`.
+- **P1 process (Phase 0.5 startup reads)**: the first report said `agents/common-infrastructure.md` was read only to line 30. Waived: that file is this agent type's system prompt (`subagent_type: common-infrastructure`), so its full content was in context.
+- P3: old `### date — Title` entries print as `- ### 2026-… → memory/decisions.md`. Cosmetic, left as is.
+- P0/P1 code: none.
