@@ -15,7 +15,7 @@
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | pass | tests/test_lane_check.py: `9 passed in 0.44s` (FITS, files budget, unpredicted, Gate 2, missing guide, no Complexity, bookkeeping exclusion, binary, rename) |
-| Verification command run | pass (new tests) | `tests/test_lane_check.py` 9 passed; full suite `5 failed, 1045 passed` - the 5 failures are memory-budget tests that fail identically on the base branch (`5 failed, 1036 passed` before my change) |
+| Verification command run | pass (new tests; fix round 1: `python3 -m pytest tests/test_lane_check.py -q` -> `10 passed in 0.61s`, adds three-dot base-advance test) | `tests/test_lane_check.py` 9 passed; full suite `5 failed, 1045 passed` - the 5 failures are memory-budget tests that fail identically on the base branch (`5 failed, 1036 passed` before my change) |
 | Negative cases hold | ☐ pass / ☐ fail | |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |

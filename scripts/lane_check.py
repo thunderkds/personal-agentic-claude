@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Warn-only Stage 4 check: does the branch diff fit the task's declared Complexity?
 
-Usage: lane_check.py <TASK_GUIDE_Txxx.md> <base>..<head>
+Usage: lane_check.py <TASK_GUIDE_Txxx.md> <base>...<head>  (three dots: diff against the
+merge point, so work merged into base after the fork is not counted)
 Prints one line; exit code is always 0 (never blocks).
 """
 import fnmatch
@@ -113,7 +114,7 @@ def check(guide, rng):
 
 def main(argv):
     if len(argv) != 3:
-        print("UNKNOWN (usage: lane_check.py <guide> <base>..<head>)")
+        print("UNKNOWN (usage: lane_check.py <guide> <base>...<head>)")
         return 0
     try:
         print(check(argv[1], argv[2]))

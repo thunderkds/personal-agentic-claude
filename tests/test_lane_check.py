@@ -113,3 +113,17 @@ def test_rename_counts_once(tmp_path):
     git(repo, "commit", "-qm", "mv")
     out = run(repo, guide)
     assert out.startswith("lane: C0, 1 files, 0 lines")
+
+
+def test_three_dot_ignores_base_advancing(tmp_path):
+    repo, guide = make_repo(tmp_path, {"src/a.py": 5})
+    git(repo, "branch", "-m", "work")
+    git(repo, "checkout", "-q", "-b", "base", "HEAD~1")
+    (repo / "src").mkdir(exist_ok=True)
+    (repo / "src" / "later.py").write_text("y\n" * 40)
+    git(repo, "add", "-A")
+    git(repo, "commit", "-qm", "other task merged into base")
+    git(repo, "checkout", "-q", "work")
+    r = subprocess.run([sys.executable, SCRIPT, str(guide), "base...HEAD"], cwd=repo,
+                       capture_output=True, text=True)
+    assert r.stdout.strip() == "lane: C0, 1 files, 5 lines, FITS"
