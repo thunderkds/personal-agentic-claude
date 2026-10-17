@@ -33,8 +33,30 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured before any implementation commit; `python3 -m pytest tests/test_memory_slice.py -q; python3 skills/craft-spawn-prompt/scripts/memory_slice.py tasks/TASK_GUIDE_T137.md`, lines truncated to 160 chars; note: no `### From decisions.md` section, the T137 cold entry title "**T137 merged (2026-10-08): a backup is named after the kit version it replaces...**" is absent):
+
+```
+2026-10-17T05:09:19Z
+.....................                                                    [100%]
+21 passed in 0.40s
+<!-- memory-slice:T137 -->
+memory/MEMORY.md — 12 of 249 index lines matched on: lib/harness-fetch.sh, setup.sh, PROJECT_KANBAN.md, memory/, .claude/hooks/, T137
+### Decisions
+- [The push gate reads the board and the trace](learnings.md) — set `.claude/hooks/.state/active_task` before a task's verification work, or its Bash calls are 
+- [Codebase Map](codebase-map.md) — structural snapshot (tree, entry points, hotspots) in memory/codebase-map.md; C2/C3 agents read it
+- [learn skill: Learning Record System](decisions.md) — LR files in memory/learning-records/
+- [T031/T032/T033 merged: the direct-install trio](decisions.md) — shared lib/harness-fetch.sh + per-file harness-lock.json + hash-lock update
+- [setup.sh clones the remote, so unmerged work is unverifiable](learnings.md) — an install can run green and build a tree without your change
+- [T137 merged: backups named `<file>.bak-<prev kit_commit>`, Update `o` backs up](decisions.md) — lock gains `kit_commit`; date fallback; hex-only from the loc
+### Patterns & Gotchas
+- [A short SHA is hex — lock pair regex would read `kit_commit` as a file](learnings.md) — scope lock readers to the `"files"` block (T137)
+- [The merge gate reads one board by name](learnings.md) — `pre_bash_block_unsafe_merge.py` checks `PROJECT_KANBAN.md` only, so T083's site board was ungated at
+- [`pytest tests/ -q` runs 8 tests, not 688](learnings.md) — the suite lives in `.claude/hooks/tests/` and bare pytest skips hidden dirs; Always `python3 -m pyt
+- [CLAUDE.md gains Supervisor Communication Style section, 2026-08-03](decisions.md) — lives in the harness's master CLAUDE.md so setup.sh propagates to other r
+- [Kanban merge hygiene when both sides edit the board](learnings.md) — restore Supervisor-side PROJECT_KANBAN.md to the merge base BEFORE merging (only branch 
+- [A memory pass is uncommitted work like any other, and stashes hide it](learnings.md) — T046 shipped with a merged commit, passing tests and a closed row, yet
+<!-- /memory-slice -->
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
