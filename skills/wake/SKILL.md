@@ -29,6 +29,7 @@ Read all four sources in parallel. If any source fails or is missing, record the
 | Git history | Run `git log --oneline -10` via Bash tool | `"No git history found."` (if no commits) or `"Not a git repository."` (if git fails) |
 | `PROJECT_KANBAN.md` | Read full file, then filter to rows with status `In Progress` or `🔄` | `"No KANBAN found — project may be new or not yet planned."` |
 | `memory/MEMORY.md` | Read full file | `"No MEMORY.md found."` |
+| Uncommitted work in In Progress worktrees | Run `python3 skills/wake/scripts/dirty_worktrees.py` via Bash (read-only; prints one `Txxx <worktree> N modified, M untracked` line per In Progress task whose worktree has uncommitted changes, nothing otherwise) | No output = nothing to report; any failure is treated the same, never halt |
 | `memory/learning-records/LR-*.md` | Read all `.md` files; keep only those with `status: active` in frontmatter; sort by filename descending; take top 3 | `"No active Learning Records yet."` (same note if folder does not exist) |
 
 If this skill is invoked when the conversation already has substantial context (not a cold start), prepend a one-line note at the very top of the briefing:
@@ -59,6 +60,8 @@ Filter `PROJECT_KANBAN.md` to rows whose status column contains `In Progress` or
 ## 🔄 In-Flight Work
 - T009 — learn SKILL.md — core detection + write + promotion loop
 ```
+
+Then, under the list, emit each line from `dirty_worktrees.py` prefixed `⚠ uncommitted:` (a background agent died mid-task). Omit when the script printed nothing.
 
 **Graceful degradation**:
 - If `PROJECT_KANBAN.md` does not exist: emit `"No KANBAN found — project may be new or not yet planned."`.
@@ -121,6 +124,7 @@ The 50-line cap is a hard constraint. Never emit more than 50 lines total.
 | No git repo | Section 1: `"Not a git repository."` — continue with remaining sections |
 | Git repo with 0 commits | Section 1: `"No commits yet."` |
 | KANBAN exists, no in-progress tasks | Section 2: `"No tasks currently in progress."` |
+| `dirty_worktrees.py` prints nothing or fails | Omit the `⚠ uncommitted:` lines — no note |
 | KANBAN missing | Section 2: `"No KANBAN found — project may be new or not yet planned."` |
 | All LRs are superseded | Section 4: `"No active Learning Records yet."` |
 | `memory/learning-records/` folder absent | Section 4: `"No active Learning Records yet."` |
