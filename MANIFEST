@@ -47,6 +47,7 @@ skills          codex=.codex/skills
 .claude/sensitive-paths.txt
 scripts/gen_sandbox_profile.py
 scripts/lane_check.py
+scripts/verify_trace.py
 templates
 docs/claude-md
 packs

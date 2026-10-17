@@ -26,6 +26,12 @@ Ownership rule (Supervisor decision, TASK_GUIDE_T111 "Approach"):
     Every other entry belongs to the user: never modified, never reordered,
     never removed.
 
+Permissions (T148): the kit's `permissions.deny` entries are unioned into the
+project's `permissions.deny`, add-only — every project entry and every other
+`permissions` key is kept as is, project order first, missing kit entries
+appended, no duplicates. Kit `allow`/`ask` are never copied: a deny can only
+narrow what an agent may do in the project, an allow would widen it.
+
 Additional guarantees:
     * A kit entry whose hook file does not exist under the project root is
       dropped with a warning — a settings.json pointing at a missing hook file
@@ -127,6 +133,31 @@ def drop_dangling(groups, project_root):
     return kept
 
 
+def merge_permission_denies(merged, upstream):
+    """Append the kit's deny rules the project lacks; touch nothing else."""
+    kit_permissions = upstream.get("permissions")
+    if not isinstance(kit_permissions, dict):
+        return
+    kit_deny = [r for r in kit_permissions.get("deny") or [] if isinstance(r, str)]
+    if not kit_deny:
+        return
+    permissions = merged.get("permissions")
+    if permissions is None:
+        permissions = {}
+    if not isinstance(permissions, dict):
+        die('"permissions" in the project settings is not an object')
+    deny = permissions.get("deny")
+    if deny is None:
+        deny = []
+    if not isinstance(deny, list):
+        die('"permissions.deny" in the project settings is not a list')
+    missing = [r for i, r in enumerate(kit_deny) if r not in deny and r not in kit_deny[:i]]
+    if missing:
+        permissions = dict(permissions)
+        permissions["deny"] = deny + missing
+        merged["permissions"] = permissions
+
+
 def merge(project, upstream, project_root):
     project_hooks = project.get("hooks")
     if project_hooks is None:
@@ -154,6 +185,7 @@ def merge(project, upstream, project_root):
             merged_hooks[event] = groups
 
     merged = dict(project)
+    merge_permission_denies(merged, upstream)
     if merged_hooks:
         merged["hooks"] = merged_hooks
     else:

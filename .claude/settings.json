@@ -95,5 +95,11 @@
         ]
       }
     ]
+  },
+  "permissions": {
+    "deny": [
+      "Edit(~/.claude/harness-anchors/**)",
+      "Bash(*harness-anchors*)"
+    ]
   }
 }

@@ -130,8 +130,17 @@ GOLDEN_LINES = {
 TIMESTAMP_RE = re.compile(r'"timestamp": "[^"]*"')
 
 
+# T148 appends a hash chain (`prev`, `hash`) to every line. Those two fields are
+# pinned by test_trace_chain.py; here they are dropped so everything else stays
+# pinned byte for byte, key order included.
+CHAIN_FIELDS = ("prev", "hash")
+
+
 def elide_timestamp(line):
-    return TIMESTAMP_RE.sub('"timestamp": "<TS>"', line)
+    record = json.loads(line)
+    for key in CHAIN_FIELDS:
+        record.pop(key, None)
+    return TIMESTAMP_RE.sub('"timestamp": "<TS>"', json.dumps(record))
 
 
 class HookSandbox:
@@ -377,7 +386,7 @@ def test_unusable_tool_response_yields_no_spawn_key(sandbox, tool_response, miss
     record = sandbox.only_record()
     assert "spawn" not in record, record
     assert record["tool_name"] == "Agent"
-    assert set(record) == {"timestamp", "tool_name", "summary", "is_error"}
+    assert set(record) == {"timestamp", "tool_name", "summary", "is_error", *CHAIN_FIELDS}
 
 
 def test_error_flag_still_derived_from_tool_response(sandbox):

@@ -385,8 +385,9 @@ def test_trace_record_schema_matches_pre_change_records():
         assert result.returncode == 0, result.stderr
         new_record = sandbox.trace_records("_untagged.jsonl")[0]
         old_record = json.loads(PRE_CHANGE_TRACE_LINE)
-        assert set(new_record) == set(old_record), (set(new_record), set(old_record))
-        assert set(new_record) == {"timestamp", "tool_name", "summary", "is_error"}
+        # T148 adds the hash-chain fields; every pre-change key keeps its type.
+        assert set(new_record) == set(old_record) | {"prev", "hash"}, (set(new_record), set(old_record))
+        assert set(new_record) == {"timestamp", "tool_name", "summary", "is_error", "prev", "hash"}
         for key in old_record:
             assert type(new_record[key]) is type(old_record[key]), key
     finally:

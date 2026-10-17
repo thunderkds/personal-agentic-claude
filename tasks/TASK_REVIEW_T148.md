@@ -14,15 +14,15 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_trace_chain.py` (new, 15 tests): AC1 `test_ac1_lines_carry_prev_and_hash_chained_from_genesis`, `test_canonical_json_ignores_key_order_and_spacing`; AC2 `test_ac2_each_append_anchors_task_line_and_hash_outside_the_root`; AC4/SC1-SC4 `test_sc1_…intact`, `test_sc2_…broken_at_that_line`, `test_sc3_…anchor_mismatch`, `test_sc4_…unanchored…`, plus deletion, forged-append, truncated-line, bad-name/missing-trace; AC6/SC5 `test_sc5_unwritable_anchor_dir_…[file]`, `[relative]`, `test_lock_failure_still_appends_and_is_marked`; AC7/SC6 `test_sc6_two_processes_fifty_appends_each_stay_intact`. AC3: `tests/test_subagent_sandbox_profile.py::test_sc5_supervisor_settings_have_no_permissions_or_sandbox` (narrowed, now asserts the deny-only anchor block), `test_sc5_any_permission_beyond_the_anchor_deny_still_fails[allow/ask/defaultMode]`, `test_sc5_an_extra_deny_entry_or_a_sandbox_block_still_fails`. Implementing agent, 2026-10-17T08:16:37Z: `python3 -m pytest .claude/hooks/tests/test_trace_chain.py tests/test_subagent_sandbox_profile.py -q` → `31 passed in 3.08s` |
+| Verification command run | ☐ pass / ☑ fail (5 failures, none from T148; see the smoke row) | **Fix round 1**, implementing agent, 2026-10-17T08:21:11Z, trace state file re-written to T148 first: `python3 -m pytest .claude/hooks/tests/test_trace_chain.py tests/test_subagent_sandbox_profile.py -q` → `33 passed in 2.99s`; `bash tests/test_settings_merge.sh` → `--- 46 passed, 0 failed ---` (6 new T148 checks); `python3 -m pytest tests/ .claude/hooks/tests/ -q` → `5 failed, 1057 passed, 25 subtests passed in 26.03s`; The 5 are the MEMORY.md budget tests, already fixed on the integration branch.; Other shell tests that run `merge-settings`: `test_install_backups` 17/0, `test_update` 38/0, `test_t098_harness_presence` 20/0, `test_harness_projection` 41/0, `test_update_removals` 30/0, `test_setup` 18/0.; Mutation checks, both restored afterwards: · With the `UNVERIFIED` branch disabled (2026-10-17T08:20:57Z): `FAILED …test_a_forged_append_marked_anchor_failed_is_unverified_not_intact`, `2 failed, 15 passed`. · With the `merge_permission_denies` call removed (2026-10-17T08:20:12Z): `--- 42 passed, 4 failed ---`.; Earlier runs: 08:16:37Z `31 passed` / `5 failed, 1055 passed`; 05:15:32Z `15 passed` / `5 failed, 1051 passed`. |
+| Negative cases hold | ☑ pass (SC8, the live Write-to-anchor denial, is left to the Supervisor at Stage 5 `/verify`) | SC2 `BROKEN at line 2`, SC3 `ANCHOR MISMATCH at line 2`, deleted last line `ANCHOR MISMATCH at line 3`, forged appended line `ANCHOR MISMATCH at line 3: no anchor recorded for it`. **SC7 mutation control** (2026-10-17T05:15:12Z): with `mismatched = []` replacing the anchor comparison in `scripts/verify_trace.py`, `FAILED …test_sc3_rewrite_with_whole_chain_recomputed_is_an_anchor_mismatch` / `E       assert 0 == 1` / `1 failed, 1 passed, 13 deselected`; restored → `2 passed`. The Supervisor should re-run SC7 independently. **AC3 guard mutation** (2026-10-17T08:16:30Z): adding `"allow": ["Bash(python3 -m pytest *)"]` to the real `.claude/settings.json` → `E         Left contains one more item: "permissions must hold only 'deny': …"` / `1 failed`; file restored |
+| verify | ☑ pass | user `/verify` 2026-10-17: headless session in this worktree, 3 tool calls → 3 chained lines + 3 anchors, `verify_trace.py _untagged` → `INTACT: lines 1-3 chained and anchored`; tamper probes on copies → BROKEN / ANCHOR MISMATCH / UNVERIFIED (forged `anchor: failed` line) / ANCHOR MISMATCH (dropped line, no anchors); setup into a project with its own permissions → kit deny appended, project allow/deny/defaultMode kept, idempotent, non-list deny refused; SC8 run by the user: Write to `~/.claude/harness-anchors/probe.txt` → `File is in a directory that is denied by your permission settings.`, file absent — pass |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | `feat/t144-t145-t148-t149...feat/t148-trace-chain` (hook, lib/trace_chain.py, verify_trace.py, settings.json, tests) + direct callers: setup.sh `install_settings` → lib/merge-settings.py `merge()` |
+| Full smoke suite still green (no regression) | ☑ pass, no regression (the suite is not fully green) | Latest run 2026-10-17T08:16:37Z: `5 failed, 1055 passed`. The 5 failures are in the MEMORY.md budget tests, which T148 does not touch: `test_memory_channel_and_budget.py` (4) and `test_token_audit_format.py::test_memory_md_hot_tier_stays_within_char_budget` (`hot-tier report: 42,268 / 42,000 chars (-268 remaining)`). They fail the same way with T148's changes stashed (`5 failed, 13 passed`). AC5: `test_merge_gate_evidence.py` (`trace_shows_verification`) passes unmodified. `scripts/token_meter.py` reads Claude transcripts, not event traces, and has no change. Two schema pins changed for the new `prev`/`hash` fields: `test_post_tool_trace_spawn.py` (golden lines compared with the chain fields dropped) and `test_task_context.py::test_trace_record_schema_matches_pre_change_records`. |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | Pure backend: hook, script and tests only, no UI |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | Pure backend, no UI |
+| **UI: Responsiveness at target viewports** | ☑ N/A | Pure backend, no UI |
 
 ---
 
@@ -33,12 +33,129 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured 2026-10-17T05:10:20Z at `364d883`, before any T148 implementation commit, in
+worktree `wt-t148`. The hook was run from a scratch copy, so the real `memory/event-trace/` stayed
+untouched. A trace line has no `prev`/`hash`, there is no verifier, and `.claude/settings.json` has
+no deny rule:
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+```
+$ date -u
+2026-10-17T05:10:20Z
+$ git rev-parse --short HEAD
+364d883
+$ python3 -m pytest .claude/hooks/tests/test_trace_chain.py -q
+ERROR: file or directory not found: .claude/hooks/tests/test_trace_chain.py
+no tests ran in 0.00s
+exit=4
+$ python3 scripts/verify_trace.py T148
+python3: can't open file '/home/hungnguyenhuu/workspace/pets/wt-t148/scripts/verify_trace.py': [Errno 2] No such file or directory
+exit=2
+$ echo <Bash event> | CLAUDE_ACTIVE_TASK=T900 python3 <sandbox>/.claude/hooks/post_tool_trace.py; cat <sandbox>/memory/event-trace/T900.jsonl
+{"timestamp": "2026-10-17T05:10:20.532873+00:00", "tool_name": "Bash", "summary": "{\"command\": \"echo hi\"}", "is_error": false}
+$ grep -c permissions .claude/settings.json
+0
+```
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+**AFTER**: captured 2026-10-17T05:16:40Z at `92cdcff` (implementing agent), with the same scratch-copy
+setup and `CLAUDE_TRACE_ANCHOR_DIR` set to a scratch dir:
+
+```
+$ date -u
+2026-10-17T05:16:40Z
+$ git rev-parse --short HEAD
+92cdcff
+$ python3 -m pytest .claude/hooks/tests/test_trace_chain.py -q
+15 passed in 3.55s
+$ (3 hook runs) cat <sandbox>/memory/event-trace/T900.jsonl | head -1
+{"timestamp": "2026-10-17T05:16:44.584930+00:00", "tool_name": "Bash", "summary": "{\"command\": \"echo 1\"}", "is_error": false, "prev": "genesis", "hash": "53624c2906d0707b12bd2c853d8ec6834df63ad8dbe23ebef51361bdab356891"}
+$ python3 <sandbox>/scripts/verify_trace.py T900
+INTACT: lines 1-3 chained and anchored
+exit=0
+$ (edit line 2 summary and recompute the whole chain) python3 <sandbox>/scripts/verify_trace.py T900
+ANCHOR MISMATCH at line 2: anchored hash differs
+exit=1
+```
+
+**DELTA**: A user can run `python3 scripts/verify_trace.py <task>` and see when a task's trace was edited after it was written. This includes an edit that recomputes the whole in-file chain, which shows as `ANCHOR MISMATCH`.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
+
+## Implementation notes (implementing agent)
+
+**AC3: done, and T147's AC4 test narrowed by user decision (2026-10-17).** Before T148,
+`tests/test_subagent_sandbox_profile.py::test_sc5_supervisor_settings_have_no_permissions_or_sandbox` (T147 AC4,
+"Supervisor keeps today's permissions") rejected any `permissions` block, so AC3 could not land. The user chose the
+deny-only option. `.claude/settings.json` now carries exactly this block:
+
+```json
+"permissions": {
+  "deny": [
+    "Edit(~/.claude/harness-anchors/**)",
+    "Bash(*harness-anchors*)"
+  ]
+}
+```
+
+What the narrowed test still rejects:
+- any `sandbox` block
+- any `allow`, `ask` or `defaultMode` key
+- any other key under `permissions`
+- a deny list that is not exactly these two rules
+- a diff from `main` that changes anything beyond these lines
+
+New negative tests prove an extra allow, ask, defaultMode, extra deny entry or sandbox block still fails it.
+SC8, a live `Write` to the anchor being refused, is still open: the Supervisor runs it at Stage 5 `/verify`.
+
+**Open note: the config directory on this machine.** The anchor path is literally `~/.claude/harness-anchors`. This
+machine's active Claude Code config directory is `~/.claude-wife`. The anchor still lands under `~/.claude` and the
+`Edit(~/.claude/harness-anchors/**)` rule still names it, so the two agree. The path was not changed. Worth confirming
+during SC8 that the deny rule applies to that path in a session running under `~/.claude-wife`.
+
+**Assumption verified: path syntax for a `~`-rooted directory.** Source: https://code.claude.com/docs/en/permissions, fetched 2026-10-17.
+- Path table, verbatim: *"`~/path` | Path from home directory | `Read(~/Documents/*.pdf)`"*.
+- Also: *"To write a rule in user settings that applies inside every project, use a `//` absolute path or a `~/` home-relative path instead."*
+- `Edit`, not `Write`, verbatim: *"Claude Code checks file permissions against `Edit(path)` and `Read(path)` rules only. If you write a path rule for `Write` … Claude Code accepts the rule but never consults it … Use `Edit(docs/**)` in place of `Write(docs/**)`"*.
+- So `Edit(~/.claude/harness-anchors/**)` covers both Edit and Write.
+- Bash, verbatim: *"Bash rules match the whole command text, with `*` standing in for any text."*
+
+**Bash denial is pattern-based and evadable.** `Bash(*harness-anchors*)` matches only commands whose text names the directory.
+For example, `d=harness; cat ~/.claude/${d}-anchors/...` or a Python one-liner that builds the path does not match. The anchor
+raises the bar against an agent quietly rewriting its trace. It is not a proof. The human operator is out of scope by design.
+The verifier and `lib/trace_chain.py` are repo code, so an agent could also edit them; that edit shows in the branch diff.
+
+**Design choices:**
+- Line numbers are physical lines in the `.jsonl`.
+- The anchor line is written before the trace line, under the trace's exclusive lock. If the anchor write fails, the line
+  gets `"anchor": "failed"` inside its hash.
+- The verifier reads the trace and the anchor file under a shared lock, so an append in progress is never reported as a
+  mismatch.
+- A chained line with no anchor entry and no `anchor: failed` is an `ANCHOR MISMATCH`. This catches forged appends.
+- Lines marked `anchor: failed` are chain-checked only. Fix round 1 (P1-a) changed what the verifier does with them:
+  - Before: it printed `INTACT` plus a note, so a forged line appended with `anchor: failed` and a valid recomputed hash
+    passed.
+  - Now: the verdict is `UNVERIFIED at line N: written with anchor: failed — not anchor-checked`, exit 1.
+  - `BROKEN` and `ANCHOR MISMATCH` still take precedence, and within a verdict the earliest line is reported.
+  - Consequence: a genuine anchor-write failure also makes the trace `UNVERIFIED`. That is deliberate, because nothing
+    outside the repo vouches for that line.
+- Fix round 1 (P1-b): `lib/merge-settings.py` now unions the kit's `permissions.deny` into a project that already has
+  a `.claude/settings.json`. Before, its `merge()` reconciled `hooks` only, so those projects got the anchor-writing
+  hook without its protection. The union is add-only:
+  - every project entry and every other `permissions` key is kept;
+  - project order comes first, missing kit entries are appended, with no duplicates;
+  - kit `allow`/`ask` are never copied;
+  - a non-object `permissions` or a non-list `deny` is refused (exit 2, file untouched).
+- `<repo-slug>` is the root directory's basename plus `-` and the first 8 hex chars of sha256(`remote.origin.url`), or
+  `noremote`. Renaming or moving the checkout changes the slug, and the old anchors then report `ANCHOR MISMATCH`.
+- `.claude/hooks/tests/conftest.py` (new, not in Files to Change) points `CLAUDE_TRACE_ANCHOR_DIR` at a temp dir for the
+  whole hook test suite. Without it, the existing spawn and task-context tests would write anchors under the real home.
+
+## Stage 4 — code-review + security-review (Supervisor, 2026-10-17)
+
+Scope: `feat/t144-t145-t148-t149...feat/t148-trace-chain`, plus the install path that ships `.claude/settings.json` (setup.sh `install_settings`/`merge_settings` → `lib/merge-settings.py`). lane_check: `lane: C2, 11 files, 691 lines, EXCEEDS (lines 691 > 500)`. The unpredicted files are trace_chain.py, conftest.py, two tests that pin the trace fields, MANIFEST and the narrowed T147 test, each justified in the implementer's report. 300 of the lines are tests, so this is recorded and not raised. Startup reads line is complete.
+- **P1 security (100) — fixed in round 1, `4572463`**: an appended forged line marked `"anchor": "failed"`, with a recomputed chain hash, verified as `INTACT`. It now reports `UNVERIFIED at line N`, exit 1. Test `test_a_forged_append_marked_anchor_failed_is_unverified_not_intact`; mutation control `2 failed, 15 passed`.
+- **P1 (100) — fixed in round 1, `4572463`**: `merge()` reconciled only `hooks`, so any project that already had a settings.json got the anchor-writing hook without the deny rules. `merge_permission_denies()` now unions the kit's deny entries into the project's, add-only, and never copies allow/ask. `tests/test_settings_merge.sh` → `--- 46 passed, 0 failed ---`; mutation control `42 passed, 4 failed`.
+- Re-run by the Supervisor after round 1: `33 passed` (trace_chain + sandbox profile) and `--- 46 passed, 0 failed ---`.
+- Accepted limits, recorded and not fixed: the `Bash(*harness-anchors*)` deny only matches the literal string, so a path built from a variable gets past it. Renaming the checkout changes the slug. Every tool call reads the whole trace and runs one `git config` (P3 performance).
+- Not an issue: `~/.claude` versus this machine's `~/.claude-wife`. The writer, the verifier and the deny rule all use the literal `~/.claude/harness-anchors` path.
+- Open for /verify: SC8, a live `Write` into `~/.claude/harness-anchors/` that must be refused.
