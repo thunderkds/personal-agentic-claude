@@ -14,12 +14,12 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_memory_slice.py` (8 `test_t145_*` tests appended; the 21 existing untouched): `29 passed in 0.62s`
+| Verification command run | ☑ pass | `python3 -m pytest tests/test_memory_slice.py -q` -> `29 passed`; live T137 run (2026-10-17T05:10:22Z) ends with `- **T137 merged (2026-10-08): a backup is named after the kit version it replaces; Update's `[o]verwrite` backs up too.** → memory/decisions.md`
+| Negative cases hold | ☑ pass | prose-only mention and no-Files-line entries not selected; missing decisions.md silent. Mutation (cold pass disabled): `5 failed, 24 passed`, SC1 RED |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| Full smoke suite still green (no regression) | ☐ fail (pre-existing) | `.claude/hooks/tests/ tests/`: 5 failed / 1044 passed; same 5 MEMORY.md hot-tier budget tests fail on the untouched base (5 failed / 1036 passed) -- not caused by T145 |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
 | **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
@@ -58,9 +58,9 @@ memory/MEMORY.md — 12 of 249 index lines matched on: lib/harness-fetch.sh, set
 <!-- /memory-slice -->
 ```
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER** (2026-10-17T05:10:22Z, same T137 command, tail): the slice now ends with `### From decisions.md`, a header line, and `- **T137 merged (2026-10-08): a backup is named after the kit version it replaces; Update's `[o]verwrite` backs up too.** → memory/decisions.md`. `skills/compound/SKILL.md` template now opens `## The General Lesson`, `## Applies When`, then `## Problem`.
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+**DELTA**: A spawned agent now sees the titles of past decisions that named its files, and new compound docs lead with the reusable lesson.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]

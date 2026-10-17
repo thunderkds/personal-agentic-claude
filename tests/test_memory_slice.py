@@ -284,3 +284,92 @@ def test_missing_guide_is_an_error(tmp_path):
     result = run_slice(tmp_path / "tasks" / "TASK_GUIDE_T950.md")
     assert result.returncode != 0
     assert "not found" in result.stderr
+
+
+# --------------------------------------------------------------------------
+# T145 — cold decisions.md entries whose **Files** line overlaps the guide's files
+# --------------------------------------------------------------------------
+HOT = "### Decisions\n- [hot line](decisions.md) — `lib/harness-fetch.sh`\n"
+
+
+def cold_project(tmp_path: Path, decisions: str | None, memory: str = HOT,
+                 files=("lib/harness-fetch.sh",)) -> Path:
+    guide = make_project(tmp_path, "T950", guide_with(list(files)), memory)
+    if decisions is not None:
+        (tmp_path / "memory" / "decisions.md").write_text(decisions, encoding="utf-8")
+    return guide
+
+
+def test_t145_sc1_entry_with_matching_files_line_is_listed_by_title(tmp_path):
+    decisions = ("**T900 merged: fetch gets a retry.**\nBody prose.\n"
+                 "**Files**: lib/harness-fetch.sh, tests/x.sh\n\n"
+                 "**T901 merged: unrelated.**\nBody.\n**Files**: site/index.html\n")
+    out = run_slice(cold_project(tmp_path, decisions)).stdout
+    assert re.search(r"### From decisions\.md\nmemory/decisions\.md — 1 entries matched[^\n]*\n"
+                     r"- \*\*T900 merged: fetch gets a retry\.\*\* → memory/decisions\.md\n", out)
+    assert "T901" not in out and "Body prose" not in out
+    assert out.index("- [hot line]") < out.index("### From decisions.md") < out.index("<!-- /memory-slice -->")
+
+
+def test_t145_sc2_path_in_prose_only_is_not_selected(tmp_path):
+    decisions = ("**T900 merged: prose only.**\nWe touched lib/harness-fetch.sh here.\n"
+                 "**Files**: site/index.html\n\n"
+                 "**T902 merged: no files line.**\nlib/harness-fetch.sh mentioned.\n")
+    out = run_slice(cold_project(tmp_path, decisions)).stdout
+    assert "From decisions.md" not in out and "T900" not in out and "T902" not in out
+
+
+def test_t145_sc3_forty_matches_stay_within_cap_and_header_counts_drops(tmp_path):
+    decisions = "\n".join(
+        f"**T{800 + i} merged: decision number {i} " + "x" * 60 + ".**\n"
+        "**Files**: lib/harness-fetch.sh\n" for i in range(40))
+    out = run_slice(cold_project(tmp_path, decisions)).stdout
+    assert len(out.splitlines()) <= MAX_LINES and len(out) <= MAX_CHARS
+    m = re.search(r"memory/decisions\.md — 40 entries .*?(\d+) shown, (\d+) dropped", out)
+    assert m and int(m.group(1)) + int(m.group(2)) == 40 and int(m.group(2)) > 0
+    assert out.count("→ memory/decisions.md") == int(m.group(1))
+    assert "- [hot line]" in out  # cold is dropped before hot
+
+
+def test_t145_sc4_missing_decisions_md_is_silent(tmp_path):
+    with_none = run_slice(cold_project(tmp_path, None)).stdout
+    other = tmp_path / "b"
+    other.mkdir()
+    no_match = run_slice(cold_project(other, "**T1 x.**\n**Files**: site/index.html\n")).stdout
+    assert "decisions.md" not in with_none.replace("(decisions.md)", "")
+    assert with_none == no_match  # an unmatched decisions.md changes nothing either
+
+
+def test_t145_wrapped_files_line_and_heading_style_entries(tmp_path):
+    decisions = ("### 2026-01-01 — Old style heading\n**Decision**: d\n**Why**: w\n"
+                 "**Files**: setup.sh,\nlib/harness-fetch.sh\n\n"
+                 "**T903 merged: wrapped.**\nbody\n**Files**: a.sh,\nb.sh,\nlib/harness-fetch.sh\n")
+    out = run_slice(cold_project(tmp_path, decisions)).stdout
+    assert "- ### 2026-01-01 — Old style heading → memory/decisions.md" in out
+    assert "- **T903 merged: wrapped.** → memory/decisions.md" in out
+
+
+def test_t145_generic_basename_maps_to_directory(tmp_path):
+    decisions = "**T904 merged: skill change.**\n**Files**: skills/foo/SKILL.md\n"
+    guide = cold_project(tmp_path, decisions, files=("skills/foo/SKILL.md",))
+    out = run_slice(guide).stdout
+    assert "T904 merged" in out
+    other = tmp_path / "b"
+    other.mkdir()
+    out = run_slice(cold_project(other, "**T905 other.**\n**Files**: skills/bar/SKILL.md\n",
+                                 files=("skills/foo/SKILL.md",))).stdout
+    assert "T905" not in out
+
+
+def test_t145_cold_section_when_no_hot_line_matches(tmp_path):
+    decisions = "**T906 merged: only cold.**\n**Files**: lib/harness-fetch.sh\n"
+    out = run_slice(cold_project(tmp_path, decisions, memory="### X\n- [nope](l.md) — none\n")).stdout
+    assert "no memory lines matched" in out and "- **T906 merged: only cold.**" in out
+
+
+def test_t145_compound_template_leads_with_lesson_and_applies_when():
+    text = (ROOT / "skills" / "compound" / "SKILL.md").read_text(encoding="utf-8")
+    block = text[text.index("track: bug | knowledge"):]
+    heads = re.findall(r"^## .+$", block, re.MULTILINE)
+    assert heads[:2] == ["## The General Lesson", "## Applies When"]
+    assert re.search(r"empty.{0,40}Applies When|Applies When.{0,60}(empty|reject)", text, re.I | re.S)
