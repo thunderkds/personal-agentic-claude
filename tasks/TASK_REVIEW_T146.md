@@ -261,3 +261,12 @@ Verdict: **2 × P1 must be fixed before merge** → sent back to the implementin
 - Headless `claude -p`, asked to Write `.env` → refused: `[hook:sensitive-path] This Write call touches a sensitive path: …/vt/.env (pattern `.env`). Listed in .claude/sensitive-paths.txt and no active task predicts it.` The `.env` file was not created.
 - SC9, interactive with `--permission-mode acceptEdits` in a herdr pane: `Write(notes.txt)` → `Wrote 1 line to notes.txt` with no prompt; `Write(.env)` → `Do you want to create .env? ❯ 1. Yes 2. No`. Declined, and `.env` was not created.
 - 🔍 Bash inside the sandboxed session: `echo "x" > secrets.key` → `[hook:sensitive-path] This Bash call touches a sensitive path: secrets.key (pattern `**/*.key`)`.
+
+## Stage 4 — code-review, fix round 1 delta (Supervisor, 2026-10-17)
+
+Scope: `9a04675..7426c92` (`pre_tool_sensitive_path.py` and its tests). Both P1s are confirmed closed through the real stdin protocol: `echo x > ".env"`, `echo x >".env"`, `echo x | tee ".env"`, `rm -rf infra`, `mv secrets /tmp/x` → ask; `echo "edit .env later"` → silent. No new P0/P1.
+
+| Sev | Finding | Conf | Action |
+|---|---|---|---|
+| P2 | **Over-asking on plain words, and the dir fix made it worse.** Any bare token equal to a protected directory name now asks: `git commit -m "update infra docs"`, `git commit -m "rotate secrets handling"`, `docker build -t infra .`. In a headless spawn, `ask` resolves to deny, so a sub-agent's commit is refused whenever its message names one of these words. The implementing agent hit this live and worked around it with `git commit -F`. | 100 | Follow-up task: treat `git commit -m/--message` values as data, or match a bare `dir/**` token only when it ends in `/` or exists as a directory. |
+| P3 | `QUOTED_REDIRECT_TARGET_PATTERN` also fires on a `>` *inside* quoted prose (`echo "a > '.env'"` → ask). | 100 | Accept: it errs toward asking. |
