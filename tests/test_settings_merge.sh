@@ -14,6 +14,7 @@
 #   SC7 no python3 on PATH                      -> same as SC6
 #   SC8 every merged command references a file that exists
 #   M1  mutation control: a merge that skips adding entries must fail SC1
+#   T148 kit permissions.deny unioned in add-only; kit allow/ask never copied
 #
 # Plus the Edge Case Checklist: symlink refusal, empty/null event lists,
 # non-ASCII preservation, atomic write (no temp-file residue), and a command
@@ -523,6 +524,64 @@ PYEOF
   fi
   cp "$WORK/merge-settings.orig.py" "$FIXTURE/lib/merge-settings.py"
   commit_fixture "M1 revert"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# T148 — the kit's permissions.deny is unioned in, add-only; allow/ask never copied
+# Drives lib/merge-settings.py directly on scratch files.
+# ─────────────────────────────────────────────────────────────────────────────
+PD="$WORK/perm-deny"
+mkdir -p "$PD/root/.claude/hooks"
+: > "$PD/root/.claude/hooks/kit_one.py"
+cat > "$PD/kit.json" <<'EOF'
+{
+  "hooks": {"PreToolUse": [{"matcher": "Bash", "hooks": [{"type": "command",
+    "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/kit_one.py"}]}]},
+  "permissions": {
+    "allow": ["Bash(kit-allow *)"],
+    "ask": ["Bash(kit-ask *)"],
+    "deny": ["Edit(~/.claude/harness-anchors/**)", "Bash(*harness-anchors*)"]
+  }
+}
+EOF
+cat > "$PD/own.json" <<'EOF'
+{
+  "permissions": {
+    "allow": ["Bash(ls:*)"],
+    "deny": ["Read(.env)", "Bash(*harness-anchors*)"],
+    "defaultMode": "default"
+  }
+}
+EOF
+printf '{}\n' > "$PD/none.json"
+for f in own none; do
+  python3 "$MERGE" "$PD/kit.json" "$PD/$f.json" "$PD/root" \
+    || fail "T148: merge exited non-zero on $f.json"
+done
+assert_json "T148: project deny kept in order, missing kit deny appended once" "$PD/own.json" \
+  'd["permissions"]["deny"] == ["Read(.env)", "Bash(*harness-anchors*)", "Edit(~/.claude/harness-anchors/**)"]'
+assert_json "T148: project allow and other permissions keys untouched" "$PD/own.json" \
+  'd["permissions"]["allow"] == ["Bash(ls:*)"] and d["permissions"]["defaultMode"] == "default" and "ask" not in d["permissions"]'
+assert_json "T148: project with no permissions gets the kit deny only" "$PD/none.json" \
+  'd["permissions"] == {"deny": ["Edit(~/.claude/harness-anchors/**)", "Bash(*harness-anchors*)"]}'
+assert_json "T148: kit allow/ask never copied" "$PD/none.json" \
+  '"allow" not in d["permissions"] and "ask" not in d["permissions"]'
+cp "$PD/own.json" "$PD/own.first"; cp "$PD/none.json" "$PD/none.first"
+python3 "$MERGE" "$PD/kit.json" "$PD/own.json" "$PD/root"
+python3 "$MERGE" "$PD/kit.json" "$PD/none.json" "$PD/root"
+if cmp -s "$PD/own.json" "$PD/own.first" && cmp -s "$PD/none.json" "$PD/none.first"; then
+  pass "T148: re-running the merge is byte-identical (idempotent deny union)"
+else
+  fail "T148: a second merge changed the permissions"
+fi
+printf '{"permissions": {"deny": "Read(.env)"}}\n' > "$PD/bad.json"
+cp "$PD/bad.json" "$PD/bad.before"
+if python3 "$MERGE" "$PD/kit.json" "$PD/bad.json" "$PD/root" 2>/dev/null; then
+  fail "T148: a non-list permissions.deny was merged instead of refused"
+elif cmp -s "$PD/bad.json" "$PD/bad.before"; then
+  pass "T148: a non-list permissions.deny is refused, file untouched"
+else
+  fail "T148: a refused merge still wrote the file"
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────

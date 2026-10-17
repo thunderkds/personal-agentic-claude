@@ -15,7 +15,16 @@
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_trace_chain.py` (new, 15 tests): AC1 `test_ac1_lines_carry_prev_and_hash_chained_from_genesis`, `test_canonical_json_ignores_key_order_and_spacing`; AC2 `test_ac2_each_append_anchors_task_line_and_hash_outside_the_root`; AC4/SC1-SC4 `test_sc1_…intact`, `test_sc2_…broken_at_that_line`, `test_sc3_…anchor_mismatch`, `test_sc4_…unanchored…`, plus deletion, forged-append, truncated-line, bad-name/missing-trace; AC6/SC5 `test_sc5_unwritable_anchor_dir_…[file]`, `[relative]`, `test_lock_failure_still_appends_and_is_marked`; AC7/SC6 `test_sc6_two_processes_fifty_appends_each_stay_intact`. AC3: `tests/test_subagent_sandbox_profile.py::test_sc5_supervisor_settings_have_no_permissions_or_sandbox` (narrowed, now asserts the deny-only anchor block), `test_sc5_any_permission_beyond_the_anchor_deny_still_fails[allow/ask/defaultMode]`, `test_sc5_an_extra_deny_entry_or_a_sandbox_block_still_fails`. Implementing agent, 2026-10-17T08:16:37Z: `python3 -m pytest .claude/hooks/tests/test_trace_chain.py tests/test_subagent_sandbox_profile.py -q` → `31 passed in 3.08s` |
-| Verification command run | ☐ pass / ☑ fail (5 failures, none from T148; see the smoke row) | Implementing agent, 2026-10-17T08:16:37Z, after the AC3 change. `python3 -m pytest .claude/hooks/tests/test_trace_chain.py -q && python3 -m pytest tests/ .claude/hooks/tests/ -q`: first half `15 passed`, full suite `5 failed, 1055 passed, 25 subtests passed in 24.60s`. Earlier run, 2026-10-17T05:15:32Z, before AC3: `15 passed in 3.09s` / `5 failed, 1051 passed, 25 subtests passed in 25.85s` |
+| Verification command run | ☐ pass / ☑ fail (5 failures, none from T148; see the smoke row) | **Fix round 1**, implementing agent, 2026-10-17T08:21:11Z, trace state file re-written to T148 first:
+  - `python3 -m pytest .claude/hooks/tests/test_trace_chain.py tests/test_subagent_sandbox_profile.py -q` → `33 passed in 2.99s`
+  - `bash tests/test_settings_merge.sh` → `--- 46 passed, 0 failed ---` (6 new T148 checks)
+  - `python3 -m pytest tests/ .claude/hooks/tests/ -q` → `5 failed, 1057 passed, 25 subtests passed in 26.03s`
+  - The 5 are the MEMORY.md budget tests, already fixed on the integration branch.
+  - Other shell tests that run `merge-settings`: `test_install_backups` 17/0, `test_update` 38/0, `test_t098_harness_presence` 20/0, `test_harness_projection` 41/0, `test_update_removals` 30/0, `test_setup` 18/0.
+  - Mutation checks, both restored afterwards:
+    - With the `UNVERIFIED` branch disabled (2026-10-17T08:20:57Z): `FAILED …test_a_forged_append_marked_anchor_failed_is_unverified_not_intact`, `2 failed, 15 passed`.
+    - With the `merge_permission_denies` call removed (2026-10-17T08:20:12Z): `--- 42 passed, 4 failed ---`.
+  - Earlier runs: 08:16:37Z `31 passed` / `5 failed, 1055 passed`; 05:15:32Z `15 passed` / `5 failed, 1051 passed`. |
 | Negative cases hold | ☑ pass (SC8, the live Write-to-anchor denial, is left to the Supervisor at Stage 5 `/verify`) | SC2 `BROKEN at line 2`, SC3 `ANCHOR MISMATCH at line 2`, deleted last line `ANCHOR MISMATCH at line 3`, forged appended line `ANCHOR MISMATCH at line 3: no anchor recorded for it`. **SC7 mutation control** (2026-10-17T05:15:12Z): with `mismatched = []` replacing the anchor comparison in `scripts/verify_trace.py`, `FAILED …test_sc3_rewrite_with_whole_chain_recomputed_is_an_anchor_mismatch` / `E       assert 0 == 1` / `1 failed, 1 passed, 13 deselected`; restored → `2 passed`. The Supervisor should re-run SC7 independently. **AC3 guard mutation** (2026-10-17T08:16:30Z): adding `"allow": ["Bash(python3 -m pytest *)"]` to the real `.claude/settings.json` → `E         Left contains one more item: "permissions must hold only 'deny': …"` / `1 failed`; file restored |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
@@ -131,8 +140,20 @@ The verifier and `lib/trace_chain.py` are repo code, so an agent could also edit
 - The verifier reads the trace and the anchor file under a shared lock, so an append in progress is never reported as a
   mismatch.
 - A chained line with no anchor entry and no `anchor: failed` is an `ANCHOR MISMATCH`. This catches forged appends.
-- Lines marked `anchor: failed` are chain-checked only. The verifier lists them in a `note:` line. Known gap: a forger could
-  mark appended lines `anchor: failed`.
+- Lines marked `anchor: failed` are chain-checked only. Fix round 1 (P1-a) changed what the verifier does with them:
+  - Before: it printed `INTACT` plus a note, so a forged line appended with `anchor: failed` and a valid recomputed hash
+    passed.
+  - Now: the verdict is `UNVERIFIED at line N: written with anchor: failed — not anchor-checked`, exit 1.
+  - `BROKEN` and `ANCHOR MISMATCH` still take precedence, and within a verdict the earliest line is reported.
+  - Consequence: a genuine anchor-write failure also makes the trace `UNVERIFIED`. That is deliberate, because nothing
+    outside the repo vouches for that line.
+- Fix round 1 (P1-b): `lib/merge-settings.py` now unions the kit's `permissions.deny` into a project that already has
+  a `.claude/settings.json`. Before, its `merge()` reconciled `hooks` only, so those projects got the anchor-writing
+  hook without its protection. The union is add-only:
+  - every project entry and every other `permissions` key is kept;
+  - project order comes first, missing kit entries are appended, with no duplicates;
+  - kit `allow`/`ask` are never copied;
+  - a non-object `permissions` or a non-list `deny` is refused (exit 2, file untouched).
 - `<repo-slug>` is the root directory's basename plus `-` and the first 8 hex chars of sha256(`remote.origin.url`), or
   `noremote`. Renaming or moving the checkout changes the slug, and the old anchors then report `ANCHOR MISMATCH`.
 - `.claude/hooks/tests/conftest.py` (new, not in Files to Change) points `CLAUDE_TRACE_ANCHOR_DIR` at a temp dir for the

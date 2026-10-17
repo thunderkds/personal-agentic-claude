@@ -15,12 +15,18 @@ line when the trace starts with lines written before the chain existed:
                              anchored when it was written (a rewrite that
                              recomputed the chain, or a deleted/forged line)  exit 1
 
+    UNVERIFIED at line N     the chain links and every anchor matches, but line
+                             N was written with "anchor": "failed" (anchor dir
+                             unwritable) — nothing outside the repo vouches
+                             for it, and a forged append could claim the same  exit 1
+
+BROKEN and ANCHOR MISMATCH take precedence over UNVERIFIED; within a verdict
+the earliest line is reported.
+
 Exit 2: bad task name or no trace file. This reports; it blocks nothing.
 
-Limits: a line written while the anchor directory was unwritable carries
-`"anchor": "failed"` and is checked by the chain only; such lines are listed in
-a note. The anchor is protected by permission rules, which raise the bar but are
-not a proof (see TASK_REVIEW_T148).
+Limits: the anchor is protected by permission rules, which raise the bar but
+are not a proof (see TASK_REVIEW_T148).
 """
 import json
 import os
@@ -106,8 +112,10 @@ def verify(trace_bytes, anchors):
         why = "no anchor recorded for it" if n not in anchors else "anchored hash differs"
         return out + ["ANCHOR MISMATCH at line %d: %s" % (n, why)], 1
     if anchor_failed:
-        out.append("note: lines %s were written with anchor: failed — chain-checked only"
-                   % ",".join(str(n) for n in anchor_failed))
+        # A line marked anchor: failed has nothing outside the repo to check it
+        # against, so it is exactly what a forged append would claim to be.
+        return out + ["UNVERIFIED at line %d: written with anchor: failed — not anchor-checked"
+                      % min(anchor_failed)], 1
     return out + ["INTACT: lines %d-%d chained and anchored" % (first_chained, len(lines))], 0
 
 

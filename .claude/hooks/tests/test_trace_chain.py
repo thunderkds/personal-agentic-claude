@@ -222,6 +222,33 @@ def test_a_forged_line_appended_with_a_valid_chain_is_an_anchor_mismatch(sb):
     assert result.stdout.splitlines()[-1] == "ANCHOR MISMATCH at line 3: no anchor recorded for it"
 
 
+def test_a_forged_append_marked_anchor_failed_is_unverified_not_intact(sb):
+    """Fix round 1 P1-a: claiming the anchor write failed must not buy an INTACT."""
+    for n in range(2):
+        sb.run_hook(bash_event(n))
+    recs = sb.records()
+    forged = {"timestamp": "t", "tool_name": "Bash",
+              "summary": '{"command": "python3 -m pytest -q"}', "is_error": False,
+              "anchor": "failed", "prev": recs[-1]["hash"]}
+    forged["hash"] = chain_hash(forged)
+    sb.write_lines(sb.lines() + [json.dumps(forged)])
+    result = sb.verify()
+    assert result.returncode == 1, result.stdout
+    assert result.stdout.splitlines()[-1] == (
+        "UNVERIFIED at line 3: written with anchor: failed — not anchor-checked")
+
+
+def test_anchor_mismatch_takes_precedence_over_unverified(sb):
+    for n in range(2):
+        sb.run_hook(bash_event(n))
+    recs = sb.records()
+    recs[0]["summary"] = "{}"
+    recs.append({"timestamp": "t", "tool_name": "Bash", "summary": "{}", "is_error": False,
+                 "anchor": "failed"})
+    sb.write_lines(rechain(recs))
+    assert sb.verify().stdout.splitlines()[-1].startswith("ANCHOR MISMATCH at line 1")
+
+
 # --- edge cases ---------------------------------------------------------------
 
 def test_a_crash_truncated_line_is_reported_not_crashed_on(sb):
@@ -266,9 +293,8 @@ def test_sc5_unwritable_anchor_dir_still_writes_the_line_marked_failed(sb, ancho
     if anchor_dir == "relative/anchors":
         assert result.returncode == 2  # the verifier refuses a relative anchor dir too
     else:
-        assert result.returncode == 0, result.stdout
-        assert result.stdout.splitlines()[-1].startswith("INTACT")
-        assert "anchor: failed" in result.stdout
+        assert result.returncode == 1, result.stdout
+        assert result.stdout.splitlines()[-1].startswith("UNVERIFIED at line 1")
 
 
 def test_lock_failure_still_appends_and_is_marked(sb):
