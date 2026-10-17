@@ -148,6 +148,7 @@
 - [T136 merged: spawn model picked per CLI via `## CLI Model Table`](decisions.md) — C0–C3 stays in the guide; `craft-spawn-prompt` looks up the CLI's row and STOPs on no CLI / no row / empty cell
 - [T137 merged: backups named `<file>.bak-<prev kit_commit>`, Update `o` backs up](decisions.md) — lock gains `kit_commit`; date fallback; hex-only from the lock; suffix = last kit installed, not edit origin
 - [T138 merged: inline-SVG pipeline diagram in site Overview](decisions.md) — one node per `## Stage` heading, drift-tested
+- [T146/T147: sensitive-path ask hook; sub-agent sandbox is CLI-only (b)](decisions.md) — predicted path ⇒ no decision (never `allow`); `Agent()` spawns not sandboxed; T147 /verify FAIL on Ubuntu userns
 
 ### Patterns & Gotchas
 - [A short SHA is hex — lock pair regex would read `kit_commit` as a file](learnings.md) — scope lock readers to the `"files"` block (T137)
@@ -258,6 +259,8 @@
 - [skill promotion: code block only](learnings.md) — never auto-save SKILL.md stub; output fenced block and stop; user saves + registers manually
 - [A rule keyed on an input needs a "no input" case](learnings.md) — T136: 9 ACs covered named CLIs; no CLI named silently fell back to claude
 - [A "must not appear" test must skip record files](learnings.md) — T136: AC8 tripped on the KANBAN row quoting the verify result
+- [Claude sandbox Bash dies under Ubuntu nested-userns restriction](learnings.md) — `apparmor_restrict_unprivileged_userns=1` ⇒ `apply-seccomp … nested userns` on every Bash; probe nested, not bare bwrap
+- [Hook `ask` = deny in headless runs; `slice_section` misses `…)` headings](learnings.md) — over-asking kills headless sub-agent work; look up `Files to Change` prefix
 
 ### Learning Records
 <!-- One-liner per active LR: - [LR-NNNN slug](memory/learning-records/LR-NNNN-slug.md) — summary -->
