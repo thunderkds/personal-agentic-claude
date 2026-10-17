@@ -8,6 +8,7 @@
 ## Board
 
 ### Todo
+- [ ] **T151** — The docs and site describe what T144, T145, T148 and T149 changed | common-infrastructure | C1 | Risk: Low | P1
 - [ ] **T143** — CI re-runs the Verification Command of every task a PR moves to Done | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T143.md` | Depends on: none | Registered 2026-10-16 from the improvement-list grilling + brainstorm (`BRAINSTORMING_LOG_harness-hardening.md`): reuses `lib/guide_sections.py`; fail-closed on a missing/placeholder block; `# ci: skip — <reason>` opt-out
 - [ ] **T142** — Two machines cannot grab the same task: an atomic claim/release | Common-Infrastructure-Agent | C2 | Risk: Medium | P2 | Depends on: none | Registered 2026-10-16 from the improvement-list grilling (#5), **deferred by the user**. Grilling found the constraint any design must meet: `pre_bash_block_unsafe_merge.py` blocks every push while a task is In Progress, so a claim recorded by moving the row cannot be pushed. Candidate recorded, not chosen: an empty `claim/Txxx` remote branch (a push of an existing name fails, which makes it atomic)
 - [ ] **T139** — Update's lock rewrite has no test for `kit_commit` | Common-Infrastructure-Agent | C0 | Risk: Low | P2 | Depends on: T137 | Registered 2026-10-08 from T137 Stage 4 P2: `write_new_lock` records the new kit commit (hand-probed `d82da61`→`2cb8fe3`, and seen at `/verify`) but no assertion in `tests/test_update.sh` pins it
@@ -79,6 +80,7 @@
 
 
 ### In Progress
+- [ ] **T151** — The docs and site describe what T144, T145, T148 and T149 changed | common-infrastructure | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T151.md` | Branch: `feat/t151-docs` → `feat/t144-t145-t148-t149` | Depends on: T144, T145, T148, T149 | Registered 2026-10-17 at the user's request (docs not updated after the batch)
 - [ ] **T150** — Spawns run as background agents, and `wake` flags work a dead agent left behind | common-infrastructure | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T150.md` | Branch: `feat/t150-spawn-mode` (worktree `../wt-t150`) | Depends on: none | Registered 2026-10-17 from the user's spawn-mode decision (`BRAINSTORMING_LOG_spawn-mode.md`): background `Agent()` by default, CLI pane only on request or for a non-Claude CLI; `wake` reports In Progress worktrees with uncommitted work (T148 left half-done when its session ended)
 
 
