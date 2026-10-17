@@ -18,7 +18,7 @@
 | Verification command run | pass (new tests; fix round 1: `python3 -m pytest tests/test_lane_check.py -q` -> `10 passed in 0.61s`, adds three-dot base-advance test) | `tests/test_lane_check.py` 9 passed; full suite `5 failed, 1045 passed` - the 5 failures are memory-budget tests that fail identically on the base branch (`5 failed, 1036 passed` before my change) |
 | Negative cases hold | ☐ pass / ☐ fail | |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | `feat/t144-t145-t148-t149...feat/t144-lane-check`: scripts/lane_check.py, tests/test_lane_check.py, skills/code-review/SKILL.md, PROJECT_SPEC.md, MANIFEST; caller memory_slice.table_paths |
 | Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
@@ -64,3 +64,10 @@ Budgets chosen (table at top of scripts/lane_check.py): C0 (2 files, 30 lines), 
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
+
+## Stage 4 — code-review (Supervisor, 2026-10-17)
+
+Scope: `feat/t144-t145-t148-t149...feat/t144-lane-check` (5 files) plus its one caller dependency, `memory_slice.table_paths`. lane_check on itself: `lane: C1, 5 files, 245 lines, FITS; unpredicted: MANIFEST` (justified: installed projects need the script the new code-review step runs). Startup reads line present and complete for the three Permanent-Rule reads.
+- **P2 (100) — fixed in round 1, `c971f20`**: the SKILL told reviewers to run `<base>..HEAD`; `git diff A..B` = `git diff A B`, so once the integration branch advances, other tasks' changes are counted (reversed). Seen live: a two-dot diff of T148 against the integration branch listed PROJECT_KANBAN.md, MEMORY.md and TASK_REVIEW_T146.md. Now `<base>...HEAD`, and `test_three_dot_ignores_base_advancing` covers it → `10 passed`.
+- P0/P1: none. Over-engineering: none. The single budget table, warn-only exit 0, and reuse of `table_paths` all match the guide.
+- Open (not a finding): the C0 budget is uncalibrated, because there was no C0 sample in T128–T138.
