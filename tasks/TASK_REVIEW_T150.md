@@ -33,8 +33,16 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured 2026-10-17T08:56:00Z, before any implementation commit):
+
+```
+$ python3 -m pytest tests/test_dirty_worktrees.py -q
+no tests ran in 0.00s
+$ python3 skills/wake/scripts/dirty_worktrees.py
+python3: can't open file '.../skills/wake/scripts/dirty_worktrees.py': [Errno 2] No such file or directory
+```
+
+Prior doc text. `skills/craft-spawn-prompt/SKILL.md` Output (#6), item 4 ended: "`Agent()` spawns are **not** sandboxed — they run with the Supervisor's permissions; say so whenever you pick that path." `docs/claude-md/pipeline-stages.md` Stage 3 has no Spawn-mode bullet: the `craft-spawn-prompt` bullet ends "Then issue the `Agent()` call in that worktree using its output." `skills/wake/SKILL.md` Step 1 reads "four live authoritative sources" (git log, KANBAN, MEMORY.md, LRs) and has no worktree check.
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
