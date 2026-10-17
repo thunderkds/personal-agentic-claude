@@ -33,8 +33,38 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured by the implementing agent at `9d470d7` — T146 committed, no T147 change yet):
+
+```text
+2026-10-17T03:34:17Z
+$ python3 -m pytest tests/test_subagent_sandbox_profile.py -q
+ERROR: file or directory not found: tests/test_subagent_sandbox_profile.py
+
+no tests ran in 0.00s
+exit=4
+$ ls templates/subagent-sandbox.settings.json scripts/gen_sandbox_profile.py
+ls: cannot access 'templates/subagent-sandbox.settings.json': No such file or directory
+ls: cannot access 'scripts/gen_sandbox_profile.py': No such file or directory
+exit=2
+$ grep -c -e "--settings" -e "sandbox" skills/craft-spawn-prompt/SKILL.md
+0
+$ git diff main -- .claude/settings.json | grep -c permissions
+0
+```
+
+Prior content of the part of `skills/craft-spawn-prompt/SKILL.md` this task changes (`#### 6. Output`),
+verbatim:
+
+```markdown
+#### 6. Output
+Return: 1. the assembled prompt (fenced, ready for `Agent({ subagent_type, prompt })`); 2. the
+pre-flight verdict; 3. the recommended spawn model as `<cli> · <Cn> → <model>` (or STOP-and-ask).
+
+The Supervisor reads this output and issues the `Agent()` call itself; this skill never calls it.
+```
+
+No profile, no generator, no CLI spawn command and no word on sandboxing: a CLI-spawned sub-agent
+ran with whatever permissions its terminal's `claude` picked up, the same as the Supervisor's.
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
