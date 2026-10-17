@@ -14,8 +14,8 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | pass | tests/test_lane_check.py: `9 passed in 0.44s` (FITS, files budget, unpredicted, Gate 2, missing guide, no Complexity, bookkeeping exclusion, binary, rename) |
+| Verification command run | pass (new tests) | `tests/test_lane_check.py` 9 passed; full suite `5 failed, 1045 passed` - the 5 failures are memory-budget tests that fail identically on the base branch (`5 failed, 1036 passed` before my change) |
 | Negative cases hold | ☐ pass / ☐ fail | |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
@@ -44,9 +44,23 @@ python3: can't open file '/home/hungnguyenhuu/workspace/pets/wt-t144/scripts/lan
 no tests ran in 0.00s
 ```
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**: `python3 -m pytest tests/test_lane_check.py -q` -> `9 passed`. Calibration run (SC7, merge-base diff of each merged branch, T135 has no merge commit, skipped; T133's PR bundled T132/T133 so it is over-counted):
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```
+T128 lane: C1, 2 files, 181 lines, FITS
+T129 lane: C1, 5 files, 115 lines, FITS
+T130 lane: C1, 2 files, 109 lines, FITS
+T131 lane: C1, 3 files, 52 lines, FITS; unpredicted: tasks/TASK_GUIDE_T131.md
+T132 lane: C1, 3 files, 51 lines, FITS
+T133 lane: C1, 10 files, 460 lines, EXCEEDS (files 10 > 6; lines 460 > 250); unpredicted: .clau
+T136 lane: C2, 8 files, 203 lines, FITS; unpredicted: skills/bugfix/SKILL.md, tasks/TASK_GUIDE_
+T137 lane: C2, 11 files, 394 lines, FITS; unpredicted: tests/test_one_command_menu.sh, tests/te
+T138 lane: C1, 2 files, 117 lines, FITS
+```
+
+Budgets chosen (table at top of scripts/lane_check.py): C0 (2 files, 30 lines), C1 (6, 250), C2 (14, 500), C3 none. Initial guesses C1 (4,150) / C2 (10,500) exceeded 4 of 9; raised C1 and C2 files so 1 of 9 exceeds (the bundled T133 PR). C0 has no sample in T128-T138; kept as a guess.
+
+**DELTA**: The Stage 4 reviewer gets one line saying whether the diff fits the declared Complexity and predicted files.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]

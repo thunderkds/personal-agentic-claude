@@ -71,6 +71,8 @@ Stage 4 review gatekeeper: run a structured, multi-perspective review of the cur
 
 Run `git diff --name-only` (or `git diff <base>..HEAD --name-only` if a base ref is provided). List the changed files, then identify direct callers of changed functions (Grep) and test files covering the changed code. This set is the review scope — do not review files outside it.
 
+Also run `python3 scripts/lane_check.py tasks/TASK_GUIDE_Txxx.md <base>..HEAD` and paste its one line into the report (T144). It is warn-only: `EXCEEDS (...)` or `unpredicted: ...` means the task may be under-labelled — raise it to the Supervisor; it never blocks.
+
 Completion criterion: review scope listed; no file outside the diff + direct callers set queued for review.
 
 ---
