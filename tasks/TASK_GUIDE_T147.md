@@ -39,10 +39,10 @@ From the user's improvement list, area 9: *"Stronger sandboxing or permission bo
 
 ### Requirement Fidelity Gate (sign off BEFORE implementation)
 
-- [ ] Restated intent confirmed to match the user's request (by Supervisor / user — not the implementing agent)
+- [x] Restated intent confirmed to match the user's request (by Supervisor / user — not the implementing agent) — Supervisor 2026-10-17, user approved running T146+T147
 - [x] Domain terms align with `PROJECT_SPEC.md` glossary
-- [ ] Every Acceptance Criterion below traces to a line in the Requirement
-- [ ] **Decision point resolved** (Approach § Decision) — by the user, recorded here
+- [x] Every Acceptance Criterion below traces to a line in the Requirement
+- [x] **Decision point resolved** (Approach § Decision) — by the user 2026-10-17: **(b)**, recorded in Approach § Decision
 
 ---
 
@@ -104,6 +104,8 @@ python3 -m pytest tests/test_subagent_sandbox_profile.py -q
 - (b) if it doesn't: the profile applies to CLI spawns only, and the docs say plainly that `Agent()` spawns are **not** sandboxed.
 Never claim (a)'s coverage on (b)'s evidence.
 
+**Resolved 2026-10-17 by the user — (b).** Verification (Supervisor, source: https://code.claude.com/docs/en/hooks, "Common input fields"): hook input *does* carry `agent_id`/`agent_type` for subagent tool calls, so (a) was feasible; the user chose (b) anyway: *"just want to spawn an sub-agent, or parallel agent into new sandboxing terminal and readonly will be fine."* Meaning: the profile applies to CLI spawns in their own terminal (`claude --settings <profile>`); reads outside the worktree stay allowed (sensitive patterns excepted); writes only inside the worktree. `Agent()` in-process spawns are **not** sandboxed — `craft-spawn-prompt` must say so plainly. Do not extend T146's hook.
+
 **Vital slice**: the generated profile + CLI spawn flag + drift test.
 **Cut list**:
 - Per-role profiles
@@ -148,7 +150,7 @@ Automated drift/shape tests; SC2–SC4 as a recorded live run at `/verify`.
 
 ## Completion Checklist
 
-- [ ] Decision point resolved and recorded
+- [x] Decision point resolved and recorded
 - [ ] Implementation done
 - [ ] Self-review: `Skill({ skill: "code-review" })` run
 - [ ] Security review: `Skill({ skill: "security-review" })` run (Medium — mandatory)

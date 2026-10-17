@@ -36,9 +36,9 @@ From the user's improvement list, area 9: *"Explicit 'dangerous boundary' detect
 
 ### Requirement Fidelity Gate (sign off BEFORE implementation)
 
-- [ ] Restated intent confirmed to match the user's request (by Supervisor / user — not the implementing agent)
+- [x] Restated intent confirmed to match the user's request (by Supervisor / user — not the implementing agent) — Supervisor 2026-10-17, user approved running T146+T147
 - [x] Domain terms align with `PROJECT_SPEC.md` glossary
-- [ ] Every Acceptance Criterion below traces to a line in the Requirement
+- [x] Every Acceptance Criterion below traces to a line in the Requirement
 - [x] Requirement Refs — N/A, traced above
 
 ---
