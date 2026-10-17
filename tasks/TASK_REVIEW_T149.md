@@ -14,8 +14,8 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | pass | tests/test_ship_approval_gate.py (6 tests) |
+| Verification command run | pass | `python3 -m pytest tests/test_ship_approval_gate.py -q` -> `6 passed in 0.02s`. Mutation (approval line deleted) -> `1 failed, 5 passed` (test_gate_has_approval_line) |
 | Negative cases hold | ☐ pass / ☐ fail | |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
@@ -33,12 +33,24 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (verbatim prior content, 2026-10-17; non-executable change):
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+`skills/ship/SKILL.md` § 7:
+```
+- [ ] Stage 5 evidence green for every in-scope task
+- [ ] Rollback plan exists with trigger conditions + exact reverse steps
+- [ ] Post-deploy health check is defined with a concrete pass condition
+- [ ] Deploy command is known (sourced from PROJECT_SPEC.md) — not a TODO
+```
+`skills/ship/SKILL.md` § 3 post-deploy bullet: "**Post-deploy health check**: an exact command or URL probe with a concrete pass condition ..."
+`templates/RUNBOOK_template.md`:
+```
+| Version / Tag | Date | Scope (Task IDs) | Deployer | Outcome |
+```
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+**AFTER**: `skills/ship/SKILL.md` § 7 now adds `- [ ] Production approval recorded for <version> @ <commit>` plus a "Production approval" paragraph (AskUserQuestion naming version+commit, verbatim answer into Release Log, mismatched version/commit does not satisfy, Supervisor-written record); § 3 adds "Smoke test, defined before the deploy"; RUNBOOK Release Log header gains `Approved (by / when / answer)`. SKILL.md 5.5 KB (<8 KB).
+
+**DELTA**: `ship` cannot recommend GO until the human approved that exact version and commit, and the smoke-test pass condition is fixed before deploying.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]

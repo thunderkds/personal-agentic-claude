@@ -67,6 +67,6 @@ Ordered steps to ship a release. Migrations before app. Commands copy-pasteable.
 
 ## Release Log
 
-| Version / Tag | Date | Scope (Task IDs) | Deployer | Outcome |
-|---------------|------|------------------|----------|---------|
-| [v / tag] | [YYYY-MM-DD] | [T001, T002 …] | [name] | Success / Rolled back / Partial |
+| Version / Tag | Date | Scope (Task IDs) | Deployer | Approved (by / when / answer) | Outcome |
+|---------------|------|------------------|----------|-------------------------------|---------|
+| [v / tag] | [YYYY-MM-DD] | [T001, T002 …] | [name] | [user / YYYY-MM-DD / verbatim answer] | Success / Rolled back / Partial |
