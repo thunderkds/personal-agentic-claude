@@ -33,8 +33,16 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**:
+
+```
+$ date -u; python3 scripts/lane_check.py tasks/TASK_GUIDE_T144.md main..HEAD; python3 -m pytest tests/test_lane_check.py -q
+Sat Oct 17 05:09:13 AM UTC 2026
+python3: can't open file '/home/hungnguyenhuu/workspace/pets/wt-t144/scripts/lane_check.py': [Errno 2] No such file or directory
+
+
+no tests ran in 0.00s
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
