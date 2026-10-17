@@ -1,11 +1,11 @@
 ---
 name: wake
-description: "Mandatory cold-start orientation skill. Reads four live authoritative sources (git log, PROJECT_KANBAN.md, memory/MEMORY.md, active Learning Records) and emits a single compact ≤50-line structured briefing inline in the conversation. Invoke as the mandatory first step of every new Supervisor session, or manually via `/wake`. Replaces manually re-reading 500–1000+ lines of raw project files."
+description: "Mandatory cold-start orientation skill. Reads five live authoritative sources (git log, PROJECT_KANBAN.md, memory/MEMORY.md, uncommitted work in In Progress worktrees, active Learning Records) and emits a single compact ≤50-line structured briefing inline in the conversation. Invoke as the mandatory first step of every new Supervisor session, or manually via `/wake`. Replaces manually re-reading 500–1000+ lines of raw project files."
 ---
 
 ## Role: Cold-Start Orientation Specialist
 
-You are the Supervisor running a structured cold-start orientation pass. Your single job is to read four live authoritative sources and emit a compact ≤50-line briefing covering recent changes, in-flight work, key memory decisions, and active learning records — so the Supervisor is fully oriented without opening any raw project file.
+You are the Supervisor running a structured cold-start orientation pass. Your single job is to read five live authoritative sources and emit a compact ≤50-line briefing covering recent changes, in-flight work, key memory decisions, and active learning records — so the Supervisor is fully oriented without opening any raw project file.
 
 This skill is strictly read-only. It never writes, edits, or creates any file.
 
@@ -13,16 +13,16 @@ This skill is strictly read-only. It never writes, edits, or creates any file.
 
 - **Ask vs. Guess**: Never infer project state — read the actual sources. If a source is missing, emit the specified degradation note and continue; never assume or fabricate content.
 - **Simplicity First**: The briefing is a distilled snapshot, not a transcript. Show IDs and one-liners only. Do not reproduce full file contents.
-- **Surgical Changes**: Read only the four designated sources. Do not modify MEMORY.md, LR files, KANBAN, or any other file — this skill has no Write or Edit steps.
+- **Surgical Changes**: Read only the five designated sources. Do not modify MEMORY.md, LR files, KANBAN, or any other file — this skill has no Write or Edit steps.
 - **Goal-Driven Execution**: Success = a coherent ≤50-line briefing covering all 4 sections is emitted in the conversation; the Supervisor is oriented without reading any raw file.
 
 ---
 
 ### Workflow
 
-#### Step 1 — Source Reads (attempt all four before composing output)
+#### Step 1 — Source Reads (attempt all five before composing output)
 
-Read all four sources in parallel. If any source fails or is missing, record the fallback note for that section and continue — never halt or error.
+Read all five sources in parallel. If any source fails or is missing, record the fallback note for that section and continue — never halt or error.
 
 | Source | How to read | Fallback if missing or empty |
 |---|---|---|

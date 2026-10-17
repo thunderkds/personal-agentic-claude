@@ -11,6 +11,7 @@ BOARD = """# Board
 - [ ] **T901** - one | see **T999** in text
 - [ ] **T903** - three
 - [ ] **T904** - four
+- [ ] **T1000** - four digits
 ### Done
 - [x] **T902** - two
 """
@@ -79,6 +80,17 @@ def test_sc4_two_tasks_one_worktree_one_line_each(tmp_path):
     add_tree(repo, tmp_path, "wt903", "feat/t903-t904-x", True)
     lines = run(repo).strip().splitlines()
     assert [l.split()[0] for l in lines] == ["T903", "T904"]
+
+
+def test_four_digit_task_id_matches_whole_id(tmp_path):
+    repo = make_repo(tmp_path)
+    add_tree(repo, tmp_path, "wt1000", "feat/t1000-x", True)
+    assert [l.split()[0] for l in run(repo).strip().splitlines()] == ["T1000"]
+
+
+def test_status_takes_no_optional_index_lock():
+    with open(SCRIPT) as f:
+        assert '"--no-optional-locks"' in f.read()
 
 
 def test_sc4_main_worktree_never_reported(tmp_path):

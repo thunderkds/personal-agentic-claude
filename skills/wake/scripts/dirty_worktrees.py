@@ -39,7 +39,7 @@ def worktrees():
 
 
 def counts(path):
-    out = subprocess.run(["git", "-C", path, "status", "--porcelain"],
+    out = subprocess.run(["git", "--no-optional-locks", "-C", path, "status", "--porcelain"],
                          capture_output=True, text=True, check=True).stdout
     lines = [l for l in out.splitlines() if l]
     untracked = sum(1 for l in lines if l.startswith("??"))
@@ -52,7 +52,7 @@ def main():
         path, branch = tree.get("worktree", ""), tree.get("branch", "")
         if "prunable" in tree or not branch or not os.path.isdir(path):
             continue
-        tasks = sorted({"T" + n for n in re.findall(r"t(\d{3})", branch, re.I)} & ids)
+        tasks = sorted({"T" + n for n in re.findall(r"t(\d{3,})", branch, re.I)} & ids)
         if not tasks:
             continue
         modified, untracked = counts(path)
