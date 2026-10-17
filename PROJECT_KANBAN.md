@@ -79,7 +79,6 @@
 
 
 ### In Progress
-- [ ] **T150** — Spawns run as background agents, and `wake` flags work a dead agent left behind | common-infrastructure | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T150.md` | Branch: `feat/t150-spawn-mode` (worktree `../wt-t150`) | Depends on: none | Registered 2026-10-17 from the user's spawn-mode decision (`BRAINSTORMING_LOG_spawn-mode.md`): background `Agent()` by default, CLI pane only on request or for a non-Claude CLI; `wake` reports In Progress worktrees with uncommitted work (T148 left half-done when its session ended)
 
 
 
@@ -88,6 +87,7 @@
 
 
 ### Ready for Review
+- [ ] **T150** — Spawns run as background agents, and `wake` flags work a dead agent left behind | common-infrastructure | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T150.md` | Branch: `feat/t150-spawn-mode` (worktree `../wt-t150`) | Depends on: none | Registered 2026-10-17 from the user's spawn-mode decision (`BRAINSTORMING_LOG_spawn-mode.md`): background `Agent()` by default, CLI pane only on request or for a non-Claude CLI; `wake` reports In Progress worktrees with uncommitted work (T148 left half-done when its session ended) | Stage 4 code-review done 2026-10-17 (P1 + P2 + 2×P3 fixed) — Stage 5 `/verify` PASS 2026-10-17
 - [ ] **T151** — The docs and site describe what T144, T145, T148 and T149 changed | common-infrastructure | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T151.md` | Branch: `feat/t151-docs` → `feat/t144-t145-t148-t149` | Depends on: T144, T145, T148, T149 | Registered 2026-10-17 at the user's request (docs not updated after the batch) | Stage 4 code-review done 2026-10-17 — awaiting user `/verify`
 
 
