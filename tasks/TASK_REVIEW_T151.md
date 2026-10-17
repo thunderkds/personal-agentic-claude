@@ -14,15 +14,15 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_docs_t151.py` (6 tests, AC1–AC6); RED before the edits (`6 failed in 0.04s`); mutation (drop `verify_trace.py` from the hook row) → `1 failed, 5 passed` |
+| Verification command run | ☑ pass | Supervisor re-run 2026-10-17: `tests/test_docs_t151.py tests/test_site_content.py` → `45 passed in 0.10s`; full suite in this worktree `1 failed, 1092 passed` — the 1 is `test_find_kanban_section_on_real_current_board`, caused by a duplicate auto-registered T151 Todo row in the board this branch forked from; fixed on the integration branch in `408c5ed` (`19 passed` there) |
 | Negative cases hold | ☐ pass / ☐ fail | |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | `feat/t144-t145-t148-t149...feat/t151-docs`: 2 doc files + new test; each added sentence checked against lane_check.py, memory_slice.py, post_tool_trace.py/trace_chain.py/verify_trace.py, merge-settings.py, ship/SKILL.md |
 | Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | text-only edits inside existing cells/paragraphs; only inline `<code>` added — no new elements, classes, styles or sections (guide § UI) |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | text-only edits inside existing cells/paragraphs; only inline `<code>` added — no new elements, classes, styles or sections (guide § UI) |
+| **UI: Responsiveness at target viewports** | ☑ N/A | text-only edits inside existing cells/paragraphs; only inline `<code>` added — no new elements, classes, styles or sections (guide § UI) |
 
 ---
 
@@ -50,3 +50,16 @@
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
+
+## Stage 4 — code-review (Supervisor, 2026-10-17)
+
+Scope: `feat/t144-t145-t148-t149...feat/t151-docs`. lane_check: `lane: C1, 3 files, 78 lines, FITS`. Startup reads line is complete (all three read in full).
+- Fact check, every added sentence against the code on this branch:
+  - Memory injection (T145): `memory_slice.py` matches the `**Files**:` line, uses `### From decisions.md`, drops cold entries first. ✓
+  - Lane check (T144): `<base>...HEAD`, three dots, warn-only. ✓
+  - `ship` (T149): approval of `<version> @ <commit>` recorded in the Release Log; smoke test written before the deploy; "never auto-deploys" kept. ✓
+  - Trace hook row (T148): the hash chain, a per-line hash copy under `~/.claude/harness-anchors/`, and `verify_trace.py <task>`. ✓
+  - Settings merge (T148): the deny entries are added, add-only, and the kit's allow/ask rules are never copied. ✓
+- P0–P2: none.
+- P3 (pre-existing, not T151's): `pipeline-stages.md` says the hot tier is "≤50,000 characters", while the site and the enforced budget say 42,000.
+- P3: the settings-merge text doesn't list the new refusal, a project `permissions.deny` that is not a list. That's minor; the existing "if it cannot be merged" sentence covers the outcome.
