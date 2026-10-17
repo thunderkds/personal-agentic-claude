@@ -79,7 +79,6 @@
 
 
 ### In Progress
-- [ ] **T148** — A rewritten event trace is detectable — hash-chained, with the chain head anchored outside the repo | common-infrastructure | C2 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_T148.md` | Branch: `feat/t148-trace-chain` → `feat/t144-t145-t148-t149` | Depends on: none | Registered 2026-10-16 from the improvement-list grilling + brainstorm (`BRAINSTORMING_LOG_harness-hardening.md`): chain head anchored under `~/.claude/harness-anchors/` behind `permissions.deny`; report-only, merge gate not wired
 
 
 
@@ -88,6 +87,7 @@
 
 
 ### Ready for Review
+- [ ] **T148** — A rewritten event trace is detectable — hash-chained, with the chain head anchored outside the repo | common-infrastructure | C2 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_T148.md` | Branch: `feat/t148-trace-chain` → `feat/t144-t145-t148-t149` | Depends on: none | Registered 2026-10-16 from the improvement-list grilling + brainstorm (`BRAINSTORMING_LOG_harness-hardening.md`): chain head anchored under `~/.claude/harness-anchors/` behind `permissions.deny`; report-only, merge gate not wired | Stage 4 code-review + security-review done 2026-10-17 (2 P1s fixed in round 1) — awaiting user `/verify` incl. SC8
 - [ ] **T144** — Stage 4 warns when a task's diff outgrows its declared Complexity | common-infrastructure | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T144.md` | Branch: `feat/t144-lane-check` → `feat/t144-t145-t148-t149` | Depends on: none | Registered 2026-10-16 from the improvement-list grilling + brainstorm (`BRAINSTORMING_LOG_harness-hardening.md`): warn-only report line in `code-review` Phase 0; the Complexity label *is* the lane — no new label; budgets calibrated on T128–T138 | Stage 4 code-review done 2026-10-17 (fix round 1 where needed) — awaiting user `/verify`
 - [ ] **T145** — A spawned agent inherits past decisions about its files, and compound leads with the general lesson | common-infrastructure | C1 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_T145.md` | Branch: `feat/t145-decision-slice` → `feat/t144-t145-t148-t149` | Depends on: none | Registered 2026-10-16 from the improvement-list grilling + brainstorm (`BRAINSTORMING_LOG_harness-hardening.md`): extends T125 `memory_slice.py` to cold `decisions.md` entries via their existing `**Files**:` line — no new `touches:` field, no RAG | Stage 4 code-review done 2026-10-17 (fix round 1 where needed) — awaiting user `/verify`
 - [ ] **T149** — `ship` won't recommend GO for production until a human has approved that exact version | common-infrastructure | C1 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_T149.md` | Branch: `feat/t149-ship-approval` → `feat/t144-t145-t148-t149` | Depends on: none | Registered 2026-10-16 from the improvement-list grilling + brainstorm (`BRAINSTORMING_LOG_harness-hardening.md`): fifth condition in `ship` § 7 GO gate; approval asked by the Supervisor and recorded — weaker than a user-signed record, chosen for speed | Stage 4 code-review done 2026-10-17 (fix round 1 where needed) — awaiting user `/verify`
