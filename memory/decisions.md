@@ -2298,3 +2298,24 @@ One node per `## Stage` heading of `docs/claude-md/pipeline-stages.md` plus Phas
 `tests/test_site_content.py` (reads the headings at test time). No return arrow: the doc says findings are
 addressed before Stage 5, not sent back to Stage 3. Vertical layout so 320 px needs no second layout.
 **Files**: site/index.html, tests/test_site_content.py
+
+**Improvement-list grilling (2026-10-16): six areas carried to brainstorming, scope locked per area.**
+Source: a pasted 11-area improvement list. Triaged against the repo first: #3 model tiering (T136), memory
+slice (T125), measured compacting (T124/T126) already built; #10 = T133 and #11 = T117 already on the board;
+#7 "granular install flags" contradicts T115 (installer takes no options) and #2 "make the move-to-Review
+hook blocking" contradicts T044 (no event carries task identity) — both dropped. User picks:
+(1) **Lanes scale depth, never stages** — every stage and Hard-Stop Gate still runs (Gate 1, LR-0002 intact);
+plus a diff-vs-claimed-Complexity check. (2) **Verify recheck lives in CI**: a machine-readable `### Verify`
+block per TASK_GUIDE, re-run on the PR; the local merge hook does not execute guide-authored commands.
+(6) **Production = gate + conventions, no deploys**: `ship` gains a required human-approval checkpoint and
+smoke/rollback conventions; ship's no-auto-deploy rule stands. (4) **File-keyed inheritance, no RAG**:
+`touches:` paths on memory/solutions entries, overlap-injected at spawn (extends T125); compound leads with
+the general lesson. (5) **Claims deferred** → T142. (9) **All three security pieces**: sensitive-path
+confirm hook, sub-agent sandbox profile, tamper-evident (hash-chained) event trace.
+Not in scope (user's pick listed it separately): #8 split of the 4 skills over Codex's 8 KB cap.
+DDR gate: no decision met 2 of 3 criteria at this stage — revisit per task at Stage 2.
+Brainstorm (same day, `BRAINSTORMING_LOG_harness-hardening.md`): **Option B — one task manifest** chosen as recommended
+(one parser over the guide's existing Complexity / Files to Change / Verification Command sections). User answers:
+trace chain head anchored outside the repo under a permissions.deny path; lane check warns at Stage 4, never
+blocks (until thresholds are measured); prod approval asked by the Supervisor via a question prompt and
+recorded with the exact version/commit — not a user-only command.
