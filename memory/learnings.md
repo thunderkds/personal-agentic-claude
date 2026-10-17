@@ -2723,3 +2723,19 @@ evidence the instruction channel works — **not** evidence the model changed.
   cost real work. Bare `infra`/`secrets` words in a `git commit -m` currently trip it (open P2).
 - **`guide_sections.slice_section` can't find a heading that ends in `)`**. It appends `\b` after the heading, so
   `Files to Change (Predicted)` returns None silently. Look up the prefix `Files to Change` (T146 workaround; no fix yet).
+
+## T144–T149 batch: running four agents at once (2026-10-17)
+- **`verify` can't be invoked through the Skill tool** (`disable-model-invocation`). The user must type `/verify`,
+  so plan that hand-off before promising a push: the merge gate blocks until each task's verify row says pass.
+- **The shared `active_task` state file misattributes the Supervisor too.** After four concurrent agents, the last
+  one's ID (T148) stayed in the file, and `pre_agent_step_limit` killed the Supervisor's own smoke run as
+  "T148 exceeded 90 tool calls". The counter resets itself; rewrite or clear the state file after the agents finish.
+- **Shell install tests write anchors into the real home.** `tests/test_update_removals.sh` runs the trace hook with
+  the real `$HOME`, which created `~/.claude/harness-anchors/p6-noremote/`. Only `.claude/hooks/tests/conftest.py`
+  redirects anchors (open follow-up).
+- **The auto-mode classifier refuses a Supervisor probe that writes into the anchor folder** (`[Logging/Audit Tampering]`).
+  T148's SC8 refused-write check therefore has to be run by the user.
+- **`memory_slice` cold entries are noisy.** Broad keys (`PROJECT_SPEC.md`, `.claude/hooks/`) match many old entries,
+  bold sub-paragraphs (`**AC7 — …**`) split as separate entries, and ties keep the oldest entries (open follow-up).
+- **Agents skip parts of the Startup reads.** 2 of 4 skipped or partly read the role guide, which is already their system
+  prompt; T149 read only 60 lines of PROJECT_SPEC.md. Phase 0.5 records these and the role-guide case is waived.
