@@ -18,7 +18,7 @@
 | Verification command run | pass | `python3 -m pytest tests/test_ship_approval_gate.py -q` -> `6 passed in 0.02s`. Mutation (approval line deleted) -> `1 failed, 5 passed` (test_gate_has_approval_line) |
 | Negative cases hold | ☐ pass / ☐ fail | |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | `feat/t144-t145-t148-t149...feat/t149-ship-approval`: skills/ship/SKILL.md, templates/RUNBOOK_template.md, tests/test_ship_approval_gate.py |
 | Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
@@ -54,3 +54,10 @@
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
+
+## Stage 4 — code-review (Supervisor, 2026-10-17)
+
+Scope: `feat/t144-t145-t148-t149...feat/t149-ship-approval` (3 files). lane_check: `lane: C1, 3 files, 48 lines, FITS`.
+- No P0–P2 code findings. The fifth GO condition, the verbatim-answer rule, the mismatch rule and the "Supervisor-written, not user-signed" caveat are all present. "The operator executes" and "no deploy" are unchanged. SKILL.md is under 8 KB.
+- **P1 process (Phase 0.5 startup reads)**: PROJECT_SPEC.md was read only to line 60, and the role guide was not opened. The role guide is waived because it is this agent type's system prompt. The partial PROJECT_SPEC read is recorded. The review found no consequence in the diff.
+- Open for /verify: SC4, a live dry run in which `ship` asks for approval naming the version and commit.
