@@ -164,16 +164,27 @@ def render(task, header, entries, cold_header=None, cold=()):
     return "\n".join(out) + "\n"
 
 
-def add_cold(task, keys, decisions_text, hot_out, hot_header, hot_entries):
-    """`hot_out` plus the cold section, trimmed to the shared cap; hot is never trimmed."""
+def cold_matches(keys, decisions_text):
+    """[(position, title, hit keys)] for decisions.md entries whose Files line hits a key."""
     if decisions_text is None:
-        return hot_out
+        return []
     patterns = [(key, key_pattern(key, is_prefix)) for key, is_prefix in keys]
-    matched = []  # (position, title, hit keys)
+    matched = []
     for pos, (title, files) in enumerate(cold_entries(decisions_text)):
         hits = [key for key, pat in patterns if pat.search(files)]
         if hits:
             matched.append((pos, title, hits))
+    return matched
+
+
+def all_dropped_note(n):
+    return f"; decisions.md: {n} entries matched on their Files line, all dropped by the cap"
+
+
+def add_cold(task, keys, matched, hot_out, hot_header, hot_entries):
+    """`hot_out` plus the cold section, trimmed to the shared cap; hot is never trimmed.
+
+    If no cold entry fits, the hot header says how many matched, so the omission is visible."""
     if not matched:
         return hot_out
     names = ", ".join(k for k, _ in keys if k in {h for *_, hs in matched for h in hs})
@@ -191,15 +202,18 @@ def add_cold(task, keys, decisions_text, hot_out, hot_header, hot_entries):
         if len(text.splitlines()) > MAX_LINES or len(text) > MAX_CHARS:
             break
         kept = trial
+    if not kept:
+        return render(task, hot_header + all_dropped_note(len(matched)), hot_entries)
     return render(task, hot_header, hot_entries, cold_header(len(kept)), [t for _, t, _ in kept])
 
 
 def build_slice(guide_path, guide_text, memory_text, decisions_text=None):
     task = task_id_of(guide_path, guide_text)
     keys = extract_keys(guide_path, guide_text)
+    cold = cold_matches(keys, decisions_text)
     if memory_text is None:
         header = "memory/MEMORY.md — MEMORY.md not found; no slice."
-        return add_cold(task, keys, decisions_text, render(task, header, []), header, [])
+        return add_cold(task, keys, cold, render(task, header, []), header, [])
 
     patterns = [(key, key_pattern(key, is_prefix)) for key, is_prefix in keys]
     entries = index_lines(memory_text)
@@ -212,7 +226,7 @@ def build_slice(guide_path, guide_text, memory_text, decisions_text=None):
     if not matched:
         header = (f"memory/MEMORY.md — no memory lines matched this task's files "
                   f"(0 of {len(entries)} index lines; keys: {', '.join(k for k, _ in keys)})")
-        return add_cold(task, keys, decisions_text, render(task, header, []), header, [])
+        return add_cold(task, keys, cold, render(task, header, []), header, [])
 
     hit_keys = {k for *_, hits in matched for k in hits}
     names = ", ".join(k for k, _ in keys if k in hit_keys)
@@ -231,12 +245,13 @@ def build_slice(guide_path, guide_text, memory_text, decisions_text=None):
     for cand in sorted(matched, key=lambda m: (-len(m[3]), m[0])):
         trial = sorted(kept + [cand])
         text = render(task, header_for(len(trial)), [(h, l) for _, h, l, _ in trial])
-        if len(text.splitlines()) > MAX_LINES or len(text) > MAX_CHARS:
+        reserve = len(all_dropped_note(len(cold))) if cold else 0  # room for the omission note
+        if len(text.splitlines()) > MAX_LINES or len(text) + reserve > MAX_CHARS:
             break
         kept = trial
     hot_entries = [(h, l) for _, h, l, _ in kept]
     hot_out = render(task, header_for(len(kept)), hot_entries)
-    return add_cold(task, keys, decisions_text, hot_out, header_for(len(kept)), hot_entries)
+    return add_cold(task, keys, cold, hot_out, header_for(len(kept)), hot_entries)
 
 
 def main(argv):

@@ -15,7 +15,7 @@
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_memory_slice.py` (8 `test_t145_*` tests appended; the 21 existing untouched): `29 passed in 0.62s`
-| Verification command run | ☑ pass | `python3 -m pytest tests/test_memory_slice.py -q` -> `29 passed`; live T137 run (2026-10-17T05:10:22Z) ends with `- **T137 merged (2026-10-08): a backup is named after the kit version it replaces; Update's `[o]verwrite` backs up too.** → memory/decisions.md`
+| Verification command run | ☑ pass | `python3 -m pytest tests/test_memory_slice.py -q` -> `29 passed`; live T137 run (2026-10-17T05:10:22Z) ends with `- **T137 merged (2026-10-08): a backup is named after the kit version it replaces; Update's `[o]verwrite` backs up too.** → memory/decisions.md`; **fix round 1** (P2: hot at cap hid matched cold entries): `python3 -m pytest tests/test_memory_slice.py -q` -> `30 passed in 0.71s` (new `test_t145_fix1_hot_at_cap_still_reports_dropped_cold_entries`) -- pass
 | Negative cases hold | ☑ pass | prose-only mention and no-Files-line entries not selected; missing decisions.md silent. Mutation (cold pass disabled): `5 failed, 24 passed`, SC1 RED |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |

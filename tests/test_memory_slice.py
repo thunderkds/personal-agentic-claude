@@ -373,3 +373,13 @@ def test_t145_compound_template_leads_with_lesson_and_applies_when():
     heads = re.findall(r"^## .+$", block, re.MULTILINE)
     assert heads[:2] == ["## The General Lesson", "## Applies When"]
     assert re.search(r"empty.{0,40}Applies When|Applies When.{0,60}(empty|reject)", text, re.I | re.S)
+
+
+def test_t145_fix1_hot_at_cap_still_reports_dropped_cold_entries(tmp_path):
+    hot = "### Decisions\n" + "".join(
+        f"- [hot {i}](decisions.md) — `lib/harness-fetch.sh` " + "y" * 90 + "\n" for i in range(60))
+    decisions = "**T907 merged: matches but no room.**\n**Files**: lib/harness-fetch.sh\n"
+    out = run_slice(cold_project(tmp_path, decisions, memory=hot)).stdout
+    assert len(out.splitlines()) <= MAX_LINES and len(out) <= MAX_CHARS
+    assert "decisions.md: 1 entries matched on their Files line, all dropped by the cap" in out
+    assert "From decisions.md" not in out and "T907" not in out
