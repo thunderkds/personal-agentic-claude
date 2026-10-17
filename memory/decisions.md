@@ -2349,3 +2349,15 @@ T149: `ship` § 7 gains a fifth GO condition, approval recorded for `<version> @
 `AskUserQuestion` and copied verbatim into the RUNBOOK Release Log's new `Approved (by / when / answer)`
 column. The smoke test's pass condition is written before the deploy step.
 **Files**: scripts/lane_check.py, skills/code-review/SKILL.md, skills/craft-spawn-prompt/scripts/memory_slice.py, skills/compound/SKILL.md, .claude/hooks/post_tool_trace.py, .claude/hooks/lib/trace_chain.py, scripts/verify_trace.py, .claude/settings.json, lib/merge-settings.py, skills/ship/SKILL.md, templates/RUNBOOK_template.md
+
+## T150: spawn mode is background `Agent()` by default; `wake` flags dirty In Progress worktrees (2026-10-17)
+**Decision**: the user does not need to watch sub-agents; the final report and commits are enough. Stage 3 now
+says every spawn is a background `Agent()` call (`run_in_background`); a CLI pane only when the user asks to
+watch or the task runs on a non-Claude CLI; the T147 sandboxed profile stays unused until a *nested*-userns
+check passes. `craft-spawn-prompt` output item 3 names the mode. `wake` gains a fifth source,
+`skills/wake/scripts/dirty_worktrees.py`: one `Txxx <path> N modified, M untracked` line per In Progress task
+whose worktree (matched by `t(\d{3,})` in the branch name) is dirty; uses `git --no-optional-locks status` so
+it never takes another session's index lock; silent on any failure.
+**Why**: T144–T149 went to background agents by accident (no rule existed) while the user expected panes.
+**Files**: docs/claude-md/pipeline-stages.md, skills/craft-spawn-prompt/SKILL.md, skills/wake/SKILL.md, skills/wake/scripts/dirty_worktrees.py, tests/test_dirty_worktrees.py, BRAINSTORMING_LOG_spawn-mode.md
+**Follow-up**: the script reads `PROJECT_KANBAN.md` relative to cwd — run from a subfolder it is silently empty (found at `/verify`; `wake` always runs from root).

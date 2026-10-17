@@ -150,6 +150,7 @@
 - [T138 merged: inline-SVG pipeline diagram in site Overview](decisions.md) — one node per `## Stage` heading, drift-tested
 - [T146/T147: sensitive-path ask hook; sub-agent sandbox is CLI-only (b)](decisions.md) — predicted path ⇒ no decision (never `allow`); `Agent()` spawns not sandboxed; T147 /verify FAIL on Ubuntu userns
 - [T144/T145/T148/T149 merged: lane check, decisions.md slice, anchored trace, prod approval](decisions.md) — lane_check needs `base...HEAD`; trace anchors in `~/.claude/harness-anchors` behind deny-only rules; merge-settings unions kit deny
+- [T150: spawns are background `Agent()` by default; `wake` flags dirty In Progress worktrees](decisions.md) — CLI pane only on request / non-Claude CLI; sandbox profile unused until nested-userns passes
 
 ### Patterns & Gotchas
 - [A short SHA is hex — lock pair regex would read `kit_commit` as a file](learnings.md) — scope lock readers to the `"files"` block (T137)
@@ -263,6 +264,7 @@
 - [Claude sandbox Bash dies under Ubuntu nested-userns restriction](learnings.md) — `apparmor_restrict_unprivileged_userns=1` ⇒ `apply-seccomp … nested userns` on every Bash; probe nested, not bare bwrap
 - [Hook `ask` = deny in headless runs; `slice_section` misses `…)` headings](learnings.md) — over-asking kills headless sub-agent work; look up `Files to Change` prefix
 - [Four agents at once: verify is user-only; stale active_task misattributes the Supervisor](learnings.md) — plan the `/verify` hand-off; clear the state file after the agents finish
+- [A dirty worktree is not proof of a dead agent](learnings.md) — T150: a concurrent session may be live; check commit times and ask before relaunching
 
 ### Learning Records
 <!-- One-liner per active LR: - [LR-NNNN slug](memory/learning-records/LR-NNNN-slug.md) — summary -->
