@@ -72,7 +72,7 @@ ask the user** (suggest `templates/PROJECT_SPEC_template.md`); never fall back t
 
 #### 6. Output
 Return: 1. the assembled prompt (fenced, ready for `Agent({ subagent_type, prompt })`); 2. the
-pre-flight verdict; 3. the recommended spawn model as `<cli> · <Cn> → <model>` (or STOP-and-ask).
+pre-flight verdict; 3. the recommended spawn model as `<cli> · <Cn> → <model>` (or STOP-and-ask); 4. for a `claude` CLI spawn, the sandboxed command in `references/sandbox.md` (T147). `Agent()` spawns are **not** sandboxed — they run with the Supervisor's permissions; say so whenever you pick that path.
 
 The Supervisor reads this output and issues the `Agent()` call itself; this skill never calls it.
 

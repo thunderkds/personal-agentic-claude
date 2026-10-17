@@ -2713,3 +2713,13 @@ evidence the instruction channel works — **not** evidence the model changed.
   auto-registers every new `tasks/TASK_GUIDE_Txxx.md` under `### Todo`. Inserting a fresh row under
   In Progress left a duplicate, and `test_find_kanban_section_on_real_current_board` went red. When
   spawning, *move* the auto-registered row (and enrich it) instead of adding one.
+- **Claude Code's Linux sandbox can't run Bash on stock Ubuntu with `kernel.apparmor_restrict_unprivileged_userns=1`** (T147 /verify).
+  A single `bwrap --unshare-user` works, because the `bwrap-userns-restrict` AppArmor profile allows it. The nested
+  namespace the seccomp helper needs is refused: `apply-seccomp: write /proc/self/setgroups (nested userns is
+  capability-restricted …)`. `failIfUnavailable` doesn't fire, so every Bash call fails, even `echo`. Probe the
+  *nested* case before calling a sandbox usable; a bare `bwrap` check passes falsely.
+- **A hook's `ask` becomes a deny in headless runs** (T146 /verify): `claude -p` reported it under `permission_denials`.
+  Under `dontAsk` it's denied outright. A headless sub-agent hitting an over-broad ask just fails, so false positives
+  cost real work. Bare `infra`/`secrets` words in a `git commit -m` currently trip it (open P2).
+- **`guide_sections.slice_section` can't find a heading that ends in `)`**. It appends `\b` after the heading, so
+  `Files to Change (Predicted)` returns None silently. Look up the prefix `Files to Change` (T146 workaround; no fix yet).

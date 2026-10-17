@@ -1,0 +1,53 @@
+{
+  "permissions": {
+    "defaultMode": "dontAsk",
+    "allow": [
+      "Edit(./**)",
+      "Bash(python3 -m pytest *)",
+      "Bash(python -m pytest *)",
+      "Bash(pytest *)",
+      "Bash(bash tests/*)",
+      "Bash(sh tests/*)",
+      "Bash(bash scripts/*)",
+      "Bash(npm test *)",
+      "Bash(npm run test *)"
+    ],
+    "deny": [
+      "Read(.env)",
+      "Edit(.env)",
+      "Read(.env.*)",
+      "Edit(.env.*)",
+      "Read(**/secrets/**)",
+      "Edit(**/secrets/**)",
+      "Read(**/*.pem)",
+      "Edit(**/*.pem)",
+      "Read(**/*.key)",
+      "Edit(**/*.key)",
+      "Read(**/prod*.yml)",
+      "Edit(**/prod*.yml)",
+      "Read(**/prod*.yaml)",
+      "Edit(**/prod*.yaml)",
+      "Read(**/prod*.json)",
+      "Edit(**/prod*.json)",
+      "Read(**/prod*.tf)",
+      "Edit(**/prod*.tf)",
+      "Read(infra/**)",
+      "Edit(infra/**)",
+      "Read(terraform/**)",
+      "Edit(terraform/**)",
+      "Edit(memory/**)",
+      "WebFetch",
+      "WebSearch"
+    ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": true,
+    "autoAllowBashIfSandboxed": true,
+    "allowUnsandboxedCommands": false,
+    "network": {
+      "allowedDomains": [],
+      "strictAllowlist": true
+    }
+  }
+}

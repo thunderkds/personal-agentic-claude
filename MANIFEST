@@ -44,6 +44,8 @@
 agents
 skills          codex=.codex/skills
 .claude/hooks
+.claude/sensitive-paths.txt
+scripts/gen_sandbox_profile.py
 templates
 docs/claude-md
 packs
