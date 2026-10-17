@@ -266,11 +266,11 @@
 <!-- One-liner per active LR: - [LR-NNNN slug](memory/learning-records/LR-NNNN-slug.md) — summary -->
 <!-- Superseded LRs: ~~old text~~ → see LR-NNNN -->
 
-- [An agent can satisfy a gate by editing the thing the gate measures](learnings.md#an-agent-can-satisfy-a-gate-by-editing-the-thing-the-gate-measures-t102-2026-09-05) — check the diff against the measured artifact, not just the edit
+- [An agent can satisfy a gate by editing the thing the gate measures](learnings.md) — check the diff against the measured artifact, not just the edit
 - [A note that states a count states a measurement, and measurements expire](learnings.md#a-note-that-states-a-count-states-a-measurement-and-measurements-expire-t102-2026-09-05) — the fix for a stale-count note shi
-- [T102 merged: the board no longer lies about its own baseline](decisions.md#t102-merged-the-board-no-longer-lies-about-its-own-baseline-2026-09-05) — README cap 60→75, footer names real canon; hot tier via user-run /compact-memory
+- [T102 merged: the board no longer lies about its own baseline](decisions.md) — README cap 60→75, footer names real canon; hot tier via user-run /compact-memory
 - [T104 merged: the site names v2.0.0](decisions.md#t104-merged-the-site-names-the-release-it-actually-ships-with-2026-09-05) — sidebar/footer parsed from RUNBOOK's Release Log at test time, not hardcoded
-- [Merge gate reads Kanban section, not the checkbox](learnings.md#the-merge-gate-reads-kanban-section-membership-not-the-checkbox-t104-2026-09-05) — move the row under ### Done and commit that on the checked-out branch before merging, not just the feature branch
+- [Merge gate reads Kanban section, not the checkbox](learnings.md) — move the row under ### Done and commit that on the checked-out branch before merging, not just the feature branch
 
 - [A commit message can overclaim what its own evidence file records](learnings.md#a-commit-message-can-overclaim-what-its-own-evidence-file-records-t104-2026-09-05) — 3rd in 3 tasks: code right, summary wrong
 
@@ -279,7 +279,7 @@
 - [shellcheck IS available here — fetch the static binary](learnings.md) — supersedes the 2026-07-17 "no shellcheck in this env" note
 - [T105 merged: the shellcheck gate on main is green again](decisions.md) — 4 findings fixed, `ci.yml` unpinned by user decision, merged with 2 open follow-ups
 
-- [Public repo = CI history without `gh` auth](learnings.md#correction-to-the-t105-record-the-red-ci-dates-to-the-v200-promotion-not-to-t097-2026-09-06) — `curl api.github.com/.../actions/runs` needs no login; code age ≠ gate-red age
+- [Public repo = CI history without `gh` auth](learnings.md) — `curl api.github.com/.../actions/runs` needs no login; code age ≠ gate-red age
 
 - [The README described a product a Codex user would not receive](learnings.md#the-readme-described-a-product-a-codex-user-would-not-receive-t106-2026-09-06) — docs that invite a config must say what it silently
 - [An anti-drift test that guards one direction is half a test](learnings.md#an-anti-drift-test-that-guards-one-direction-is-half-a-test-t106-2026-09-06) — write the negative case both ways
