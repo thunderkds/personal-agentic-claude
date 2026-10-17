@@ -33,8 +33,28 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured 2026-10-17T05:10:20Z at `364d883`, before any T148 implementation commit, in
+worktree `wt-t148`. The hook was run from a scratch copy, so the real `memory/event-trace/` stayed
+untouched. A trace line has no `prev`/`hash`, there is no verifier, and `.claude/settings.json` has
+no deny rule:
+
+```
+$ date -u
+2026-10-17T05:10:20Z
+$ git rev-parse --short HEAD
+364d883
+$ python3 -m pytest .claude/hooks/tests/test_trace_chain.py -q
+ERROR: file or directory not found: .claude/hooks/tests/test_trace_chain.py
+no tests ran in 0.00s
+exit=4
+$ python3 scripts/verify_trace.py T148
+python3: can't open file '/home/hungnguyenhuu/workspace/pets/wt-t148/scripts/verify_trace.py': [Errno 2] No such file or directory
+exit=2
+$ echo <Bash event> | CLAUDE_ACTIVE_TASK=T900 python3 <sandbox>/.claude/hooks/post_tool_trace.py; cat <sandbox>/memory/event-trace/T900.jsonl
+{"timestamp": "2026-10-17T05:10:20.532873+00:00", "tool_name": "Bash", "summary": "{\"command\": \"echo hi\"}", "is_error": false}
+$ grep -c permissions .claude/settings.json
+0
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
