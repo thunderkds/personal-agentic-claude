@@ -132,3 +132,17 @@ Two consequences recorded for the Supervisor:
 - **Bash globs**: `cat .env*` is expanded against the filesystem the way the shell would.
 - **Recorded limitations**: paths built from variables (`"$F"`) are not resolved; Bash *reads* of
   sensitive paths ask too.
+
+## Stage 4 — code-review (Supervisor, 2026-10-17)
+
+Scope: `main..feat/t146-t147-harness-hardening`. Startup-reads line present and complete. Entry point `pre_tool_sensitive_path.py` is registered in `.claude/settings.json`. Task suites: `40 passed, 11 subtests passed`; `gen_sandbox_profile.py --check` reports the profile is fresh.
+
+| Sev | File | Finding | Conf | Action |
+|---|---|---|---|---|
+| P1 | `.claude/hooks/pre_tool_sensitive_path.py` `command_tokens` | A **quoted redirect target behind a data command** is stripped as data, so the write goes through silently. Reproduced through the real stdin protocol: `echo x > ".env"` → silent and `printf k > ".env.local"` → silent, while `echo x > .env` → ask. | 100 | Before `strip_quoted_spans`, collect quoted redirect targets (`>`, `>>`, `>|`, `&>`, `2>` followed by a quoted word) from the heredoc-stripped text and check them as tokens. Keep SC3 (`echo "edit .env later"` → allow). |
+| P1 | same, `_pattern_matches` | **A directory named by a `dir/**` pattern doesn't match itself**, so the whole tree can be removed or moved. Reproduced: `rm -rf infra` → silent, `mv secrets /tmp/x` → silent, `rm -rf 'infra/'` → silent. | 100 | Also try `path_string + "/"` against slash patterns, so `infra/**` covers `infra`. |
+| P2 | hook (design) | The "predicted path" escape and the pattern list are read from files the agent itself can write: its worktree's `tasks/TASK_GUIDE_*.md`, `.claude/sensitive-paths.txt` (when `CLAUDE_PROJECT_DIR` is the worktree), and the shared `active_task` state file. So the hook guards against accidents, not against a misbehaving agent. | 75 | Not fixed in this round. Record it as a limitation; a follow-up could read predictions from `main`'s committed guide. |
+| P2 | `templates/subagent-sandbox.settings.json` (T147) | `memory/` is denied for the Edit tool only. Sandboxed Bash can still write `memory/` inside the worktree. | 75 | Record as a limitation (the Supervisor reviews the diff before merge), or add a sandbox filesystem write-deny for `memory/` if the setting exists. |
+| P3 | hook `command_tokens` | `glob.glob(..., recursive=True)` builds the full list before the 200-match cap, so a `**` token walks the whole tree on every Bash call. | 75 | Use `itertools.islice(glob.iglob(...), MAX_GLOB_MATCHES)`. |
+
+Verdict: **2 × P1 must be fixed before merge** → sent back to the implementing agent (fix round 1).
