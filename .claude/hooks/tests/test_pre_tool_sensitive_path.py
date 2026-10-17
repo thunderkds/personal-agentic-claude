@@ -152,6 +152,30 @@ class SensitivePathHookTest(unittest.TestCase):
     def test_bash_redirect_into_env_asks(self):
         self.assert_ask(self.bash("echo KEY=1 >.env"), ".env")
 
+    def test_bash_quoted_redirect_target_behind_data_command_asks(self):
+        # Fix round 1, P1: `echo`/`printf` make their quoted spans data, but a
+        # quoted word after a redirect is where the output goes, not data.
+        for command in ('echo x > ".env"', 'printf k > ".env.local"', "echo x >> '.env'",
+                        'echo x >| ".env"', 'echo x 2>".env"', 'echo x &> ".env"'):
+            with self.subTest(command=command):
+                self.assert_ask(self.bash(command), ".env")
+
+    def test_bash_quoted_redirect_to_ordinary_path_is_silent(self):
+        self.assert_silent(self.bash('echo "edit .env later" > "notes.md"'))
+
+    def test_bash_directory_named_by_dir_pattern_asks(self):
+        # Fix round 1, P1: `infra/**` must cover `infra` itself, or the whole
+        # tree can be removed or moved in one call.
+        for command in ("rm -rf infra", "mv secrets /tmp/x", "rm -rf 'infra/'",
+                        "rm -rf terraform", "rm -r config/secrets"):
+            with self.subTest(command=command):
+                self.assert_ask(self.bash(command), "pattern")
+
+    def test_directory_lookalikes_stay_silent(self):
+        for command in ("ls infrastructure", "cat docs/infra.md", "rm -rf secrets_old"):
+            with self.subTest(command=command):
+                self.assert_silent(self.bash(command))
+
     def test_bash_read_of_env_asks_by_design(self):
         self.assert_ask(self.bash("grep KEY .env"), ".env")
 
@@ -255,8 +279,8 @@ class SensitivePathHookTest(unittest.TestCase):
     def test_sc8a_dropping_the_quoted_span_keep_rule_turns_sc4_red(self):
         # Strip every quoted span, as the naive T099 round did.
         mutant = self._mutant(
-            "text = strip_quoted_spans(strip_heredoc_bodies(command))",
-            "text = re.sub(r\"\\\"[^\\\"]*\\\"|'[^']*'\", ' ', strip_heredoc_bodies(command))",
+            "text = strip_quoted_spans(unheredoc)",
+            "text = re.sub(r\"\\\"[^\\\"]*\\\"|'[^']*'\", ' ', unheredoc)",
         )
         proc = self.bash('bash -c "echo x > .env"', hook=mutant)
         self.assertEqual(proc.stdout.strip(), "", "mutant should wave SC4 through (RED)")

@@ -29,6 +29,7 @@ Recorded limitations (cut list, TASK_GUIDE_T146):
   reads and writes are not cheaply distinguishable in a command string.
 """
 import glob
+import itertools
 import json
 import os
 import re
@@ -63,6 +64,10 @@ TOKEN_SPLIT_PATTERN = re.compile(r"[\s;&|<>()`'\"=]+")
 GLOB_CHARS = re.compile(r"[*?\[]")
 MAX_GLOB_MATCHES = 200
 BACKTICK_SPAN_PATTERN = re.compile(r"`([^`]+)`")
+# A quoted word right after an output redirect (`>`, `>>`, `>|`, `&>`, `2>`).
+# strip_quoted_spans treats every quoted span behind `echo`/`printf` as data,
+# but a redirect target is where the output is written, not data.
+QUOTED_REDIRECT_TARGET_PATTERN = re.compile(r"""(?:&|\d*)>[>|]?\s*(?:"([^"]*)"|'([^']*)')""")
 
 
 def project_dir():
@@ -171,11 +176,14 @@ def _pattern_matches(has_slash, regexes, anchored, path_string):
     if not has_slash:
         name = path_string.rsplit("/", 1)[-1]
         return any(rx.match(name) for rx in regexes)
+    # Each path is also tried as a directory, so `infra/**` covers `infra`
+    # itself: `rm -rf infra` removes the whole tree the pattern protects.
     if anchored:
-        return any(rx.match(path_string) for rx in regexes)
-    parts = path_string.split("/")
-    suffixes = ["/".join(parts[i:]) for i in range(len(parts))]
-    return any(rx.match(s) for rx in regexes for s in suffixes)
+        candidates = [path_string]
+    else:
+        parts = path_string.split("/")
+        candidates = ["/".join(parts[i:]) for i in range(len(parts))]
+    return any(rx.match(c) or rx.match(c + "/") for rx in regexes for c in candidates)
 
 
 def matching_pattern(forms, patterns):
@@ -196,17 +204,21 @@ def command_tokens(command, cwd):
     """Path-like tokens of the command text left after shell_data strips data.
 
     A token carrying glob characters is expanded against the filesystem the way
-    the shell would (`cat .env*`), and kept as written too.
+    the shell would (`cat .env*`), and kept as written too. Quoted redirect
+    targets are collected before shell_data strips them as data (`echo x > ".env"`).
     """
-    text = strip_quoted_spans(strip_heredoc_bodies(command))
-    tokens = []
+    unheredoc = strip_heredoc_bodies(command)
+    tokens = [double or single
+              for double, single in QUOTED_REDIRECT_TARGET_PATTERN.findall(unheredoc)
+              if double or single]
+    text = strip_quoted_spans(unheredoc)
     for token in TOKEN_SPLIT_PATTERN.split(text):
         if not token:
             continue
         tokens.append(token)
         if GLOB_CHARS.search(token):
-            matches = glob.glob(os.path.join(cwd, token), recursive=True)
-            tokens.extend(matches[:MAX_GLOB_MATCHES])
+            matches = glob.iglob(os.path.join(cwd, token), recursive=True)
+            tokens.extend(itertools.islice(matches, MAX_GLOB_MATCHES))
     return tokens
 
 

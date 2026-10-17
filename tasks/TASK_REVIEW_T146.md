@@ -14,12 +14,12 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_pre_tool_sensitive_path.py` (new, 28 tests): AC1 shipped list; AC2/SC1–SC2 Edit/Write; AC3/SC3–SC5 Bash via `shell_data`; AC4/SC6 predicted paths (silent — see Assumption check §2); AC5/SC7 missing list, malformed stdin, import failure; AC6 MANIFEST + `lib/merge-settings.py` merge; SC8 (a)/(b) mutation controls. Output (2026-10-17T03:30:57Z): `28 passed, 11 subtests passed in 0.89s` |
-| Verification command run | ☑ pass | `python3 -m pytest .claude/hooks/tests/test_pre_tool_sensitive_path.py -q && python3 -m pytest tests/ .claude/hooks/tests/ -q` → `28 passed, 11 subtests passed in 0.89s` then `1025 passed, 11 subtests passed in 18.85s`, exit=0 (implementing agent, 2026-10-17T03:30:57Z) — reviewer to re-run |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_pre_tool_sensitive_path.py` (new, 28 tests): AC1 shipped list; AC2/SC1–SC2 Edit/Write; AC3/SC3–SC5 Bash via `shell_data`; AC4/SC6 predicted paths (silent — see Assumption check §2); AC5/SC7 missing list, malformed stdin, import failure; AC6 MANIFEST + `lib/merge-settings.py` merge; SC8 (a)/(b) mutation controls. Output (2026-10-17T03:30:57Z): `28 passed, 11 subtests passed in 0.89s`. **Fix round 1** added 4 tests (quoted redirect target asks / ordinary redirect silent / bare `dir/**` directory asks / lookalikes silent) — 9 subtests RED before the fix; after (2026-10-17T03:49:14Z): `32 passed, 25 subtests passed in 1.08s` |
+| Verification command run | ☑ pass | `python3 -m pytest .claude/hooks/tests/test_pre_tool_sensitive_path.py -q && python3 -m pytest tests/ .claude/hooks/tests/ -q` → fix round 1 (2026-10-17T03:49:14Z): `32 passed, 25 subtests passed in 1.08s` then `1041 passed, 25 subtests passed in 16.78s`, exit=0 (implementing agent) — reviewer to re-run. Round 0: `28 passed` / `1025 passed`, 2026-10-17T03:30:57Z |
 | Negative cases hold | ☑ pass | `.env.example`, quoted data (`echo "edit .env later"`), heredoc-body mention, ordinary paths (`docs/infra.md`, `envoy.yaml`) stay silent; unpredicted sibling `infra/other.tf` and an unpredicted token in a mixed Bash command still ask. SC8 mutants: naive quoted-strip waves SC4 through, allow-on-failure waves SC7 through — both asserted RED |
 | verify | ☐ pending — user runs `/verify`; SC9 (live permission prompt on Write `.env`) is checked there | not yet run — awaiting the user's `/verify` |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☑ pass | `tests/ .claude/hooks/tests/` 1025 passed (first run caught `tests/test_site_content.py::test_every_wired_hook_appears_in_hook_table` — fixed by adding the hook's row to `site/index.html`); `bash scripts/validate.sh` → `validate.sh: PASS`; `tests/test_settings_merge.sh`, `tests/test_setup.sh`, `tests/test_manifest_exclusions.sh` exit=0 |
+| Full smoke suite still green (no regression) | ☑ pass | Fix round 1 (2026-10-17T03:49Z): `tests/ .claude/hooks/tests/` 1041 passed; `bash scripts/validate.sh` → `validate.sh: PASS` exit=0; `python3 scripts/gen_sandbox_profile.py --check` exit=0 (T147 imports the hook's brace expansion). Round 0: `tests/ .claude/hooks/tests/` 1025 passed (first run caught `tests/test_site_content.py::test_every_wired_hook_appears_in_hook_table` — fixed by adding the hook's row to `site/index.html`); `bash scripts/validate.sh` → `validate.sh: PASS`; `tests/test_settings_merge.sh`, `tests/test_setup.sh`, `tests/test_manifest_exclusions.sh` exit=0 |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
 | **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
@@ -111,6 +111,62 @@ exit=0
 The first five are the two P1s: each writes, removes or moves a sensitive path with no prompt. The
 last is SC3 (quoted data) and must stay silent.
 
+### Fix round 1 — AFTER
+
+Implementing agent, same script, after the fix, before the fix commit:
+
+```text
+2026-10-17T03:49:33Z
+$ Bash: echo x > ".env"
+ask: [hook:sensitive-path] This Bash call touches a sensitive path: .env (pattern `.env`). Listed in .claude/sensitive-paths.txt and no active task predicts it.
+exit=0
+$ Bash: printf k > ".env.local"
+ask: [hook:sensitive-path] This Bash call touches a sensitive path: .env.local (pattern `.env.*`). Listed in .claude/sensitive-paths.txt and no active task predicts it.
+exit=0
+$ Bash: rm -rf infra
+ask: [hook:sensitive-path] This Bash call touches a sensitive path: infra (pattern `infra/**`). Listed in .claude/sensitive-paths.txt and no active task predicts it.
+exit=0
+$ Bash: mv secrets /tmp/x
+ask: [hook:sensitive-path] This Bash call touches a sensitive path: secrets (pattern `**/secrets/**`). Listed in .claude/sensitive-paths.txt and no active task predicts it.
+exit=0
+$ Bash: rm -rf 'infra/'
+ask: [hook:sensitive-path] This Bash call touches a sensitive path: infra/ (pattern `infra/**`). Listed in .claude/sensitive-paths.txt and no active task predicts it.
+exit=0
+$ Bash: echo "edit .env later"
+(silent — no decision)
+exit=0
+```
+
+Verification run for this round:
+
+```text
+2026-10-17T03:49:14Z
+$ python3 -m pytest .claude/hooks/tests/test_pre_tool_sensitive_path.py -q && python3 -m pytest tests/ .claude/hooks/tests/ -q
+32 passed, 25 subtests passed in 1.08s
+1041 passed, 25 subtests passed in 16.78s
+exit=0
+$ bash scripts/validate.sh
+validate.sh: PASS
+exit=0
+$ python3 scripts/gen_sandbox_profile.py --check
+exit=0
+```
+
+What changed (`.claude/hooks/pre_tool_sensitive_path.py` only; `lib/shell_data.py` untouched):
+
+- **P1 quoted redirect target**: `command_tokens` collects every quoted word right after `>`, `>>`,
+  `>|`, `&>` or `N>` (`QUOTED_REDIRECT_TARGET_PATTERN`) from the heredoc-stripped text, *before*
+  `strip_quoted_spans` removes data spans, and checks each as a path. A quoted `>` target inside a
+  data span (`echo "a > 'b'"`) is also collected — that can only over-ask.
+- **P1 bare directory**: `_pattern_matches` tries each slash-pattern candidate as written and with a
+  trailing `/`, so `infra/**` and `**/secrets/**` cover `infra` and `secrets` themselves. A plain
+  *file* named `infra` now asks too — over-asks, the safe side.
+- **P3**: `itertools.islice(glob.iglob(...), MAX_GLOB_MATCHES)` stops the walk at the cap.
+- Tests (written first, 9 subtests RED before the fix): `test_bash_quoted_redirect_target_behind_data_command_asks`,
+  `test_bash_quoted_redirect_to_ordinary_path_is_silent`, `test_bash_directory_named_by_dir_pattern_asks`,
+  `test_directory_lookalikes_stay_silent`. The SC8a mutation anchor moved with the renamed line
+  (`strip_quoted_spans(unheredoc)`); the control still asserts SC4 goes RED.
+
 ---
 
 ## Assumption check (implementing agent, 2026-10-17)
@@ -177,3 +233,24 @@ Scope: `main..feat/t146-t147-harness-hardening`. Startup-reads line present and 
 | P3 | hook `command_tokens` | `glob.glob(..., recursive=True)` builds the full list before the 200-match cap, so a `**` token walks the whole tree on every Bash call. | 75 | Use `itertools.islice(glob.iglob(...), MAX_GLOB_MATCHES)`. |
 
 Verdict: **2 × P1 must be fixed before merge** → sent back to the implementing agent (fix round 1).
+
+### Fix round 1 — response (implementing agent, 2026-10-17)
+
+- P1 quoted redirect target — **fixed**, see Demonstration "Fix round 1 — AFTER".
+- P1 `dir/**` matching the directory itself — **fixed**, same.
+- P3 full `glob.glob` list — **fixed** (`islice(iglob(...))`).
+- Both P2s — **not fixed, recorded as limitations** below, per the work order.
+
+### Recorded limitations (from the Stage 4 P2s)
+
+1. **The hook guards against accidents, not a misbehaving agent.** The predicted-path escape
+   (`tasks/TASK_GUIDE_*.md`, read from both the project dir and the call's `cwd`), the pattern list
+   (`.claude/sensitive-paths.txt`, when `CLAUDE_PROJECT_DIR` is the worktree) and the shared
+   `active_task` state file are all writable by the agent the hook is gating. An agent that edits
+   its own guide's `## Files to Change (Predicted)` table or the list silences the prompt. The
+   Supervisor's pre-merge diff review is the backstop. Follow-up candidate: read predictions from
+   `main`'s committed guide instead of the working tree.
+2. **T147: `memory/` is write-denied for the Edit tool only.** `templates/subagent-sandbox.settings.json`
+   does not stop sandboxed Bash from writing `memory/` inside the worktree. The Supervisor reviews
+   the diff before merge; a sandbox filesystem write-deny for `memory/` is the follow-up if the
+   setting exists.
