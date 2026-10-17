@@ -1,0 +1,22 @@
+# Sensitive paths (T146) — an Edit, Write or Bash call that touches a path matching
+# a line below asks the human first, unless the active task's guide lists that exact
+# path under "## Files to Change (Predicted)". Read by
+# .claude/hooks/pre_tool_sensitive_path.py; T147's sub-agent sandbox profile is
+# generated from it (scripts/gen_sandbox_profile.py).
+#
+# One glob per line, gitignore-style:
+#   - no "/" in the pattern  -> matched against the file name, in any directory
+#   - a "/" in the pattern   -> matched against the path from the project root
+#   - "*" stays inside one directory, "**" crosses directories, {a,b} alternates
+#   - "!pattern" un-marks a path an earlier line marked; the last matching line wins
+# Lines starting with "#" and blank lines are ignored. Edit this file to change the list.
+
+.env
+.env.*
+!.env.example
+**/secrets/**
+**/*.pem
+**/*.key
+**/prod*.{yml,yaml,json,tf}
+infra/**
+terraform/**

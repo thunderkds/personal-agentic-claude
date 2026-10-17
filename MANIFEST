@@ -44,6 +44,7 @@
 agents
 skills          codex=.codex/skills
 .claude/hooks
+.claude/sensitive-paths.txt
 templates
 docs/claude-md
 packs

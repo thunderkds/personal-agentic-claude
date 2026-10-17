@@ -64,6 +64,16 @@
         ]
       },
       {
+        "description": "Ask the human before Edit/Write/Bash touches a path in .claude/sensitive-paths.txt, unless the active task predicted it",
+        "matcher": "Edit|Write|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pre_tool_sensitive_path.py"
+          }
+        ]
+      },
+      {
         "description": "Deterministic guardrail — kill a task's run after CLAUDE_STEP_LIMIT tool calls to prevent infinite loops / token waste",
         "matcher": ".*",
         "hooks": [
