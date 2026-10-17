@@ -175,3 +175,13 @@ How each guide requirement is met, and where the docs forced a choice:
 ## Supervisor decision (2026-10-17)
 
 **Answered by the user — accept Bash-only reads outside the worktree.** The Read tool stays confined to the worktree (plus `--add-dir` paths); Bash may read outside it, sensitive patterns excepted. This matches the user's "readonly will be fine". No profile change. If a future spawn needs Read-tool access outside the worktree, pass `--add-dir <path>` on that spawn.
+
+## Stage 5 — /verify (2026-10-17, run by the user's `/verify`)
+
+**Verdict: FAIL on this machine (environment), so not mergeable as-is.** It was run through the real spawn path: `claude -p --settings templates/subagent-sandbox.settings.json` in a herdr pane, outside the Supervisor's own sandbox.
+- ✅ Write tool outside the worktree → `Permission to use Write has been denied because Claude Code is running in don't ask mode`
+- ✅ Write tool into `memory/` → `File is in a directory that is denied by your permission settings.`
+- ❌ **Every Bash call fails before it runs**, including `python3 -m pytest …` (SC4 / AC5) and `echo inside > inside.txt` inside the worktree. Error: `apply-seccomp: write /proc/self/setgroups (nested userns is capability-restricted; caller must provide CAP_SYS_ADMIN): Permission denied`.
+- Root cause: Ubuntu sets `kernel.apparmor_restrict_unprivileged_userns = 1`. A plain `bwrap --unshare-user` works (the `bwrap-userns-restrict` AppArmor profile allows it), but the **nested** user namespace that Claude Code's seccomp helper needs is refused. The implementing agent's "bwrap works on this machine" checked only the single, non-nested case.
+- So SC2 and SC3 (outside write, no network via Bash) "hold" only because Bash can't run at all. That is not evidence that the sandbox enforces them.
+- `failIfUnavailable: true` did not fire: the sandbox counts as available, yet every command fails.

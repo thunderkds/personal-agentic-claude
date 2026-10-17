@@ -254,3 +254,10 @@ Verdict: **2 × P1 must be fixed before merge** → sent back to the implementin
    does not stop sandboxed Bash from writing `memory/` inside the worktree. The Supervisor reviews
    the diff before merge; a sandbox filesystem write-deny for `memory/` is the follow-up if the
    setting exists.
+
+## Stage 5 — /verify (2026-10-17, run by the user's `/verify`)
+
+**Verdict: PASS.** Real Claude Code 2.1.302 sessions, in a throwaway linked worktree of this branch:
+- Headless `claude -p`, asked to Write `.env` → refused: `[hook:sensitive-path] This Write call touches a sensitive path: …/vt/.env (pattern `.env`). Listed in .claude/sensitive-paths.txt and no active task predicts it.` The `.env` file was not created.
+- SC9, interactive with `--permission-mode acceptEdits` in a herdr pane: `Write(notes.txt)` → `Wrote 1 line to notes.txt` with no prompt; `Write(.env)` → `Do you want to create .env? ❯ 1. Yes 2. No`. Declined, and `.env` was not created.
+- 🔍 Bash inside the sandboxed session: `echo "x" > secrets.key` → `[hook:sensitive-path] This Bash call touches a sensitive path: secrets.key (pattern `**/*.key`)`.
