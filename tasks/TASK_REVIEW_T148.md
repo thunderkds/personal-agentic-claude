@@ -14,12 +14,12 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass (AC3 not covered — not implemented, see Implementation notes) | `.claude/hooks/tests/test_trace_chain.py` (new, 15 tests): AC1 `test_ac1_lines_carry_prev_and_hash_chained_from_genesis`, `test_canonical_json_ignores_key_order_and_spacing`; AC2 `test_ac2_each_append_anchors_task_line_and_hash_outside_the_root`; AC4/SC1-SC4 `test_sc1_…intact`, `test_sc2_…broken_at_that_line`, `test_sc3_…anchor_mismatch`, `test_sc4_…unanchored…`, plus deletion, forged-append, truncated-line, bad-name/missing-trace; AC6/SC5 `test_sc5_unwritable_anchor_dir_…[file]`, `[relative]`, `test_lock_failure_still_appends_and_is_marked`; AC7/SC6 `test_sc6_two_processes_fifty_appends_each_stay_intact`. Run by the implementing agent 2026-10-17T05:15:32Z: `15 passed in 3.09s` |
-| Verification command run | ☐ pass / ☑ fail (5 failures, none from T148; see the smoke row) | `python3 -m pytest .claude/hooks/tests/test_trace_chain.py -q && python3 -m pytest tests/ .claude/hooks/tests/ -q` at 2026-10-17T05:15:32Z (implementing agent): first half `15 passed in 3.09s`; second half `5 failed, 1051 passed, 25 subtests passed in 25.85s` |
-| Negative cases hold | ☑ pass (SC8, the live Write-to-anchor denial, not run: AC3 blocked) | SC2 `BROKEN at line 2`, SC3 `ANCHOR MISMATCH at line 2`, deleted last line `ANCHOR MISMATCH at line 3`, forged appended line `ANCHOR MISMATCH at line 3: no anchor recorded for it`. **SC7 mutation control** (2026-10-17T05:15:12Z): with `mismatched = []` replacing the anchor comparison in `scripts/verify_trace.py`, `FAILED …test_sc3_rewrite_with_whole_chain_recomputed_is_an_anchor_mismatch` / `E       assert 0 == 1` / `1 failed, 1 passed, 13 deselected`; restored → `2 passed`. The Supervisor should re-run SC7 independently |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_trace_chain.py` (new, 15 tests): AC1 `test_ac1_lines_carry_prev_and_hash_chained_from_genesis`, `test_canonical_json_ignores_key_order_and_spacing`; AC2 `test_ac2_each_append_anchors_task_line_and_hash_outside_the_root`; AC4/SC1-SC4 `test_sc1_…intact`, `test_sc2_…broken_at_that_line`, `test_sc3_…anchor_mismatch`, `test_sc4_…unanchored…`, plus deletion, forged-append, truncated-line, bad-name/missing-trace; AC6/SC5 `test_sc5_unwritable_anchor_dir_…[file]`, `[relative]`, `test_lock_failure_still_appends_and_is_marked`; AC7/SC6 `test_sc6_two_processes_fifty_appends_each_stay_intact`. AC3: `tests/test_subagent_sandbox_profile.py::test_sc5_supervisor_settings_have_no_permissions_or_sandbox` (narrowed, now asserts the deny-only anchor block), `test_sc5_any_permission_beyond_the_anchor_deny_still_fails[allow/ask/defaultMode]`, `test_sc5_an_extra_deny_entry_or_a_sandbox_block_still_fails`. Implementing agent, 2026-10-17T08:16:37Z: `python3 -m pytest .claude/hooks/tests/test_trace_chain.py tests/test_subagent_sandbox_profile.py -q` → `31 passed in 3.08s` |
+| Verification command run | ☐ pass / ☑ fail (5 failures, none from T148; see the smoke row) | Implementing agent, 2026-10-17T08:16:37Z, after the AC3 change. `python3 -m pytest .claude/hooks/tests/test_trace_chain.py -q && python3 -m pytest tests/ .claude/hooks/tests/ -q`: first half `15 passed`, full suite `5 failed, 1055 passed, 25 subtests passed in 24.60s`. Earlier run, 2026-10-17T05:15:32Z, before AC3: `15 passed in 3.09s` / `5 failed, 1051 passed, 25 subtests passed in 25.85s` |
+| Negative cases hold | ☑ pass (SC8, the live Write-to-anchor denial, is left to the Supervisor at Stage 5 `/verify`) | SC2 `BROKEN at line 2`, SC3 `ANCHOR MISMATCH at line 2`, deleted last line `ANCHOR MISMATCH at line 3`, forged appended line `ANCHOR MISMATCH at line 3: no anchor recorded for it`. **SC7 mutation control** (2026-10-17T05:15:12Z): with `mismatched = []` replacing the anchor comparison in `scripts/verify_trace.py`, `FAILED …test_sc3_rewrite_with_whole_chain_recomputed_is_an_anchor_mismatch` / `E       assert 0 == 1` / `1 failed, 1 passed, 13 deselected`; restored → `2 passed`. The Supervisor should re-run SC7 independently. **AC3 guard mutation** (2026-10-17T08:16:30Z): adding `"allow": ["Bash(python3 -m pytest *)"]` to the real `.claude/settings.json` → `E         Left contains one more item: "permissions must hold only 'deny': …"` / `1 failed`; file restored |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☑ pass, no regression (the suite is not fully green) | The 5 failures are in the MEMORY.md budget tests, which T148 does not touch: `test_memory_channel_and_budget.py` (4) and `test_token_audit_format.py::test_memory_md_hot_tier_stays_within_char_budget` (`hot-tier report: 42,268 / 42,000 chars (-268 remaining)`). They fail the same way with T148's changes stashed (`5 failed, 13 passed`). AC5: `test_merge_gate_evidence.py` (`trace_shows_verification`) passes unmodified. `scripts/token_meter.py` reads Claude transcripts, not event traces, and has no change. Two schema pins changed for the new `prev`/`hash` fields: `test_post_tool_trace_spawn.py` (golden lines compared with the chain fields dropped) and `test_task_context.py::test_trace_record_schema_matches_pre_change_records`. |
+| Full smoke suite still green (no regression) | ☑ pass, no regression (the suite is not fully green) | Latest run 2026-10-17T08:16:37Z: `5 failed, 1055 passed`. The 5 failures are in the MEMORY.md budget tests, which T148 does not touch: `test_memory_channel_and_budget.py` (4) and `test_token_audit_format.py::test_memory_md_hot_tier_stays_within_char_budget` (`hot-tier report: 42,268 / 42,000 chars (-268 remaining)`). They fail the same way with T148's changes stashed (`5 failed, 13 passed`). AC5: `test_merge_gate_evidence.py` (`trace_shows_verification`) passes unmodified. `scripts/token_meter.py` reads Claude transcripts, not event traces, and has no change. Two schema pins changed for the new `prev`/`hash` fields: `test_post_tool_trace_spawn.py` (golden lines compared with the chain fields dropped) and `test_task_context.py::test_trace_record_schema_matches_pre_change_records`. |
 | **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | Pure backend: hook, script and tests only, no UI |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | Pure backend, no UI |
 | **UI: Responsiveness at target viewports** | ☑ N/A | Pure backend, no UI |
@@ -83,12 +83,10 @@ implementing agent alone]
 
 ## Implementation notes (implementing agent)
 
-**AC3 blocked: it conflicts with an accepted T147 test.** `tests/test_subagent_sandbox_profile.py::test_sc5_supervisor_settings_have_no_permissions_or_sandbox`
-asserts `"permissions" not in settings` for `.claude/settings.json`, and that `git diff main -- .claude/settings.json`
-contains no `permissions`. That is T147's AC4: "Supervisor keeps today's permissions". Adding T148's deny rules would turn
-that test red. The implementing agent did not edit another task's acceptance test. `.claude/settings.json` is unchanged.
-Supervisor decision needed. Recommended: add the block below and narrow T147's test to allow a `permissions` block whose
-only key is `deny`, holding only these anchor rules:
+**AC3: done, and T147's AC4 test narrowed by user decision (2026-10-17).** Before T148,
+`tests/test_subagent_sandbox_profile.py::test_sc5_supervisor_settings_have_no_permissions_or_sandbox` (T147 AC4,
+"Supervisor keeps today's permissions") rejected any `permissions` block, so AC3 could not land. The user chose the
+deny-only option. `.claude/settings.json` now carries exactly this block:
 
 ```json
 "permissions": {
@@ -98,6 +96,21 @@ only key is `deny`, holding only these anchor rules:
   ]
 }
 ```
+
+What the narrowed test still rejects:
+- any `sandbox` block
+- any `allow`, `ask` or `defaultMode` key
+- any other key under `permissions`
+- a deny list that is not exactly these two rules
+- a diff from `main` that changes anything beyond these lines
+
+New negative tests prove an extra allow, ask, defaultMode, extra deny entry or sandbox block still fails it.
+SC8, a live `Write` to the anchor being refused, is still open: the Supervisor runs it at Stage 5 `/verify`.
+
+**Open note: the config directory on this machine.** The anchor path is literally `~/.claude/harness-anchors`. This
+machine's active Claude Code config directory is `~/.claude-wife`. The anchor still lands under `~/.claude` and the
+`Edit(~/.claude/harness-anchors/**)` rule still names it, so the two agree. The path was not changed. Worth confirming
+during SC8 that the deny rule applies to that path in a session running under `~/.claude-wife`.
 
 **Assumption verified: path syntax for a `~`-rooted directory.** Source: https://code.claude.com/docs/en/permissions, fetched 2026-10-17.
 - Path table, verbatim: *"`~/path` | Path from home directory | `Read(~/Documents/*.pdf)`"*.

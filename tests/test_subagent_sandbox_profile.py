@@ -5,7 +5,8 @@
   AC3     — drift: the committed profile is exactly what the generator produces, and a
             pattern added to the list without regenerating is caught.
   AC5     — the profile never waits on a human (`dontAsk`) and pre-allows the test runners.
-  SC5/AC4 — the Supervisor's `.claude/settings.json` carries no permissions or sandbox block.
+  SC5/AC4 — the Supervisor's `.claude/settings.json` carries no permissions or sandbox block,
+            except T148's deny-only trace-anchor rules (narrowed by user decision, 2026-10-17).
   AC2     — craft-spawn-prompt's CLI spawn command passes the profile; Agent() is said to be
             unsandboxed.
 
@@ -19,6 +20,8 @@ import os
 import re
 import subprocess
 import sys
+
+import pytest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PATTERNS = os.path.join(ROOT, ".claude", "sensitive-paths.txt")
@@ -113,16 +116,59 @@ def test_ac5_never_waits_on_a_human_and_test_runners_are_preallowed():
     assert _profile()["sandbox"]["autoAllowBashIfSandboxed"] is True
 
 
+# T148 (user decision, 2026-10-17): the Supervisor's settings may carry exactly one
+# permissions block — deny-only, holding exactly the trace-anchor rules. Anything else
+# (allow, ask, defaultMode, sandbox, another deny entry) still changes the Supervisor's
+# permissions and fails T147's AC4.
+ANCHOR_DENY_RULES = ["Edit(~/.claude/harness-anchors/**)", "Bash(*harness-anchors*)"]
+
+
+def supervisor_settings_violations(settings):
+    problems = []
+    if "sandbox" in settings:
+        problems.append("sandbox block present")
+    permissions = settings.get("permissions")
+    if permissions is None:
+        return problems
+    if not isinstance(permissions, dict) or set(permissions) != {"deny"}:
+        problems.append("permissions must hold only 'deny': %r" % (permissions,))
+    elif sorted(permissions["deny"]) != sorted(ANCHOR_DENY_RULES):
+        problems.append("deny must be exactly the anchor rules: %r" % (permissions["deny"],))
+    return problems
+
+
 def test_sc5_supervisor_settings_have_no_permissions_or_sandbox():
     settings = json.loads(_read(SETTINGS))
-    assert "permissions" not in settings
-    assert "sandbox" not in settings
+    assert supervisor_settings_violations(settings) == []
     has_main = subprocess.run(["git", "-C", ROOT, "rev-parse", "--verify", "-q", "main"],
                               capture_output=True).returncode == 0
     if has_main:
         diff = subprocess.run(["git", "-C", ROOT, "diff", "main", "--", ".claude/settings.json"],
                               capture_output=True, text=True).stdout
-        assert "permissions" not in diff and "sandbox" not in diff
+        assert "sandbox" not in diff
+        changed = [line[1:].strip().rstrip(",") for line in diff.splitlines()
+                   if line[:1] in "+-" and not line.startswith(("+++", "---"))]
+        allowed = {'"permissions": {', '"deny": [', "]", "}", "},", ""} | {
+            json.dumps(rule) for rule in ANCHOR_DENY_RULES}
+        assert set(changed) <= allowed, set(changed) - allowed
+
+
+@pytest.mark.parametrize("extra", [
+    {"allow": ["Bash(python3 -m pytest *)"]},
+    {"ask": ["Bash(git push *)"]},
+    {"defaultMode": "dontAsk"},
+])
+def test_sc5_any_permission_beyond_the_anchor_deny_still_fails(extra):
+    settings = json.loads(_read(SETTINGS))
+    settings.setdefault("permissions", {"deny": list(ANCHOR_DENY_RULES)}).update(extra)
+    assert supervisor_settings_violations(settings)
+
+
+def test_sc5_an_extra_deny_entry_or_a_sandbox_block_still_fails():
+    base = {"permissions": {"deny": ANCHOR_DENY_RULES + ["Edit(src/**)"]}}
+    assert supervisor_settings_violations(base)
+    assert supervisor_settings_violations({"sandbox": {"enabled": True}})
+    assert supervisor_settings_violations({"permissions": {"deny": ANCHOR_DENY_RULES[:1]}})
 
 
 def test_ac2_cli_spawn_command_passes_the_profile():

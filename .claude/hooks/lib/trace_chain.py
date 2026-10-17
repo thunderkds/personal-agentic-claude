@@ -12,8 +12,8 @@ append the writer also appends `<task> <line-no> <hash>` to
 
     ~/.claude/harness-anchors/<repo-slug>/<task>.anchors
 
-which agents are meant to be denied write access to (permission rules; see
-TASK_REVIEW_T148 for their status). The base directory
+which `.claude/settings.json` denies agents write access to
+(`Edit(~/.claude/harness-anchors/**)`, `Bash(*harness-anchors*)`). The base directory
 is overridable with CLAUDE_TRACE_ANCHOR_DIR (tests).
 
 `<repo-slug>` = the project root's directory name (the hooks live at
