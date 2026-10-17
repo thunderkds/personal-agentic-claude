@@ -61,7 +61,7 @@ Filter `PROJECT_KANBAN.md` to rows whose status column contains `In Progress` or
 - T009 — learn SKILL.md — core detection + write + promotion loop
 ```
 
-Then, under the list, emit each line from `dirty_worktrees.py` prefixed `⚠ uncommitted:` (a background agent died mid-task). Omit when the script printed nothing.
+Then, under the list, emit each line from `dirty_worktrees.py` prefixed `⚠ uncommitted:`. This means *either* a background agent died mid-task *or* another live session is still working there — check the worktree's latest commit time and ask before relaunching or touching it. Omit when the script printed nothing.
 
 **Graceful degradation**:
 - If `PROJECT_KANBAN.md` does not exist: emit `"No KANBAN found — project may be new or not yet planned."`.
