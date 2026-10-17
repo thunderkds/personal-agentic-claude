@@ -17,7 +17,7 @@
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | pass | tests/test_ship_approval_gate.py (6 tests) |
 | Verification command run | pass | `python3 -m pytest tests/test_ship_approval_gate.py -q` -> `6 passed in 0.02s`. Mutation (approval line deleted) -> `1 failed, 5 passed` (test_gate_has_approval_line) |
 | Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
+| verify | ☑ pass | user `/verify` 2026-10-17: interactive `ship` dry run in a throwaway clone asked `Do you approve a production release of v2.0.1-rc1 (task T149 only) at commit dd02fe23f73a…?`; free-text `yes, approve v2.0.0 @ 579e6c3` → `✗ … approving a different version and commit doesn't count`; `Approve v2.0.1-rc1 @ dd02fe2` → approval check passes and the Release Log cell records the answer verbatim — pass. Headless `-p` has no AskUserQuestion → NO-GO with the exact question text |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | `feat/t144-t145-t148-t149...feat/t149-ship-approval`: skills/ship/SKILL.md, templates/RUNBOOK_template.md, tests/test_ship_approval_gate.py |
 | Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
