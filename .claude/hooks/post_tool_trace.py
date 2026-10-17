@@ -15,6 +15,12 @@ read happens to mention a Task ID.
 Records with no discoverable Task ID are written to
 memory/event-trace/_untagged.jsonl instead of being dropped, so nothing
 is silently lost.
+
+T148: every line is hash-chained (`prev`, `hash`) and its hash is anchored
+outside the repo — see lib/trace_chain.py. Appends to one trace are serialised
+with an exclusive file lock. Neither the anchor nor the lock may break the
+tool call: on failure the line is still written, marked `"anchor": "failed"`
+or `"lock": "failed"`.
 """
 import json
 import os
@@ -35,6 +41,14 @@ try:
 except Exception:
     def resolve_task_id(event):
         return None
+try:
+    from trace_chain import GENESIS, anchor_path, chain_hash, safe_name
+except Exception:
+    chain_hash = None
+try:
+    import fcntl
+except Exception:  # not POSIX: appends go unlocked and say so
+    fcntl = None
 
 
 def summarize(tool_input):
@@ -156,7 +170,71 @@ def main():
         if spawn:
             record["spawn"] = spawn
 
-    with open(trace_path, "a") as f:
-        f.write(json.dumps(record) + "\n")
+    append_record(trace_path, task_id, record)
+
+
+def _lock(f):
+    try:
+        fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+        return True
+    except Exception:
+        return False
+
+
+def _last_hash(lines):
+    """`hash` of the last chained line, or genesis. A crash-truncated last line
+    is skipped here; the verifier reports it as the break."""
+    for raw in reversed(lines):
+        try:
+            rec = json.loads(raw)
+        except Exception:
+            continue
+        if isinstance(rec, dict) and isinstance(rec.get("hash"), str):
+            return rec["hash"]
+    return GENESIS
+
+
+def _write_anchor(task_id, line_no, digest):
+    try:
+        path = anchor_path(ROOT, task_id)
+        os.makedirs(os.path.dirname(path), mode=0o700, exist_ok=True)
+        with open(path, "a") as f:
+            f.write("%s %d %s\n" % (safe_name(task_id, "_untagged"), line_no, digest))
+        return True
+    except Exception:
+        return False
+
+
+def append_record(trace_path, task_id, record):
+    """Append one chained, anchored line. The lock is held from reading the
+    chain head to writing the line, so two agents can't fork the chain; it is
+    released when the file closes."""
+    with open(trace_path, "a+b") as f:
+        if not _lock(f):
+            record["lock"] = "failed"
+        line = None
+        if chain_hash is not None:
+            try:
+                f.seek(0)
+                data = f.read()
+                if data and not data.endswith(b"\n"):
+                    f.write(b"\n")  # end a crash-truncated line; ours starts clean
+                    data += b"\n"
+                lines = data.split(b"\n")[:-1]
+                record["prev"] = _last_hash(lines)
+                record["hash"] = chain_hash(record)
+                if not _write_anchor(task_id, len(lines) + 1, record["hash"]):
+                    del record["hash"]
+                    record["anchor"] = "failed"
+                    record["hash"] = chain_hash(record)
+                line = json.dumps(record)
+            except Exception:
+                line = None
+        if line is None:  # chain code unavailable or failed: never lose the record
+            for key in ("prev", "hash", "anchor"):
+                record.pop(key, None)
+            line = json.dumps(record)
+        f.write((line + "\n").encode("utf-8"))
+
 
 main()
