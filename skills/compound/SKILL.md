@@ -72,6 +72,12 @@ status: active
 
 # [Problem title — specific, not generic]
 
+## The General Lesson
+[One or two sentences, stated without this incident's names, files or error text — what a reader facing a different instance of the same shape should take away]
+
+## Applies When
+[A concrete, checkable condition — a kind of file, tool, symptom or situation — under which this lesson should be applied]
+
 ## Problem
 [What it is and how it manifests]
 
@@ -93,7 +99,9 @@ status: active
 
 Create `docs/solutions/` and the category subfolder if they don't exist.
 
-Completion criterion: doc written with all sections present; file path follows `docs/solutions/[category]/[slug].md`.
+**Reject the draft** if `## Applies When` is empty, a placeholder, or only restates the incident ("when X broke"): rewrite it as a condition a future agent can test against its own task. `## The General Lesson` and `## Applies When` stay the first two sections — the incident detail follows, never leads.
+
+Completion criterion: doc written with all sections present (Applies When non-empty); file path follows `docs/solutions/[category]/[slug].md`.
 
 ---
 
