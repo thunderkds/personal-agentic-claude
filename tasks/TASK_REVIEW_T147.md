@@ -171,3 +171,7 @@ How each guide requirement is met, and where the docs forced a choice:
   - `MANIFEST` also ships `scripts/gen_sandbox_profile.py`. The profile ships under the existing
     `templates` entry.
 - **Not touched**: `.claude/settings.json` (AC4) and `.claude/sensitive-paths.txt` (read only).
+
+## Supervisor decision (2026-10-17)
+
+**Answered by the user — accept Bash-only reads outside the worktree.** The Read tool stays confined to the worktree (plus `--add-dir` paths); Bash may read outside it, sensitive patterns excepted. This matches the user's "readonly will be fine". No profile change. If a future spawn needs Read-tool access outside the worktree, pass `--add-dir <path>` on that spawn.
