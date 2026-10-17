@@ -80,6 +80,37 @@ SC9 (the prompt really appears in a live session) is still **pending** — Stage
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/T146.jsonl`, never the
 implementing agent alone]
 
+### Fix round 1 — BEFORE
+
+Implementing agent, at HEAD `1c2bd1d`, before any fix-round-1 commit. Each command is sent to the
+hook as a Bash PreToolUse event on stdin (`/tmp/t146_demo.sh`: `{"tool_name":"Bash","tool_input":{"command":…},"cwd":<worktree>}`,
+`CLAUDE_PROJECT_DIR=<worktree>`, `CLAUDE_ACTIVE_TASK` unset):
+
+```text
+2026-10-17T03:48:10Z
+$ Bash: echo x > ".env"
+(silent — no decision)
+exit=0
+$ Bash: printf k > ".env.local"
+(silent — no decision)
+exit=0
+$ Bash: rm -rf infra
+(silent — no decision)
+exit=0
+$ Bash: mv secrets /tmp/x
+(silent — no decision)
+exit=0
+$ Bash: rm -rf 'infra/'
+(silent — no decision)
+exit=0
+$ Bash: echo "edit .env later"
+(silent — no decision)
+exit=0
+```
+
+The first five are the two P1s: each writes, removes or moves a sensitive path with no prompt. The
+last is SC3 (quoted data) and must stay silent.
+
 ---
 
 ## Assumption check (implementing agent, 2026-10-17)
