@@ -139,6 +139,8 @@ python3 -m pytest tests/test_board_sync_pull.py tests/test_board_id_pattern.py .
 | `scripts/board_sync.py` (new) | CLI |
 | `MANIFEST` | ship `scripts/board_sync.py` |
 | `tests/test_board_sync_pull.py`, `tests/fixtures/board/` (new) | tests + golden files |
+| `.claude/hooks/lib/board/__init__.py` | package docstring names the new modules |
+| `tasks/TASK_REVIEW_T154.md` | Demonstration BEFORE capture |
 
 ## Files Must NOT Touch
 

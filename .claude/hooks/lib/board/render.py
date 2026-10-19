@@ -1,0 +1,157 @@
+"""Board → board cache, in today's exact file formats (T154, FR-002, FR-005, FR-012).
+
+Board-independent: takes `Task`s, returns text. `render_kanban` produces a
+`PROJECT_KANBAN.md` every existing hook parses unchanged; `guide_files` maps each
+task's description, verbatim, to `tasks/TASK_GUIDE_<ID>.md`.
+
+Board text is untrusted (NFR-005). A row is one line built by this module; every board
+field placed in it is flattened to one line and has the characters the hooks parse
+escaped, so no title can open a section (`### Done`), forge a row (`- [ ] **T999**`),
+or add a `| field`. Labels and assignees are reduced to fixed shapes.
+"""
+import re
+import sys
+import unicodedata
+
+from board.config import PATH_SAFE_ID
+
+SECTIONS = ("Todo", "In Progress", "Ready for Review", "Done", "Closed")
+HEADINGS = {"Closed": "Closed (will not do)"}
+CHECKBOX = {"Done": "x", "Closed": "~"}
+
+# FR-012. Board status name → board cache section. `status_map` in `.claude/board.json`
+# overrides or extends it (teams rename states); a name in neither falls back on the
+# board's state type, so a renamed "started" state still blocks the merge gate.
+DEFAULT_STATUS_MAP = {
+    "Backlog": "Todo", "Triage": "Todo", "Todo": "Todo",
+    "In Progress": "In Progress", "In Review": "Ready for Review", "Done": "Done",
+    "Canceled": "Closed", "Cancelled": "Closed", "Duplicate": "Closed",
+}
+STATE_TYPE_MAP = {
+    "triage": "Todo", "backlog": "Todo", "unstarted": "Todo", "started": "In Progress",
+    "completed": "Done", "canceled": "Closed",
+}
+RISKS = {"low": "Low", "med": "Medium", "medium": "Medium", "high": "High"}
+
+HEADER = """# PROJECT_KANBAN.md
+**Last updated**: {today}
+
+> Board cache, pulled from the board by `python3 scripts/board_sync.py pull`. Do not edit it by hand:
+> the board is the source of truth, and the next pull overwrites this file.
+
+---
+
+## Board
+"""
+FOOTER = """## Blocked
+
+---
+
+## Stage Tracker
+"""
+AGENT = re.compile(r"Assigned\s+Agent\*{0,2}[:\s]+([a-z\-]+)", re.IGNORECASE)
+
+
+def one_line(text):
+    """Every whitespace or control character (each line break `str.splitlines` honours
+    among them) becomes one space."""
+    chars = (" " if ch.isspace() or unicodedata.category(ch).startswith("C") else ch
+             for ch in str(text or ""))
+    return " ".join("".join(chars).split())
+
+
+def escape(text):
+    """One line, with the characters the KANBAN parsers key on backslash-escaped."""
+    return re.sub(r"([\\`*#|])", r"\\\1", one_line(text))
+
+
+def assignee_token(name):
+    """`@<token>` field value: letters, digits, `.`, `_`, `-` only, or None."""
+    token = re.sub(r"[^A-Za-z0-9._-]", "", one_line(name))
+    return token or None
+
+
+def section_for(task, status_map):
+    section = status_map.get(task.status) or STATE_TYPE_MAP.get(task.status_type)
+    if section is None:
+        print(f"[board] {task.id}: unmapped status {one_line(task.status)!r}; shown as Todo",
+              file=sys.stderr)
+    return section or "Todo"
+
+
+def merged_status_map(config_map):
+    merged = dict(DEFAULT_STATUS_MAP)
+    for name, section in (config_map or {}).items():
+        if section in SECTIONS:
+            merged[name] = section
+        else:
+            print(f"[board] status_map: ignoring {one_line(name)!r} → {one_line(section)!r} "
+                  f"(not one of {', '.join(SECTIONS)})", file=sys.stderr)
+    return merged
+
+
+def label_fields(labels):
+    complexity, risk = "?", "?"
+    for label in labels or []:
+        m = re.fullmatch(r"complexity:(c[0-3])", str(label).strip(), re.IGNORECASE)
+        if m:
+            complexity = m.group(1).upper()
+        m = re.fullmatch(r"risk:([a-z]+)", str(label).strip(), re.IGNORECASE)
+        if m and m.group(1).lower() in RISKS:
+            risk = RISKS[m.group(1).lower()]
+    return complexity, risk
+
+
+def row(task, section):
+    agent = AGENT.search(task.description or "")
+    complexity, risk = label_fields(task.labels)
+    fields = [f"- [{CHECKBOX.get(section, ' ')}] **{task.id}** — {escape(task.title)}",
+              agent.group(1) if agent else "?", complexity, f"Risk: {risk}",
+              task.priority if task.priority in ("P0", "P1", "P2") else "?"]
+    who = assignee_token(task.assignee)
+    if who:
+        fields.append(f"@{who}")
+    fields.append(f"Guide: `tasks/TASK_GUIDE_{task.id}.md`" if task.description
+                  else "Guide: missing")
+    return " | ".join(fields)
+
+
+# A board ID that may name a file and sit inside `**…**`: a strict subset of
+# PATH_SAFE_ID with at most one leading `#` (GitHub `#170`), so no ID spells `###`.
+ROW_SAFE_ID = re.compile(r"\A#?[A-Z0-9][A-Z0-9_-]{0,62}\Z")
+
+
+def safe_tasks(tasks, warn=True):
+    """Tasks whose ID is row- and path-safe; the rest are skipped (with a warning)."""
+    kept = []
+    for task in tasks:
+        task_id = str(task.id)
+        if ROW_SAFE_ID.match(task_id) and PATH_SAFE_ID.match(task_id):
+            kept.append(task)
+        elif warn:
+            print(f"[board] skipping task with unsafe ID {one_line(task_id)!r}", file=sys.stderr)
+    return kept
+
+
+def sort_key(task):
+    m = re.fullmatch(r"(.*?)(\d+)", task.id)
+    return (m.group(1), int(m.group(2))) if m else (task.id, 0)
+
+
+def render_kanban(tasks, status_map=None, today=""):
+    status_map = merged_status_map(status_map)
+    by_section = {s: [] for s in SECTIONS}
+    for task in safe_tasks(tasks):
+        by_section[section_for(task, status_map)].append(task)
+    parts = [HEADER.format(today=today)]
+    for section in SECTIONS:
+        rows = [row(t, section) for t in sorted(by_section[section], key=sort_key)]
+        parts.append("\n".join([f"### {HEADINGS.get(section, section)}", *rows]) + "\n")
+    parts.append(FOOTER)
+    return "\n".join(parts)
+
+
+def guide_files(tasks):
+    """`{"tasks/TASK_GUIDE_<ID>.md": description}` for each task with a description."""
+    return {f"tasks/TASK_GUIDE_{t.id}.md": t.description
+            for t in safe_tasks(tasks, warn=False) if t.description}
