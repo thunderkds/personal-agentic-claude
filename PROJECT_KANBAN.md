@@ -8,7 +8,6 @@
 ## Board
 
 ### Todo
-- [ ] **T152** — `dirty_worktrees.py` is silently empty when run from a subfolder | common-infrastructure | C0 | Risk: Low | P2 | Depends on: T150 | Registered 2026-10-17 from T150's `/verify`: it reads `PROJECT_KANBAN.md` relative to cwd, so from `docs/` it finds no board and prints nothing while a worktree is dirty. `wake` always runs it from the repo root, so only a by-hand run is affected. Fix: resolve the board from `git rev-parse --show-toplevel`
 - [ ] **T143** — CI re-runs the Verification Command of every task a PR moves to Done | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T143.md` | Depends on: none | Registered 2026-10-16 from the improvement-list grilling + brainstorm (`BRAINSTORMING_LOG_harness-hardening.md`): reuses `lib/guide_sections.py`; fail-closed on a missing/placeholder block; `# ci: skip — <reason>` opt-out
 - [ ] **T142** — Two machines cannot grab the same task: an atomic claim/release | Common-Infrastructure-Agent | C2 | Risk: Medium | P2 | Depends on: none | Registered 2026-10-16 from the improvement-list grilling (#5), **deferred by the user**. Grilling found the constraint any design must meet: `pre_bash_block_unsafe_merge.py` blocks every push while a task is In Progress, so a claim recorded by moving the row cannot be pushed. Candidate recorded, not chosen: an empty `claim/Txxx` remote branch (a push of an existing name fails, which makes it atomic)
 - [ ] **T139** — Update's lock rewrite has no test for `kit_commit` | Common-Infrastructure-Agent | C0 | Risk: Low | P2 | Depends on: T137 | Registered 2026-10-08 from T137 Stage 4 P2: `write_new_lock` records the new kit commit (hand-probed `d82da61`→`2cb8fe3`, and seen at `/verify`) but no assertion in `tests/test_update.sh` pins it
@@ -80,6 +79,7 @@
 
 
 ### In Progress
+- [ ] **T152** — `dirty_worktrees.py` is silently empty when run from a subfolder | common-infrastructure | C0 | Risk: Low | P2 | Depends on: T150 | Registered 2026-10-17 from T150's `/verify`: it reads `PROJECT_KANBAN.md` relative to cwd, so from `docs/` it finds no board and prints nothing while a worktree is dirty. `wake` always runs it from the repo root, so only a by-hand run is affected. Fix: resolve the board from `git rev-parse --show-toplevel`
 
 
 
