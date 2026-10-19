@@ -18,6 +18,8 @@ class FakeBoard(BoardAdapter):
         self.auth_fails = False   # test switch: every call raises BoardAuthError
         self.rejects = False      # test switch: every write raises a non-transient BoardError
         self.decision_content = None  # the Decision Log document text; None until first use (T158)
+        self.id_prefix = "ENG"    # create_task numbers new issues <id_prefix>-<n> (T159)
+        self.viewer_name = "tester"  # the assignee a created issue gets (the board user)
 
     @classmethod
     def from_file(cls, path):
@@ -56,6 +58,28 @@ class FakeBoard(BoardAdapter):
         if self.unreachable:
             raise BoardUnavailable("fake board unreachable")
         return any(t == task_id and marker in b for t, b in self.comments)
+
+    def create_task(self, task):
+        """The board assigns the ID (T159): one past the highest `<id_prefix>-<n>` held."""
+        self._write_check()
+        numbers = [int(t.id.rsplit("-", 1)[1]) for t in self.tasks
+                   if t.id.startswith(self.id_prefix + "-") and t.id.rsplit("-", 1)[1].isdigit()]
+        created = Task(id=f"{self.id_prefix}-{max(numbers, default=0) + 1}", title=task.title,
+                       status="Todo", status_type="unstarted", priority=task.priority,
+                       labels=list(task.labels), assignee=self.viewer_name,
+                       description=task.description)
+        self.tasks.append(created)
+        self._after_write()
+        return created.id
+
+    def update_task(self, task):
+        """Replace the description of the held task with `task.id` (T159)."""
+        self._write_check()
+        held = self.get_task(task.id)
+        if held is None:
+            raise BoardError("the board has no such task")
+        held.description = task.description
+        self._after_write()
 
     def set_status(self, task_id, status):
         self._write_check()
