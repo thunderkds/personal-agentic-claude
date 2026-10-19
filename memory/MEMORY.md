@@ -266,6 +266,7 @@
 - [Four agents at once: verify is user-only; stale active_task misattributes the Supervisor](learnings.md) — plan the `/verify` hand-off; clear the state file after the agents finish
 - [A dirty worktree is not proof of a dead agent](learnings.md) — T150: a concurrent session may be live; check commit times and ask before relaunching
 - [Gitignored files never make a worktree dirty](learnings.md) — T152 `/verify`: a `.tmp` probe is ignored, so an empty `dirty_worktrees.py` result was correct; `git check-ignore -v` the probe first
+- [A verified branch is not a merged branch](learnings.md) — T151 missed PR #100: check `git merge-base --is-ancestor` for each task branch before opening a batch PR
 
 ### Learning Records
 <!-- One-liner per active LR: - [LR-NNNN slug](memory/learning-records/LR-NNNN-slug.md) — summary -->
