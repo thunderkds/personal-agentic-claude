@@ -157,7 +157,7 @@ For every task moved to In Progress:
 - Invoke `Skill({ skill: "craft-spawn-prompt" })` with the task's guide path and the CLI that will run it — it assembles the spawn prompt, pre-flight-checks it against the spawn hook, and recommends the model by looking the task's **Complexity** up in `PROJECT_SPEC.md`'s `## CLI Model Table` for that CLI (no row/empty cell → it stops and asks, never a Claude-name fallback). Then issue the `Agent()` call in that worktree using its output.
 - **Spawn mode**: every spawn is a background `Agent()` call (`run_in_background`) — the final report and the commits are what the Supervisor reads. Use a CLI pane instead only when the user asks to watch the agent work, or the task runs on a non-Claude CLI. Do not use the T147 sandboxed profile until a nested-userns check passes. A background agent dies with the Supervisor session, so `wake` reports any In Progress task whose worktree has uncommitted changes.
 - The sub-agent must read both its TASK_GUIDE_Txxx.md (from tasks/) and the relevant agent guide from agents/.
-- **Memory injection**: Paste the task's **memory slice** in every sub-agent spawn prompt, after the task pointer — the output of `python3 skills/craft-spawn-prompt/scripts/memory_slice.py <guide>`, verbatim: the `memory/MEMORY.md` index lines that name the guide's files, its `Depends on` tasks or its ID (T125). Then the fallback: *"Read `memory/MEMORY.md` in full only if your work reaches a file, hook, skill or decision the slice does not cover."* Do **not** paste the whole hot-tier index (≤50,000 characters); nothing loads it for the agent, so the full file is read only when the slice falls short.
+- **Memory injection**: Paste the task's **memory slice** in every sub-agent spawn prompt, after the task pointer — the output of `python3 skills/craft-spawn-prompt/scripts/memory_slice.py <guide>`, verbatim: the `memory/MEMORY.md` index lines that name the guide's files, its `Depends on` tasks or its ID (T125), plus any `memory/decisions.md` entry whose `**Files**:` line names the guide's files (T145), listed under `### From decisions.md` and dropped first when the cap bites. Then the fallback: *"Read `memory/MEMORY.md` in full only if your work reaches a file, hook, skill or decision the slice does not cover."* Do **not** paste the whole hot-tier index (≤50,000 characters); nothing loads it for the agent, so the full file is read only when the slice falls short.
 
 Run the app during implementation to catch regressions early:
 ```
@@ -173,7 +173,7 @@ For every task that reaches "Ready for Review":
    ```
    Skill({ skill: "code-review" })
    ```
-   Bound the review to the change's **blast radius** — its affected callers, dependents, and tests — rather than re-reading the whole repo. This keeps review focused and token-efficient (the affected set comes from `risk-hotspots.md`/`architecture.md` in legacy mode, or from the predicted files + judgment in greenfield). `code-review` also runs the Entry-Point Reachability Check (Phase 0.5) against the task's declared `Entry point:` field.
+   Bound the review to the change's **blast radius** — its affected callers, dependents, and tests — rather than re-reading the whole repo. This keeps review focused and token-efficient (the affected set comes from `risk-hotspots.md`/`architecture.md` in legacy mode, or from the predicted files + judgment in greenfield). `code-review` also runs the Entry-Point Reachability Check (Phase 0.5) against the task's declared `Entry point:` field, and prints one line from `scripts/lane_check.py <guide> <base>...HEAD` (three dots) comparing the branch diff to the declared Complexity; it warns and never blocks (T144).
 
 2. **Security Review** (if task Risk Level is Medium or High):
    ```
@@ -233,7 +233,7 @@ After all Stage 4 reviews pass:
    ```
    Skill({ skill: "ship" })
    ```
-   Turns the merged tasks/commits into a runnable deployment plan, a rollback plan, and user-facing release notes, then appends a runbook entry. `ship` **plans and de-risks** the release — it never auto-deploys; the operator executes the plan.
+   Turns the merged tasks/commits into a runnable deployment plan, a rollback plan, and user-facing release notes, then appends a runbook entry. `ship` **plans and de-risks** the release — it never auto-deploys; the operator executes the plan. A GO also needs the human's approval of the exact `<version> @ <commit>`, recorded in the runbook's Release Log, and the smoke test with its pass condition is written before the deploy step (T149).
 
 Only after all tasks are integrated, announce:
 > "Stage 5: Integration complete. All tasks merged. Project milestone delivered."

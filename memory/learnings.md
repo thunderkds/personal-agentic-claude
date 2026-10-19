@@ -2754,3 +2754,10 @@ At T152's `/verify` the first probe file was `verify-probe.tmp`; `.gitignore:37`
 had failed. Before trusting an empty result from a dirty-worktree check, run `git check-ignore -v <file>` on
 the probe, or use a plain `.txt` name.
 **Files**: skills/wake/scripts/dirty_worktrees.py, tests/test_dirty_worktrees.py
+
+## A verified task branch is not merged until `merge-base --is-ancestor` says so (T151, 2026-10-19)
+T151's `/verify` PASS was committed on `feat/t151-docs` (`698d507`), but the branch was never merged into
+`feat/t144-t145-t148-t149` and never pushed, and the board still read "awaiting /verify". PR #100 then
+shipped the batch to `main` without it. Before opening a batch PR, run
+`git merge-base --is-ancestor <task-branch> <batch-branch>` for every task whose row names that batch branch.
+**Files**: PROJECT_KANBAN.md, docs/claude-md/pipeline-stages.md, site/index.html

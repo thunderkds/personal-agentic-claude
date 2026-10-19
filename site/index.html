@@ -370,8 +370,8 @@ Choose [1]:</pre>
    (and named) if you did.</li>
   <li><strong><code>.claude/settings.json</code></strong> — not a <code>MANIFEST</code> file, so it is
     <em>merged</em> rather than copied: the kit's hooks are reconciled into it on install
-    <em>and</em> on update, while your own permissions and your own hook entries are kept exactly as
-    they are. If it cannot be merged — invalid JSON, a symlink, or no <code>python3</code> — nothing
+    <em>and</em> on update, while the kit's <code>permissions.deny</code> entries are appended to yours (add-only; your own
+    permissions and hook entries are kept exactly as they are, and the kit's allow or ask rules are never copied). If it cannot be merged — invalid JSON, a symlink, or no <code>python3</code> — nothing
     is written, the block to add by hand is printed, and the run exits <code>2</code>.</li>
 </ul>
 <p class="lead">
@@ -515,7 +515,8 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <p class="lead">
   The wiring lives in <code>.claude/settings.json</code>. Both <code>setup.sh</code> and
   <code>update.sh</code> merge every entry below into that file — including into one your project
-  already has — and never touch your own permissions or hook entries. No manual merge step.
+  already has — and keep your own permissions and hook entries; the only permissions it adds are the kit's
+  <code>permissions.deny</code> entries. No manual merge step.
 </p>
 <div class="table-wrap">
 <table>
@@ -528,7 +529,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <tr><td>PostToolUse</td><td><code>Write</code></td><td><code>post_write_register_task.py</code></td><td><span class="tag tag-advise">advises</span> — auto-registers new TASK_GUIDE files on the board</td></tr>
 <tr><td>PostToolUse</td><td><code>Agent</code></td><td><code>post_agent_move_to_review.py</code></td><td><span class="tag tag-inert">inert</span> — <strong>does not move anything and does not touch any step counter</strong>; it only prints a reminder for the Supervisor to move the row by hand (deliberately, after two past defects made the automatic move actively harmful)</td></tr>
 <tr><td>PostToolUse</td><td><code>Bash</code></td><td><code>post_bash_memory_update.py</code></td><td><span class="tag tag-advise">advises</span> — prompts a diff-driven memory-update pass after git push/merge/pull</td></tr>
-<tr><td>PostToolUse</td><td><code>.*</code></td><td><code>post_tool_trace.py</code></td><td><span class="tag tag-advise">advises</span> — appends every tool call to <code>memory/event-trace/&lt;task&gt;.jsonl</code></td></tr>
+<tr><td>PostToolUse</td><td><code>.*</code></td><td><code>post_tool_trace.py</code></td><td><span class="tag tag-advise">advises</span> — appends every tool call to <code>memory/event-trace/&lt;task&gt;.jsonl</code>, each line linked to the one before by a hash chain, with a copy of each line's hash kept outside the repo under <code>~/.claude/harness-anchors/</code>; <code>scripts/verify_trace.py &lt;task&gt;</code> reports whether the trace still matches</td></tr>
 <tr><td>Stop</td><td>—</td><td><code>stop_review_reminder.py</code></td><td><span class="tag tag-advise">advises</span> — reminds the Supervisor to run Stage 4 review for pending tasks</td></tr>
 </tbody>
 </table>
@@ -545,7 +546,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <table>
 <thead><tr><th>We apply</th><th>To save</th><th>Idea from</th></tr></thead>
 <tbody>
-<tr><td><strong>Memory slice</strong> — the spawn prompt pastes only the <code>memory/MEMORY.md</code> lines about the task's own files, capped at 30 lines / 4,000 characters</td><td>Every agent reading the whole memory index before it starts</td><td>headroom</td></tr>
+<tr><td><strong>Memory slice</strong> — the spawn prompt pastes only the <code>memory/MEMORY.md</code> lines about the task's own files, plus any <code>memory/decisions.md</code> entry that lists those files, capped at 30 lines / 4,000 characters</td><td>Every agent reading the whole memory index before it starts</td><td>headroom</td></tr>
 <tr><td><strong>Startup reads list</strong> — the spawn prompt names what to read first, and the agent ends its report with a <code>Startup reads:</code> line that Stage 4 review checks</td><td>Rework from an agent that skipped the rules it must follow</td><td>—</td></tr>
 <tr><td><strong>Response Standard</strong> — replies lead with the answer and stay short, but code, exact error text, file paths, commands and security warnings are quoted verbatim; reports point to <code>path:line</code>. The audit trail stays fully detailed</td><td>Output tokens, and the Supervisor carrying pasted logs for the rest of its session</td><td>caveman</td></tr>
 <tr><td><strong>Over-engineering reviewer</strong> — <code>code-review</code> checks any diff that adds a function, class, module, dependency or config option</td><td>Code nobody asked for, which someone must then review and maintain</td><td>ponytail</td></tr>
@@ -652,7 +653,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <table>
 <thead><tr><th>File</th><th>Tier</th><th>Holds</th></tr></thead>
 <tbody>
-<tr><td><code>memory/MEMORY.md</code></td><td>Hot</td><td>≤42,000 characters. Each sub-agent spawn prompt carries a pasted <strong>memory slice</strong> — the index lines naming the task's files, dependencies or ID — and the agent reads the whole file only if its work reaches what the slice misses</td></tr>
+<tr><td><code>memory/MEMORY.md</code></td><td>Hot</td><td>≤42,000 characters. Each sub-agent spawn prompt carries a pasted <strong>memory slice</strong> — the index lines naming the task's files, dependencies or ID, plus matching <code>decisions.md</code> entries — and the agent reads the whole file only if its work reaches what the slice misses</td></tr>
 <tr><td><code>memory/decisions.md</code></td><td>Cold</td><td>Architectural and infrastructure decisions</td></tr>
 <tr><td><code>memory/glossary.md</code></td><td>Cold</td><td>Canonical domain terms and core domain models</td></tr>
 <tr><td><code>memory/learnings.md</code></td><td>Cold</td><td>Spec clarifications, patterns, gotchas</td></tr>
