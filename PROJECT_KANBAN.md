@@ -79,7 +79,6 @@
 
 
 ### In Progress
-- [ ] **T152** — `dirty_worktrees.py` is silently empty when run from a subfolder | common-infrastructure | C0 | Risk: Low | P2 | Depends on: T150 | Registered 2026-10-17 from T150's `/verify`: it reads `PROJECT_KANBAN.md` relative to cwd, so from `docs/` it finds no board and prints nothing while a worktree is dirty. `wake` always runs it from the repo root, so only a by-hand run is affected. Fix: resolve the board from `git rev-parse --show-toplevel`
 
 
 
@@ -88,6 +87,7 @@
 
 
 ### Ready for Review
+- [ ] **T152** — `dirty_worktrees.py` is silently empty when run from a subfolder | common-infrastructure | C0 | Risk: Low | P2 | Depends on: T150 | Registered 2026-10-17 from T150's `/verify`: it reads `PROJECT_KANBAN.md` relative to cwd, so from `docs/` it finds no board and prints nothing while a worktree is dirty. `wake` always runs it from the repo root, so only a by-hand run is affected. Fix: resolve the board from `git rev-parse --show-toplevel`
 - [ ] **T151** — The docs and site describe what T144, T145, T148 and T149 changed | common-infrastructure | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T151.md` | Branch: `feat/t151-docs` → `feat/t144-t145-t148-t149` | Depends on: T144, T145, T148, T149 | Registered 2026-10-17 at the user's request (docs not updated after the batch) | Stage 4 code-review done 2026-10-17 — awaiting user `/verify`
 
 
