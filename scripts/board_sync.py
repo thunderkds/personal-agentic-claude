@@ -26,6 +26,16 @@ shared board document (`decision_doc` in board.json, default "Project Decisions"
 first use). It goes through the same outbox as `push`. `pull` renders the log into the board
 section of `memory/decisions.md`; content outside that section is never touched.
 
+    python3 scripts/board_sync.py create --guide <draft.md>
+    python3 scripts/board_sync.py update --guide <ID>
+
+`create` (T159) is Stage 2 in board mode: the board assigns the task ID, the issue is created
+with the draft's title, priority, `complexity:`/`risk:` labels, the board user as assignee and
+the draft (minus its local title line) as description, and `tasks/TASK_GUIDE_<ID>.md` is
+written from the board's copy. `update --guide <ID>` pushes the local guide back to the
+description. Neither goes through the outbox: a new ID cannot be queued, and a failure exits 1
+with nothing written. A draft missing Complexity, Risk or Priority is refused (exit 2).
+
 Board mode `online` (`.claude/board.json` names a `board`): fetch every task of the
 configured team/project and rewrite the board cache in today's formats —
 `PROJECT_KANBAN.md` and `tasks/TASK_GUIDE_<ID>.md` (each issue description, verbatim).
@@ -51,7 +61,7 @@ from datetime import date, datetime, timezone
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, ".claude", "hooks", "lib"))
 from board import outbox, render  # noqa: E402
-from board.base import BoardAuthError, BoardError, BoardUnavailable, Decision  # noqa: E402
+from board.base import BoardAuthError, BoardError, BoardUnavailable, Decision, Task  # noqa: E402
 from board.config import board_id_pattern, config_path, load_config, normalize_task_id, task_id_pattern  # noqa: E402
 from board.fake import FakeBoard  # noqa: E402
 from board.linear import LinearBoard  # noqa: E402
@@ -303,6 +313,95 @@ def decide(board, config, root, args):
     return 0
 
 
+# ── create / update (T159) ───────────────────────────────────────────────────
+# Copied from `.claude/hooks/post_write_register_task.py` (its regexes are inline in `main()`,
+# so they cannot be imported). The title pattern differs: a draft's ID is still a placeholder.
+DRAFT_TITLE = re.compile(r"^#\s+TASK_GUIDE\s*[—–-]+\s*\S+?:\s*(.+)$", re.MULTILINE)
+DRAFT_FIELDS = (
+    ("Complexity", r"Complexity(?:\s+Level)?\*{0,2}[:\s]+\*{0,2}(C[0-3])"),
+    ("Risk", r"Risk(?:\s+Level)?\*{0,2}[:\s]+\*{0,2}(Low|Med(?:ium)?|High)"),
+    ("Priority", r"Priority\*{0,2}[:\s]+\*{0,2}(P[0-2])"),
+)
+
+
+def parse_draft(text):
+    """(Task, []) for a complete draft, else (None, names of the missing fields)."""
+    found, missing = {}, []
+    title = DRAFT_TITLE.search(text)
+    if not title or not render.one_line(title.group(1)):
+        missing.append("title (`# TASK_GUIDE — <ID>: <title>`)")
+    for name, pattern in DRAFT_FIELDS:
+        m = re.search(pattern, text, re.IGNORECASE | re.MULTILINE)
+        if m:
+            found[name] = m.group(1)
+        else:
+            missing.append(name)
+    if missing:
+        return None, missing
+    risk = "medium" if found["Risk"].lower().startswith("med") else found["Risk"].lower()
+    body = (text[:title.start()] + text[title.end():]).lstrip("\n")
+    return Task(id="", title=render.one_line(title.group(1)), status="",
+                priority=found["Priority"].upper(),
+                labels=[f"complexity:{found['Complexity'].lower()}", f"risk:{risk}"],
+                description=body), []
+
+
+def create(board, root, args):
+    try:
+        with open(args.guide, encoding="utf-8") as f:
+            text = f.read()
+    except (OSError, UnicodeDecodeError):
+        print(f"[board] cannot read the draft guide {render.one_line(args.guide)!r}", file=sys.stderr)
+        return 2
+    task, missing = parse_draft(text)
+    if task is None:
+        print(f"[board] the draft is missing: {', '.join(missing)}; nothing created", file=sys.stderr)
+        return 2
+    try:
+        new_id = board.create_task(task)
+    except BoardError as exc:
+        raise BoardError(f"{exc}. A new task's ID comes from the board, so a create cannot be "
+                         f"queued; nothing was written. If it timed out, check the board for the "
+                         f"issue before retrying") from None
+    if not (render.safe_tasks([Task(id=new_id, title="", status="")], warn=False)):
+        print(f"[board] the board returned an unusable task ID {render.one_line(new_id)!r}; "
+              f"no guide written", file=sys.stderr)
+        return 1
+    description = task.description
+    try:
+        held = board.get_task(new_id)
+        if held is not None and held.description:
+            description = held.description
+    except BoardError:
+        print(f"[board] {new_id} was created but not read back; its guide is the draft you sent",
+              file=sys.stderr)
+    cache = render.guide_files([Task(id=new_id, title="", status="", description=description)])
+    write_atomically(root, cache)
+    print(f"[board] created {new_id}: {', '.join(cache)} written")
+    return 0
+
+
+def update(board, root, args):
+    task_id = normalize_task_id(args.guide)
+    if not re.fullmatch(task_id_pattern(root), task_id):
+        print(f"[board] {render.one_line(args.guide)!r} is not a task ID", file=sys.stderr)
+        return 2
+    try:
+        with open(os.path.join(root, "tasks", f"TASK_GUIDE_{task_id}.md"), encoding="utf-8") as f:
+            text = f.read()
+    except (OSError, UnicodeDecodeError):
+        print(f"[board] no readable tasks/TASK_GUIDE_{task_id}.md to push", file=sys.stderr)
+        return 2
+    try:
+        board.update_task(Task(id=task_id, title="", status="",
+                               description=render.vacate_review_sections(text, task_id)))
+    except BoardError as exc:
+        raise BoardError(f"{exc}. The guide edit was not queued; run update again when the "
+                         f"board is reachable") from None
+    print(f"[board] pushed the guide of {task_id} to its description")
+    return 0
+
+
 # ── init (T155) ──────────────────────────────────────────────────────────────
 MCP_COMMAND = "claude mcp add --transport http linear https://mcp.linear.app/mcp"
 CONNECTIONS = {"1": "api", "2": "mcp", "3": "both"}
@@ -473,6 +572,10 @@ def main(argv=None, root=ROOT):
     p_decide.add_argument("id")
     p_decide.add_argument("text", nargs="+", help="the decision")
     sub.add_parser("init")
+    p_create = sub.add_parser("create")
+    p_create.add_argument("--guide", required=True, help="the draft guide file")
+    p_update = sub.add_parser("update")
+    p_update.add_argument("--guide", required=True, help="the task ID whose local guide to push")
     p_push = sub.add_parser("push")
     p_push.add_argument("kind", choices=["status", "comment"])
     p_push.add_argument("id")
@@ -487,6 +590,10 @@ def main(argv=None, root=ROOT):
     config = load_config(root)
     if config is None and os.path.exists(config_path(root)):
         print("[board] .claude/board.json is unusable; nothing pulled", file=sys.stderr)
+        return 2
+    if args.command in ("create", "update") and not (config and config.get("board")):
+        print(f"[board] {args.command} needs board mode online (no board in .claude/board.json)",
+              file=sys.stderr)
         return 2
     if not config or not config.get("board"):
         print(f"[board] board mode is local (no board in .claude/board.json); nothing to {args.command}",
@@ -508,6 +615,10 @@ def main(argv=None, root=ROOT):
             return flush(board, root)
         if args.command == "decide":
             return decide(board, config, root, args)
+        if args.command == "create":
+            return create(board, root, args)
+        if args.command == "update":
+            return update(board, root, args)
         return push(board, config, root, args)
     except ConfigError as exc:
         code, message = 2, str(exc)

@@ -53,6 +53,24 @@ DOC_UPDATE = """mutation DocUpdate($id: String!, $content: String!) {
   documentUpdate(id: $id, input: {content: $content}) { success }
 }"""
 
+# Create / update (T159). ASSUMED field names, unconfirmed against a live workspace:
+# `viewer { id }`; `issueLabels(first)` nodes `{ id name team { id } }`;
+# `issueLabelCreate(input: {name, teamId}) { issueLabel { id } }`;
+# `issueCreate(input: {teamId, projectId, title, description, priority, assigneeId, labelIds})
+# { success issue { identifier } }`; `issueUpdate(id, input: {description}) { success }`.
+LINEAR_PRIORITY = {"P0": 1, "P1": 2, "P2": 3}   # the inverse of PRIORITY (Low is never written)
+VIEWER_ID_QUERY = "query ViewerId { viewer { id } }"
+LABELS_QUERY = "query Labels { issueLabels(first: 250) { nodes { id name team { id } } } }"
+LABEL_CREATE = """mutation LabelCreate($name: String!, $teamId: String!) {
+  issueLabelCreate(input: {name: $name, teamId: $teamId}) { success issueLabel { id } }
+}"""
+ISSUE_CREATE = """mutation IssueCreate($input: IssueCreateInput!) {
+  issueCreate(input: $input) { success issue { identifier } }
+}"""
+DESCRIPTION_MUTATION = """mutation Describe($id: String!, $description: String!) {
+  issueUpdate(id: $id, input: {description: $description}) { success }
+}"""
+
 
 def task_from_node(node):
     state = node.get("state") or {}
@@ -131,6 +149,56 @@ class LinearBoard(BoardAdapter):
         data, _ = self._post(GET_QUERY, {"id": task_id})
         node = data.get("issue")
         return task_from_node(node) if isinstance(node, dict) else None
+
+    def _label_ids(self, names):
+        """Ids of the labels called `names` (case-insensitive, workspace or this team's);
+        a missing one is created once."""
+        data, _ = self._post(LABELS_QUERY, {})
+        try:
+            held = {}
+            for node in data["issueLabels"]["nodes"]:
+                if ((node.get("team") or {}).get("id") in (None, self.team)):
+                    held.setdefault(str(node["name"]).lower(), str(node["id"]))
+        except (KeyError, TypeError, AttributeError):
+            raise BoardError("unexpected answer shape from Linear") from None
+        ids = []
+        for name in names:
+            if name.lower() not in held:
+                made, _ = self._post(LABEL_CREATE, {"name": name, "teamId": self.team})
+                try:
+                    held[name.lower()] = str(made["issueLabelCreate"]["issueLabel"]["id"])
+                except (KeyError, TypeError):
+                    raise BoardError("Linear did not accept the label") from None
+            ids.append(held[name.lower()])
+        return ids
+
+    def create_task(self, task):
+        """Create the issue, assigned to the API key's user; returns the ID Linear assigned."""
+        data, _ = self._post(VIEWER_ID_QUERY, {})
+        try:
+            viewer_id = str(data["viewer"]["id"])
+        except (KeyError, TypeError):
+            raise BoardError("unexpected answer shape from Linear") from None
+        fields = {"teamId": self.team, "title": task.title, "description": task.description,
+                  "assigneeId": viewer_id, "labelIds": self._label_ids(task.labels)}
+        if self.project:
+            fields["projectId"] = self.project
+        if task.priority in LINEAR_PRIORITY:
+            fields["priority"] = LINEAR_PRIORITY[task.priority]
+        data, _ = self._post(ISSUE_CREATE, {"input": fields})
+        try:
+            created = data["issueCreate"]
+            if not created.get("success"):
+                raise BoardError("Linear did not accept the new issue")
+            return str(created["issue"]["identifier"])
+        except (KeyError, TypeError, AttributeError):
+            raise BoardError("unexpected answer shape from Linear") from None
+
+    def update_task(self, task):
+        """Replace the issue's description with `task.description`."""
+        data, _ = self._post(DESCRIPTION_MUTATION, {"id": task.id, "description": task.description})
+        if not (data.get("issueUpdate") or {}).get("success"):
+            raise BoardError("Linear did not accept the description")
 
     def add_comment(self, task_id, body):
         data, _ = self._post(COMMENT_MUTATION, {"issueId": task_id, "body": body})

@@ -444,7 +444,9 @@ def test_linear_key_not_in_repr():
 
 
 def test_unbuilt_operations_raise_not_implemented():
-    board = FakeBoard([])
+    # create_task / update_task are built since T159; the interface stubs still raise.
+    from board.base import BoardAdapter
+    board = BoardAdapter()
     for call in (lambda: board.create_task(None), lambda: board.update_task(None)):
         with pytest.raises(NotImplementedError):
             call()
