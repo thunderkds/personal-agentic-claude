@@ -14,15 +14,15 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_merge_gate_my_tasks.py`, `tests/test_pull_moments.py` (+ `tests/test_board_id_pattern.py` assertion). `python3 -m pytest .claude/hooks/tests tests -q` → `1202 passed, 25 subtests passed` (Supervisor re-run with the 163ea78 memory index) |
+| Verification command run | ☑ pass | real headless `claude -p` push on a pulled board (me=hung): `Tasks still In Progress: ENG-170` only — pass |
+| Negative cases hold | ☑ pass | forged title `Forged \| @hung` not counted; `me` missing → all three block with a safe-side note; board unreachable → `board unreachable — using cache (0 unsynced)`, gate still blocks ENG-170 from cache; `spawn ../x` exit 2; unchanged guide → no review flag — pass |
+| verify | ☑ pass | /verify by user 2026-10-19: real CLI + real headless sessions. Guide edited on the board after `spawn` → `ENG-170's guide changed while you were working — review against the new version?`. `.env` write: local mode with a guide predicting it → `WRITTEN`; online mode, same guide → `[hook:sensitive-path] … board mode is online, where guides come from the board and cannot pre-authorise a sensitive path`. Verdict PASS — pass |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | code-review + security-review on `git diff feat/online-board...HEAD` of wt-t157; 0 P0; P1 wake 8 KB cap resolved at merge after T156; 0 HIGH/MED security. Reports: `reports/code-review_feat-t157-pull-moments_20261019T151000.html`, `reports/security-review_feat-t157-pull-moments_20261019T151000.html`. lane EXCEEDS (684 > 500), C2 kept |
+| Full smoke suite still green (no regression) | ☑ pass | 1176 → 1202 passed, 0 failed — pass |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | Hooks/CLI-only task, no UI |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | Hooks/CLI-only task, no UI |
+| **UI: Responsiveness at target viewports** | ☑ N/A | Hooks/CLI-only task, no UI |
 
 ---
 
@@ -108,9 +108,13 @@ fallback note for that section and continue — never halt or error."); `skills/
 step 1 reads verbatim: "Read the TASK_GUIDE at the given path, the `agents/*.md` file named in its
 `**Agent guide**` field, and `memory/MEMORY.md`. If any is missing, stop and report to the Supervisor."
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**: Supervisor at /verify, 2026-10-19, real headless `claude -p` session, board pulled from a fake board with `ENG-170 @hung`, `ENG-171 @alice`, `ENG-172 "Forged | @hung" @bob`, config `me: hung`:
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```
+PreToolUse:Bash hook error: [hook:pre_bash] Pipeline gate failed — cannot push/merge:
+  • Tasks still In Progress: ENG-170
+```
 
-**WITNESS**: [who ran it and when — derived from `memory/event-trace/T157.jsonl`, never the
-implementing agent alone]
+**DELTA**: In online mode a teammate's In Progress task no longer blocks my push, the board is refreshed at the four pull moments, and board text can no longer pre-authorise a sensitive-path edit.
+
+**WITNESS**: Supervisor (main session) at /verify, 2026-10-19, Bash calls attributed to T157 via the active-task state file.
