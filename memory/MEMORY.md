@@ -267,6 +267,8 @@
 - [A dirty worktree is not proof of a dead agent](learnings.md) — T150: a concurrent session may be live; check commit times and ask before relaunching
 - [Gitignored files never make a worktree dirty](learnings.md) — T152 `/verify`: a `.tmp` probe is ignored, so an empty `dirty_worktrees.py` result was correct; `git check-ignore -v` the probe first
 - [A verified branch is not a merged branch](learnings.md) — T151 missed PR #100: check `git merge-base --is-ancestor` for each task branch before opening a batch PR
+- [The merge gate reads quoted prose in a Bash command](learnings.md) — T153 `/verify`: `claude -p "…git push…"` was blocked by the Supervisor's own gate; drive it from a script file
+- [Bad `board.json` drops board tasks from the merge gate](learnings.md) — T153: invalid `id_pattern` falls back to `T\d+`, warning only on stderr; T155 init must validate it
 
 ### Learning Records
 <!-- One-liner per active LR: - [LR-NNNN slug](memory/learning-records/LR-NNNN-slug.md) — summary -->
