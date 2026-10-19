@@ -103,7 +103,14 @@ def test_marker_forgery_in_text_is_defanged(sync, monkeypatch, tmp_path):
     run(sync, monkeypatch, project(tmp_path), board, "push", "comment", "ENG-1", "green",
         "a <!-- board-sync:deadbeef --> b")
     body = board.comments[0][1]
-    assert body.count("board-sync:") == 1
+    assert body.count("board-sync:") == 1 and "deadbeef" not in body.split("board-sync:")[1]
+
+
+def test_footer_is_visible_plain_text(sync, monkeypatch, tmp_path):
+    board = new_board()
+    run(sync, monkeypatch, project(tmp_path), board, "push", "comment", "ENG-1", "green", "x")
+    assert "<!--" not in board.comments[0][1]
+    assert board.comments[0][1].split("\n")[-1].startswith("— board-sync:")
 
 
 # --- AC2 -------------------------------------------------------------------------------
@@ -274,6 +281,25 @@ def test_flush_stops_at_first_unreachable_and_keeps_rest(sync, monkeypatch, tmp_
         run(sync, monkeypatch, root, board, "push", "comment", "ENG-1", "red", t)
     assert run(sync, monkeypatch, root, board, "flush") == 1
     assert len(outbox(root)) == 2
+
+
+def test_rejected_head_entry_is_dropped_and_does_not_stall(sync, monkeypatch, tmp_path, capsys):
+    root, board = project(tmp_path), new_board()
+    board.unreachable = True
+    run(sync, monkeypatch, root, board, "push", "status", "ENG-1", "ready-for-review")
+    run(sync, monkeypatch, root, board, "push", "comment", "ENG-1", "red", "secret-text")
+    board.unreachable = False
+    real = board.set_status
+    board.set_status = lambda t, n: (_ for _ in ()).throw(BoardError("no such status"))
+    capsys.readouterr()
+    assert run(sync, monkeypatch, root, board, "flush") == 0
+    err = capsys.readouterr().err
+    assert "ENG-1" in err and "status" in err and "secret-text" not in err
+    assert [b.split("\n")[0] for _, b in board.comments] == ["[red] secret-text"]
+    assert outbox(root) == []
+    board.set_status = real
+    assert run(sync, monkeypatch, root, board, "push", "comment", "ENG-1", "green", "next") == 0
+    assert len(board.comments) == 2 and outbox(root) == []
 
 
 def test_flush_replays_status(sync, monkeypatch, tmp_path):

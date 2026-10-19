@@ -134,6 +134,7 @@ Dedupe key = sha256 of (task id, milestone, text, created-at) truncated, embedde
 | `.claude/hooks/lib/board/outbox.py` (new) | append-only outbox + locked flush |
 | `scripts/board_sync.py` | `push`, `flush`, `status` |
 | `skills/wake/SKILL.md` | unsynced line |
+| `.gitignore` | ignore `.board/` (local outbox state) |
 | `tests/test_board_push.py` (new) | T156 tests |
 | `tests/test_board_sync_pull.py` | drop `set_status`/`add_comment` from the "unbuilt operations" assertion |
 

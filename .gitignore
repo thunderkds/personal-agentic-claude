@@ -56,3 +56,6 @@ memory/event-trace/
 # Section 7: Vercel CLI local auth/link state (T084)
 # ============================================================
 .vercel/
+
+# T156: online-board local outbox state
+.board/

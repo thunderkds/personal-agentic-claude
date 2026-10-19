@@ -119,6 +119,7 @@ class LinearBoard(BoardAdapter):
             raise BoardError("Linear did not accept the comment")
 
     def has_comment(self, task_id, marker):
+        # Reads the first 250 comments only; a replay marker beyond that is not seen.
         data, _ = self._post(COMMENTS_QUERY, {"id": task_id})
         try:
             nodes = data["issue"]["comments"]["nodes"]

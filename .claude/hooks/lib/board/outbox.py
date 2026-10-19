@@ -17,6 +17,8 @@ except ImportError:  # Windows: no advisory lock; single-session use stays corre
     fcntl = None
 
 
+from board.base import BoardError, BoardUnavailable  # noqa: E402
+
 DIR = ".board"
 NAME = "outbox.jsonl"
 
@@ -77,21 +79,30 @@ def _rewrite(root, items):
             os.unlink(tmp)
 
 
-def flush(root, deliver):
+def flush(root, deliver, on_drop=None):
     """Replay in order. `deliver(entry)` returns on success (or already-delivered) and raises
-    on failure. Stops at the first failure and keeps it and everything after it.
+    on failure. A `BoardError` that is not `BoardUnavailable` is permanent (the board will
+    refuse it again): the entry is dropped, `on_drop(entry, exc)` is told, and the replay
+    goes on. Anything else (unreachable, unexpected) stops it, keeping that entry and the rest.
     Returns (delivered count, remaining count, the exception that stopped it or None)."""
     if not os.path.exists(path(root)):
         return 0, 0, None
     with _locked(root):
         items = entries(root)
-        done, error = 0, None
+        done, consumed, error = 0, 0, None
         for item in items:
             try:
                 deliver(item)
-            except Exception as exc:  # BoardUnavailable or a rejected write: stop, keep order
+                done += 1
+            except BoardUnavailable as exc:
                 error = exc
                 break
-            done += 1
-        _rewrite(root, items[done:])
-        return done, len(items) - done, error
+            except BoardError as exc:
+                if on_drop:
+                    on_drop(item, exc)
+            except Exception as exc:  # unexpected: stop, keep order
+                error = exc
+                break
+            consumed += 1
+        _rewrite(root, items[consumed:])
+        return done, len(items) - consumed, error

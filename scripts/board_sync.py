@@ -135,7 +135,7 @@ def dedupe_key(task, milestone, text, created):
 
 
 def comment_body(milestone, text, key):
-    return f"[{milestone}] {text}\n\n<!-- board-sync:{key} -->"
+    return f"[{milestone}] {text}\n\n— board-sync:{key}"
 
 
 def deliver(board, entry):
@@ -151,7 +151,11 @@ def deliver(board, entry):
 
 
 def flush(board, root):
-    done, remaining, error = outbox.flush(root, lambda entry: deliver(board, entry))
+    def dropped(entry, exc):  # never the text or the key
+        print(f"[board] dropped a queued {entry.get('kind')} for {entry.get('task')} "
+              f"({entry.get('milestone')}): the board refused it ({exc})", file=sys.stderr)
+
+    done, remaining, error = outbox.flush(root, lambda entry: deliver(board, entry), dropped)
     if done:
         print(f"[board] flushed {done} queued write(s)")
     if error is not None:
@@ -177,8 +181,7 @@ def push(board, config, root, args):
         key = os.environ.get("LINEAR_API_KEY")
         if key:
             text = text.replace(key, "[redacted]")
-        # Neither a forged marker nor a closing `-->` may come from the text.
-        text = text.replace("board-sync:", "board-sync -").replace("<!--", "< !--").replace("-->", "-- >")
+        text = text.replace("board-sync:", "board-sync -")  # no forged dedupe marker
         if not text:
             print("[board] a comment needs text", file=sys.stderr)
             return 2

@@ -1,7 +1,7 @@
 """Board-adapter interface (T154, FR-004, board portability rule).
 
 Only `lib/board/<board>.py` knows which board a project uses. Everything else talks to the
-seven operations below over plain dataclasses. T154 builds `list_tasks` and `get_task`;
+seven operations below (plus `has_comment`, T156: the replay check that makes a queued comment post exactly once) over plain dataclasses. T154 builds `list_tasks` and `get_task`;
 the rest raise `NotImplementedError` until T156 (push), T158 (Decision Log) and T159
 (create) fill them.
 
