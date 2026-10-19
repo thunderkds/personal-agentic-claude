@@ -14,15 +14,15 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | pass | tests/test_dirty_worktrees.py::test_subfolder_run_finds_board (new, AC1; red before fix, green after); `13 passed in 0.56s` |
+| Verification command run | pass | `python3 -m pytest tests/test_dirty_worktrees.py -q` -> `13 passed in 0.56s` (Supervisor re-run 2026-10-19) |
+| Negative cases hold | pass | AC3: `test_sc5_not_a_git_repo` and `test_sc5_no_board` green; Supervisor by-hand: repo path with a space, run from a subfolder -> `T901 ... 0 modified, 1 untracked`, exit 0 |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Supervisor Stage 4 code-review 2026-10-19, `e219642...HEAD`: dirty_worktrees.py, test_dirty_worktrees.py; caller skills/wake/SKILL.md read (unchanged). lane_check: `lane: C0, 2 files, 15 lines, FITS`. Findings: P0 0 / P1 0 / P2 0 / P3 0. Startup reads line complete |
+| Full smoke suite still green (no regression) | pass | `python3 -m pytest tests/ .claude/hooks/tests/ -q` -> 1100 passed, 25 subtests passed in 39.79s |
+| **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | no UI — a CLI script |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ N/A | no UI — a CLI script |
+| **UI: Responsiveness at target viewports** | ☐ N/A | no UI — a CLI script |
 
 ---
 
@@ -56,9 +56,15 @@ FAILED tests/test_dirty_worktrees.py::test_subfolder_run_finds_board - Assert...
 
 Run from `docs/`, the script prints nothing: the bare `PROJECT_KANBAN.md` path resolves against cwd and misses the board.
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**:
+```
+$ date -u +%Y-%m-%dT%H:%M:%SZ
+2026-10-19T02:34:21Z
+$ python3 -m pytest tests/test_dirty_worktrees.py -q -k test_subfolder_run_finds_board
+1 passed, 12 deselected in 0.08s
+```
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+**DELTA**: Running `dirty_worktrees.py` by hand from any subfolder now reports dirty In Progress worktrees instead of printing nothing.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
