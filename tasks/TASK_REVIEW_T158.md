@@ -19,7 +19,9 @@
 | Negative cases hold | ☐ pass / ☐ fail | |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | pass | `python3 -m pytest -q`: `425 passed in 17.29s` (one pre-existing test, `test_unbuilt_operations_raise_not_implemented`, edited: it listed T158's two operations as unbuilt) |
+| Full smoke suite still green (no regression) | pass | `python3 -m pytest -q`: `425 passed in 17.29s` (subset, tests/ only; superseded by the next row) (one pre-existing test, `test_unbuilt_operations_raise_not_implemented`, edited: it listed T158's two operations as unbuilt) |
+| Decision Log read failure does not fail the pull (review P1) | pass | `test_unreadable_decision_log_does_not_fail_the_pull`. Red before the fix: `[board] pull failed: Linear rejected the query (GraphQL error). The board cache was left unchanged.` / `1 failed, 35 deselected`. Green after: `1 passed, 35 deselected` |
+| Full suite, both folders | pass | `python3 -m pytest -q tests .claude/hooks/tests`: `1291 passed, 25 subtests passed in 39.24s` |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
 | **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |

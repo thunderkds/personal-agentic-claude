@@ -140,7 +140,11 @@ def use_decision_doc(board, config):
 def decisions_cache(board, config, root):
     """{DECISIONS_FILE: text} with the Decision Log in its board section, or {} when there is
     nothing to write (no entries and no section yet). Read before anything is written."""
-    decisions = board.read_decisions()
+    try:
+        decisions = board.read_decisions()
+    except BoardError as exc:   # the log must never fail the task pull
+        print(f"[board] Decision Log not read ({exc}); {DECISIONS_FILE} left as is", file=sys.stderr)
+        return {}
     try:
         with open(os.path.join(root, DECISIONS_FILE), encoding="utf-8") as f:
             existing = f.read()

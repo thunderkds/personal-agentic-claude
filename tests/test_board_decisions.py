@@ -436,3 +436,24 @@ def test_decide_never_writes_the_key(sync, monkeypatch, tmp_path):
     board.unreachable = True
     decide(sync, monkeypatch, root, board, "ENG-1", "x")
     assert KEY not in (root / ".board" / "outbox.jsonl").read_text()
+
+
+# --- The Decision Log never breaks the task pull -------------------------------------
+
+def test_unreadable_decision_log_does_not_fail_the_pull(sync, monkeypatch, tmp_path, capsys):
+    root = project(tmp_path)
+    (root / "memory").mkdir()
+    existing = render.merge_decisions_file("# Decisions\nlocal\n", render.render_decisions_section(
+        [entry("kept", key="5" * 16)]))
+    (root / "memory" / "decisions.md").write_text(existing)
+    board = FakeBoard([Task(id="ENG-1", title="t", status="Todo")])
+
+    def rejected():
+        raise BoardError("Linear rejected the query (GraphQL error)")
+    board.read_decisions = rejected
+    monkeypatch.setattr(sync, "make_board", lambda config, r: (board, None))
+    assert sync.main(["pull"], root=str(root)) == 0
+    assert "ENG-1" in (root / "PROJECT_KANBAN.md").read_text()
+    assert (root / "memory" / "decisions.md").read_text() == existing
+    assert ("[board] Decision Log not read (Linear rejected the query (GraphQL error)); "
+            "memory/decisions.md left as is") in capsys.readouterr().err
