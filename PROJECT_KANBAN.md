@@ -9,8 +9,6 @@
 
 ### Todo
 - [ ] **T161** — Online mode: a teammate's Ready for Review task no longer blocks my push (assignee filter, like T157's In Progress filter) | common-infrastructure | C2 | Risk: High | P1 | Guide: to generate at Stage 2 before pickup | Depends on: T157 | Registered 2026-10-19: user chose "filter review too" at T157 /verify.
-- [ ] **T155** — Init asks the four board questions and writes `.claude/board.json` | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T155.md` | Depends on: T154 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`).
-- [ ] **T158** — Decision Log: decisions go to one shared board document and reach every developer | backend-developer | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T158.md` | Depends on: T156 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`).
 - [ ] **T159** — Planning creates the board issue with the full guide as its description | backend-developer | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T159.md` | Depends on: T156 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`).
 - [ ] **T160** — `wake` triages my new board tasks: propose priority, ask, then ready-or-investigate | backend-developer | C2 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_T160.md` | Depends on: T159 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`).
 - [ ] **T143** — CI re-runs the Verification Command of every task a PR moves to Done | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T143.md` | Depends on: none | Registered 2026-10-16 from the improvement-list grilling + brainstorm (`BRAINSTORMING_LOG_harness-hardening.md`): reuses `lib/guide_sections.py`; fail-closed on a missing/placeholder block; `# ci: skip — <reason>` opt-out
@@ -83,6 +81,8 @@
 
 
 ### In Progress
+- [ ] **T155** — Init asks the four board questions and writes `.claude/board.json` | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T155.md` | Depends on: T154 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`).
+- [ ] **T158** — Decision Log: decisions go to one shared board document and reach every developer | backend-developer | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T158.md` | Depends on: T156 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`).
 
 
 
