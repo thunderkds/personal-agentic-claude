@@ -14,12 +14,12 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass (implementer; reviewer to confirm) | `tests/test_merge_gate_review_filter.py` — 11 tests: AC1 (`test_mine_blocks_teammate_is_named_in_a_note`, `test_only_teammate_review_row_lets_push_through`), AC2 (same + case-insensitive `me`), AC3 (`me` missing, not a board render, two assignee fields), AC4 (`test_unassigned_review_row_is_checked`), AC5 (`test_local_mode_checks_every_row_exactly_as_today`), fail-closed (`test_filter_exception_checks_every_row`), forged `\| @alice` title. Red before the change: `6 failed, 5 passed in 1.10s`; after: `24 passed in 3.08s` (with T157's file) |
+| Verification command run | ☑ pass (implementer; reviewer to confirm) | The guide's command names `tests/test_merge_gate_my_tasks.py`, which does not exist (the file is `.claude/hooks/tests/test_merge_gate_my_tasks.py`): as written it prints `no tests ran in 0.00s`, exit 4. Corrected path, `python3 -m pytest -q tests/test_merge_gate_review_filter.py .claude/hooks/tests/test_merge_gate_my_tasks.py .claude/hooks/tests` → exit=0, `876 passed, 25 subtests passed in 18.47s` |
 | Negative cases hold | ☐ pass / ☐ fail | |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| Full smoke suite still green (no regression) | ☑ pass (implementer; reviewer to confirm) | `python3 -m pytest -q tests .claude/hooks/tests` (worktree root, exit read directly) → exit=0, `1375 passed, 25 subtests passed in 29.10s` (1364 before + 11 new) |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
 | **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
@@ -49,9 +49,17 @@ stderr: (empty)
 
 Today the teammate's (`bob`'s) unverified Ready for Review row blocks `alice`'s push.
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**: same harness, after the implementation (uncommitted working tree on top of `9394477`):
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```
+$ date -u +%Y-%m-%dT%H:%M:%SZ && python3 <scratchpad>/demo_t161.py /home/hungnguyenhuu/workspace/pets/wt-t161
+2026-10-19T15:18:10Z
+exit: 0
+stdout: (empty — push allowed)
+stderr: [hook:pre_bash] teammates' Ready for Review tasks, not checked here: ENG-181
+```
+
+**DELTA**: In board mode `online`, a developer can push while a teammate's Ready for Review task lacks verify evidence (the teammate's task is named in a note); their own and unassigned Ready for Review tasks still block, and local mode is unchanged.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
