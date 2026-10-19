@@ -197,6 +197,13 @@ def test_spawn_validator_hash_id(tmp_path):
     assert out.get("decision") == "block" and "#171" in out["reason"]
 
 
+def test_spawn_validator_ignores_path_unsafe_id(tmp_path):
+    """An over-broad pattern must never turn a prompt ID into a path outside tasks/."""
+    project = make_project(tmp_path, {"id_pattern": r"[A-Z./]+-\d+"})
+    out = spawn(project, "Task ID: ../X-1")
+    assert out.get("decision") != "block", out
+
+
 # --- AC2: task_context.resolve_task_id -------------------------------------------------
 
 def test_resolve_task_id_from_board_id_guide_path(tmp_path):

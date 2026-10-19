@@ -44,8 +44,10 @@ except Exception:  # pragma: no cover - fail open, never block a spawn
 # (T153). A broken import degrades to today's `T\d+`, never to "no IDs": the
 # missing-guide block keeps working for every `Txxx` task.
 try:
-    from board.config import normalize_task_id, task_id_pattern
+    from board.config import PATH_SAFE_ID, normalize_task_id, task_id_pattern
 except Exception:  # pragma: no cover - fall back to local IDs
+    PATH_SAFE_ID = re.compile(r"\A[A-Z0-9#_-]{1,64}\Z")
+
     def task_id_pattern(root=None, local=r"T\d+", bounded=False):
         return rf"(?<![A-Za-z0-9_])(?:{local})(?![A-Za-z0-9_])" if bounded else local
 
@@ -55,10 +57,13 @@ except Exception:  # pragma: no cover - fall back to local IDs
 
 def task_key(raw_id):
     """A matched ID -> this hook's task key: the digits for a `Txxx` ID (the key
-    every function here has always taken), the upper-cased ID for a board ID."""
+    every function here has always taken), the upper-cased ID for a board ID.
+    None when the ID is not `PATH_SAFE_ID`: an over-broad `id_pattern` must
+    never turn into a guide path outside `tasks/`."""
     if re.fullmatch(r"[Tt]\d+", raw_id):
         return raw_id[1:]
-    return normalize_task_id(raw_id)
+    key = normalize_task_id(raw_id)
+    return key if PATH_SAFE_ID.match(key) else None
 
 
 def task_ref(tid):
@@ -131,7 +136,7 @@ def extract_structural_task_ids(prompt):
     found = re.findall(rf"TASK_GUIDE_({pattern})(?:_[A-Z0-9_]+)?\.md", prompt, re.IGNORECASE)
     found += re.findall(rf"(?:\*\*Task ID\*\*|Task ID)\s*:\s*({task_id_pattern(ROOT, bounded=True)})",
                         prompt, re.IGNORECASE)
-    return sorted({task_key(raw) for raw in found})
+    return sorted({key for key in map(task_key, found) if key})
 
 
 def check_dependency_warnings(task_ids):
