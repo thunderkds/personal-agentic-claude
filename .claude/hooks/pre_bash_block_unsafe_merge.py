@@ -41,7 +41,8 @@ sys.path.insert(0, os.path.join(HOOKS_DIR, "lib"))
 try:
     from guide_sections import read_guide_section  # noqa: E402
     from shell_data import strip_heredoc_bodies, strip_quoted_spans  # noqa: E402
-    from board.config import task_id_pattern  # noqa: E402
+    from board.config import load_config, task_id_pattern  # noqa: E402
+    from board.moments import board_mode, my_blocking_tasks, pull_cache  # noqa: E402
 except Exception as exc:  # pragma: no cover - exercised via subprocess test
     print(json.dumps({
         "decision": "block",
@@ -50,7 +51,8 @@ except Exception as exc:  # pragma: no cover - exercised via subprocess test
             f"({type(exc).__name__}: {exc}) — cannot confirm Stage 5 verify "
             "evidence for any task, so this push/merge is blocked. Restore "
             ".claude/hooks/lib/guide_sections.py, "
-            ".claude/hooks/lib/shell_data.py and .claude/hooks/lib/board/config.py."
+            ".claude/hooks/lib/shell_data.py, .claude/hooks/lib/board/config.py "
+            "and .claude/hooks/lib/board/moments.py."
         ),
     }))
     sys.exit(0)
@@ -420,13 +422,24 @@ def main():
     if not any(re.search(p, scannable) for p in BLOCKED_PATTERNS):
         sys.exit(0)
 
+    # T157: in board mode `online` the board cache is refreshed before it is evaluated
+    # (the pre-merge pull moment). A failed or hanging pull is a warning, and the gate
+    # evaluates the cache it already has. Local and unusable configs never pull.
+    mode = board_mode(ROOT)
+    notes = []
+    if mode == "online":
+        warning = pull_cache(ROOT)
+        if warning:
+            print(f"[hook:pre_bash] {warning}", file=sys.stderr)
+            notes.append(warning)
+
     try:
         with open(KANBAN) as f:
             kanban = f.read()
     except FileNotFoundError:
         sys.exit(0)
 
-    def tasks_in_section(section_title, id_pattern=r"T\d+"):
+    def tasks_in_section(section_title, id_pattern=r"T\d+", with_lines=False):
         row_id = re.compile(rf"\*\*({id_pattern})\*\*")
         m = re.search(
             rf"### {re.escape(section_title)}\n(.*?)(?=^###|\Z)", kanban,
@@ -435,7 +448,7 @@ def main():
         if not m:
             return []
         block = m.group(1).strip()
-        return [row_id.search(l).group(1)
+        return [(row_id.search(l).group(1), l) if with_lines else row_id.search(l).group(1)
                 for l in block.splitlines()
                 if l.strip().startswith("- ") and row_id.search(l)]
 
@@ -443,6 +456,17 @@ def main():
     id_pattern = task_id_pattern(ROOT)
     in_progress = tasks_in_section("In Progress", id_pattern)
     ready_review = tasks_in_section("Ready for Review", id_pattern)
+
+    # T157 / FR-011: online, the cache holds the whole team's board, so only my In
+    # Progress tasks block. Every doubt (`me` unset, a cache that is not a board render,
+    # two assignee fields on one row) resolves to blocking. Ready for Review is unfiltered.
+    if mode == "online":
+        in_progress, filter_notes = my_blocking_tasks(
+            tasks_in_section("In Progress", id_pattern, with_lines=True),
+            (load_config(ROOT) or {}).get("me"), kanban)
+        notes.extend(filter_notes)
+        for note in filter_notes:
+            print(f"[hook:pre_bash] {note}", file=sys.stderr)
 
     blockers = []
 
@@ -476,7 +500,7 @@ def main():
             "decision": "block",
             "reason": (
                 "[hook:pre_bash] Pipeline gate failed — cannot push/merge:\n  • "
-                + "\n  • ".join(blockers)
+                + "\n  • ".join(blockers + [f"Board: {n}" for n in notes])
                 + "\nComplete Stage 4 review and Stage 5 verify first."
                 + "\n  " + ATTRIBUTION_REMEDY
             )

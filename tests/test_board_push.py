@@ -337,7 +337,7 @@ def test_status_zero_when_no_outbox(sync, monkeypatch, tmp_path, capsys):
 
 def test_wake_names_the_unsynced_line():
     text = (ROOT / "skills" / "wake" / "SKILL.md").read_text()
-    assert "board_sync.py status" in text and "unsynced" in text
+    assert "pull_moment.py wake" in text and "unsynced board writes" in text
 
 
 # --- local mode, stdlib ----------------------------------------------------------------

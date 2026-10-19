@@ -357,7 +357,9 @@ def test_bad_config_warns_once_and_falls_back(tmp_path, raw):
 def test_config_without_id_pattern_is_local_mode_silently(tmp_path):
     result = push(make_project(tmp_path, {"board": "linear"}))
     assert "ENG-170" not in in_progress_line(result)
-    assert "board.json" not in result.stderr
+    # No T153 config warning. (A `board` key is board mode `online` since T154, so the
+    # T157 pull/`me` warnings may name the file; they are not id_pattern warnings.)
+    assert "ignoring" not in result.stderr
 
 
 # --- AC5: normalize_task_id ------------------------------------------------------------

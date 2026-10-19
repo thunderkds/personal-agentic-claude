@@ -20,6 +20,10 @@ This skill is strictly read-only. It never writes, edits, or creates any file.
 
 ### Workflow
 
+#### Step 0 — Pull (board mode `online`)
+
+Run `python3 scripts/pull_moment.py wake` first (FR-009; no-op in `local` mode). Show any line it prints (`board unreachable — using cache (N unsynced)` or `⚠ N unsynced board writes — …`) atop the briefing and continue.
+
 #### Step 1 — Source Reads (attempt all five before composing output)
 
 Read all five sources in parallel. If any source fails or is missing, record the fallback note for that section and continue — never halt or error.
@@ -62,8 +66,6 @@ Filter `PROJECT_KANBAN.md` to rows whose status column contains `In Progress` or
 ```
 
 Then, under the list, emit each line from `dirty_worktrees.py` prefixed `⚠ uncommitted:`. This means *either* a background agent died mid-task *or* another live session is still working there — check the worktree's latest commit time and ask before relaunching or touching it. Omit when the script printed nothing.
-
-Then, if `.claude/board.json` exists, run `python3 scripts/board_sync.py status` via Bash; when it prints `N unsynced` with N>0, emit `⚠ N unsynced board writes — run python3 scripts/board_sync.py flush`. Omit otherwise; any failure is treated the same.
 
 **Graceful degradation**:
 - If `PROJECT_KANBAN.md` does not exist: emit `"No KANBAN found — project may be new or not yet planned."`.

@@ -17,6 +17,10 @@ Decisions, and the direction every uncertainty resolves:
 * Malformed stdin, an unreadable pattern file, or a helper module that fails to
   import -> `ask`. Fail toward the human, never a silent allow (AC5).
 
+Board mode `online` (T157, NFR-005): guides are pulled from the board, whose text anyone
+with workspace access can write, so no guide's prediction exempts a sensitive path — it
+always asks. An unusable `.claude/board.json` counts as online here (the safe side).
+
 Bash: the command's heredoc bodies and its *data* quoted spans are removed with
 `lib/shell_data.py` first — the only sanctioned way to separate command text from
 data (T099's three fail-opens came from fresh regexes). Quoted spans T099 classes
@@ -54,6 +58,7 @@ try:
     from guide_sections import read_guide_section  # noqa: E402
     from shell_data import strip_heredoc_bodies, strip_quoted_spans  # noqa: E402
     from task_context import resolve_task_id  # noqa: E402
+    from board.moments import board_mode  # noqa: E402
     IMPORT_ERROR = None
 except Exception as exc:  # pragma: no cover - exercised via subprocess test
     IMPORT_ERROR = exc
@@ -318,7 +323,8 @@ def main():
             sys.exit(0)
 
         task_id = resolve_task_id(event)
-        predicted = predicted_paths(
+        board_text = any(board_mode(r) != "local" for r in roots)
+        predicted = set() if board_text else predicted_paths(
             task_id, [os.path.join(root, "tasks"), os.path.join(cwd, "tasks")]
         )
         unpredicted = [(p, pat) for p, forms, pat in hits if not is_predicted(forms, predicted)]
@@ -333,6 +339,9 @@ def main():
     listed = ", ".join(f"{p} (pattern `{pat}`)" for p, pat in unpredicted)
     owner = (f"the active task {task_id} does not list it under '## {PREDICTED_HEADING}'"
              if task_id else "no active task predicts it")
+    if board_text:
+        owner = ("board mode is online, where guides come from the board and cannot "
+                 "pre-authorise a sensitive path")
     ask(f"This {tool_name} call touches a sensitive path: {listed}. "
         f"Listed in .claude/sensitive-paths.txt and {owner}.")
 

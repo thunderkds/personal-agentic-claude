@@ -169,6 +169,8 @@ Skill({ skill: "run" })
 ## Stage 4: Review
 For every task that reaches "Ready for Review":
 
+**Pull moment 3 (board mode `online`, FR-009).** Before moving the task to Ready for Review, run `python3 scripts/pull_moment.py review <ID>`. If it prints `<ID>'s guide changed while you were working — review against the new version?`, ask the user before reviewing. If it prints `board unreachable — using cache (N unsynced)`, continue on the cache. In board mode `local` it prints nothing.
+
 1. **Code Review** (always):
    ```
    Skill({ skill: "code-review" })
