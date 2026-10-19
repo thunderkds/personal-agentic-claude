@@ -179,7 +179,8 @@ def guide_files(tasks):
 # The document line may end with ` <!--bs:<key>-->`, the dedupe key. Text is untrusted
 # (NFR-005): one line, with every character the parsers key on backslash-escaped, so it can
 # neither end the line's attribution nor open a header, a `**Files**:` line or a marker. A
-# line read back must already be in that shape (`DECISION_LINE`), so rendering is idempotent
+# line read back must already be in that shape (`DECISION_LINE`), so rendering is idempotent: `Decision.text` is plain text everywhere (unescaped when
+# parsed, escaped exactly once by `format_decision`)
 # and a hand-edited document line that is not skipped cannot carry anything either.
 
 DECISIONS_HEADING = "### Decision Log (pulled from the board — do not edit)"
@@ -196,6 +197,10 @@ def escape_decision(text):
     return re.sub(f"([{re.escape(SPECIALS)}])", r"\\\1", one_line(text))
 
 
+def unescape_decision(text):
+    return re.sub(f"\\\\([{re.escape(SPECIALS)}])", r"\1", text)
+
+
 def format_decision(decision, with_key=True):
     line = (f"- {decision.date}  {escape_decision(decision.text)}  "
             f"(from {decision.task_id}, by {assignee_token(decision.author) or 'unknown'})")
@@ -209,7 +214,8 @@ def parse_decision_lines(text):
     for line in text.splitlines():
         m = DECISION_LINE.fullmatch(line)
         if m:
-            found.append(Decision(date=m.group(1), text=m.group(2), task_id=m.group(3),
+            found.append(Decision(date=m.group(1), text=unescape_decision(m.group(2)),
+                                  task_id=m.group(3),
                                   author=m.group(4), key=m.group(5) or ""))
     return found
 

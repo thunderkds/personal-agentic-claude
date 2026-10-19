@@ -55,7 +55,7 @@ except Exception:  # pragma: no cover - fall back to local IDs
         return rf"(?<![A-Za-z0-9_])(?:{local})(?![A-Za-z0-9_])" if bounded else local
 
 try:
-    from board.render import cached_decisions
+    from board.render import cached_decisions, format_decision
 except Exception:  # pragma: no cover - no board library: no Decision Log section
     cached_decisions = None
 
@@ -252,7 +252,7 @@ def add_log(out, task, decisions_text):
         header = f"Decision Log (board) — {len(mine)} entries linked to {task}{note}"
         body = []
         for d in kept:
-            line = f"- {d.date}  {d.text}  (from {d.task_id}, by {d.author})"
+            line = format_decision(d, with_key=False)
             body.append(line if len(line) <= LOG_LINE_MAX else line[:LOG_LINE_MAX - 1] + "…")
         return ["### From Decision Log", header, *body]
 

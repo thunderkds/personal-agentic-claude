@@ -22,6 +22,8 @@
 | Full smoke suite still green (no regression) | pass | `python3 -m pytest -q`: `425 passed in 17.29s` (subset, tests/ only; superseded by the next row) (one pre-existing test, `test_unbuilt_operations_raise_not_implemented`, edited: it listed T158's two operations as unbuilt) |
 | Decision Log read failure does not fail the pull (review P1) | pass | `test_unreadable_decision_log_does_not_fail_the_pull`. Red before the fix: `[board] pull failed: Linear rejected the query (GraphQL error). The board cache was left unchanged.` / `1 failed, 35 deselected`. Green after: `1 passed, 35 deselected` |
 | Full suite, both folders | pass | `python3 -m pytest -q tests .claude/hooks/tests`: `1291 passed, 25 subtests passed in 39.24s` |
+| Single escaping layer end to end (verify defect) | pass | `test_pull_does_not_escape_twice`. Red before: the cache line held `\\\#\\\#\\\# x \\\| y` (triple backslash) instead of the document line's `\#\#\# x \| y`; `1 failed, 36 deselected`. Green after: `37 passed` in `tests/test_board_decisions.py`. Fix: `parse_decision_lines` unescapes, `format_decision` escapes once, `memory_slice.py` formats through `format_decision` |
+| Full suite, both folders (after verify fix) | pass | `python3 -m pytest -q tests .claude/hooks/tests`: `1292 passed, 25 subtests passed in 49.65s` |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
 | **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |

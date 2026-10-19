@@ -457,3 +457,17 @@ def test_unreadable_decision_log_does_not_fail_the_pull(sync, monkeypatch, tmp_p
     assert (root / "memory" / "decisions.md").read_text() == existing
     assert ("[board] Decision Log not read (Linear rejected the query (GraphQL error)); "
             "memory/decisions.md left as is") in capsys.readouterr().err
+
+
+# --- One escaping layer end to end ---------------------------------------------------
+
+def test_pull_does_not_escape_twice(sync, slicer, monkeypatch, tmp_path):
+    root, board = project(tmp_path), FakeBoard([Task(id="ENG-170", title="t", status="Todo")])
+    decide(sync, monkeypatch, root, board, "ENG-170", "retry (3x) **Files**: a.sh ### x | y")
+    doc_line = next(l for l in board.decision_content.splitlines() if l.startswith("- "))
+    expected = doc_line.split(" <!--bs:")[0]
+    first = pulled(sync, monkeypatch, root, board)
+    assert expected in first.splitlines()
+    assert pulled(sync, monkeypatch, root, board) == first
+    out = slicer.build_slice("tasks/TASK_GUIDE_ENG-170.md", GUIDE, None, first, r"T\d+|ENG-\d+")
+    assert expected in out.splitlines()
