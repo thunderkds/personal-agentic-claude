@@ -41,6 +41,9 @@ sys.path.insert(0, os.path.join(HOOKS_DIR, "lib"))
 try:
     from guide_sections import read_guide_section  # noqa: E402
     from shell_data import strip_heredoc_bodies, strip_quoted_spans  # noqa: E402
+    from board.config import load_config, task_id_pattern  # noqa: E402
+    from board.moments import (  # noqa: E402
+        board_mode, my_blocking_tasks, my_review_tasks, pull_cache)
 except Exception as exc:  # pragma: no cover - exercised via subprocess test
     print(json.dumps({
         "decision": "block",
@@ -48,8 +51,9 @@ except Exception as exc:  # pragma: no cover - exercised via subprocess test
             "[hook:pre_bash] Evidence resolver unavailable "
             f"({type(exc).__name__}: {exc}) — cannot confirm Stage 5 verify "
             "evidence for any task, so this push/merge is blocked. Restore "
-            ".claude/hooks/lib/guide_sections.py and "
-            ".claude/hooks/lib/shell_data.py."
+            ".claude/hooks/lib/guide_sections.py, "
+            ".claude/hooks/lib/shell_data.py, .claude/hooks/lib/board/config.py "
+            "and .claude/hooks/lib/board/moments.py."
         ),
     }))
     sys.exit(0)
@@ -419,13 +423,25 @@ def main():
     if not any(re.search(p, scannable) for p in BLOCKED_PATTERNS):
         sys.exit(0)
 
+    # T157: in board mode `online` the board cache is refreshed before it is evaluated
+    # (the pre-merge pull moment). A failed or hanging pull is a warning, and the gate
+    # evaluates the cache it already has. Local and unusable configs never pull.
+    mode = board_mode(ROOT)
+    notes = []
+    if mode == "online":
+        warning = pull_cache(ROOT)
+        if warning:
+            print(f"[hook:pre_bash] {warning}", file=sys.stderr)
+            notes.append(warning)
+
     try:
         with open(KANBAN) as f:
             kanban = f.read()
     except FileNotFoundError:
         sys.exit(0)
 
-    def tasks_in_section(section_title):
+    def tasks_in_section(section_title, id_pattern=r"T\d+", with_lines=False):
+        row_id = re.compile(rf"\*\*({id_pattern})\*\*")
         m = re.search(
             rf"### {re.escape(section_title)}\n(.*?)(?=^###|\Z)", kanban,
             re.DOTALL | re.MULTILINE,
@@ -433,12 +449,35 @@ def main():
         if not m:
             return []
         block = m.group(1).strip()
-        return [re.search(r"\*\*(T\d+)\*\*", l).group(1)
+        return [(row_id.search(l).group(1), l) if with_lines else row_id.search(l).group(1)
                 for l in block.splitlines()
-                if l.strip().startswith("- ") and re.search(r"\*\*(T\d+)\*\*", l)]
+                if l.strip().startswith("- ") and row_id.search(l)]
 
-    in_progress = tasks_in_section("In Progress")
-    ready_review = tasks_in_section("Ready for Review")
+    # `T\d+`, plus the board's `id_pattern` when `.claude/board.json` sets one (T153).
+    id_pattern = task_id_pattern(ROOT)
+    in_progress = tasks_in_section("In Progress", id_pattern)
+    ready_review = tasks_in_section("Ready for Review", id_pattern)
+
+    # T157 / FR-011: online, the cache holds the whole team's board, so only my In
+    # Progress tasks block. Every doubt (`me` unset, a cache that is not a board render,
+    # two assignee fields on one row) resolves to blocking. T161: likewise only my Ready
+    # for Review tasks (and unassigned ones) are checked for verify evidence; a filter
+    # that raises checks every row.
+    if mode == "online":
+        in_progress, filter_notes = my_blocking_tasks(
+            tasks_in_section("In Progress", id_pattern, with_lines=True),
+            (load_config(ROOT) or {}).get("me"), kanban)
+        try:
+            ready_review, review_notes = my_review_tasks(
+                tasks_in_section("Ready for Review", id_pattern, with_lines=True),
+                (load_config(ROOT) or {}).get("me"), kanban)
+        except Exception:
+            review_notes = ["the Ready for Review filter failed — every Ready for Review "
+                            "task is checked (safe side)"]
+        filter_notes = filter_notes + review_notes
+        notes.extend(filter_notes)
+        for note in filter_notes:
+            print(f"[hook:pre_bash] {note}", file=sys.stderr)
 
     blockers = []
 
@@ -472,7 +511,7 @@ def main():
             "decision": "block",
             "reason": (
                 "[hook:pre_bash] Pipeline gate failed — cannot push/merge:\n  • "
-                + "\n  • ".join(blockers)
+                + "\n  • ".join(blockers + [f"Board: {n}" for n in notes])
                 + "\nComplete Stage 4 review and Stage 5 verify first."
                 + "\n  " + ATTRIBUTION_REMEDY
             )

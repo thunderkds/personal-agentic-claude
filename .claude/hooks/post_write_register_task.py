@@ -16,6 +16,15 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 KANBAN = os.path.join(ROOT, "PROJECT_KANBAN.md")
 TASKS_DIR = os.path.join(ROOT, "tasks")
 
+# `T\d+`, plus the board's `id_pattern` when `.claude/board.json` sets one (T153). A
+# broken import degrades to today's pattern: this hook only registers rows.
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib"))
+try:
+    from board.config import task_id_pattern
+except Exception:  # pragma: no cover - fail open to local IDs
+    def task_id_pattern(root=None, local=r"T\d+", bounded=False):
+        return local
+
 def main():
     try:
         event = json.load(sys.stdin)
@@ -29,7 +38,8 @@ def main():
         sys.exit(0)
 
     file_path = tool_input.get("file_path", "")
-    match = re.search(r"TASK_GUIDE_(T\d+)\.md$", file_path)
+    id_pattern = task_id_pattern(ROOT)
+    match = re.search(rf"TASK_GUIDE_({id_pattern})\.md$", file_path)
     if not match:
         sys.exit(0)
 
@@ -46,7 +56,7 @@ def main():
         m = re.search(pattern, guide, re.IGNORECASE | re.MULTILINE)
         return m.group(1).strip() if m else default
 
-    title    = extract(r"^#\s+TASK_GUIDE[_\s—-]+T\d+[:\s—-]+(.+)$", "untitled")
+    title    = extract(rf"^#\s+TASK_GUIDE[_\s—-]+(?:{id_pattern})[:\s—-]+(.+)$", "untitled")
     agent    = extract(r"Assigned\s+Agent\*{0,2}[:\s]+([a-z\-]+)", "backend-developer")
     cx       = extract(r"Complexity(?:\s+Level)?\*{0,2}[:\s]+\*{0,2}(C[0-3])", "?")
     risk     = extract(r"Risk(?:\s+Level)?\*{0,2}[:\s]+\*{0,2}(Low|Med(?:ium)?|High)", "?")

@@ -129,6 +129,7 @@ Use two files:
 **After user approves the task breakdown:**
 - Generate **all** TASK_GUIDE_Txxx.md files (one for every task) using `templates/TASK_GUIDE_template.md`.
 - Save every file into the `tasks/` folder (e.g. `tasks/TASK_GUIDE_T001.md`).
+- **Board mode `online`** (`.claude/board.json` exists): draft each guide to a scratch file and run `python3 scripts/board_sync.py create --guide <draft.md>` per task instead — the board assigns the ID, the guide becomes the issue description, and `tasks/TASK_GUIDE_<ID>.md` is written as its cache; later edits go back with `board_sync.py update --guide <ID>`.
 - In each TASK_GUIDE file, explicitly instruct the sub-agent to read the relevant guide from `agents/`.
 - Fill each guide's `## Dependencies & Reachability` section: `Depends on:` names another Task ID this one needs as a precondition (or `None`); `Entry point:` names the literal, grep-able identifier (route, button label, function/consumer name) that reaches this task's output, or `Standalone — N/A` with a one-line reason. This is **advisory, not a Hard-Stop Gate** — `Depends on` is checked (non-blocking warning) by `pre_agent_validate_guide.py` at spawn time; `Entry point` is checked (non-blocking finding) by `code-review` Phase 0.5. It is distinct from `PROJECT_KANBAN.md`'s `## Blocked` table, which remains a manual escape hatch for non-task blockers (external people/APIs/decisions) that can't be checked automatically.
 
@@ -168,6 +169,8 @@ Skill({ skill: "run" })
 
 ## Stage 4: Review
 For every task that reaches "Ready for Review":
+
+**Pull moment 3 (board mode `online`, FR-009).** Before moving the task to Ready for Review, run `python3 scripts/pull_moment.py review <ID>`. If it prints `<ID>'s guide changed while you were working — review against the new version?`, ask the user before reviewing. If it prints `board unreachable — using cache (N unsynced)`, continue on the cache. In board mode `local` it prints nothing.
 
 1. **Code Review** (always):
    ```

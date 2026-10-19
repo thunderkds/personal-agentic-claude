@@ -5,6 +5,11 @@ PreToolUse hook — fires before every Agent tool call.
 Extracts a task ID (Txxx) from the spawn prompt and blocks the spawn
 if the corresponding tasks/TASK_GUIDE_Txxx.md does not exist.
 
+Also blocks (T160) when the guide exists but is incomplete — a required section
+(`guide_sections.missing_guide_sections`) is missing or blank — naming the sections, so
+a one-line board issue's guide cannot be spawned on. A crash in that check fails
+open (allows), like every advisory below.
+
 Also reads the target guide's `Depends on:` field (if present) and warns
 — non-blocking — if the referenced task isn't Done yet on
 PROJECT_KANBAN.md, or doesn't exist at all. This is advisory only: it
@@ -35,10 +40,51 @@ KANBAN = os.path.join(ROOT, "PROJECT_KANBAN.md")
 # Demonstration warnings" rather than blocking a spawn.
 sys.path.insert(0, os.path.join(HOOKS_DIR, "lib"))
 try:
-    from guide_sections import read_guide_section
+    from guide_sections import missing_guide_sections, read_guide_section
 except Exception:  # pragma: no cover - fail open, never block a spawn
     def read_guide_section(task_id, heading, tasks_dir):
         return None
+
+    def missing_guide_sections(text):
+        return []
+
+# Task IDs are `T\d+`, plus the board's `id_pattern` when `.claude/board.json` sets one
+# (T153). A broken import degrades to today's `T\d+`, never to "no IDs": the
+# missing-guide block keeps working for every `Txxx` task.
+try:
+    from board.config import PATH_SAFE_ID, normalize_task_id, task_id_pattern
+except Exception:  # pragma: no cover - fall back to local IDs
+    PATH_SAFE_ID = re.compile(r"\A[A-Z0-9#_-]{1,64}\Z")
+
+    def task_id_pattern(root=None, local=r"T\d+", bounded=False):
+        return rf"(?<![A-Za-z0-9_])(?:{local})(?![A-Za-z0-9_])" if bounded else local
+
+    def normalize_task_id(task_id):
+        return task_id.upper()
+
+
+def task_key(raw_id):
+    """A matched ID -> this hook's task key: the digits for a `Txxx` ID (the key
+    every function here has always taken), the upper-cased ID for a board ID.
+    None when the ID is not `PATH_SAFE_ID`: an over-broad `id_pattern` must
+    never turn into a guide path outside `tasks/`."""
+    if re.fullmatch(r"[Tt]\d+", raw_id):
+        return raw_id[1:]
+    key = normalize_task_id(raw_id)
+    return key if PATH_SAFE_ID.match(key) else None
+
+
+def task_ref(tid):
+    """Task key -> displayed / file-name ID: `7` -> `T007`, `ENG-170` unchanged."""
+    return f"T{tid.zfill(3)}" if tid.isdigit() else tid
+
+
+def guide_candidates(tid, tasks_dir):
+    """Zero-padded guide path first, then the raw digits; a board ID has one."""
+    names = [f"TASK_GUIDE_{task_ref(tid)}.md"]
+    if tid.isdigit():
+        names.append(f"TASK_GUIDE_T{tid}.md")
+    return [os.path.join(tasks_dir, name) for name in names]
 
 
 def find_kanban_section(task_ref):
@@ -94,21 +140,22 @@ def extract_structural_task_ids(prompt):
     Free-text mentions like "confirmed T013/T014 have no guide" or
     "T019: reconciled ..." are intentionally NOT matched.
     """
-    ids = set()
-    ids.update(re.findall(r"TASK_GUIDE_T(\d+)(?:_[A-Z0-9_]+)?\.md", prompt, re.IGNORECASE))
-    ids.update(re.findall(r"(?:\*\*Task ID\*\*|Task ID)\s*:\s*T(\d+)\b", prompt, re.IGNORECASE))
-    return sorted(ids)
+    pattern = task_id_pattern(ROOT)
+    found = re.findall(rf"TASK_GUIDE_({pattern})(?:_[A-Z0-9_]+)?\.md", prompt, re.IGNORECASE)
+    found += re.findall(rf"(?:\*\*Task ID\*\*|Task ID)\s*:\s*({task_id_pattern(ROOT, bounded=True)})",
+                        prompt, re.IGNORECASE)
+    return sorted({key for key in map(task_key, found) if key})
 
 
 def check_dependency_warnings(task_ids):
     """For each spawned task, read its guide's `Depends on:` field and
     return a list of non-blocking warning strings."""
     warnings = []
+    dep_pattern = task_id_pattern(ROOT, r"T\d{3}", bounded=True)
     for tid in task_ids:
-        task_ref = f"T{tid.zfill(3)}"
-        guide_path = os.path.join(TASKS_DIR, f"TASK_GUIDE_{task_ref}.md")
-        if not os.path.exists(guide_path):
-            guide_path = os.path.join(TASKS_DIR, f"TASK_GUIDE_T{tid}.md")
+        ref = task_ref(tid)
+        paths = guide_candidates(tid, TASKS_DIR)
+        guide_path = next((p for p in paths if os.path.exists(p)), paths[-1])
         try:
             with open(guide_path) as f:
                 guide = f.read()
@@ -122,20 +169,20 @@ def check_dependency_warnings(task_ids):
         if dep_line.lower().startswith("none") or dep_line.startswith("[Txxx"):
             continue
 
-        dep_match = re.search(r"\bT(\d{3})\b", dep_line, re.IGNORECASE)
+        dep_match = re.search(dep_pattern, dep_line, re.IGNORECASE)
         if not dep_match:
             continue
-        dep_ref = f"T{dep_match.group(1)}"
+        dep_ref = normalize_task_id(dep_match.group(0))
 
         section = find_kanban_section(dep_ref)
         if section is None:
             warnings.append(
-                f"{task_ref} declares 'Depends on: {dep_ref}' but {dep_ref} was not "
+                f"{ref} declares 'Depends on: {dep_ref}' but {dep_ref} was not "
                 f"found anywhere on PROJECT_KANBAN.md — unknown dependency, check for a typo."
             )
         elif section != "Done":
             warnings.append(
-                f"{task_ref} declares 'Depends on: {dep_ref}', which is currently "
+                f"{ref} declares 'Depends on: {dep_ref}', which is currently "
                 f"'{section}' (not Done). Confirm this is intentional (e.g. parallel "
                 f"stub work) before proceeding."
             )
@@ -198,22 +245,33 @@ def check_demonstration_warnings(task_ids, tasks_dir=None):
     tasks_dir = tasks_dir or TASKS_DIR
     warnings = []
     for tid in task_ids:
-        task_ref = f"T{tid.zfill(3)}"
-        guide_path = os.path.join(tasks_dir, f"TASK_GUIDE_{task_ref}.md")
-        if not os.path.exists(guide_path):
-            guide_path = os.path.join(tasks_dir, f"TASK_GUIDE_T{tid}.md")
-        if not os.path.exists(guide_path):
+        ref = task_ref(tid)
+        if not any(os.path.exists(p) for p in guide_candidates(tid, tasks_dir)):
             continue
 
-        section = read_guide_section(task_ref, "Demonstration", tasks_dir)
+        section = read_guide_section(ref, "Demonstration", tasks_dir)
 
         if before_value_is_blank(section):
             warnings.append(
-                f"{task_ref}'s Demonstration BEFORE field is blank. Capture it "
+                f"{ref}'s Demonstration BEFORE field is blank. Capture it "
                 f"BEFORE your first implementation commit — a BEFORE taken after "
                 f"the change is not a BEFORE, and there is no N/A path."
             )
     return warnings
+
+
+def incomplete_guides(task_ids, tasks_dir=None):
+    """`<ID> (missing: A, B)` for each task whose existing guide is incomplete (T160).
+    Raises on an unreadable guide; `main()` treats any exception as "allow"."""
+    tasks_dir = tasks_dir or TASKS_DIR
+    found = []
+    for tid in task_ids:
+        path = next(p for p in guide_candidates(tid, tasks_dir) if os.path.exists(p))
+        with open(path, encoding="utf-8") as f:
+            missing = missing_guide_sections(f.read())
+        if missing:
+            found.append(f"{task_ref(tid)} (missing: {', '.join(missing)})")
+    return found
 
 
 MEMORY_SLICE_MARKER = "<!-- memory-slice:"
@@ -222,7 +280,7 @@ MEMORY_SLICE_MARKER = "<!-- memory-slice:"
 def check_memory_slice_warning(prompt):
     """T125: a prompt naming a TASK_GUIDE without a memory-slice block gets one
     non-blocking warning. Keyed on a guide *path*, not a bare `Task ID:` line."""
-    if not re.search(r"TASK_GUIDE_T\d+", prompt) or MEMORY_SLICE_MARKER in prompt:
+    if not re.search(rf"TASK_GUIDE_(?:{task_id_pattern(ROOT)})", prompt) or MEMORY_SLICE_MARKER in prompt:
         return []
     return [
         "Spawn prompt names a TASK_GUIDE but has no `<!-- memory-slice:` marker, so "
@@ -239,7 +297,7 @@ STARTUP_READS_RE = re.compile(r"^\*\*Startup reads\*\*", re.MULTILINE)
 def check_startup_reads_warning(prompt):
     """T129: a prompt naming a TASK_GUIDE without a `**Startup reads**` block gets one
     non-blocking warning. Independent of the memory-slice check."""
-    if not re.search(r"TASK_GUIDE_T\d+", prompt) or STARTUP_READS_RE.search(prompt):
+    if not re.search(rf"TASK_GUIDE_(?:{task_id_pattern(ROOT)})", prompt) or STARTUP_READS_RE.search(prompt):
         return []
     return [
         "Spawn prompt names a TASK_GUIDE but has no `**Startup reads**` block, so the "
@@ -266,11 +324,9 @@ def main():
 
     missing = []
     for tid in task_ids:
-        guide = os.path.join(TASKS_DIR, f"TASK_GUIDE_T{tid.zfill(3)}.md")
-        # Also try without zero-padding
-        guide_raw = os.path.join(TASKS_DIR, f"TASK_GUIDE_T{tid}.md")
-        if not os.path.exists(guide) and not os.path.exists(guide_raw):
-            missing.append(f"T{tid}")
+        # Zero-padded, then raw digits; a board ID has one file name.
+        if not any(os.path.exists(p) for p in guide_candidates(tid, TASKS_DIR)):
+            missing.append(f"T{tid}" if tid.isdigit() else tid)
 
     if missing:
         result = {
@@ -282,6 +338,21 @@ def main():
             )
         }
         print(json.dumps(result))
+        sys.exit(0)
+
+    try:
+        incomplete = incomplete_guides(task_ids)
+    except Exception:
+        incomplete = []  # fail open: a broken check must never block a spawn
+    if incomplete:
+        print(json.dumps({
+            "decision": "block",
+            "reason": (
+                f"[hook:pre_agent] Cannot spawn agent — incomplete TASK_GUIDE for: "
+                f"{'; '.join(incomplete)}. Fill those sections first (Stage 2); in board "
+                f"mode push them with `python3 scripts/board_sync.py update --guide <ID>`."
+            )
+        }))
         sys.exit(0)
 
     try:

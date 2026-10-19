@@ -2739,6 +2739,8 @@ evidence the instruction channel works — **not** evidence the model changed.
   bold sub-paragraphs (`**AC7 — …**`) split as separate entries, and ties keep the oldest entries (open follow-up).
 - **Agents skip parts of the Startup reads.** 2 of 4 skipped or partly read the role guide, which is already their system
   prompt; T149 read only 60 lines of PROJECT_SPEC.md. Phase 0.5 records these and the role-guide case is waived.
+  Recurred on T155, T158 and T159 (2026-10-19): each read only part of `agents/<role>.md` even when the prompt
+  said "in full". That is the waived case: log it, don't raise it as a P1.
 
 ## A dirty worktree is not proof of a dead agent — another session may be live (T150, 2026-10-17)
 The Supervisor saw `wt-t148` with uncommitted files after the spawning session ended and told the user the
@@ -2761,3 +2763,53 @@ T151's `/verify` PASS was committed on `feat/t151-docs` (`698d507`), but the bra
 shipped the batch to `main` without it. Before opening a batch PR, run
 `git merge-base --is-ancestor <task-branch> <batch-branch>` for every task whose row names that batch branch.
 **Files**: PROJECT_KANBAN.md, docs/claude-md/pipeline-stages.md, site/index.html
+
+## The merge gate scans the whole Bash command string, quoted prose included (T153, 2026-10-19)
+At T153's `/verify` a headless run `claude -p "... run git push origin main ..."` was blocked by the
+*Supervisor's own* `pre_bash_block_unsafe_merge.py`: the gate matches the push/merge words anywhere in
+the command, including inside a quoted prompt. Put such a driver in a script file under the scratchpad
+and run the script (build the words from variables), so the outer gate never sees them.
+**Files**: .claude/hooks/pre_bash_block_unsafe_merge.py
+
+## A bad `.claude/board.json` quietly drops board tasks from the merge gate (T153, 2026-10-19)
+By design an invalid `id_pattern` (bad JSON, capturing group, empty match) falls back to `T\d+` with one
+stderr warning. Seen at `/verify`: with `ENG-(\d+)` the gate listed only `T142`, not `ENG-170`, and the
+headless session never surfaced the warning. A broken config therefore weakens the gate for board tasks
+only; T155 (init) should validate `id_pattern` when it writes the file.
+**Files**: .claude/hooks/lib/board/config.py, .claude/hooks/pre_bash_block_unsafe_merge.py
+
+## A guide pulled from the board is gate input, not just a spec (T154, 2026-10-19)
+Hooks resolve sections guide-first (`guide_sections.read_guide_section`), so once a guide is an issue
+description, whoever edits the issue writes gate input. T154 Stage 4 found a description could carry
+`## Evidence | verify | ☑ pass |` and satisfy the merge gate's evidence half; `render.vacate_review_sections`
+now replaces Evidence/Demonstration with a TASK_REVIEW pointer. Still open (below threshold, routed to
+T157): the `Files to Change` table feeds `pre_tool_sensitive_path.py`, so board text can pre-authorise a
+sensitive-path edit. Online mode is detected by a `board` key in `.claude/board.json` (no `mode` key).
+**Files**: .claude/hooks/lib/board/render.py, .claude/hooks/lib/guide_sections.py, .claude/hooks/pre_tool_sensitive_path.py, .claude/hooks/pre_bash_block_unsafe_merge.py
+
+## Parallel tasks serialize at the merge gate, and a "permanent" board error must exclude auth (T156/T157, 2026-10-19)
+The merge gate refuses every `git merge` while any task is In Progress or in Ready for Review without
+evidence, so T156 (verified) could not land until T157 was verified too, and an agent cannot merge the
+base into its own branch either. Plan parallel pairs to reach `/verify` together, and do cross-task
+integration (here: wake's 8 KB Codex cap, a duplicated outbox counter) as a tested merge commit.
+Also: when classifying board errors as "drop vs keep", 401/403 are fixable config, not permanent —
+T156 first dropped the whole outbox on a bad key (`BoardAuthError` now keeps it).
+**Files**: .claude/hooks/pre_bash_block_unsafe_merge.py, .claude/hooks/lib/board/outbox.py, skills/wake/SKILL.md
+
+## Tests that inject the input hide a dead terminal; `pytest -q` from the root is a subset (T155/T158, 2026-10-19)
+T155's 19 tests passed with an injected `ask`, but on a real terminal `open("/dev/tty", "r+")` raises
+`UnsupportedOperation: File or stream is not seekable` — an `OSError`, so `init` read it as "no terminal"
+and exited 0 silently; `setup.sh` "y" did nothing. Only driving it in tmux found it. Interactive code needs
+one test on a real pty (`os.openpty()` as the child's controlling terminal; the parent must keep the slave
+fd open or reading the master gives EIO). Also: agents reported "full suite 425/409 passed" from
+`python3 -m pytest -q`, which collects only `tests/`; the real suite is `pytest -q tests .claude/hooks/tests`
+(1313 after T155+T158) — name both folders in spawn prompts. Both sonnet agents in this batch also skipped
+required Startup reads and said so only when asked; check the `Startup reads:` line every time.
+And T158's pull escaped Decision Log text twice (parsed text was still escaped) — keep text plain in
+memory and escape once, at write.
+**Files**: scripts/board_sync.py, setup.sh, skills/craft-spawn-prompt/SKILL.md, .claude/hooks/lib/board/render.py
+
+## zsh does not word-split `$var`, so `set -- $t` loops silently do the wrong thing (2026-10-19)
+The Supervisor shell is zsh. A `for t in "161 branch" ...; do set -- $t; git merge $2 ...` loop gave `git merge`
+an empty `$2`, and with output sent to /dev/null nothing showed it failed. **Rule**: in zsh use `${=t}` or separate
+arrays, and never hide a merge's output.

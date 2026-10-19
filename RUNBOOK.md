@@ -112,6 +112,29 @@ v2.0.0 moves canon from `.claude/agents/` and `.claude/skills/` to plain root an
 
 ---
 
+### v2.1.0 — online board mode (additional deploy and rollback notes)
+
+- **Deploy is a PR, not a direct push** (installer-rework decision, 2026-09-12): `main` already carries
+  ~400 untagged commits since `v2.0.0` that are live, so resetting `main` to `v2.0.0` is **not** a rollback
+  for this release. Steps:
+  1. `gh pr create --base main --head feat/online-board --title "v2.1.0: online board mode (Linear, experimental)"`
+  2. The user merges the PR on GitHub (merge commit). Then `git fetch github && git checkout main && git pull --ff-only github main`.
+  3. `git tag -a v2.1.0 -m "release v2.1.0 — T153–T161, T164" <merge-sha> && git push github v2.1.0`
+  4. Health check: §Deploy step 4 (fresh `curl | sh` install from `main`), plus, inside that install:
+     `test -f scripts/board_sync.py && test -f .claude/hooks/lib/board/linear.py && python3 scripts/board_sync.py pull; echo rc=$?`
+     **Pass**: both files present; the pull prints `board mode is local (no board in .claude/board.json); nothing to pull`
+     and `rc=0`; `ls .board .claude/board.json` → both absent (local mode makes no files, no network calls).
+- **Rollback trigger**: the health check fails; or a local-mode project reports a changed merge gate, wake or spawn
+  behaviour; or the spawn gate blocks a guide that has Requirement, Acceptance Criteria and Verification Command.
+- **Rollback**: `git revert -m 1 <merge-sha>` on `main`, normal push (never force: others have pulled), then
+  `git push github :refs/tags/v2.1.0 && git tag -d v2.1.0`. Re-run the health check against the reverted `main`.
+- **Downstream exposure**: a project that turned board mode on keeps `.claude/board.json` and `.board/` after a
+  rollback Update; with the board code gone they are inert. Deleting `.claude/board.json` returns it to local mode.
+  `PROJECT_KANBAN.md` in such a project holds the board render; restore the last local copy from git if wanted.
+- **Known limits shipped (release notes say so)**: Linear field names for setup, comments, Documents, issue/label
+  create are unconfirmed against a live workspace; online `PROJECT_KANBAN.md` is still tracked (T162); a missing
+  key reads "board unreachable" in pull moments (T163); `create` twice makes two issues.
+
 ## Deploying the landing site
 
 **Deployed URL**: [`https://personal-agentic-claude.vercel.app/`](https://personal-agentic-claude.vercel.app/)
@@ -234,8 +257,9 @@ gitignored).
 
 ## Release Log
 
-| Version / Tag | Date | Scope (Task IDs) | Deployer | Outcome |
-|---------------|------|------------------|----------|---------|
-| v1.0.0 | 2026-08-15 | T070 (first tagged release; codifies the state of `main` at `238421c`) | hungnh1110@gmail.com | _pending operator execution_ |
-| v1.1.0 | 2026-08-21 | T083, T084, T085, T087, T088 — public landing site, Vercel deploy config, README 477→55, site reference content, PACK.md flag fix | hungnh1110@gmail.com | _pending operator execution — site deploy not yet run_ |
-| v2.0.0 | 2026-09-05 | **BREAKING.** T086, T089, T090–T104 — canon relocated to plain root (`agents/`, `skills/`) with `.claude/*` kept as committed relative symlinks (T096, DDR-0007); per-harness install projection and `setup.sh --harness codex|claude` (T097/T098); provider adapters `AGENTS.md` + `.cursor/rules/agent-base.mdc` (T090/T091); merge-gate and quoted-span hook fixes (T094/T095/T099); Response Standard inlined into `CLAUDE.md` (T100/T103); docs and baseline reconciliation (T101/T102); site names the shipping version (T104) | hungnh1110@gmail.com | **Deployed 2026-09-05.** `main` fast-forwarded `a586000` → `b6ef559` (0 divergent commits, clean FF — this is the first release to actually reverse the 2026-08-25 v2/main freeze; `main` is now the v2.0.0 codebase). Tagged `v2.0.0`, pushed `main` + tag. Health check PASS: fresh `curl \| sh` install from the published `main` exited 0, printed `Setup complete`, and all three post-install assertions held (`harness-lock.json` present, `TASK_GUIDE_template.md` complexity-matrix reference found, `agents/backend.md` has 4 complexity rows) |
+| Version / Tag | Date | Scope (Task IDs) | Deployer | Approved (by / when / answer) | Outcome |
+|---------------|------|------------------|----------|-------------------------------|---------|
+| v1.0.0 | 2026-08-15 | T070 (first tagged release; codifies the state of `main` at `238421c`) | hungnh1110@gmail.com | — | _pending operator execution_ |
+| v1.1.0 | 2026-08-21 | T083, T084, T085, T087, T088 — public landing site, Vercel deploy config, README 477→55, site reference content, PACK.md flag fix | hungnh1110@gmail.com | — | _pending operator execution — site deploy not yet run_ |
+| v2.0.0 | 2026-09-05 | **BREAKING.** T086, T089, T090–T104 — canon relocated to plain root (`agents/`, `skills/`) with `.claude/*` kept as committed relative symlinks (T096, DDR-0007); per-harness install projection and `setup.sh --harness codex|claude` (T097/T098); provider adapters `AGENTS.md` + `.cursor/rules/agent-base.mdc` (T090/T091); merge-gate and quoted-span hook fixes (T094/T095/T099); Response Standard inlined into `CLAUDE.md` (T100/T103); docs and baseline reconciliation (T101/T102); site names the shipping version (T104) | hungnh1110@gmail.com | **Deployed 2026-09-05.** `main` fast-forwarded `a586000` → `b6ef559` (0 divergent commits, clean FF — this is the first release to actually reverse the 2026-08-25 v2/main freeze; `main` is now the v2.0.0 codebase). Tagged `v2.0.0`, pushed `main` + tag. Health check PASS: fresh `curl \| — | sh` install from the published `main` exited 0, printed `Setup complete`, and all three post-install assertions held (`harness-lock.json` present, `TASK_GUIDE_template.md` complexity-matrix reference found, `agents/backend.md` has 4 complexity rows) |
+| v2.1.0 | 2026-10-19 | T153, T154, T155, T156, T157, T158, T159, T160, T161, T164 — online board mode (Linear first, opt-in at setup, experimental): board-ID config, `board_sync.py` pull/push/flush/decide/init/create/update/triage, outbox, pull moments, my-task merge-gate filters, Decision Log, spawn gate blocks an incomplete guide. Not in scope: T162, T163 (Todo) | hungnh1110@gmail.com | hungnh1110@gmail.com / 2026-10-19 / "Approve v2.1.0 @ d632579 (Recommended)" — approved for branch `feat/online-board` @ `d632579`, tag to go on the PR merge commit; release-metadata commit `689f602` adds only RUNBOOK.md and the site version label | _pending operator execution — PR to main not yet merged_ |
