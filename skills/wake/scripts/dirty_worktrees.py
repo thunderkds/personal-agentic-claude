@@ -25,6 +25,11 @@ def in_progress_ids(board_path):
     return ids
 
 
+def toplevel():
+    return subprocess.run(["git", "rev-parse", "--show-toplevel"],
+                          capture_output=True, text=True, check=True).stdout.strip()
+
+
 def worktrees():
     out = subprocess.run(["git", "worktree", "list", "--porcelain"],
                          capture_output=True, text=True, check=True).stdout
@@ -47,7 +52,7 @@ def counts(path):
 
 
 def main():
-    ids = in_progress_ids(BOARD)
+    ids = in_progress_ids(os.path.join(toplevel(), BOARD))
     for tree in worktrees():
         path, branch = tree.get("worktree", ""), tree.get("branch", "")
         if "prunable" in tree or not branch or not os.path.isdir(path):
