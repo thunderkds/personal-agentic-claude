@@ -2793,3 +2793,16 @@ integration (here: wake's 8 KB Codex cap, a duplicated outbox counter) as a test
 Also: when classifying board errors as "drop vs keep", 401/403 are fixable config, not permanent —
 T156 first dropped the whole outbox on a bad key (`BoardAuthError` now keeps it).
 **Files**: .claude/hooks/pre_bash_block_unsafe_merge.py, .claude/hooks/lib/board/outbox.py, skills/wake/SKILL.md
+
+## Tests that inject the input hide a dead terminal; `pytest -q` from the root is a subset (T155/T158, 2026-10-19)
+T155's 19 tests passed with an injected `ask`, but on a real terminal `open("/dev/tty", "r+")` raises
+`UnsupportedOperation: File or stream is not seekable` — an `OSError`, so `init` read it as "no terminal"
+and exited 0 silently; `setup.sh` "y" did nothing. Only driving it in tmux found it. Interactive code needs
+one test on a real pty (`os.openpty()` as the child's controlling terminal; the parent must keep the slave
+fd open or reading the master gives EIO). Also: agents reported "full suite 425/409 passed" from
+`python3 -m pytest -q`, which collects only `tests/`; the real suite is `pytest -q tests .claude/hooks/tests`
+(1313 after T155+T158) — name both folders in spawn prompts. Both sonnet agents in this batch also skipped
+required Startup reads and said so only when asked; check the `Startup reads:` line every time.
+And T158's pull escaped Decision Log text twice (parsed text was still escaped) — keep text plain in
+memory and escape once, at write.
+**Files**: scripts/board_sync.py, setup.sh, skills/craft-spawn-prompt/SKILL.md, .claude/hooks/lib/board/render.py
