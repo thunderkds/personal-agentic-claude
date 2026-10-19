@@ -1,12 +1,12 @@
 # TASK_GUIDE — T160: `wake` triages my new board tasks: propose priority, ask, then ready-or-investigate
 **Date**: 2026-10-19
 **Complexity Level**: C2
-**Risk Level**: Medium
+**Risk Level**: High
 **Priority**: P2
 **Assigned agent**: backend-developer
 **Agent guide**: `agents/backend.md`
 
-> Medium: board text reaches the Supervisor's prompt.
+> High: changes the spawn gate (`pre_agent_validate_guide.py`, Hard-Stop Gate 1). Raised from Medium by the user's choice at Stage 3 pickup, 2026-10-19.
 
 ---
 
@@ -62,8 +62,9 @@ This task: User, 2026-10-19: "supervisor should check if this tasks got assign b
 |---|---|---|
 | 1 | `triage` lists exactly my tasks lacking a complete guide (template sections missing) or changed since the last session marker | FR-011 |
 | 2 | Others' tasks never appear in `triage` output | FR-011 bypass |
-| 3 | `skills/wake/SKILL.md` documents the flow: show → propose priority + reason → ask → ready (write guide) or investigate (brainstorm/grill) first | FR-011 |
-| 4 | `pre_agent_validate_guide.py` still refuses a spawn for a task whose guide is incomplete | Hard-Stop Gate 1 |
+| 3 | `skills/wake/SKILL.md` points to `skills/wake/references/triage.md`, which documents the flow: show → propose priority + reason → ask → ready (write guide) or investigate (brainstorm/grill) first | FR-011 |
+| 4 | `pre_agent_validate_guide.py` refuses (blocks) a spawn for a task whose guide is incomplete, naming the missing sections. Today it only checks the file exists, so a one-line board issue's guide would pass (user decision 2026-10-19: close the gap here) | Hard-Stop Gate 1 |
+| 5 | Every guide in `tasks/` whose task is not Done still spawns (no false block); the Done guides that would now block are listed in the test as known | Hard-Stop Gate 1 |
 
 ---
 
@@ -101,7 +102,7 @@ python3 -m pytest tests/test_board_triage.py -q
 **Cut list**:
 - Learning priority from history
 
-"Complete guide" = the sections `pre_agent_validate_guide.py` already requires. The last-session marker lives in `.board/` (gitignored).
+"Complete guide" is defined once, in `.claude/hooks/lib/guide_sections.py`: the headings `## Requirement`, `## Acceptance Criteria` and `### Verification Command` are present, each with a non-blank body. Today 139 of 146 guides have all three; the 7 without (T018–T024) are Done. `triage` and the spawn hook both call that one function. The last-session marker lives in `.board/` (gitignored).
 
 ---
 
@@ -120,7 +121,11 @@ python3 -m pytest tests/test_board_triage.py -q
 | File | Change |
 |---|---|
 | `scripts/board_sync.py` | `triage` |
-| `skills/wake/SKILL.md` | triage section within the 50-line cap |
+| `skills/wake/SKILL.md` | one pointer line only — the file is 8,119 bytes against the 8 KB Codex cap |
+| `skills/wake/references/triage.md` (new) | the triage flow (AC3) |
+| `.claude/hooks/lib/guide_sections.py` | `missing_guide_sections()` — the one definition of complete |
+| `.claude/hooks/pre_agent_validate_guide.py` | block an incomplete guide |
+| `scripts/pull_moment.py` | `wake` prints the triage lines (pattern: the decisions line) |
 | tests |  |
 
 ## Files Must NOT Touch
