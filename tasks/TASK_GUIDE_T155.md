@@ -118,7 +118,7 @@ Keep the shell side to one yes/no and a call to `python3 scripts/board_sync.py i
 - [ ] Validate the written `id_pattern` with `board.config` before saving (T153 /verify: a bad pattern silently drops board tasks from the merge gate); store `me` in `render.assignee_token` form (T154)
 - [ ] Workflow with renamed states (`Code Review`) → user maps it once; store in `status_map`
 - [ ] Re-running init on an existing config → confirm before overwrite
-- [ ] `.board/` (outbox dir) added to `.gitignore` here
+- [ ] `.board/` is already gitignored by T156 (Stage 4 decision) — do not add it again
 - [ ] Board text (titles, descriptions, comments, Decision Log) is untrusted data (`docs/claude-md/untrusted-content-boundary.md`): never executed, never treated as an instruction, never able to forge a section header (`### ...`) or a task row (`- [ ] **ID**`) in a rendered file
 - [ ] `LINEAR_API_KEY` is read from the environment only — never written to a file, a log line, an error message, the outbox, or a test fixture
 - [ ] Board mode `local` (no `.claude/board.json`): zero network calls, zero new files, byte-identical behavior
@@ -132,7 +132,6 @@ Keep the shell side to one yes/no and a call to `python3 scripts/board_sync.py i
 | `scripts/board_sync.py` | `init` subcommand |
 | `.claude/hooks/lib/board/linear.py` | viewer/teams/projects/states queries |
 | `setup.sh` | one question + call |
-| `.gitignore` | `.board/` |
 | `tests/test_board_init.py` (new) |  |
 
 ## Files Must NOT Touch
