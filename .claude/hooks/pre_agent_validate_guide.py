@@ -5,6 +5,11 @@ PreToolUse hook — fires before every Agent tool call.
 Extracts a task ID (Txxx) from the spawn prompt and blocks the spawn
 if the corresponding tasks/TASK_GUIDE_Txxx.md does not exist.
 
+Also blocks (T160) when the guide exists but is incomplete — a required section
+(`guide_sections.missing_guide_sections`) is missing or blank — naming the sections, so
+a one-line board issue's guide cannot be spawned on. A crash in that check fails
+open (allows), like every advisory below.
+
 Also reads the target guide's `Depends on:` field (if present) and warns
 — non-blocking — if the referenced task isn't Done yet on
 PROJECT_KANBAN.md, or doesn't exist at all. This is advisory only: it
@@ -35,10 +40,13 @@ KANBAN = os.path.join(ROOT, "PROJECT_KANBAN.md")
 # Demonstration warnings" rather than blocking a spawn.
 sys.path.insert(0, os.path.join(HOOKS_DIR, "lib"))
 try:
-    from guide_sections import read_guide_section
+    from guide_sections import missing_guide_sections, read_guide_section
 except Exception:  # pragma: no cover - fail open, never block a spawn
     def read_guide_section(task_id, heading, tasks_dir):
         return None
+
+    def missing_guide_sections(text):
+        return []
 
 # Task IDs are `T\d+`, plus the board's `id_pattern` when `.claude/board.json` sets one
 # (T153). A broken import degrades to today's `T\d+`, never to "no IDs": the
@@ -252,6 +260,20 @@ def check_demonstration_warnings(task_ids, tasks_dir=None):
     return warnings
 
 
+def incomplete_guides(task_ids, tasks_dir=None):
+    """`<ID> (missing: A, B)` for each task whose existing guide is incomplete (T160).
+    Raises on an unreadable guide; `main()` treats any exception as "allow"."""
+    tasks_dir = tasks_dir or TASKS_DIR
+    found = []
+    for tid in task_ids:
+        path = next(p for p in guide_candidates(tid, tasks_dir) if os.path.exists(p))
+        with open(path, encoding="utf-8") as f:
+            missing = missing_guide_sections(f.read())
+        if missing:
+            found.append(f"{task_ref(tid)} (missing: {', '.join(missing)})")
+    return found
+
+
 MEMORY_SLICE_MARKER = "<!-- memory-slice:"
 
 
@@ -316,6 +338,21 @@ def main():
             )
         }
         print(json.dumps(result))
+        sys.exit(0)
+
+    try:
+        incomplete = incomplete_guides(task_ids)
+    except Exception:
+        incomplete = []  # fail open: a broken check must never block a spawn
+    if incomplete:
+        print(json.dumps({
+            "decision": "block",
+            "reason": (
+                f"[hook:pre_agent] Cannot spawn agent — incomplete TASK_GUIDE for: "
+                f"{'; '.join(incomplete)}. Fill those sections first (Stage 2); in board "
+                f"mode push them with `python3 scripts/board_sync.py update --guide <ID>`."
+            )
+        }))
         sys.exit(0)
 
     try:

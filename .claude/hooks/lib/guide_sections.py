@@ -185,6 +185,27 @@ def read_review_text(task_id, tasks_dir):
         return None
 
 
+# T160: the one definition of a *complete* guide, shared by the spawn gate
+# (`pre_agent_validate_guide.py`) and `board_sync.py triage`. Each heading must be
+# present with a body that `is_pointer_only` does not call empty. Template
+# `[placeholder]` text counts as filled: telling it from real prose is not simple,
+# and a guess here would block real spawns. The bugfix flavor (`skills/bugfix`
+# Step 3) has none of these headings; it is recognised by its `Mental Model`
+# heading, the same test `craft-spawn-prompt` uses, and needs its own two.
+REQUIRED_SECTIONS = ("Requirement", "Acceptance Criteria", "Verification Command")
+BUGFIX_REQUIRED_SECTIONS = ("Mental Model", "Diagnosis Gates")
+
+
+def missing_guide_sections(text):
+    """The required sections that guide `text` lacks or leaves blank, in order;
+    [] when the guide is complete. Text that is not a string lacks them all."""
+    if not isinstance(text, str):
+        return list(REQUIRED_SECTIONS)
+    required = (BUGFIX_REQUIRED_SECTIONS if slice_section(text, "Mental Model") is not None
+                else REQUIRED_SECTIONS)
+    return [h for h in required if is_pointer_only(slice_section(text, h))]
+
+
 def resolve_section(guide_text, review_text, heading):
     """Same ordered precedence as `read_guide_section`, for callers that already
     hold both texts in memory. Returns the body or None. Never raises."""

@@ -15,6 +15,9 @@ it and, if the guide changed since spawn, prints
 
 `wake` also prints `N new decisions from teammates since your last session` (T158): entries
 in the cached Decision Log, written by others, after the position seen at the last wake.
+After a good pull it also prints the lines of `board_sync.py triage --mark` (T160) under one
+header: my tasks that are not planned yet or changed since the last wake. The `--mark`
+advances the marker, so a change is shown at one wake. A failed pull skips triage.
 
 Board mode `local` (or an unusable `.claude/board.json`): does nothing, prints nothing.
 
@@ -22,12 +25,25 @@ Exit 0 always — a pull moment never blocks work — except 2 for bad arguments
 """
 import argparse
 import os
+import subprocess
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, ".claude", "hooks", "lib"))
 from board import moments  # noqa: E402
 from board.config import load_config  # noqa: E402
+
+
+def triage_lines(root):
+    """`board_sync.py triage --mark` output lines; [] on any failure (never blocks a wake)."""
+    script = os.path.join(root, "scripts", "board_sync.py")
+    try:
+        done = subprocess.run([sys.executable, script, "triage", "--mark"], cwd=root,
+                              stdin=subprocess.DEVNULL, capture_output=True, text=True,
+                              timeout=moments.PULL_TIMEOUT_S)
+    except (OSError, subprocess.SubprocessError):
+        return []
+    return done.stdout.splitlines() if done.returncode == 0 else []
 
 
 def main(argv=None, root=ROOT):
@@ -56,6 +72,12 @@ def main(argv=None, root=ROOT):
         decisions_line = moments.new_decisions_line(root, (load_config(root) or {}).get("me"))
         if decisions_line:
             print(decisions_line)
+        lines = [] if warning else triage_lines(root)
+        if lines:
+            print(f"{len(lines)} of your board tasks to triage "
+                  f"(skills/wake/references/triage.md):")
+            for line in lines:
+                print(f"  {line}")
 
     if args.moment == "spawn":
         path = moments.guide_hash_path(root, task_id)

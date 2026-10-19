@@ -39,7 +39,9 @@ MIXED_BOARD = """# Board
 ### Done
 - [x] **ENG-160** - done one
 """
-GUIDE = "# TASK_GUIDE — {tid}: title for {tid}\n**Assigned agent**: common-infrastructure\n"
+GUIDE = ("# TASK_GUIDE — {tid}: title for {tid}\n**Assigned agent**: common-infrastructure\n"
+         "\n## Requirement\n\nr\n\n## Acceptance Criteria\n\na\n\n### Verification Command\n\nv\n")
+# (T160: the spawn gate blocks a guide without these three sections.)
 
 
 def clean_env(**extra):

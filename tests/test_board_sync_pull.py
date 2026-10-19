@@ -468,7 +468,8 @@ def test_local_mode_pull_touches_nothing(tmp_path, monkeypatch, capsys):
 # --- AC6: stdlib only ---------------------------------------------------------------------
 
 def test_board_package_and_cli_import_only_stdlib():
-    files = sorted((LIB / "board").glob("*.py")) + [SCRIPT]
+    # guide_sections.py (T160: board_sync's `triage` imports it) is checked here too.
+    files = sorted((LIB / "board").glob("*.py")) + [SCRIPT, LIB / "guide_sections.py"]
     for path in files:
         for item in ast.walk(ast.parse(path.read_text())):
             if isinstance(item, ast.Import):
@@ -481,7 +482,8 @@ def test_board_package_and_cli_import_only_stdlib():
                 continue
             for name in names:
                 top = name.split(".")[0]
-                assert top in sys.stdlib_module_names or top == "board", f"{path.name}: {name}"
+                assert top in sys.stdlib_module_names or top in ("board", "guide_sections"), \
+                    f"{path.name}: {name}"
 
 
 # --- Stage 4 (P1): board text never supplies review sections --------------------------
