@@ -280,3 +280,56 @@ def test_setup_yes_calls_init(tmp_path):
 def test_setup_skips_when_already_configured_or_script_absent(tmp_path):
     assert run_offer(tmp_path, 1, "y", with_config=True) == ""
     assert run_offer(tmp_path / "x", 1, "y", with_script=False) == ""
+
+
+# Real terminal (T155 /verify) ---------------------------------------------------------------
+def test_init_prompts_on_a_real_pty(tmp_path):
+    """`open('/dev/tty', 'r+')` raises UnsupportedOperation (an OSError), which once made
+    init exit silently on every real terminal. Run it with a pty as controlling terminal."""
+    import fcntl
+    import os
+    import select
+    import termios
+
+    master, slave = os.openpty()
+
+    def make_ctty():
+        os.setsid()
+        fcntl.ioctl(slave, termios.TIOCSCTTY, 0)
+
+    env = {"PATH": "/usr/bin:/bin"}  # no LINEAR_API_KEY: the flow ends before any Linear call
+    proc = subprocess.Popen([sys.executable, str(SCRIPT), "init"], cwd=tmp_path, env=env,
+                            stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                            text=True, preexec_fn=make_ctty)
+    # keep `slave` open here: with every slave fd closed, reading the master gives EIO
+
+    def read_until(needle, timeout=10):
+        seen = b""
+        while needle.encode() not in seen:
+            if not select.select([master], [], [], timeout)[0]:
+                break
+            try:
+                chunk = os.read(master, 4096)
+            except OSError:
+                break
+            if not chunk:
+                break
+            seen += chunk
+        return seen.decode(errors="replace")
+
+    try:
+        assert "How should agents reach Linear?" in read_until("> ")
+        os.write(master, b"1\n")
+        out, err = proc.communicate(timeout=10)
+    finally:
+        proc.kill()
+        os.close(slave)
+        os.close(master)
+    assert proc.returncode == 1, (out, err)
+    assert "export LINEAR_API_KEY=" in out
+    assert not (tmp_path / ".claude" / "board.json").exists()
+
+
+def test_setup_warns_when_init_writes_no_config(tmp_path):
+    out = run_offer(tmp_path, 1, "y")  # stubbed python3 writes nothing
+    assert "Board setup did not finish" in out

@@ -20,6 +20,8 @@
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
 | Full smoke suite still green (no regression) | pass | `python3 -m pytest -q`: 409 passed in 12.92s |
+| /verify FAIL fix: real-terminal prompt (T155 round 2) | pass | `tests/test_board_init.py::test_init_prompts_on_a_real_pty` (pty as controlling terminal). RED before fix (tty_ask opened /dev/tty "r+" -> UnsupportedOperation -> silent exit 0): `FAILED ...test_init_prompts_on_a_real_pty - AssertionError ... 1 failed in 10.06s`. GREEN after (separate write/read handles): `1 passed`. Also `test_setup_warns_when_init_writes_no_config`. |
+| Full suite, both folders | pass | `python3 -m pytest -q tests .claude/hooks/tests`: 1276 passed, 25 subtests passed in 38.35s; test_setup.sh 18/0, test_one_command_menu.sh 22/0, test_update.sh 38/0, test_shellcheck_clean.sh PASS |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
 | **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |

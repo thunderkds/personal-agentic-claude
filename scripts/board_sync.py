@@ -237,9 +237,10 @@ class InitAbort(Exception):
 def tty_ask(prompt):
     """One line from the terminal, or None when there is no terminal (or EOF)."""
     try:
-        with open("/dev/tty", "r+", encoding="utf-8") as tty:
-            tty.write(prompt)
-            tty.flush()
+        # Separate handles: "r+" on a tty raises UnsupportedOperation (not seekable).
+        with open("/dev/tty", "w", encoding="utf-8") as out, open("/dev/tty", encoding="utf-8") as tty:
+            out.write(prompt)
+            out.flush()
             line = tty.readline()
     except OSError:
         return None

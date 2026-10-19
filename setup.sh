@@ -762,7 +762,9 @@ offer_board_mode() {
     log_warn "python3 is not on PATH - board mode skipped."
     return 0
   fi
-  python3 scripts/board_sync.py init || log_warn "Board setup did not finish; the project stays in local mode. Re-run: python3 scripts/board_sync.py init"
+  # A "no" inside init is a quiet exit 0 too, so judge by the file, not the exit code.
+  python3 scripts/board_sync.py init || true
+  [ -f ".claude/board.json" ] || log_warn "Board setup did not finish; the project stays in local mode. Re-run: python3 scripts/board_sync.py init"
 }
 
 # ── Main ──────────────────────────────────────────────────────────────────────
