@@ -30,7 +30,7 @@ KEY = "lin_api_SECRETtestkey0123456789"
 
 sys.path.insert(0, str(LIB))
 from board import linear  # noqa: E402
-from board.base import BoardError, BoardUnavailable, Task  # noqa: E402
+from board.base import BoardAuthError, BoardError, BoardUnavailable, Task  # noqa: E402
 from board.fake import FakeBoard  # noqa: E402
 
 
@@ -358,3 +358,60 @@ def test_outbox_module_is_stdlib_only():
     names |= {n.module.split(".")[0] for n in ast.walk(tree)
               if isinstance(n, ast.ImportFrom) and n.level == 0}
     assert names <= set(_s.stdlib_module_names) | {"board"}
+
+
+# --- auth failures are config problems, never a reason to drop --------------------------
+
+@pytest.mark.parametrize("code", [401, 403])
+def test_linear_401_403_is_auth_error(monkeypatch, code):
+    _http(monkeypatch, code)
+    with pytest.raises(BoardAuthError) as info:
+        linear.LinearBoard(KEY, "team").add_comment("ENG-1", "b")
+    assert "LINEAR_API_KEY" in str(info.value) and KEY not in str(info.value)
+
+
+def _queue_two(sync, monkeypatch, root, board):
+    board.unreachable = True
+    run(sync, monkeypatch, root, board, "push", "comment", "ENG-1", "red", "a")
+    run(sync, monkeypatch, root, board, "push", "status", "ENG-1", "ready-for-review")
+    board.unreachable = False
+
+
+def test_flush_auth_error_keeps_everything_then_good_key_delivers(sync, monkeypatch, tmp_path, capsys):
+    root, board = project(tmp_path), new_board()
+    _queue_two(sync, monkeypatch, root, board)
+    board.auth_fails = True
+    capsys.readouterr()
+    assert run(sync, monkeypatch, root, board, "flush") == 1
+    assert "2 write(s) still queued" in capsys.readouterr().err
+    assert len(outbox(root)) == 2
+    board.auth_fails = False
+    assert run(sync, monkeypatch, root, board, "flush") == 0
+    assert board.comments[0][1].startswith("[red] a") and board.statuses == {"ENG-1": "In Review"}
+    assert outbox(root) == []
+
+
+def test_push_auth_error_on_direct_send_exits_1_and_does_not_queue(sync, monkeypatch, tmp_path, capsys):
+    root, board = project(tmp_path), new_board()
+    board.auth_fails = True
+    assert run(sync, monkeypatch, root, board, "push", "comment", "ENG-1", "red", "a") == 1
+    assert outbox(root) == [] and "API key" in capsys.readouterr().err
+
+
+def test_push_auth_error_in_preflush_queues_behind_and_exits_1(sync, monkeypatch, tmp_path, capsys):
+    root, board = project(tmp_path), new_board()
+    _queue_two(sync, monkeypatch, root, board)
+    board.auth_fails = True
+    capsys.readouterr()
+    assert run(sync, monkeypatch, root, board, "push", "comment", "ENG-1", "green", "c") == 1
+    captured = capsys.readouterr()
+    assert "API key" in captured.err and "unreachable" not in captured.out
+    assert [e["milestone"] for e in outbox(root)] == ["red", "ready-for-review", "green"]
+
+
+def test_graphql_rejection_still_dropped(sync, monkeypatch, tmp_path):
+    root, board = project(tmp_path), new_board()
+    _queue_two(sync, monkeypatch, root, board)
+    board.rejects = True
+    assert run(sync, monkeypatch, root, board, "flush") == 0
+    assert outbox(root) == []

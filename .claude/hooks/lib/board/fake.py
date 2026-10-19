@@ -4,7 +4,7 @@ Selected with `{"board": "fake", "fake_board": "<path to JSON list of tasks>"}`.
 """
 import json
 
-from board.base import BoardAdapter, BoardError, BoardUnavailable, Task
+from board.base import BoardAdapter, BoardAuthError, BoardError, BoardUnavailable, Task
 
 
 class FakeBoard(BoardAdapter):
@@ -14,6 +14,7 @@ class FakeBoard(BoardAdapter):
         self.statuses = {}        # task_id -> board status name
         self.unreachable = False  # test switch: every write raises BoardUnavailable
         self.drop_response = False  # test switch: the write lands, the client still times out
+        self.auth_fails = False   # test switch: every call raises BoardAuthError
         self.rejects = False      # test switch: every write raises a non-transient BoardError
 
     @classmethod
@@ -31,6 +32,8 @@ class FakeBoard(BoardAdapter):
         return next((t for t in self.tasks if t.id == task_id), None)
 
     def _write_check(self):
+        if self.auth_fails:
+            raise BoardAuthError("Linear rejected the API key (HTTP 401/403); check LINEAR_API_KEY")
         if self.rejects:
             raise BoardError("fake board rejected the write")
         if self.unreachable:
@@ -46,6 +49,8 @@ class FakeBoard(BoardAdapter):
         self._after_write()
 
     def has_comment(self, task_id, marker):
+        if self.auth_fails:
+            raise BoardAuthError("Linear rejected the API key (HTTP 401/403); check LINEAR_API_KEY")
         if self.unreachable:
             raise BoardUnavailable("fake board unreachable")
         return any(t == task_id and marker in b for t, b in self.comments)

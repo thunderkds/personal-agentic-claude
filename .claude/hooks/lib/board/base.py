@@ -17,6 +17,11 @@ class BoardError(Exception):
     """The board could not be read. Its message must never carry the API key."""
 
 
+class BoardAuthError(BoardError):
+    """HTTP 401/403: a wrong, expired or under-privileged key. A config problem the user can
+    fix, so a queued write that hits it is kept, never dropped."""
+
+
 class BoardUnavailable(BoardError):
     """Transient: unreachable, timeout, 5xx or 429. A write that hits it may be queued and
     retried; any other `BoardError` (bad request, rejected query) would fail again."""

@@ -39,7 +39,7 @@ from datetime import date, datetime, timezone
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, ".claude", "hooks", "lib"))
 from board import outbox, render  # noqa: E402
-from board.base import BoardError, BoardUnavailable  # noqa: E402
+from board.base import BoardAuthError, BoardError, BoardUnavailable  # noqa: E402
 from board.config import config_path, load_config, normalize_task_id, task_id_pattern  # noqa: E402
 from board.fake import FakeBoard  # noqa: E402
 from board.linear import LinearBoard  # noqa: E402
@@ -150,7 +150,8 @@ def deliver(board, entry):
         raise BoardError("unknown outbox entry")
 
 
-def flush(board, root):
+def replay(board, root):
+    """Flush the outbox; returns the error that stopped it, or None."""
     def dropped(entry, exc):  # never the text or the key
         print(f"[board] dropped a queued {entry.get('kind')} for {entry.get('task')} "
               f"({entry.get('milestone')}): the board refused it ({exc})", file=sys.stderr)
@@ -162,8 +163,11 @@ def flush(board, root):
         if not isinstance(error, BoardError):
             error = BoardError(f"unexpected {type(error).__name__}")
         print(f"[board] {remaining} write(s) still queued: {error}", file=sys.stderr)
-        return 1
-    return 0
+    return error
+
+
+def flush(board, root):
+    return 1 if replay(board, root) is not None else 0
 
 
 def push(board, config, root, args):
@@ -200,7 +204,11 @@ def push(board, config, root, args):
                  "key": dedupe_key(task, args.value, name, created), "created": created}
     try:
         if outbox.count(root):                       # older writes first
-            if flush(board, root):
+            error = replay(board, root)
+            if isinstance(error, BoardAuthError):    # keep order: queue behind, tell the user
+                outbox.append(root, entry)
+                return 1
+            if error is not None:
                 raise BoardUnavailable("earlier writes are still queued")
         deliver(board, entry)
     except BoardUnavailable:

@@ -11,7 +11,7 @@ import json
 import urllib.error
 import urllib.request
 
-from board.base import BoardAdapter, BoardError, BoardUnavailable, Task
+from board.base import BoardAdapter, BoardAuthError, BoardError, BoardUnavailable, Task
 
 URL = "https://api.linear.app/graphql"
 TIMEOUT = 30
@@ -75,6 +75,9 @@ class LinearBoard(BoardAdapter):
         except urllib.error.HTTPError as exc:
             if exc.code == 429:
                 raise BoardUnavailable("Linear rate limit reached (HTTP 429); try again later") from None
+            if exc.code in (401, 403):
+                raise BoardAuthError("Linear rejected the API key (HTTP 401/403); "
+                                     "check LINEAR_API_KEY") from None
             if exc.code >= 500:
                 raise BoardUnavailable(f"Linear returned HTTP {exc.code}") from None
             raise BoardError(f"Linear returned HTTP {exc.code}") from None
