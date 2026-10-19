@@ -33,8 +33,40 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured 2026-10-19T07:45:18Z on `feat/t157-pull-moments` at `b06e264` (no T157 commit
+yet), by the implementing agent. Command: `sh t157_demo.sh /home/hungnguyenhuu/workspace/pets/wt-t157`
+— the script (kept outside the repo) builds a temp project from the worktree's hooks and
+`scripts/board_sync.py`, with a fake board (`ENG-170` In Progress `@alice`, whose guide predicts
+`.env`; `ENG-171` In Progress `@bob`) and `.claude/board.json` = `{"board": "fake", "id_pattern":
+"ENG-\\d+", "me": "alice"}`. No network. The gate's long attribution note is elided as `…`.
+
+```
+2026-10-19T07:45:18Z
+$ python3 scripts/board_sync.py pull
+[board] pulled 2 tasks: PROJECT_KANBAN.md and 2 guides written
+$ git push   (gate, me=alice; ENG-170 @alice + ENG-171 @bob In Progress)
+{"decision": "block", "reason": "[hook:pre_bash] Pipeline gate failed — cannot push/merge:\n  • Tasks still In Progress: ENG-170, ENG-171\nComplete Stage 4 review and Stage 5 verify first.\n  Note: …(attribution remedy elided)"}
+ [exit 0]
+$ python3 scripts/pull_moment.py spawn ENG-170
+python3: can't open file '/tmp/tmp.9Xm05cnEw1/proj/scripts/pull_moment.py': [Errno 2] No such file or directory
+ [exit 2]
+$ python3 scripts/pull_moment.py review ENG-170   (board guide edited since spawn)
+python3: can't open file '/tmp/tmp.9Xm05cnEw1/proj/scripts/pull_moment.py': [Errno 2] No such file or directory
+ [exit 2]
+$ git push   (board unreachable)
+{"decision": "block", "reason": "[hook:pre_bash] Pipeline gate failed — cannot push/merge:\n  • Tasks still In Progress: ENG-170, ENG-171\nComplete Stage 4 review and Stage 5 verify first.\n  Note: …(attribution remedy elided)"}
+ [exit 0]
+$ Edit .env as ENG-170   (sensitive path predicted only by the pulled guide)
+ [exit 0, no output = no ask]
+```
+
+Read: the teammate's `ENG-171` blocks my push; no pull moment exists for spawn/review; an
+unreachable board is silent (the gate never pulls); a `.env` edit predicted only by board text is
+waved through. Skill text before the change — `skills/wake/SKILL.md` Step 1 has no pull step (its
+first line is "Read all five sources in parallel. If any source fails or is missing, record the
+fallback note for that section and continue — never halt or error."); `skills/craft-spawn-prompt/SKILL.md`
+step 1 reads verbatim: "Read the TASK_GUIDE at the given path, the `agents/*.md` file named in its
+`**Agent guide**` field, and `memory/MEMORY.md`. If any is missing, stop and report to the Supervisor."
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
