@@ -2330,3 +2330,34 @@ T147: the user chose **(b)**, even though hook input does carry `agent_id`/`agen
 `claude --settings` CLI spawns only. `Agent()` spawns are **not** sandboxed. The user's purpose: the human
 talks only to the Supervisor; sub-agents run headless in a watch-only pane, so the profile uses `dontAsk`.
 Stage 5: T146 /verify PASS; T147 /verify FAIL on this machine (see learnings: nested userns).
+
+## T144/T145/T148/T149 merged: lane check, decision inheritance, anchored trace, prod approval (2026-10-17)
+T144: `scripts/lane_check.py <guide> <base>...HEAD` prints one warn-only line at `code-review` Phase 0.
+Budgets are one table (C0 2 files/30 lines, C1 6/250, C2 14/500, C3 none), calibrated on T128–T138; C0 is a
+guess. The range must be **three-dot**: two-dot counts the integration branch's later commits, reversed.
+T145: `memory_slice.py` adds `decisions.md` entries whose `**Files**:` line overlaps the guide's predicted
+files, under `### From decisions.md`, sharing the hot cap (cold dropped first; an all-dropped cold set is
+named in the header). `compound` docs now open with `## The General Lesson` and `## Applies When`.
+T148: every trace line carries `prev`/`hash`, and `<task> <line> <hash>` is appended to
+`~/.claude/harness-anchors/<repo-slug>/<task>.anchors`. `scripts/verify_trace.py <task>` reports INTACT /
+UNANCHORED / BROKEN / ANCHOR MISMATCH / UNVERIFIED (a line marked `anchor: failed` is never INTACT).
+User decision: `.claude/settings.json` gains a **deny-only** `permissions` block
+(`Edit(~/.claude/harness-anchors/**)`, `Bash(*harness-anchors*)`), and T147's AC4 test was narrowed to allow
+exactly it. `lib/merge-settings.py` unions the kit's `permissions.deny` into existing projects, add-only;
+kit `allow`/`ask` are never copied. The merge gate does not read the chain yet.
+T149: `ship` § 7 gains a fifth GO condition, approval recorded for `<version> @ <commit>`, asked with
+`AskUserQuestion` and copied verbatim into the RUNBOOK Release Log's new `Approved (by / when / answer)`
+column. The smoke test's pass condition is written before the deploy step.
+**Files**: scripts/lane_check.py, skills/code-review/SKILL.md, skills/craft-spawn-prompt/scripts/memory_slice.py, skills/compound/SKILL.md, .claude/hooks/post_tool_trace.py, .claude/hooks/lib/trace_chain.py, scripts/verify_trace.py, .claude/settings.json, lib/merge-settings.py, skills/ship/SKILL.md, templates/RUNBOOK_template.md
+
+## T150: spawn mode is background `Agent()` by default; `wake` flags dirty In Progress worktrees (2026-10-17)
+**Decision**: the user does not need to watch sub-agents; the final report and commits are enough. Stage 3 now
+says every spawn is a background `Agent()` call (`run_in_background`); a CLI pane only when the user asks to
+watch or the task runs on a non-Claude CLI; the T147 sandboxed profile stays unused until a *nested*-userns
+check passes. `craft-spawn-prompt` output item 3 names the mode. `wake` gains a fifth source,
+`skills/wake/scripts/dirty_worktrees.py`: one `Txxx <path> N modified, M untracked` line per In Progress task
+whose worktree (matched by `t(\d{3,})` in the branch name) is dirty; uses `git --no-optional-locks status` so
+it never takes another session's index lock; silent on any failure.
+**Why**: T144–T149 went to background agents by accident (no rule existed) while the user expected panes.
+**Files**: docs/claude-md/pipeline-stages.md, skills/craft-spawn-prompt/SKILL.md, skills/wake/SKILL.md, skills/wake/scripts/dirty_worktrees.py, tests/test_dirty_worktrees.py, BRAINSTORMING_LOG_spawn-mode.md
+**Follow-up (closed by T152, 2026-10-19)**: the board path is now resolved from `git rev-parse --show-toplevel`, so a run from any subfolder matches a root run. Inside a linked worktree it reads that worktree's board copy — accepted, `wake` runs from the main checkout.

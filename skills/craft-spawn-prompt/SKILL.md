@@ -30,7 +30,7 @@ Both shapes reuse the same checklist proven in `bugfix` Step 4; only element 2 a
 | 1 | Guide pointer | `tasks/TASK_GUIDE_Txxx.md` path | same |
 | 2 | Orienting content | Guide's Restated Intent / Requirement section, verbatim | Confirmed Mental Model section, verbatim |
 | 3 | First-action skill invocation | Only if the task explicitly requires one (e.g. `migration-safety` for schema work) — otherwise omit | `Skill({ skill: "diagnose" })` as the first action — always present |
-| 4 | Memory slice | Run `python3 skills/craft-spawn-prompt/scripts/memory_slice.py <guide-path>` and paste its output **verbatim** (the `<!-- memory-slice:Txxx -->` block: index lines naming the guide's Files-table paths, `Depends on` tasks or ID — T069: paste what must arrive), then this line verbatim: *Read `memory/MEMORY.md` in full only if your work reaches a file, hook, skill or decision the slice does not cover.* The **path** `memory/MEMORY.md` stays that fallback. Do **not** paste its contents | same |
+| 4 | Memory slice | Run `python3 skills/craft-spawn-prompt/scripts/memory_slice.py <guide-path>` and paste its output **verbatim** (the `<!-- memory-slice:Txxx -->` block: index lines naming the guide's Files-table paths, `Depends on` tasks or ID, plus under `### From decisions.md` the title of each `memory/decisions.md` entry whose `**Files**:` line names those paths — T145; T069: paste what must arrive), then this line verbatim: *Read `memory/MEMORY.md` in full only if your work reaches a file, hook, skill or decision the slice does not cover.* The **path** `memory/MEMORY.md` stays that fallback. Do **not** paste its contents | same |
 | 5 | Agent-guide pointer | `agents/<role>.md` from the guide's `**Agent guide**` field | same |
 | 6 | Trace-attribution instruction | The active-task state-file line below, verbatim | same |
 | 7 | Demonstration BEFORE-capture instruction | The BEFORE-capture line below, verbatim | same — for a bugfix guide, this is naturally satisfied by the Phase 1 repro loop the `diagnose` first action already builds; the instruction still restates the rule so the agent doesn't skip it under time pressure |
@@ -72,7 +72,7 @@ ask the user** (suggest `templates/PROJECT_SPEC_template.md`); never fall back t
 
 #### 6. Output
 Return: 1. the assembled prompt (fenced, ready for `Agent({ subagent_type, prompt })`); 2. the
-pre-flight verdict; 3. the recommended spawn model as `<cli> · <Cn> → <model>` (or STOP-and-ask); 4. for a `claude` CLI spawn, the sandboxed command in `references/sandbox.md` (T147). `Agent()` spawns are **not** sandboxed — they run with the Supervisor's permissions; say so whenever you pick that path.
+pre-flight verdict; 3. the recommended spawn model as `<cli> · <Cn> → <model>` (or STOP-and-ask) and the spawn mode — a background `Agent()` call unless the user asked to watch or the task runs on a non-Claude CLI (Stage 3 **Spawn mode** rule in `docs/claude-md/pipeline-stages.md`); 4. for a `claude` CLI spawn, the sandboxed command in `references/sandbox.md` (T147). `Agent()` spawns are **not** sandboxed — they run with the Supervisor's permissions; say so whenever you pick that path.
 
 The Supervisor reads this output and issues the `Agent()` call itself; this skill never calls it.
 

@@ -1,11 +1,11 @@
 ---
 name: wake
-description: "Mandatory cold-start orientation skill. Reads four live authoritative sources (git log, PROJECT_KANBAN.md, memory/MEMORY.md, active Learning Records) and emits a single compact ≤50-line structured briefing inline in the conversation. Invoke as the mandatory first step of every new Supervisor session, or manually via `/wake`. Replaces manually re-reading 500–1000+ lines of raw project files."
+description: "Mandatory cold-start orientation skill. Reads five live authoritative sources (git log, PROJECT_KANBAN.md, memory/MEMORY.md, uncommitted work in In Progress worktrees, active Learning Records) and emits a single compact ≤50-line structured briefing inline in the conversation. Invoke as the mandatory first step of every new Supervisor session, or manually via `/wake`. Replaces manually re-reading 500–1000+ lines of raw project files."
 ---
 
 ## Role: Cold-Start Orientation Specialist
 
-You are the Supervisor running a structured cold-start orientation pass. Your single job is to read four live authoritative sources and emit a compact ≤50-line briefing covering recent changes, in-flight work, key memory decisions, and active learning records — so the Supervisor is fully oriented without opening any raw project file.
+You are the Supervisor running a structured cold-start orientation pass. Your single job is to read five live authoritative sources and emit a compact ≤50-line briefing covering recent changes, in-flight work, key memory decisions, and active learning records — so the Supervisor is fully oriented without opening any raw project file.
 
 This skill is strictly read-only. It never writes, edits, or creates any file.
 
@@ -13,22 +13,23 @@ This skill is strictly read-only. It never writes, edits, or creates any file.
 
 - **Ask vs. Guess**: Never infer project state — read the actual sources. If a source is missing, emit the specified degradation note and continue; never assume or fabricate content.
 - **Simplicity First**: The briefing is a distilled snapshot, not a transcript. Show IDs and one-liners only. Do not reproduce full file contents.
-- **Surgical Changes**: Read only the four designated sources. Do not modify MEMORY.md, LR files, KANBAN, or any other file — this skill has no Write or Edit steps.
+- **Surgical Changes**: Read only the five designated sources. Do not modify MEMORY.md, LR files, KANBAN, or any other file — this skill has no Write or Edit steps.
 - **Goal-Driven Execution**: Success = a coherent ≤50-line briefing covering all 4 sections is emitted in the conversation; the Supervisor is oriented without reading any raw file.
 
 ---
 
 ### Workflow
 
-#### Step 1 — Source Reads (attempt all four before composing output)
+#### Step 1 — Source Reads (attempt all five before composing output)
 
-Read all four sources in parallel. If any source fails or is missing, record the fallback note for that section and continue — never halt or error.
+Read all five sources in parallel. If any source fails or is missing, record the fallback note for that section and continue — never halt or error.
 
 | Source | How to read | Fallback if missing or empty |
 |---|---|---|
 | Git history | Run `git log --oneline -10` via Bash tool | `"No git history found."` (if no commits) or `"Not a git repository."` (if git fails) |
 | `PROJECT_KANBAN.md` | Read full file, then filter to rows with status `In Progress` or `🔄` | `"No KANBAN found — project may be new or not yet planned."` |
 | `memory/MEMORY.md` | Read full file | `"No MEMORY.md found."` |
+| Uncommitted work in In Progress worktrees | Run `python3 skills/wake/scripts/dirty_worktrees.py` via Bash (read-only; prints one `Txxx <worktree> N modified, M untracked` line per In Progress task whose worktree has uncommitted changes, nothing otherwise) | No output = nothing to report; any failure is treated the same, never halt |
 | `memory/learning-records/LR-*.md` | Read all `.md` files; keep only those with `status: active` in frontmatter; sort by filename descending; take top 3 | `"No active Learning Records yet."` (same note if folder does not exist) |
 
 If this skill is invoked when the conversation already has substantial context (not a cold start), prepend a one-line note at the very top of the briefing:
@@ -59,6 +60,8 @@ Filter `PROJECT_KANBAN.md` to rows whose status column contains `In Progress` or
 ## 🔄 In-Flight Work
 - T009 — learn SKILL.md — core detection + write + promotion loop
 ```
+
+Then, under the list, emit each line from `dirty_worktrees.py` prefixed `⚠ uncommitted:`. This means *either* a background agent died mid-task *or* another live session is still working there — check the worktree's latest commit time and ask before relaunching or touching it. Omit when the script printed nothing.
 
 **Graceful degradation**:
 - If `PROJECT_KANBAN.md` does not exist: emit `"No KANBAN found — project may be new or not yet planned."`.
@@ -121,6 +124,7 @@ The 50-line cap is a hard constraint. Never emit more than 50 lines total.
 | No git repo | Section 1: `"Not a git repository."` — continue with remaining sections |
 | Git repo with 0 commits | Section 1: `"No commits yet."` |
 | KANBAN exists, no in-progress tasks | Section 2: `"No tasks currently in progress."` |
+| `dirty_worktrees.py` prints nothing or fails | Omit the `⚠ uncommitted:` lines — no note |
 | KANBAN missing | Section 2: `"No KANBAN found — project may be new or not yet planned."` |
 | All LRs are superseded | Section 4: `"No active Learning Records yet."` |
 | `memory/learning-records/` folder absent | Section 4: `"No active Learning Records yet."` |

@@ -2723,3 +2723,34 @@ evidence the instruction channel works — **not** evidence the model changed.
   cost real work. Bare `infra`/`secrets` words in a `git commit -m` currently trip it (open P2).
 - **`guide_sections.slice_section` can't find a heading that ends in `)`**. It appends `\b` after the heading, so
   `Files to Change (Predicted)` returns None silently. Look up the prefix `Files to Change` (T146 workaround; no fix yet).
+
+## T144–T149 batch: running four agents at once (2026-10-17)
+- **`verify` can't be invoked through the Skill tool** (`disable-model-invocation`). The user must type `/verify`,
+  so plan that hand-off before promising a push: the merge gate blocks until each task's verify row says pass.
+- **The shared `active_task` state file misattributes the Supervisor too.** After four concurrent agents, the last
+  one's ID (T148) stayed in the file, and `pre_agent_step_limit` killed the Supervisor's own smoke run as
+  "T148 exceeded 90 tool calls". The counter resets itself; rewrite or clear the state file after the agents finish.
+- **Shell install tests write anchors into the real home.** `tests/test_update_removals.sh` runs the trace hook with
+  the real `$HOME`, which created `~/.claude/harness-anchors/p6-noremote/`. Only `.claude/hooks/tests/conftest.py`
+  redirects anchors (open follow-up).
+- **The auto-mode classifier refuses a Supervisor probe that writes into the anchor folder** (`[Logging/Audit Tampering]`).
+  T148's SC8 refused-write check therefore has to be run by the user.
+- **`memory_slice` cold entries are noisy.** Broad keys (`PROJECT_SPEC.md`, `.claude/hooks/`) match many old entries,
+  bold sub-paragraphs (`**AC7 — …**`) split as separate entries, and ties keep the oldest entries (open follow-up).
+- **Agents skip parts of the Startup reads.** 2 of 4 skipped or partly read the role guide, which is already their system
+  prompt; T149 read only 60 lines of PROJECT_SPEC.md. Phase 0.5 records these and the role-guide case is waived.
+
+## A dirty worktree is not proof of a dead agent — another session may be live (T150, 2026-10-17)
+The Supervisor saw `wt-t148` with uncommitted files after the spawning session ended and told the user the
+agent "likely died". A second, concurrent Supervisor session was in fact still working T148 and merged it
+~3h later. **Rule**: before calling work abandoned or relaunching, check the worktree's latest commit time and
+`git log` on the integration branch, and ask; `wake`'s `⚠ uncommitted:` line says "died *or* live session".
+Two sessions on one repo also share the board and the `active_task` state file — re-read the board right
+before moving a row.
+
+## Gitignored files never make a worktree "dirty" — pick a probe name git tracks (T152, 2026-10-19)
+At T152's `/verify` the first probe file was `verify-probe.tmp`; `.gitignore:37` ignores `*.tmp`, so
+`git status --porcelain` was empty and `dirty_worktrees.py` correctly printed nothing — it looked like the fix
+had failed. Before trusting an empty result from a dirty-worktree check, run `git check-ignore -v <file>` on
+the probe, or use a plain `.txt` name.
+**Files**: skills/wake/scripts/dirty_worktrees.py, tests/test_dirty_worktrees.py

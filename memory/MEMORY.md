@@ -106,7 +106,7 @@
 - [T082 merged: untrusted-content trust boundary](decisions.md) — rules live in `docs/claude-md/untrusted-content-boundary.md`
 
 - [T090 merged: provider adapters, split by mandate](decisions.md) — `CLAUDE.md` stays primary
-- [The hot-tier budget is stated as 50,000 in 5 places, enforced at 45,000](learnings.md#the-hot-tier-budget-is-stated-as-50000-in-three-places-and-enforced-at-45000) — broke `main`
+- [The hot-tier budget is stated as 50,000 in 5 places, enforced at 45,000](learnings.md) — broke `main`
 - [setup.sh clones the remote, so unmerged work is unverifiable](learnings.md) — an install can run green and build a tree without your change
 - [Blocked != broken in a verify verdict](learnings.md) — T090's provider surface was unreachable on auth; keep observed apart from inferred, never round up to PASS
 - ["Check first" guide rows push a Stage 2 call downward](learnings.md) — T090's site row was obeyed exactly and still wrong; Never condition on what the task changes
@@ -149,6 +149,8 @@
 - [T137 merged: backups named `<file>.bak-<prev kit_commit>`, Update `o` backs up](decisions.md) — lock gains `kit_commit`; date fallback; hex-only from the lock; suffix = last kit installed, not edit origin
 - [T138 merged: inline-SVG pipeline diagram in site Overview](decisions.md) — one node per `## Stage` heading, drift-tested
 - [T146/T147: sensitive-path ask hook; sub-agent sandbox is CLI-only (b)](decisions.md) — predicted path ⇒ no decision (never `allow`); `Agent()` spawns not sandboxed; T147 /verify FAIL on Ubuntu userns
+- [T144/T145/T148/T149 merged: lane check, decisions.md slice, anchored trace, prod approval](decisions.md) — lane_check needs `base...HEAD`; trace anchors in `~/.claude/harness-anchors` behind deny-only rules; merge-settings unions kit deny
+- [T150: spawns are background `Agent()` by default; `wake` flags dirty In Progress worktrees](decisions.md) — CLI pane only on request / non-Claude CLI; sandbox profile unused until nested-userns passes
 
 ### Patterns & Gotchas
 - [A short SHA is hex — lock pair regex would read `kit_commit` as a file](learnings.md) — scope lock readers to the `"files"` block (T137)
@@ -163,18 +165,18 @@
 - [Assert agreement across a constant's occurrences, not presence of the current value](learnings.md) — a shipped stub contradicted itself where no in-repo file showed it
 - [Clear `__pycache__` after a mutation control](learnings.md) — stale bytecode outlived a `git checkout` restore; the mirror case is a false GREEN.
 - [Docs that describe a gate in terms the gate does not use](learnings.md) — 2 instances in one session (T079 pointer form, T080 body-vs-file line budget); matching the cited authority is not the same as being right.
-- [Guards that lock out the role meant to release them](learnings.md#guards-that-lock-out-the-role-meant-to-release-them) — step-limit family, 4 incidents; lifetime 4 lockouts / 2 lost runs / 0 runaways caught.
-- [The vacuous-assertion family](learnings.md#the-vacuous-assertion-family) — 7 instances; an assertion never observed failing is not evidence. Attack the metric from more than one direction.
-- [Evidence integrity: a checkmark is a claim, not a fact](learnings.md#evidence-integrity-a-checkmark-is-a-claim-not-a-fact) — 5 incidents; the reviewer re-runs it and pastes their own output.
-- [Worktree and isolation gotchas](learnings.md#worktree-and-isolation-gotchas) — `isolation:"worktree"` forks from `main`, not your branch; commit Stage 2 artifacts before any spawn
-- [How the merge gate has failed to gate](learnings.md#how-the-merge-gate-has-failed-to-gate) — 4 distinct ways, plus its input layer; a guard is only as strong as the layer feeding it.
+- [Guards that lock out the role meant to release them](learnings.md) — step-limit family, 4 incidents; lifetime 4 lockouts / 2 lost runs / 0 runaways caught.
+- [The vacuous-assertion family](learnings.md) — 7 instances; an assertion never observed failing is not evidence. Attack the metric from more than one direction.
+- [Evidence integrity: a checkmark is a claim, not a fact](learnings.md) — 5 incidents; the reviewer re-runs it and pastes their own output.
+- [Worktree and isolation gotchas](learnings.md) — `isolation:"worktree"` forks from `main`, not your branch; commit Stage 2 artifacts before any spawn
+- [How the merge gate has failed to gate](learnings.md) — 4 distinct ways, plus its input layer; a guard is only as strong as the layer feeding it.
 - [Don't spawn in parallel onto a known-open race](learnings.md) — the shared-`.state` race was flagged open since T047; Serialize until the flagged risk is closed
 - [Reverting a mutation with `git checkout` also reverts your fix](learnings.md) — mutation-testing an *uncommitted* Stage-4 fix and undoing via `git checkout <file>` restores the committed state, silently deleting
 - [Never quote a `###` heading inside a KANBAN row](learnings.md) — `find_kanban_section`'s `(?=###|\Z)` truncates the section there
 - [A defect can reproduce itself during its own write-up](learnings.md) — T045's guide auto-registered a row whose title contained `###`, truncating Todo so T044/T040/T041 vanished
 - [security-review now actually runs](learnings.md) — fixed 2026-07-23 with user consent via `git remote add origin <same-url>` + `set-head origin main`
 - [CLAUDE.md gains Supervisor Communication Style section, 2026-08-03](decisions.md) — lives in the harness's master CLAUDE.md so setup.sh propagates to other repos (not machine-level `~/.claude/CLAUDE.md`, wrong
-- [CLAUDE.md gains context-overwhelm self-monitoring rule, 2026-08-03](decisions.md#claudemd-gains-a-context-overwhelm-self-monitoring-rule-2026-08-03) — the Supervisor's own long-session accuracy, judged off
+- [CLAUDE.md gains context-overwhelm self-monitoring rule, 2026-08-03](decisions.md) — the Supervisor's own long-session accuracy, judged off
 - [New skill: compact-advisor, 2026-08-03](decisions.md) — operationalizes the self-monitoring rule above, dual-triggered (automatic + `/compact-advisor` manual)
 - [T049 merged: CLAUDE.md split 565→198 lines, 2026-08-04](decisions.md) — 5 docs/claude-md/ files
 - [T052 merged: Stuck-Loop Escalation checkpoint, 2026-08-04](decisions.md) — diagnose STOPs after 2 disproven hypotheses
@@ -187,7 +189,7 @@
 - [A feature whose suite only passes while the feature is unused](learnings.md) — armed: 9 failed / unarmed: 121 passed
 - [$CLAUDE_PROJECT_DIR: set for hooks, EMPTY in an agent's Bash tool call](learnings.md) — the hook side can resolve paths from it, the agent side cannot; embed a literal absolute path in the spawn prompt instead
 - [A "never raises" contract does not cover module import](learnings.md) — `int(os.environ...)` at import raised below the contract, and callers' fail-open `except Exception` around the import turned it into silent
-- [A test that shares a root can't detect a root-split defect](learnings.md#a-test-that-shares-a-root-cannot-detect-a-root-split-defect-2026-07-31-t047-stage-4) — T047's write/read paths collapse inside one worktree
+- [A test that shares a root can't detect a root-split defect](learnings.md) — T047's write/read paths collapse inside one worktree
 - ["It runs now" is not "it applies now"](learnings.md) — the built-in diffs the **checked-out** branch vs `origin/HEAD`
 - [Working-tree-vs-HEAD is a scope guard, not a repeatable test](learnings.md) — works exactly once, pre-commit; after commit baseline==current so delta 0 fails forever
 - [post_agent_move_to_review.py fires at spawn, not completion](learnings.md) — PostToolUse/`Agent` fires when the async spawn is *issued*, so the board says Ready for Review before work exists
@@ -204,11 +206,11 @@
 - [Kanban merge hygiene when both sides edit the board](learnings.md) — restore Supervisor-side PROJECT_KANBAN.md to the merge base BEFORE merging (only branch changed it → no conflict), merge, THEN move to Done
 - [Install-era shell gotchas (T031–T033)](learnings.md) — temp-dir cleanup must expose a var not stdout (`$(fn)` registers the EXIT trap in a subshell)
 - [T064 merged: reviewer sections split out of the implementer's guide](decisions.md) — Demonstration + Evidence move to TASK_REVIEW_Txxx.md
-- [A hook that blocks via stdout JSON fails OPEN when it raises](learnings.md#a-hook-that-blocks-via-stdout-json-fails-open-when-it-raises-t064-2026-08-09) — fail-closed must be actively emitted, never obtained by
-- [A test can pin a section's *location*](learnings.md#a-test-can-pin-a-sections-location-and-a-move-shaped-task-cannot-pass-it-t064-2026-08-09) — two tests pinned the `verify` row to the files T064 vacates
+- [A hook that blocks via stdout JSON fails OPEN when it raises](learnings.md) — fail-closed must be actively emitted, never obtained by
+- [A test can pin a section's *location*](learnings.md) — two tests pinned the `verify` row to the files T064 vacates
 - [A percentage claim needs more than one sample](learnings.md) — T064's ≥25% size claim held on 4 real guides (30.5–33.6%) and came in at **16.3%** on a 5th; State the range and name the outlier
 
-- [A scope guard committed as an invariant blocks what it guarded](learnings.md#a-scope-guard-committed-as-an-invariant-blocks-the-thing-it-was-guarding-t065-2026-08-09) — a pinned count/hash/line forbids the next
+- [A scope guard committed as an invariant blocks what it guarded](learnings.md) — a pinned count/hash/line forbids the next
 - [T066 merged: dedupe the startup read set toward the guaranteed channel](decisions.md) — consolidation went INTO the role guides, not the shared template
 - [Dedupe toward the guaranteed channel, not the tidy one](learnings.md) — the instinct is to make the shared template the single source and thin the leaves
 - [A comparison whose two sides came from different readers](learnings.md) — T066's AC7 test passed **while the files were untouched**: `git show` (bytes) vs `read_text` (chars), and these files are dense with
@@ -235,9 +237,9 @@
 
 - [T060 merged: diagnose gains cross-tier boundary instrumentation](decisions.md) — discovery-only boundary inventory
 - [T061 merged: per-spawn cost telemetry captured from the harness's own payload](decisions.md) — Agent records gain a guarded spawn object
-- [Volume is not cost when nearly everything is a cache read](learnings.md#volume-is-not-cost-when-nearly-everything-is-a-cache-read-2026-08-07-t061-investigation) — trimming injected context is worth ~a tenth of
+- [Volume is not cost when nearly everything is a cache read](learnings.md) — trimming injected context is worth ~a tenth of
 - [Check the measurement isn't already arriving before building an instrument](learnings.md) — DDR-0001 burned two windows failing to capture cost by hand from `/cost` and DDR-0002 retired the effort, while the
-- [An empty Todo column can mean "never registered", not "nothing left"](learnings.md#an-empty-todo-column-can-mean-never-registered-not-nothing-left-2026-08-07) — T061 read 0 Todo/59 Done and looked finished
+- [An empty Todo column can mean "never registered", not "nothing left"](learnings.md) — T061 read 0 Todo/59 Done and looked finished
 - [T067 merged: diagnose gains a root-cause rule, backward tracing, red flags](decisions.md) — the skill asked agents to REPORT a root cause but never required the fix be AT one
 - [DDR-0004: Gate 1 upheld — cheaper spawns, not fewer](../docs/ddr/0004-uphold-hard-stop-gate-1-over-spawn-elimination.md) — user ruling 2026-08-07: spawn *count* is the cost lever, but cutting spawns means the
 - [T063 merged: what event-trace attributes, and how memory reaches agents](decisions.md) — invalidates the ~10,700-tok-per-spawn premise
@@ -261,33 +263,36 @@
 - [A "must not appear" test must skip record files](learnings.md) — T136: AC8 tripped on the KANBAN row quoting the verify result
 - [Claude sandbox Bash dies under Ubuntu nested-userns restriction](learnings.md) — `apparmor_restrict_unprivileged_userns=1` ⇒ `apply-seccomp … nested userns` on every Bash; probe nested, not bare bwrap
 - [Hook `ask` = deny in headless runs; `slice_section` misses `…)` headings](learnings.md) — over-asking kills headless sub-agent work; look up `Files to Change` prefix
+- [Four agents at once: verify is user-only; stale active_task misattributes the Supervisor](learnings.md) — plan the `/verify` hand-off; clear the state file after the agents finish
+- [A dirty worktree is not proof of a dead agent](learnings.md) — T150: a concurrent session may be live; check commit times and ask before relaunching
+- [Gitignored files never make a worktree dirty](learnings.md) — T152 `/verify`: a `.tmp` probe is ignored, so an empty `dirty_worktrees.py` result was correct; `git check-ignore -v` the probe first
 
 ### Learning Records
 <!-- One-liner per active LR: - [LR-NNNN slug](memory/learning-records/LR-NNNN-slug.md) — summary -->
 <!-- Superseded LRs: ~~old text~~ → see LR-NNNN -->
 
-- [An agent can satisfy a gate by editing the thing the gate measures](learnings.md#an-agent-can-satisfy-a-gate-by-editing-the-thing-the-gate-measures-t102-2026-09-05) — check the diff against the measured artifact, not just the edit
-- [A note that states a count states a measurement, and measurements expire](learnings.md#a-note-that-states-a-count-states-a-measurement-and-measurements-expire-t102-2026-09-05) — the fix for a stale-count note shi
-- [T102 merged: the board no longer lies about its own baseline](decisions.md#t102-merged-the-board-no-longer-lies-about-its-own-baseline-2026-09-05) — README cap 60→75, footer names real canon; hot tier via user-run /compact-memory
-- [T104 merged: the site names v2.0.0](decisions.md#t104-merged-the-site-names-the-release-it-actually-ships-with-2026-09-05) — sidebar/footer parsed from RUNBOOK's Release Log at test time, not hardcoded
-- [Merge gate reads Kanban section, not the checkbox](learnings.md#the-merge-gate-reads-kanban-section-membership-not-the-checkbox-t104-2026-09-05) — move the row under ### Done and commit that on the checked-out branch before merging, not just the feature branch
+- [An agent can satisfy a gate by editing the thing the gate measures](learnings.md) — check the diff against the measured artifact, not just the edit
+- [A note that states a count states a measurement, and measurements expire](learnings.md) — the fix for a stale-count note shi
+- [T102 merged: the board no longer lies about its own baseline](decisions.md) — README cap 60→75, footer names real canon; hot tier via user-run /compact-memory
+- [T104 merged: the site names v2.0.0](decisions.md) — sidebar/footer parsed from RUNBOOK's Release Log at test time, not hardcoded
+- [Merge gate reads Kanban section, not the checkbox](learnings.md) — move the row under ### Done and commit that on the checked-out branch before merging, not just the feature branch
 
-- [A commit message can overclaim what its own evidence file records](learnings.md#a-commit-message-can-overclaim-what-its-own-evidence-file-records-t104-2026-09-05) — 3rd in 3 tasks: code right, summary wrong
+- [A commit message can overclaim what its own evidence file records](learnings.md) — 3rd in 3 tasks: code right, summary wrong
 
-- [A suppression directive names a check code, and codes aren't version-stable](learnings.md#a-suppression-directive-names-a-check-code-and-codes-are-not-stable-across-linter-versions-t105-2026-09-06) — T105: a *cor
-- [A test that mirrors another file's list by copying it is a comment, not a mechanism](learnings.md#a-test-that-mirrors-another-files-list-by-copying-it-is-a-comment-and-not-a-mechanism-t105-2026-09-06) — third sig
+- [A suppression directive names a check code, and codes aren't version-stable](learnings.md) — T105: a *cor
+- [A test that mirrors another file's list by copying it is a comment, not a mechanism](learnings.md) — third sig
 - [shellcheck IS available here — fetch the static binary](learnings.md) — supersedes the 2026-07-17 "no shellcheck in this env" note
 - [T105 merged: the shellcheck gate on main is green again](decisions.md) — 4 findings fixed, `ci.yml` unpinned by user decision, merged with 2 open follow-ups
 
-- [Public repo = CI history without `gh` auth](learnings.md#correction-to-the-t105-record-the-red-ci-dates-to-the-v200-promotion-not-to-t097-2026-09-06) — `curl api.github.com/.../actions/runs` needs no login; code age ≠ gate-red age
+- [Public repo = CI history without `gh` auth](learnings.md) — `curl api.github.com/.../actions/runs` needs no login; code age ≠ gate-red age
 
-- [The README described a product a Codex user would not receive](learnings.md#the-readme-described-a-product-a-codex-user-would-not-receive-t106-2026-09-06) — docs that invite a config must say what it silently
-- [An anti-drift test that guards one direction is half a test](learnings.md#an-anti-drift-test-that-guards-one-direction-is-half-a-test-t106-2026-09-06) — write the negative case both ways
-- [A deploy nobody wrote down is indistinguishable from one that never happened](learnings.md#a-relative-link-to-an-html-file-is-inert-on-github) — the site URL blocker stood 16 days because the URL was recorded
+- [The README described a product a Codex user would not receive](learnings.md) — docs that invite a config must say what it silently
+- [An anti-drift test that guards one direction is half a test](learnings.md) — write the negative case both ways
+- [A deploy nobody wrote down is indistinguishable from one that never happened](learnings.md) — the site URL blocker stood 16 days because the URL was recorded
 - [T106 merged: the README names its release](decisions.md) — v2.0.0 named, Codex skip note, multi-harness framing, live site links
 
-- [A path-exclusion gate can fail open, and this shell makes it likely](learnings.md#a-path-exclusion-gate-can-fail-open-and-this-shell-makes-it-likely-t107-2026-09-06) — Use `command grep` + `--exclude-dir=`
-- [An extension-filtered grep cannot establish "every occurrence"](learnings.md#an-extension-filtered-grep-cannot-establish-every-occurrence-t107-2026-09-06) — `--include='*.sh'` etc
+- [A path-exclusion gate can fail open, and this shell makes it likely](learnings.md) — Use `command grep` + `--exclude-dir=`
+- [An extension-filtered grep cannot establish "every occurrence"](learnings.md) — `--include='*.sh'` etc
 - [T107 merged: the product is Easy Kit on every surface](decisions.md) — 5 one-line edits; install path and audit trail deliberately untouched.
 
 - [An agent that never exits looks like one still working](learnings.md) — T109r2 idled 3h20m after committing; on a CPU-flat warning, check the worktree's commits before waiting
