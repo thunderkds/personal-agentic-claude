@@ -12,7 +12,8 @@ index (the most-read file before a spawn's first edit — docs/token-focus-findi
   * every backticked path in the first column of the *Files to Change* and *Files Must NOT
     Touch* tables, plus its basename. A glob matches the prefix before the glob. A generic
     basename (`SKILL.md`) is replaced by its directory name, which is how memory names a skill;
-  * every `T<digits>` on the `**Depends on**` line;
+  * every `T<digits>` on the `**Depends on**` line (and every board ID, when
+    `.claude/board.json` sets `id_pattern` — T153);
   * the task's own ID.
 
 **Matching** — a key matches a whole path token: not preceded by a path character, so the
@@ -36,6 +37,18 @@ import os
 import re
 import sys
 
+# Task IDs: `T\d+`, plus the board's `id_pattern` when `.claude/board.json` sets one
+# (T153). The helper ships with the kit's hooks; without it, today's `T\d+` only.
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
+    os.path.realpath(__file__))))), ".claude", "hooks", "lib"))
+try:
+    from board.config import LOCAL_PATTERN, task_id_pattern
+except Exception:  # pragma: no cover - fall back to local IDs
+    LOCAL_PATTERN = r"T\d+"
+
+    def task_id_pattern(root=None, local=LOCAL_PATTERN, bounded=False):
+        return rf"(?<![A-Za-z0-9_])(?:{local})(?![A-Za-z0-9_])" if bounded else local
+
 MAX_LINES = 30
 MAX_CHARS = 4000
 GENERIC_BASENAMES = {"SKILL.md"}
@@ -43,10 +56,10 @@ PATH_CHARS = "A-Za-z0-9_./-"
 TABLE_HEADINGS = re.compile(r"^## Files (?:to Change|Must NOT Touch)\b", re.IGNORECASE)
 
 
-def task_id_of(guide_path, text):
-    m = re.search(r"TASK_GUIDE_(T\d+)", os.path.basename(guide_path))
+def task_id_of(guide_path, text, id_pattern=LOCAL_PATTERN):
+    m = re.search(rf"TASK_GUIDE_({id_pattern})", os.path.basename(guide_path))
     if not m:
-        m = re.search(r"^# TASK_GUIDE\W+(T\d+)", text, re.MULTILINE)
+        m = re.search(rf"^# TASK_GUIDE\W+({id_pattern})", text, re.MULTILINE)
     return m.group(1) if m else "T???"
 
 
@@ -83,14 +96,15 @@ def keys_for_path(path):
     return keys
 
 
-def extract_keys(guide_path, text):
+def extract_keys(guide_path, text, id_pattern=LOCAL_PATTERN):
     keys = []
     for path in table_paths(text):
         keys.extend(keys_for_path(path))
     dep = re.search(r"\*\*Depends on\*\*:\s*(.+)", text)
     if dep:
-        keys.extend((t, False) for t in re.findall(r"\bT\d+\b", dep.group(1)))
-    keys.append((task_id_of(guide_path, text), False))
+        bounded = rf"(?<![A-Za-z0-9_])(?:{id_pattern})(?![A-Za-z0-9_])"
+        keys.extend((t, False) for t in re.findall(bounded, dep.group(1)))
+    keys.append((task_id_of(guide_path, text, id_pattern), False))
     seen, unique = set(), []
     for key, is_prefix in keys:
         if key and key not in seen:
@@ -207,9 +221,10 @@ def add_cold(task, keys, matched, hot_out, hot_header, hot_entries):
     return render(task, hot_header, hot_entries, cold_header(len(kept)), [t for _, t, _ in kept])
 
 
-def build_slice(guide_path, guide_text, memory_text, decisions_text=None):
-    task = task_id_of(guide_path, guide_text)
-    keys = extract_keys(guide_path, guide_text)
+def build_slice(guide_path, guide_text, memory_text, decisions_text=None,
+                id_pattern=LOCAL_PATTERN):
+    task = task_id_of(guide_path, guide_text, id_pattern)
+    keys = extract_keys(guide_path, guide_text, id_pattern)
     cold = cold_matches(keys, decisions_text)
     if memory_text is None:
         header = "memory/MEMORY.md — MEMORY.md not found; no slice."
@@ -276,7 +291,8 @@ def main(argv):
             decisions_text = f.read()
     except OSError:
         decisions_text = None
-    sys.stdout.write(build_slice(guide_path, guide_text, memory_text, decisions_text))
+    sys.stdout.write(build_slice(guide_path, guide_text, memory_text, decisions_text,
+                                 task_id_pattern(root)))
     return 0
 
 

@@ -14,15 +14,15 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_board_id_pattern.py` (30 tests: merge gate, register-on-write, spawn validator incl. path-unsafe IDs, resolve_task_id, memory_slice, token_meter, dirty_worktrees, bad-config fallback). `python3 -m pytest .claude/hooks/tests tests -q` → `1136 passed, 25 subtests passed in 43.86s` (Supervisor re-run 2026-10-19, after 5377ff0) |
+| Verification command run | ☑ pass | Demonstration AFTER below: merge gate lists `T142, ENG-170`; spawn validator blocks missing `ENG-171` guide — pass |
+| Negative cases hold | ☑ pass | No config → only `T\d+` (tests `*_without_config_*`); invalid JSON → one warning + `T\d+` fallback (seen live: `[board] ignoring …board.json: not valid JSON`); path-unsafe IDs dropped — pass |
+| verify | ☑ pass | /verify run by user 2026-10-19: headless `claude -p` session in a scratch project built from wt-t153 with `id_pattern` `ENG-\d+`. Real harness merge gate → `Tasks still In Progress: T142, ENG-170`; real Agent spawn naming `TASK_GUIDE_ENG-171.md` → `missing TASK_GUIDE for: ENG-171`; `Task ID: eng-170` → spawn allowed; capturing-group pattern → falls back to `T142` only. Verdict PASS — pass |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | code-review + security-review on `git diff feat/online-board...HEAD` of wt-t153 + direct callers; 0 P0/P1, P2 fixed (5377ff0), 0 HIGH/MED security. Reports: `reports/code-review_feat-t153-board-id-pattern_20261019T141600.html`, `reports/security-review_feat-t153-board-id-pattern_20261019T141600.html`. lane_check: `EXCEEDS (lines 787 > 500)` — vague guide Files table, C2 kept |
+| Full smoke suite still green (no regression) | ☑ pass | 1106 baseline → 1136 passed, 0 failed — pass |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | Backend/hook-only task, no UI |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | Backend/hook-only task, no UI |
+| **UI: Responsiveness at target viewports** | ☑ N/A | Backend/hook-only task, no UI |
 
 ---
 
@@ -33,12 +33,39 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured by the implementing agent at base commit `b06653c`, before any T153 commit.
+Script: copies `.claude/hooks` into a temp project, writes `.claude/board.json` =
+`{"id_pattern": "ENG-\\d+"}` and a board with `T142` and `ENG-170` In Progress, then pipes a
+`git push` event into the merge gate and an `Agent` event naming a missing
+`tasks/TASK_GUIDE_ENG-171.md` into the spawn validator.
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+```
+== date: 2026-10-19T05:10:15Z
+== .claude/board.json: {"id_pattern": "ENG-\d+"}
+== merge gate on 'git push':
+{"decision": "block", "reason": "[hook:pre_bash] Pipeline gate failed — cannot push/merge:\n  • Tasks still In Progress: T142\nComplete Stage 4 review and Stage 5 verify first.\n  Note: if a task above is missing its trace record ... (remedy text elided)"}
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+== spawn validator, prompt names missing tasks/TASK_GUIDE_ENG-171.md:
+(exit 0; empty output = spawn allowed)
+```
 
-**WITNESS**: [who ran it and when — derived from `memory/event-trace/T153.jsonl`, never the
-implementing agent alone]
+The merge gate does not see `ENG-170` (In Progress, but not listed), and the spawn validator lets
+an agent start on `ENG-171`, a task with no guide (Hard-Stop Gate 1 not enforced for board IDs).
+Baseline suite at the same commit: `1106 passed, 25 subtests passed in 19.77s`.
+
+**AFTER**: same scenario, run by the Supervisor on 5377ff0:
+
+```
+== date: 2026-10-19T07:15:14Z
+== .claude/board.json: {"id_pattern": "ENG-\d+"}
+== merge gate on 'git push':
+block
+  • Tasks still In Progress: T142, ENG-170
+== spawn validator, prompt names missing tasks/TASK_GUIDE_ENG-171.md:
+block
+[hook:pre_agent] Cannot spawn agent — missing TASK_GUIDE for: ENG-171. Run Stage 2 planning first to generate the guide(s) in tasks/.
+```
+
+**DELTA**: With `.claude/board.json` setting `id_pattern`, every gate now recognises board IDs like `ENG-170` next to `T142`, so Hard-Stop Gate 1 and the merge gate hold for board tasks.
+
+**WITNESS**: Supervisor (main session), 2026-10-19T07:15Z, Bash calls attributed to T153 via the active-task state file.

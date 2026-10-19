@@ -85,18 +85,51 @@ a hook that runs on every tool call in the repo can never crash or block on it.
 """
 import os
 import re
+import sys
 from datetime import datetime, timezone
+
+# Board IDs (T153). This module must never fail to import (both callers would lose
+# attribution repo-wide), so an absent `board` package degrades to today's `T` IDs.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+try:
+    from board.config import (  # noqa: E402
+        PATH_SAFE_ID,
+        normalize_task_id as _canonical_task_id,
+        task_id_pattern,
+    )
+except Exception:  # pragma: no cover - exercised by copying this file alone
+    PATH_SAFE_ID = re.compile(r"\AT\d+\Z")
+
+    def _canonical_task_id(task_id):
+        return "T" + str(task_id).strip().lstrip("Tt").zfill(3)
+
+    def task_id_pattern(root=None, local=r"T\d+", bounded=False):
+        return rf"(?<![A-Za-z0-9_])(?:{local})(?![A-Za-z0-9_])" if bounded else local
 
 ENV_VAR = "CLAUDE_ACTIVE_TASK"
 
 # tool_input fields whose value is a file-system path. Explicit list by design.
 PATH_FIELDS = ("file_path", "notebook_path", "path")
 
-ENV_TASK_PATTERN = re.compile(r"T(\d{3})\Z", re.IGNORECASE)
-GUIDE_PATH_PATTERN = re.compile(r"TASK_GUIDE_T(\d+)(?:_[A-Z0-9_]+)?\.md", re.IGNORECASE)
-TASK_ID_DECLARATION_PATTERN = re.compile(
-    r"(?:\*\*Task ID\*\*|Task ID)\s*:\s*T(\d+)\b", re.IGNORECASE
-)
+# The `T` alternatives below are today's patterns; `task_id_pattern` adds the board's
+# `id_pattern` (T153) when `.claude/board.json` sets one. Built per call, not at import:
+# the config lives under `_resolve_root()`, and a hook process is short-lived anyway.
+ENV_TASK_LOCAL = r"T\d{3}"
+
+
+def _env_task_pattern():
+    return re.compile(rf"({task_id_pattern(_resolve_root(), ENV_TASK_LOCAL)})\Z", re.IGNORECASE)
+
+
+def _guide_path_pattern():
+    return re.compile(rf"TASK_GUIDE_({task_id_pattern(_resolve_root())})(?:_[A-Z0-9_]+)?\.md",
+                      re.IGNORECASE)
+
+
+def _task_id_declaration_pattern():
+    return re.compile(rf"(?:\*\*Task ID\*\*|Task ID)\s*:\s*"
+                      rf"({task_id_pattern(_resolve_root(), bounded=True)})", re.IGNORECASE)
+
 
 _LIB_DIR = os.path.dirname(os.path.abspath(__file__))
 _HOOKS_DIR = os.path.dirname(_LIB_DIR)
@@ -162,14 +195,17 @@ def _resolve_max_age_s():
 ACTIVE_TASK_MAX_AGE_S = _resolve_max_age_s()
 
 
-def normalize_task_id(digits):
-    """`44` -> `T044`; digit strings longer than 3 are kept as-is."""
-    return "T" + str(digits).zfill(3)
+def normalize_task_id(task_id):
+    """`44` / `t44` -> `T044` (digit strings longer than 3 are kept as-is); a board ID
+    is upper-cased (`eng-170` -> `ENG-170`). None when the result could not safely
+    name a file (an over-broad `id_pattern` must not reach a trace path)."""
+    canonical = _canonical_task_id(task_id)
+    return canonical if PATH_SAFE_ID.match(canonical) else None
 
 
 def _task_id_from_env():
     raw = os.environ.get(ENV_VAR, "")
-    match = ENV_TASK_PATTERN.match(raw.strip())
+    match = _env_task_pattern().match(raw.strip())
     return normalize_task_id(match.group(1)) if match else None
 
 
@@ -183,7 +219,7 @@ def _task_id_from_state_file():
         if len(lines) < 2:
             return None
 
-        match = ENV_TASK_PATTERN.match(lines[0].strip())
+        match = _env_task_pattern().match(lines[0].strip())
         if not match:
             return None
 
@@ -204,7 +240,7 @@ def _task_id_from_path_fields(tool_input):
         value = tool_input.get(field)
         if not isinstance(value, str):
             continue
-        match = GUIDE_PATH_PATTERN.search(value)
+        match = _guide_path_pattern().search(value)
         if match:
             return normalize_task_id(match.group(1))
     return None
@@ -214,7 +250,7 @@ def _task_id_from_agent_prompt(tool_input):
     prompt = tool_input.get("prompt")
     if not isinstance(prompt, str):
         return None
-    for pattern in (GUIDE_PATH_PATTERN, TASK_ID_DECLARATION_PATTERN):
+    for pattern in (_guide_path_pattern(), _task_id_declaration_pattern()):
         match = pattern.search(prompt)
         if match:
             return normalize_task_id(match.group(1))
