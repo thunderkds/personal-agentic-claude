@@ -33,8 +33,20 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured by backend-developer in `../wt-t154` on `b37c311`, before any T154 commit:
+
+```
+$ date -u +"%Y-%m-%dT%H:%M:%SZ"; git log --oneline -1; python3 scripts/board_sync.py pull; echo "exit=$?"; ls .claude/hooks/lib/board/
+2026-10-19T07:23:52Z
+b37c311 memory(T153): merge-gate prose scan + bad board.json fallback learnings
+python3: can't open file '/home/hungnguyenhuu/workspace/pets/wt-t154/scripts/board_sync.py': [Errno 2] No such file or directory
+exit=2
+__init__.py
+config.py
+```
+
+No pull command exists and the board package has only T153's ID config: nothing can render
+`PROJECT_KANBAN.md` or a guide from a board.
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
