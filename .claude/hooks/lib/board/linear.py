@@ -11,7 +11,7 @@ import json
 import urllib.error
 import urllib.request
 
-from board.base import BoardAdapter, BoardError, Task
+from board.base import BoardAdapter, BoardAuthError, BoardError, BoardUnavailable, Task
 
 URL = "https://api.linear.app/graphql"
 TIMEOUT = 30
@@ -28,6 +28,15 @@ LIST_QUERY = """query Issues($filter: IssueFilter, $after: String) {
   }
 }""" % ISSUE_FIELDS
 GET_QUERY = "query Issue($id: String!) { issue(id: $id) { %s } }" % ISSUE_FIELDS
+
+COMMENT_MUTATION = """mutation Comment($issueId: String!, $body: String!) {
+  commentCreate(input: {issueId: $issueId, body: $body}) { success }
+}"""
+COMMENTS_QUERY = "query Comments($id: String!) { issue(id: $id) { comments(first: 250) { nodes { body } } } }"
+STATES_QUERY = "query States($id: String!) { issue(id: $id) { id team { states { nodes { id name } } } } }"
+STATUS_MUTATION = """mutation Status($id: String!, $stateId: String!) {
+  issueUpdate(id: $id, input: {stateId: $stateId}) { success }
+}"""
 
 
 def task_from_node(node):
@@ -65,12 +74,17 @@ class LinearBoard(BoardAdapter):
                 remaining = response.headers.get("X-RateLimit-Requests-Remaining")
         except urllib.error.HTTPError as exc:
             if exc.code == 429:
-                raise BoardError("Linear rate limit reached (HTTP 429); try again later") from None
+                raise BoardUnavailable("Linear rate limit reached (HTTP 429); try again later") from None
+            if exc.code in (401, 403):
+                raise BoardAuthError("Linear rejected the API key (HTTP 401/403); "
+                                     "check LINEAR_API_KEY") from None
+            if exc.code >= 500:
+                raise BoardUnavailable(f"Linear returned HTTP {exc.code}") from None
             raise BoardError(f"Linear returned HTTP {exc.code}") from None
         except urllib.error.URLError:
-            raise BoardError("cannot reach Linear (network error)") from None
+            raise BoardUnavailable("cannot reach Linear (network error)") from None
         except (OSError, ValueError):
-            raise BoardError("no usable answer from Linear (timeout or invalid response)") from None
+            raise BoardUnavailable("no usable answer from Linear (timeout or invalid response)") from None
         if not isinstance(body, dict) or body.get("errors") or not isinstance(body.get("data"), dict):
             raise BoardError("Linear rejected the query (GraphQL error)")
         try:
@@ -101,3 +115,33 @@ class LinearBoard(BoardAdapter):
         data, _ = self._post(GET_QUERY, {"id": task_id})
         node = data.get("issue")
         return task_from_node(node) if isinstance(node, dict) else None
+
+    def add_comment(self, task_id, body):
+        data, _ = self._post(COMMENT_MUTATION, {"issueId": task_id, "body": body})
+        if not (data.get("commentCreate") or {}).get("success"):
+            raise BoardError("Linear did not accept the comment")
+
+    def has_comment(self, task_id, marker):
+        # Reads the first 250 comments only; a replay marker beyond that is not seen.
+        data, _ = self._post(COMMENTS_QUERY, {"id": task_id})
+        try:
+            nodes = data["issue"]["comments"]["nodes"]
+            return any(marker in (n.get("body") or "") for n in nodes)
+        except (KeyError, TypeError, AttributeError):
+            raise BoardError("unexpected answer shape from Linear") from None
+
+    def set_status(self, task_id, status):
+        """Move the task to the team state named `status` (the board's own name)."""
+        data, _ = self._post(STATES_QUERY, {"id": task_id})
+        try:
+            issue = data["issue"]
+            states = issue["team"]["states"]["nodes"]
+            state_id = next(s["id"] for s in states if s.get("name") == status)
+        except StopIteration:
+            raise BoardError("this board has no status with that name; set `status_map` in "
+                             ".claude/board.json") from None
+        except (KeyError, TypeError, AttributeError):
+            raise BoardError("unexpected answer shape from Linear") from None
+        data, _ = self._post(STATUS_MUTATION, {"id": task_id, "stateId": state_id})
+        if not (data.get("issueUpdate") or {}).get("success"):
+            raise BoardError("Linear did not accept the status change")

@@ -1,7 +1,7 @@
 """Board-adapter interface (T154, FR-004, board portability rule).
 
 Only `lib/board/<board>.py` knows which board a project uses. Everything else talks to the
-seven operations below over plain dataclasses. T154 builds `list_tasks` and `get_task`;
+seven operations below (plus `has_comment`, T156: the replay check that makes a queued comment post exactly once) over plain dataclasses. T154 builds `list_tasks` and `get_task`;
 the rest raise `NotImplementedError` until T156 (push), T158 (Decision Log) and T159
 (create) fill them.
 
@@ -15,6 +15,16 @@ from dataclasses import dataclass, field
 
 class BoardError(Exception):
     """The board could not be read. Its message must never carry the API key."""
+
+
+class BoardAuthError(BoardError):
+    """HTTP 401/403: a wrong, expired or under-privileged key. A config problem the user can
+    fix, so a queued write that hits it is kept, never dropped."""
+
+
+class BoardUnavailable(BoardError):
+    """Transient: unreachable, timeout, 5xx or 429. A write that hits it may be queued and
+    retried; any other `BoardError` (bad request, rejected query) would fail again."""
 
 
 @dataclass
@@ -62,6 +72,10 @@ class BoardAdapter:
         raise NotImplementedError
 
     def add_comment(self, task_id, body):
+        raise NotImplementedError
+
+    def has_comment(self, task_id, marker):
+        """True when a comment on the task already contains `marker` (replay dedupe, T156)."""
         raise NotImplementedError
 
     def read_decisions(self):
