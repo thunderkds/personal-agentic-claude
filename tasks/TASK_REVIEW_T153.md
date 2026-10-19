@@ -33,8 +33,25 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured by the implementing agent at base commit `b06653c`, before any T153 commit.
+Script: copies `.claude/hooks` into a temp project, writes `.claude/board.json` =
+`{"id_pattern": "ENG-\\d+"}` and a board with `T142` and `ENG-170` In Progress, then pipes a
+`git push` event into the merge gate and an `Agent` event naming a missing
+`tasks/TASK_GUIDE_ENG-171.md` into the spawn validator.
+
+```
+== date: 2026-10-19T05:10:15Z
+== .claude/board.json: {"id_pattern": "ENG-\d+"}
+== merge gate on 'git push':
+{"decision": "block", "reason": "[hook:pre_bash] Pipeline gate failed — cannot push/merge:\n  • Tasks still In Progress: T142\nComplete Stage 4 review and Stage 5 verify first.\n  Note: if a task above is missing its trace record ... (remedy text elided)"}
+
+== spawn validator, prompt names missing tasks/TASK_GUIDE_ENG-171.md:
+(exit 0; empty output = spawn allowed)
+```
+
+The merge gate does not see `ENG-170` (In Progress, but not listed), and the spawn validator lets
+an agent start on `ENG-171`, a task with no guide (Hard-Stop Gate 1 not enforced for board IDs).
+Baseline suite at the same commit: `1106 passed, 25 subtests passed in 19.77s`.
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
