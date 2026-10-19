@@ -128,11 +128,14 @@ Dedupe key = sha256 of (task id, milestone, text, created-at) truncated, embedde
 
 | File | Change |
 |---|---|
-| `.claude/hooks/lib/board/linear.py`, `fake.py` | `add_comment`, `set_status` |
-| `.claude/hooks/lib/board/outbox.py` (new) |  |
+| `.claude/hooks/lib/board/base.py` | `BoardUnavailable`, `has_comment` |
+| `.claude/hooks/lib/board/linear.py` | `add_comment`, `has_comment`, `set_status`; transient errors raise `BoardUnavailable` |
+| `.claude/hooks/lib/board/fake.py` | fake `add_comment`, `has_comment`, `set_status` + failure switches |
+| `.claude/hooks/lib/board/outbox.py` (new) | append-only outbox + locked flush |
 | `scripts/board_sync.py` | `push`, `flush`, `status` |
 | `skills/wake/SKILL.md` | unsynced line |
-| `tests/test_board_push.py` (new) |  |
+| `tests/test_board_push.py` (new) | T156 tests |
+| `tests/test_board_sync_pull.py` | drop `set_status`/`add_comment` from the "unbuilt operations" assertion |
 
 ## Files Must NOT Touch
 

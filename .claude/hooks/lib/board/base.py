@@ -17,6 +17,11 @@ class BoardError(Exception):
     """The board could not be read. Its message must never carry the API key."""
 
 
+class BoardUnavailable(BoardError):
+    """Transient: unreachable, timeout, 5xx or 429. A write that hits it may be queued and
+    retried; any other `BoardError` (bad request, rejected query) would fail again."""
+
+
 @dataclass
 class Task:
     id: str
@@ -62,6 +67,10 @@ class BoardAdapter:
         raise NotImplementedError
 
     def add_comment(self, task_id, body):
+        raise NotImplementedError
+
+    def has_comment(self, task_id, marker):
+        """True when a comment on the task already contains `marker` (replay dedupe, T156)."""
         raise NotImplementedError
 
     def read_decisions(self):

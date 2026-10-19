@@ -47,9 +47,28 @@ board_sync.py: error: argument command: invalid choice: 'status' (choose from pu
 exit=2
 ```
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER** (fake board, `git_auto_status: true`, 2026-10-19T07:45:53Z):
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```
+date -u: 2026-10-19T07:45:53Z
+$ board_sync.py push comment ENG-1 green ok
+[board] pushed comment for ENG-1
+exit=0
+$ board_sync.py push status ENG-1 ready-for-review
+[board] pushed status for ENG-1
+exit=0
+$ board_sync.py push status ENG-1 done
+[board] git_auto_status is on: the git integration moves done; only todo and ready-for-review are pushed
+exit=2
+$ board_sync.py push comment ENG-1 chatter x
+[board] milestone must be one of: started, red, green, review, verify, merged, blocked, question
+exit=2
+$ board_sync.py status
+0 unsynced
+exit=0
+```
+
+**DELTA**: An agent can push a Ready for Review status and milestone comments to the board, and they queue in `.board/outbox.jsonl` and replay exactly once when the board is unreachable.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/T156.jsonl`, never the
 implementing agent alone]
