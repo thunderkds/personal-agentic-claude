@@ -45,6 +45,7 @@ agents
 skills          codex=.codex/skills
 .claude/hooks
 .claude/sensitive-paths.txt
+scripts/board_sync.py
 scripts/gen_sandbox_profile.py
 scripts/lane_check.py
 scripts/verify_trace.py

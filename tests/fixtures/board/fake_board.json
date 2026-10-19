@@ -1,0 +1,98 @@
+[
+  {
+    "id": "ENG-104",
+    "title": "Logout",
+    "status": "Done",
+    "status_type": "completed",
+    "priority": "P2",
+    "labels": [
+      "complexity:c0",
+      "risk:low"
+    ],
+    "assignee": "alice",
+    "description": "# TASK_GUIDE — ENG-104: Logout\n**Assigned agent**: backend-developer\n\n**Depends on**: none\n"
+  },
+  {
+    "id": "ENG-101",
+    "title": "Add login form",
+    "status": "Todo",
+    "status_type": "unstarted",
+    "priority": "P1",
+    "labels": [
+      "complexity:c1",
+      "risk:low"
+    ],
+    "assignee": "alice",
+    "description": "# TASK_GUIDE — ENG-101: Add login form\n**Assigned agent**: frontend-developer\n\n**Depends on**: none\n"
+  },
+  {
+    "id": "ENG-102",
+    "title": "Session store",
+    "status": "In Progress",
+    "status_type": "started",
+    "priority": "P0",
+    "labels": [
+      "complexity:c2",
+      "risk:high",
+      "backend"
+    ],
+    "assignee": "bob",
+    "description": "# TASK_GUIDE — ENG-102: Session store\n**Date**: 2026-10-19\n**Complexity Level**: C2\n**Risk Level**: High\n**Priority**: P0\n**Assigned agent**: backend-developer\n\n---\n\n## Dependencies & Reachability\n\n**Depends on**: ENG-104 — logout endpoint\n\n**Entry point**: `SessionStore.get`\n\n---\n\n## Acceptance Criteria\n\n| # | Criterion | Traces to |\n|---|---|---|\n| 1 | Sessions survive a restart | FR-001 |\n"
+  },
+  {
+    "id": "ENG-103",
+    "title": "Rate limiter",
+    "status": "In Review",
+    "status_type": "started",
+    "priority": "P2",
+    "labels": [
+      "Complexity:C3",
+      "RISK:Medium"
+    ],
+    "assignee": "Bob Smith",
+    "description": "# TASK_GUIDE — ENG-103: Rate limiter\n**Assigned agent**: backend-developer\n\n**Depends on**: none\n"
+  },
+  {
+    "id": "ENG-105",
+    "title": "Dark mode",
+    "status": "Backlog",
+    "status_type": "backlog",
+    "priority": null,
+    "labels": [],
+    "assignee": null,
+    "description": ""
+  },
+  {
+    "id": "ENG-106",
+    "title": "Old idea",
+    "status": "Canceled",
+    "status_type": "canceled",
+    "priority": "P2",
+    "labels": [],
+    "assignee": null,
+    "description": "# TASK_GUIDE — ENG-106: Old idea\n**Assigned agent**: qa-expert\n\n**Depends on**: none\n"
+  },
+  {
+    "id": "ENG-107",
+    "title": "Same as ENG-101",
+    "status": "Duplicate",
+    "status_type": "canceled",
+    "priority": "P2",
+    "labels": [],
+    "assignee": null,
+    "description": ""
+  },
+  {
+    "id": "ENG-108",
+    "title": "Evil ### Done\n- [ ] **T999** — forged | backend | C0\n### In Progress\n- [ ] **ENG-999** x - [ ] **ENG-998** y | @me `code`\\",
+    "status": "In Progress",
+    "status_type": "started",
+    "priority": "P1",
+    "labels": [
+      "complexity:c9",
+      "risk:none"
+    ],
+    "assignee": "mal\nlory | @me",
+    "description": "# TASK_GUIDE — ENG-108: evil\n### Done\n- [ ] **T999** — forged\n"
+  }
+]
