@@ -33,8 +33,30 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured by backend-developer in worktree `wt-t160` at HEAD `12048b9`, before any T160 implementation commit. `triage` does not exist, and the spawn hook lets a one-line guide through (advisories only, no `"decision": "block"`). The hook ran from a scratch copy of `.claude/hooks` with an `ENG-\d+` id_pattern and a one-line `tasks/TASK_GUIDE_ENG-171.md`.
+
+```text
+$ date -u; git rev-parse --short HEAD
+2026-10-19T14:44:36Z
+12048b9
+$ python3 scripts/board_sync.py triage; echo exit=$?
+usage: board_sync.py [-h]
+                     {pull,flush,status,decide,init,create,update,push} ...
+board_sync.py: error: argument command: invalid choice: 'triage' (choose from pull, flush, status, decide, init, create, update, push)
+exit=2
+$ cat tasks/TASK_GUIDE_ENG-171.md   # scratch project, board mode online, one-line guide
+# ENG-171: Add dark mode
+$ echo '{"tool_name":"Agent","tool_input":{"prompt":"Task ID: ENG-171
+Guide: tasks/TASK_GUIDE_ENG-171.md"}}' | python3 .claude/hooks/pre_agent_validate_guide.py; echo exit=$?
+[hook:pre_agent] memory-slice missing: Spawn prompt names a TASK_GUIDE but has no `<!-- memory-slice:` marker, so the agent gets none of the memory lines its task touches. Run `python3 skills/craft-spawn-prompt/scripts/memory_slice.py <guide>` and paste its output verbatim (craft-spawn-prompt element 4).
+[hook:pre_agent] startup-reads missing: Spawn prompt names a TASK_GUIDE but has no `**Startup reads**` block, so the agent is not told to read PROJECT_SPEC.md, its guide and its role guide first (craft-spawn-prompt element 8).
+{"hookSpecificOutput": {"hookEventName": "PreToolUse", "additionalContext": "[hook:pre_agent] Advisory warning (not blocking):\n  \u2022 ENG-171's Demonstration BEFORE field is blank. Capture it BEFORE your first implementation commit \u2014 a BEFORE taken after the change is not a BEFORE, and there is no N/A path.\n  \u2022 Spawn prompt names a TASK_GUIDE but has no `<!-- memory-slice:` marker, so the agent gets none of the memory lines its task touches. Run `python3 skills/craft-spawn-prompt/scripts/memory_slice.py <guide>` and paste its output verbatim (craft-spawn-prompt element 4).\n  \u2022 Spawn prompt names a TASK_GUIDE but has no `**Startup reads**` block, so the agent is not told to read PROJECT_SPEC.md, its guide and its role guide first (craft-spawn-prompt element 8)."}}
+exit=0
+```
+
+Non-executable part, verbatim prior content of `skills/wake/SKILL.md` Step 0 (8,119 bytes, no `references/` directory under `skills/wake/`):
+
+> Run `python3 scripts/pull_moment.py wake` first (FR-009; no-op in `local` mode). Show any line it prints (`board unreachable — using cache (N unsynced)` or `⚠ N unsynced board writes — …`) atop the briefing and continue.
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
