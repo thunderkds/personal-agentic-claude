@@ -86,7 +86,6 @@
 
 
 ### In Progress
-- [ ] **T153** — Task IDs come from board config, so hooks accept `T142` and `ENG-170` side by side | common-infrastructure | C2 | Risk: High | P0 | Guide: `tasks/TASK_GUIDE_T153.md` | Depends on: none | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`). | Started 2026-10-19, worktree `../wt-t153` (`feat/t153-board-id-pattern`).
 
 
 
@@ -95,6 +94,7 @@
 
 
 ### Ready for Review
+- [ ] **T153** — Task IDs come from board config, so hooks accept `T142` and `ENG-170` side by side | common-infrastructure | C2 | Risk: High | P0 | Guide: `tasks/TASK_GUIDE_T153.md` | Depends on: none | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`). | Started 2026-10-19, worktree `../wt-t153` (`feat/t153-board-id-pattern`). Ready for Review 2026-10-19: 1135 passed (Supervisor re-run).
 
 
 ### Done
