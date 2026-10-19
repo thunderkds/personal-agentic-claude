@@ -83,7 +83,6 @@
 
 
 ### In Progress
-- [ ] **T159** — Planning creates the board issue with the full guide as its description | backend-developer | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T159.md` | Depends on: T156 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`). | Started 2026-10-19, worktree `../wt-t159` (`feat/t159-board-create`).
 
 
 
@@ -92,6 +91,7 @@
 
 
 ### Ready for Review
+- [ ] **T159** — Planning creates the board issue with the full guide as its description | backend-developer | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T159.md` | Depends on: T156 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`). | Started 2026-10-19, worktree `../wt-t159` (`feat/t159-board-create`). Ready for Review 2026-10-19: `tests/test_board_create.py` (33), `1346 passed, 25 subtests passed` (Supervisor re-run, rc=0); code-review no P0, 1 P1 process (startup reads partial); security no HIGH/MED.
 
 
 ### Done
