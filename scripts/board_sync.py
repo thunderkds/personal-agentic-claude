@@ -6,6 +6,10 @@
     python3 scripts/board_sync.py push comment <ID> <milestone> <text...>
     python3 scripts/board_sync.py flush
     python3 scripts/board_sync.py status
+    python3 scripts/board_sync.py init
+
+`init` (T155) is the one interactive command: it asks how to connect, which team and project,
+and writes `.claude/board.json` (nothing secret). No terminal, or a "no", changes nothing.
 
 `push` sends at once (FR-009); when the board is unreachable (network error, timeout, 5xx,
 429) the write is appended to `.board/outbox.jsonl` with a dedupe key and the command still
@@ -37,6 +41,7 @@ Exit codes: 0 pulled (or local mode), 1 the board could not be read, 2 bad confi
 """
 import argparse
 import hashlib
+import json
 import os
 import re
 import sys
@@ -47,7 +52,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, ".claude", "hooks", "lib"))
 from board import outbox, render  # noqa: E402
 from board.base import BoardAuthError, BoardError, BoardUnavailable, Decision  # noqa: E402
-from board.config import config_path, load_config, normalize_task_id, task_id_pattern  # noqa: E402
+from board.config import board_id_pattern, config_path, load_config, normalize_task_id, task_id_pattern  # noqa: E402
 from board.fake import FakeBoard  # noqa: E402
 from board.linear import LinearBoard  # noqa: E402
 
@@ -298,6 +303,166 @@ def decide(board, config, root, args):
     return 0
 
 
+# ── init (T155) ──────────────────────────────────────────────────────────────
+MCP_COMMAND = "claude mcp add --transport http linear https://mcp.linear.app/mcp"
+CONNECTIONS = {"1": "api", "2": "mcp", "3": "both"}
+
+
+class InitAbort(Exception):
+    """The user gave no usable answer; nothing is written."""
+
+
+def tty_ask(prompt):
+    """One line from the terminal, or None when there is no terminal (or EOF)."""
+    try:
+        # Separate handles: "r+" on a tty raises UnsupportedOperation (not seekable).
+        with open("/dev/tty", "w", encoding="utf-8") as out, open("/dev/tty", encoding="utf-8") as tty:
+            out.write(prompt)
+            out.flush()
+            line = tty.readline()
+    except OSError:
+        return None
+    return line.strip() if line else None
+
+
+def _choose(ask, title, options, default=None, zero=None):
+    """Numbered menu -> the chosen index (0-based). `default` is returned on Enter; `zero` is an
+    extra "0) label" entry that returns -1."""
+    lines = [title] + ([f"  0) {zero}"] if zero else []) + [f"  {i}) {render.one_line(label)}" for i, label in enumerate(options, 1)]
+    prompt = "\n".join(lines) + "\n> "
+    for _ in range(3):
+        answer = ask(prompt)
+        if answer is None:
+            raise InitAbort("no answer")
+        if answer == "" and default is not None:
+            return default
+        if zero and answer == "0":
+            return -1
+        if answer.isdigit() and 1 <= int(answer) <= len(options):
+            return int(answer) - 1
+    raise InitAbort("no valid choice")
+
+
+def _yes(ask, prompt):
+    answer = ask(prompt)
+    if answer is None:
+        raise InitAbort("no answer")
+    return answer.lower() in ("y", "yes")
+
+
+def _id_pattern_for(team_key):
+    """`<TEAMKEY>-\\d+`, the key escaped; None when board.config would not accept it."""
+    if not re.fullmatch(r"[A-Za-z0-9]+", team_key or ""):
+        return None
+    pattern = rf"{re.escape(team_key.upper())}-\d+"
+    with tempfile.TemporaryDirectory() as tmp:
+        os.makedirs(os.path.join(tmp, ".claude"))
+        with open(config_path(tmp), "w", encoding="utf-8") as f:
+            json.dump({"id_pattern": pattern}, f)
+        return board_id_pattern(tmp)
+
+
+def _status_map(ask, states):
+    """Ask once per state the default map does not place; Enter keeps the default by type."""
+    mapping = {}
+    for state in states:
+        name = state.get("name") if isinstance(state, dict) else None
+        if not isinstance(name, str) or not name or name in render.DEFAULT_STATUS_MAP:
+            continue
+        idx = _choose(ask, f"Which board section is the status {render.one_line(name)!r}? "
+                           f"(Enter = by its type, {render.one_line(state.get('type'))})",
+                      list(render.SECTIONS), default=-1)
+        if idx >= 0:
+            mapping[name] = render.SECTIONS[idx]
+    return mapping
+
+
+def _fetch_choices(adapter, ask):
+    me = render.assignee_token(adapter.viewer())
+    if not me:
+        raise BoardError("Linear gave no usable user name")
+    teams = [t for t in adapter.list_teams() if isinstance(t, dict) and t.get("id") and t.get("key")]
+    if not teams:
+        raise BoardError("this Linear account has no teams")
+    team = teams[_choose(ask, "Which team?", [f"{t['key']}  {t.get('name', '')}" for t in teams])]
+    projects = [p for p in adapter.list_projects(team["id"]) if isinstance(p, dict) and p.get("id")]
+    pick = _choose(ask, "Which project?", [p.get("name", "") for p in projects],
+                   zero="(whole team)") if projects else -1
+    project = projects[pick]["id"] if pick >= 0 else ""
+    status_map = _status_map(ask, adapter.list_states(team["id"]))
+    return {"team": team["id"], "project": project, "me": me, "status_map": status_map}, team["key"]
+
+
+def init(root, ask, make_adapter, env, out, err):
+    """Ask the board questions and write `.claude/board.json`. 0 done or declined, 1 could not
+    finish, 2 the answers would give a config board.config rejects. Never writes the API key."""
+    asked = [False]
+
+    def guarded(prompt):
+        answer = ask(prompt)
+        if answer is not None:
+            asked[0] = True
+        return answer
+
+    key = env.get("LINEAR_API_KEY") or ""
+    try:
+        if os.path.exists(config_path(root)):
+            if not _yes(guarded, ".claude/board.json already exists. Overwrite it? [y/N] "):
+                return 0
+        connection = CONNECTIONS[str(1 + _choose(guarded, "How should agents reach Linear?",
+                                                 ["API key (LINEAR_API_KEY in your shell)",
+                                                  "Linear MCP server", "both"]))]
+        chosen = {}
+        if connection in ("mcp", "both"):
+            out("To add Linear's official MCP server, run this yourself (Easy Kit installs nothing):")
+            out(f"  {MCP_COMMAND}")
+        if connection == "mcp":
+            team_key = guarded("Your Linear team key (for example ENG): ")
+            name = guarded("Your Linear display name: ")
+            if team_key is None or name is None:
+                raise InitAbort("no answer")
+            team_key = team_key.strip()
+            me = render.assignee_token(name)
+            if not me:
+                err("[board] init: no usable user name; nothing written")
+                return 1
+            chosen = {"me": me, "status_map": {}}
+        else:
+            if not key:
+                out("LINEAR_API_KEY is not set. Create a key in Linear (Settings > API) and add "
+                    "`export LINEAR_API_KEY=...` to your shell profile, then run "
+                    "`python3 scripts/board_sync.py init` again. The key is never stored in a file.")
+                return 1
+            chosen, team_key = _fetch_choices(make_adapter(key), guarded)
+        pattern = _id_pattern_for(team_key)
+        if pattern is None:
+            err(f"[board] init: the team key {render.one_line(team_key)!r} gives a task-ID pattern "
+                f"board.json would reject; nothing written")
+            return 2
+        auto = _yes(guarded, "Does Linear's GitHub integration move issues to In Progress/Done "
+                             "itself? [y/N] ")
+    except InitAbort:
+        if asked[0]:
+            err("[board] init: no complete answer; nothing written")
+            return 1
+        return 0                                    # no terminal: stay in local mode, silently
+    except BoardError as exc:
+        message = str(exc).replace(key, "[redacted]") if key else str(exc)
+        err(f"[board] init failed: {message}; nothing written")
+        return 1
+    except Exception as exc:  # never a traceback: it could echo board text or the key
+        err(f"[board] init failed: unexpected {type(exc).__name__}; nothing written")
+        return 1
+
+    config = {"board": "linear", "connection": connection, **chosen, "id_pattern": pattern,
+              "git_auto_status": auto}
+    write_atomically(root, {os.path.join(".claude", "board.json"):
+                            json.dumps(config, indent=2, ensure_ascii=False) + "\n"})
+    out("[board] wrote .claude/board.json (board mode online). Your API key is not stored; "
+        "keep LINEAR_API_KEY in your shell profile.")
+    return 0
+
+
 def main(argv=None, root=ROOT):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="command", required=True)
@@ -307,12 +472,17 @@ def main(argv=None, root=ROOT):
     p_decide = sub.add_parser("decide")
     p_decide.add_argument("id")
     p_decide.add_argument("text", nargs="+", help="the decision")
+    sub.add_parser("init")
     p_push = sub.add_parser("push")
     p_push.add_argument("kind", choices=["status", "comment"])
     p_push.add_argument("id")
     p_push.add_argument("value", help="status slug, or comment milestone")
     p_push.add_argument("text", nargs="*", help="comment text")
     args = parser.parse_args(argv)
+
+    if args.command == "init":
+        return init(root, tty_ask, lambda key: LinearBoard(key, ""), os.environ,
+                    print, lambda text: print(text, file=sys.stderr))
 
     config = load_config(root)
     if config is None and os.path.exists(config_path(root)):

@@ -742,6 +742,31 @@ run_install() {
   write_harness_lock "$manifest"
 }
 
+# ── Board mode (T155) ────────────────────────────────────────────────────────
+# One y/N question, default No (and No with no terminal, so a scripted install is
+# byte-identical to before). "y" hands over to board_sync.py init, which asks the
+# rest on /dev/tty and writes .claude/board.json. A project that already has the
+# file is not asked again; re-run `python3 scripts/board_sync.py init` to change it.
+# Never fatal: the kit is installed whether or not the board answers.
+offer_board_mode() {
+  [ "$TTY_OK" -eq 1 ] || return 0
+  [ -f "scripts/board_sync.py" ] || return 0
+  [ ! -f ".claude/board.json" ] || return 0
+  printf 'Use an online board (Linear) for tasks? [y/N] '
+  tty_read || { printf '\n'; return 0; }
+  case "$TTY_ANSWER" in
+    y|Y|yes|YES|Yes) ;;
+    *) return 0 ;;
+  esac
+  if ! command -v python3 >/dev/null 2>&1; then
+    log_warn "python3 is not on PATH - board mode skipped."
+    return 0
+  fi
+  # A "no" inside init is a quiet exit 0 too, so judge by the file, not the exit code.
+  python3 scripts/board_sync.py init || true
+  [ -f ".claude/board.json" ] || log_warn "Board setup did not finish; the project stays in local mode. Re-run: python3 scripts/board_sync.py init"
+}
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 main() {
   check_git
@@ -801,6 +826,7 @@ main() {
       # Update asks for no CLI: it keeps exactly what is present (T098).
       HARNESSES=""
       run_update "$LOCK_FILE" "$manifest" "$fresh_list"
+      offer_board_mode
       return
       ;;
     install)
@@ -812,6 +838,7 @@ main() {
       ;;
   esac
 
+  offer_board_mode
   log_info "Setup complete. Easy Kit copied into $(pwd)"
   log_info "CLAUDE source: $CLAUDE_SRC | lock: .claude/harness-lock.json"
   log_info "CLIs: $(cli_names)"
