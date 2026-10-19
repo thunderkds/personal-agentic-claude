@@ -52,6 +52,7 @@ class Decision:
     text: str
     task_id: str
     author: str | None = None
+    key: str = ""                    # dedupe key: an entry with this key is appended once
 
 
 class BoardAdapter:
@@ -79,7 +80,10 @@ class BoardAdapter:
         raise NotImplementedError
 
     def read_decisions(self):
+        """Every Decision Log entry, oldest first, as `Decision`s; [] when there is no log yet."""
         raise NotImplementedError
 
     def append_decision(self, decision):
+        """Append one entry to the Decision Log (created on first use); an entry whose `key`
+        is already in the log is a success without a second line (T158)."""
         raise NotImplementedError

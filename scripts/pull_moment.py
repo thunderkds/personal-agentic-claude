@@ -13,6 +13,9 @@ print `board unreachable — using cache (N unsynced)` and carry on with the cac
 it and, if the guide changed since spawn, prints
 `<ID>'s guide changed while you were working — review against the new version?`.
 
+`wake` also prints `N new decisions from teammates since your last session` (T158): entries
+in the cached Decision Log, written by others, after the position seen at the last wake.
+
 Board mode `local` (or an unusable `.claude/board.json`): does nothing, prints nothing.
 
 Exit 0 always — a pull moment never blocks work — except 2 for bad arguments.
@@ -24,6 +27,7 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, ".claude", "hooks", "lib"))
 from board import moments  # noqa: E402
+from board.config import load_config  # noqa: E402
 
 
 def main(argv=None, root=ROOT):
@@ -47,6 +51,11 @@ def main(argv=None, root=ROOT):
     elif args.moment == "wake" and moments.unsynced_count(root):
         print(f"⚠ {moments.unsynced_count(root)} unsynced board writes — run "
               f"python3 scripts/board_sync.py flush")
+
+    if args.moment == "wake":
+        decisions_line = moments.new_decisions_line(root, (load_config(root) or {}).get("me"))
+        if decisions_line:
+            print(decisions_line)
 
     if args.moment == "spawn":
         path = moments.guide_hash_path(root, task_id)

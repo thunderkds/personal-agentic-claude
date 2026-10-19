@@ -170,3 +170,84 @@ def guide_files(tasks):
     verbatim except that any Evidence/Demonstration section is vacated to a pointer."""
     return {f"tasks/TASK_GUIDE_{t.id}.md": vacate_review_sections(t.description, t.id)
             for t in safe_tasks(tasks, warn=False) if t.description}
+
+
+# --- Decision Log (T158, FR-008) ---------------------------------------------------
+#
+# The board document and the `memory/decisions.md` board section share one line shape:
+#     - 2026-10-19  Retry 3 times  (from ENG-170, by alice)
+# The document line may end with ` <!--bs:<key>-->`, the dedupe key. Text is untrusted
+# (NFR-005): one line, with every character the parsers key on backslash-escaped, so it can
+# neither end the line's attribution nor open a header, a `**Files**:` line or a marker. A
+# line read back must already be in that shape (`DECISION_LINE`), so rendering is idempotent: `Decision.text` is plain text everywhere (unescaped when
+# parsed, escaped exactly once by `format_decision`)
+# and a hand-edited document line that is not skipped cannot carry anything either.
+
+DECISIONS_HEADING = "### Decision Log (pulled from the board — do not edit)"
+DECISIONS_BEGIN = "<!-- board-decisions:begin -->"
+DECISIONS_END = "<!-- board-decisions:end -->"
+DECISIONS_TITLE = "Project Decisions"
+SPECIALS = "\\`*#|()<>"
+DECISION_LINE = re.compile(
+    r"- (\d{4}-\d{2}-\d{2})  ((?:[^\\`*#|()<>]|\\[\\`*#|()<>])+)  "
+    r"\(from ([A-Z0-9#_-]{1,64}), by ([A-Za-z0-9._-]{1,64})\)(?: <!--bs:([0-9a-f]{16})-->)?")
+
+
+def escape_decision(text):
+    return re.sub(f"([{re.escape(SPECIALS)}])", r"\\\1", one_line(text))
+
+
+def unescape_decision(text):
+    return re.sub(f"\\\\([{re.escape(SPECIALS)}])", r"\1", text)
+
+
+def format_decision(decision, with_key=True):
+    line = (f"- {decision.date}  {escape_decision(decision.text)}  "
+            f"(from {decision.task_id}, by {assignee_token(decision.author) or 'unknown'})")
+    return f"{line} <!--bs:{decision.key}-->" if with_key and decision.key else line
+
+
+def parse_decision_lines(text):
+    """`Decision`s from every well-formed entry line of `text`, in order; others are skipped."""
+    from board.base import Decision
+    found = []
+    for line in text.splitlines():
+        m = DECISION_LINE.fullmatch(line)
+        if m:
+            found.append(Decision(date=m.group(1), text=unescape_decision(m.group(2)),
+                                  task_id=m.group(3),
+                                  author=m.group(4), key=m.group(5) or ""))
+    return found
+
+
+def decision_document(decisions):
+    return "\n".join([f"# {DECISIONS_TITLE}", "", *(format_decision(d) for d in decisions)]) + "\n"
+
+
+def render_decisions_section(decisions):
+    lines = [DECISIONS_BEGIN, DECISIONS_HEADING, ""]
+    lines += [format_decision(d, with_key=False) for d in decisions]
+    return "\n".join([*lines, DECISIONS_END]) + "\n"
+
+
+def board_section(text):
+    """The text between the board-decisions markers of a cache file ('' if there are none)."""
+    start = text.find(DECISIONS_BEGIN)
+    end = text.find(DECISIONS_END, start + 1) if start >= 0 else -1
+    return text[start:end] if end >= 0 else ""
+
+
+def cached_decisions(text):
+    return parse_decision_lines(board_section(text))
+
+
+def merge_decisions_file(existing, section):
+    """`existing` with its board section replaced by `section`; local content is untouched.
+    No section yet: it is appended after the local content."""
+    start = existing.find(DECISIONS_BEGIN)
+    end = existing.find(DECISIONS_END, start + 1) if start >= 0 else -1
+    if end >= 0:
+        return existing[:start] + section + existing[end + len(DECISIONS_END) + 1:]
+    if not existing:
+        return section
+    return existing.rstrip("\n") + "\n\n" + section

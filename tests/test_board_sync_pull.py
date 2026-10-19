@@ -445,8 +445,7 @@ def test_linear_key_not_in_repr():
 
 def test_unbuilt_operations_raise_not_implemented():
     board = FakeBoard([])
-    for call in (lambda: board.create_task(None), lambda: board.update_task(None),
-                 lambda: board.read_decisions(), lambda: board.append_decision(None)):
+    for call in (lambda: board.create_task(None), lambda: board.update_task(None)):
         with pytest.raises(NotImplementedError):
             call()
 

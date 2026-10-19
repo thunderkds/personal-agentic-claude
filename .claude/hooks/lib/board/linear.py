@@ -8,9 +8,11 @@ One request per page of 100 issues (NFR-002). A 429, or `X-RateLimit-Requests-Re
 reaching 0 with pages left, stops the pull — never a retry loop.
 """
 import json
+import sys
 import urllib.error
 import urllib.request
 
+from board import render
 from board.base import BoardAdapter, BoardAuthError, BoardError, BoardUnavailable, Task
 
 URL = "https://api.linear.app/graphql"
@@ -38,6 +40,19 @@ STATUS_MUTATION = """mutation Status($id: String!, $stateId: String!) {
   issueUpdate(id: $id, input: {stateId: $stateId}) { success }
 }"""
 
+# Decision Log (T158). ASSUMED field names, unconfirmed against a live workspace: the
+# `documents` query with `filter: {title, project}` and nodes `{ id content }`, and the
+# `documentCreate` / `documentUpdate` mutations with `title`, `content`, `projectId`.
+DOCS_QUERY = """query Docs($filter: DocumentFilter) {
+  documents(first: 1, filter: $filter) { nodes { id content } }
+}"""
+DOC_CREATE = """mutation DocCreate($title: String!, $content: String!, $projectId: String) {
+  documentCreate(input: {title: $title, content: $content, projectId: $projectId}) { success }
+}"""
+DOC_UPDATE = """mutation DocUpdate($id: String!, $content: String!) {
+  documentUpdate(id: $id, input: {content: $content}) { success }
+}"""
+
 
 def task_from_node(node):
     state = node.get("state") or {}
@@ -59,6 +74,7 @@ class LinearBoard(BoardAdapter):
         self._auth = {"Authorization": api_key}
         self.team = team
         self.project = project
+        self.decision_doc = render.DECISIONS_TITLE  # `decision_doc` in board.json overrides (T158)
 
     def __repr__(self):
         return f"LinearBoard(team={self.team!r}, project={self.project!r})"
@@ -145,3 +161,53 @@ class LinearBoard(BoardAdapter):
         data, _ = self._post(STATUS_MUTATION, {"id": task_id, "stateId": state_id})
         if not (data.get("issueUpdate") or {}).get("success"):
             raise BoardError("Linear did not accept the status change")
+
+    # --- Decision Log (T158): one Document, appended by read-modify-write ----------
+
+    def _decision_doc(self):
+        """{"id", "content"} of the Decision Log document, or None when there is none."""
+        flt = {"title": {"eq": self.decision_doc}}
+        if self.project:
+            flt["project"] = {"id": {"eq": self.project}}
+        data, _ = self._post(DOCS_QUERY, {"filter": flt})
+        try:
+            nodes = data["documents"]["nodes"]
+            if not nodes:
+                return None
+            return {"id": str(nodes[0]["id"]), "content": nodes[0].get("content") or ""}
+        except (KeyError, TypeError, AttributeError, IndexError):
+            raise BoardError("unexpected answer shape from Linear") from None
+
+    def read_decisions(self):
+        doc = self._decision_doc()
+        return render.parse_decision_lines(doc["content"]) if doc else []
+
+    def append_decision(self, decision):
+        """Read the document, add the line, check the content is unchanged right before the
+        update, and retry once if a teammate wrote in between. Linear has no compare-and-set,
+        so this narrows the race window rather than closing it. Still changing: unavailable,
+        so the write is queued and replayed."""
+        marker = f"<!--bs:{decision.key}-->"
+        line = render.format_decision(decision)
+        for _ in range(2):
+            doc = self._decision_doc()
+            if doc is None:
+                print(f"[board] Decision Log document {render.one_line(self.decision_doc)!r} "
+                      f"not found; creating it", file=sys.stderr)
+                data, _ = self._post(DOC_CREATE, {
+                    "title": self.decision_doc, "projectId": self.project or None,
+                    "content": render.decision_document([]) + line + "\n"})
+                if not (data.get("documentCreate") or {}).get("success"):
+                    raise BoardError("Linear did not accept the Decision Log document")
+                return
+            if decision.key and marker in doc["content"]:
+                return
+            current = self._decision_doc()
+            if current is None or current["content"] != doc["content"]:
+                continue
+            data, _ = self._post(DOC_UPDATE, {"id": doc["id"],
+                                              "content": doc["content"].rstrip("\n") + "\n" + line + "\n"})
+            if not (data.get("documentUpdate") or {}).get("success"):
+                raise BoardError("Linear did not accept the Decision Log update")
+            return
+        raise BoardUnavailable("the Decision Log changed while writing; try again")

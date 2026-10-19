@@ -18,7 +18,7 @@ import re
 import subprocess
 import sys
 
-from board import outbox
+from board import outbox, render
 from board.config import config_path, load_config, normalize_task_id, PATH_SAFE_ID
 
 PULL_TIMEOUT_S = 10
@@ -129,3 +129,42 @@ def my_blocking_tasks(rows, me, kanban):
         elif len(assignees) > 1 or assignees[0].casefold() == me_token.casefold():
             blocking.append(task_id)
     return blocking, warnings
+
+
+# --- New decisions at wake (T158) ----------------------------------------------------
+
+DECISIONS_SEEN = "decisions_seen.txt"
+
+
+def new_decisions_line(root, me):
+    """`N new decisions from teammates since your last session`, or None when there are none.
+
+    Reads the board cache (`memory/decisions.md`), counts the entries after the position
+    stored at the last call that were written by someone other than `me`, then moves the
+    marker to the end. No marker yet: every teammate entry is new to this developer. Never
+    raises; a missing or unreadable cache, or a state file that cannot be written, is None."""
+    try:
+        with open(os.path.join(root, "memory", "decisions.md"), encoding="utf-8") as f:
+            entries = render.cached_decisions(f.read())
+    except OSError:
+        return None
+    marker_path = os.path.join(root, STATE_DIR, DECISIONS_SEEN)
+    try:
+        with open(marker_path, encoding="utf-8") as f:
+            seen = int(f.read().strip())
+    except (OSError, ValueError):
+        seen = 0
+    if not 0 <= seen <= len(entries):    # the log shrank: start over from its end
+        seen = len(entries)
+    me_token = (render.assignee_token(me) or "") if isinstance(me, str) else ""
+    fresh = [d for d in entries[seen:] if d.author.casefold() != me_token.casefold()]
+    try:
+        os.makedirs(os.path.dirname(marker_path), exist_ok=True)
+        with open(marker_path, "w", encoding="utf-8") as f:
+            f.write(f"{len(entries)}\n")
+    except OSError:
+        pass
+    if not fresh:
+        return None
+    noun = "decision" if len(fresh) == 1 else "decisions"
+    return f"{len(fresh)} new {noun} from teammates since your last session"
