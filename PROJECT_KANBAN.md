@@ -82,7 +82,6 @@
 
 
 ### In Progress
-- [ ] **T160** — `wake` triages my new board tasks: propose priority, ask, then ready-or-investigate | backend-developer | C2 | Risk: High | P2 | Guide: `tasks/TASK_GUIDE_T160.md` | Depends on: T159 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`). | Risk raised to High 2026-10-19 (user: spawn gate blocks an incomplete guide, inside T160). Started 2026-10-19, worktree `../wt-t160` (`feat/t160-triage`).
 
 
 
@@ -91,6 +90,7 @@
 
 
 ### Ready for Review
+- [ ] **T160** — `wake` triages my new board tasks: propose priority, ask, then ready-or-investigate | backend-developer | C2 | Risk: High | P2 | Guide: `tasks/TASK_GUIDE_T160.md` | Depends on: T159 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`). | Risk raised to High 2026-10-19 (user: spawn gate blocks an incomplete guide, inside T160). Started 2026-10-19, worktree `../wt-t160` (`feat/t160-triage`). Ready for Review 2026-10-19: `tests/test_board_triage.py` (19), `1364 passed, 25 subtests passed` (Supervisor re-run, rc=0); code-review no P0/P1 (bugfix-guide definition accepted); security no HIGH/MED.
 
 
 ### Done
