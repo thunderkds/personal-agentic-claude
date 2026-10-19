@@ -145,3 +145,48 @@ class LinearBoard(BoardAdapter):
         data, _ = self._post(STATUS_MUTATION, {"id": task_id, "stateId": state_id})
         if not (data.get("issueUpdate") or {}).get("success"):
             raise BoardError("Linear did not accept the status change")
+
+
+# ── setup queries (T155): what `board_sync.py init` lists before a team is configured ──
+VIEWER_QUERY = "query Viewer { viewer { displayName } }"
+TEAMS_QUERY = "query Teams { teams(first: 100) { nodes { id key name } } }"
+TEAM_PROJECTS_QUERY = "query TeamProjects($id: String!) { team(id: $id) { projects(first: 100) { nodes { id name } } } }"
+TEAM_STATES_QUERY = "query TeamStates($id: String!) { team(id: $id) { states(first: 100) { nodes { name type } } } }"
+
+
+def _nodes(data, *path):
+    try:
+        for step in path:
+            data = data[step]
+        return [n for n in data if isinstance(n, dict)]
+    except (KeyError, TypeError):
+        raise BoardError("unexpected answer shape from Linear") from None
+
+
+def _viewer(self):
+    data, _ = self._post(VIEWER_QUERY, {})
+    try:
+        return str(data["viewer"]["displayName"])
+    except (KeyError, TypeError):
+        raise BoardError("unexpected answer shape from Linear") from None
+
+
+def _list_teams(self):
+    data, _ = self._post(TEAMS_QUERY, {})
+    return _nodes(data, "teams", "nodes")
+
+
+def _list_projects(self, team_id):
+    data, _ = self._post(TEAM_PROJECTS_QUERY, {"id": team_id})
+    return _nodes(data, "team", "projects", "nodes")
+
+
+def _list_states(self, team_id):
+    data, _ = self._post(TEAM_STATES_QUERY, {"id": team_id})
+    return _nodes(data, "team", "states", "nodes")
+
+
+LinearBoard.viewer = _viewer
+LinearBoard.list_teams = _list_teams
+LinearBoard.list_projects = _list_projects
+LinearBoard.list_states = _list_states
