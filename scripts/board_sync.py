@@ -36,6 +36,16 @@ written from the board's copy. `update --guide <ID>` pushes the local guide back
 description. Neither goes through the outbox: a new ID cannot be queued, and a failure exits 1
 with nothing written. A draft missing Complexity, Risk or Priority is refused (exit 2).
 
+    python3 scripts/board_sync.py triage [--mark]
+
+`triage` (T160, FR-011) prints one line per *my* task (assignee == `me`) that is not Done or
+closed and either has an incomplete guide (`guide_sections.missing_guide_sections`) or is new
+to me / changed since the last-session marker `.board/triage_seen.json`:
+`<ID> · <P0-P2|untriaged> · <reason> · <title>` — the title last, flattened to one line.
+Teammates' tasks are never listed. Read-only unless `--mark`, which then records the hash of
+each of my tasks' descriptions; `pull_moment.py wake` runs `triage --mark`, so a change shows
+at one wake. With no marker yet, only incomplete guides are listed. Online mode only (exit 2).
+
 Board mode `online` (`.claude/board.json` names a `board`): fetch every task of the
 configured team/project and rewrite the board cache in today's formats —
 `PROJECT_KANBAN.md` and `tasks/TASK_GUIDE_<ID>.md` (each issue description, verbatim).
@@ -65,6 +75,7 @@ from board.base import BoardAuthError, BoardError, BoardUnavailable, Decision, T
 from board.config import board_id_pattern, config_path, load_config, normalize_task_id, task_id_pattern  # noqa: E402
 from board.fake import FakeBoard  # noqa: E402
 from board.linear import LinearBoard  # noqa: E402
+from guide_sections import missing_guide_sections  # noqa: E402
 
 KANBAN = "PROJECT_KANBAN.md"
 MILESTONES = ("started", "red", "green", "review", "verify", "merged", "blocked", "question")
@@ -402,6 +413,59 @@ def update(board, root, args):
     return 0
 
 
+# ── triage (T160) ────────────────────────────────────────────────────────────
+TRIAGE_SEEN = os.path.join(".board", "triage_seen.json")
+
+
+def read_triage_seen(root):
+    """{task ID: description hash} from the last `--mark`; None when there is no marker yet,
+    {} when it is unreadable (then every task of mine shows as new: the side that hides nothing)."""
+    path = os.path.join(root, TRIAGE_SEEN)
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, encoding="utf-8") as f:
+            seen = json.load(f)
+    except (OSError, ValueError):
+        return {}
+    return seen if isinstance(seen, dict) else {}
+
+
+def triage(board, config, root, args):
+    me = config.get("me")
+    me = render.assignee_token(me) if isinstance(me, str) else None
+    if not me:
+        print("[board] triage needs `me` (your board user) in .claude/board.json", file=sys.stderr)
+        return 2
+    status_map = config.get("status_map")
+    status_map = render.merged_status_map(status_map if isinstance(status_map, dict) else None)
+    seen = read_triage_seen(root)
+    mine, lines = {}, []
+    for task in render.safe_tasks(board.list_tasks(), warn=False):
+        if (render.assignee_token(task.assignee) or "").casefold() != me.casefold():
+            continue
+        digest = hashlib.sha256((task.description or "").encode("utf-8")).hexdigest()
+        mine[task.id] = digest
+        if render.section_for(task, status_map) in ("Done", "Closed"):
+            continue
+        missing = missing_guide_sections(task.description or "")
+        if missing:
+            reason = f"not planned (missing: {', '.join(missing)})"
+        elif seen is None or seen.get(task.id) == digest:
+            continue
+        elif task.id not in seen:
+            reason = "new to you since last session"
+        else:
+            reason = "changed since last session"
+        priority = task.priority if task.priority in ("P0", "P1", "P2") else "untriaged"
+        lines.append(f"{task.id} · {priority} · {reason} · {render.one_line(task.title)}")
+    for line in lines:
+        print(line)
+    if args.mark:
+        write_atomically(root, {TRIAGE_SEEN: json.dumps(mine, indent=1, sort_keys=True) + "\n"})
+    return 0
+
+
 # ── init (T155) ──────────────────────────────────────────────────────────────
 MCP_COMMAND = "claude mcp add --transport http linear https://mcp.linear.app/mcp"
 CONNECTIONS = {"1": "api", "2": "mcp", "3": "both"}
@@ -576,6 +640,9 @@ def main(argv=None, root=ROOT):
     p_create.add_argument("--guide", required=True, help="the draft guide file")
     p_update = sub.add_parser("update")
     p_update.add_argument("--guide", required=True, help="the task ID whose local guide to push")
+    p_triage = sub.add_parser("triage")
+    p_triage.add_argument("--mark", action="store_true",
+                          help="record the last-session marker after listing (wake does this)")
     p_push = sub.add_parser("push")
     p_push.add_argument("kind", choices=["status", "comment"])
     p_push.add_argument("id")
@@ -591,7 +658,7 @@ def main(argv=None, root=ROOT):
     if config is None and os.path.exists(config_path(root)):
         print("[board] .claude/board.json is unusable; nothing pulled", file=sys.stderr)
         return 2
-    if args.command in ("create", "update") and not (config and config.get("board")):
+    if args.command in ("create", "update", "triage") and not (config and config.get("board")):
         print(f"[board] {args.command} needs board mode online (no board in .claude/board.json)",
               file=sys.stderr)
         return 2
@@ -619,6 +686,8 @@ def main(argv=None, root=ROOT):
             return create(board, root, args)
         if args.command == "update":
             return update(board, root, args)
+        if args.command == "triage":
+            return triage(board, config, root, args)
         return push(board, config, root, args)
     except ConfigError as exc:
         code, message = 2, str(exc)

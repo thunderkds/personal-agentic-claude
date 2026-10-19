@@ -14,15 +14,15 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_board_triage.py` (new, 18 tests): AC1 `test_sc1_only_my_incomplete_task_is_listed`, `test_changed_since_marker_shows_once_marked`, `test_task_reassigned_to_me_shows_at_next_wake`, `test_wake_prints_triage_lines_and_advances_the_marker`; AC2 `test_others_never_appear_even_when_changed`; AC3 `test_wake_skill_points_to_triage_reference_within_codex_cap`; AC4 `test_spawn_blocks_a_one_line_guide_naming_the_missing_sections`, `test_a_crash_in_the_completeness_check_fails_open`; AC5 `test_every_not_done_repo_guide_is_complete`. Output: `18 passed in 0.79s` (backend-developer, 2026-10-19T14:51Z) |
+| Verification command run | ☑ pass | `python3 -m pytest tests/test_board_triage.py -q` → `..................  [100%]` / `18 passed in 0.79s` (backend-developer, 2026-10-19T14:51Z) |
+| Negative cases hold | ☑ pass | teammate/unassigned tasks never listed; Done/Canceled/`completed`-type skipped; local mode exit 2 with no file written; missing `me` exit 2 with no marker; failed pull prints no triage; title with `\n### Done\n- [x] **ENG-9**` stays one line, last field; completeness-check crash → spawn allowed |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| Full smoke suite still green (no regression) | ☑ pass | `python3 -m pytest -q tests .claude/hooks/tests; echo exit=$?` → `exit=0`, `1364 passed, 25 subtests passed in 28.45s`. Also `sh tests/test_harness_projection.sh` → `41 passed, 0 failed` (Codex 8 KB skill cap; `skills/wake/SKILL.md` is 8,118 bytes) |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | no UI: CLI script, hook and skill text only |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | no UI |
+| **UI: Responsiveness at target viewports** | ☑ N/A | no UI |
 
 ---
 
@@ -58,9 +58,37 @@ Non-executable part, verbatim prior content of `skills/wake/SKILL.md` Step 0 (8,
 
 > Run `python3 scripts/pull_moment.py wake` first (FR-009; no-op in `local` mode). Show any line it prints (`board unreachable — using cache (N unsynced)` or `⚠ N unsynced board writes — …`) atop the briefing and continue.
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**: same commands, after the implementation (worktree `wt-t160`, run by backend-developer). Local mode refuses `triage` (exit 2, nothing written); online, only my one-line task is listed; the one-line guide is now blocked, naming the missing sections.
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```text
+$ date -u; git rev-parse --short HEAD
+2026-10-19T14:51:36Z
+b45c35a
+$ python3 scripts/board_sync.py triage; echo exit=$?   # this repo: board mode local
+[board] triage needs board mode online (no board in .claude/board.json)
+exit=2
+$ python3 scripts/board_sync.py triage; echo exit=$?   # scratch project, fake board: ENG-171 mine one-line, ENG-172 mine complete, ENG-173 bob's
+ENG-171 · untriaged · not planned (missing: Requirement, Acceptance Criteria, Verification Command) · Add dark mode
+exit=0
+$ cat tasks/TASK_GUIDE_ENG-171.md   # scratch project, one-line guide
+# ENG-171: Add dark mode
+$ echo '{"tool_name":"Agent","tool_input":{"prompt":"Task ID: ENG-171
+Guide: tasks/TASK_GUIDE_ENG-171.md"}}' | python3 .claude/hooks/pre_agent_validate_guide.py; echo exit=$?
+{"decision": "block", "reason": "[hook:pre_agent] Cannot spawn agent \u2014 incomplete TASK_GUIDE for: ENG-171 (missing: Requirement, Acceptance Criteria, Verification Command). Fill those sections first (Stage 2); in board mode push them with `python3 scripts/board_sync.py update --guide <ID>`."}
+exit=0
+$ python3 -m pytest tests/test_board_triage.py -q
+..................                                                       [100%]
+18 passed in 0.79s
+$ wc -c skills/wake/SKILL.md
+8118 skills/wake/SKILL.md
+```
+
+New `skills/wake/SKILL.md` Step 0 (8,118 bytes), and the new file `skills/wake/references/triage.md` (the flow):
+
+> Run `python3 scripts/pull_moment.py wake` first (FR-009; no-op in `local` mode). Show any line it prints (unreachable board, unsynced board writes) atop the briefing and continue.
+> Tasks to triage: follow `references/triage.md`.
+
+**DELTA**: At `wake`, a developer in board mode now sees their own board tasks that are unplanned or changed since the last session, with a documented propose-priority, ask, then plan-or-investigate flow. No agent can be spawned on a guide missing its Requirement, Acceptance Criteria or Verification Command, in either board mode.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/T160.jsonl`, never the
 implementing agent alone]

@@ -230,7 +230,7 @@ def test_wake_skill_points_to_triage_reference_within_codex_cap():
     skill = ROOT / "skills" / "wake" / "SKILL.md"
     assert "references/triage.md" in skill.read_text(encoding="utf-8")
     assert skill.stat().st_size <= 8192, "lib/harness-fetch.sh skips a Codex skill over 8 KB"
-    flow = (ROOT / "skills" / "wake" / "references" / "triage.md").read_text(encoding="utf-8")
+    flow = (ROOT / "skills" / "wake" / "references" / "triage.md").read_text(encoding="utf-8").lower()
     for needle in ("propose a priority", "reason", "ask the user", "update --guide",
                    "brainstorming", "grill-with-docs", "untrusted", "never spawn"):
         assert needle in flow, needle
@@ -249,6 +249,27 @@ def test_complete_guide_definition():
     assert "Requirement" in missing_guide_sections(
         COMPLETE.replace("## Requirement (Pillar", "## Requirements (Pillar")
                 .replace("### Requirement Fidelity Gate", "### Gate"))
+
+
+BUGFIX = """## Bug Fix Task Guide — T901
+
+### Mental Model (confirmed by user)
+- Observed: crash
+
+### Intake
+- Trigger: run it
+
+### Diagnosis Gates (Pillar 1 — must pass before any fix)
+- [ ] Phase 1 feedback loop built and running
+"""
+
+
+def test_bugfix_flavor_has_its_own_required_sections():
+    """skills/bugfix Step 3's guide has no Requirement/AC/Verification headings; detected by
+    its Mental Model heading, as craft-spawn-prompt detects it."""
+    assert missing_guide_sections(BUGFIX) == []
+    assert missing_guide_sections(BUGFIX.replace("- [ ] Phase 1 feedback loop built and running\n",
+                                                 "")) == ["Diagnosis Gates"]
 
 
 # --- AC4: the spawn gate ------------------------------------------------------------------
@@ -315,7 +336,8 @@ def test_a_crash_in_the_completeness_check_fails_open(tmp_path, monkeypatch, cap
 
 # --- AC5: no false block on the repo's own guides ------------------------------------------
 
-KNOWN_INCOMPLETE_DONE = {"T018", "T019", "T020", "T021", "T022", "T023", "T024"}
+# Pre-template guides, all Done. T018-T020 are bugfix-flavor guides and complete as such.
+KNOWN_INCOMPLETE_DONE = {"T021", "T022", "T023", "T024"}
 
 
 def test_every_not_done_repo_guide_is_complete():

@@ -37,7 +37,7 @@
       "backend"
     ],
     "assignee": "bob",
-    "description": "# TASK_GUIDE — ENG-102: Session store\n**Date**: 2026-10-19\n**Complexity Level**: C2\n**Risk Level**: High\n**Priority**: P0\n**Assigned agent**: backend-developer\n\n---\n\n## Dependencies & Reachability\n\n**Depends on**: ENG-104 — logout endpoint\n\n**Entry point**: `SessionStore.get`\n\n---\n\n## Acceptance Criteria\n\n| # | Criterion | Traces to |\n|---|---|---|\n| 1 | Sessions survive a restart | FR-001 |\n"
+    "description": "# TASK_GUIDE — ENG-102: Session store\n**Date**: 2026-10-19\n**Complexity Level**: C2\n**Risk Level**: High\n**Priority**: P0\n**Assigned agent**: backend-developer\n\n---\n\n## Requirement\n\nSessions persist across restarts.\n\n---\n\n## Dependencies & Reachability\n\n**Depends on**: ENG-104 — logout endpoint\n\n**Entry point**: `SessionStore.get`\n\n---\n\n## Acceptance Criteria\n\n| # | Criterion | Traces to |\n|---|---|---|\n| 1 | Sessions survive a restart | FR-001 |\n\n### Verification Command\n\n```bash\npython3 -m pytest tests/test_session_store.py -q\n```\n"
   },
   {
     "id": "ENG-103",
