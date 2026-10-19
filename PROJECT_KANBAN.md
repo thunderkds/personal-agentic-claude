@@ -9,8 +9,6 @@
 
 ### Todo
 - [ ] **T155** — Init asks the four board questions and writes `.claude/board.json` | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T155.md` | Depends on: T154 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`).
-- [ ] **T156** — Push + outbox: milestone comments and Ready for Review reach the board, offline writes arrive later exactly once | backend-developer | C2 | Risk: Medium | P0 | Guide: `tasks/TASK_GUIDE_T156.md` | Depends on: T154 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`).
-- [ ] **T157** — Pull moments wired in, and only my In Progress tasks block my push | common-infrastructure | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T157.md` | Depends on: T154 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`). Supersedes deferred T142 (assignee + my-task filter) once Done.
 - [ ] **T158** — Decision Log: decisions go to one shared board document and reach every developer | backend-developer | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T158.md` | Depends on: T156 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`).
 - [ ] **T159** — Planning creates the board issue with the full guide as its description | backend-developer | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T159.md` | Depends on: T156 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`).
 - [ ] **T160** — `wake` triages my new board tasks: propose priority, ask, then ready-or-investigate | backend-developer | C2 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_T160.md` | Depends on: T159 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`).
@@ -85,6 +83,8 @@
 
 
 ### In Progress
+- [ ] **T157** — Pull moments wired in, and only my In Progress tasks block my push | common-infrastructure | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T157.md` | Depends on: T154 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`). Supersedes deferred T142 (assignee + my-task filter) once Done. | Started 2026-10-19, worktree `../wt-t157` (`feat/t157-pull-moments`).
+- [ ] **T156** — Push + outbox: milestone comments and Ready for Review reach the board, offline writes arrive later exactly once | backend-developer | C2 | Risk: Medium | P0 | Guide: `tasks/TASK_GUIDE_T156.md` | Depends on: T154 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`). | Started 2026-10-19, worktree `../wt-t156` (`feat/t156-board-push`).
 
 
 
