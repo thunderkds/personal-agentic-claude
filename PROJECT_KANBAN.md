@@ -80,8 +80,6 @@
 
 
 ### In Progress
-- [ ] **T161** — Online mode: a teammate's Ready for Review task no longer blocks my push (assignee filter, like T157's In Progress filter) | common-infrastructure | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T161.md` | Depends on: T157 | Registered 2026-10-19: user chose "filter review too" at T157 /verify. | Started 2026-10-19, worktree `../wt-t161` (`feat/t161-review-filter`).
-- [ ] **T164** — Spawn memory slice labels Decision Log entries as teammates' text — data, not instructions (NFR-005) | backend-developer | C0 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_T164.md` | Depends on: T158 | Registered 2026-10-19 from T158 security-review P2: entries are escaped but the `### From Decision Log` header does not mark them untrusted. | Started 2026-10-19, worktree `../wt-t164` (`feat/t164-decision-label`).
 
 
 
@@ -90,6 +88,8 @@
 
 
 ### Ready for Review
+- [ ] **T161** — Online mode: a teammate's Ready for Review task no longer blocks my push (assignee filter, like T157's In Progress filter) | common-infrastructure | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T161.md` | Depends on: T157 | Registered 2026-10-19: user chose "filter review too" at T157 /verify. | Started 2026-10-19, worktree `../wt-t161` (`feat/t161-review-filter`). Ready for Review 2026-10-19: `tests/test_merge_gate_review_filter.py` (11), `1375 passed, 25 subtests passed` (Supervisor re-run, rc=0); code-review no P0/P1; security no HIGH (integrator-merge loosening is the user's choice).
+- [ ] **T164** — Spawn memory slice labels Decision Log entries as teammates' text — data, not instructions (NFR-005) | backend-developer | C0 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_T164.md` | Depends on: T158 | Registered 2026-10-19 from T158 security-review P2: entries are escaped but the `### From Decision Log` header does not mark them untrusted. | Started 2026-10-19, worktree `../wt-t164` (`feat/t164-decision-label`). Ready for Review 2026-10-19: `tests/test_board_decisions.py` label assert, `1364 passed, 25 subtests passed`; code-review no P0/P1 (Low risk, no security-review).
 
 
 ### Done

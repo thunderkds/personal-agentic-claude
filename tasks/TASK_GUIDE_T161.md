@@ -82,7 +82,7 @@ This task: At T157 /verify the user chose "filter review too": in board mode `on
 ### Verification Command (exact, runnable)
 
 ```bash
-python3 -m pytest -q tests/test_merge_gate_review_filter.py tests/test_merge_gate_my_tasks.py .claude/hooks/tests
+python3 -m pytest -q tests/test_merge_gate_review_filter.py .claude/hooks/tests
 ```
 
 ### Evidence (filled by reviewer at Stage 4/5)
