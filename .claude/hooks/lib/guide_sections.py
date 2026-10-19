@@ -47,13 +47,20 @@ Contract, copied deliberately from ``lib/task_context.py``:
 """
 import os
 import re
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from board.config import PATH_SAFE_ID, task_id_pattern  # noqa: E402
+from board.config import normalize_task_id as _canonical_task_id  # noqa: E402
 
 GUIDE_PREFIX = "TASK_GUIDE_"
 REVIEW_PREFIX = "TASK_REVIEW_"
 
 # `T64` and `T064` name the same task. Anchored end-to-end: no separators, no
-# path components, no shell metacharacters can survive this.
-TASK_ID_PATTERN = re.compile(r"\AT(\d{1,6})\Z", re.IGNORECASE)
+# path components, no shell metacharacters can survive this. A board ID (T153) is
+# accepted when `.claude/board.json` sets `id_pattern`, and must still pass
+# `PATH_SAFE_ID` after canonicalising, whatever the configured pattern allows.
+TASK_ID_LOCAL = r"T\d{1,6}"
 
 # A blockquote line, a horizontal rule, or blank. A body made only of these is
 # the vacated `> **Moved.**` pointer (or leftover template guidance) — not
@@ -63,14 +70,21 @@ TASK_ID_PATTERN = re.compile(r"\AT(\d{1,6})\Z", re.IGNORECASE)
 POINTER_LINE_PATTERN = re.compile(r"\A\s*(?:>.*|-{3,}|\*{3,}|_{3,})?\Z")
 
 
-def normalize_task_id(task_id):
-    """`'T64'` / `'t064'` / `'064'`-shaped input -> `'T064'`, else None."""
+def normalize_task_id(task_id, root=None):
+    """`'T64'` / `'t064'`-shaped input -> `'T064'`; a board ID matching the `id_pattern`
+    under `root` -> upper-cased (`'eng-170'` -> `'ENG-170'`); else None."""
     if not isinstance(task_id, str):
         return None
-    match = TASK_ID_PATTERN.match(task_id.strip())
-    if not match:
+    pattern = task_id_pattern(root, TASK_ID_LOCAL)
+    if not re.fullmatch(pattern, task_id.strip(), re.IGNORECASE):
         return None
-    return "T" + match.group(1).zfill(3)
+    canonical = _canonical_task_id(task_id)
+    return canonical if PATH_SAFE_ID.match(canonical) else None
+
+
+def _project_root(tasks_dir):
+    """`<root>/tasks` -> `<root>`, where `.claude/board.json` lives."""
+    return os.path.dirname(os.path.abspath(tasks_dir))
 
 
 def is_pointer_only(body):
@@ -111,11 +125,12 @@ def _read_text(path):
 
 def _candidate_paths(tasks_dir, prefix, task_id):
     """Zero-padded first, then the raw digits — the two-line path juggling that
-    was duplicated at three call sites before this module existed."""
-    digits = task_id[1:]
+    was duplicated at three call sites before this module existed. A board ID has
+    one name only."""
     names = [f"{prefix}{task_id}.md"]
+    digits = task_id[1:]
     unpadded = digits.lstrip("0") or "0"
-    if unpadded != digits:
+    if digits.isdigit() and unpadded != digits:
         names.append(f"{prefix}T{unpadded}.md")
     return [os.path.join(tasks_dir, name) for name in names]
 
@@ -138,8 +153,10 @@ def read_guide_section(task_id, heading, tasks_dir):
     source carries it. Never raises.
     """
     try:
-        normalized = normalize_task_id(task_id)
-        if not normalized or not isinstance(tasks_dir, str) or not tasks_dir:
+        if not isinstance(tasks_dir, str) or not tasks_dir:
+            return None
+        normalized = normalize_task_id(task_id, _project_root(tasks_dir))
+        if not normalized:
             return None
         for prefix in (GUIDE_PREFIX, REVIEW_PREFIX):
             body = _section_from(tasks_dir, prefix, normalized, heading)
@@ -154,8 +171,10 @@ def read_review_text(task_id, tasks_dir):
     """The sibling review file's full text, or None. For callers handed a guide
     path rather than a task id (`delivery-report`'s renderer)."""
     try:
-        normalized = normalize_task_id(task_id)
-        if not normalized or not isinstance(tasks_dir, str) or not tasks_dir:
+        if not isinstance(tasks_dir, str) or not tasks_dir:
+            return None
+        normalized = normalize_task_id(task_id, _project_root(tasks_dir))
+        if not normalized:
             return None
         for path in _candidate_paths(tasks_dir, REVIEW_PREFIX, normalized):
             text = _read_text(path)

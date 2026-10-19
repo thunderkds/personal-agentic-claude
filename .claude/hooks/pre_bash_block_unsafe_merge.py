@@ -41,6 +41,7 @@ sys.path.insert(0, os.path.join(HOOKS_DIR, "lib"))
 try:
     from guide_sections import read_guide_section  # noqa: E402
     from shell_data import strip_heredoc_bodies, strip_quoted_spans  # noqa: E402
+    from board.config import task_id_pattern  # noqa: E402
 except Exception as exc:  # pragma: no cover - exercised via subprocess test
     print(json.dumps({
         "decision": "block",
@@ -48,8 +49,8 @@ except Exception as exc:  # pragma: no cover - exercised via subprocess test
             "[hook:pre_bash] Evidence resolver unavailable "
             f"({type(exc).__name__}: {exc}) — cannot confirm Stage 5 verify "
             "evidence for any task, so this push/merge is blocked. Restore "
-            ".claude/hooks/lib/guide_sections.py and "
-            ".claude/hooks/lib/shell_data.py."
+            ".claude/hooks/lib/guide_sections.py, "
+            ".claude/hooks/lib/shell_data.py and .claude/hooks/lib/board/config.py."
         ),
     }))
     sys.exit(0)
@@ -425,7 +426,8 @@ def main():
     except FileNotFoundError:
         sys.exit(0)
 
-    def tasks_in_section(section_title):
+    def tasks_in_section(section_title, id_pattern=r"T\d+"):
+        row_id = re.compile(rf"\*\*({id_pattern})\*\*")
         m = re.search(
             rf"### {re.escape(section_title)}\n(.*?)(?=^###|\Z)", kanban,
             re.DOTALL | re.MULTILINE,
@@ -433,12 +435,14 @@ def main():
         if not m:
             return []
         block = m.group(1).strip()
-        return [re.search(r"\*\*(T\d+)\*\*", l).group(1)
+        return [row_id.search(l).group(1)
                 for l in block.splitlines()
-                if l.strip().startswith("- ") and re.search(r"\*\*(T\d+)\*\*", l)]
+                if l.strip().startswith("- ") and row_id.search(l)]
 
-    in_progress = tasks_in_section("In Progress")
-    ready_review = tasks_in_section("Ready for Review")
+    # `T\d+`, plus the board's `id_pattern` when `.claude/board.json` sets one (T153).
+    id_pattern = task_id_pattern(ROOT)
+    in_progress = tasks_in_section("In Progress", id_pattern)
+    ready_review = tasks_in_section("Ready for Review", id_pattern)
 
     blockers = []
 

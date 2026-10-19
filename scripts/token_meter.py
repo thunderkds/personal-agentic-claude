@@ -108,6 +108,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                 os.pardir, ".claude", "hooks", "lib"))
 from shell_data import strip_heredoc_bodies, strip_quoted_spans  # noqa: E402
+from board.config import task_id_pattern  # noqa: E402
 
 PRICE_IN_PER_MTOK = 5.0     # claude-opus-5, $ per million input tokens
 PRICE_OUT_PER_MTOK = 25.0   # claude-opus-5, $ per million output tokens
@@ -130,7 +131,7 @@ INTERPRETER = re.compile(r"\bpython[0-9.]*\s+(?:-\s*<<|-[A-Za-z]*c\b)")
 INTERPRETER_WRITE = re.compile(r"open\([^()]*,\s*(?:mode\s*=\s*)?['\"][wax][bt+]*['\"]"
                                r"|\.write_text\(")
 EXCLUDED_ATTACHMENTS = ("prompt_snapshot",)
-SPAWN_PATTERN = re.compile(r"TASK_GUIDE_(T\d+)")
+SPAWN_PATTERN = re.compile(r"TASK_GUIDE_(T\d+)")  # main() adds the board's IDs (T153)
 SAFE_NAME = re.compile(r"^[A-Za-z0-9_.:-]{1,64}$")
 ERROR_LINE = re.compile(r"error|fail|exception|traceback|fatal|panic", re.IGNORECASE)
 KEEP_HEAD, KEEP_TAIL, ERROR_CAP = 40, 60, 60
@@ -705,6 +706,9 @@ def main(argv=None):
     parser.add_argument("--price-out", type=float, default=PRICE_OUT_PER_MTOK, help="$ per MTok output")
     parser.add_argument("--json", action="store_true", help="print one JSON object")
     args = parser.parse_args(argv)
+    # Board IDs from the project the meter runs in (`.claude/board.json` under cwd, T153).
+    global SPAWN_PATTERN
+    SPAWN_PATTERN = re.compile(rf"TASK_GUIDE_({task_id_pattern(os.getcwd())})")
     if args.bash_lines is not None and args.bash_lines < 0:
         parser.error("--bash-lines must be >= 0")
 
