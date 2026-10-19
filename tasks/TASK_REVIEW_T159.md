@@ -14,15 +14,15 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | pass | `tests/test_board_create.py` (33 tests, AC1-AC4); `python3 -m pytest tests/test_board_create.py -q` -> `33 passed in 0.09s` |
+| Verification command run | pass | `python3 -m pytest -q tests .claude/hooks/tests` exit=0, tail: `1346 passed, 25 subtests passed in 29.96s` |
+| Negative cases hold | pass | missing fields refused (exit 2), offline/auth/rejected create exit 1 with no file and no outbox, local mode non-zero, unsafe board ID writes nothing |
+| verify | pass | /verify 2026-10-19 on an isolated copy of feat/t159-board-create against a stateful stub Linear (shim rewrites api.linear.app): `create --guide draft.md` -> `[board] created ENG-5: tasks/TASK_GUIDE_ENG-5.md written`, rc=0; Linear got issueCreate {teamId t1, projectId p1, assigneeId u1 (viewer), priority 2, labelIds [L1 reused case-insensitively, L12 created for risk:medium]}; forged `☑ pass` Evidence row vacated in the cache; `pull` renders `ENG-5 ... C2, Risk: Medium, P1`; `update --guide ENG-5` (and `eng-5`) round-trips an edit; offline -> rc=1 `cannot reach Linear ... a create cannot be queued; nothing was written`, tasks/ unchanged, no .board/; bad key rc=1, key not echoed; no key rc=2; missing Risk/Priority rc=2; board ID `../../x` -> rc=1, no file; read-back 503 -> guide from the draft, warned; local mode rc=2 with 0 requests — pass |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | pass | code-review + security-review on feat/online-board...feat/t159-board-create (7 files) plus callers (render.guide_files, write_atomically, main error handling); reports `reports/code-review_feat-t159-board-create_20261019T174452.html`, `reports/security-review_feat-t159-board-create_20261019T174452.html` |
+| Full smoke suite still green (no regression) | pass | see Verification row; one obsolete assertion in `tests/test_board_sync_pull.py` updated (stubs now checked on `BoardAdapter`) |
+| **UI: Visual regression (diff or verdict pasted)** | N/A | backend CLI task, no UI |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | N/A | backend CLI task, no UI |
+| **UI: Responsiveness at target viewports** | N/A | backend CLI task, no UI |
 
 ---
 
@@ -33,12 +33,23 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured 2026-10-19T10:39:47Z in `/home/hungnguyenhuu/workspace/pets/wt-t159`, before any implementation commit:
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+```
+$ python3 scripts/board_sync.py create --guide draft.md
+usage: board_sync.py [-h] {pull,flush,status,decide,init,push} ...
+board_sync.py: error: argument command: invalid choice: 'create' (choose from pull, flush, status, decide, init, push)
+exit=2
+```
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+**AFTER**: 2026-10-19T10:43:02Z, same command against a scratch project with the fake board:
 
-**WITNESS**: [who ran it and when — derived from `memory/event-trace/T159.jsonl`, never the
-implementing agent alone]
+```
+$ python3 scripts/board_sync.py create --guide draft.md
+[board] created ENG-1: tasks/TASK_GUIDE_ENG-1.md written
+exit=0
+```
+
+**DELTA**: Stage 2 in board mode can create the board issue from a draft guide and get the board-assigned ID plus the guide cache in one command.
+
+**WITNESS**: Supervisor (main session) at /verify, 2026-10-19, Bash calls attributed to T159 via the active-task state file (`memory/event-trace/T159.jsonl`).
