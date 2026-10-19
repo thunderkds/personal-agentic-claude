@@ -8,7 +8,6 @@
 ## Board
 
 ### Todo
-- [ ] **T153** — Task IDs come from board config, so hooks accept `T142` and `ENG-170` side by side | common-infrastructure | C2 | Risk: High | P0 | Guide: `tasks/TASK_GUIDE_T153.md` | Depends on: none | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`).
 - [ ] **T154** — First pull from Linear: `board_sync.py pull` renders the board cache | backend-developer | C2 | Risk: High | P0 | Guide: `tasks/TASK_GUIDE_T154.md` | Depends on: T153 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`).
 - [ ] **T155** — Init asks the four board questions and writes `.claude/board.json` | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T155.md` | Depends on: T154 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`).
 - [ ] **T156** — Push + outbox: milestone comments and Ready for Review reach the board, offline writes arrive later exactly once | backend-developer | C2 | Risk: Medium | P0 | Guide: `tasks/TASK_GUIDE_T156.md` | Depends on: T154 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`).
@@ -87,6 +86,7 @@
 
 
 ### In Progress
+- [ ] **T153** — Task IDs come from board config, so hooks accept `T142` and `ENG-170` side by side | common-infrastructure | C2 | Risk: High | P0 | Guide: `tasks/TASK_GUIDE_T153.md` | Depends on: none | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`). | Started 2026-10-19, worktree `../wt-t153` (`feat/t153-board-id-pattern`).
 
 
 
