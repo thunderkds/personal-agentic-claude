@@ -85,7 +85,6 @@
 
 
 ### In Progress
-- [ ] **T154** — First pull from Linear: `board_sync.py pull` renders the board cache | backend-developer | C2 | Risk: High | P0 | Guide: `tasks/TASK_GUIDE_T154.md` | Depends on: T153 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`). | Started 2026-10-19, worktree `../wt-t154` (`feat/t154-board-pull`).
 
 
 
@@ -94,6 +93,7 @@
 
 
 ### Ready for Review
+- [ ] **T154** — First pull from Linear: `board_sync.py pull` renders the board cache | backend-developer | C2 | Risk: High | P0 | Guide: `tasks/TASK_GUIDE_T154.md` | Depends on: T153 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`). | Started 2026-10-19, worktree `../wt-t154` (`feat/t154-board-pull`). Ready for Review 2026-10-19: 1175 passed (Supervisor re-run).
 
 
 ### Done
