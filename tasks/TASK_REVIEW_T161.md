@@ -33,8 +33,21 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured on `feat/t161-review-filter` at `65c0bc4` (no implementation commit yet).
+Harness: a temp copy of `.claude/hooks` + `scripts/board_sync.py`, `.claude/board.json` online
+(`board: fake`, `me: alice`), fake board with one task `ENG-181` in `In Review` assigned to `bob`
+and no evidence; the gate fed `{"tool_name": "Bash", "tool_input": {"command": "git push"}}`.
+
+```
+$ date -u +%Y-%m-%dT%H:%M:%SZ && git rev-parse --short HEAD && python3 <scratchpad>/demo_t161.py /home/hungnguyenhuu/workspace/pets/wt-t161
+2026-10-19T15:15:10Z
+65c0bc4
+exit: 0
+stdout: {"decision": "block", "reason": "[hook:pre_bash] Pipeline gate failed — cannot push/merge:\n  • Tasks in Ready for Review missing Stage 5 verify evidence: ENG-181 (no evidence row)\nComplete Stage 4 review and Stage 5 verify first.\n  Note: if a task above is missing its trace record rather than its evidence row, attribute your Bash calls by writing the active-task state file first: ... (attribution remedy elided)"}
+stderr: (empty)
+```
+
+Today the teammate's (`bob`'s) unverified Ready for Review row blocks `alice`'s push.
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
