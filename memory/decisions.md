@@ -2374,3 +2374,18 @@ landed, so the message says to check the board before retrying.
 **Open**: Linear field names (`issueCreate` input, `issueLabels`, `issueLabelCreate`, `issueUpdate` description) are
 assumed, as with T155/T158; the cached guide has no `# TASK_GUIDE — <ID>: <title>` heading (nothing reads it).
 **Files**: scripts/board_sync.py, .claude/hooks/lib/board/linear.py, .claude/hooks/lib/board/fake.py, docs/claude-md/pipeline-stages.md, tests/test_board_create.py
+
+## T160: the spawn gate blocks an incomplete guide; `wake` triages my board tasks (2026-10-19)
+**Decision** (user, at T160 pickup): `pre_agent_validate_guide.py` now **blocks** a spawn whose guide lacks a required
+section, in both board modes — before, it only checked the file existed, so a one-line Linear issue's guide passed.
+"Complete" is defined once, `guide_sections.missing_guide_sections(text)`: `Requirement`, `Acceptance Criteria`,
+`Verification Command` each present and non-blank; a bugfix-flavoured guide (has `Mental Model`, as
+`craft-spawn-prompt` detects it) needs `Mental Model` + `Diagnosis Gates` instead. Template `[placeholder]` text counts
+as filled. A crash in the check fails open. Done legacy guides T021–T024 are incomplete and would now be blocked.
+`board_sync.py triage [--mark]` lists my (assignee == `me`) not-Done tasks whose guide is incomplete or that are
+new to me / changed since `.board/triage_seen.json`; `pull_moment.py wake` runs it with `--mark` after a good pull, so
+a change shows at one wake and an unplanned task shows until planned. The flow (propose priority → ask → plan or
+investigate) is in `skills/wake/references/triage.md`; `skills/wake/SKILL.md` carries one pointer (8 KB Codex cap).
+**Why**: FR-011 / D9, and Hard-Stop Gate 1 has to hold when guides come from the board.
+**Open**: with no `me` in board.json, wake's triage is silently empty (triage itself exits 2 with a message).
+**Files**: .claude/hooks/pre_agent_validate_guide.py, .claude/hooks/lib/guide_sections.py, scripts/board_sync.py, scripts/pull_moment.py, skills/wake/SKILL.md, skills/wake/references/triage.md, tests/test_board_triage.py
