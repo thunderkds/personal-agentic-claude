@@ -105,30 +105,58 @@ def row_assignees(line):
             for m in [ASSIGNEE_FIELD.fullmatch(f.strip())] if m]
 
 
-def my_blocking_tasks(rows, me, kanban):
-    """(IDs that block my push, warnings) for the In Progress `(id, line)` rows.
+def split_by_assignee(rows, me, kanban, safe_side):
+    """(mine, teammates', unassigned, warnings) for a section's `(id, line)` rows.
 
-    Blocks on every row — the gate before T157 — when `me` is not usable or the cache
-    is not a board render (a failed pull left a hand-written board). Otherwise a row
-    blocks when its assignee is me (case-insensitive: a near-match blocks rather than
-    passes) or when it carries more than one assignee field. Unassigned rows are warned
-    about, not blocked."""
+    Every row counts as mine — the gate before T157 — when `me` is not usable or the
+    cache is not a board render (a failed pull left a hand-written board); `safe_side`
+    ends the warning that says so. Otherwise a row is mine when its assignee is me
+    (case-insensitive: a near-match counts as mine rather than passing) or when it
+    carries more than one assignee field."""
     all_ids = [task_id for task_id, _ in rows]
     me_token = re.sub(r"[^A-Za-z0-9._-]", "", me) if isinstance(me, str) else ""
     if not me_token:
-        return all_ids, ["`me` is missing from .claude/board.json — every In Progress "
-                         "task blocks (safe side)"]
+        return all_ids, [], [], [f"`me` is missing from .claude/board.json — {safe_side}"]
     if BOARD_CACHE_MARKER not in kanban:
-        return all_ids, ["PROJECT_KANBAN.md is not a board render — every In Progress "
-                         "task blocks (safe side)"]
-    blocking, warnings = [], []
+        return all_ids, [], [], [f"PROJECT_KANBAN.md is not a board render — {safe_side}"]
+    mine, teammates, unassigned = [], [], []
     for task_id, line in rows:
         assignees = row_assignees(line)
         if not assignees:
-            warnings.append(f"{task_id} is In Progress but unassigned — not blocking")
+            unassigned.append(task_id)
         elif len(assignees) > 1 or assignees[0].casefold() == me_token.casefold():
-            blocking.append(task_id)
-    return blocking, warnings
+            mine.append(task_id)
+        else:
+            teammates.append(task_id)
+    return mine, teammates, unassigned, []
+
+
+def my_blocking_tasks(rows, me, kanban):
+    """(IDs that block my push, warnings) for the In Progress `(id, line)` rows.
+
+    Mine block (see `split_by_assignee`); a teammate's are silent. Unassigned rows are
+    warned about, not blocked."""
+    mine, _, unassigned, warnings = split_by_assignee(
+        rows, me, kanban, "every In Progress task blocks (safe side)")
+    return mine, warnings + [f"{task_id} is In Progress but unassigned — not blocking"
+                             for task_id in unassigned]
+
+
+def my_review_tasks(rows, me, kanban):
+    """(IDs whose verify evidence the gate checks, notes) for the Ready for Review
+    `(id, line)` rows (T161).
+
+    Mine are checked (see `split_by_assignee`), and so are unassigned rows: unlike an
+    In Progress row, this one asks the gate to let work ship, so nobody owning it is a
+    doubt, and every doubt checks. A teammate's are named in one note line, unchecked:
+    their evidence lives in their checkout."""
+    mine, teammates, unassigned, notes = split_by_assignee(
+        rows, me, kanban, "every Ready for Review task is checked (safe side)")
+    checked = set(mine + unassigned)
+    if teammates:
+        notes.append("teammates' Ready for Review tasks, not checked here: "
+                     + ", ".join(teammates))
+    return [task_id for task_id, _ in rows if task_id in checked], notes
 
 
 # --- New decisions at wake (T158) ----------------------------------------------------

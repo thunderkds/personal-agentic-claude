@@ -42,7 +42,8 @@ try:
     from guide_sections import read_guide_section  # noqa: E402
     from shell_data import strip_heredoc_bodies, strip_quoted_spans  # noqa: E402
     from board.config import load_config, task_id_pattern  # noqa: E402
-    from board.moments import board_mode, my_blocking_tasks, pull_cache  # noqa: E402
+    from board.moments import (  # noqa: E402
+        board_mode, my_blocking_tasks, my_review_tasks, pull_cache)
 except Exception as exc:  # pragma: no cover - exercised via subprocess test
     print(json.dumps({
         "decision": "block",
@@ -459,11 +460,21 @@ def main():
 
     # T157 / FR-011: online, the cache holds the whole team's board, so only my In
     # Progress tasks block. Every doubt (`me` unset, a cache that is not a board render,
-    # two assignee fields on one row) resolves to blocking. Ready for Review is unfiltered.
+    # two assignee fields on one row) resolves to blocking. T161: likewise only my Ready
+    # for Review tasks (and unassigned ones) are checked for verify evidence; a filter
+    # that raises checks every row.
     if mode == "online":
         in_progress, filter_notes = my_blocking_tasks(
             tasks_in_section("In Progress", id_pattern, with_lines=True),
             (load_config(ROOT) or {}).get("me"), kanban)
+        try:
+            ready_review, review_notes = my_review_tasks(
+                tasks_in_section("Ready for Review", id_pattern, with_lines=True),
+                (load_config(ROOT) or {}).get("me"), kanban)
+        except Exception:
+            review_notes = ["the Ready for Review filter failed — every Ready for Review "
+                            "task is checked (safe side)"]
+        filter_notes = filter_notes + review_notes
         notes.extend(filter_notes)
         for note in filter_notes:
             print(f"[hook:pre_bash] {note}", file=sys.stderr)
