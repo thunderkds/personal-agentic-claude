@@ -33,8 +33,28 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured 2026-10-19T02:32:33Z, before any implementation commit, on branch `fix/t152-board-root`
+with the script unchanged. Command: `python3 -m pytest tests/test_dirty_worktrees.py -q -k test_subfolder_run_finds_board`
+
+```
+$ date -u +%Y-%m-%dT%H:%M:%SZ
+2026-10-19T02:32:33Z
+$ python3 -m pytest tests/test_dirty_worktrees.py -q -k test_subfolder_run_finds_board
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________________________ test_subfolder_run_finds_board ________________________
+...
+>       assert run(docs).strip() == f"T901 {wt} 1 modified, 2 untracked"
+E       AssertionError: assert '' == 'T901 /tmp/py..., 2 untracked'
+E
+E         - T901 /tmp/pytest-of-hungnguyenhuu/pytest-0/test_subfolder_run_finds_board0/wt901 1 modified, 2 untracked
+tests/test_dirty_worktrees.py:108: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_dirty_worktrees.py::test_subfolder_run_finds_board - Assert...
+1 failed, 12 deselected in 0.15s
+```
+
+Run from `docs/`, the script prints nothing: the bare `PROJECT_KANBAN.md` path resolves against cwd and misses the board.
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 

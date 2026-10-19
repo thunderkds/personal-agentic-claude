@@ -100,6 +100,14 @@ def test_sc4_main_worktree_never_reported(tmp_path):
     assert run(repo) == ""
 
 
+def test_subfolder_run_finds_board(tmp_path):
+    repo = make_repo(tmp_path)
+    wt = add_tree(repo, tmp_path, "wt901", "feat/t901-x", True)
+    docs = repo / "docs"
+    docs.mkdir()
+    assert run(docs).strip() == f"T901 {wt} 1 modified, 2 untracked"
+
+
 def test_sc5_no_board(tmp_path):
     repo = make_repo(tmp_path)
     add_tree(repo, tmp_path, "wt901", "feat/t901-x", True)
