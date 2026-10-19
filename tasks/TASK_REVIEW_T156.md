@@ -33,8 +33,19 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured 2026-10-19T07:43:08Z in `wt-t156`, before any implementation commit):
+
+```
+$ date -u: 2026-10-19T07:43:08Z
+$ python3 scripts/board_sync.py push status ENG-1 ready-for-review
+usage: board_sync.py [-h] {pull}
+board_sync.py: error: argument command: invalid choice: 'push' (choose from pull)
+exit=2
+$ python3 scripts/board_sync.py status
+usage: board_sync.py [-h] {pull}
+board_sync.py: error: argument command: invalid choice: 'status' (choose from pull)
+exit=2
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
