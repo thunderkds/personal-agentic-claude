@@ -39,6 +39,46 @@ yet), by the implementing agent. Command: `sh t157_demo.sh /home/hungnguyenhuu/w
 `scripts/board_sync.py`, with a fake board (`ENG-170` In Progress `@alice`, whose guide predicts
 `.env`; `ENG-171` In Progress `@bob`) and `.claude/board.json` = `{"board": "fake", "id_pattern":
 "ENG-\\d+", "me": "alice"}`. No network. The gate's long attribution note is elided as `…`.
+To re-run for AFTER, save the script below as `t157_demo.sh` outside the repo and pipe the output
+through `sed 's/  Note: if a task above.*session starts\."/  Note: …(attribution remedy elided)"/'`.
+
+<details><summary>t157_demo.sh</summary>
+
+```sh
+#!/bin/sh
+# T157 demonstration: online-mode merge gate + pull moments, against a fake board (no network).
+# Usage: sh t157_demo.sh <worktree>
+WT="$1"
+P=$(mktemp -d)/proj
+mkdir -p "$P/.claude" "$P/scripts" "$P/tasks"
+cp -r "$WT/.claude/hooks" "$P/.claude/hooks"
+rm -rf "$P/.claude/hooks/tests" "$P/.claude/hooks/.state"
+cp "$WT/scripts/board_sync.py" "$P/scripts/"
+cp "$WT/.claude/sensitive-paths.txt" "$P/.claude/"
+[ -f "$WT/scripts/pull_moment.py" ] && cp "$WT/scripts/pull_moment.py" "$P/scripts/"
+cat > "$P/board.json" <<'EOF'
+[{"id": "ENG-170", "title": "My task", "status": "In Progress", "assignee": "alice", "description": "# guide ENG-170 v1\n\n## Files to Change (Predicted)\n\n| File | Change |\n|---|---|\n| `.env` | board-predicted |\n"},
+ {"id": "ENG-171", "title": "Teammate task", "status": "In Progress", "assignee": "bob", "description": "# guide ENG-171\n"}]
+EOF
+printf '{"board": "fake", "fake_board": "board.json", "id_pattern": "ENG-\\\\d+", "me": "alice"}' > "$P/.claude/board.json"
+cd "$P" || exit 1
+unset LINEAR_API_KEY CLAUDE_ACTIVE_TASK
+export CLAUDE_PROJECT_DIR="$P"
+date -u +%Y-%m-%dT%H:%M:%SZ
+echo '$ python3 scripts/board_sync.py pull'; python3 scripts/board_sync.py pull
+echo '$ git push   (gate, me=alice; ENG-170 @alice + ENG-171 @bob In Progress)'
+echo '{"tool_name":"Bash","tool_input":{"command":"git push"}}' | python3 .claude/hooks/pre_bash_block_unsafe_merge.py; echo " [exit $?]"
+echo '$ python3 scripts/pull_moment.py spawn ENG-170'; python3 scripts/pull_moment.py spawn ENG-170; echo " [exit $?]"
+sed -i 's/v1/v2 changed by a teammate/' board.json
+echo '$ python3 scripts/pull_moment.py review ENG-170   (board guide edited since spawn)'; python3 scripts/pull_moment.py review ENG-170; echo " [exit $?]"
+mv board.json board.gone
+echo '$ git push   (board unreachable)'
+echo '{"tool_name":"Bash","tool_input":{"command":"git push"}}' | python3 .claude/hooks/pre_bash_block_unsafe_merge.py; echo " [exit $?]"
+echo '$ Edit .env as ENG-170   (sensitive path predicted only by the pulled guide)'
+echo '{"tool_name":"Edit","tool_input":{"file_path":".env"},"cwd":"'"$P"'"}' | CLAUDE_ACTIVE_TASK=ENG-170 python3 .claude/hooks/pre_tool_sensitive_path.py; echo " [exit $?, no output = no ask]"
+```
+
+</details>
 
 ```
 2026-10-19T07:45:18Z

@@ -15,7 +15,7 @@ The single source of truth for turning a `tasks/TASK_GUIDE_Txxx.md` into a ready
 ### Workflow
 
 #### 1. Read inputs
-Read the TASK_GUIDE at the given path, the `agents/*.md` file named in its `**Agent guide**` field, and `memory/MEMORY.md`. If any is missing, stop and report to the Supervisor.
+First run `python3 scripts/pull_moment.py spawn <ID>` (pull moment 2, FR-009: in board mode `online` it refreshes the board cache and records the guide's hash for the Ready-for-Review check; no-op in `local`; on `board unreachable — using cache (N unsynced)` carry that line into the output and continue). Then read the TASK_GUIDE at the given path, the `agents/*.md` file named in its `**Agent guide**` field, and `memory/MEMORY.md`. If any is missing, stop and report to the Supervisor.
 
 #### 2. Detect guide flavor
 Search the guide for a `### Mental Model` (or `## Mental Model`) heading.

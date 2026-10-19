@@ -20,6 +20,10 @@ This skill is strictly read-only. It never writes, edits, or creates any file.
 
 ### Workflow
 
+#### Step 0 — Pull (board mode `online`)
+
+Run `python3 scripts/pull_moment.py wake` first (FR-009; no-op in `local` mode). If it prints `board unreachable — using cache (N unsynced)`, show that line atop the briefing and continue.
+
 #### Step 1 — Source Reads (attempt all five before composing output)
 
 Read all five sources in parallel. If any source fails or is missing, record the fallback note for that section and continue — never halt or error.

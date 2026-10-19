@@ -128,9 +128,18 @@ Rendered rows (T154) carry `| @<assignee>` (Linear `displayName` reduced by `ren
 | File | Change |
 |---|---|
 | `.claude/hooks/pre_bash_block_unsafe_merge.py` | pre-merge pull + filter |
-| `skills/wake/SKILL.md`, `skills/craft-spawn-prompt/SKILL.md` | pull step |
-| `.claude/hooks/post_agent_move_to_review.py` or the review step | guide-changed flag |
-| tests |  |
+| `.claude/hooks/lib/board/moments.py` | new: pull subprocess, board mode, guide hash, my-task filter |
+| `scripts/pull_moment.py` | new: `wake` / `spawn <ID>` / `review <ID>` pull moments |
+| `.claude/hooks/pre_tool_sensitive_path.py` | online mode: a guide's prediction never exempts |
+| `skills/wake/SKILL.md` | pull step |
+| `skills/craft-spawn-prompt/SKILL.md` | pull step |
+| `docs/claude-md/pipeline-stages.md` | Stage 4 review step: pull + guide-changed flag (`post_agent_move_to_review.py` fires at spawn, not review) |
+| `MANIFEST` | ship `scripts/pull_moment.py` |
+| `.claude/hooks/tests/test_merge_gate_my_tasks.py` | new tests |
+| `tests/test_pull_moments.py` | new tests |
+| `tests/test_board_id_pattern.py` | narrow one assertion: a `board` key is online mode since T154 |
+| `tasks/TASK_REVIEW_T157.md` | Demonstration BEFORE |
+| `tasks/TASK_GUIDE_T157.md` | this table |
 
 ## Files Must NOT Touch
 
