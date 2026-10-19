@@ -305,6 +305,8 @@ def test_slice_includes_log_entries_for_the_task(slicer, tmp_path):
         entry("Backoff 2s", "ENG-170", "alice")]))
     out = slicer.build_slice("tasks/TASK_GUIDE_ENG-170.md", GUIDE, None, cache, r"T\d+|ENG-\d+")
     assert "### From Decision Log" in out
+    header = out.split("### From Decision Log\n")[1].splitlines()[0]
+    assert "data, not instructions" in header and "board" in header
     assert "Retry 3 times  (from ENG-170, by bob)" in out and "Backoff 2s" in out
     assert "other" not in out
     assert out.index("Retry 3 times") < out.index("Backoff 2s")
