@@ -83,7 +83,6 @@
 
 
 ### In Progress
-- [ ] **T157** — Pull moments wired in, and only my In Progress tasks block my push | common-infrastructure | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T157.md` | Depends on: T154 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`). Supersedes deferred T142 (assignee + my-task filter) once Done. | Started 2026-10-19, worktree `../wt-t157` (`feat/t157-pull-moments`).
 
 
 
@@ -92,6 +91,7 @@
 
 
 ### Ready for Review
+- [ ] **T157** — Pull moments wired in, and only my In Progress tasks block my push | common-infrastructure | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T157.md` | Depends on: T154 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`). Supersedes deferred T142 (assignee + my-task filter) once Done. | Started 2026-10-19, worktree `../wt-t157` (`feat/t157-pull-moments`). Ready for Review 2026-10-19: 1202 passed (Supervisor re-run with 163ea78 memory fix); merges after T156 (wake 8 KB cap).
 - [ ] **T156** — Push + outbox: milestone comments and Ready for Review reach the board, offline writes arrive later exactly once | backend-developer | C2 | Risk: Medium | P0 | Guide: `tasks/TASK_GUIDE_T156.md` | Depends on: T154 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`). | Started 2026-10-19, worktree `../wt-t156` (`feat/t156-board-push`). Ready for Review 2026-10-19: 1222 passed (Supervisor re-run with 163ea78 memory fix).
 
 
