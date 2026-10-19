@@ -115,6 +115,7 @@ Keep the shell side to one yes/no and a call to `python3 scripts/board_sync.py i
 ## Edge Case Checklist
 
 - [ ] Team key like `ENG` must be regex-escaped in `id_pattern`
+- [ ] Validate the written `id_pattern` with `board.config` before saving (T153 /verify: a bad pattern silently drops board tasks from the merge gate); store `me` in `render.assignee_token` form (T154)
 - [ ] Workflow with renamed states (`Code Review`) → user maps it once; store in `status_map`
 - [ ] Re-running init on an existing config → confirm before overwrite
 - [ ] `.board/` (outbox dir) added to `.gitignore` here

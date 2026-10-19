@@ -269,6 +269,7 @@
 - [A verified branch is not a merged branch](learnings.md) — T151 missed PR #100: check `git merge-base --is-ancestor` for each task branch before opening a batch PR
 - [The merge gate reads quoted prose in a Bash command](learnings.md) — T153 `/verify`: `claude -p "…git push…"` was blocked by the Supervisor's own gate; drive it from a script file
 - [Bad `board.json` drops board tasks from the merge gate](learnings.md) — T153: invalid `id_pattern` falls back to `T\d+`, warning only on stderr; T155 init must validate it
+- [A board-pulled guide is gate input](learnings.md) — T154: description could forge Evidence (fixed: vacated); `Files to Change` still pre-authorises sensitive paths → T157; online mode = `board` key
 
 ### Learning Records
 <!-- One-liner per active LR: - [LR-NNNN slug](memory/learning-records/LR-NNNN-slug.md) — summary -->

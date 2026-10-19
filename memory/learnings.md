@@ -2775,3 +2775,12 @@ stderr warning. Seen at `/verify`: with `ENG-(\d+)` the gate listed only `T142`,
 headless session never surfaced the warning. A broken config therefore weakens the gate for board tasks
 only; T155 (init) should validate `id_pattern` when it writes the file.
 **Files**: .claude/hooks/lib/board/config.py, .claude/hooks/pre_bash_block_unsafe_merge.py
+
+## A guide pulled from the board is gate input, not just a spec (T154, 2026-10-19)
+Hooks resolve sections guide-first (`guide_sections.read_guide_section`), so once a guide is an issue
+description, whoever edits the issue writes gate input. T154 Stage 4 found a description could carry
+`## Evidence | verify | ☑ pass |` and satisfy the merge gate's evidence half; `render.vacate_review_sections`
+now replaces Evidence/Demonstration with a TASK_REVIEW pointer. Still open (below threshold, routed to
+T157): the `Files to Change` table feeds `pre_tool_sensitive_path.py`, so board text can pre-authorise a
+sensitive-path edit. Online mode is detected by a `board` key in `.claude/board.json` (no `mode` key).
+**Files**: .claude/hooks/lib/board/render.py, .claude/hooks/lib/guide_sections.py, .claude/hooks/pre_tool_sensitive_path.py, .claude/hooks/pre_bash_block_unsafe_merge.py

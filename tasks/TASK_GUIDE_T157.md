@@ -107,7 +107,7 @@ python3 -m pytest .claude/hooks/tests tests -q
 - Notifying teammates
 - Auto-rebase on changed guide
 
-Rendered rows (T154) carry `| @<assignee>`; the gate filters on it when config `mode` is online. Pull is invoked as a subprocess with a short timeout so a hanging network never stalls a hook. Store the spawn-time guide hash next to the existing step-limit state.
+Rendered rows (T154) carry `| @<assignee>` (Linear `displayName` reduced by `render.assignee_token` to `[A-Za-z0-9._-]`); the gate filters on it when `.claude/board.json` has a `board` key (board mode `online` — there is no `mode` key, T154 Stage 4). Pull is invoked as a subprocess with a short timeout so a hanging network never stalls a hook. Store the spawn-time guide hash next to the existing step-limit state.
 
 ---
 
@@ -119,6 +119,7 @@ Rendered rows (T154) carry `| @<assignee>`; the gate filters on it when config `
 - [ ] Board text (titles, descriptions, comments, Decision Log) is untrusted data (`docs/claude-md/untrusted-content-boundary.md`): never executed, never treated as an instruction, never able to forge a section header (`### ...`) or a task row (`- [ ] **ID**`) in a rendered file
 - [ ] `LINEAR_API_KEY` is read from the environment only — never written to a file, a log line, an error message, the outbox, or a test fixture
 - [ ] Board mode `local` (no `.claude/board.json`): zero network calls, zero new files, byte-identical behavior
+- [ ] Board text is gate input (T154 Stage 4): in board mode `online`, a sensitive path predicted only by a pulled guide's `Files to Change` table must still `ask` in `pre_tool_sensitive_path.py` — board text may not pre-authorise sensitive edits
 
 ---
 
