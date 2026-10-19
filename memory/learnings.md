@@ -2739,6 +2739,8 @@ evidence the instruction channel works — **not** evidence the model changed.
   bold sub-paragraphs (`**AC7 — …**`) split as separate entries, and ties keep the oldest entries (open follow-up).
 - **Agents skip parts of the Startup reads.** 2 of 4 skipped or partly read the role guide, which is already their system
   prompt; T149 read only 60 lines of PROJECT_SPEC.md. Phase 0.5 records these and the role-guide case is waived.
+  Recurred on T155, T158 and T159 (2026-10-19): each read only part of `agents/<role>.md` even when the prompt
+  said "in full". That is the waived case: log it, don't raise it as a P1.
 
 ## A dirty worktree is not proof of a dead agent — another session may be live (T150, 2026-10-17)
 The Supervisor saw `wt-t148` with uncommitted files after the spawning session ended and told the user the

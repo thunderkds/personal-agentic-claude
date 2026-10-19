@@ -2361,3 +2361,16 @@ it never takes another session's index lock; silent on any failure.
 **Why**: T144–T149 went to background agents by accident (no rule existed) while the user expected panes.
 **Files**: docs/claude-md/pipeline-stages.md, skills/craft-spawn-prompt/SKILL.md, skills/wake/SKILL.md, skills/wake/scripts/dirty_worktrees.py, tests/test_dirty_worktrees.py, BRAINSTORMING_LOG_spawn-mode.md
 **Follow-up (closed by T152, 2026-10-19)**: the board path is now resolved from `git rev-parse --show-toplevel`, so a run from any subfolder matches a root run. Inside a linked worktree it reads that worktree's board copy — accepted, `wake` runs from the main checkout.
+
+## T159: a board task is created online only — its ID is never queued (2026-10-19)
+**Decision**: in board mode `online`, Stage 2 runs `python3 scripts/board_sync.py create --guide <draft.md>` per task.
+Linear assigns the ID; the issue gets the draft's title, priority (P0→1, P1→2, P2→3), `complexity:cN` / `risk:<level>`
+labels (matched case-insensitively, created once if missing) and the API key's user as assignee; the cache
+`tasks/TASK_GUIDE_<ID>.md` is written from the board's read-back through `render.guide_files`, so a forged Evidence
+section is vacated exactly as on `pull`. `update --guide <ID>` pushes the local guide back to the description only.
+Neither goes through the outbox: offline or rejected → exit 1, nothing written. A timed-out create may still have
+landed, so the message says to check the board before retrying.
+**Why**: an ID invented offline would collide with the board's numbering, and the outbox has no guide-edit kind.
+**Open**: Linear field names (`issueCreate` input, `issueLabels`, `issueLabelCreate`, `issueUpdate` description) are
+assumed, as with T155/T158; the cached guide has no `# TASK_GUIDE — <ID>: <title>` heading (nothing reads it).
+**Files**: scripts/board_sync.py, .claude/hooks/lib/board/linear.py, .claude/hooks/lib/board/fake.py, docs/claude-md/pipeline-stages.md, tests/test_board_create.py
