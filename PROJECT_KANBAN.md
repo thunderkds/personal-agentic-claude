@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-10-17
+**Last updated**: 2026-10-19
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -8,6 +8,14 @@
 ## Board
 
 ### Todo
+- [ ] **T153** — Task IDs come from board config, so hooks accept `T142` and `ENG-170` side by side | common-infrastructure | C2 | Risk: High | P0 | Guide: `tasks/TASK_GUIDE_T153.md` | Depends on: none | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`).
+- [ ] **T154** — First pull from Linear: `board_sync.py pull` renders the board cache | backend-developer | C2 | Risk: High | P0 | Guide: `tasks/TASK_GUIDE_T154.md` | Depends on: T153 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`).
+- [ ] **T155** — Init asks the four board questions and writes `.claude/board.json` | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T155.md` | Depends on: T154 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`).
+- [ ] **T156** — Push + outbox: milestone comments and Ready for Review reach the board, offline writes arrive later exactly once | backend-developer | C2 | Risk: Medium | P0 | Guide: `tasks/TASK_GUIDE_T156.md` | Depends on: T154 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`).
+- [ ] **T157** — Pull moments wired in, and only my In Progress tasks block my push | common-infrastructure | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T157.md` | Depends on: T154 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`). Supersedes deferred T142 (assignee + my-task filter) once Done.
+- [ ] **T158** — Decision Log: decisions go to one shared board document and reach every developer | backend-developer | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T158.md` | Depends on: T156 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`).
+- [ ] **T159** — Planning creates the board issue with the full guide as its description | backend-developer | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T159.md` | Depends on: T156 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`).
+- [ ] **T160** — `wake` triages my new board tasks: propose priority, ask, then ready-or-investigate | backend-developer | C2 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_T160.md` | Depends on: T159 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`).
 - [ ] **T143** — CI re-runs the Verification Command of every task a PR moves to Done | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T143.md` | Depends on: none | Registered 2026-10-16 from the improvement-list grilling + brainstorm (`BRAINSTORMING_LOG_harness-hardening.md`): reuses `lib/guide_sections.py`; fail-closed on a missing/placeholder block; `# ci: skip — <reason>` opt-out
 - [ ] **T142** — Two machines cannot grab the same task: an atomic claim/release | Common-Infrastructure-Agent | C2 | Risk: Medium | P2 | Depends on: none | Registered 2026-10-16 from the improvement-list grilling (#5), **deferred by the user**. Grilling found the constraint any design must meet: `pre_bash_block_unsafe_merge.py` blocks every push while a task is In Progress, so a claim recorded by moving the row cannot be pushed. Candidate recorded, not chosen: an empty `claim/Txxx` remote branch (a push of an existing name fails, which makes it atomic)
 - [ ] **T139** — Update's lock rewrite has no test for `kit_commit` | Common-Infrastructure-Agent | C0 | Risk: Low | P2 | Depends on: T137 | Registered 2026-10-08 from T137 Stage 4 P2: `write_new_lock` records the new kit commit (hand-probed `d82da61`→`2cb8fe3`, and seen at `/verify`) but no assertion in `tests/test_update.sh` pins it
