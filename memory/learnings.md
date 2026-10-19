@@ -2808,3 +2808,8 @@ required Startup reads and said so only when asked; check the `Startup reads:` l
 And T158's pull escaped Decision Log text twice (parsed text was still escaped) — keep text plain in
 memory and escape once, at write.
 **Files**: scripts/board_sync.py, setup.sh, skills/craft-spawn-prompt/SKILL.md, .claude/hooks/lib/board/render.py
+
+## zsh does not word-split `$var`, so `set -- $t` loops silently do the wrong thing (2026-10-19)
+The Supervisor shell is zsh. A `for t in "161 branch" ...; do set -- $t; git merge $2 ...` loop gave `git merge`
+an empty `$2`, and with output sent to /dev/null nothing showed it failed. **Rule**: in zsh use `${=t}` or separate
+arrays, and never hide a merge's output.
