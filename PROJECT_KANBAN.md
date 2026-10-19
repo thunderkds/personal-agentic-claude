@@ -8,7 +8,6 @@
 ## Board
 
 ### Todo
-- [ ] **T154** — First pull from Linear: `board_sync.py pull` renders the board cache | backend-developer | C2 | Risk: High | P0 | Guide: `tasks/TASK_GUIDE_T154.md` | Depends on: T153 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`).
 - [ ] **T155** — Init asks the four board questions and writes `.claude/board.json` | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T155.md` | Depends on: T154 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`).
 - [ ] **T156** — Push + outbox: milestone comments and Ready for Review reach the board, offline writes arrive later exactly once | backend-developer | C2 | Risk: Medium | P0 | Guide: `tasks/TASK_GUIDE_T156.md` | Depends on: T154 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`).
 - [ ] **T157** — Pull moments wired in, and only my In Progress tasks block my push | common-infrastructure | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T157.md` | Depends on: T154 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`). Supersedes deferred T142 (assignee + my-task filter) once Done.
@@ -86,6 +85,7 @@
 
 
 ### In Progress
+- [ ] **T154** — First pull from Linear: `board_sync.py pull` renders the board cache | backend-developer | C2 | Risk: High | P0 | Guide: `tasks/TASK_GUIDE_T154.md` | Depends on: T153 | Registered 2026-10-19 from the online-board planning (`PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md`). | Started 2026-10-19, worktree `../wt-t154` (`feat/t154-board-pull`).
 
 
 
