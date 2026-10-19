@@ -270,6 +270,7 @@
 - [Merge gate reads quoted prose in Bash](learnings.md) — T153: drive `claude -p` push tests from a script file
 - [Bad `board.json` hides board tasks from the merge gate](learnings.md) — T153: falls back to `T\d+`; T155 validates
 - [A board-pulled guide is gate input](learnings.md) — T154: forged Evidence vacated; sensitive-path ask → T157
+- [Parallel tasks merge together; 401 ≠ permanent](learnings.md) — T156/T157: gate serialises merges
 
 ### Learning Records
 <!-- One-liner per active LR: - [LR-NNNN slug](memory/learning-records/LR-NNNN-slug.md) — summary -->

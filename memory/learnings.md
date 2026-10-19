@@ -2784,3 +2784,12 @@ now replaces Evidence/Demonstration with a TASK_REVIEW pointer. Still open (belo
 T157): the `Files to Change` table feeds `pre_tool_sensitive_path.py`, so board text can pre-authorise a
 sensitive-path edit. Online mode is detected by a `board` key in `.claude/board.json` (no `mode` key).
 **Files**: .claude/hooks/lib/board/render.py, .claude/hooks/lib/guide_sections.py, .claude/hooks/pre_tool_sensitive_path.py, .claude/hooks/pre_bash_block_unsafe_merge.py
+
+## Parallel tasks serialize at the merge gate, and a "permanent" board error must exclude auth (T156/T157, 2026-10-19)
+The merge gate refuses every `git merge` while any task is In Progress or in Ready for Review without
+evidence, so T156 (verified) could not land until T157 was verified too, and an agent cannot merge the
+base into its own branch either. Plan parallel pairs to reach `/verify` together, and do cross-task
+integration (here: wake's 8 KB Codex cap, a duplicated outbox counter) as a tested merge commit.
+Also: when classifying board errors as "drop vs keep", 401/403 are fixable config, not permanent —
+T156 first dropped the whole outbox on a bad key (`BoardAuthError` now keeps it).
+**Files**: .claude/hooks/pre_bash_block_unsafe_merge.py, .claude/hooks/lib/board/outbox.py, skills/wake/SKILL.md
