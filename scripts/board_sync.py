@@ -15,6 +15,13 @@ board (matched by the key embedded in it) is dropped, not reposted. `status` pri
 integration owns In Progress/Done and `push status` refuses them. Milestones only
 (started, red, green, review, verify, merged, blocked, question) — no free-form streaming.
 
+    python3 scripts/board_sync.py decide <ID> "<text>"
+
+`decide` (T158) appends a dated, attributed entry linked to <ID> to the Decision Log, one
+shared board document (`decision_doc` in board.json, default "Project Decisions"; created on
+first use). It goes through the same outbox as `push`. `pull` renders the log into the board
+section of `memory/decisions.md`; content outside that section is never touched.
+
 Board mode `online` (`.claude/board.json` names a `board`): fetch every task of the
 configured team/project and rewrite the board cache in today's formats —
 `PROJECT_KANBAN.md` and `tasks/TASK_GUIDE_<ID>.md` (each issue description, verbatim).
@@ -39,7 +46,7 @@ from datetime import date, datetime, timezone
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, ".claude", "hooks", "lib"))
 from board import outbox, render  # noqa: E402
-from board.base import BoardAuthError, BoardError, BoardUnavailable  # noqa: E402
+from board.base import BoardAuthError, BoardError, BoardUnavailable, Decision  # noqa: E402
 from board.config import config_path, load_config, normalize_task_id, task_id_pattern  # noqa: E402
 from board.fake import FakeBoard  # noqa: E402
 from board.linear import LinearBoard  # noqa: E402
@@ -115,9 +122,34 @@ def pull(board, config, root):
     if dropped:
         print(f"[board] the board has no {', '.join(dropped)}; their local rows were dropped "
               f"(online mode: the board is the source of truth)", file=sys.stderr)
-    write_atomically(root, {**guides, KANBAN: kanban})
+    extra = decisions_cache(board, config, root)
+    write_atomically(root, {**guides, KANBAN: kanban, **extra})
     print(f"[board] pulled {len(tasks)} tasks: {KANBAN} and {len(guides)} guides written")
     return 0
+
+
+DECISIONS_FILE = "memory/decisions.md"
+
+
+def use_decision_doc(board, config):
+    name = config.get("decision_doc")
+    if isinstance(name, str) and name.strip() and hasattr(board, "decision_doc"):
+        board.decision_doc = render.one_line(name)
+
+
+def decisions_cache(board, config, root):
+    """{DECISIONS_FILE: text} with the Decision Log in its board section, or {} when there is
+    nothing to write (no entries and no section yet). Read before anything is written."""
+    decisions = board.read_decisions()
+    try:
+        with open(os.path.join(root, DECISIONS_FILE), encoding="utf-8") as f:
+            existing = f.read()
+    except OSError:
+        existing = ""
+    if not decisions and render.DECISIONS_BEGIN not in existing:
+        return {}
+    return {DECISIONS_FILE: render.merge_decisions_file(
+        existing, render.render_decisions_section(decisions))}
 
 
 def board_status_name(config, section):
@@ -146,6 +178,9 @@ def deliver(board, entry):
         board.add_comment(entry["task"], comment_body(entry["milestone"], entry["text"], entry["key"]))
     elif entry.get("kind") == "status":
         board.set_status(entry["task"], entry["name"])
+    elif entry.get("kind") == "decision":
+        board.append_decision(Decision(date=entry["date"], text=entry["text"], task_id=entry["task"],
+                                       author=entry.get("author"), key=entry["key"]))
     else:
         raise BoardError("unknown outbox entry")
 
@@ -220,12 +255,54 @@ def push(board, config, root, args):
     return 0
 
 
+def decide(board, config, root, args):
+    task = normalize_task_id(args.id)
+    if not re.fullmatch(task_id_pattern(root), task):
+        print(f"[board] {render.one_line(args.id)!r} is not a task ID", file=sys.stderr)
+        return 2
+    text = render.one_line(" ".join(args.text))
+    key = os.environ.get("LINEAR_API_KEY")
+    if key:
+        text = text.replace(key, "[redacted]")
+    if not text:
+        print("[board] a decision needs text", file=sys.stderr)
+        return 2
+    created = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    me = config.get("me")
+    entry = {"kind": "decision", "task": task, "milestone": "decision", "text": text,
+             "date": date.today().isoformat(),
+             "author": render.assignee_token(me) if isinstance(me, str) else None,
+             "key": dedupe_key(task, "decision", text, created), "created": created}
+    try:
+        if outbox.count(root):                       # older writes first
+            error = replay(board, root)
+            if isinstance(error, BoardAuthError):
+                outbox.append(root, entry)
+                return 1
+            if error is not None:
+                raise BoardUnavailable("earlier writes are still queued")
+        deliver(board, entry)
+    except BoardUnavailable:
+        outbox.append(root, entry)
+        print(f"[board] board unreachable: queued decision for {task} "
+              f"({outbox.count(root)} unsynced); run `board_sync.py flush` later")
+        return 0
+    except BoardAuthError:
+        outbox.append(root, entry)
+        raise
+    print(f"[board] decision recorded for {task}")
+    return 0
+
+
 def main(argv=None, root=ROOT):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("pull")
     sub.add_parser("flush")
     sub.add_parser("status")
+    p_decide = sub.add_parser("decide")
+    p_decide.add_argument("id")
+    p_decide.add_argument("text", nargs="+", help="the decision")
     p_push = sub.add_parser("push")
     p_push.add_argument("kind", choices=["status", "comment"])
     p_push.add_argument("id")
@@ -250,10 +327,13 @@ def main(argv=None, root=ROOT):
     secret = None
     try:
         board, secret = make_board(config, root)
+        use_decision_doc(board, config)
         if args.command == "pull":
             return pull(board, config, root)
         if args.command == "flush":
             return flush(board, root)
+        if args.command == "decide":
+            return decide(board, config, root, args)
         return push(board, config, root, args)
     except ConfigError as exc:
         code, message = 2, str(exc)

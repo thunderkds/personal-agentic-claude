@@ -32,6 +32,11 @@ its `**Files**:` line (continuation lines joined) matches any key; prose mention
 Each prints as its first line plus `→ memory/decisions.md`, under `### From decisions.md`,
 inside the same markers, with its own header line. Hot and cold share the one cap; cold
 entries are dropped before any hot line. No `decisions.md`, or no match: output is unchanged.
+
+**Decision Log (T158)** — the board section of `memory/decisions.md` (written by
+`board_sync.py pull`) lists teammates' decisions as `- <date>  <text>  (from <ID>, by <who>)`.
+Entries whose `from` is the spawned task print under `### From Decision Log`, inside the same
+markers and cap; over the cap the oldest go first and the header says how many.
 """
 import os
 import re
@@ -48,6 +53,11 @@ except Exception:  # pragma: no cover - fall back to local IDs
 
     def task_id_pattern(root=None, local=LOCAL_PATTERN, bounded=False):
         return rf"(?<![A-Za-z0-9_])(?:{local})(?![A-Za-z0-9_])" if bounded else local
+
+try:
+    from board.render import cached_decisions
+except Exception:  # pragma: no cover - no board library: no Decision Log section
+    cached_decisions = None
 
 MAX_LINES = 30
 MAX_CHARS = 4000
@@ -221,8 +231,53 @@ def add_cold(task, keys, matched, hot_out, hot_header, hot_entries):
     return render(task, hot_header, hot_entries, cold_header(len(kept)), [t for _, t, _ in kept])
 
 
+LOG_LINE_MAX = 240
+CLOSE = "<!-- /memory-slice -->\n"
+
+
+def add_log(out, task, decisions_text):
+    """`out` plus the Decision Log entries linked to `task` (T158), newest kept under the cap.
+
+    Entries come only from the board section of `memory/decisions.md` (between its markers),
+    already escaped by the pull; an entry matches when its `(from <ID>, ...)` is this task."""
+    if not decisions_text or cached_decisions is None or not out.endswith(CLOSE):
+        return out
+    mine = [d for d in cached_decisions(decisions_text) if d.task_id == task]
+    if not mine:
+        return out
+
+    def lines_for(kept):
+        note = "" if len(kept) == len(mine) else (
+            f"; {len(kept)} shown, {len(mine) - len(kept)} dropped by the cap, oldest first")
+        header = f"Decision Log (board) — {len(mine)} entries linked to {task}{note}"
+        body = []
+        for d in kept:
+            line = f"- {d.date}  {d.text}  (from {d.task_id}, by {d.author})"
+            body.append(line if len(line) <= LOG_LINE_MAX else line[:LOG_LINE_MAX - 1] + "…")
+        return ["### From Decision Log", header, *body]
+
+    def fits(kept):
+        text = out[:-len(CLOSE)] + "\n".join(lines_for(kept)) + "\n" + CLOSE
+        return text if len(text.splitlines()) <= MAX_LINES and len(text) <= MAX_CHARS else None
+
+    kept, result = [], fits([])
+    for d in reversed(mine):
+        trial = [d] + kept
+        text = fits(trial)
+        if text is None:
+            break
+        kept, result = trial, text
+    return result or out
+
+
 def build_slice(guide_path, guide_text, memory_text, decisions_text=None,
                 id_pattern=LOCAL_PATTERN):
+    out = build_hot_cold(guide_path, guide_text, memory_text, decisions_text, id_pattern)
+    return add_log(out, task_id_of(guide_path, guide_text, id_pattern), decisions_text)
+
+
+def build_hot_cold(guide_path, guide_text, memory_text, decisions_text=None,
+                   id_pattern=LOCAL_PATTERN):
     task = task_id_of(guide_path, guide_text, id_pattern)
     keys = extract_keys(guide_path, guide_text, id_pattern)
     cold = cold_matches(keys, decisions_text)

@@ -4,6 +4,7 @@ Selected with `{"board": "fake", "fake_board": "<path to JSON list of tasks>"}`.
 """
 import json
 
+from board import render
 from board.base import BoardAdapter, BoardAuthError, BoardError, BoardUnavailable, Task
 
 
@@ -16,6 +17,7 @@ class FakeBoard(BoardAdapter):
         self.drop_response = False  # test switch: the write lands, the client still times out
         self.auth_fails = False   # test switch: every call raises BoardAuthError
         self.rejects = False      # test switch: every write raises a non-transient BoardError
+        self.decision_content = None  # the Decision Log document text; None until first use (T158)
 
     @classmethod
     def from_file(cls, path):
@@ -58,4 +60,19 @@ class FakeBoard(BoardAdapter):
     def set_status(self, task_id, status):
         self._write_check()
         self.statuses[task_id] = status
+        self._after_write()
+
+    def read_decisions(self):
+        if self.auth_fails:
+            raise BoardAuthError("Linear rejected the API key (HTTP 401/403); check LINEAR_API_KEY")
+        if self.unreachable:
+            raise BoardUnavailable("fake board unreachable")
+        return render.parse_decision_lines(self.decision_content or "")
+
+    def append_decision(self, decision):
+        self._write_check()
+        if self.decision_content is None:
+            self.decision_content = render.decision_document([])
+        if not (decision.key and f"<!--bs:{decision.key}-->" in self.decision_content):
+            self.decision_content += render.format_decision(decision) + "\n"
         self._after_write()
