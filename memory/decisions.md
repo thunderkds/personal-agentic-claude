@@ -2360,4 +2360,4 @@ whose worktree (matched by `t(\d{3,})` in the branch name) is dirty; uses `git -
 it never takes another session's index lock; silent on any failure.
 **Why**: T144–T149 went to background agents by accident (no rule existed) while the user expected panes.
 **Files**: docs/claude-md/pipeline-stages.md, skills/craft-spawn-prompt/SKILL.md, skills/wake/SKILL.md, skills/wake/scripts/dirty_worktrees.py, tests/test_dirty_worktrees.py, BRAINSTORMING_LOG_spawn-mode.md
-**Follow-up**: the script reads `PROJECT_KANBAN.md` relative to cwd — run from a subfolder it is silently empty (found at `/verify`; `wake` always runs from root).
+**Follow-up (closed by T152, 2026-10-19)**: the board path is now resolved from `git rev-parse --show-toplevel`, so a run from any subfolder matches a root run. Inside a linked worktree it reads that worktree's board copy — accepted, `wake` runs from the main checkout.

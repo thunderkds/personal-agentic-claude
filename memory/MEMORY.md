@@ -265,6 +265,7 @@
 - [Hook `ask` = deny in headless runs; `slice_section` misses `…)` headings](learnings.md) — over-asking kills headless sub-agent work; look up `Files to Change` prefix
 - [Four agents at once: verify is user-only; stale active_task misattributes the Supervisor](learnings.md) — plan the `/verify` hand-off; clear the state file after the agents finish
 - [A dirty worktree is not proof of a dead agent](learnings.md) — T150: a concurrent session may be live; check commit times and ask before relaunching
+- [Gitignored files never make a worktree dirty](learnings.md) — T152 `/verify`: a `.tmp` probe is ignored, so an empty `dirty_worktrees.py` result was correct; `git check-ignore -v` the probe first
 
 ### Learning Records
 <!-- One-liner per active LR: - [LR-NNNN slug](memory/learning-records/LR-NNNN-slug.md) — summary -->

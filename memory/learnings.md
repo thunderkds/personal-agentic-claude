@@ -2747,3 +2747,10 @@ agent "likely died". A second, concurrent Supervisor session was in fact still w
 `git log` on the integration branch, and ask; `wake`'s `⚠ uncommitted:` line says "died *or* live session".
 Two sessions on one repo also share the board and the `active_task` state file — re-read the board right
 before moving a row.
+
+## Gitignored files never make a worktree "dirty" — pick a probe name git tracks (T152, 2026-10-19)
+At T152's `/verify` the first probe file was `verify-probe.tmp`; `.gitignore:37` ignores `*.tmp`, so
+`git status --porcelain` was empty and `dirty_worktrees.py` correctly printed nothing — it looked like the fix
+had failed. Before trusting an empty result from a dirty-worktree check, run `git check-ignore -v <file>` on
+the probe, or use a plain `.txt` name.
+**Files**: skills/wake/scripts/dirty_worktrees.py, tests/test_dirty_worktrees.py
