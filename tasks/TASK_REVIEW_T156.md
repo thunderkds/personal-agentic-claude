@@ -14,15 +14,15 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_board_push.py` (+ updated `tests/test_board_sync_pull.py`). `python3 -m pytest .claude/hooks/tests tests -q` → `1228 passed, 25 subtests passed in 45.43s` (Supervisor re-run on 86dc365 with the 163ea78 memory index) |
+| Verification command run | ☑ pass | `board_sync.py push comment ENG-101 started …` → `pushed comment`; offline → `queued comment for ENG-101 (1 unsynced)`; `status` → `2 unsynced` — pass |
+| Negative cases hold | ☑ pass | git_auto_status refuses in-progress (exit 2); bad milestone / `../x` / empty text exit 2; key typed into text stored as `[redacted]`, 0 occurrences in `.board/`; `.board/` gitignored; offline flush keeps all (exit 1); 401 keeps all (exit 1, `check LINEAR_API_KEY`) — pass |
+| verify | ☑ pass | /verify by user 2026-10-19: first run FAIL (401 dropped queued writes) → fixed 86dc365 → Supervisor re-ran the same probes against the real Linear endpoint: queue kept, exit 1, auth message, key never stored. Verdict PASS — pass |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | code-review + security-review on `git diff feat/online-board...HEAD` of wt-t156; P1 poison entry fixed 40a5f35, P2 marker + gitignore fixed 40a5f35, verify P1 (401 drop) fixed 86dc365; 0 HIGH/MED security. Reports: `reports/code-review_feat-t156-board-push_20261019T151000.html`, `reports/security-review_feat-t156-board-push_20261019T151000.html`. lane EXCEEDS (lines 726 > 500), C2 kept |
+| Full smoke suite still green (no regression) | ☑ pass | 1176 → 1228 passed, 0 failed — pass |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | CLI-only task, no UI |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | CLI-only task, no UI |
+| **UI: Responsiveness at target viewports** | ☑ N/A | CLI-only task, no UI |
 
 ---
 
@@ -70,5 +70,4 @@ exit=0
 
 **DELTA**: An agent can push a Ready for Review status and milestone comments to the board, and they queue in `.board/outbox.jsonl` and replay exactly once when the board is unreachable.
 
-**WITNESS**: [who ran it and when — derived from `memory/event-trace/T156.jsonl`, never the
-implementing agent alone]
+**WITNESS**: Supervisor (main session) at /verify, 2026-10-19T08:01–08:03Z, Bash calls attributed to T156 via the active-task state file.
