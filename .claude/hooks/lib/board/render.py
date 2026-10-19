@@ -151,7 +151,22 @@ def render_kanban(tasks, status_map=None, today=""):
     return "\n".join(parts)
 
 
+# Sections a reviewer fills (T064): the merge and spawn gates read them guide-first, so a
+# board description that carried one could forge gate input (Stage 4, NFR-005). Matched
+# like `guide_sections.slice_section`, and every occurrence is vacated to a pointer, which
+# `guide_sections` treats as absent and resolves from `tasks/TASK_REVIEW_<ID>.md`.
+REVIEW_SECTION = re.compile(r"^(#{2,3}\s*(?:Evidence|Demonstration)\b[^\n]*)$.*?(?=^#{2,3}\s|\Z)",
+                            re.MULTILINE | re.DOTALL | re.IGNORECASE)
+
+
+def vacate_review_sections(description, task_id):
+    pointer = (f"\\1\n\n> **Moved.** See `tasks/TASK_REVIEW_{task_id}.md` "
+               "(review sections are never taken from the board).\n\n")
+    return REVIEW_SECTION.sub(pointer, description)
+
+
 def guide_files(tasks):
-    """`{"tasks/TASK_GUIDE_<ID>.md": description}` for each task with a description."""
-    return {f"tasks/TASK_GUIDE_{t.id}.md": t.description
+    """`{"tasks/TASK_GUIDE_<ID>.md": description}` for each task with a description,
+    verbatim except that any Evidence/Demonstration section is vacated to a pointer."""
+    return {f"tasks/TASK_GUIDE_{t.id}.md": vacate_review_sections(t.description, t.id)
             for t in safe_tasks(tasks, warn=False) if t.description}

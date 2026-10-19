@@ -67,7 +67,7 @@ This task: Linear is the source of truth; `PROJECT_KANBAN.md` and `tasks/TASK_GU
 | # | Criterion (testable) | Traces to requirement |
 |---|---|---|
 | 1 | Against the fake board fixture (Todo, In Progress, In Review, Done, Backlog, Canceled issues), `pull` writes a `PROJECT_KANBAN.md` whose sections and rows parse identically through every existing KANBAN parser (merge gate, `dirty_worktrees.py`, register hook) | FR-002 same formats |
-| 2 | Each issue's description is written to `tasks/TASK_GUIDE_<ID>.md` verbatim; `pre_agent_validate_guide.py` validates it like a hand-written guide | FR-005 |
+| 2 | Each issue's description is written to `tasks/TASK_GUIDE_<ID>.md` verbatim (except any `Evidence`/`Demonstration` section, vacated to a `TASK_REVIEW` pointer — Stage 4 P1, NFR-005); `pre_agent_validate_guide.py` validates it like a hand-written guide | FR-005 |
 | 3 | Mapping: Backlog→Todo, In Review→Ready for Review, Canceled/Duplicate→Closed (will not do); Urgent/High/Medium/Low→P0/P1/P2/P2; labels `complexity:cN`, `risk:x` → row fields; status names read from `status_map` in config | FR-012 |
 | 4 | A title or description containing `### Done`, `- [ ] **T999**` or a newline cannot add a section or a row to the rendered board | NFR-005 |
 | 5 | Missing `LINEAR_API_KEY`, HTTP error or 429 → non-zero exit, a message that never contains the key, and the existing cache left untouched (write via temp file + rename) | NFR-001, NFR-004 |
