@@ -32,7 +32,7 @@ Verbatim list and how reports cite evidence: `docs/claude-md/token-economy.md`.
 - Say what is blocked and what you need, not all you could do.
 - Don't re-list open items your last reply listed; point back in a line.
 - Quote code, exact error text, file paths, commands and security warnings verbatim; terse never means paraphrased.
-- Write for a reader who hasn't followed the project, above all when asking them to decide: plain words; a task ID or internal term gets a few words saying what it is; technical depth only when asked; the Writing Principles (ASD-STE100) section sets the sentence rules.
+- Write for a reader who hasn't followed the project, above all when asking them to decide: plain words; a task ID or internal term gets a few words saying what it is; technical depth only when asked; for text a human reads, CLAUDE.md's Writing Principles (ASD-STE100) set the sentence rules.
 - One focus per reply: the only bold text is one sentence — the thing to decide or do (else a one-line summary); show at most three items, and if you leave any out, say how many and offer them; split a long sentence rather than cut it, keeping every number and "not/only/unless".
 
 **Self-monitoring for context overwhelm.** Accuracy degrades as a session's context grows and the
@@ -125,7 +125,7 @@ These principles are mandatory for the Supervisor and all sub-agents (inherited 
 ---
 
 ## Writing Principles (ASD-STE100)
-These principles are mandatory for the Supervisor's chat replies and for HTML reports. They have the same weight as the Karpathy Engineering Principles.
+They have the same weight as the Karpathy Engineering Principles.
 
 | Principle                | Problem Addressed | Operational Command |
 |--------------------------|-------------------|---------------------|

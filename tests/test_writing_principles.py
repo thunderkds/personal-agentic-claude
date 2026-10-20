@@ -84,3 +84,4 @@ def test_response_standard_bullet_points_to_section():
     text = CLAUDE_MD.read_text(encoding="utf-8")
     bullet = next(l for l in text.splitlines() if l.startswith("- Write for a reader"))
     assert "Writing Principles" in bullet
+    assert "text a human reads" in bullet
