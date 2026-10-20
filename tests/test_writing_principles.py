@@ -38,8 +38,8 @@ def test_four_named_rows_with_limits():
     ]
     header = next(l for l in sec.splitlines() if l.startswith("| Principle"))
     assert "Problem Addressed" in header and "Operational Command" in header
-    for limit in ("20 words", "25 words", "3 nouns"):
-        assert limit in sec
+    assert not re.search(r"\d+ words", sec) and not re.search(r"\d+ nouns", sec)
+    assert "one idea" in sec and "link word" in sec
 
 
 def test_scope_and_exemptions():

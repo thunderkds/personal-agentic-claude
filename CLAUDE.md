@@ -111,9 +111,9 @@ They have the same weight as the Karpathy Engineering Principles.
 | Principle                | Problem Addressed | Operational Command |
 |--------------------------|-------------------|---------------------|
 | One Term, One Meaning    | One thing gets three names; a forced paraphrase changes the meaning | Give each thing one name and keep it. Keep the key term exactly; never replace it with a paraphrase. Gloss it once, in brackets, only if the reader may not know it. |
-| Short Sentences          | Long sentences hide the point | Steps: 20 words or fewer. Descriptions: 25 words or fewer. Split a long sentence, but keep its link word (because, so, unless, only if). Never drop a number or a "not". |
+| Short Sentences          | Long sentences hide the point | Write short sentences, one idea each. Split a long sentence, but keep its link word (because, so, unless, only if). Never drop a number or a "not". |
 | One Action, Active Voice | Several actions in one sentence; it is not clear who does what | Write one action per sentence. Write steps as commands. Name who acts: "The hook blocks the push", not "the push is gated". |
-| No Noun Stacks           | "pre-push assignee filter predicate" | Put no more than 3 nouns in a row. A `PROJECT_SPEC.md` glossary term counts as one noun. Break longer chains with verbs, or with "of / for / that". |
+| No Noun Stacks           | "pre-push assignee filter predicate" | Avoid stacks of nouns. A `PROJECT_SPEC.md` glossary term counts as one noun. Break a long chain with verbs, or with "of / for / that". |
 
 These rules apply only to text a human reads: the Supervisor's chat replies and HTML reports.
 Agent-to-agent text needs precision, not easy reading, so it is exempt. This covers spawn prompts, TASK_GUIDEs, sub-agent reports, Kanban rows and commits.
