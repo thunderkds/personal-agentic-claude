@@ -914,3 +914,101 @@ def test_verifier_section_links_the_easy_verifier_site_beside_the_repo():
     ), "verifier section must link the Easy Verifier site with target=_blank rel=noopener noreferrer"
     link_line = [l for l in body.splitlines() if EASY_VERIFIER_SITE_URL in l]
     assert VERIFIER_REPO_URL in link_line[0], "Easy Verifier site link must sit beside the GitHub link"
+
+
+# --- T166: the Skills section is a stage flow with skill chips ----------------
+
+# The one place the grouping is pinned (T166 Requirement): stage -> skills.
+SKILL_FLOW_GROUPING = {
+    "0.5": {"brainstorming", "ideate"},
+    "1": {"git-guardrails-claude-code", "map-codebase"},
+    "1.5": {"craft-agent"},
+    "2": {"grill-with-docs", "to-issues"},
+    "3": {"tdd", "bugfix", "diagnose", "craft-spawn-prompt", "migration-safety"},
+    "4": {"blast-radius", "code-review", "html-report"},
+    "5": {"ship", "delivery-report"},
+}
+
+
+def _skills_section_body():
+    m = re.search(r'<section id="skills">(.*?)</section>', _page_text(), re.DOTALL)
+    assert m, 'page has no <section id="skills">'
+    return m.group(1)
+
+
+def _skill_flow():
+    m = re.search(r'<ol\b[^>]*class="skill-flow"[^>]*>(.*?)</ol>', _skills_section_body(), re.DOTALL)
+    assert m, '#skills has no <ol class="skill-flow">'
+    return m
+
+
+def _flow_steps():
+    """[(stage number, step html)] in document order."""
+    steps = re.findall(
+        r'<li\b[^>]*class="flow-step"[^>]*data-stage="([^"]+)"[^>]*>(.*?)</li>\s*(?=<li\b[^>]*class="flow-step"|\Z)',
+        _skill_flow().group(1),
+        re.DOTALL,
+    )
+    return steps
+
+
+def _chips(fragment):
+    return [_html.unescape(c).strip() for c in re.findall(r'<span class="chip">(.*?)</span>', fragment, re.DOTALL)]
+
+
+def _skill_band():
+    m = re.search(r'<div\b[^>]*class="skill-band"[^>]*>(.*?)</div>', _skills_section_body(), re.DOTALL)
+    assert m, '#skills has no <div class="skill-band">'
+    return m.group(1)
+
+
+def test_skills_flow_has_one_step_per_pipeline_stage_in_order():
+    """AC1."""
+    expected = [n for n in _pipeline_stage_numbers() if n != "0"]
+    assert [s for s, _ in _flow_steps()] == expected
+
+
+def test_skills_flow_steps_show_stage_label_and_chips():
+    """AC2: stage number + name as text, skills as plain-text chips, no SVG text."""
+    assert "<svg" not in _skills_section_body()
+    for stage, body in _flow_steps():
+        heading = re.search(r"<h3\b[^>]*>(.*?)</h3>", body, re.DOTALL)
+        assert heading, f"stage {stage} step has no <h3>"
+        label = " ".join(_words(heading.group(1)))
+        assert label.startswith(f"Stage {stage}") and len(_words(label)) > 2, label
+        assert _chips(body), f"stage {stage} step has no chips"
+
+
+def test_skills_flow_is_accessible_and_arrows_are_visual_only():
+    """AC3: named list; any arrow element is aria-hidden; no arrow glyph in reading text."""
+    tag = re.search(r'<ol\b[^>]*class="skill-flow"[^>]*>', _skills_section_body()).group(0)
+    assert re.search(r'aria-label="[^"]+"', tag), "skill-flow needs an accessible name"
+    for el in re.findall(r"<[^>]*class=\"[^\"]*arrow[^\"]*\"[^>]*>", _skills_section_body()):
+        assert 'aria-hidden="true"' in el, el
+    reading = " ".join(_words(_skill_flow().group(1)))
+    assert not re.search(r"[→↓➜►▶]", reading), "arrow glyphs would be read aloud"
+
+
+def test_skills_cross_cutting_band_is_separate_and_below_the_flow():
+    """AC4."""
+    body = _skills_section_body()
+    assert body.index('class="skill-band"') > body.index("</ol>")
+    assert re.search(r"Any stage", _skill_band())
+    assert len(_chips(_skill_band())) > 0
+    assert not _chips(_skill_band()) or not (set(_chips(_skill_band())) & set().union(*SKILL_FLOW_GROUPING.values()))
+
+
+def test_skills_section_lists_every_skill_dir_exactly_once_and_nothing_else():
+    """AC5: both directions, derived from skills/."""
+    all_chips = _chips(_skill_flow().group(1)) + _chips(_skill_band())
+    on_disk = _skill_dirs()
+    dupes = sorted({c for c in all_chips if all_chips.count(c) > 1})
+    assert not dupes, f"skill(s) listed more than once: {dupes}"
+    assert sorted(all_chips) == on_disk, (
+        f"missing: {sorted(set(on_disk) - set(all_chips))}; unknown: {sorted(set(all_chips) - set(on_disk))}"
+    )
+
+
+def test_skills_flow_grouping_matches_the_requirement():
+    """AC6."""
+    assert {s: set(_chips(b)) for s, b in _flow_steps()} == SKILL_FLOW_GROUPING
