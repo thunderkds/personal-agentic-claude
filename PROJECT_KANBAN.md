@@ -80,7 +80,6 @@
 
 
 ### In Progress
-- [ ] **T166** — The Skills section shows a stage flow with skill chips | Frontend-Implementer | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T166.md` | Depends on: T165 | Registered 2026-10-20: user asked for the Skills section as a stage flow, chose "Stage flow + chips" from a mock. Started 2026-10-20 on `feat/t165-site-scan-first` (worktree `../wt-t165`, stacked on T165).
 
 
 
@@ -89,6 +88,7 @@
 
 
 ### Ready for Review
+- [ ] **T166** — The Skills section shows a stage flow with skill chips | Frontend-Implementer | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T166.md` | Depends on: T165 | Registered 2026-10-20: user asked for the Skills section as a stage flow, chose "Stage flow + chips" from a mock. Started 2026-10-20 on `feat/t165-site-scan-first` (worktree `../wt-t165`, stacked on T165). Ready for Review 2026-10-20 after one rework round (snake layout so every stage connects on wide screens): 7 new tests, `1390 passed, 25 subtests passed` (Supervisor re-run); code-review round 2 no open findings; screenshots at 1280/800/375px. Awaiting user /verify.
 
 
 ### Done

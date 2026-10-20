@@ -156,3 +156,13 @@ Markup: the `<ol class="skill-flow">` shown under AFTER above (steps carry only 
 - `sh scripts/validate.sh` → `validate.sh: PASS`
 
 **UI evidence**: 1280px headless-Chrome screenshot (`/tmp/t166shots/wc.png`, viewed): →, ↓, ←, ↓, →, ↓ all visible between the seven boxes; chips wrap inside boxes. 375px: page rendered in a 375px-wide iframe (headless Chrome cannot go below ~485px window) (`/tmp/t166shots/mc.png`, viewed): one column, ↓ between every step, no horizontal overflow of the flow, `git-guardrails-claude-code` fits. Not checked: real device emulation, tablet widths 768–900px, a pixel-diff regression tool, M1–M4 not re-run this round (markup order/chips unchanged; no new tests touch them).
+
+## Stage 4 — code-review round 2 (Supervisor, 2026-10-20) — accepted
+
+P0 0 · P1 0 open · P2 0 · P3 0. Round-1 P1 (no arrows between rows) **fixed** in `7f2b731`: Supervisor DevTools-emulated screenshots at 1280px (→ ↓ ← ↓ → ↓, all six pairs connected), 800px (same snake, chips wrap inside boxes) and 375px (one column, ↓ between every step) — the 768–900px gap the implementer left unchecked is covered by the 800px shot. Round-1 P3 (arrow size/contrast) fixed: arrows larger, `--cyan`.
+
+Supervisor re-run: `1390 passed, 25 subtests passed`; mutations re-run on the round-2 page (implementer did not repeat them): **M2** `tdd` duplicated into Stage 4 → `2 failed, 52 passed`; **M1** steps 3 and 4 swapped → `2 failed, 52 passed`; page restored, `git status` clean.
+
+**Process finding (recorded, not blocking):** the round-2 report's `Startup reads:` line lists `PROJECT_SPEC.md`, `PROJECT_SPEC_SITE.md` and `agents/frontend.md`, but the same report says these were only line-counted this session. Round 1 (same task, same day) read them in full and the round-2 work was confined to the review file's rework spec, so the gap did not reach the change. The line should say what was actually read.
+
+Security-review: not required (Low risk); the diff adds no script, form, link or external asset.
