@@ -14,15 +14,15 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_site_content.py`: `test_tables_do_not_force_a_minimum_width_or_scroll_sideways` (AC1), `test_long_code_tokens_in_table_cells_can_wrap` (AC2), `test_every_td_carries_its_columns_header_as_data_label` (AC3), `test_phone_layout_stacks_each_row_as_a_card_with_labelled_cells` (AC4). Observed RED first: `4 failed, 54 passed`; GREEN after the change: `58 passed`. |
+| Verification command run | ☑ pass | `pytest tests/test_site_content.py tests/test_docs_t151.py tests/test_docs_match_installer.py -q` → `70 passed in 0.18s`; `pytest .claude/hooks/tests tests -q` → `1394 passed, 25 subtests passed in 30.34s`; `sh scripts/validate.sh` → `validate.sh: PASS`. Three existing assertions matched a literal `<td>` and were loosened to `<td\b[^>]*>` (two in `tests/test_site_content.py`; one needle at `tests/test_docs_t151.py:51` now includes `data-label="Tier"`); nothing else in them changed. |
+| Negative cases hold | ☑ pass | M1 (restore `min-width: 40rem`) → AC1 test RED. M2 (drop one `data-label`) → AC3 test RED. M3 (wrong header in one `data-label`) → AC3 test RED. M4 (`td::before` → `td::after`) → AC4 test RED. Each run: `1 failed, 57 passed`; page restored byte-identical after each (diff clean). |
+| verify | ☐ pass / ☐ fail / ☐ N/A | Not run — `/verify` is user-run. |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | Left to Stage 4 reviewer. Changed: `site/index.html` (table CSS + `data-label` on all 8 tables), `tests/test_site_content.py`, `tests/test_docs_t151.py` (one needle). |
+| Full smoke suite still green (no regression) | ☑ pass | `1394 passed, 25 subtests passed`; `validate.sh: PASS`. |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ pass | Screenshots viewed (not committed; /tmp/t167): `#hooks` at 1280 and 375, `#packs` at 375. 375: each row is a card, one labelled cell per line, rule between rows, `<details>` fold-outs open inside cells. 1280: normal table; long script names wrap inside the Script column (mid-token breaks, e.g. `pre_agent` / `_validate_` / `guide.py`). Not viewed as images: `#packs` at 1280 and the other six tables (covered by the overflow measurement only). |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ pass | Existing tokens only (`--border`, `--muted`); the `td::before` label copies the `th` look (muted, uppercase, .75rem, .05em tracking). No new colours or fonts. Checked by reading the CSS diff. |
+| **UI: Responsiveness at target viewports** | ☑ pass | 1280 and 375 via DevTools device emulation (`<details>` opened): zero `.table-wrap` with scrollWidth > clientWidth at either width; page scrollWidth 375 at 375px (= viewport), 1265 at 1280px (≤ viewport; headless scrollbar). Widths between (e.g. 768–1000px) not measured. |
 
 ---
 
@@ -40,9 +40,25 @@
 375px BRANCH overflowing wraps closed=[["update-flow",341,640,"auto"],["hooks",341,716,"auto"],["agent-focus",341,640,"auto"],["packs",341,640,"auto"],["providers",341,640,"auto"],["repository-layout",341,640,"auto"],["memory-system",341,640,"auto"],["options",341,640,"auto"]] open=[["update-flow",341,640,"auto"],["hooks",341,716,"auto"],["agent-focus",341,640,"auto"],["packs",341,640,"auto"],["providers",341,640,"auto"],["repository-layout",341,640,"auto"],["memory-system",341,640,"auto"],["options",341,640,"auto"]]
 ```
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**Table CSS lines changed** (verbatim prior content, `site/index.html:123-129`):
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
+  table { border-collapse: collapse; width: 100%; min-width: 40rem; font-size: .9rem; }
+  /* keep the leading column reachable while the table scrolls sideways */
+  th:first-child, td:first-child { position: sticky; left: 0; background: var(--bg); }
+  th:first-child { background: var(--surface2); }
+```
+(Still matches the Supervisor's BEFORE: `min-width: 40rem` forces 640px.)
+
+**AFTER** (2026-10-20T04:00:20Z, same method, `site/` served on :8167, DevTools emulation, `<details>` opened; `bad` = wraps with scrollWidth > clientWidth):
+
+```
+1280px {"vw":1280,"page":1265,"wraps":[["update-flow",639,639,"visible",639],["hooks",639,639,"visible",639],["agent-focus",639,639,"visible",639],["packs",639,639,"visible",639],["providers",639,639,"visible",639],["repository-layout",639,639,"visible",639],["memory-system",639,639,"visible",639],["options",639,639,"visible",639]],"bad":0}
+375px {"vw":375,"page":375,"wraps":[["update-flow",341,341,"visible",341],["hooks",341,341,"visible",341],["agent-focus",341,341,"visible",341],["packs",341,341,"visible",341],["providers",341,341,"visible",341],["repository-layout",341,341,"visible",341],["memory-system",341,341,"visible",341],["options",341,341,"visible",341]],"bad":0}
+```
+
+**DELTA**: A reader can now read every table without scrolling sideways — on desktop (was: `#hooks` scrolled) and on a phone (was: all 8 tables scrolled), where rows now stack as labelled cards.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]

@@ -420,7 +420,7 @@ def test_layout_table_names_canon_root_and_relative_symlinks():
     )
     for canon_dir in ("skills/", "agents/"):
         assert re.search(
-            r"<tr><td><code>" + re.escape(canon_dir) + r"</code></td>", body
+            r"<tr><td\b[^>]*><code>" + re.escape(canon_dir) + r"</code></td>", body
         ), f"Repository layout table has no dedicated row for canon root path {canon_dir}"
 
 
@@ -648,8 +648,8 @@ def test_agent_focus_credits_the_three_source_repos():
     # Read the "Idea from" column only: prose elsewhere in the section (row 6 says
     # "headroom-style") must not satisfy a credit that was dropped from its row.
     rows = re.findall(r"<tr>(.*?)</tr>", _agent_focus_body(), re.DOTALL)
-    credits = [re.findall(r"<td>(.*?)</td>", r, re.DOTALL)[-1].strip().lower()
-               for r in rows if "<td>" in r]
+    credits = [re.findall(r"<td\b[^>]*>(.*?)</td>", r, re.DOTALL)[-1].strip().lower()
+               for r in rows if "<td" in r]
     for repo in ("headroom", "caveman", "ponytail"):
         assert repo in credits, f"no agent-focus row credits {repo} in its Idea-from column"
 
@@ -1024,3 +1024,94 @@ def test_skills_flow_snakes_with_an_arrow_between_every_consecutive_pair():
     css = _page_text()
     for d in ("right", "left", "down"):
         assert re.search(rf'\.flow-step\[data-next="{d}"\]::after', css), f"no CSS arrow rule for {d}"
+
+
+# ---- T167: tables never scroll sideways --------------------------------
+
+def _style_block():
+    m = re.search(r"<style>(.*?)</style>", _page_text(), re.DOTALL)
+    assert m, "page has no <style> block"
+    return m.group(1)
+
+
+def _css_rule(css, selector):
+    """Body of the first rule whose selector list is exactly `selector`."""
+    for sel, body in re.findall(r"(?m)^\s*([^{}@/]+?)\s*\{([^{}]*)\}", css):
+        if ", ".join(x.strip() for x in sel.split(",")) == selector:
+            return body
+    return None
+
+
+def _mobile_block():
+    css = _style_block()
+    start = css.index("@media (max-width: 767px)")
+    depth, i = 0, css.index("{", start)
+    for j in range(i, len(css)):
+        depth += {"{": 1, "}": -1}.get(css[j], 0)
+        if depth == 0:
+            return css[i + 1:j]
+    raise AssertionError("unbalanced 767px media block")
+
+
+def test_tables_do_not_force_a_minimum_width_or_scroll_sideways():
+    """AC1."""
+    css = _style_block()
+    table = _css_rule(css, "table")
+    assert table is not None and "min-width" not in table, f"table rule forces a width: {table}"
+    wrap = _css_rule(css, ".table-wrap")
+    assert wrap is not None and not re.search(r"overflow(-x)?\s*:\s*(auto|scroll)", wrap), wrap
+    assert "th:first-child, td:first-child" not in css, "sticky first column is only for sideways scrolling"
+
+
+def test_long_code_tokens_in_table_cells_can_wrap():
+    """AC2."""
+    css = _style_block()
+    assert re.search(r"(?:td|th)\s+code\s*\{[^}]*overflow-wrap\s*:\s*anywhere", css) or \
+        re.search(r"(?:td|th)\s+code\s*\{[^}]*word-break\s*:\s*break-all", css), \
+        "no wrapping rule for code inside table cells"
+
+
+def _tables():
+    """[(headers, [td-open-tags])] for every table on the page."""
+    out = []
+    for t in re.findall(r"<table\b.*?</table>", _page_text(), re.DOTALL):
+        heads = [" ".join(_words(h)) for h in re.findall(r"<th\b[^>]*>(.*?)</th>", t, re.DOTALL)]
+        body = re.search(r"<tbody>(.*?)</tbody>", t, re.DOTALL).group(1)
+        rows = [re.findall(r"<td\b[^>]*>", r) for r in re.findall(r"<tr>(.*?)</tr>", body, re.DOTALL)]
+        out.append((heads, rows))
+    return out
+
+
+def test_every_td_carries_its_columns_header_as_data_label():
+    """AC3: both directions — none missing, none mismatched."""
+    tables = _tables()
+    assert len(tables) >= 8, "fixture broken: expected the page's tables"
+    problems = []
+    for heads, rows in tables:
+        for r in rows:
+            if len(r) != len(heads):
+                problems.append(f"{heads}: row has {len(r)} cells for {len(heads)} headers")
+                continue
+            for h, tag in zip(heads, r):
+                m = re.search(r'data-label="([^"]*)"', tag)
+                got = _html.unescape(m.group(1)) if m else None
+                if got != h:
+                    problems.append(f"{heads}: expected {h!r}, got {got!r}")
+    assert not problems, problems
+
+
+def test_phone_layout_stacks_each_row_as_a_card_with_labelled_cells():
+    """AC4."""
+    m = _mobile_block()
+    thead = _css_rule(m, "thead")
+    assert thead and "display: none" not in thead.replace("display:none", "display: none") \
+        and re.search(r"clip|position\s*:\s*absolute", thead), f"thead must be visually hidden, not removed: {thead}"
+    for sel in ("table, tbody, tr, td", "table, tbody, tr, th, td", "tr, td", "tbody, tr, td"):
+        blk = _css_rule(m, sel)
+        if blk:
+            assert "display: block" in blk
+            break
+    else:
+        raise AssertionError("rows and cells are not made display: block on phones")
+    before = _css_rule(m, "td::before")
+    assert before and "content: attr(data-label)" in before, before
