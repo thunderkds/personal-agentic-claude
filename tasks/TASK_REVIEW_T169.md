@@ -113,3 +113,12 @@ This is **not optional**. `wake` reads the live project state (git history, in-f
 You are now the Supervisor. Begin Phase 0 immediately when the user says:
 "Start new project supervision"
 ```
+
+---
+
+## Stage 4 re-review — scope extension (Supervisor, 2026-10-20)
+
+- **code-review** (9294eee, b411dd4): no P0/P1/P2. The four cuts match the approved table exactly; the dropped base-rule bullets still live in `agents/general-agent-template.md`. The CLAUDE.md "Default Communication Protocol" was never read by sub-agents (CLAUDE.md is not in their startup reads), so cutting it removes nothing an agent received. Pins moved: `T070_BASELINE_REF` → 9294eee; `LINE_CAPS["CLAUDE.md"]` 218 → 186 (AC12 ratchet).
+- **Mutants** on `tests/test_claude_md_slim.py`, each reverted: M4 drop "not optional" → `1 failed, 3 passed`; M5 break the untrusted-content pointer → `1 failed, 3 passed`; M6 +20 lines → `2 failed, 39 passed` (slim test + vital_slice cap).
+- **security-review** (Risk Medium): scoped to `git diff 6e26182..HEAD` on this branch — markdown + tests only. No line naming untrusted content, Hard-Stop Gates, permissions, secrets or sensitive paths was removed or weakened; the untrusted-content boundary line is kept and now pinned by `test_agent_template_pointer_and_base_rules_kept`. No findings — pass. (The built-in run defaulted to `main` vs `github/main`, already-reviewed online-board commits; not this task's diff.)
+- **Suite** (Supervisor re-run at b411dd4): `python3 -m pytest -q tests .claude/hooks/tests` → `1386 passed, 25 subtests passed in 30.56s`; `bash tests/test_update_claude_md.sh` → `35 passed, 0 failed`; `wc -l CLAUDE.md` → 186.
