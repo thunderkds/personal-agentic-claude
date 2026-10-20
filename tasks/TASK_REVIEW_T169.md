@@ -33,8 +33,16 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: Captured 2026-10-20T05:00:52Z, before any implementation commit. Docs change, so BEFORE is the prior state.
+
+Command: `grep -n "Writing Principles" CLAUDE.md agents/*.md AGENTS.md .cursor/rules/agent-base.mdc` -> no output, exit 1.
+
+Prior `CLAUDE.md` Response Standard bullet (line 35, verbatim):
+> - Write for a reader who hasn't followed the project, above all when asking them to decide: plain words; a task ID or internal term gets a few words saying what it is; technical depth only when asked.
+
+Prior `CLAUDE.md` section order: `## Karpathy Engineering Principles` (line 109) is followed directly by `## Code Naming Conventions` (line 127). `AGENTS.md` and `.cursor/rules/agent-base.mdc` list only the 4 Karpathy names.
+
+AC 9 token_meter BEFORE (`python3 scripts/token_meter.py --current --json`, main checkout, this implementer session, not a baseline of a Supervisor session): calls 44, spend_usd 3.853, context_now 127710, calls_over_150k 0. The AFTER row is left for the Supervisor.
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
