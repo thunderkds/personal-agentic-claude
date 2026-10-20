@@ -121,8 +121,8 @@ T069_BASELINE_REF = "8d6d56b"
 # deleted, assertion body untouched; CLAUDE.md gains that one line only.
 # REPOINTED AGAIN by T169 (`c3016fa` -> `19c139f`, the review-fixed edit commit; CLAUDE.md line cap raise to 218 user-approved 2026-10-20): T169 adds the Writing Principles section to CLAUDE.md
 # and one clause to the Response Standard bullet in CLAUDE.md and the template. Repointed, NOT deleted.
-# REPOINTED once more by T169 scope extension (`19c139f` -> `9294eee`): CLAUDE.md slimmed 218 -> 186 lines (General Agent Template, Mandatory Session Startup, opening list, Final Instruction). User-approved 2026-10-20.
-T070_BASELINE_REF = "9294eee"  # T169 scope extension: CLAUDE.md slimming
+# REPOINTED once more by T169 scope extension (`19c139f` -> `9294eee`, then `9294eee` -> `09e552d` by D6, numeric caps dropped from the Writing Principles table): CLAUDE.md slimmed 218 -> 186 lines (General Agent Template, Mandatory Session Startup, opening list, Final Instruction). User-approved 2026-10-20.
+T070_BASELINE_REF = "09e552d"  # T169 scope extension: CLAUDE.md slimming
 
 # T082's own edit commit (same commit as the repoint above). T082 adds a mandatory Base Rule bullet
 # to `general-agent-template.md` too (the same untrusted-content pointer) — a legitimate, required
