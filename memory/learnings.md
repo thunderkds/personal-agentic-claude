@@ -2820,3 +2820,21 @@ T165–T168; the clash only showed when `git worktree add ../wt-t165` found that
 assigning an ID at Stage 2, check `git log --all --oneline | grep -E 'T1[0-9]{2}'` and `git branch -a` for the
 highest ID anywhere, not only `PROJECT_KANBAN.md` on the checked-out branch. Renumbered to T169.
 **Files**: PROJECT_KANBAN.md, tasks/
+
+## v2.1.0 README miss + T165 spawn (2026-10-20)
+- **A release commit must bump README's header version too.** v2.1.0's release commit (`689f602`) updated
+  `RUNBOOK.md` and the site label but left `README.md:3` at `**v2.0.0**`; CI failed on
+  `tests/test_readme_current.sh` AC1 after merge. Fixed in PR #103. When writing a release row, grep the
+  previous version across `README.md`, `RUNBOOK.md` and `site/index.html` before committing.
+- **craft-spawn-prompt's sandboxed `claude` command can't run on this host.** It points at
+  `references/sandbox.md`, but this Ubuntu host has `kernel.apparmor_restrict_unprivileged_userns=1`
+  (see the T147 entry above): T165's sandboxed spawn spent $0.75 and stopped at its first Bash call.
+  Check that entry before choosing the sandboxed path; an unsandboxed relaunch needs the user's
+  explicit go-ahead (auto mode refuses it as "Create Unsafe Agents" otherwise).
+- **The guide auto-register hook fires on a TASK_GUIDE written anywhere, even the scratchpad** (T168).
+  Drafting `TASK_GUIDE_T168.md` in the session scratchpad put a T168 row on the *main checkout's* board.
+  It also registers on the main checkout while the real guide lives in a worktree (T166, T167).
+  After writing a guide, check `git -C <main> status` and move the row to the branch's board.
+- **Headless frontend agents mis-report Startup reads and leave servers running** (T166–T168). Two rounds
+  listed `PROJECT_SPEC.md`/`agents/frontend.md` that were only line-counted, and one left `http.server 8167`.
+  The spawn prompt now asks for honest reads and for cleanup; still check `ps` after each run.

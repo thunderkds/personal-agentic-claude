@@ -18,7 +18,7 @@ def _line_with(text, needle):
 
 
 STAGES = _read("docs", "claude-md", "pipeline-stages.md")
-SITE = _read("site", "index.html")
+SITE = _read("site", "index.html").replace("<wbr>", "")  # <wbr> is a break hint, not content (T167)
 
 
 def test_ac1_memory_injection_names_decisions_entries():
@@ -48,7 +48,7 @@ def test_ac4_trace_hook_row():
 def test_ac5_memory_slice_rows_mention_decisions():
     row548 = _line_with(SITE, "<strong>Memory slice</strong>")
     assert "decisions.md" in row548
-    row655 = _line_with(SITE, "<code>memory/MEMORY.md</code></td><td>Hot")
+    row655 = _line_with(SITE, "<code>memory/MEMORY.md</code></td><td data-label=\"Tier\">Hot")
     assert "decisions.md" in row655
 
 

@@ -120,13 +120,10 @@
   }
 
   section { margin: 2.5rem 0; scroll-margin-top: 1rem; }
-  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
-  table { border-collapse: collapse; width: 100%; min-width: 40rem; font-size: .9rem; }
+  .table-wrap { border: 1px solid var(--border); border-radius: 8px; }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; }
   th, td { text-align: left; padding: .6rem .8rem; border-bottom: 1px solid var(--border); }
   th { background: var(--surface2); color: var(--muted); text-transform: uppercase; font-size: .75rem; letter-spacing: .05em; }
-  /* keep the leading column reachable while the table scrolls sideways */
-  th:first-child, td:first-child { position: sticky; left: 0; background: var(--bg); }
-  th:first-child { background: var(--surface2); }
   tr:last-child td { border-bottom: none; }
   code { color: var(--cyan); background: var(--cyan-dim); padding: .1rem .4rem; border-radius: 4px; font-size: .85em; }
   .tag { display: inline-block; padding: .1rem .5rem; border-radius: 999px; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
@@ -134,14 +131,31 @@
   .tag-advise { background: var(--green-dim); color: var(--green); }
   .tag-inert  { background: var(--purple-dim); color: var(--purple); }
 
-  .skill-groups { display: grid; gap: 1rem; }
-  .skill-group { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; }
-  .skill-group h3 { margin: 0 0 .5rem; font-size: .85rem; color: var(--purple); text-transform: uppercase; letter-spacing: .05em; }
-  .skill-group ul { margin: 0; padding-left: 1.2rem; columns: 2; column-gap: 1.5rem; }
-  .skill-group li { break-inside: avoid; margin-bottom: .2rem; }
-
+  .skill-flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2.6rem 2.6rem; }
+  .flow-step { position: relative; min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: .9rem 1.1rem; }
+  /* snake on wide screens: 0.5 -> 1 / 2 <- 1.5 / 3 -> 4 / 5; DOM order stays 0.5..5 */
+  .flow-step[data-stage="0.5"] { grid-area: 1 / 1; }
+  .flow-step[data-stage="1"]   { grid-area: 1 / 2; }
+  .flow-step[data-stage="1.5"] { grid-area: 2 / 2; }
+  .flow-step[data-stage="2"]   { grid-area: 2 / 1; }
+  .flow-step[data-stage="3"]   { grid-area: 3 / 1; }
+  .flow-step[data-stage="4"]   { grid-area: 3 / 2; }
+  .flow-step[data-stage="5"]   { grid-area: 4 / 2; }
+  .flow-step[data-next]::after {
+    position: absolute; width: 2.6rem; height: 2.6rem; line-height: 2.6rem; text-align: center;
+    color: var(--cyan); font-size: 1.9rem; font-weight: 700;
+  }
+  .flow-step[data-next="right"]::after { content: "\2192" / ""; left: 100%; top: 50%; margin-top: -1.3rem; }
+  .flow-step[data-next="left"]::after  { content: "\2190" / ""; right: 100%; top: 50%; margin-top: -1.3rem; }
+  .flow-step[data-next="down"]::after  { content: "\2193" / ""; top: 100%; left: 50%; margin-left: -1.3rem; }
+  .flow-step h3, .skill-band h3 { margin: 0 0 .6rem; font-size: .8rem; color: var(--purple); text-transform: uppercase; letter-spacing: .05em; }
+  .chips { margin: 0; display: flex; flex-wrap: wrap; gap: .4rem; }
+  .chip { max-width: 100%; overflow-wrap: anywhere; background: var(--surface2); border: 1px solid var(--border); border-radius: 999px; padding: .15rem .65rem; font-size: .82rem; }
+  .skill-band { margin-top: 1.2rem; background: var(--surface); border: 1px dashed var(--border); border-radius: 8px; padding: .9rem 1.1rem; }
   .agent-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: .9rem; }
   .agent-card .name { color: var(--green); font-weight: 700; }
+  .agent-card a { color: var(--cyan); }
+  .agent-card h3 { margin: 0 0 .5rem; color: var(--green); font-size: 1rem; }
   .agent-card .subtype { color: var(--muted); font-size: .85rem; }
 
   pre.install {
@@ -149,6 +163,19 @@
     padding: 1rem; font-size: .85rem; color: var(--green);
     white-space: pre-wrap; overflow-wrap: anywhere;
   }
+
+  /* ---- quick reference + fold-outs --------------------------------- */
+  .quick-ref { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; }
+  .quick-ref dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: .6rem 1rem; margin: 0; align-items: baseline; }
+  .quick-ref dt { color: var(--muted); font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+  .quick-ref dd { margin: 0; min-width: 0; }
+  .quick-ref pre.install { margin: 0; }
+  .quick-ref a { color: var(--cyan); }
+  details { margin: .5rem 0 1rem; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); padding: .45rem .8rem; }
+  td details { margin: .4rem 0 0; background: var(--surface2); }
+  details > :last-child { margin-bottom: 0; }
+  summary { cursor: pointer; color: var(--cyan); font-size: .85rem; font-weight: 600; }
+  summary:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
 
   /* ---- pipeline diagram -------------------------------------------- */
   svg.pipeline { display: block; width: 100%; max-width: 26rem; height: auto; margin: 1.25rem auto; }
@@ -159,6 +186,11 @@
   svg.pipeline .arrow-head { stroke: var(--cyan); stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
   footer { color: var(--muted); font-size: .8rem; margin: 3rem 0 1.5rem; }
+
+  /* desktop: Event and Matcher take only their content width so Script and Behavior share the rest */
+  @media (min-width: 768px) {
+    #hooks th:nth-child(-n+2), #hooks td:nth-child(-n+2) { width: 1%; white-space: nowrap; }
+  }
 
   /* ---- mobile ------------------------------------------------------ */
   @media (max-width: 767px) {
@@ -172,8 +204,19 @@
     .js .nav-toggle { display: inline-block; }
     .js .nav-groups[data-collapsed="true"] { display: none; }
     .sidebar .brand-sub { margin-bottom: .75rem; }
-    .skill-group ul { columns: 1; }
+    .skill-flow { grid-template-columns: minmax(0, 1fr); }
+    .flow-step[data-stage] { grid-area: auto; }
+    .flow-step[data-next]::after { content: "\2193" / ""; left: 50%; right: auto; top: 100%; margin: 0 0 0 -1.3rem; }
     .header { padding: 1.25rem; }
+    .quick-ref dl { grid-template-columns: minmax(0, 1fr); gap: .2rem; }
+    .quick-ref dd { margin-bottom: .6rem; }
+    /* tables never scroll sideways: each row becomes a card, each cell labelled by its column */
+    thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    table, tbody, tr, td { display: block; }
+    tr { border-bottom: 1px solid var(--border); padding: .4rem 0; }
+    tr:last-child { border-bottom: none; }
+    td { border-bottom: none; padding: .3rem .8rem; }
+    td::before { content: attr(data-label); display: block; color: var(--muted); text-transform: uppercase; font-size: .75rem; letter-spacing: .05em; }
   }
 </style>
 </head>
@@ -190,6 +233,7 @@
   <nav id="site-nav" class="nav-groups" aria-label="Site sections">
     <p class="nav-group-title">Overview</p>
     <ul>
+      <li><a href="#quick-reference">Quick reference</a></li>
       <li><a href="#what-you-get">What you get</a></li>
     </ul>
     <p class="nav-group-title">Getting started</p>
@@ -211,7 +255,7 @@
       <li><a href="#providers">Providers</a></li>
       <li><a href="#repository-layout">Repository layout</a></li>
       <li><a href="#memory-system">Memory system</a></li>
-      <li><a href="#verifier">easy-verifier-mcp</a></li>
+      <li><a href="#mcps">MCPs</a></li>
       <li><a href="#options">Options</a></li>
     </ul>
   </nav>
@@ -222,23 +266,40 @@
 <div class="header">
   <h1>Easy Kit</h1>
   <p class="lead">
-    A multi-agent supervisor framework. On Claude Code, one Supervisor session enforces a 5-stage
-    pipeline (plan → spawn isolated sub-agents → review → integrate → ship) through deterministic
-    hooks, not just prompted convention. Other providers (Codex, Cursor) get the same doctrine
-    through a thin adapter — see Providers below for what carries over and what doesn't. Install
-    it into any git repo with one command.
+    A multi-agent supervisor framework: one Supervisor session enforces a 5-stage pipeline through
+    deterministic hooks, not just prompted convention. Install it into any git repo with one command.
   </p>
+  <ul class="lead">
+    <li><strong>Pipeline</strong> — plan → spawn isolated sub-agents → review → integrate → ship.</li>
+    <li><strong>Claude Code</strong> — the Supervisor session and its hooks enforce every stage.</li>
+    <li><strong>Other providers</strong> (Codex, Cursor) — the same doctrine through a thin adapter; see
+      Providers below for what carries over and what doesn't.</li>
+  </ul>
   <p class="lead">
     <a href="https://github.com/thunderkds/personal-agentic-claude" target="_blank" rel="noopener noreferrer">View the Supervisor GitHub repository</a>
     for the source and installation reference.
   </p>
 </div>
+<section id="quick-reference">
+<h2>Quick reference</h2>
+<div class="quick-ref">
+<dl>
+  <dt>Install</dt>
+  <dd><pre class="install">curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh</pre></dd>
+  <dt>Update</dt>
+  <dd>Run the same command from your repo root and choose <strong>1) Update</strong> — see <a href="#update-flow">Update flow</a>.</dd>
+  <dt>Stages</dt>
+  <dd>Phase 0 → 0.5 → 1 → 1.5 → 2 → 3 → 4 → 5</dd>
+  <dt>Roster</dt>
+  <dd><a href="#agent-roles">4 spawnable roles</a> &middot; <a href="#skills">30 skills</a> &middot; <a href="#hooks">4 blocking hooks (of 9)</a></dd>
+</dl>
+</div>
+</section>
 <section id="what-you-get">
 <h2>What you get</h2>
 <p class="lead">
-  A base team of four spawnable sub-agent roles, a roster of skills covering every pipeline stage,
-  and a set of enforcement hooks that gate merges and spawns automatically — so "write a test
-  first" and "update the board" are not just written down, they are checked.
+  Four spawnable sub-agent roles, skills for every pipeline stage, and enforcement hooks that gate
+  merges and spawns — so "write a test first" and "update the board" are checked, not just written down.
 </p>
 <svg id="pipeline-diagram" class="pipeline" role="img" viewBox="0 0 320 558" xmlns="http://www.w3.org/2000/svg" aria-labelledby="pipeline-diagram-title pipeline-diagram-desc">
   <title id="pipeline-diagram-title">The Easy Kit pipeline</title>
@@ -306,12 +367,18 @@
 </p>
 <p class="lead">
   Installing into an existing project never deletes what is already there: a file or folder the kit
-  would replace is first moved to a backup named after the kit version it replaces
-  (<code>CLAUDE.md.bak-&lt;commit&gt;</code>, <code>templates.bak-&lt;commit&gt;/</code>, …; today's date,
-  such as <code>CLAUDE.md.bak-20261008</code>, when no earlier version is recorded, as on a first
-  install), and each backup is listed in the install output. A name already taken gets
-  <code>.1</code>, <code>.2</code>, … so no backup is ever overwritten. Identical files are left alone.
+  would replace is first moved to a backup, listed in the install output. Identical files are left alone.
 </p>
+<details>
+<summary>How backups are named</summary>
+<ul>
+  <li>After the kit version it replaces: <code>CLAUDE.md.bak-&lt;commit&gt;</code>,
+    <code>templates.bak-&lt;commit&gt;/</code>, …</li>
+  <li>Today's date, such as <code>CLAUDE.md.bak-20261008</code>, when no earlier version is recorded,
+    as on a first install.</li>
+  <li>A name already taken gets <code>.1</code>, <code>.2</code>, … so no backup is ever overwritten.</li>
+</ul>
+</details>
 <p class="lead">
   The command takes no options — you choose from numbered menus, and <strong>Enter</strong> takes the
   default each time:
@@ -328,18 +395,20 @@
 </ul>
 <p class="lead">
   A plan then lists the CLIs, the project type and anything that will be backed up, and asks
-  <code>Proceed? [Y/n]</code> before a single file changes. With no terminal (CI, containers) there are
-  no menus: the defaults are printed and taken. Pass it anything on the command line and it stops with
-  nothing written.
+  <code>Proceed? [Y/n]</code> before a single file changes.
 </p>
+<ul class="lead">
+  <li><strong>No terminal</strong> (CI, containers) — no menus: the defaults are printed and taken.</li>
+  <li><strong>Anything on the command line</strong> — it stops with nothing written.</li>
+</ul>
 <p class="lead">To pull in newer Easy Kit changes later, run the same command again from your repo root and choose <strong>Update</strong> (see below).</p>
 </section>
 
 <section id="update-flow">
 <h2>Update flow</h2>
 <p class="lead">
-  There is one command. Run the same install line again from inside your already-installed
-  project, which must still be a git repository. Easy Kit sees it is installed and asks what to do:
+  There is one command: run the same install line again inside your installed project (still a git
+  repository). Easy Kit sees it is installed and asks what to do:
 </p>
 <pre class="install">Easy Kit is already installed in /path/to/your-project.
   1) Update (keeps your edits)
@@ -347,33 +416,38 @@
   3) Cancel
 Choose [1]:</pre>
 <p class="lead">
-  Before it changes anything it shows a plan — the files it will ask you about, the files it will
-  remove because the kit no longer ships them, and anything it will back up — and ends with
-  <code>Proceed? [Y/n]</code>. Answer <code>n</code> to go back to the menu. <strong>Cancel changes
-  nothing.</strong> With no terminal (CI, containers, <code>ssh</code> without <code>-t</code>) there
-  is no menu: it prints the safe default — Update, keeping every edit — and takes it; Reinstall never
-  runs without a terminal. (An existing <code>update.sh</code> in a checkout still works: it runs the
-  same Update action.)
-</p>
-<p class="lead">
-  <strong>Update</strong> re-fetches the framework fresh, then for every <code>MANIFEST</code> file — plus
-  <code>CLAUDE.md</code> — compares your project's current copy against the content hash recorded
-  at the last install/update (<code>.claude/harness-lock.json</code>, which also records the kit's
-  commit ID as <code>kit_commit</code>):
+  Before changing anything it shows a plan — files to ask about, files to remove because the kit no
+  longer ships them, anything to back up — and ends with <code>Proceed? [Y/n]</code>.
 </p>
 <ul class="lead">
-  <li><strong>Untouched since install</strong> — silently overwritten with the latest upstream version.</li>
-  <li><strong>Customized</strong> — shown a diff and prompted per file: overwrite / skip / view diff again.
-    Overwrite first moves your version to <code>&lt;file&gt;.bak-&lt;commit&gt;</code>, named after the
-    kit version it replaces; skip keeps it in place.</li>
-  <li><strong>No longer shipped</strong> — a file the kit dropped is removed if you never edited it, and kept
-   (and named) if you did.</li>
-  <li><strong><code>.claude/settings.json</code></strong> — not a <code>MANIFEST</code> file, so it is
-    <em>merged</em> rather than copied: the kit's hooks are reconciled into it on install
-    <em>and</em> on update, while the kit's <code>permissions.deny</code> entries are appended to yours (add-only; your own
-    permissions and hook entries are kept exactly as they are, and the kit's allow or ask rules are never copied). If it cannot be merged — invalid JSON, a symlink, or no <code>python3</code> — nothing
-    is written, the block to add by hand is printed, and the run exits <code>2</code>.</li>
+  <li>Answer <code>n</code> to go back to the menu. <strong>Cancel changes nothing.</strong></li>
+  <li><strong>No terminal</strong> (CI, containers, <code>ssh</code> without <code>-t</code>) — no
+    menu: it prints the safe default — Update, keeping every edit — and takes it. Reinstall never runs
+    without a terminal.</li>
+  <li>An existing <code>update.sh</code> in a checkout still works: it runs the same Update action.</li>
 </ul>
+<p class="lead">
+  <strong>Update</strong> re-fetches the framework fresh, then compares each <code>MANIFEST</code> file —
+  plus <code>CLAUDE.md</code> — against the content hash recorded at the last install/update:
+</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Your copy</th><th>What Update does</th></tr></thead>
+<tbody>
+<tr><td data-label="Your copy"><strong>Untouched since install</strong></td><td data-label="What Update does">Silently overwritten with the latest upstream version</td></tr>
+<tr><td data-label="Your copy"><strong>Customized</strong></td><td data-label="What Update does">Shows a diff and prompts per file: overwrite / skip / view diff again. Overwrite first moves yours to <code>&lt;file&gt;.bak-&lt;commit&gt;</code>; skip keeps it</td></tr>
+<tr><td data-label="Your copy"><strong>No longer shipped</strong></td><td data-label="What Update does">Removed if you never edited it; kept (and named) if you did</td></tr>
+<tr><td data-label="Your copy"><code>.claude/<wbr>settings.json</code></td><td data-label="What Update does">Not a <code>MANIFEST</code> file, so it is <em>merged</em> rather than copied — on install <em>and</em> on update <details><summary>How the merge works</summary><ul><li>The kit's hooks are reconciled into it.</li><li>The kit's <code>permissions.deny</code> entries are appended to yours (add-only); your own permissions and hook entries are kept exactly as they are.</li><li>The kit's allow or ask rules are never copied.</li><li>If it cannot be merged — invalid JSON, a symlink, or no <code>python3</code> — nothing is written, the block to add by hand is printed, and the run exits <code>2</code>.</li></ul></details></td></tr>
+</tbody>
+</table>
+</div>
+<details>
+<summary>Where the hashes are recorded</summary>
+<p>
+  In <code>.claude/harness-lock.json</code>, which also records the kit's commit ID as
+  <code>kit_commit</code> — the version a <code>.bak-&lt;commit&gt;</code> backup is named after.
+</p>
+</details>
 <p class="lead">
   <code>CLAUDE.md</code> is delivered from the same source the project was installed with — a
   brownfield/existing project keeps receiving <code>CLAUDE_LEGACY.md</code>'s rules, never the
@@ -383,8 +457,8 @@ Choose [1]:</pre>
 <h3>Which CLIs get updated</h3>
 <p class="lead">
   Easy Kit stores no list of CLIs. <strong>Update</strong> asks no CLI question: it refreshes every CLI
-  whose directory is already present in the project. <strong>Reinstall</strong> shows the CLI menu,
-  pre-selecting the CLIs the project already has. That means:
+  whose directory is already present. <strong>Reinstall</strong> shows the CLI menu, pre-selecting
+  those. That means:
 </p>
 <ul class="lead">
   <li>A <strong>Codex-only</strong> project refreshes <code>.codex/skills/</code> and is not given
@@ -397,11 +471,14 @@ Choose [1]:</pre>
     one, delete its folder.</li>
 </ul>
 <p class="lead">
-  One edge worth knowing: if <em>both</em> <code>.claude/skills</code> and
-  <code>.claude/agents</code> are deleted outright, Update leaves them absent — with nothing present,
-  the project is indistinguishable from one that never picked Claude Code. Restore them the same way:
-  run the command, choose <strong>Reinstall</strong>, and pick Claude Code.
+  One edge worth knowing: if <em>both</em> <code>.claude/skills</code> and <code>.claude/agents</code>
+  are deleted outright, Update leaves them absent. Restore them: run the command, choose
+  <strong>Reinstall</strong>, and pick Claude Code.
 </p>
+<details>
+<summary>Why Update leaves them absent</summary>
+<p>With nothing present, the project is indistinguishable from one that never picked Claude Code.</p>
+</details>
 </section>
 
 <section id="install-variants">
@@ -411,11 +488,14 @@ Choose [1]:</pre>
 curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-claude/main/setup.sh | sh</pre>
 <p class="lead">
   <strong>New vs. existing (brownfield) project</strong> — a menu choice in the same
-  <code>curl … | sh</code> line: the menus read your terminal, not the pipe. Choose
-  <code>2) Existing / legacy project</code> for an existing codebase — it uses
-  <code>CLAUDE_LEGACY.md</code>, which adds legacy-codebase guidance (risk hotspots, strangler-fig
-  patterns). With no terminal the default is <code>1) New project</code> (<code>CLAUDE.md</code>).
+  <code>curl … | sh</code> line: the menus read your terminal, not the pipe.
 </p>
+<ul class="lead">
+  <li><code>2) Existing / legacy project</code> — for an existing codebase. Uses
+    <code>CLAUDE_LEGACY.md</code>, which adds legacy-codebase guidance (risk hotspots, strangler-fig
+    patterns).</li>
+  <li><code>1) New project</code> (<code>CLAUDE.md</code>) — the default with no terminal.</li>
+</ul>
 </section>
 
 <section id="agent-roles">
@@ -423,8 +503,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <p class="lead">
   Four roles are directly spawnable via the <code>Agent</code> tool, each scoped to a single
   <code>TASK_GUIDE</code>. A fifth file, <code>general-agent-template</code>, is <strong>not a
-  spawnable role</strong> — it is the shared base template every spawnable role inherits Base
-  Rules and engineering principles from.
+  spawnable role</strong> — the shared base template they all inherit.
 </p>
 
 <div class="agent-card">
@@ -464,43 +543,45 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
   One inline instruction set loaded per invocation, grouped by which pipeline stage it belongs to.
 </p>
 
-<div class="skill-groups">
-  <div class="skill-group">
+<ol class="skill-flow" aria-label="Skills grouped by pipeline stage, in stage order">
+  <li class="flow-step" data-stage="0.5" data-next="right">
     <h3>Stage 0.5 — Requirement Grilling / Brainstorming</h3>
-    <ul><li>brainstorming</li><li>ideate</li></ul>
-  </div>
-  <div class="skill-group">
+    <p class="chips"><span class="chip">brainstorming</span><span class="chip">ideate</span></p>
+  </li>
+  <li class="flow-step" data-stage="1" data-next="down">
     <h3>Stage 1 — Environment &amp; Provider Setup</h3>
-    <ul><li>git-guardrails-claude-code</li><li>map-codebase</li></ul>
-  </div>
-  <div class="skill-group">
+    <p class="chips"><span class="chip">git-guardrails-claude-code</span><span class="chip">map-codebase</span></p>
+  </li>
+  <li class="flow-step" data-stage="1.5" data-next="left">
     <h3>Stage 1.5 — Sub-Agent Architecture</h3>
-    <ul><li>craft-agent</li></ul>
-  </div>
-  <div class="skill-group">
+    <p class="chips"><span class="chip">craft-agent</span></p>
+  </li>
+  <li class="flow-step" data-stage="2" data-next="down">
     <h3>Stage 2 — Intent Transformation</h3>
-    <ul><li>grill-with-docs</li><li>to-issues</li></ul>
-  </div>
-  <div class="skill-group">
+    <p class="chips"><span class="chip">grill-with-docs</span><span class="chip">to-issues</span></p>
+  </li>
+  <li class="flow-step" data-stage="3" data-next="right">
     <h3>Stage 3 — Parallel Execution via Isolation</h3>
-    <ul><li>tdd</li><li>bugfix</li><li>diagnose</li><li>craft-spawn-prompt</li><li>migration-safety</li></ul>
-  </div>
-  <div class="skill-group">
+    <p class="chips"><span class="chip">tdd</span><span class="chip">bugfix</span><span class="chip">diagnose</span><span class="chip">craft-spawn-prompt</span><span class="chip">migration-safety</span></p>
+  </li>
+  <li class="flow-step" data-stage="4" data-next="down">
     <h3>Stage 4 — Review</h3>
-    <ul><li>blast-radius</li><li>code-review</li><li>html-report</li></ul>
-  </div>
-  <div class="skill-group">
+    <p class="chips"><span class="chip">blast-radius</span><span class="chip">code-review</span><span class="chip">html-report</span></p>
+  </li>
+  <li class="flow-step" data-stage="5">
     <h3>Stage 5 — Integration &amp; Verification</h3>
-    <ul><li>ship</li><li>delivery-report</li></ul>
-  </div>
-  <div class="skill-group">
-    <h3>Cross-cutting</h3>
-    <ul>
-      <li>compact-advisor</li><li>compact-memory</li><li>compound</li><li>compound-refresh</li>
-      <li>learn</li><li>optimize</li><li>resolve-pr-feedback</li><li>slim-skills</li>
-      <li>strategy</li><li>teach</li><li>thinking-report</li><li>wake</li><li>write-better-skill</li>
-    </ul>
-  </div>
+    <p class="chips"><span class="chip">ship</span><span class="chip">delivery-report</span></p>
+  </li>
+</ol>
+
+<div class="skill-band">
+  <h3>Any stage</h3>
+  <p class="chips">
+    <span class="chip">compact-advisor</span><span class="chip">compact-memory</span><span class="chip">compound</span><span class="chip">compound-refresh</span>
+    <span class="chip">learn</span><span class="chip">optimize</span><span class="chip">resolve-pr-feedback</span><span class="chip">slim-skills</span>
+    <span class="chip">strategy</span><span class="chip">teach</span><span class="chip">thinking-report</span><span class="chip">wake</span>
+    <span class="chip">write-better-skill</span>
+  </p>
 </div>
 </section>
 
@@ -510,27 +591,33 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
   Deterministic shell/python guardrails the harness runs — not the model. Each fires on a
   <code>PreToolUse</code>, <code>PostToolUse</code>, or <code>Stop</code> event and either
   <span class="tag tag-block">blocks</span> the tool call or only
-  <span class="tag tag-advise">advises</span> (prints a message, never stops execution).
+  <span class="tag tag-advise">advises</span> (prints, never stops execution).
 </p>
 <p class="lead">
   The wiring lives in <code>.claude/settings.json</code>. Both <code>setup.sh</code> and
-  <code>update.sh</code> merge every entry below into that file — including into one your project
-  already has — and keep your own permissions and hook entries; the only permissions it adds are the kit's
-  <code>permissions.deny</code> entries. No manual merge step.
+  <code>update.sh</code> merge every entry below into that file. No manual merge step.
 </p>
+<details>
+<summary>What the merge keeps</summary>
+<p>
+  It merges into a <code>.claude/settings.json</code> your project already has too, and keeps your own
+  permissions and hook entries; the only permissions it adds are the kit's
+  <code>permissions.deny</code> entries.
+</p>
+</details>
 <div class="table-wrap">
 <table>
 <thead><tr><th>Event</th><th>Matcher</th><th>Script</th><th>Behavior</th></tr></thead>
 <tbody>
-<tr><td>PreToolUse</td><td><code>Agent</code></td><td><code>pre_agent_validate_guide.py</code></td><td><span class="tag tag-block">blocks</span> spawn if the TASK_GUIDE is missing; <span class="tag tag-advise">advises</span> (never blocks) when the spawn prompt has no memory slice or no <code>**Startup reads**</code> block, when a <code>Depends on</code> task is not Done, or when a task's Demonstration BEFORE is still blank</td></tr>
-<tr><td>PreToolUse</td><td><code>Bash</code></td><td><code>pre_bash_block_unsafe_merge.py</code></td><td><span class="tag tag-block">blocks</span> git push/merge if pipeline gates are unsatisfied</td></tr>
-<tr><td>PreToolUse</td><td><code>Edit|Write|Bash</code></td><td><code>pre_tool_sensitive_path.py</code></td><td><span class="tag tag-block">asks</span> you to confirm before a call touches a path listed in <code>.claude/sensitive-paths.txt</code> (<code>.env*</code>, secrets, production configs, infra) — unless the active task's guide predicted that exact path</td></tr>
-<tr><td>PreToolUse</td><td><code>.*</code></td><td><code>pre_agent_step_limit.py</code></td><td><span class="tag tag-block">blocks</span> a task's tool call once it exceeds the step limit (default <strong>90</strong>) — self-clearing on the very next call</td></tr>
-<tr><td>PostToolUse</td><td><code>Write</code></td><td><code>post_write_register_task.py</code></td><td><span class="tag tag-advise">advises</span> — auto-registers new TASK_GUIDE files on the board</td></tr>
-<tr><td>PostToolUse</td><td><code>Agent</code></td><td><code>post_agent_move_to_review.py</code></td><td><span class="tag tag-inert">inert</span> — <strong>does not move anything and does not touch any step counter</strong>; it only prints a reminder for the Supervisor to move the row by hand (deliberately, after two past defects made the automatic move actively harmful)</td></tr>
-<tr><td>PostToolUse</td><td><code>Bash</code></td><td><code>post_bash_memory_update.py</code></td><td><span class="tag tag-advise">advises</span> — prompts a diff-driven memory-update pass after git push/merge/pull</td></tr>
-<tr><td>PostToolUse</td><td><code>.*</code></td><td><code>post_tool_trace.py</code></td><td><span class="tag tag-advise">advises</span> — appends every tool call to <code>memory/event-trace/&lt;task&gt;.jsonl</code>, each line linked to the one before by a hash chain, with a copy of each line's hash kept outside the repo under <code>~/.claude/harness-anchors/</code>; <code>scripts/verify_trace.py &lt;task&gt;</code> reports whether the trace still matches</td></tr>
-<tr><td>Stop</td><td>—</td><td><code>stop_review_reminder.py</code></td><td><span class="tag tag-advise">advises</span> — reminds the Supervisor to run Stage 4 review for pending tasks</td></tr>
+<tr><td data-label="Event">PreToolUse</td><td data-label="Matcher"><code>Agent</code></td><td data-label="Script"><code>pre_<wbr>agent_<wbr>validate_<wbr>guide.py</code></td><td data-label="Behavior"><span class="tag tag-block">blocks</span> spawn if the TASK_GUIDE is missing; otherwise only <span class="tag tag-advise">advises</span> (never blocks) <details><summary>When it advises</summary><ul><li>The spawn prompt has no memory slice or no <code>**Startup reads**</code> block</li><li>A <code>Depends on</code> task is not Done</li><li>A task's Demonstration BEFORE is still blank</li></ul></details></td></tr>
+<tr><td data-label="Event">PreToolUse</td><td data-label="Matcher"><code>Bash</code></td><td data-label="Script"><code>pre_<wbr>bash_<wbr>block_<wbr>unsafe_<wbr>merge.py</code></td><td data-label="Behavior"><span class="tag tag-block">blocks</span> git push/merge if pipeline gates are unsatisfied</td></tr>
+<tr><td data-label="Event">PreToolUse</td><td data-label="Matcher"><code>Edit|Write|Bash</code></td><td data-label="Script"><code>pre_<wbr>tool_<wbr>sensitive_<wbr>path.py</code></td><td data-label="Behavior"><span class="tag tag-block">asks</span> you to confirm before a call touches a path listed in <code>.claude/<wbr>sensitive-<wbr>paths.txt</code> — unless the active task's guide predicted that exact path <details><summary>What the list covers</summary><p><code>.env*</code>, secrets, production configs, infra.</p></details></td></tr>
+<tr><td data-label="Event">PreToolUse</td><td data-label="Matcher"><code>.*</code></td><td data-label="Script"><code>pre_<wbr>agent_<wbr>step_<wbr>limit.py</code></td><td data-label="Behavior"><span class="tag tag-block">blocks</span> a task's tool call once it exceeds the step limit (default <strong>90</strong>) — self-clearing on the very next call</td></tr>
+<tr><td data-label="Event">PostToolUse</td><td data-label="Matcher"><code>Write</code></td><td data-label="Script"><code>post_<wbr>write_<wbr>register_<wbr>task.py</code></td><td data-label="Behavior"><span class="tag tag-advise">advises</span> — auto-registers new TASK_GUIDE files on the board</td></tr>
+<tr><td data-label="Event">PostToolUse</td><td data-label="Matcher"><code>Agent</code></td><td data-label="Script"><code>post_<wbr>agent_<wbr>move_<wbr>to_<wbr>review.py</code></td><td data-label="Behavior"><span class="tag tag-inert">inert</span> — <strong>does not move anything and does not touch any step counter</strong>; it only prints a reminder to move the row by hand <details><summary>Why by hand</summary><p>The reminder is for the Supervisor. The hand move is deliberate, after two past defects made the automatic move actively harmful.</p></details></td></tr>
+<tr><td data-label="Event">PostToolUse</td><td data-label="Matcher"><code>Bash</code></td><td data-label="Script"><code>post_<wbr>bash_<wbr>memory_<wbr>update.py</code></td><td data-label="Behavior"><span class="tag tag-advise">advises</span> — prompts a diff-driven memory-update pass after git push/merge/pull</td></tr>
+<tr><td data-label="Event">PostToolUse</td><td data-label="Matcher"><code>.*</code></td><td data-label="Script"><code>post_tool_trace.py</code></td><td data-label="Behavior"><span class="tag tag-advise">advises</span> — appends every tool call to <code>memory/<wbr>event-<wbr>trace/<wbr>&lt;task&gt;.jsonl</code>; <code>scripts/<wbr>verify_<wbr>trace.py &lt;task&gt;</code> reports whether the trace still matches <details><summary>How an edit shows</summary><p>Each line is linked to the one before by a hash chain, with a copy of each line's hash kept outside the repo under <code>~/.claude/<wbr>harness-<wbr>anchors/</code>.</p></details></td></tr>
+<tr><td data-label="Event">Stop</td><td data-label="Matcher">—</td><td data-label="Script"><code>stop_<wbr>review_<wbr>reminder.py</code></td><td data-label="Behavior"><span class="tag tag-advise">advises</span> — reminds the Supervisor to run Stage 4 review for pending tasks</td></tr>
 </tbody>
 </table>
 </div>
@@ -546,12 +633,12 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <table>
 <thead><tr><th>We apply</th><th>To save</th><th>Idea from</th></tr></thead>
 <tbody>
-<tr><td><strong>Memory slice</strong> — the spawn prompt pastes only the <code>memory/MEMORY.md</code> lines about the task's own files, plus any <code>memory/decisions.md</code> entry that lists those files, capped at 30 lines / 4,000 characters</td><td>Every agent reading the whole memory index before it starts</td><td>headroom</td></tr>
-<tr><td><strong>Startup reads list</strong> — the spawn prompt names what to read first, and the agent ends its report with a <code>Startup reads:</code> line that Stage 4 review checks</td><td>Rework from an agent that skipped the rules it must follow</td><td>—</td></tr>
-<tr><td><strong>Response Standard</strong> — replies lead with the answer and stay short, but code, exact error text, file paths, commands and security warnings are quoted verbatim; reports point to <code>path:line</code>. The audit trail stays fully detailed</td><td>Output tokens, and the Supervisor carrying pasted logs for the rest of its session</td><td>caveman</td></tr>
-<tr><td><strong>Over-engineering reviewer</strong> — <code>code-review</code> checks any diff that adds a function, class, module, dependency or config option</td><td>Code nobody asked for, which someone must then review and maintain</td><td>ponytail</td></tr>
-<tr><td><strong>Measured <code>compact-advisor</code></strong> — quotes the session's measured context size before judging whether to compact, where the kit repository's transcript meter is present; an installed project falls back to judgment</td><td>Re-reading a long conversation on every call, the largest cost measured</td><td>—</td></tr>
-<tr><td><strong>Measure before keeping</strong> — a claimed saving is measured from session transcripts first (DDR-0009)</td><td>Building what doesn't pay: a headroom-style Bash-output compressor was measured at about 1 percent of spend and parked</td><td>—</td></tr>
+<tr><td data-label="We apply"><strong>Memory slice</strong> — the spawn prompt pastes only the <code>memory/MEMORY.md</code> lines about the task's own files, capped at 30 lines / 4,000 characters <details><summary>Also pasted</summary><p>Any <code>memory/decisions.md</code> entry that lists those files, within the same cap.</p></details></td><td data-label="To save">Every agent reading the whole memory index before it starts</td><td data-label="Idea from">headroom</td></tr>
+<tr><td data-label="We apply"><strong>Startup reads list</strong> — the spawn prompt names what to read first; the agent's report ends with a <code>Startup reads:</code> line Stage 4 review checks</td><td data-label="To save">Rework from an agent that skipped the rules it must follow</td><td data-label="Idea from">—</td></tr>
+<tr><td data-label="We apply"><strong>Response Standard</strong> — replies lead with the answer and stay short, but quote what matters verbatim; the audit trail stays fully detailed <details><summary>What stays verbatim</summary><p>Code, exact error text, file paths, commands and security warnings; reports point to <code>path:line</code>.</p></details></td><td data-label="To save">Output tokens, and the Supervisor carrying pasted logs for the rest of its session</td><td data-label="Idea from">caveman</td></tr>
+<tr><td data-label="We apply"><strong>Over-engineering reviewer</strong> — <code>code-review</code> checks any diff that adds a function, class, module, dependency or config option</td><td data-label="To save">Code nobody asked for, which someone must then review and maintain</td><td data-label="Idea from">ponytail</td></tr>
+<tr><td data-label="We apply"><strong>Measured <code>compact-advisor</code></strong> — quotes the session's measured context size before judging whether to compact <details><summary>Where it can measure</summary><p>Where the kit repository's transcript meter is present; an installed project falls back to judgment.</p></details></td><td data-label="To save">Re-reading a long conversation on every call, the largest cost measured</td><td data-label="Idea from">—</td></tr>
+<tr><td data-label="We apply"><strong>Measure before keeping</strong> — a claimed saving is measured from session transcripts first (DDR-0009)</td><td data-label="To save">Building what doesn't pay: a headroom-style Bash-output compressor was measured at about 1 percent of spend and parked</td><td data-label="Idea from">—</td></tr>
 </tbody>
 </table>
 </div>
@@ -560,62 +647,72 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <section id="packs">
 <h2>Packs (optional domain extensions)</h2>
 <p class="lead">
-  The core framework ships four agents for every project. Packs add domain-specific agents and
-  skills on top, never replacing core resources. Every project ships all packs, inactive: they sit in
-  <code>packs/</code> and no CLI loads them.
+  Packs add domain-specific agents and skills on top of the four core agents, never replacing core
+  resources. Every project ships all packs, inactive: they sit in <code>packs/</code> and no CLI loads them.
 </p>
 <div class="table-wrap">
 <table>
 <thead><tr><th>Pack</th><th>Domain</th><th>Agent</th><th>Skills</th></tr></thead>
 <tbody>
-<tr><td><code>mobile</code></td><td>Flutter, React Native, Swift, Kotlin</td><td><code>mobile-developer</code></td><td><code>ui-accessibility</code>, <code>platform-compatibility</code></td></tr>
-<tr><td><code>data</code></td><td>Pipelines, notebooks, ETL, dbt</td><td><code>data-engineer</code></td><td><code>notebook-review</code>, <code>pipeline-safety</code></td></tr>
-<tr><td><code>devops</code></td><td>Terraform, K8s, CI/CD, Docker</td><td><code>devops-engineer</code></td><td><code>infra-safety</code>, <code>deployment-checklist</code></td></tr>
-<tr><td><code>ai-agent</code></td><td>LLM apps, RAG, MCP servers</td><td><code>ai-engineer</code></td><td><code>prompt-review</code>, <code>eval-design</code></td></tr>
-<tr><td><code>api</code></td><td>REST/gRPC, OpenAPI, auth flows</td><td><code>api-designer</code></td><td><code>contract-review</code>, <code>auth-checklist</code></td></tr>
+<tr><td data-label="Pack"><code>mobile</code></td><td data-label="Domain">Flutter, React Native, Swift, Kotlin</td><td data-label="Agent"><code>mobile-developer</code></td><td data-label="Skills"><code>ui-accessibility</code>, <code>platform-<wbr>compatibility</code></td></tr>
+<tr><td data-label="Pack"><code>data</code></td><td data-label="Domain">Pipelines, notebooks, ETL, dbt</td><td data-label="Agent"><code>data-engineer</code></td><td data-label="Skills"><code>notebook-review</code>, <code>pipeline-safety</code></td></tr>
+<tr><td data-label="Pack"><code>devops</code></td><td data-label="Domain">Terraform, K8s, CI/CD, Docker</td><td data-label="Agent"><code>devops-engineer</code></td><td data-label="Skills"><code>infra-safety</code>, <code>deployment-checklist</code></td></tr>
+<tr><td data-label="Pack"><code>ai-agent</code></td><td data-label="Domain">LLM apps, RAG, MCP servers</td><td data-label="Agent"><code>ai-engineer</code></td><td data-label="Skills"><code>prompt-review</code>, <code>eval-design</code></td></tr>
+<tr><td data-label="Pack"><code>api</code></td><td data-label="Domain">REST/gRPC, OpenAPI, auth flows</td><td data-label="Agent"><code>api-designer</code></td><td data-label="Skills"><code>contract-review</code>, <code>auth-checklist</code></td></tr>
 </tbody>
 </table>
 </div>
-<p class="lead">
-  The installer never asks about packs. Your Supervisor recommends packs for your project from its
-  business domain, and activates each pack you approve by copying it into <code>agents/</code> and
-  <code>skills/</code>. Update keeps the <code>packs/</code> catalog current like any other kit file.
-</p>
+<ul class="lead">
+  <li>The installer never asks about packs.</li>
+  <li>Your Supervisor recommends packs for your project from its business domain, and activates each
+    pack you approve by copying it into <code>agents/</code> and <code>skills/</code>.</li>
+  <li>Update keeps the <code>packs/</code> catalog current like any other kit file.</li>
+</ul>
 </section>
 
 <section id="providers">
 <h2>Providers</h2>
 <p class="lead">
   <code>CLAUDE.md</code> plus <code>docs/claude-md/</code> stay the one primary source of truth.
-  Every other provider gets a thin adapter file in the channel that provider actually auto-reads,
-  carrying the kit's non-negotiable rules (the four Karpathy principle names and the six Hard-Stop
-  Gate titles) inline and pointing back at the primary for everything else.
+  Every other provider gets a thin adapter file in the channel that provider actually auto-reads.
 </p>
+<details>
+<summary>What an adapter carries</summary>
+<p>
+  The kit's non-negotiable rules (the four Karpathy principle names and the six Hard-Stop Gate titles)
+  inline, pointing back at the primary for everything else.
+</p>
+</details>
 <div class="table-wrap">
 <table>
 <thead><tr><th>Adapter</th><th>Auto-read by</th><th>What it carries</th></tr></thead>
 <tbody>
-<tr><td><code>AGENTS.md</code></td><td>Codex</td><td>Karpathy principle names, Hard-Stop Gate titles, the untrusted-content boundary rule, and the "no TASK_GUIDE = no work" rule — inlined, not just linked</td></tr>
-<tr><td><code>.cursor/rules/agent-base.mdc</code></td><td>Cursor (<code>alwaysApply: true</code>)</td><td>The same inlined non-negotiables as <code>AGENTS.md</code></td></tr>
+<tr><td data-label="Adapter"><code>AGENTS.md</code></td><td data-label="Auto-read by">Codex</td><td data-label="What it carries">Karpathy principle names, Hard-Stop Gate titles, the untrusted-content boundary rule, and the "no TASK_GUIDE = no work" rule — inlined, not just linked</td></tr>
+<tr><td data-label="Adapter"><code>.cursor/<wbr>rules/<wbr>agent-<wbr>base.mdc</code></td><td data-label="Auto-read by">Cursor (<code>alwaysApply: true</code>)</td><td data-label="What it carries">The same inlined non-negotiables as <code>AGENTS.md</code></td></tr>
 </tbody>
 </table>
 </div>
 <p class="lead">
   Codex executes the kit's skills directly, by name, from a projected <code>.codex/skills/</code>
-  directory (choose Codex in the installer's CLI menu) — it is not left with doctrine alone. Each
-  skill's body is capped at <strong>8 KB</strong> per Codex's own limit; a skill over the cap is
-  <strong>skipped with a named, loud warning</strong> rather than truncated. Four of this kit's
-  skills currently exceed it and are skipped for Codex: <code>bugfix</code>,
-  <code>craft-spawn-prompt</code>, <code>diagnose</code>, and <code>write-better-skill</code>.
+  directory (choose Codex in the installer's CLI menu) — it is not left with doctrine alone.
 </p>
+<ul class="lead">
+  <li>Each skill's body is capped at <strong>8 KB</strong> per Codex's own limit.</li>
+  <li>A skill over the cap is <strong>skipped with a named, loud warning</strong> rather than truncated.</li>
+  <li>Four of this kit's skills currently exceed it and are skipped for Codex: <code>bugfix</code>,
+    <code>craft-spawn-prompt</code>, <code>diagnose</code>, and <code>write-better-skill</code>.</li>
+</ul>
 <p class="lead">
   What a non-Claude provider <strong>still cannot</strong> enforce: Claude Code's
   <code>PreToolUse</code>/<code>PostToolUse</code> hooks, the <code>Agent</code> spawn tool, and
-  everything built on them — <code>code-review</code>, <code>security-review</code>,
-  <code>verify</code>, <code>ship</code>, <code>migration-safety</code>, and the git-guardrails
-  hook. Those stay on the Claude supervisor; an adapter carries the doctrine, and Codex can now run
-  the skills it has room for, but the deterministic enforcement layer does not follow.
+  everything built on them:
 </p>
+<ul class="lead">
+  <li><code>code-review</code>, <code>security-review</code>, <code>verify</code>, <code>ship</code>,
+    <code>migration-safety</code>, and the git-guardrails hook.</li>
+  <li>Those stay on the Claude supervisor: an adapter carries the doctrine, and Codex can now run the
+    skills it has room for, but the deterministic enforcement layer does not follow.</li>
+</ul>
 </section>
 
 <section id="repository-layout">
@@ -628,16 +725,16 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <table>
 <thead><tr><th>Path</th><th>What it contains</th></tr></thead>
 <tbody>
-<tr><td><code>agents/</code></td><td>Canon sub-agent definitions plus <code>general-agent-template.md</code> (DDR-0007)</td></tr>
-<tr><td><code>skills/</code></td><td>Canon custom skills (DDR-0007)</td></tr>
-<tr><td><code>.claude/agents/</code></td><td>Committed <strong>relative symlink</strong> onto <code>agents/</code> so Claude Code can discover it (<code>.claude/agents -&gt; ../agents</code>)</td></tr>
-<tr><td><code>.claude/skills/</code></td><td>Committed <strong>relative symlink</strong> onto <code>skills/</code> so Claude Code can discover it (<code>.claude/skills -&gt; ../skills</code>)</td></tr>
-<tr><td><code>AGENTS.md</code></td><td>Provider adapter for Codex — see Providers below</td></tr>
-<tr><td><code>.cursor/rules/agent-base.mdc</code></td><td>Provider adapter for Cursor — see Providers below</td></tr>
-<tr><td><code>tasks/</code></td><td>Task guides generated at Stage 2 (per project)</td></tr>
-<tr><td><code>templates/</code></td><td>Blank templates for PRD, PROJECT_SPEC, task board, TASK_GUIDE, and more</td></tr>
-<tr><td><code>packs/</code></td><td>Optional domain packs — each adds agents + skills for a specific project type</td></tr>
-<tr><td><code>memory/</code></td><td>Two-tier hot/cold memory files (per project) — see Memory System below</td></tr>
+<tr><td data-label="Path"><code>agents/</code></td><td data-label="What it contains">Canon sub-agent definitions plus <code>general-<wbr>agent-<wbr>template.md</code> (DDR-0007)</td></tr>
+<tr><td data-label="Path"><code>skills/</code></td><td data-label="What it contains">Canon custom skills (DDR-0007)</td></tr>
+<tr><td data-label="Path"><code>.claude/agents/</code></td><td data-label="What it contains">Committed <strong>relative symlink</strong> onto <code>agents/</code> so Claude Code can discover it (<code>.claude/<wbr>agents -&gt; ../agents</code>)</td></tr>
+<tr><td data-label="Path"><code>.claude/skills/</code></td><td data-label="What it contains">Committed <strong>relative symlink</strong> onto <code>skills/</code> so Claude Code can discover it (<code>.claude/<wbr>skills -&gt; ../skills</code>)</td></tr>
+<tr><td data-label="Path"><code>AGENTS.md</code></td><td data-label="What it contains">Provider adapter for Codex — see Providers below</td></tr>
+<tr><td data-label="Path"><code>.cursor/<wbr>rules/<wbr>agent-<wbr>base.mdc</code></td><td data-label="What it contains">Provider adapter for Cursor — see Providers below</td></tr>
+<tr><td data-label="Path"><code>tasks/</code></td><td data-label="What it contains">Task guides generated at Stage 2 (per project)</td></tr>
+<tr><td data-label="Path"><code>templates/</code></td><td data-label="What it contains">Blank templates for PRD, PROJECT_SPEC, task board, TASK_GUIDE, and more</td></tr>
+<tr><td data-label="Path"><code>packs/</code></td><td data-label="What it contains">Optional domain packs — each adds agents + skills for a specific project type</td></tr>
+<tr><td data-label="Path"><code>memory/</code></td><td data-label="What it contains">Two-tier hot/cold memory files (per project) — see Memory System below</td></tr>
 </tbody>
 </table>
 </div>
@@ -653,18 +750,24 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <table>
 <thead><tr><th>File</th><th>Tier</th><th>Holds</th></tr></thead>
 <tbody>
-<tr><td><code>memory/MEMORY.md</code></td><td>Hot</td><td>≤42,000 characters. Each sub-agent spawn prompt carries a pasted <strong>memory slice</strong> — the index lines naming the task's files, dependencies or ID, plus matching <code>decisions.md</code> entries — and the agent reads the whole file only if its work reaches what the slice misses</td></tr>
-<tr><td><code>memory/decisions.md</code></td><td>Cold</td><td>Architectural and infrastructure decisions</td></tr>
-<tr><td><code>memory/glossary.md</code></td><td>Cold</td><td>Canonical domain terms and core domain models</td></tr>
-<tr><td><code>memory/learnings.md</code></td><td>Cold</td><td>Spec clarifications, patterns, gotchas</td></tr>
-<tr><td><code>memory/codebase-map.md</code></td><td>Structural</td><td>Directory tree, entry points, blast-radius hotspots — generated by <code>map-codebase</code></td></tr>
+<tr><td data-label="File"><code>memory/MEMORY.md</code></td><td data-label="Tier">Hot</td><td data-label="Holds">≤42,000 characters. Each spawn prompt carries a <strong>memory slice</strong>; the agent reads the whole file only if its work reaches what the slice misses <details><summary>What the slice holds</summary><p>Pasted into each sub-agent spawn prompt: the index lines naming the task's files, dependencies or ID, plus matching <code>decisions.md</code> entries.</p></details></td></tr>
+<tr><td data-label="File"><code>memory/decisions.md</code></td><td data-label="Tier">Cold</td><td data-label="Holds">Architectural and infrastructure decisions</td></tr>
+<tr><td data-label="File"><code>memory/glossary.md</code></td><td data-label="Tier">Cold</td><td data-label="Holds">Canonical domain terms and core domain models</td></tr>
+<tr><td data-label="File"><code>memory/learnings.md</code></td><td data-label="Tier">Cold</td><td data-label="Holds">Spec clarifications, patterns, gotchas</td></tr>
+<tr><td data-label="File"><code>memory/<wbr>codebase-<wbr>map.md</code></td><td data-label="Tier">Structural</td><td data-label="Holds">Directory tree, entry points, blast-radius hotspots — generated by <code>map-codebase</code></td></tr>
 </tbody>
 </table>
 </div>
 </section>
 
-<section id="verifier">
-<h2>easy-verifier-mcp</h2>
+<section id="mcps">
+<h2>MCPs</h2>
+<p class="lead">
+  Two separate companion tools, not part of this kit: MCP servers you can run alongside it, each from its own repository.
+</p>
+
+<div class="agent-card" id="verifier">
+<h3>easy-verifier-mcp</h3>
 <p class="lead">
   A separate companion tool, not part of this kit: a no-LLM evidence engine you can run alongside Stage 4 review.
 </p>
@@ -675,7 +778,23 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
   <li>Read-only and local — never runs the target repo's code, no outbound network</li>
   <li>Kit-aware mode treats this kit's specs, task guides and memory as ground truth</li>
 </ul>
-<p><a href="https://github.com/thunderkds/easy-verifier-mcp" target="_blank" rel="noopener noreferrer">easy-verifier-mcp on GitHub</a></p>
+<p><a href="https://github.com/thunderkds/easy-verifier-mcp" target="_blank" rel="noopener noreferrer">easy-verifier-mcp on GitHub</a> &middot; <a href="https://easy-verifier.vercel.app/" target="_blank" rel="noopener noreferrer">Easy Verifier site</a></p>
+</div>
+
+<div class="agent-card" id="easy-ui-mcp">
+<h3>easy-ui-mcp</h3>
+<p class="lead">
+  A separate companion tool, not part of this kit: a Dockerized MCP server for testing a web UI locally.
+</p>
+<ul>
+  <li>Playwright browser automation that an agent such as Claude Code drives step by step</li>
+  <li>Returns a JSON and HTML report with screenshots — no server-side LLM, no test scripts to write</li>
+  <li>Separates claims from observations: <code>ui_assert</code> fails the run, <code>ui_check</code> records and continues</li>
+  <li>Captures console errors, page errors and failed network requests as "Browser problems"</li>
+  <li>Version 1 covers web only (Chromium) and runs locally only</li>
+</ul>
+<p><a href="https://github.com/thunderkds/easy-ui-mcp" target="_blank" rel="noopener noreferrer">easy-ui-mcp on GitHub</a></p>
+</div>
 </section>
 
 <section id="options">
@@ -684,7 +803,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <table>
 <thead><tr><th>Environment variable</th><th>Default</th><th>Purpose</th></tr></thead>
 <tbody>
-<tr><td><code>GITHUB_USERNAME</code></td><td><code>thunderkds</code></td><td>Install/update from a fork instead of the canonical repo</td></tr>
+<tr><td data-label="Environment variable"><code>GITHUB_USERNAME</code></td><td data-label="Default"><code>thunderkds</code></td><td data-label="Purpose">Install/update from a fork instead of the canonical repo</td></tr>
 </tbody>
 </table>
 </div>

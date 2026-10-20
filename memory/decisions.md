@@ -2415,3 +2415,17 @@ a split sentence keeps its link word. Token cost is measured with `scripts/token
 **D6**: no numeric word caps — Anthropic's prompt-audit guide (bundled `claude-api` skill, Claude Code 2.1.304) lists hard word caps as a dated pattern; round-2 /verify had every sentence ≤24 words without them.
 **Slim**: same task cut CLAUDE.md to 186 lines (agent-template duplicate, wake section, opening list, Final Instruction); `LINE_CAPS["CLAUDE.md"]` = 186.
 **Files**: CLAUDE.md, agents/general-agent-template.md, AGENTS.md, .cursor/rules/agent-base.mdc, tests/test_writing_principles.py, tests/test_claude_md_slim.py, .claude/hooks/tests/test_vital_slice.py, tasks/TASK_GUIDE_T169.md (D1–D6)
+
+**T165–T168 (2026-10-20, `feat/t165-site-scan-first`): the landing page becomes a scan-first reference.**
+T165: one-line leads + bullets/tables, secondary detail in 14 native `<details>` fold-outs, a `#quick-reference`
+card (install/update, stage sequence, derived roster counts), Easy Verifier site link; every pre-change `<code>`
+token kept (AC7 diff). T166: `#skills` is a stage flow (`ol.skill-flow`, chips) that snakes on wide screens so
+every consecutive stage has one arrow, one column on phones; grouping pinned in tests. T167 **reverses T083's
+"tables scroll inside their own container" choice** at the user's request: no `.table-wrap` overflows at any
+width — tables fit on desktop (code tokens break at `<wbr>` after `_`/`/`/`.`/`-`, never mid-word), and at
+≤767px rows become labelled cards (`td[data-label]`, `td::before`). T168: `#verifier` → `#mcps` with two
+companion cards, easy-verifier-mcp (`id="verifier"` kept for old links) and easy-ui-mcp; the kit uses neither
+(T015/T016's `ui-test` integration was never merged). Two rework rounds (T166 snake layout, T167 mid-word breaks)
+came from Supervisor screenshots, not tests — layout claims need a look at 1280px and 375px. T165/T166 passed
+/verify; for T167/T168 the user waived /verify ("no need to verify, mark done") — recorded as N/A, not pass.
+**Files**: site/index.html, tests/test_site_content.py, tests/test_docs_t151.py
