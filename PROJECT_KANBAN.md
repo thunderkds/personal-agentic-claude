@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-10-19
+**Last updated**: 2026-10-20
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -8,6 +8,7 @@
 ## Board
 
 ### Todo
+- [ ] **T165** — The landing page reads as a scan-first reference, and links the Easy Verifier site | Frontend-Implementer | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T165.md` | Depends on: none | Registered 2026-10-20: user chose "Scan-first rewrite" for the site page + Easy Verifier site link. Site scope (`PROJECT_SPEC_SITE.md`) but tracked here because the merge-gate hooks read only this board.
 - [ ] **T162** — Online mode stops tracking `PROJECT_KANBAN.md` in git (the board copy is rewritten on every pull); local mode keeps tracking it | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T162.md` | Depends on: T155 | Registered 2026-10-19: user approved ("yes") the T155 agent's recommendation. /verify of T158 showed an online pull drops all 161 local `Txxx` rows from the board copy, so a tracked copy makes a diff on every pull moment. Must keep the merge gate and hooks reading a present file (pull runs before they read).
 - [ ] **T163** — MCP-only board setup warns that hook sync needs `LINEAR_API_KEY`, and a pull that fails for a missing key says so (not "board unreachable") | common-infrastructure | C1 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_T163.md` | Depends on: T155 | Registered 2026-10-19 from T155 Stage 4 P2: probed `connection: mcp` config → `pull failed: LINEAR_API_KEY is not set` rc=2, while `pull_moment.py wake` printed `board unreachable — using cache (0 unsynced)`.
 - [ ] **T143** — CI re-runs the Verification Command of every task a PR moves to Done | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T143.md` | Depends on: none | Registered 2026-10-16 from the improvement-list grilling + brainstorm (`BRAINSTORMING_LOG_harness-hardening.md`): reuses `lib/guide_sections.py`; fail-closed on a missing/placeholder block; `# ci: skip — <reason>` opt-out
