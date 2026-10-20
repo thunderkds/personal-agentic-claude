@@ -33,8 +33,36 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured by common-infrastructure before the first implementation commit (branch head
+`e1a6bb8`). Docs/skill-text task, so BEFORE is the guide's named command plus the verbatim prior
+content of each file that changes.
+
+```
+2026-10-20T11:15:45Z
+$ ls skills/resolve-question; grep -n "Question (if blocked)" agents/*.md
+ls: cannot access 'skills/resolve-question': No such file or directory
+grep exit=1
+```
+
+Prior report format, `agents/backend.md:118-122` (`frontend.md:117-121` same shape;
+`common-infrastructure.md:112-116` adds `environment-ready` to Status; `qa.md:121-126` adds a
+`Verdict:` line):
+
+```
+Agent: backend-developer
+Task: T[NNN] — [short title]
+Status: [in-progress | ready-for-review | blocked]
+Changed files: [list]
+Blockers / notes: [any]
+```
+
+Prior `CLAUDE.md:65` tail: `Cross-cutting (any stage, not tied to a single one): `compact-memory` (cold memory files), `compact-advisor` (live conversation health — see Self-monitoring rule above).`
+
+Prior `skills/thinking-report/SKILL.md:3` args: `Args: session=<brainstorming|grilling|planning> task=<TASK_ID> branch=<branch-name>"`;
+prior save line `:121`: `SAVE → reports/thinking-report_<branch-arg>_<YYYYMMDDTHHMMSS>.html`
+
+Prior `site/index.html:582` (Any stage chips, no `resolve-question`):
+`<span class="chip">strategy</span><span class="chip">teach</span><span class="chip">thinking-report</span><span class="chip">wake</span>`
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
