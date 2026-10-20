@@ -2411,5 +2411,6 @@ width — tables fit on desktop (code tokens break at `<wbr>` after `_`/`/`/`.`/
 ≤767px rows become labelled cards (`td[data-label]`, `td::before`). T168: `#verifier` → `#mcps` with two
 companion cards, easy-verifier-mcp (`id="verifier"` kept for old links) and easy-ui-mcp; the kit uses neither
 (T015/T016's `ui-test` integration was never merged). Two rework rounds (T166 snake layout, T167 mid-word breaks)
-came from Supervisor screenshots, not tests — layout claims need a look at 1280px and 375px.
+came from Supervisor screenshots, not tests — layout claims need a look at 1280px and 375px. T165/T166 passed
+/verify; for T167/T168 the user waived /verify ("no need to verify, mark done") — recorded as N/A, not pass.
 **Files**: site/index.html, tests/test_site_content.py, tests/test_docs_t151.py
