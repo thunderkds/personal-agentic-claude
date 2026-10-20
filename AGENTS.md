@@ -18,6 +18,12 @@ Before any work:
 - Surgical Changes
 - Goal-Driven Execution
 
+## Writing Principles (ASD-STE100) (names — see CLAUDE.md for the operational commands)
+- One Term, One Meaning
+- Short Sentences
+- One Action, Active Voice
+- No Noun Stacks
+
 ## Hard-Stop Gates (titles — see CLAUDE.md for full text)
 1. No TASK_GUIDE = no work.
 2. Complexity floor for structural work.

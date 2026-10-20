@@ -2814,6 +2814,13 @@ The Supervisor shell is zsh. A `for t in "161 branch" ...; do set -- $t; git mer
 an empty `$2`, and with output sent to /dev/null nothing showed it failed. **Rule**: in zsh use `${=t}` or separate
 arrays, and never hide a merge's output.
 
+### A free task ID must be free on every branch, not just on main's board (2026-10-20, T169)
+T165 was planned on `main` while an unmerged branch (`feat/t165-site-scan-first`, its own board) already used
+T165–T168; the clash only showed when `git worktree add ../wt-t165` found that worktree taken. **Rule**: before
+assigning an ID at Stage 2, check `git log --all --oneline | grep -E 'T1[0-9]{2}'` and `git branch -a` for the
+highest ID anywhere, not only `PROJECT_KANBAN.md` on the checked-out branch. Renumbered to T169.
+**Files**: PROJECT_KANBAN.md, tasks/
+
 ## v2.1.0 README miss + T165 spawn (2026-10-20)
 - **A release commit must bump README's header version too.** v2.1.0's release commit (`689f602`) updated
   `RUNBOOK.md` and the site label but left `README.md:3` at `**v2.0.0**`; CI failed on
