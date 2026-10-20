@@ -14,15 +14,15 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_writing_principles.py` (7 tests: AC1–AC8, AC10; written first, RED 6 failed / 1 passed at 19e2d5d's parent per agent). Supervisor re-run 2026-10-20 at d653337: `24 passed in 0.03s` (with test_provider_adapters.py, test_response_standard.py). AC9 is a measurement, not a test: BEFORE `attachment:instructions` 5,273 tokens (Supervisor session, `token_meter --current`); AFTER pending a new session post-merge |
+| Verification command run | ☑ pass | `python3 -m pytest -q tests/test_writing_principles.py tests/test_provider_adapters.py tests/test_response_standard.py` → `24 passed in 0.03s` |
+| Negative cases hold | ☑ pass | Supervisor mutants on d653337, each reverted: M1 drop keep-the-term sentence → `1 failed, 6 passed`; M2 scope "only to text a human reads"→"to all text" → `1 failed, 6 passed`; M3 append table row to `agents/qa.md` → `1 failed, 6 passed` |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Reviewed the 8 changed files + pin tests that read CLAUDE.md. lane_check: `EXCEEDS (files 7 > 6); unpredicted: test_agent_guide_dedup.py, test_vital_slice.py` — pin edits, cap 202→218 user-approved 2026-10-20. code-review: 0 P0, 1 P1 (template pointer dangled for sub-agents — fixed 19c139f), 1 P3 (duplicate scope sentence — fixed 19c139f). Startup reads line complete |
+| Full smoke suite still green (no regression) | ☑ pass | `python3 -m pytest -q tests .claude/hooks/tests` → `1382 passed, 25 subtests passed in 30.32s` (exit 0); `bash tests/test_update_claude_md.sh` → `35 passed, 0 failed` |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | Docs/rules task — no UI component |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | Docs/rules task — no UI component |
+| **UI: Responsiveness at target viewports** | ☑ N/A | Docs/rules task — no UI component |
 
 ---
 
