@@ -59,7 +59,7 @@ LINE_CAPS = {
     "agents/frontend.md": 142,
     "agents/common-infrastructure.md": 137,
     "agents/qa.md": 129,
-    "CLAUDE.md": 218,  # T169: Writing Principles section adds 16 lines (was 202, T133 round 2); user-approved 2026-10-20
+    "CLAUDE.md": 186,  # T169 scope extension: slimmed 218 -> 186 (user: <=200); cap ratchets down to the new count
     TASK_GUIDE_TEMPLATE: 197,
 }
 
