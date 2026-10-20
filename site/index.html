@@ -134,12 +134,16 @@
   .tag-advise { background: var(--green-dim); color: var(--green); }
   .tag-inert  { background: var(--purple-dim); color: var(--purple); }
 
-  .skill-groups { display: grid; gap: 1rem; }
-  .skill-group { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; }
-  .skill-group h3 { margin: 0 0 .5rem; font-size: .85rem; color: var(--purple); text-transform: uppercase; letter-spacing: .05em; }
-  .skill-group ul { margin: 0; padding-left: 1.2rem; columns: 2; column-gap: 1.5rem; }
-  .skill-group li { break-inside: avoid; margin-bottom: .2rem; }
-
+  .skill-flow { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 1rem 2.2rem; }
+  .flow-step { position: relative; flex: 1 1 15rem; min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: .9rem 1.1rem; }
+  .flow-step:not(:last-child)::after {
+    content: "\2192" / ""; position: absolute; right: -1.8rem; top: 50%; transform: translateY(-50%);
+    width: 1.4rem; text-align: center; color: var(--cyan); font-weight: 700;
+  }
+  .flow-step h3, .skill-band h3 { margin: 0 0 .6rem; font-size: .8rem; color: var(--purple); text-transform: uppercase; letter-spacing: .05em; }
+  .chips { margin: 0; display: flex; flex-wrap: wrap; gap: .4rem; }
+  .chip { max-width: 100%; overflow-wrap: anywhere; background: var(--surface2); border: 1px solid var(--border); border-radius: 999px; padding: .15rem .65rem; font-size: .82rem; }
+  .skill-band { margin-top: 1.2rem; background: var(--surface); border: 1px dashed var(--border); border-radius: 8px; padding: .9rem 1.1rem; }
   .agent-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: .9rem; }
   .agent-card .name { color: var(--green); font-weight: 700; }
   .agent-card .subtype { color: var(--muted); font-size: .85rem; }
@@ -185,7 +189,9 @@
     .js .nav-toggle { display: inline-block; }
     .js .nav-groups[data-collapsed="true"] { display: none; }
     .sidebar .brand-sub { margin-bottom: .75rem; }
-    .skill-group ul { columns: 1; }
+    .skill-flow { flex-direction: column; flex-wrap: nowrap; gap: 2.2rem; }
+    .flow-step { flex: none; }
+    .flow-step:not(:last-child)::after { right: auto; left: 50%; top: auto; bottom: -1.8rem; transform: translateX(-50%) rotate(90deg); }
     .header { padding: 1.25rem; }
     .quick-ref dl { grid-template-columns: minmax(0, 1fr); gap: .2rem; }
     .quick-ref dd { margin-bottom: .6rem; }
@@ -515,43 +521,45 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
   One inline instruction set loaded per invocation, grouped by which pipeline stage it belongs to.
 </p>
 
-<div class="skill-groups">
-  <div class="skill-group">
+<ol class="skill-flow" aria-label="Skills grouped by pipeline stage, in stage order">
+  <li class="flow-step" data-stage="0.5">
     <h3>Stage 0.5 — Requirement Grilling / Brainstorming</h3>
-    <ul><li>brainstorming</li><li>ideate</li></ul>
-  </div>
-  <div class="skill-group">
+    <p class="chips"><span class="chip">brainstorming</span><span class="chip">ideate</span></p>
+  </li>
+  <li class="flow-step" data-stage="1">
     <h3>Stage 1 — Environment &amp; Provider Setup</h3>
-    <ul><li>git-guardrails-claude-code</li><li>map-codebase</li></ul>
-  </div>
-  <div class="skill-group">
+    <p class="chips"><span class="chip">git-guardrails-claude-code</span><span class="chip">map-codebase</span></p>
+  </li>
+  <li class="flow-step" data-stage="1.5">
     <h3>Stage 1.5 — Sub-Agent Architecture</h3>
-    <ul><li>craft-agent</li></ul>
-  </div>
-  <div class="skill-group">
+    <p class="chips"><span class="chip">craft-agent</span></p>
+  </li>
+  <li class="flow-step" data-stage="2">
     <h3>Stage 2 — Intent Transformation</h3>
-    <ul><li>grill-with-docs</li><li>to-issues</li></ul>
-  </div>
-  <div class="skill-group">
+    <p class="chips"><span class="chip">grill-with-docs</span><span class="chip">to-issues</span></p>
+  </li>
+  <li class="flow-step" data-stage="3">
     <h3>Stage 3 — Parallel Execution via Isolation</h3>
-    <ul><li>tdd</li><li>bugfix</li><li>diagnose</li><li>craft-spawn-prompt</li><li>migration-safety</li></ul>
-  </div>
-  <div class="skill-group">
+    <p class="chips"><span class="chip">tdd</span><span class="chip">bugfix</span><span class="chip">diagnose</span><span class="chip">craft-spawn-prompt</span><span class="chip">migration-safety</span></p>
+  </li>
+  <li class="flow-step" data-stage="4">
     <h3>Stage 4 — Review</h3>
-    <ul><li>blast-radius</li><li>code-review</li><li>html-report</li></ul>
-  </div>
-  <div class="skill-group">
+    <p class="chips"><span class="chip">blast-radius</span><span class="chip">code-review</span><span class="chip">html-report</span></p>
+  </li>
+  <li class="flow-step" data-stage="5">
     <h3>Stage 5 — Integration &amp; Verification</h3>
-    <ul><li>ship</li><li>delivery-report</li></ul>
-  </div>
-  <div class="skill-group">
-    <h3>Cross-cutting</h3>
-    <ul>
-      <li>compact-advisor</li><li>compact-memory</li><li>compound</li><li>compound-refresh</li>
-      <li>learn</li><li>optimize</li><li>resolve-pr-feedback</li><li>slim-skills</li>
-      <li>strategy</li><li>teach</li><li>thinking-report</li><li>wake</li><li>write-better-skill</li>
-    </ul>
-  </div>
+    <p class="chips"><span class="chip">ship</span><span class="chip">delivery-report</span></p>
+  </li>
+</ol>
+
+<div class="skill-band">
+  <h3>Any stage</h3>
+  <p class="chips">
+    <span class="chip">compact-advisor</span><span class="chip">compact-memory</span><span class="chip">compound</span><span class="chip">compound-refresh</span>
+    <span class="chip">learn</span><span class="chip">optimize</span><span class="chip">resolve-pr-feedback</span><span class="chip">slim-skills</span>
+    <span class="chip">strategy</span><span class="chip">teach</span><span class="chip">thinking-report</span><span class="chip">wake</span>
+    <span class="chip">write-better-skill</span>
+  </p>
 </div>
 </section>
 
