@@ -108,3 +108,7 @@ script-cell lines: pre_agent_validate_guide.py 2 | pre_bash_block_unsafe_merge.p
 **Round 2 verification**: `pytest tests/test_site_content.py tests/test_docs_t151.py tests/test_docs_match_installer.py -q` → `71 passed`; `pytest .claude/hooks/tests tests -q` → `1395 passed, 25 subtests passed`; `sh scripts/validate.sh` → `validate.sh: PASS`.
 
 **Round 2 UI rows**: visual regression — viewed `#hooks` at 1280 (script names on two clean lines, Matcher one line) and at 375 (cards unchanged). Not viewed as images this round: other tables at 1280 (their only change is `<wbr>` in long tokens, e.g. `.cursor/rules/agent-base.mdc`; measured no overflow). Design-system: no new tokens. Responsiveness: 1280 and 375 re-measured above; widths between 768 and 1000 not measured.
+
+## Stage 4 — code-review round 2 (Supervisor, 2026-10-20) — accepted
+
+P2 fixed in `52313b8`: Supervisor 1280px screenshot of `#hooks` — every script name on ≤ 2 lines, breaking at `_` (`pre_agent_validate_` / `guide.py`), Event/Matcher at content width. Re-measure: `.table-wrap` overflowing at 1280px `[]`, 375px `[]`; suite `1395 passed, 25 subtests passed`. P3 (startup reads): round 2 line now states partial reads honestly and the role guide and spec were read. Implementer left a stray `python3 -m http.server 8167` running; Supervisor stopped it (pid 152522). No open findings. Security-review not required (Low).
