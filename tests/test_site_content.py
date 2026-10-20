@@ -692,28 +692,47 @@ def test_page_does_not_name_token_meter_while_scripts_are_not_shipped():
 VERIFIER_REPO_URL = "https://github.com/thunderkds/easy-verifier-mcp"
 
 
-def _verifier_section_body():
-    m = re.search(r'<section id="verifier">(.*?)</section>', _page_text(), re.DOTALL)
-    assert m, 'page has no <section id="verifier">'
+def _mcps_section_body():
+    m = re.search(r'<section id="mcps">(.*?)</section>', _page_text(), re.DOTALL)
+    assert m, 'page has no <section id="mcps">'
     return m.group(1)
 
 
-def test_verifier_section_is_linked_from_the_reference_nav_group():
+def _mcp_entry_body(entry_id):
+    """The card inside #mcps carrying id=<entry_id> (cards hold no nested <div>)."""
+    m = re.search(rf'<div class="agent-card" id="{entry_id}">(.*?)</div>', _mcps_section_body(), re.DOTALL)
+    assert m, f'#mcps has no entry with id="{entry_id}"'
+    return m.group(1)
+
+
+def _verifier_section_body():
+    return _mcp_entry_body("verifier")
+
+
+def test_mcps_section_is_linked_from_the_reference_nav_group():
     text = _page_text()
     nav = re.search(r"<nav\b[^>]*>(.*?)</nav>", text, re.DOTALL).group(1)
     reference = nav[nav.index("Reference"):]
-    assert 'href="#verifier"' in reference, "Reference nav group has no #verifier link"
-    assert _top_level_section_ids().index("verifier") == (
-        _top_level_section_ids().index("memory-system") + 1
-    ), "#verifier must sit right after #memory-system (before #options)"
-    assert _top_level_section_ids().index("options") == (
-        _top_level_section_ids().index("verifier") + 1
-    )
+    assert 'href="#mcps"' in reference, "Reference nav group has no #mcps link"
+    assert 'href="#verifier"' not in reference, "Reference nav group still links #verifier"
+    ids = _top_level_section_ids()
+    assert "verifier" not in ids, "standalone top-level #verifier section is still there"
+    assert ids.index("mcps") == ids.index("memory-system") + 1, "#mcps must sit right after #memory-system"
+    assert ids.index("options") == ids.index("mcps") + 1, "#options must follow #mcps"
+    assert "<h2>MCPs</h2>" in _mcps_section_body(), "section heading must be <h2>MCPs</h2>"
+
+
+def test_mcps_section_has_one_named_entry_per_server():
+    body = _mcps_section_body()
+    for name in ("easy-verifier-mcp", "easy-ui-mcp"):
+        assert re.search(rf"<h3>[^<]*{name}[^<]*</h3>", body), f"no <h3> naming {name}"
+    assert len(re.findall(r'<div class="agent-card"', body)) == 2, "expected exactly two entries"
+    assert 'id="verifier"' in body, 'verifier entry lost id="verifier"; old #verifier links break'
 
 
 def test_verifier_section_names_the_tool_and_links_the_repo_safely():
     body = _verifier_section_body()
-    assert re.search(r"<h2>[^<]*easy-verifier-mcp[^<]*</h2>", body), "h2 must name easy-verifier-mcp"
+    assert re.search(r"<h3>[^<]*easy-verifier-mcp[^<]*</h3>", body), "h3 must name easy-verifier-mcp"
     assert (
         f'href="{VERIFIER_REPO_URL}" target="_blank" rel="noopener noreferrer"' in body
     ), "section must link the repo with target=_blank rel=noopener noreferrer"
@@ -723,14 +742,45 @@ def test_verifier_section_is_short_with_four_to_six_highlights():
     body = _verifier_section_body()
     highlights = re.findall(r"<li>", body)
     assert 4 <= len(highlights) <= 6, f"expected 4-6 highlights, found {len(highlights)}"
-    assert len(body.strip().splitlines()) <= 20, "verifier section must stay within ~20 lines"
+    assert len(body.strip().splitlines()) <= 20, "verifier entry must stay within ~20 lines"
 
 
-def test_verifier_section_does_not_claim_the_kit_uses_it():
-    body = _verifier_section_body().lower()
-    assert "separate" in body, "section must say it is a separate tool"
-    for phrase in ("the kit uses", "ships with", "built in", "required"):
-        assert phrase not in body, f"verifier section must not say {phrase!r}"
+UI_MCP_REPO_URL = "https://github.com/thunderkds/easy-ui-mcp"
+HONESTY_PHRASES = ("the kit uses", "ships with", "built in", "required")
+
+
+def _ui_mcp_entry_body():
+    m = re.search(r'<div class="agent-card" id="easy-ui-mcp">(.*?)</div>', _mcps_section_body(), re.DOTALL)
+    assert m, '#mcps has no entry with id="easy-ui-mcp"'
+    return m.group(1)
+
+
+def test_ui_mcp_entry_has_four_to_five_one_line_highlights():
+    body = _ui_mcp_entry_body()
+    assert re.search(r"<h3>[^<]*easy-ui-mcp[^<]*</h3>", body), "h3 must name easy-ui-mcp"
+    items = re.findall(r"<li>(.*?)</li>", body, re.DOTALL)
+    assert 4 <= len(items) <= 5, f"expected 4-5 highlights, found {len(items)}"
+    assert all("\n" not in i.strip() for i in items), "each highlight must sit on one line"
+
+
+def test_ui_mcp_entry_links_the_repo_safely_and_invents_no_site():
+    body = _ui_mcp_entry_body()
+    assert (
+        f'href="{UI_MCP_REPO_URL}" target="_blank" rel="noopener noreferrer"' in body
+    ), "easy-ui-mcp entry must link its repo with target=_blank rel=noopener noreferrer"
+    hrefs = re.findall(r'href="([^"]+)"', body)
+    assert hrefs == [UI_MCP_REPO_URL], f"easy-ui-mcp entry must carry only its repo link, found {hrefs}"
+
+
+def test_mcps_section_says_separate_and_never_claims_kit_integration():
+    body = _mcps_section_body()
+    lead = re.search(r'<p class="lead">(.*?)</p>', body, re.DOTALL)
+    assert lead and "separate" in lead.group(1).lower() and "companion" in lead.group(1).lower(), (
+        "section lead must call both servers separate companion tools"
+    )
+    lowered = body.lower()
+    for phrase in HONESTY_PHRASES:
+        assert phrase not in lowered, f"#mcps must not say {phrase!r}"
 
 
 # ---------------------------------------------------------------------------
