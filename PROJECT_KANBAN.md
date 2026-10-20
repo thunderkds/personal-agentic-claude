@@ -80,7 +80,6 @@
 
 
 ### In Progress
-- [ ] **T168** — An "MCPs" section lists the companion MCP servers: easy-verifier-mcp and easy-ui-mcp | Frontend-Implementer | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T168.md` | Depends on: T167 | Registered 2026-10-20: user: "create a new section that call MCPs, and adding verifier to that, one more is https://github.com/thunderkds/easy-ui-mcp". Started 2026-10-20 on `feat/t165-site-scan-first` (worktree `../wt-t165`).
 
 
 
@@ -89,6 +88,7 @@
 
 
 ### Ready for Review
+- [ ] **T168** — An "MCPs" section lists the companion MCP servers: easy-verifier-mcp and easy-ui-mcp | Frontend-Implementer | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T168.md` | Depends on: T167 | Registered 2026-10-20: user: "create a new section that call MCPs, and adding verifier to that, one more is https://github.com/thunderkds/easy-ui-mcp". Started 2026-10-20 on `feat/t165-site-scan-first` (worktree `../wt-t165`). Ready for Review 2026-10-20: `#verifier` replaced by `#mcps` with easy-verifier-mcp (moved in, `id="verifier"` kept) and easy-ui-mcp cards; T135/T165 verifier tests updated, 5 new; `1398 passed, 25 subtests passed` (Supervisor re-run). Awaiting user /verify.
 - [ ] **T167** — Site tables never scroll sideways — fit on desktop, stacked cards on phones | Frontend-Implementer | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T167.md` | Depends on: T166 | Registered 2026-10-20: user: "the tables got the scroll horizontal, it does not look good, check and remove it". Started 2026-10-20 on `feat/t165-site-scan-first` (worktree `../wt-t165`). Ready for Review 2026-10-20 after one rework round (mid-word breaks in the Hooks table): no `.table-wrap` overflows at 1280/375px (BEFORE 1 and 8), phone rows are labelled cards; `1395 passed, 25 subtests passed` (Supervisor re-run). Awaiting user /verify.
 
 

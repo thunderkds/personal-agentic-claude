@@ -72,3 +72,13 @@ Verbatim `#verifier` section:
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
+
+## Stage 4 — code-review (Supervisor, 2026-10-20) — accepted
+
+P0 0 · P1 0 · P2 0 · P3 1. Supervisor re-run `1398 passed, 25 subtests passed`; screenshots at 1280px and 375px (DevTools emulation) — `#mcps` shows two cards, links cyan, `#agent-roles` cards unchanged by the new `.agent-card h3`/`a` rules. No stray processes left by the implementer. Startup reads line names partial reads honestly.
+
+| Sev | File | Finding | Conf | Action |
+|---|---|---|---|---|
+| P3 | `site/index.html` `#mcps` | "separate companion tool, not part of this kit" appears in the section lead and again in each card's lead — three times in one section | 75 | Optional trim; left as is (the T135 honesty tests read each card) |
+
+Security-review not required (Low): two outbound links, both `target="_blank" rel="noopener noreferrer"`; no script, form or external asset.
