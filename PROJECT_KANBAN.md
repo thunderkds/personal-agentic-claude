@@ -80,6 +80,7 @@
 
 
 ### In Progress
+- [ ] **T166** — The Skills section shows a stage flow with skill chips | Frontend-Implementer | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T166.md` | Depends on: T165 | Registered 2026-10-20: user asked for the Skills section as a stage flow, chose "Stage flow + chips" from a mock. Started 2026-10-20 on `feat/t165-site-scan-first` (worktree `../wt-t165`, stacked on T165).
 
 
 
