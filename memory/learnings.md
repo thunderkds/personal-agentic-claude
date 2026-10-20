@@ -2824,3 +2824,10 @@ arrays, and never hide a merge's output.
   (see the T147 entry above): T165's sandboxed spawn spent $0.75 and stopped at its first Bash call.
   Check that entry before choosing the sandboxed path; an unsandboxed relaunch needs the user's
   explicit go-ahead (auto mode refuses it as "Create Unsafe Agents" otherwise).
+- **The guide auto-register hook fires on a TASK_GUIDE written anywhere, even the scratchpad** (T168).
+  Drafting `TASK_GUIDE_T168.md` in the session scratchpad put a T168 row on the *main checkout's* board.
+  It also registers on the main checkout while the real guide lives in a worktree (T166, T167).
+  After writing a guide, check `git -C <main> status` and move the row to the branch's board.
+- **Headless frontend agents mis-report Startup reads and leave servers running** (T166–T168). Two rounds
+  listed `PROJECT_SPEC.md`/`agents/frontend.md` that were only line-counted, and one left `http.server 8167`.
+  The spawn prompt now asks for honest reads and for cleanup; still check `ps` after each run.
