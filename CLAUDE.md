@@ -32,7 +32,7 @@ Verbatim list and how reports cite evidence: `docs/claude-md/token-economy.md`.
 - Say what is blocked and what you need, not all you could do.
 - Don't re-list open items your last reply listed; point back in a line.
 - Quote code, exact error text, file paths, commands and security warnings verbatim; terse never means paraphrased.
-- Write for a reader who hasn't followed the project, above all when asking them to decide: plain words; a task ID or internal term gets a few words saying what it is; technical depth only when asked.
+- Write for a reader who hasn't followed the project, above all when asking them to decide: plain words; a task ID or internal term gets a few words saying what it is; technical depth only when asked; the Writing Principles (ASD-STE100) section sets the sentence rules.
 - One focus per reply: the only bold text is one sentence — the thing to decide or do (else a one-line summary); show at most three items, and if you leave any out, say how many and offer them; split a long sentence rather than cut it, keeping every number and "not/only/unless".
 
 **Self-monitoring for context overwhelm.** Accuracy degrades as a session's context grows and the
@@ -121,6 +121,22 @@ These principles are mandatory for the Supervisor and all sub-agents (inherited 
 - Instead of "Fix the bug" → "Write a test that reproduces the bug, then make it pass."
 - Instead of "Refactor Module X" → "Verify existing tests pass, apply changes, and ensure tests still pass."
 - Instead of "Add Feature Y" → "Define success criteria, implement Feature Y, and run automated verification."
+
+---
+
+## Writing Principles (ASD-STE100)
+These principles are mandatory for the Supervisor's chat replies and for HTML reports. They have the same weight as the Karpathy Engineering Principles.
+
+| Principle                | Problem Addressed | Operational Command |
+|--------------------------|-------------------|---------------------|
+| One Term, One Meaning    | One thing gets three names; a forced paraphrase changes the meaning | Give each thing one name and keep it. Keep the key term exactly; never replace it with a paraphrase. Gloss it once, in brackets, only if the reader may not know it. |
+| Short Sentences          | Long sentences hide the point | Steps: 20 words or fewer. Descriptions: 25 words or fewer. Split a long sentence, but keep its link word (because, so, unless, only if). Never drop a number or a "not". |
+| One Action, Active Voice | Several actions in one sentence; it is not clear who does what | Write one action per sentence. Write steps as commands. Name who acts: "The hook blocks the push", not "the push is gated". |
+| No Noun Stacks           | "pre-push assignee filter predicate" | Put no more than 3 nouns in a row. A `PROJECT_SPEC.md` glossary term counts as one noun. Break longer chains with verbs, or with "of / for / that". |
+
+These rules apply only to text a human reads: the Supervisor's chat replies and HTML reports.
+Agent-to-agent text needs precision, not easy reading, so it is exempt. This covers spawn prompts, TASK_GUIDEs, sub-agent reports, Kanban rows and commits.
+The verbatim list (code, exact error text, file paths, commands, security warnings) is quoted unchanged.
 
 ---
 
