@@ -80,6 +80,7 @@
 
 
 ### In Progress
+- [ ] **T168** — An "MCPs" section lists the companion MCP servers: easy-verifier-mcp and easy-ui-mcp | Frontend-Implementer | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T168.md` | Depends on: T167 | Registered 2026-10-20: user: "create a new section that call MCPs, and adding verifier to that, one more is https://github.com/thunderkds/easy-ui-mcp". Started 2026-10-20 on `feat/t165-site-scan-first` (worktree `../wt-t165`).
 
 
 
