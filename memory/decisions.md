@@ -2410,4 +2410,6 @@ once, never replaced — user: "must keep the key, not the whole". A glossary te
 a split sentence keeps its link word. Token cost is measured with `scripts/token_meter.py`, not estimated.
 **Why**: STE itself allows technical names/verbs; the first draft omitted that, and a forced paraphrase
 ("git worktree" → "a separate copy of the repo") changed the meaning. No DDR: ADR/DDR docs are parked.
+**Cap**: user approved the `CLAUDE.md` line cap 202 → 218 (`test_vital_slice.py`) and the dedup baseline repoints, 2026-10-20 ("yes, raise the cap to 218").
+**Token baseline**: Supervisor session before the rules: `attachment:instructions` 5,273 tokens (`token_meter --current`); re-measure in a new session after merge.
 **Files**: tasks/TASK_GUIDE_T169.md (D1–D5)
