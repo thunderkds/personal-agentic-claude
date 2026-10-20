@@ -22,9 +22,14 @@ SETTINGS_PATH = os.path.join(ROOT, ".claude", "settings.json")
 STEP_LIMIT_HOOK = os.path.join(ROOT, ".claude", "hooks", "pre_agent_step_limit.py")
 
 
-def _page_text():
+def _raw_page_text():
     with open(SITE_PAGE, encoding="utf-8") as f:
         return f.read()
+
+
+def _page_text():
+    # <wbr> only offers line-break points inside long code tokens (T167); it is not content.
+    return _raw_page_text().replace("<wbr>", "")
 
 
 def _skill_dirs():
@@ -420,7 +425,7 @@ def test_layout_table_names_canon_root_and_relative_symlinks():
     )
     for canon_dir in ("skills/", "agents/"):
         assert re.search(
-            r"<tr><td><code>" + re.escape(canon_dir) + r"</code></td>", body
+            r"<tr><td\b[^>]*><code>" + re.escape(canon_dir) + r"</code></td>", body
         ), f"Repository layout table has no dedicated row for canon root path {canon_dir}"
 
 
@@ -648,8 +653,8 @@ def test_agent_focus_credits_the_three_source_repos():
     # Read the "Idea from" column only: prose elsewhere in the section (row 6 says
     # "headroom-style") must not satisfy a credit that was dropped from its row.
     rows = re.findall(r"<tr>(.*?)</tr>", _agent_focus_body(), re.DOTALL)
-    credits = [re.findall(r"<td>(.*?)</td>", r, re.DOTALL)[-1].strip().lower()
-               for r in rows if "<td>" in r]
+    credits = [re.findall(r"<td\b[^>]*>(.*?)</td>", r, re.DOTALL)[-1].strip().lower()
+               for r in rows if "<td" in r]
     for repo in ("headroom", "caveman", "ponytail"):
         assert repo in credits, f"no agent-focus row credits {repo} in its Idea-from column"
 
@@ -687,28 +692,47 @@ def test_page_does_not_name_token_meter_while_scripts_are_not_shipped():
 VERIFIER_REPO_URL = "https://github.com/thunderkds/easy-verifier-mcp"
 
 
-def _verifier_section_body():
-    m = re.search(r'<section id="verifier">(.*?)</section>', _page_text(), re.DOTALL)
-    assert m, 'page has no <section id="verifier">'
+def _mcps_section_body():
+    m = re.search(r'<section id="mcps">(.*?)</section>', _page_text(), re.DOTALL)
+    assert m, 'page has no <section id="mcps">'
     return m.group(1)
 
 
-def test_verifier_section_is_linked_from_the_reference_nav_group():
+def _mcp_entry_body(entry_id):
+    """The card inside #mcps carrying id=<entry_id> (cards hold no nested <div>)."""
+    m = re.search(rf'<div class="agent-card" id="{entry_id}">(.*?)</div>', _mcps_section_body(), re.DOTALL)
+    assert m, f'#mcps has no entry with id="{entry_id}"'
+    return m.group(1)
+
+
+def _verifier_section_body():
+    return _mcp_entry_body("verifier")
+
+
+def test_mcps_section_is_linked_from_the_reference_nav_group():
     text = _page_text()
     nav = re.search(r"<nav\b[^>]*>(.*?)</nav>", text, re.DOTALL).group(1)
     reference = nav[nav.index("Reference"):]
-    assert 'href="#verifier"' in reference, "Reference nav group has no #verifier link"
-    assert _top_level_section_ids().index("verifier") == (
-        _top_level_section_ids().index("memory-system") + 1
-    ), "#verifier must sit right after #memory-system (before #options)"
-    assert _top_level_section_ids().index("options") == (
-        _top_level_section_ids().index("verifier") + 1
-    )
+    assert 'href="#mcps"' in reference, "Reference nav group has no #mcps link"
+    assert 'href="#verifier"' not in reference, "Reference nav group still links #verifier"
+    ids = _top_level_section_ids()
+    assert "verifier" not in ids, "standalone top-level #verifier section is still there"
+    assert ids.index("mcps") == ids.index("memory-system") + 1, "#mcps must sit right after #memory-system"
+    assert ids.index("options") == ids.index("mcps") + 1, "#options must follow #mcps"
+    assert "<h2>MCPs</h2>" in _mcps_section_body(), "section heading must be <h2>MCPs</h2>"
+
+
+def test_mcps_section_has_one_named_entry_per_server():
+    body = _mcps_section_body()
+    for name in ("easy-verifier-mcp", "easy-ui-mcp"):
+        assert re.search(rf"<h3>[^<]*{name}[^<]*</h3>", body), f"no <h3> naming {name}"
+    assert len(re.findall(r'<div class="agent-card"', body)) == 2, "expected exactly two entries"
+    assert 'id="verifier"' in body, 'verifier entry lost id="verifier"; old #verifier links break'
 
 
 def test_verifier_section_names_the_tool_and_links_the_repo_safely():
     body = _verifier_section_body()
-    assert re.search(r"<h2>[^<]*easy-verifier-mcp[^<]*</h2>", body), "h2 must name easy-verifier-mcp"
+    assert re.search(r"<h3>[^<]*easy-verifier-mcp[^<]*</h3>", body), "h3 must name easy-verifier-mcp"
     assert (
         f'href="{VERIFIER_REPO_URL}" target="_blank" rel="noopener noreferrer"' in body
     ), "section must link the repo with target=_blank rel=noopener noreferrer"
@@ -718,14 +742,45 @@ def test_verifier_section_is_short_with_four_to_six_highlights():
     body = _verifier_section_body()
     highlights = re.findall(r"<li>", body)
     assert 4 <= len(highlights) <= 6, f"expected 4-6 highlights, found {len(highlights)}"
-    assert len(body.strip().splitlines()) <= 20, "verifier section must stay within ~20 lines"
+    assert len(body.strip().splitlines()) <= 20, "verifier entry must stay within ~20 lines"
 
 
-def test_verifier_section_does_not_claim_the_kit_uses_it():
-    body = _verifier_section_body().lower()
-    assert "separate" in body, "section must say it is a separate tool"
-    for phrase in ("the kit uses", "ships with", "built in", "required"):
-        assert phrase not in body, f"verifier section must not say {phrase!r}"
+UI_MCP_REPO_URL = "https://github.com/thunderkds/easy-ui-mcp"
+HONESTY_PHRASES = ("the kit uses", "ships with", "built in", "required")
+
+
+def _ui_mcp_entry_body():
+    m = re.search(r'<div class="agent-card" id="easy-ui-mcp">(.*?)</div>', _mcps_section_body(), re.DOTALL)
+    assert m, '#mcps has no entry with id="easy-ui-mcp"'
+    return m.group(1)
+
+
+def test_ui_mcp_entry_has_four_to_five_one_line_highlights():
+    body = _ui_mcp_entry_body()
+    assert re.search(r"<h3>[^<]*easy-ui-mcp[^<]*</h3>", body), "h3 must name easy-ui-mcp"
+    items = re.findall(r"<li>(.*?)</li>", body, re.DOTALL)
+    assert 4 <= len(items) <= 5, f"expected 4-5 highlights, found {len(items)}"
+    assert all("\n" not in i.strip() for i in items), "each highlight must sit on one line"
+
+
+def test_ui_mcp_entry_links_the_repo_safely_and_invents_no_site():
+    body = _ui_mcp_entry_body()
+    assert (
+        f'href="{UI_MCP_REPO_URL}" target="_blank" rel="noopener noreferrer"' in body
+    ), "easy-ui-mcp entry must link its repo with target=_blank rel=noopener noreferrer"
+    hrefs = re.findall(r'href="([^"]+)"', body)
+    assert hrefs == [UI_MCP_REPO_URL], f"easy-ui-mcp entry must carry only its repo link, found {hrefs}"
+
+
+def test_mcps_section_says_separate_and_never_claims_kit_integration():
+    body = _mcps_section_body()
+    lead = re.search(r'<p class="lead">(.*?)</p>', body, re.DOTALL)
+    assert lead and "separate" in lead.group(1).lower() and "companion" in lead.group(1).lower(), (
+        "section lead must call both servers separate companion tools"
+    )
+    lowered = body.lower()
+    for phrase in HONESTY_PHRASES:
+        assert phrase not in lowered, f"#mcps must not say {phrase!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -784,3 +839,350 @@ def test_pipeline_diagram_uses_tokens_and_no_script_or_external_ref():
     assert not re.search(r"#[0-9a-fA-F]{3,8}\b", svg)
     css = re.search(r"svg\.pipeline.*?(?=footer \{)", _page_text(), re.DOTALL).group(0)
     assert not re.search(r"#[0-9a-fA-F]{3,8}\b", css)
+
+
+# ---------------------------------------------------------------------------
+# T165 — scan-first page. Prose outside a <details> fold-out stays short; the
+# quick-reference card's counts are derived from source at test time, never
+# hardcoded here (the drift constraint in PROJECT_SPEC_SITE.md).
+# ---------------------------------------------------------------------------
+
+import html as _html
+
+LEAD_WORD_CAP = 35
+CELL_WORD_CAP = 25
+ONE_LINE_INSTALL = (
+    "curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh"
+)
+EASY_VERIFIER_SITE_URL = "https://easy-verifier.vercel.app/"
+
+
+def _words(fragment):
+    return _html.unescape(re.sub(r"<[^>]+>", " ", fragment)).split()
+
+
+def _outside_details(text):
+    return re.sub(r"<details\b.*?</details>", " ", text, flags=re.DOTALL)
+
+
+def _quick_reference_body():
+    m = re.search(r'<section id="quick-reference">(.*?)</section>', _page_text(), re.DOTALL)
+    assert m, 'page has no <section id="quick-reference">'
+    return m.group(1)
+
+
+def _quick_reference_text():
+    return " ".join(_words(_quick_reference_body()))
+
+
+def _hooks_section_body():
+    m = re.search(r'<section id="hooks">(.*?)</section>', _page_text(), re.DOTALL)
+    assert m, 'page has no <section id="hooks">'
+    return m.group(1)
+
+
+def test_visible_lead_paragraphs_are_one_line_summaries():
+    """AC1: a lead outside a <details> fold-out is a summary, not a paragraph."""
+    leads = re.findall(r'<p class="lead">(.*?)</p>', _outside_details(_page_text()), re.DOTALL)
+    assert leads, "no visible lead paragraphs — fixture broken"
+    long_ones = [(len(_words(l)), " ".join(_words(l))[:60]) for l in leads
+                 if len(_words(l)) > LEAD_WORD_CAP]
+    assert not long_ones, f"visible lead(s) over {LEAD_WORD_CAP} words: {long_ones}"
+
+
+def test_visible_table_cells_are_short():
+    """AC2: a <td> outside a <details> fold-out holds at most 25 words."""
+    cells = re.findall(r"<td\b[^>]*>(.*?)</td>", _outside_details(_page_text()), re.DOTALL)
+    assert cells, "no table cells — fixture broken"
+    long_ones = [(len(_words(c)), " ".join(_words(c))[:60]) for c in cells
+                 if len(_words(c)) > CELL_WORD_CAP]
+    assert not long_ones, f"visible table cell(s) over {CELL_WORD_CAP} words: {long_ones}"
+
+
+def test_page_has_details_foldouts_with_content():
+    """AC3: native fold-outs exist, each opens with a <summary> and holds detail."""
+    foldouts = re.findall(r"<details\b[^>]*>(.*?)</details>", _page_text(), re.DOTALL)
+    assert foldouts, "page has no <details> fold-out"
+    for body in foldouts:
+        summary = re.match(r"\s*<summary>(.*?)</summary>(.*)", body, re.DOTALL)
+        assert summary, f"<details> does not open with a <summary>: {body[:60]!r}"
+        assert _words(summary.group(2)), f"<details> {summary.group(1)!r} has no content"
+
+
+def test_quick_reference_is_the_first_section_and_has_a_nav_link():
+    """AC4: the card sits first under <main>, right after the header."""
+    text = _page_text()
+    assert _top_level_section_ids()[0] == "quick-reference", (
+        f"first top-level section is {_top_level_section_ids()[0]!r}, want quick-reference"
+    )
+    assert text.index('<div class="header">') < text.index('<section id="quick-reference">')
+    assert "quick-reference" in _nav_hrefs(), "sidebar nav has no #quick-reference link"
+
+
+def test_quick_reference_shows_install_and_update_commands():
+    body = _quick_reference_body()
+    assert ONE_LINE_INSTALL in body, "quick reference does not show the install command"
+    assert re.search(r"\bUpdate\b", body), "quick reference does not say how to update"
+
+
+def test_quick_reference_shows_the_stage_sequence_from_the_pipeline_doc():
+    stages = _pipeline_stage_numbers()
+    expected = "Phase 0 → " + " → ".join(stages[1:])
+    assert expected in _quick_reference_text(), (
+        f"quick reference does not show the stage sequence {expected!r}"
+    )
+
+
+def _blocking_hook_count():
+    """Wired hooks (settings.json) whose hook-table row carries the blocks tag."""
+    rows = re.findall(r"<tr>.*?</tr>", _hooks_section_body(), re.DOTALL)
+    count = 0
+    for script in _hook_scripts():
+        row = [r for r in rows if f"<code>{script}</code>" in r]
+        assert row, f"hook {script} has no row in the hook table"
+        count += "tag-block" in row[0]
+    return count
+
+
+def test_quick_reference_counts_match_source():
+    """AC5: skill, spawnable-role and blocking-hook counts, each derived here."""
+    text = _quick_reference_text()
+    skills = len(_skill_dirs())
+    roles = len([n for n in _agent_names() if n != "general-agent-template"])
+    blocking = _blocking_hook_count()
+    hooks = len(_hook_scripts())
+    assert blocking, "no hook row carries tag-block — fixture broken"
+    assert re.search(rf"(?<!\d){skills} skills\b", text), f"quick reference does not say {skills} skills"
+    assert re.search(rf"(?<!\d){roles} spawnable roles\b", text), (
+        f"quick reference does not say {roles} spawnable roles"
+    )
+    assert re.search(rf"(?<!\d){blocking} blocking hooks \(of {hooks}\)", text), (
+        f"quick reference does not say {blocking} blocking hooks (of {hooks})"
+    )
+
+
+def test_verifier_section_links_the_easy_verifier_site_beside_the_repo():
+    """AC6: the Easy Verifier site link opens safely, next to the GitHub link."""
+    body = _verifier_section_body()
+    assert (
+        f'href="{EASY_VERIFIER_SITE_URL}" target="_blank" rel="noopener noreferrer"' in body
+    ), "verifier section must link the Easy Verifier site with target=_blank rel=noopener noreferrer"
+    link_line = [l for l in body.splitlines() if EASY_VERIFIER_SITE_URL in l]
+    assert VERIFIER_REPO_URL in link_line[0], "Easy Verifier site link must sit beside the GitHub link"
+
+
+# --- T166: the Skills section is a stage flow with skill chips ----------------
+
+# The one place the grouping is pinned (T166 Requirement): stage -> skills.
+SKILL_FLOW_GROUPING = {
+    "0.5": {"brainstorming", "ideate"},
+    "1": {"git-guardrails-claude-code", "map-codebase"},
+    "1.5": {"craft-agent"},
+    "2": {"grill-with-docs", "to-issues"},
+    "3": {"tdd", "bugfix", "diagnose", "craft-spawn-prompt", "migration-safety"},
+    "4": {"blast-radius", "code-review", "html-report"},
+    "5": {"ship", "delivery-report"},
+}
+
+
+def _skills_section_body():
+    m = re.search(r'<section id="skills">(.*?)</section>', _page_text(), re.DOTALL)
+    assert m, 'page has no <section id="skills">'
+    return m.group(1)
+
+
+def _skill_flow():
+    m = re.search(r'<ol\b[^>]*class="skill-flow"[^>]*>(.*?)</ol>', _skills_section_body(), re.DOTALL)
+    assert m, '#skills has no <ol class="skill-flow">'
+    return m
+
+
+def _flow_steps():
+    """[(stage number, step html)] in document order."""
+    steps = re.findall(
+        r'<li\b[^>]*class="flow-step"[^>]*data-stage="([^"]+)"[^>]*>(.*?)</li>\s*(?=<li\b[^>]*class="flow-step"|\Z)',
+        _skill_flow().group(1),
+        re.DOTALL,
+    )
+    return steps
+
+
+def _chips(fragment):
+    return [_html.unescape(c).strip() for c in re.findall(r'<span class="chip">(.*?)</span>', fragment, re.DOTALL)]
+
+
+def _skill_band():
+    m = re.search(r'<div\b[^>]*class="skill-band"[^>]*>(.*?)</div>', _skills_section_body(), re.DOTALL)
+    assert m, '#skills has no <div class="skill-band">'
+    return m.group(1)
+
+
+def test_skills_flow_has_one_step_per_pipeline_stage_in_order():
+    """AC1."""
+    expected = [n for n in _pipeline_stage_numbers() if n != "0"]
+    assert [s for s, _ in _flow_steps()] == expected
+
+
+def test_skills_flow_steps_show_stage_label_and_chips():
+    """AC2: stage number + name as text, skills as plain-text chips, no SVG text."""
+    assert "<svg" not in _skills_section_body()
+    for stage, body in _flow_steps():
+        heading = re.search(r"<h3\b[^>]*>(.*?)</h3>", body, re.DOTALL)
+        assert heading, f"stage {stage} step has no <h3>"
+        label = " ".join(_words(heading.group(1)))
+        assert label.startswith(f"Stage {stage}") and len(_words(label)) > 2, label
+        assert _chips(body), f"stage {stage} step has no chips"
+
+
+def test_skills_flow_is_accessible_and_arrows_are_visual_only():
+    """AC3: named list; any arrow element is aria-hidden; no arrow glyph in reading text."""
+    tag = re.search(r'<ol\b[^>]*class="skill-flow"[^>]*>', _skills_section_body()).group(0)
+    assert re.search(r'aria-label="[^"]+"', tag), "skill-flow needs an accessible name"
+    for el in re.findall(r"<[^>]*class=\"[^\"]*arrow[^\"]*\"[^>]*>", _skills_section_body()):
+        assert 'aria-hidden="true"' in el, el
+    reading = " ".join(_words(_skill_flow().group(1)))
+    assert not re.search(r"[→↓➜►▶]", reading), "arrow glyphs would be read aloud"
+
+
+def test_skills_cross_cutting_band_is_separate_and_below_the_flow():
+    """AC4."""
+    body = _skills_section_body()
+    assert body.index('class="skill-band"') > body.index("</ol>")
+    assert re.search(r"Any stage", _skill_band())
+    assert len(_chips(_skill_band())) > 0
+    assert not _chips(_skill_band()) or not (set(_chips(_skill_band())) & set().union(*SKILL_FLOW_GROUPING.values()))
+
+
+def test_skills_section_lists_every_skill_dir_exactly_once_and_nothing_else():
+    """AC5: both directions, derived from skills/."""
+    all_chips = _chips(_skill_flow().group(1)) + _chips(_skill_band())
+    on_disk = _skill_dirs()
+    dupes = sorted({c for c in all_chips if all_chips.count(c) > 1})
+    assert not dupes, f"skill(s) listed more than once: {dupes}"
+    assert sorted(all_chips) == on_disk, (
+        f"missing: {sorted(set(on_disk) - set(all_chips))}; unknown: {sorted(set(all_chips) - set(on_disk))}"
+    )
+
+
+def test_skills_flow_grouping_matches_the_requirement():
+    """AC6."""
+    assert {s: set(_chips(b)) for s, b in _flow_steps()} == SKILL_FLOW_GROUPING
+
+
+def test_skills_flow_snakes_with_an_arrow_between_every_consecutive_pair():
+    """T166 round 2: every step but the last names the direction of its arrow; the CSS draws all three."""
+    tags = re.findall(r'<li\b[^>]*class="flow-step"[^>]*>', _skill_flow().group(1))
+    dirs = [re.search(r'data-next="(right|left|down)"', t) for t in tags]
+    assert all(dirs[:-1]), "every step except the last needs data-next=right|left|down"
+    assert dirs[-1] is None, "the last step has no next step"
+    assert [d.group(1) for d in dirs[:-1]] == ["right", "down", "left", "down", "right", "down"]
+    css = _page_text()
+    for d in ("right", "left", "down"):
+        assert re.search(rf'\.flow-step\[data-next="{d}"\]::after', css), f"no CSS arrow rule for {d}"
+
+
+# ---- T167: tables never scroll sideways --------------------------------
+
+def _style_block():
+    m = re.search(r"<style>(.*?)</style>", _page_text(), re.DOTALL)
+    assert m, "page has no <style> block"
+    return m.group(1)
+
+
+def _css_rule(css, selector):
+    """Body of the first rule whose selector list is exactly `selector`."""
+    for sel, body in re.findall(r"(?m)^\s*([^{}@/]+?)\s*\{([^{}]*)\}", css):
+        if ", ".join(x.strip() for x in sel.split(",")) == selector:
+            return body
+    return None
+
+
+def _mobile_block():
+    css = _style_block()
+    start = css.index("@media (max-width: 767px)")
+    depth, i = 0, css.index("{", start)
+    for j in range(i, len(css)):
+        depth += {"{": 1, "}": -1}.get(css[j], 0)
+        if depth == 0:
+            return css[i + 1:j]
+    raise AssertionError("unbalanced 767px media block")
+
+
+def test_tables_do_not_force_a_minimum_width_or_scroll_sideways():
+    """AC1."""
+    css = _style_block()
+    table = _css_rule(css, "table")
+    assert table is not None and "min-width" not in table, f"table rule forces a width: {table}"
+    wrap = _css_rule(css, ".table-wrap")
+    assert wrap is not None and not re.search(r"overflow(-x)?\s*:\s*(auto|scroll)", wrap), wrap
+    assert "th:first-child, td:first-child" not in css, "sticky first column is only for sideways scrolling"
+
+
+def test_long_code_tokens_in_table_cells_can_wrap():
+    """AC2: wrapping comes from <wbr> break points (see the next test), so cell code may not be nowrap."""
+    css = _style_block()
+    assert not re.search(r"(?:td|th)\s+code\s*\{[^}]*white-space\s*:\s*(?:nowrap|pre)\b", css), \
+        "code inside table cells is forbidden from wrapping"
+
+
+def test_code_tokens_in_table_cells_break_only_at_natural_boundaries():
+    """T167 round 2: no mid-word breaks — `overflow-wrap: anywhere` is gone and every long
+    code token in a cell offers <wbr> break points after `_` `/` `.` `-`."""
+    css = _style_block()
+    assert not re.search(r"td\s+code\s*\{[^}]*overflow-wrap\s*:\s*anywhere", css)
+    assert not re.search(r"(?:td|th)\s+code\s*\{[^}]*word-break\s*:\s*break-all", css)
+    long_unbroken = []
+    for t in re.findall(r"<table\b.*?</table>", _raw_page_text(), re.DOTALL):
+        for code in re.findall(r"<code>(.*?)</code>", t, re.DOTALL):
+            if len(_html.unescape(code.replace("<wbr>", ""))) > 20 and "<wbr>" not in code:
+                long_unbroken.append(code)
+    assert not long_unbroken, f"long code tokens in table cells without <wbr>: {long_unbroken}"
+    hooks = re.search(r'<section id="hooks">(.*?)</section>', _raw_page_text(), re.DOTALL).group(1)
+    assert "pre_<wbr>agent_<wbr>validate_<wbr>guide.py" in hooks, \
+        "script names are not given break points after the underscores"
+
+
+def _tables():
+    """[(headers, [td-open-tags])] for every table on the page."""
+    out = []
+    for t in re.findall(r"<table\b.*?</table>", _page_text(), re.DOTALL):
+        heads = [" ".join(_words(h)) for h in re.findall(r"<th\b[^>]*>(.*?)</th>", t, re.DOTALL)]
+        body = re.search(r"<tbody>(.*?)</tbody>", t, re.DOTALL).group(1)
+        rows = [re.findall(r"<td\b[^>]*>", r) for r in re.findall(r"<tr>(.*?)</tr>", body, re.DOTALL)]
+        out.append((heads, rows))
+    return out
+
+
+def test_every_td_carries_its_columns_header_as_data_label():
+    """AC3: both directions — none missing, none mismatched."""
+    tables = _tables()
+    assert len(tables) >= 8, "fixture broken: expected the page's tables"
+    problems = []
+    for heads, rows in tables:
+        for r in rows:
+            if len(r) != len(heads):
+                problems.append(f"{heads}: row has {len(r)} cells for {len(heads)} headers")
+                continue
+            for h, tag in zip(heads, r):
+                m = re.search(r'data-label="([^"]*)"', tag)
+                got = _html.unescape(m.group(1)) if m else None
+                if got != h:
+                    problems.append(f"{heads}: expected {h!r}, got {got!r}")
+    assert not problems, problems
+
+
+def test_phone_layout_stacks_each_row_as_a_card_with_labelled_cells():
+    """AC4."""
+    m = _mobile_block()
+    thead = _css_rule(m, "thead")
+    assert thead and "display: none" not in thead.replace("display:none", "display: none") \
+        and re.search(r"clip|position\s*:\s*absolute", thead), f"thead must be visually hidden, not removed: {thead}"
+    for sel in ("table, tbody, tr, td", "table, tbody, tr, th, td", "tr, td", "tbody, tr, td"):
+        blk = _css_rule(m, sel)
+        if blk:
+            assert "display: block" in blk
+            break
+    else:
+        raise AssertionError("rows and cells are not made display: block on phones")
+    before = _css_rule(m, "td::before")
+    assert before and "content: attr(data-label)" in before, before
