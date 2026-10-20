@@ -80,7 +80,6 @@
 
 
 ### In Progress
-- [ ] **T170** — `resolve-question` skill: a confused Supervisor/sub-agent fact question is answered from quoted `file:line` evidence or by 2 independent read-only `Explore` scanners (consensus + citations), else escalated to the human (HITL); every answer logged (Linear `question` comment + `decide` online, `reports/` HTML page via `thinking-report session=resolution` local) and linked from the task guide's new optional `## Questions Log` | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T170.md` | Depends on: none | Registered 2026-10-20: user approved Option B ("yes, it's oke") in `BRAINSTORMING_LOG_confusion-resolution.md`; Q1 Supervisor-with-evidence skips scanners, Q2 log to Linear, Q3 HTML page in local mode + link from guide. Grilled 2026-10-20 (Citation / Fact question / Choice question / Scanner added to glossary; D6 no template change, line cap). Guide generated 2026-10-20. Started 2026-10-20, worktree `../wt-t170` (`docs/t170-resolve-question`).
 
 
 
@@ -89,6 +88,7 @@
 
 
 ### Ready for Review
+- [ ] **T170** — `resolve-question` skill: a confused Supervisor/sub-agent fact question is answered from quoted `file:line` evidence or by 2 independent read-only `Explore` scanners (consensus + citations), else escalated to the human (HITL); every answer logged (Linear `question` comment + `decide` online, `reports/` HTML page via `thinking-report session=resolution` local) and linked from the task guide's new optional `## Questions Log` | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T170.md` | Depends on: none | Registered 2026-10-20: user approved Option B ("yes, it's oke") in `BRAINSTORMING_LOG_confusion-resolution.md`; Q1 Supervisor-with-evidence skips scanners, Q2 log to Linear, Q3 HTML page in local mode + link from guide. Grilled 2026-10-20 (Citation / Fact question / Choice question / Scanner added to glossary; D6 no template change, line cap). Guide generated 2026-10-20. Started 2026-10-20, worktree `../wt-t170` (`docs/t170-resolve-question`). Ready for Review 2026-10-20: full suite 1433 passed (Supervisor re-ran); c-infra char floor +48 and CLAUDE.md baseline repointed, user-approved (`e264297`); first Questions Log entry in the guide.
 
 
 ### Done

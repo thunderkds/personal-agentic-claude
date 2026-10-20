@@ -178,3 +178,9 @@ New `tests/test_resolve_question.py` (doc-content asserts, as in `tests/test_wri
 - [ ] Tests written AND pass — output pasted into `tasks/TASK_REVIEW_T170.md`'s Evidence table (Hard-Stop Gate 5)
 - [ ] `Skill({ skill: "verify" })` run (user-only)
 - [ ] Supervisor notified: task ready for Stage 4 review
+
+---
+
+## Questions Log
+
+- 2026-10-20 · Choice question from common-infrastructure (Stage 3, full suite 2 failed): how to clear `test_agent_guide_dedup.py` pins on `CLAUDE.md` (`T070_BASELINE_REF`) and the c-infra char floor (+48 chars, `AC7_ROLE_BASELINE`)? → answered by the user: "yes" (repoint both, floor raise approved) → `e264297`. Log: this line only (board mode `local`; `thinking-report session=resolution` page not yet available — it ships in this task).
