@@ -80,6 +80,7 @@
 
 
 ### In Progress
+- [ ] **T169** — Writing Principles (ASD-STE100) become a named rule set next to Karpathy, for text a human reads only | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T169.md` | Depends on: none | Registered 2026-10-20: the user found agent chat replies too technical; Option A approved ("go with A") in `BRAINSTORMING_LOG_plain-output.md`. Scope narrowed 2026-10-20 by grill-with-docs (D1–D5 in the guide): keep key terms, human-facing only. | Started 2026-10-20, worktree `../wt-t169` (`docs/t169-writing-principles`). Ready for Review 2026-10-20: code-review 0 P0, P1/P3 fixed (19c139f); full suite 1382 passed; cap 202→218 user-approved; evidence `tasks/TASK_REVIEW_T169.md` (8fa0420). Scope extended 2026-10-20 (user: "do in this tasks also"): CLAUDE.md ≤200 lines; back to In Progress.
 
 
 
@@ -88,7 +89,6 @@
 
 
 ### Ready for Review
-- [ ] **T169** — Writing Principles (ASD-STE100) become a named rule set next to Karpathy, for text a human reads only | common-infrastructure | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T169.md` | Depends on: none | Registered 2026-10-20: the user found agent chat replies too technical; Option A approved ("go with A") in `BRAINSTORMING_LOG_plain-output.md`. Scope narrowed 2026-10-20 by grill-with-docs (D1–D5 in the guide): keep key terms, human-facing only. | Started 2026-10-20, worktree `../wt-t169` (`docs/t169-writing-principles`). Ready for Review 2026-10-20: code-review 0 P0, P1/P3 fixed (19c139f); full suite 1382 passed; cap 202→218 user-approved; evidence `tasks/TASK_REVIEW_T169.md` (8fa0420).
 
 
 ### Done
