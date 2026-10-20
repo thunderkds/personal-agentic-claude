@@ -62,3 +62,14 @@
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
+
+## Stage 4 — code-review round 1 (Supervisor, 2026-10-20) — returned for rework
+
+Overflow goal met: Supervisor re-measure with DevTools emulation, `.table-wrap` overflowing at 1280px `[]`, at 375px `[]` (BEFORE: 1 and 8); suite `1394 passed, 25 subtests passed`. 375px `#hooks` stacked cards read well (screenshot).
+
+| Sev | File | Finding | Conf | Action |
+|---|---|---|---|---|
+| P2 | `site/index.html` `td code { overflow-wrap: anywhere }` | At 1280px the `#hooks` Script column is ~80px wide, so every script name breaks mid-word over three lines (`pre_agent_` / `validate_gu` / `ide.py`, `pre_tool_s` / `ensitive_pa` / `th.py`); same for `Edit|Writ` / `e|Bash`. The user's complaint was that the tables "do not look good" — this trades one ugliness for another. Supervisor screenshot at 1280px. | 100 | Rework (below) |
+| P3 | process | `Startup reads:` line lists `PROJECT_SPEC.md` and `agents/frontend.md`, but the report says both were only line-counted. Same pattern as T166 round 2. | 100 | Say what was read; read them |
+
+**Rework spec:** (1) code tokens in table cells must break only at natural boundaries, never mid-word: replace `overflow-wrap: anywhere` with normal breaking and add `<wbr>` after each `_`, `/`, `.` (and around `|`) inside long `<code>` tokens in table cells — so `pre_agent_validate_guide.py` breaks as `pre_agent_` / `validate_guide.py` at most; (2) give the Hooks table's Script column room: let Event and Matcher take only their content width (e.g. `width: 1%` + `white-space: nowrap` on those cells, desktop only) so Script and Behavior share the rest; (3) at 1280px no script name may wrap onto more than 2 lines — measure each `#hooks` Script cell's line count (height / line-height) and paste it; (4) keep AC5 (no `.table-wrap` overflow at 1280 and 375) and the phone cards unchanged. Add a test pinning (1) (e.g. no `overflow-wrap: anywhere` on `td code`, and every table-cell code token longer than 20 characters contains `<wbr>`), RED first.
