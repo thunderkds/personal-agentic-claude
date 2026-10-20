@@ -104,6 +104,27 @@ def test_ac4_scanner_template_carries_the_question_never_the_guide_path():
     assert "not found" in tpl
 
 
+def test_ac4_area_is_a_starting_area_and_scanners_may_follow_a_lead():
+    """Stage 4 P1-1: disjoint areas + >=2 agreeing Citations would send a one-area fact to HITL."""
+    tpl = _norm(_scanner_template())
+    assert "Start in this area: {area}." in tpl
+    assert "Follow a lead anywhere in the repo if needed." in tpl
+    assert "Search only this area" not in tpl
+    assert "<path>:<line>" in tpl
+    body = _step("Scan")
+    assert "starting area" in body
+    assert "so the starting areas differ" in body
+
+
+def test_ac4_docs_area_covers_root_markdown_and_site():
+    """Stage 4 P1-2: CLAUDE.md, AGENTS.md, PROJECT_KANBAN.md, PRD*.md, site/ were in no area."""
+    m = re.search(r"^- \(b\) docs.*?(?=^- \(c\))", _skill(), re.M | re.S)
+    assert m, "no (b) docs bullet followed by a (c) bullet"
+    docs_line = _norm(m.group(0))
+    assert "root `*.md`" in docs_line and "`CLAUDE.md`" in docs_line
+    assert "`site/`" in docs_line
+
+
 def test_ac4_step_budget_attribution_is_stated():
     body = _step("Scan")
     assert ".claude/hooks/.state/active_task" in body
