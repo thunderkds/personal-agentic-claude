@@ -784,3 +784,133 @@ def test_pipeline_diagram_uses_tokens_and_no_script_or_external_ref():
     assert not re.search(r"#[0-9a-fA-F]{3,8}\b", svg)
     css = re.search(r"svg\.pipeline.*?(?=footer \{)", _page_text(), re.DOTALL).group(0)
     assert not re.search(r"#[0-9a-fA-F]{3,8}\b", css)
+
+
+# ---------------------------------------------------------------------------
+# T165 — scan-first page. Prose outside a <details> fold-out stays short; the
+# quick-reference card's counts are derived from source at test time, never
+# hardcoded here (the drift constraint in PROJECT_SPEC_SITE.md).
+# ---------------------------------------------------------------------------
+
+import html as _html
+
+LEAD_WORD_CAP = 35
+CELL_WORD_CAP = 25
+ONE_LINE_INSTALL = (
+    "curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh"
+)
+EASY_VERIFIER_SITE_URL = "https://easy-verifier.vercel.app/"
+
+
+def _words(fragment):
+    return _html.unescape(re.sub(r"<[^>]+>", " ", fragment)).split()
+
+
+def _outside_details(text):
+    return re.sub(r"<details\b.*?</details>", " ", text, flags=re.DOTALL)
+
+
+def _quick_reference_body():
+    m = re.search(r'<section id="quick-reference">(.*?)</section>', _page_text(), re.DOTALL)
+    assert m, 'page has no <section id="quick-reference">'
+    return m.group(1)
+
+
+def _quick_reference_text():
+    return " ".join(_words(_quick_reference_body()))
+
+
+def _hooks_section_body():
+    m = re.search(r'<section id="hooks">(.*?)</section>', _page_text(), re.DOTALL)
+    assert m, 'page has no <section id="hooks">'
+    return m.group(1)
+
+
+def test_visible_lead_paragraphs_are_one_line_summaries():
+    """AC1: a lead outside a <details> fold-out is a summary, not a paragraph."""
+    leads = re.findall(r'<p class="lead">(.*?)</p>', _outside_details(_page_text()), re.DOTALL)
+    assert leads, "no visible lead paragraphs — fixture broken"
+    long_ones = [(len(_words(l)), " ".join(_words(l))[:60]) for l in leads
+                 if len(_words(l)) > LEAD_WORD_CAP]
+    assert not long_ones, f"visible lead(s) over {LEAD_WORD_CAP} words: {long_ones}"
+
+
+def test_visible_table_cells_are_short():
+    """AC2: a <td> outside a <details> fold-out holds at most 25 words."""
+    cells = re.findall(r"<td\b[^>]*>(.*?)</td>", _outside_details(_page_text()), re.DOTALL)
+    assert cells, "no table cells — fixture broken"
+    long_ones = [(len(_words(c)), " ".join(_words(c))[:60]) for c in cells
+                 if len(_words(c)) > CELL_WORD_CAP]
+    assert not long_ones, f"visible table cell(s) over {CELL_WORD_CAP} words: {long_ones}"
+
+
+def test_page_has_details_foldouts_with_content():
+    """AC3: native fold-outs exist, each opens with a <summary> and holds detail."""
+    foldouts = re.findall(r"<details\b[^>]*>(.*?)</details>", _page_text(), re.DOTALL)
+    assert foldouts, "page has no <details> fold-out"
+    for body in foldouts:
+        summary = re.match(r"\s*<summary>(.*?)</summary>(.*)", body, re.DOTALL)
+        assert summary, f"<details> does not open with a <summary>: {body[:60]!r}"
+        assert _words(summary.group(2)), f"<details> {summary.group(1)!r} has no content"
+
+
+def test_quick_reference_is_the_first_section_and_has_a_nav_link():
+    """AC4: the card sits first under <main>, right after the header."""
+    text = _page_text()
+    assert _top_level_section_ids()[0] == "quick-reference", (
+        f"first top-level section is {_top_level_section_ids()[0]!r}, want quick-reference"
+    )
+    assert text.index('<div class="header">') < text.index('<section id="quick-reference">')
+    assert "quick-reference" in _nav_hrefs(), "sidebar nav has no #quick-reference link"
+
+
+def test_quick_reference_shows_install_and_update_commands():
+    body = _quick_reference_body()
+    assert ONE_LINE_INSTALL in body, "quick reference does not show the install command"
+    assert re.search(r"\bUpdate\b", body), "quick reference does not say how to update"
+
+
+def test_quick_reference_shows_the_stage_sequence_from_the_pipeline_doc():
+    stages = _pipeline_stage_numbers()
+    expected = "Phase 0 → " + " → ".join(stages[1:])
+    assert expected in _quick_reference_text(), (
+        f"quick reference does not show the stage sequence {expected!r}"
+    )
+
+
+def _blocking_hook_count():
+    """Wired hooks (settings.json) whose hook-table row carries the blocks tag."""
+    rows = re.findall(r"<tr>.*?</tr>", _hooks_section_body(), re.DOTALL)
+    count = 0
+    for script in _hook_scripts():
+        row = [r for r in rows if f"<code>{script}</code>" in r]
+        assert row, f"hook {script} has no row in the hook table"
+        count += "tag-block" in row[0]
+    return count
+
+
+def test_quick_reference_counts_match_source():
+    """AC5: skill, spawnable-role and blocking-hook counts, each derived here."""
+    text = _quick_reference_text()
+    skills = len(_skill_dirs())
+    roles = len([n for n in _agent_names() if n != "general-agent-template"])
+    blocking = _blocking_hook_count()
+    hooks = len(_hook_scripts())
+    assert blocking, "no hook row carries tag-block — fixture broken"
+    assert re.search(rf"(?<!\d){skills} skills\b", text), f"quick reference does not say {skills} skills"
+    assert re.search(rf"(?<!\d){roles} spawnable roles\b", text), (
+        f"quick reference does not say {roles} spawnable roles"
+    )
+    assert re.search(rf"(?<!\d){blocking} blocking hooks \(of {hooks}\)", text), (
+        f"quick reference does not say {blocking} blocking hooks (of {hooks})"
+    )
+
+
+def test_verifier_section_links_the_easy_verifier_site_beside_the_repo():
+    """AC6: the Easy Verifier site link opens safely, next to the GitHub link."""
+    body = _verifier_section_body()
+    assert (
+        f'href="{EASY_VERIFIER_SITE_URL}" target="_blank" rel="noopener noreferrer"' in body
+    ), "verifier section must link the Easy Verifier site with target=_blank rel=noopener noreferrer"
+    link_line = [l for l in body.splitlines() if EASY_VERIFIER_SITE_URL in l]
+    assert VERIFIER_REPO_URL in link_line[0], "Easy Verifier site link must sit beside the GitHub link"
