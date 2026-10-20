@@ -99,7 +99,7 @@
 </div>
 ```
 
-**DELTA**: a reader sees the skills laid out as the pipeline's stage sequence, with arrows and chips, instead of eight plain lists. Known limit: in the 2-column wide layout the arrow is shown only between the two boxes of a row, not from the end of one row to the start of the next (reading order is still stage order, and each box is labelled).
+**DELTA**: a reader sees the skills laid out as the pipeline's stage sequence, with arrows and chips, instead of eight plain lists. (Round 1 known limit — missing arrows between rows — is fixed in round 2, below.)
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
@@ -112,3 +112,47 @@ implementing agent alone]
 | P3 | `.skill-flow` arrows | Arrows are small (body-text glyph) and low-contrast next to the boxes | 75 | Make them clearly visible in `--cyan`, like the pipeline SVG |
 
 **Rework spec (snake / boustrophedon), wide layout only:** row 1 `0.5 → 1`; then `↓` under Stage 1 (right column); row 2 `2 ← 1.5` (Stage 1.5 placed in the **right** column, Stage 2 in the left, arrow pointing left); then `↓` under Stage 2 (left column); row 3 `3 → 4`; then `↓` under Stage 4 (right column) into Stage 5 (full width, or right column). Every consecutive pair 0.5→1→1.5→2→3→4→5 gets exactly one visible arrow. DOM/reading order stays 0.5…5 (use grid placement, not reordering). Keep the current phone layout. Add a test that pins this as far as markup allows (e.g. every step except the last carries the arrow hook class/attribute the CSS uses, and the CSS has rules for right, left and down arrows) and include a 1280px screenshot check in the UI evidence.
+
+## Round 2 BEFORE (2026-10-20, as committed in 154c867)
+
+CSS (wide, then the max-width:767px override):
+
+```css
+  .skill-flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem 2.2rem; }
+  .flow-step { position: relative; min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: .9rem 1.1rem; }
+  .flow-step:not(:last-child)::after {
+  .flow-step:nth-child(2n)::after { content: none; }
+  .flow-step:last-child { grid-column: 1 / -1; }
+  .flow-step h3, .skill-band h3 { margin: 0 0 .6rem; font-size: .8rem; color: var(--purple); text-transform: uppercase; letter-spacing: .05em; }
+  .chips { margin: 0; display: flex; flex-wrap: wrap; gap: .4rem; }
+  .chip { max-width: 100%; overflow-wrap: anywhere; background: var(--surface2); border: 1px solid var(--border); border-radius: 999px; padding: .15rem .65rem; font-size: .82rem; }
+  .skill-band { margin-top: 1.2rem; background: var(--surface); border: 1px dashed var(--border); border-radius: 8px; padding: .9rem 1.1rem; }
+    .skill-flow { grid-template-columns: minmax(0, 1fr); gap: 2.2rem; }
+    .flow-step:nth-child(2n)::after { content: "\2192" / ""; }
+    .flow-step:not(:last-child)::after { right: auto; left: 50%; top: auto; bottom: -1.8rem; transform: translateX(-50%) rotate(90deg); }
+<ol class="skill-flow" aria-label="Skills grouped by pipeline stage, in stage order">
+  <li class="flow-step" data-stage="0.5">
+  <li class="flow-step" data-stage="1">
+  <li class="flow-step" data-stage="1.5">
+  <li class="flow-step" data-stage="2">
+  <li class="flow-step" data-stage="3">
+  <li class="flow-step" data-stage="4">
+  <li class="flow-step" data-stage="5">
+```
+
+Markup: the `<ol class="skill-flow">` shown under AFTER above (steps carry only `class="flow-step" data-stage="…"`; no direction hook). Wide layout: 2-column grid, arrow only on odd steps (0.5→1, 1.5→2, 3→4); none between rows.
+
+## Round 2 — AFTER / DELTA / evidence (Frontend-Implementer, 2026-10-20)
+
+**RED first**: `tests/test_site_content.py::test_skills_flow_snakes_with_an_arrow_between_every_consecutive_pair` failed (`1 failed, 53 passed`) before the page change; GREEN after.
+
+**AFTER**: each step except the last carries `data-next="right|down|left"` (0.5 right, 1 down, 1.5 left, 2 down, 3 right, 4 down; 5 none). CSS: `.flow-step[data-next="right|left|down"]::after` draw → ← ↓ in `--cyan` at 1.9rem, bold, in a 2.6rem gutter (gap 2.6rem); wide grid placement by `grid-area` (0.5 1/1, 1 1/2, 1.5 2/2, 2 2/1, 3 3/1, 4 3/2, 5 4/2), DOM order unchanged. Under `max-width:767px` the placement resets to auto and every arrow is ↓ centred below its box.
+
+**DELTA**: at 1280px every consecutive pair 0.5→1→1.5→2→3→4→5 has one visible arrow (snake); arrows are larger and cyan. Phone layout unchanged (↓ between every step).
+
+**Verification** (2026-10-20):
+- `python3 -m pytest tests/test_site_content.py tests/test_docs_t151.py tests/test_docs_match_installer.py -q` → `66 passed`
+- `python3 -m pytest .claude/hooks/tests tests -q | tail -1` → `1390 passed, 25 subtests passed`
+- `sh scripts/validate.sh` → `validate.sh: PASS`
+
+**UI evidence**: 1280px headless-Chrome screenshot (`/tmp/t166shots/wc.png`, viewed): →, ↓, ←, ↓, →, ↓ all visible between the seven boxes; chips wrap inside boxes. 375px: page rendered in a 375px-wide iframe (headless Chrome cannot go below ~485px window) (`/tmp/t166shots/mc.png`, viewed): one column, ↓ between every step, no horizontal overflow of the flow, `git-guardrails-claude-code` fits. Not checked: real device emulation, tablet widths 768–900px, a pixel-diff regression tool, M1–M4 not re-run this round (markup order/chips unchanged; no new tests touch them).

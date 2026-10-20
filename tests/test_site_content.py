@@ -1012,3 +1012,15 @@ def test_skills_section_lists_every_skill_dir_exactly_once_and_nothing_else():
 def test_skills_flow_grouping_matches_the_requirement():
     """AC6."""
     assert {s: set(_chips(b)) for s, b in _flow_steps()} == SKILL_FLOW_GROUPING
+
+
+def test_skills_flow_snakes_with_an_arrow_between_every_consecutive_pair():
+    """T166 round 2: every step but the last names the direction of its arrow; the CSS draws all three."""
+    tags = re.findall(r'<li\b[^>]*class="flow-step"[^>]*>', _skill_flow().group(1))
+    dirs = [re.search(r'data-next="(right|left|down)"', t) for t in tags]
+    assert all(dirs[:-1]), "every step except the last needs data-next=right|left|down"
+    assert dirs[-1] is None, "the last step has no next step"
+    assert [d.group(1) for d in dirs[:-1]] == ["right", "down", "left", "down", "right", "down"]
+    css = _page_text()
+    for d in ("right", "left", "down"):
+        assert re.search(rf'\.flow-step\[data-next="{d}"\]::after', css), f"no CSS arrow rule for {d}"

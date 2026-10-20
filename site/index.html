@@ -134,14 +134,23 @@
   .tag-advise { background: var(--green-dim); color: var(--green); }
   .tag-inert  { background: var(--purple-dim); color: var(--purple); }
 
-  .skill-flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem 2.2rem; }
+  .skill-flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2.6rem 2.6rem; }
   .flow-step { position: relative; min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: .9rem 1.1rem; }
-  .flow-step:not(:last-child)::after {
-    content: "\2192" / ""; position: absolute; right: -1.8rem; top: 50%; transform: translateY(-50%);
-    width: 1.4rem; text-align: center; color: var(--cyan); font-weight: 700;
+  /* snake on wide screens: 0.5 -> 1 / 2 <- 1.5 / 3 -> 4 / 5; DOM order stays 0.5..5 */
+  .flow-step[data-stage="0.5"] { grid-area: 1 / 1; }
+  .flow-step[data-stage="1"]   { grid-area: 1 / 2; }
+  .flow-step[data-stage="1.5"] { grid-area: 2 / 2; }
+  .flow-step[data-stage="2"]   { grid-area: 2 / 1; }
+  .flow-step[data-stage="3"]   { grid-area: 3 / 1; }
+  .flow-step[data-stage="4"]   { grid-area: 3 / 2; }
+  .flow-step[data-stage="5"]   { grid-area: 4 / 2; }
+  .flow-step[data-next]::after {
+    position: absolute; width: 2.6rem; height: 2.6rem; line-height: 2.6rem; text-align: center;
+    color: var(--cyan); font-size: 1.9rem; font-weight: 700;
   }
-  .flow-step:nth-child(2n)::after { content: none; }
-  .flow-step:last-child { grid-column: 1 / -1; }
+  .flow-step[data-next="right"]::after { content: "\2192" / ""; left: 100%; top: 50%; margin-top: -1.3rem; }
+  .flow-step[data-next="left"]::after  { content: "\2190" / ""; right: 100%; top: 50%; margin-top: -1.3rem; }
+  .flow-step[data-next="down"]::after  { content: "\2193" / ""; top: 100%; left: 50%; margin-left: -1.3rem; }
   .flow-step h3, .skill-band h3 { margin: 0 0 .6rem; font-size: .8rem; color: var(--purple); text-transform: uppercase; letter-spacing: .05em; }
   .chips { margin: 0; display: flex; flex-wrap: wrap; gap: .4rem; }
   .chip { max-width: 100%; overflow-wrap: anywhere; background: var(--surface2); border: 1px solid var(--border); border-radius: 999px; padding: .15rem .65rem; font-size: .82rem; }
@@ -191,9 +200,9 @@
     .js .nav-toggle { display: inline-block; }
     .js .nav-groups[data-collapsed="true"] { display: none; }
     .sidebar .brand-sub { margin-bottom: .75rem; }
-    .skill-flow { grid-template-columns: minmax(0, 1fr); gap: 2.2rem; }
-    .flow-step:nth-child(2n)::after { content: "\2192" / ""; }
-    .flow-step:not(:last-child)::after { right: auto; left: 50%; top: auto; bottom: -1.8rem; transform: translateX(-50%) rotate(90deg); }
+    .skill-flow { grid-template-columns: minmax(0, 1fr); }
+    .flow-step[data-stage] { grid-area: auto; }
+    .flow-step[data-next]::after { content: "\2193" / ""; left: 50%; right: auto; top: 100%; margin: 0 0 0 -1.3rem; }
     .header { padding: 1.25rem; }
     .quick-ref dl { grid-template-columns: minmax(0, 1fr); gap: .2rem; }
     .quick-ref dd { margin-bottom: .6rem; }
@@ -524,27 +533,27 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 </p>
 
 <ol class="skill-flow" aria-label="Skills grouped by pipeline stage, in stage order">
-  <li class="flow-step" data-stage="0.5">
+  <li class="flow-step" data-stage="0.5" data-next="right">
     <h3>Stage 0.5 — Requirement Grilling / Brainstorming</h3>
     <p class="chips"><span class="chip">brainstorming</span><span class="chip">ideate</span></p>
   </li>
-  <li class="flow-step" data-stage="1">
+  <li class="flow-step" data-stage="1" data-next="down">
     <h3>Stage 1 — Environment &amp; Provider Setup</h3>
     <p class="chips"><span class="chip">git-guardrails-claude-code</span><span class="chip">map-codebase</span></p>
   </li>
-  <li class="flow-step" data-stage="1.5">
+  <li class="flow-step" data-stage="1.5" data-next="left">
     <h3>Stage 1.5 — Sub-Agent Architecture</h3>
     <p class="chips"><span class="chip">craft-agent</span></p>
   </li>
-  <li class="flow-step" data-stage="2">
+  <li class="flow-step" data-stage="2" data-next="down">
     <h3>Stage 2 — Intent Transformation</h3>
     <p class="chips"><span class="chip">grill-with-docs</span><span class="chip">to-issues</span></p>
   </li>
-  <li class="flow-step" data-stage="3">
+  <li class="flow-step" data-stage="3" data-next="right">
     <h3>Stage 3 — Parallel Execution via Isolation</h3>
     <p class="chips"><span class="chip">tdd</span><span class="chip">bugfix</span><span class="chip">diagnose</span><span class="chip">craft-spawn-prompt</span><span class="chip">migration-safety</span></p>
   </li>
-  <li class="flow-step" data-stage="4">
+  <li class="flow-step" data-stage="4" data-next="down">
     <h3>Stage 4 — Review</h3>
     <p class="chips"><span class="chip">blast-radius</span><span class="chip">code-review</span><span class="chip">html-report</span></p>
   </li>
