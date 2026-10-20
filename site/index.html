@@ -154,6 +154,8 @@
   .skill-band { margin-top: 1.2rem; background: var(--surface); border: 1px dashed var(--border); border-radius: 8px; padding: .9rem 1.1rem; }
   .agent-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: .9rem; }
   .agent-card .name { color: var(--green); font-weight: 700; }
+  .agent-card a { color: var(--cyan); }
+  .agent-card h3 { margin: 0 0 .5rem; color: var(--green); font-size: 1rem; }
   .agent-card .subtype { color: var(--muted); font-size: .85rem; }
 
   pre.install {
@@ -253,7 +255,7 @@
       <li><a href="#providers">Providers</a></li>
       <li><a href="#repository-layout">Repository layout</a></li>
       <li><a href="#memory-system">Memory system</a></li>
-      <li><a href="#verifier">easy-verifier-mcp</a></li>
+      <li><a href="#mcps">MCPs</a></li>
       <li><a href="#options">Options</a></li>
     </ul>
   </nav>
@@ -758,8 +760,14 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 </div>
 </section>
 
-<section id="verifier">
-<h2>easy-verifier-mcp</h2>
+<section id="mcps">
+<h2>MCPs</h2>
+<p class="lead">
+  Two separate companion tools, not part of this kit: MCP servers you can run alongside it, each from its own repository.
+</p>
+
+<div class="agent-card" id="verifier">
+<h3>easy-verifier-mcp</h3>
 <p class="lead">
   A separate companion tool, not part of this kit: a no-LLM evidence engine you can run alongside Stage 4 review.
 </p>
@@ -771,6 +779,22 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
   <li>Kit-aware mode treats this kit's specs, task guides and memory as ground truth</li>
 </ul>
 <p><a href="https://github.com/thunderkds/easy-verifier-mcp" target="_blank" rel="noopener noreferrer">easy-verifier-mcp on GitHub</a> &middot; <a href="https://easy-verifier.vercel.app/" target="_blank" rel="noopener noreferrer">Easy Verifier site</a></p>
+</div>
+
+<div class="agent-card" id="easy-ui-mcp">
+<h3>easy-ui-mcp</h3>
+<p class="lead">
+  A separate companion tool, not part of this kit: a Dockerized MCP server for testing a web UI locally.
+</p>
+<ul>
+  <li>Playwright browser automation that an agent such as Claude Code drives step by step</li>
+  <li>Returns a JSON and HTML report with screenshots — no server-side LLM, no test scripts to write</li>
+  <li>Separates claims from observations: <code>ui_assert</code> fails the run, <code>ui_check</code> records and continues</li>
+  <li>Captures console errors, page errors and failed network requests as "Browser problems"</li>
+  <li>Version 1 covers web only (Chromium) and runs locally only</li>
+</ul>
+<p><a href="https://github.com/thunderkds/easy-ui-mcp" target="_blank" rel="noopener noreferrer">easy-ui-mcp on GitHub</a></p>
+</div>
 </section>
 
 <section id="options">

@@ -14,15 +14,15 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_site_content.py`: new `test_mcps_section_is_linked_from_the_reference_nav_group` (AC1), `test_mcps_section_has_one_named_entry_per_server` (AC2), `test_ui_mcp_entry_has_four_to_five_one_line_highlights` + `test_ui_mcp_entry_links_the_repo_safely_and_invents_no_site` (AC4), `test_mcps_section_says_separate_and_never_claims_kit_integration` (AC5); T135 verifier tests + T165 AC6 test updated to read the `#verifier` entry inside `#mcps` (AC3, AC6). RED before page change: `8 failed, 54 passed`; after: `74 passed` |
+| Verification command run | ☑ pass | 2026-10-20: `pytest tests/test_site_content.py tests/test_docs_t151.py tests/test_docs_match_installer.py -q` → `74 passed in 0.26s`; `pytest .claude/hooks/tests tests -q` → `1398 passed, 25 subtests passed in 41.62s`; `sh scripts/validate.sh` → `validate.sh: PASS` |
+| Negative cases hold | ☑ pass | Page mutated, `tests/test_site_content.py` run, page restored each time. M1 remove easy-ui-mcp repo link → `1 failed`; M2 add "The kit uses easy-ui-mcp." → `1 failed`; M3 nav link back to `#verifier` → `2 failed`; M4 drop `id="verifier"` → `4 failed`. All RED |
+| verify | ☐ pass / ☐ fail / ☐ N/A (user-run `/verify`, not run by implementer) | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| Full smoke suite still green (no regression) | ☑ pass | `1398 passed, 25 subtests passed` (T165 caps, T166 flow, T167 tables, `test_docs_t151.py` included) |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ pass | Screenshots viewed: `/tmp/t168shots/mcps-1280.png`, `/tmp/t168shots/mcps-375.png` (DevTools emulation, `behavior:'instant'`). Two cards stacked under a lead; headings green, bullets legible. First shot showed GitHub links in default browser blue on the dark card; fixed with `.agent-card a { color: var(--cyan) }` and re-shot — links now cyan |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ pass | Reuses `.agent-card`; the only CSS added is two rules using existing tokens (`.agent-card h3` → `var(--green)`, `.agent-card a` → `var(--cyan)`). No new colors, fonts, images, scripts or external assets |
+| **UI: Responsiveness at target viewports** | ☑ pass | 1280px: `scrollWidth 1265 == clientWidth 1265`; 375px: `scrollWidth 375 == clientWidth 375` — no page overflow. Cards stack at both widths |
 
 ---
 
@@ -66,9 +66,9 @@ Verbatim `#verifier` section:
 </section>
 ```
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER** (`site/index.html`, this task's commit) — nav: `<li><a href="#mcps">MCPs</a></li>` in place of the `#verifier` link. Section: `<section id="mcps">` → `<h2>MCPs</h2>`, lead "Two separate companion tools, not part of this kit: MCP servers you can run alongside it, each from its own repository.", then two `<div class="agent-card">` entries: `id="verifier"` (`<h3>easy-verifier-mcp</h3>`, the five original highlights and both links, unchanged) and `id="easy-ui-mcp"` (`<h3>easy-ui-mcp</h3>`, five highlights, link `https://github.com/thunderkds/easy-ui-mcp`). Screenshots: `/tmp/t168shots/mcps-1280.png`, `mcps-375.png`.
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+**DELTA**: A reader finds both companion MCP servers, easy-verifier-mcp and easy-ui-mcp, in one "MCPs" section with a link to each repo, and is told neither is part of the kit.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
