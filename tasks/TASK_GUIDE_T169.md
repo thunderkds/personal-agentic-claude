@@ -1,12 +1,12 @@
 # TASK_GUIDE — T169: Writing Principles (ASD-STE100) become a named rule set next to Karpathy, for text a human reads only
 **Date**: 2026-10-20
-**Complexity Level**: C1
-**Risk Level**: Low
+**Complexity Level**: C2
+**Risk Level**: Medium
 **Priority**: P1
 **Assigned agent**: common-infrastructure
 **Agent guide**: `agents/common-infrastructure.md`
 
-> Low: docs and one test file only. No hook, script or installer behavior changes.
+> Medium (raised 2026-10-20 from C1/Low): the scope now restructures `CLAUDE.md`, and Hard-Stop Gate 2 sets a C2/Medium floor for restructuring. Still docs and tests only; no hook, script or installer behavior changes.
 
 ---
 
@@ -150,6 +150,30 @@ Place the new section directly after the Karpathy section and before `## Code Na
 | `agents/general-agent-template.md` | same bullet change only (byte-identical rule); no table |
 | `AGENTS.md`, `.cursor/rules/agent-base.mdc` | names list |
 | `tests/test_writing_principles.py` | new |
+
+
+## Scope Extension — CLAUDE.md ≤ 200 lines (added 2026-10-20)
+
+Source: the user, 2026-10-20: "let check the CLAUDE.md and start reduce the file to no more 200 lines", then "do in this tasks also" (fold it into T169, not a new task). The user approved the Supervisor's cut list:
+
+| Section | Now | Target | Rule kept |
+|---|---|---|---|
+| `## General Agent Template` | 21 lines | ~7 | Pointer to `agents/general-agent-template.md`; keep the untrusted-content line (pinned by `tests/test_provider_adapters.py`) and the Complexity/Risk line (check `.claude/hooks/tests/test_complexity_matrix_pointers.py`) |
+| `## Mandatory Session Startup` | 14 lines | ~5 | Must invoke `Skill({ skill: "wake" })` before the first substantive reply; not optional; even if the user jumps straight to a task |
+| Opening "Your job is to act…" list | 6 bullets | 1 line | — (restates the pipeline section) |
+| `## Final Instruction` | 3 lines | 0 | The Phase 0 section already carries the "Start new project supervision" trigger |
+
+No other section is cut. The Karpathy and Writing Principles tables, Hard-Stop Gates, Response Standard, pipeline stages and Memory Write Protocol stay as they are.
+
+| # | Criterion (testable) | Traces to |
+|---|---|---|
+| 11 | `CLAUDE.md` is ≤ 200 lines | user request |
+| 12 | `LINE_CAPS["CLAUDE.md"]` in `.claude/hooks/tests/test_vital_slice.py` is lowered to the new line count (≤ 200), so the file cannot grow back | user request; cap is a ratchet |
+| 13 | Each "Rule kept" item above is still stated in `CLAUDE.md`; a test asserts the `wake` mandate and the agent-template pointer | cut list |
+| 14 | `CLAUDE_LEGACY.md` follows its sync policy (memory: mirror session-startup gates + Hard-Stop Gates) — keep it consistent with any startup-section wording change, or record why no change is needed | memory decision "CLAUDE_LEGACY.md sync policy" |
+| 15 | Full suite green; any pin that moves (dedup baselines, byte-identical checks) is repointed with a comment naming T169 and this extension, assertion bodies untouched | regression |
+
+BEFORE for this extension: the current text of the four sections, quoted into `tasks/TASK_REVIEW_T169.md` before the first commit that cuts them.
 
 ## Files Must NOT Touch
 
