@@ -80,6 +80,7 @@
 
 
 ### In Progress
+- [ ] **T167** — Site tables never scroll sideways — fit on desktop, stacked cards on phones | Frontend-Implementer | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T167.md` | Depends on: T166 | Registered 2026-10-20: user: "the tables got the scroll horizontal, it does not look good, check and remove it". Started 2026-10-20 on `feat/t165-site-scan-first` (worktree `../wt-t165`).
 
 
 
