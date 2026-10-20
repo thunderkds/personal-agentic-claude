@@ -103,3 +103,12 @@
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
+
+## Stage 4 — code-review round 1 (Supervisor, 2026-10-20) — returned for rework
+
+| Sev | File | Finding | Conf | Action |
+|---|---|---|---|---|
+| P1 | `site/index.html` `.skill-flow` (wide layout) | At ≥768px the steps sit in a 2-column grid with arrows only inside each row (0.5→1, 1.5→2, 3→4). There is no arrow 1→1.5, 2→3 or 4→5, so the wide view reads as a grid, not a flow — AC3 ("arrows between consecutive steps") and the user's "draw the flow through stage" are not met. Supervisor screenshot at 1280px (DevTools emulation). The 375px view (one column, ↓ between every step) is correct. | 100 | Rework: snake layout (below) |
+| P3 | `.skill-flow` arrows | Arrows are small (body-text glyph) and low-contrast next to the boxes | 75 | Make them clearly visible in `--cyan`, like the pipeline SVG |
+
+**Rework spec (snake / boustrophedon), wide layout only:** row 1 `0.5 → 1`; then `↓` under Stage 1 (right column); row 2 `2 ← 1.5` (Stage 1.5 placed in the **right** column, Stage 2 in the left, arrow pointing left); then `↓` under Stage 2 (left column); row 3 `3 → 4`; then `↓` under Stage 4 (right column) into Stage 5 (full width, or right column). Every consecutive pair 0.5→1→1.5→2→3→4→5 gets exactly one visible arrow. DOM/reading order stays 0.5…5 (use grid placement, not reordering). Keep the current phone layout. Add a test that pins this as far as markup allows (e.g. every step except the last carries the arrow hook class/attribute the CSS uses, and the CSS has rules for right, left and down arrows) and include a 1280px screenshot check in the UI evidence.
