@@ -114,6 +114,7 @@ Task: T[NNN] — [short title]
 Status: [in-progress | environment-ready | ready-for-review | blocked]
 Changed files: [list]
 Blockers / notes: [any]
+Question (if blocked): [fact|choice] <question>
 ```
 
 ## Output Format

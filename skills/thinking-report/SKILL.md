@@ -1,6 +1,6 @@
 ---
 name: thinking-report
-description: "Render the Supervisor's reasoning from a completed session (brainstorming, grilling, or planning) as a self-contained HTML page with a Decision box, Trade-Off Matrix, and Assumptions list. Invoke after any brainstorming, grill-with-docs, or /plan session where a direction was locked. Args: session=<brainstorming|grilling|planning> task=<TASK_ID> branch=<branch-name>"
+description: "Render the Supervisor's reasoning from a completed session (brainstorming, grilling, or planning) as a self-contained HTML page with a Decision box, Trade-Off Matrix, and Assumptions list. Invoke after any brainstorming, grill-with-docs, or /plan session where a direction was locked. Also renders a `resolve-question` answer log. Args: session=<brainstorming|grilling|planning|resolution> task=<TASK_ID> branch=<branch-name>"
 ---
 
 ## Role: Thinking & Decision Visualiser
@@ -16,6 +16,19 @@ Invoked by the Supervisor after a brainstorming, grilling, or planning session c
 ```
 Skill({ skill: "thinking-report", args: "session=brainstorming task=T001 branch=main" })
 ```
+
+#### `session=resolution` (invoked by `resolve-question`)
+
+Logs one answered question in board mode `local`. Map the slots this way, then follow steps 2–6:
+
+| Slot | Value |
+|------|-------|
+| `{{PROBLEM_STATEMENT}}` | the Question, verbatim |
+| Trade-Off Matrix | one column per Scanner (or "Supervisor Citation", or "User"); rows: answer, Citations, agrees with accepted answer; chosen column = the accepted source |
+| `{{DECISION_STATEMENT}}` | the answer, and who gave it (Citation, Scanners, or user) |
+| `{{DECISION_RATIONALE}}` | why it was accepted: the opened Citations, or the user's words |
+
+Save to `reports/question_<task-or-none>_<YYYYMMDDTHHMMSS>.html` instead of the step 6 path.
 
 ### Workflow
 
@@ -95,7 +108,7 @@ Include all material assumptions from the session. Minimum 2 items.
 
 | Slot | Value |
 |------|-------|
-| `{{SESSION_TYPE}}` | `Brainstorming` / `Grilling` / `Planning` |
+| `{{SESSION_TYPE}}` | `Brainstorming` / `Grilling` / `Planning` / `Resolution` |
 | `{{BRANCH}}` | branch arg value |
 | `{{DATE}}` | today's date, e.g. `2026-06-18` |
 | `{{BADGE_CLASS}}` | `green` if direction locked; `yellow` if pending approval; `blue` if deferred |

@@ -62,7 +62,7 @@ Code auto-loads the matching `agents/<name>.md` as the agent's system prompt, th
 > `general-agent-template` is shared base rules, not a directly spawned sub-agent. Pack skills
 > symlink into `skills/` alongside these when a pack is installed.
 
-**Stage index** (names only): 0.5=`brainstorming`,`ideate` | 1=`git-guardrails-claude-code`,`map-codebase` | 1.5=`craft-agent` | 2=`grill-with-docs`,`to-issues` | 3=`tdd`,`bugfix`,`diagnose`,`craft-spawn-prompt`,`migration-safety` | 4=`blast-radius`,`code-review`,`html-report` | 5=`ship`,`delivery-report`. Built-ins (no definition file): `security-review`, `verify`, `run`, `update-config`, `fewer-permission-prompts`. Cross-cutting (any stage, not tied to a single one): `compact-memory` (cold memory files), `compact-advisor` (live conversation health — see Self-monitoring rule above).
+**Stage index** (names only): 0.5=`brainstorming`,`ideate` | 1=`git-guardrails-claude-code`,`map-codebase` | 1.5=`craft-agent` | 2=`grill-with-docs`,`to-issues` | 3=`tdd`,`bugfix`,`diagnose`,`craft-spawn-prompt`,`migration-safety` | 4=`blast-radius`,`code-review`,`html-report` | 5=`ship`,`delivery-report`. Built-ins (no definition file): `security-review`, `verify`, `run`, `update-config`, `fewer-permission-prompts`. Cross-cutting (any stage, not tied to a single one): `compact-memory` (cold memory files), `compact-advisor` (live conversation health — see Self-monitoring rule above), `resolve-question` (a confused Supervisor, or a sub-agent `Status: blocked` + `Question:`).
 
 > **Naming note:** `blast-radius` (skill) is **data-breach** impact; distinct from the
 > *code-dependency* "blast radius" used for Risk assignment/review scoping below.
