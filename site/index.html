@@ -134,12 +134,14 @@
   .tag-advise { background: var(--green-dim); color: var(--green); }
   .tag-inert  { background: var(--purple-dim); color: var(--purple); }
 
-  .skill-flow { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 1rem 2.2rem; }
-  .flow-step { position: relative; flex: 1 1 15rem; min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: .9rem 1.1rem; }
+  .skill-flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem 2.2rem; }
+  .flow-step { position: relative; min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: .9rem 1.1rem; }
   .flow-step:not(:last-child)::after {
     content: "\2192" / ""; position: absolute; right: -1.8rem; top: 50%; transform: translateY(-50%);
     width: 1.4rem; text-align: center; color: var(--cyan); font-weight: 700;
   }
+  .flow-step:nth-child(2n)::after { content: none; }
+  .flow-step:last-child { grid-column: 1 / -1; }
   .flow-step h3, .skill-band h3 { margin: 0 0 .6rem; font-size: .8rem; color: var(--purple); text-transform: uppercase; letter-spacing: .05em; }
   .chips { margin: 0; display: flex; flex-wrap: wrap; gap: .4rem; }
   .chip { max-width: 100%; overflow-wrap: anywhere; background: var(--surface2); border: 1px solid var(--border); border-radius: 999px; padding: .15rem .65rem; font-size: .82rem; }
@@ -189,8 +191,8 @@
     .js .nav-toggle { display: inline-block; }
     .js .nav-groups[data-collapsed="true"] { display: none; }
     .sidebar .brand-sub { margin-bottom: .75rem; }
-    .skill-flow { flex-direction: column; flex-wrap: nowrap; gap: 2.2rem; }
-    .flow-step { flex: none; }
+    .skill-flow { grid-template-columns: minmax(0, 1fr); gap: 2.2rem; }
+    .flow-step:nth-child(2n)::after { content: "\2192" / ""; }
     .flow-step:not(:last-child)::after { right: auto; left: 50%; top: auto; bottom: -1.8rem; transform: translateX(-50%) rotate(90deg); }
     .header { padding: 1.25rem; }
     .quick-ref dl { grid-template-columns: minmax(0, 1fr); gap: .2rem; }
