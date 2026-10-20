@@ -34,6 +34,7 @@ Source: the user, 2026-10-20: "just met the problem that, the agent output is te
 - D3 — A glossary term in `PROJECT_SPEC.md` counts as one noun for the No Noun Stacks rule.
 - D4 — When splitting a sentence, keep the link word (because, so, unless, only if).
 - D5 — Measure token cost with `scripts/token_meter.py` before and after, never by eye (`docs/claude-md/token-economy.md`).
+- D6 (2026-10-20, user: "yes, do the change in this branch also and push") — Drop the numeric word limits (20 / 25 words) from Short Sentences. Anthropic's prompt-audit guide (bundled `claude-api` skill, Claude Code 2.1.304, group 1b/1f) lists hard word caps as a dated pattern; `/verify` saw 2 of 7 sentences over 25 words anyway. Use qualitative wording: short sentences, one idea each. The 3-noun limit becomes an example of a noun stack, not a hard count.
 
 **Out of scope** (what this task explicitly does NOT do):
 - A checker script (`ste_check.py`, Option B). It is on the cut list until the trial ends
@@ -64,7 +65,7 @@ Source: the user, 2026-10-20: "just met the problem that, the agent output is te
 
 | # | Criterion (testable) | Traces to requirement |
 |---|---|---|
-| 1 | `CLAUDE.md` has a `## Writing Principles (ASD-STE100)` section. Its table has exactly 4 principle rows with the names One Term, One Meaning · Short Sentences · One Action, Active Voice · No Noun Stacks. Each row has a Problem Addressed column and an Operational Command column. The commands state the limits 20 words (steps), 25 words (descriptions) and 3 nouns in a row | Restated intent |
+| 1 | `CLAUDE.md` has a `## Writing Principles (ASD-STE100)` section. Its table has exactly 4 principle rows with the names One Term, One Meaning · Short Sentences · One Action, Active Voice · No Noun Stacks. Each row has a Problem Addressed column and an Operational Command column. The commands state no numeric word cap (D6): Short Sentences says short sentences, one idea each; No Noun Stacks gives a noun-stack example | Restated intent |
 | 2 | The section states the scope in words: human-facing output only (Supervisor chat replies, HTML reports), and names the exempt agent-to-agent text (spawn prompts, TASK_GUIDEs, sub-agent reports, Kanban rows, commits) | D2 |
 | 3 | The section states that the verbatim list is quoted unchanged | Restated intent |
 | 4 | Rule 1 states: keep the key term exactly, gloss it once only if the reader may not know it, never replace it with a paraphrase | D1 |
