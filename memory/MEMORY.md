@@ -153,6 +153,8 @@
 - [T150: spawns are background `Agent()` by default; `wake` flags dirty In Progress worktrees](decisions.md) — CLI pane only on request / non-Claude CLI; sandbox profile unused until nested-userns passes
 
 ### Patterns & Gotchas
+- [Release commit must bump README header](learnings.md) — v2.1.0 left README at v2.0.0; grep the old version in README/RUNBOOK/site before committing a release row
+- [Sandboxed spawn fails on this host](learnings.md) — userns restriction kills every Bash call; unsandboxed relaunch needs the user's explicit go-ahead
 - [A short SHA is hex — lock pair regex would read `kit_commit` as a file](learnings.md) — scope lock readers to the `"files"` block (T137)
 - [Writing a TASK_GUIDE auto-adds a Todo row](learnings.md) — `post_write_register_task.py`; move that row to In Progress at spawn, never add a second
 - [v1-site release lessons: evidence, publishing, planning](learnings.md) — a green mutation control means "my mutation didn't land" before "vacuous test", and for "doc D matches source S" the control changes **S**
