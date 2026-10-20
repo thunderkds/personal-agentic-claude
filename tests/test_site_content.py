@@ -22,9 +22,14 @@ SETTINGS_PATH = os.path.join(ROOT, ".claude", "settings.json")
 STEP_LIMIT_HOOK = os.path.join(ROOT, ".claude", "hooks", "pre_agent_step_limit.py")
 
 
-def _page_text():
+def _raw_page_text():
     with open(SITE_PAGE, encoding="utf-8") as f:
         return f.read()
+
+
+def _page_text():
+    # <wbr> only offers line-break points inside long code tokens (T167); it is not content.
+    return _raw_page_text().replace("<wbr>", "")
 
 
 def _skill_dirs():
@@ -1064,11 +1069,27 @@ def test_tables_do_not_force_a_minimum_width_or_scroll_sideways():
 
 
 def test_long_code_tokens_in_table_cells_can_wrap():
-    """AC2."""
+    """AC2: wrapping comes from <wbr> break points (see the next test), so cell code may not be nowrap."""
     css = _style_block()
-    assert re.search(r"(?:td|th)\s+code\s*\{[^}]*overflow-wrap\s*:\s*anywhere", css) or \
-        re.search(r"(?:td|th)\s+code\s*\{[^}]*word-break\s*:\s*break-all", css), \
-        "no wrapping rule for code inside table cells"
+    assert not re.search(r"(?:td|th)\s+code\s*\{[^}]*white-space\s*:\s*(?:nowrap|pre)\b", css), \
+        "code inside table cells is forbidden from wrapping"
+
+
+def test_code_tokens_in_table_cells_break_only_at_natural_boundaries():
+    """T167 round 2: no mid-word breaks — `overflow-wrap: anywhere` is gone and every long
+    code token in a cell offers <wbr> break points after `_` `/` `.` `-`."""
+    css = _style_block()
+    assert not re.search(r"td\s+code\s*\{[^}]*overflow-wrap\s*:\s*anywhere", css)
+    assert not re.search(r"(?:td|th)\s+code\s*\{[^}]*word-break\s*:\s*break-all", css)
+    long_unbroken = []
+    for t in re.findall(r"<table\b.*?</table>", _raw_page_text(), re.DOTALL):
+        for code in re.findall(r"<code>(.*?)</code>", t, re.DOTALL):
+            if len(_html.unescape(code.replace("<wbr>", ""))) > 20 and "<wbr>" not in code:
+                long_unbroken.append(code)
+    assert not long_unbroken, f"long code tokens in table cells without <wbr>: {long_unbroken}"
+    hooks = re.search(r'<section id="hooks">(.*?)</section>', _raw_page_text(), re.DOTALL).group(1)
+    assert "pre_<wbr>agent_<wbr>validate_<wbr>guide.py" in hooks, \
+        "script names are not given break points after the underscores"
 
 
 def _tables():

@@ -18,7 +18,7 @@ def _line_with(text, needle):
 
 
 STAGES = _read("docs", "claude-md", "pipeline-stages.md")
-SITE = _read("site", "index.html")
+SITE = _read("site", "index.html").replace("<wbr>", "")  # <wbr> is a break hint, not content (T167)
 
 
 def test_ac1_memory_injection_names_decisions_entries():

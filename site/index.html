@@ -125,7 +125,6 @@
   th, td { text-align: left; padding: .6rem .8rem; border-bottom: 1px solid var(--border); }
   th { background: var(--surface2); color: var(--muted); text-transform: uppercase; font-size: .75rem; letter-spacing: .05em; }
   tr:last-child td { border-bottom: none; }
-  td code { overflow-wrap: anywhere; }
   code { color: var(--cyan); background: var(--cyan-dim); padding: .1rem .4rem; border-radius: 4px; font-size: .85em; }
   .tag { display: inline-block; padding: .1rem .5rem; border-radius: 999px; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
   .tag-block  { background: var(--amber-dim); color: var(--amber); }
@@ -185,6 +184,11 @@
   svg.pipeline .arrow-head { stroke: var(--cyan); stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
   footer { color: var(--muted); font-size: .8rem; margin: 3rem 0 1.5rem; }
+
+  /* desktop: Event and Matcher take only their content width so Script and Behavior share the rest */
+  @media (min-width: 768px) {
+    #hooks th:nth-child(-n+2), #hooks td:nth-child(-n+2) { width: 1%; white-space: nowrap; }
+  }
 
   /* ---- mobile ------------------------------------------------------ */
   @media (max-width: 767px) {
@@ -431,7 +435,7 @@ Choose [1]:</pre>
 <tr><td data-label="Your copy"><strong>Untouched since install</strong></td><td data-label="What Update does">Silently overwritten with the latest upstream version</td></tr>
 <tr><td data-label="Your copy"><strong>Customized</strong></td><td data-label="What Update does">Shows a diff and prompts per file: overwrite / skip / view diff again. Overwrite first moves yours to <code>&lt;file&gt;.bak-&lt;commit&gt;</code>; skip keeps it</td></tr>
 <tr><td data-label="Your copy"><strong>No longer shipped</strong></td><td data-label="What Update does">Removed if you never edited it; kept (and named) if you did</td></tr>
-<tr><td data-label="Your copy"><code>.claude/settings.json</code></td><td data-label="What Update does">Not a <code>MANIFEST</code> file, so it is <em>merged</em> rather than copied — on install <em>and</em> on update <details><summary>How the merge works</summary><ul><li>The kit's hooks are reconciled into it.</li><li>The kit's <code>permissions.deny</code> entries are appended to yours (add-only); your own permissions and hook entries are kept exactly as they are.</li><li>The kit's allow or ask rules are never copied.</li><li>If it cannot be merged — invalid JSON, a symlink, or no <code>python3</code> — nothing is written, the block to add by hand is printed, and the run exits <code>2</code>.</li></ul></details></td></tr>
+<tr><td data-label="Your copy"><code>.claude/<wbr>settings.json</code></td><td data-label="What Update does">Not a <code>MANIFEST</code> file, so it is <em>merged</em> rather than copied — on install <em>and</em> on update <details><summary>How the merge works</summary><ul><li>The kit's hooks are reconciled into it.</li><li>The kit's <code>permissions.deny</code> entries are appended to yours (add-only); your own permissions and hook entries are kept exactly as they are.</li><li>The kit's allow or ask rules are never copied.</li><li>If it cannot be merged — invalid JSON, a symlink, or no <code>python3</code> — nothing is written, the block to add by hand is printed, and the run exits <code>2</code>.</li></ul></details></td></tr>
 </tbody>
 </table>
 </div>
@@ -603,15 +607,15 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <table>
 <thead><tr><th>Event</th><th>Matcher</th><th>Script</th><th>Behavior</th></tr></thead>
 <tbody>
-<tr><td data-label="Event">PreToolUse</td><td data-label="Matcher"><code>Agent</code></td><td data-label="Script"><code>pre_agent_validate_guide.py</code></td><td data-label="Behavior"><span class="tag tag-block">blocks</span> spawn if the TASK_GUIDE is missing; otherwise only <span class="tag tag-advise">advises</span> (never blocks) <details><summary>When it advises</summary><ul><li>The spawn prompt has no memory slice or no <code>**Startup reads**</code> block</li><li>A <code>Depends on</code> task is not Done</li><li>A task's Demonstration BEFORE is still blank</li></ul></details></td></tr>
-<tr><td data-label="Event">PreToolUse</td><td data-label="Matcher"><code>Bash</code></td><td data-label="Script"><code>pre_bash_block_unsafe_merge.py</code></td><td data-label="Behavior"><span class="tag tag-block">blocks</span> git push/merge if pipeline gates are unsatisfied</td></tr>
-<tr><td data-label="Event">PreToolUse</td><td data-label="Matcher"><code>Edit|Write|Bash</code></td><td data-label="Script"><code>pre_tool_sensitive_path.py</code></td><td data-label="Behavior"><span class="tag tag-block">asks</span> you to confirm before a call touches a path listed in <code>.claude/sensitive-paths.txt</code> — unless the active task's guide predicted that exact path <details><summary>What the list covers</summary><p><code>.env*</code>, secrets, production configs, infra.</p></details></td></tr>
-<tr><td data-label="Event">PreToolUse</td><td data-label="Matcher"><code>.*</code></td><td data-label="Script"><code>pre_agent_step_limit.py</code></td><td data-label="Behavior"><span class="tag tag-block">blocks</span> a task's tool call once it exceeds the step limit (default <strong>90</strong>) — self-clearing on the very next call</td></tr>
-<tr><td data-label="Event">PostToolUse</td><td data-label="Matcher"><code>Write</code></td><td data-label="Script"><code>post_write_register_task.py</code></td><td data-label="Behavior"><span class="tag tag-advise">advises</span> — auto-registers new TASK_GUIDE files on the board</td></tr>
-<tr><td data-label="Event">PostToolUse</td><td data-label="Matcher"><code>Agent</code></td><td data-label="Script"><code>post_agent_move_to_review.py</code></td><td data-label="Behavior"><span class="tag tag-inert">inert</span> — <strong>does not move anything and does not touch any step counter</strong>; it only prints a reminder to move the row by hand <details><summary>Why by hand</summary><p>The reminder is for the Supervisor. The hand move is deliberate, after two past defects made the automatic move actively harmful.</p></details></td></tr>
-<tr><td data-label="Event">PostToolUse</td><td data-label="Matcher"><code>Bash</code></td><td data-label="Script"><code>post_bash_memory_update.py</code></td><td data-label="Behavior"><span class="tag tag-advise">advises</span> — prompts a diff-driven memory-update pass after git push/merge/pull</td></tr>
-<tr><td data-label="Event">PostToolUse</td><td data-label="Matcher"><code>.*</code></td><td data-label="Script"><code>post_tool_trace.py</code></td><td data-label="Behavior"><span class="tag tag-advise">advises</span> — appends every tool call to <code>memory/event-trace/&lt;task&gt;.jsonl</code>; <code>scripts/verify_trace.py &lt;task&gt;</code> reports whether the trace still matches <details><summary>How an edit shows</summary><p>Each line is linked to the one before by a hash chain, with a copy of each line's hash kept outside the repo under <code>~/.claude/harness-anchors/</code>.</p></details></td></tr>
-<tr><td data-label="Event">Stop</td><td data-label="Matcher">—</td><td data-label="Script"><code>stop_review_reminder.py</code></td><td data-label="Behavior"><span class="tag tag-advise">advises</span> — reminds the Supervisor to run Stage 4 review for pending tasks</td></tr>
+<tr><td data-label="Event">PreToolUse</td><td data-label="Matcher"><code>Agent</code></td><td data-label="Script"><code>pre_<wbr>agent_<wbr>validate_<wbr>guide.py</code></td><td data-label="Behavior"><span class="tag tag-block">blocks</span> spawn if the TASK_GUIDE is missing; otherwise only <span class="tag tag-advise">advises</span> (never blocks) <details><summary>When it advises</summary><ul><li>The spawn prompt has no memory slice or no <code>**Startup reads**</code> block</li><li>A <code>Depends on</code> task is not Done</li><li>A task's Demonstration BEFORE is still blank</li></ul></details></td></tr>
+<tr><td data-label="Event">PreToolUse</td><td data-label="Matcher"><code>Bash</code></td><td data-label="Script"><code>pre_<wbr>bash_<wbr>block_<wbr>unsafe_<wbr>merge.py</code></td><td data-label="Behavior"><span class="tag tag-block">blocks</span> git push/merge if pipeline gates are unsatisfied</td></tr>
+<tr><td data-label="Event">PreToolUse</td><td data-label="Matcher"><code>Edit|Write|Bash</code></td><td data-label="Script"><code>pre_<wbr>tool_<wbr>sensitive_<wbr>path.py</code></td><td data-label="Behavior"><span class="tag tag-block">asks</span> you to confirm before a call touches a path listed in <code>.claude/<wbr>sensitive-<wbr>paths.txt</code> — unless the active task's guide predicted that exact path <details><summary>What the list covers</summary><p><code>.env*</code>, secrets, production configs, infra.</p></details></td></tr>
+<tr><td data-label="Event">PreToolUse</td><td data-label="Matcher"><code>.*</code></td><td data-label="Script"><code>pre_<wbr>agent_<wbr>step_<wbr>limit.py</code></td><td data-label="Behavior"><span class="tag tag-block">blocks</span> a task's tool call once it exceeds the step limit (default <strong>90</strong>) — self-clearing on the very next call</td></tr>
+<tr><td data-label="Event">PostToolUse</td><td data-label="Matcher"><code>Write</code></td><td data-label="Script"><code>post_<wbr>write_<wbr>register_<wbr>task.py</code></td><td data-label="Behavior"><span class="tag tag-advise">advises</span> — auto-registers new TASK_GUIDE files on the board</td></tr>
+<tr><td data-label="Event">PostToolUse</td><td data-label="Matcher"><code>Agent</code></td><td data-label="Script"><code>post_<wbr>agent_<wbr>move_<wbr>to_<wbr>review.py</code></td><td data-label="Behavior"><span class="tag tag-inert">inert</span> — <strong>does not move anything and does not touch any step counter</strong>; it only prints a reminder to move the row by hand <details><summary>Why by hand</summary><p>The reminder is for the Supervisor. The hand move is deliberate, after two past defects made the automatic move actively harmful.</p></details></td></tr>
+<tr><td data-label="Event">PostToolUse</td><td data-label="Matcher"><code>Bash</code></td><td data-label="Script"><code>post_<wbr>bash_<wbr>memory_<wbr>update.py</code></td><td data-label="Behavior"><span class="tag tag-advise">advises</span> — prompts a diff-driven memory-update pass after git push/merge/pull</td></tr>
+<tr><td data-label="Event">PostToolUse</td><td data-label="Matcher"><code>.*</code></td><td data-label="Script"><code>post_tool_trace.py</code></td><td data-label="Behavior"><span class="tag tag-advise">advises</span> — appends every tool call to <code>memory/<wbr>event-<wbr>trace/<wbr>&lt;task&gt;.jsonl</code>; <code>scripts/<wbr>verify_<wbr>trace.py &lt;task&gt;</code> reports whether the trace still matches <details><summary>How an edit shows</summary><p>Each line is linked to the one before by a hash chain, with a copy of each line's hash kept outside the repo under <code>~/.claude/<wbr>harness-<wbr>anchors/</code>.</p></details></td></tr>
+<tr><td data-label="Event">Stop</td><td data-label="Matcher">—</td><td data-label="Script"><code>stop_<wbr>review_<wbr>reminder.py</code></td><td data-label="Behavior"><span class="tag tag-advise">advises</span> — reminds the Supervisor to run Stage 4 review for pending tasks</td></tr>
 </tbody>
 </table>
 </div>
@@ -648,7 +652,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <table>
 <thead><tr><th>Pack</th><th>Domain</th><th>Agent</th><th>Skills</th></tr></thead>
 <tbody>
-<tr><td data-label="Pack"><code>mobile</code></td><td data-label="Domain">Flutter, React Native, Swift, Kotlin</td><td data-label="Agent"><code>mobile-developer</code></td><td data-label="Skills"><code>ui-accessibility</code>, <code>platform-compatibility</code></td></tr>
+<tr><td data-label="Pack"><code>mobile</code></td><td data-label="Domain">Flutter, React Native, Swift, Kotlin</td><td data-label="Agent"><code>mobile-developer</code></td><td data-label="Skills"><code>ui-accessibility</code>, <code>platform-<wbr>compatibility</code></td></tr>
 <tr><td data-label="Pack"><code>data</code></td><td data-label="Domain">Pipelines, notebooks, ETL, dbt</td><td data-label="Agent"><code>data-engineer</code></td><td data-label="Skills"><code>notebook-review</code>, <code>pipeline-safety</code></td></tr>
 <tr><td data-label="Pack"><code>devops</code></td><td data-label="Domain">Terraform, K8s, CI/CD, Docker</td><td data-label="Agent"><code>devops-engineer</code></td><td data-label="Skills"><code>infra-safety</code>, <code>deployment-checklist</code></td></tr>
 <tr><td data-label="Pack"><code>ai-agent</code></td><td data-label="Domain">LLM apps, RAG, MCP servers</td><td data-label="Agent"><code>ai-engineer</code></td><td data-label="Skills"><code>prompt-review</code>, <code>eval-design</code></td></tr>
@@ -682,7 +686,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <thead><tr><th>Adapter</th><th>Auto-read by</th><th>What it carries</th></tr></thead>
 <tbody>
 <tr><td data-label="Adapter"><code>AGENTS.md</code></td><td data-label="Auto-read by">Codex</td><td data-label="What it carries">Karpathy principle names, Hard-Stop Gate titles, the untrusted-content boundary rule, and the "no TASK_GUIDE = no work" rule — inlined, not just linked</td></tr>
-<tr><td data-label="Adapter"><code>.cursor/rules/agent-base.mdc</code></td><td data-label="Auto-read by">Cursor (<code>alwaysApply: true</code>)</td><td data-label="What it carries">The same inlined non-negotiables as <code>AGENTS.md</code></td></tr>
+<tr><td data-label="Adapter"><code>.cursor/<wbr>rules/<wbr>agent-<wbr>base.mdc</code></td><td data-label="Auto-read by">Cursor (<code>alwaysApply: true</code>)</td><td data-label="What it carries">The same inlined non-negotiables as <code>AGENTS.md</code></td></tr>
 </tbody>
 </table>
 </div>
@@ -719,12 +723,12 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <table>
 <thead><tr><th>Path</th><th>What it contains</th></tr></thead>
 <tbody>
-<tr><td data-label="Path"><code>agents/</code></td><td data-label="What it contains">Canon sub-agent definitions plus <code>general-agent-template.md</code> (DDR-0007)</td></tr>
+<tr><td data-label="Path"><code>agents/</code></td><td data-label="What it contains">Canon sub-agent definitions plus <code>general-<wbr>agent-<wbr>template.md</code> (DDR-0007)</td></tr>
 <tr><td data-label="Path"><code>skills/</code></td><td data-label="What it contains">Canon custom skills (DDR-0007)</td></tr>
-<tr><td data-label="Path"><code>.claude/agents/</code></td><td data-label="What it contains">Committed <strong>relative symlink</strong> onto <code>agents/</code> so Claude Code can discover it (<code>.claude/agents -&gt; ../agents</code>)</td></tr>
-<tr><td data-label="Path"><code>.claude/skills/</code></td><td data-label="What it contains">Committed <strong>relative symlink</strong> onto <code>skills/</code> so Claude Code can discover it (<code>.claude/skills -&gt; ../skills</code>)</td></tr>
+<tr><td data-label="Path"><code>.claude/agents/</code></td><td data-label="What it contains">Committed <strong>relative symlink</strong> onto <code>agents/</code> so Claude Code can discover it (<code>.claude/<wbr>agents -&gt; ../agents</code>)</td></tr>
+<tr><td data-label="Path"><code>.claude/skills/</code></td><td data-label="What it contains">Committed <strong>relative symlink</strong> onto <code>skills/</code> so Claude Code can discover it (<code>.claude/<wbr>skills -&gt; ../skills</code>)</td></tr>
 <tr><td data-label="Path"><code>AGENTS.md</code></td><td data-label="What it contains">Provider adapter for Codex — see Providers below</td></tr>
-<tr><td data-label="Path"><code>.cursor/rules/agent-base.mdc</code></td><td data-label="What it contains">Provider adapter for Cursor — see Providers below</td></tr>
+<tr><td data-label="Path"><code>.cursor/<wbr>rules/<wbr>agent-<wbr>base.mdc</code></td><td data-label="What it contains">Provider adapter for Cursor — see Providers below</td></tr>
 <tr><td data-label="Path"><code>tasks/</code></td><td data-label="What it contains">Task guides generated at Stage 2 (per project)</td></tr>
 <tr><td data-label="Path"><code>templates/</code></td><td data-label="What it contains">Blank templates for PRD, PROJECT_SPEC, task board, TASK_GUIDE, and more</td></tr>
 <tr><td data-label="Path"><code>packs/</code></td><td data-label="What it contains">Optional domain packs — each adds agents + skills for a specific project type</td></tr>
@@ -748,7 +752,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <tr><td data-label="File"><code>memory/decisions.md</code></td><td data-label="Tier">Cold</td><td data-label="Holds">Architectural and infrastructure decisions</td></tr>
 <tr><td data-label="File"><code>memory/glossary.md</code></td><td data-label="Tier">Cold</td><td data-label="Holds">Canonical domain terms and core domain models</td></tr>
 <tr><td data-label="File"><code>memory/learnings.md</code></td><td data-label="Tier">Cold</td><td data-label="Holds">Spec clarifications, patterns, gotchas</td></tr>
-<tr><td data-label="File"><code>memory/codebase-map.md</code></td><td data-label="Tier">Structural</td><td data-label="Holds">Directory tree, entry points, blast-radius hotspots — generated by <code>map-codebase</code></td></tr>
+<tr><td data-label="File"><code>memory/<wbr>codebase-<wbr>map.md</code></td><td data-label="Tier">Structural</td><td data-label="Holds">Directory tree, entry points, blast-radius hotspots — generated by <code>map-codebase</code></td></tr>
 </tbody>
 </table>
 </div>
