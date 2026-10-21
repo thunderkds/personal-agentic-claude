@@ -45,6 +45,7 @@ tmp/
 # the negation below to take effect — git won't descend into a fully-excluded directory.)
 reports/*
 !reports/token-audit_*.md
+!reports/context-search-benchmark-*.md
 
 # ============================================================
 # Section 6: Hook runtime state (step counters, event traces)
