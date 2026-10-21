@@ -113,12 +113,22 @@ def test_old_way_skips_excluded_dirs(tmp_path):
 
 def test_fixture_shape_and_mix():
     qs = b.load_questions()
-    assert 15 <= len(qs) <= 20
+    assert len(qs) >= 35
     kinds = [q["kind"] for q in qs]
     assert kinds.count("conceptual") >= 5 and kinds.count("symbol") >= 5 and kinds.count("doc") >= 3
+    for k in ("multi_hop", "exact_text", "callers", "negative"):
+        assert kinds.count(k) >= 4, k
     for q in qs:
-        assert q["id"] and q["question"] and q["grep_pattern"] and q["expected_paths"]
+        assert q["id"] and q["question"] and q["grep_pattern"]
+        assert bool(q["expected_paths"]) == (q["kind"] != "negative")
     assert len({q["id"] for q in qs}) == len(qs)
+    assert len(b.lifecycle_chains()) >= 4
+
+
+def test_fixture_expected_paths_exist_in_this_repo():
+    for q in b.load_questions():
+        for path in q["expected_paths"]:
+            assert os.path.exists(os.path.join(ROOT, path)), (q["id"], path)
 
 
 # ---- MCP client against a fake server (SSE body, session id)
@@ -128,7 +138,7 @@ def test_context_way_scores_rank_three_against_fake_server(fake_url):
                        {"id": "3", "path": "docs/x.md"}]
     c = b.McpClient(fake_url, "/root")
     c.start()
-    q = {"id": "q", "question": "q", "expected_paths": ["docs/x.md"]}
+    q = {"id": "q", "kind": "doc", "question": "q", "expected_paths": ["docs/x.md"]}
     out = b.context_way(q, c)
     s = b.score(q, out, 0.1)
     assert (s["hit1"], s["hit5"]) == (0, 1)
@@ -143,21 +153,30 @@ def test_parse_sse_and_plain_json():
 
 # ---- report rendering
 
-def test_report_rendering_and_section_replace(tmp_path):
-    q = {"id": "q1", "kind": "doc", "question": "x", "expected_paths": ["p"]}
-    row = {"q": q,
-           "context": b.score(q, {"ranked": ["p"], "chars": 40, "indexing": False}, 0.2),
-           "old": b.score(q, {"ranked": ["z", "p"], "chars": 400, "indexing": False}, 0.1)}
-    summary = b.summarize_script([row])
-    text = b.render_script([row], summary)
-    assert "| q1 | doc |" in text and "**Verdict.**" in text
-    assert "1/1" in text and "estimated" in text
-    path = str(tmp_path / "r.md")
-    b.write_section(path, "script", text, "Script mode")
-    b.write_section(path, "agent", "agent body", "Real-agent mode")
-    b.write_section(path, "script", "new body", "Script mode")
-    out = open(path).read()
-    assert out.count("Script mode") == 1 and "new body" in out and "agent body" in out
+def _row(q, ctx_ranked, old_ranked):
+    return {"q": q,
+            "context": b.score(q, {"ranked": ctx_ranked, "chars": 40, "indexing": False}, 0.2, "context"),
+            "old": b.score(q, {"ranked": old_ranked, "chars": 400, "indexing": False}, 0.1, "old"),
+            "old_bounded": b.score(q, {"ranked": old_ranked, "chars": 100, "indexing": False}, 0.1, "old_bounded")}
+
+
+def test_report_rendering_has_all_sections_and_json_roundtrip(tmp_path):
+    q = {"id": "q1", "kind": "doc", "question": "x", "expected_paths": ["p"], "grep_pattern": "x"}
+    rows = [_row(q, ["p"], ["z", "p"])]
+    data = {"date": "2026-10-21",
+            "script": {"rows": rows, "summary": b.summarize_script(rows), "per_kind": b.summarize_kinds(rows)},
+            "upkeep": {"full_reindex_s": 9.0, "noop_reindex_s": 0.3, "touch_1_reindex_s": 0.4,
+                       "touch_10_reindex_s": 0.8, "add_1_new_file_reindex_s": 0.5, "files": 5, "slices": 9,
+                       "staleness": {"new_file_found": True, "after_edit_old_text_still_returned": True,
+                                     "after_edit_new_text_found": False},
+                       "git_status_unchanged": True}}
+    md, js = str(tmp_path / "r.md"), str(tmp_path / "r.json")
+    b.save_data(data, md, js)
+    text = open(md).read()
+    assert "## Recommendation" in text and "## Script mode" in text and "## Index upkeep" in text
+    assert "| q1 | doc |" in text and "old, bounded" in text and "estimated" in text
+    assert "old text until the file was re-indexed" in text
+    assert json.load(open(js))["script"]["rows"][0]["q"]["id"] == "q1"
 
 
 def test_agent_json_parsing_sums_all_usage():
@@ -172,6 +191,7 @@ def test_agent_json_parsing_sums_all_usage():
 def test_agent_commands_allow_only_read_tools():
     ctx = b.agent_command("context", "/r", "http://u/mcp")
     old = b.agent_command("old", "/r", "http://u/mcp")
+    assert "--no-session-persistence" in ctx and "--resume" not in ctx
     assert "Edit" not in " ".join(ctx + old) and "Write" not in " ".join(ctx + old)
     assert "Bash" not in " ".join(ctx + old)
     assert ctx[ctx.index("--tools") + 1] == ""
@@ -215,3 +235,135 @@ def test_live_one_question_both_ways():
     q = b.load_questions(limit=1)[0]
     out = b.context_way(q, c)
     assert out["ranked"] and out["chars"] > 0
+
+
+# ---- round 2 (R1-R7): scoring kinds, bounded old way, budget, lifecycle
+
+def test_multi_hop_hit5_needs_all_hit1_needs_any():
+    q = {"id": "m", "kind": "multi_hop", "expected_paths": ["a.py", "t.py"]}
+    out = {"ranked": ["a.py", "x", "y"], "chars": 4, "indexing": False}
+    s = b.score(q, out, 0.1, "old")
+    assert (s["hit1"], s["hit5"]) == (1, 0)
+    out["ranked"] = ["a.py", "x", "t.py"]
+    assert b.score(q, out, 0.1, "old")["hit5"] == 1
+
+
+def test_negative_scoring_grep_right_when_nothing_found_context_unscored():
+    q = {"id": "n", "kind": "negative", "expected_paths": []}
+    none = {"ranked": [], "chars": 0, "indexing": False}
+    some = {"ranked": ["a.py"], "chars": 9, "indexing": False}
+    assert b.score(q, none, 0.1, "old")["hit5"] == 1
+    assert b.score(q, some, 0.1, "old_bounded")["hit1"] == 0
+    assert b.score(q, some, 0.1, "context")["hit1"] is None
+
+
+def test_summary_skips_unscored_rows():
+    qn = {"id": "n", "kind": "negative", "expected_paths": []}
+    qd = {"id": "d", "kind": "doc", "expected_paths": ["p"]}
+    rows = [_row(qn, ["a"], []), _row(qd, ["p"], ["p"])]
+    sm = b.summarize_script(rows)
+    assert sm["context"]["n"] == 1 and sm["old"]["n"] == 2
+    assert b.summarize_kinds(rows)["negative"]["context"]["n"] == 0
+
+
+def test_old_bounded_reads_a_window_not_the_whole_file(tmp_path):
+    (tmp_path / "big.py").write_text("\n".join(f"line{i}" for i in range(500)) + "\nneedle\n" + "x\n" * 500)
+    full = b.old_way({"grep_pattern": "needle"}, str(tmp_path))
+    bounded = b.old_bounded({"grep_pattern": "needle"}, str(tmp_path))
+    assert bounded["ranked"] == ["big.py"] == full["ranked"]
+    assert bounded["chars"] < full["chars"] / 5
+
+
+def test_old_bounded_caps_the_file_list_and_misses_cleanly(tmp_path):
+    for i in range(80):
+        (tmp_path / f"f{i:02d}.txt").write_text("needle\n")
+    out = b.old_bounded({"grep_pattern": "needle"}, str(tmp_path))
+    assert len(out["ranked"]) == 80 and out["chars"] < 80 * 20  # list capped at 50 lines + 81-line read
+    assert b.old_bounded({"grep_pattern": "zzz"}, str(tmp_path)) == {"ranked": [], "chars": 0, "indexing": False}
+
+
+def test_grade_answer_per_kind():
+    multi = {"kind": "callers", "expected_paths": ["a.py", "b.py"]}
+    assert b.grade_answer(multi, "a.py and b.py") == 1
+    assert b.grade_answer(multi, "only a.py") == 0
+    one = {"kind": "doc", "expected_paths": ["d/x.md"]}
+    assert b.grade_answer(one, "see ./d/x.md") == 1
+    neg = {"kind": "negative", "expected_paths": []}
+    assert b.grade_answer(neg, "NOT FOUND") == 1
+    assert b.grade_answer(neg, "NOT FOUND, but see docs/x.md") == 0
+    assert b.grade_answer(neg, "It is in lib/x.py") == 0
+
+
+def test_budget_aborts_before_passing_the_cap(tmp_path):
+    bud = b.Budget(cap=1.0, path=str(tmp_path / "s.json"), per_run=0.5)
+    bud.check()
+    bud.add(0.6)
+    with pytest.raises(b.BudgetExceeded):
+        bud.check()
+    assert b.Budget(cap=1.0, path=str(tmp_path / "s.json")).spent == pytest.approx(0.6)  # persisted
+
+
+def test_run_agent_mode_stops_when_budget_is_hit(monkeypatch, tmp_path):
+    calls = []
+
+    def fake(q, method, root, url, budget, **kw):
+        budget.check()
+        calls.append((q["id"], method))
+        budget.add(0.4)
+        return {"correct": 1, "tokens": 1, "cost": 0.4, "seconds": 1}
+
+    monkeypatch.setattr(b, "run_claude", fake)
+    qs = [{"id": f"q{i}", "kind": "doc", "question": "x", "expected_paths": ["p"]} for i in range(5)]
+    res = b.run_agent_mode(qs, "/r", "u", b.Budget(cap=1.0, per_run=0.5), repeat_ids=[])
+    assert res["aborted"] and len(calls) == 2 and len(res["rows"]) == 1
+
+
+def test_agent_command_resume_and_persistence():
+    cmd = b.agent_command("context", "/r", "http://u/mcp", persist=True, resume="SID", fork=True)
+    assert "--no-session-persistence" not in cmd
+    assert cmd[cmd.index("--resume") + 1] == "SID" and "--fork-session" in cmd
+
+
+def test_lifecycle_chain_records_each_step_and_waits(monkeypatch, tmp_path):
+    seen, slept = [], []
+
+    def fake(q, method, root, url, budget, **kw):
+        seen.append((q["id"], kw.get("resume")))
+        return {"session_id": "S1", "correct": 1, "cost": 0.01, "seconds": 1.0, "input": 2, "output": 3,
+                "cache_read": 100, "cache_creation": 7, "tokens": 112, "error": False, "answer": ""}
+
+    monkeypatch.setattr(b, "run_claude", fake)
+    chain = {"id": "L", "q1": "a", "q1_expected": ["p"], "q2_followup": "f", "q2_standalone": "s", "q2_expected": ["p"]}
+    ticks = iter([0, 10, 20, 30, 40])
+    steps = b.run_chain("context", chain, "/r", "u", b.Budget(cap=99), waits=(372,),
+                        sleep=slept.append, clock=lambda: next(ticks))
+    assert [s["label"] for s in steps] == ["q1", "same_session", "fresh", "resume_after_372s"]
+    assert slept == [362]  # waits until 372s after Q1, not 372s more
+    assert [r for _, r in seen] == [None, "S1", None, "S1"]
+    summ = b.summarize_lifecycle(steps)
+    assert summ["resume_after_372s"]["context"]["cache_read"] == 100
+    assert "cache_creation" in b.render_lifecycle({"summary": summ})
+
+
+def test_spread_min_median_max():
+    reps = [{"id": "q", "method": "old", "tokens": t, "cost": t / 100, "seconds": 1, "correct": 1} for t in (10, 30, 20)]
+    sp = b.spread(reps)["q"]["old"]
+    assert sp["tokens"] == [10, 20, 30] and sp["correct"] == [3, 3]
+
+
+def test_upkeep_probe_leaves_the_checkout_clean(tmp_path, monkeypatch):
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    (tmp_path / "a.py").write_text("x = 1\n")
+    subprocess.run(["git", "-C", str(tmp_path), "add", "."], check=True)
+    subprocess.run(["git", "-C", str(tmp_path), "-c", "user.email=a@b", "-c", "user.name=n", "commit", "-qm", "i"], check=True)
+    store = {}
+
+    class Fake:
+        def call(self, name, args):
+            return "", {}
+
+    monkeypatch.setattr(b, "reindex", lambda client, force=False: (0.1, {"files": 1, "slices": 2}))
+    monkeypatch.setattr(b, "search_has", lambda client, query, needle, path_hint=None: needle.endswith("4417"))
+    out = b.run_upkeep(Fake(), str(tmp_path))
+    assert out["git_status_unchanged"] and not os.path.exists(tmp_path / "zz_staleness_probe.md")
+    assert out["staleness"]["after_edit_old_text_still_returned"] and not out["staleness"]["after_edit_new_text_found"]
