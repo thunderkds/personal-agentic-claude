@@ -1,0 +1,5074 @@
+{
+ "date": "2026-10-21",
+ "script": {
+  "rows": [
+   {
+    "q": {
+     "id": "c01",
+     "kind": "conceptual",
+     "question": "Where is a push blocked when one of my tasks is still In Progress?",
+     "grep_pattern": "my_blocking_tasks|In Progress",
+     "expected_paths": [
+      ".claude/hooks/pre_bash_block_unsafe_merge.py",
+      ".claude/hooks/lib/board/moments.py"
+     ]
+    },
+    "context": {
+     "id": "c01",
+     "seconds": 0.11143799799901899,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 5645,
+     "tokens": 1412,
+     "top": "tasks/TASK_GUIDE_T157.md",
+     "top_score": 0.6764,
+     "indexing": false
+    },
+    "old": {
+     "id": "c01",
+     "seconds": 0.014841579999483656,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 92364,
+     "tokens": 23091,
+     "top": ".claude/hooks/tests/test_merge_gate_my_tasks.py",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "c01",
+     "seconds": 0.01356511699850671,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 3459,
+     "tokens": 865,
+     "top": ".claude/hooks/tests/test_merge_gate_my_tasks.py",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "c02",
+     "kind": "conceptual",
+     "question": "What stops a sub-agent that makes too many tool calls without reaching Ready for Review?",
+     "grep_pattern": "STEP_LIMIT",
+     "expected_paths": [
+      ".claude/hooks/pre_agent_step_limit.py"
+     ]
+    },
+    "context": {
+     "id": "c02",
+     "seconds": 0.12766024000302423,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 7360,
+     "tokens": 1840,
+     "top": "README.md",
+     "top_score": 0.5569,
+     "indexing": false
+    },
+    "old": {
+     "id": "c02",
+     "seconds": 0.008112587995128706,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 31316,
+     "tokens": 7829,
+     "top": ".claude/hooks/tests/test_step_limit_self_clearing.py",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "c02",
+     "seconds": 0.007649036997463554,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 3371,
+     "tokens": 843,
+     "top": ".claude/hooks/tests/test_step_limit_self_clearing.py",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "c03",
+     "kind": "conceptual",
+     "question": "How does the installer avoid destroying a project's existing file when it installs over it?",
+     "grep_pattern": "harness_backup_path|\\.bak-",
+     "expected_paths": [
+      "lib/harness-fetch.sh"
+     ]
+    },
+    "context": {
+     "id": "c03",
+     "seconds": 0.11853270400024485,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 8289,
+     "tokens": 2073,
+     "top": "PROJECT_SPEC.md",
+     "top_score": 0.5239,
+     "indexing": false
+    },
+    "old": {
+     "id": "c03",
+     "seconds": 0.017614880001929123,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 35631,
+     "tokens": 8908,
+     "top": "tasks/TASK_GUIDE_T137.md",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "c03",
+     "seconds": 0.017123042001912836,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 4323,
+     "tokens": 1081,
+     "top": "tasks/TASK_GUIDE_T137.md",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "c04",
+     "kind": "conceptual",
+     "question": "How do we detect that someone edited a task's event trace after it was written?",
+     "grep_pattern": "ANCHOR MISMATCH|anchor",
+     "expected_paths": [
+      "scripts/verify_trace.py",
+      ".claude/hooks/lib/trace_chain.py"
+     ]
+    },
+    "context": {
+     "id": "c04",
+     "seconds": 0.1668722939939471,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 6805,
+     "tokens": 1702,
+     "top": ".claude/hooks/tests/test_task_context.py",
+     "top_score": 0.5113,
+     "indexing": false
+    },
+    "old": {
+     "id": "c04",
+     "seconds": 0.01676772000064375,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 120371,
+     "tokens": 30093,
+     "top": ".claude/hooks/tests/test_trace_chain.py",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "c04",
+     "seconds": 0.015533316000073683,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 3437,
+     "tokens": 860,
+     "top": ".claude/hooks/tests/test_trace_chain.py",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "c05",
+     "kind": "conceptual",
+     "question": "How is the memory slice for a spawn prompt chosen from MEMORY.md?",
+     "grep_pattern": "memory.slice|memory_slice",
+     "expected_paths": [
+      "skills/craft-spawn-prompt/scripts/memory_slice.py"
+     ]
+    },
+    "context": {
+     "id": "c05",
+     "seconds": 0.1283234349975828,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 8743,
+     "tokens": 2186,
+     "top": "docs/memory-usage-finding-2026-08-07.md",
+     "top_score": 0.6708,
+     "indexing": false
+    },
+    "old": {
+     "id": "c05",
+     "seconds": 0.010855845997866709,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 129332,
+     "tokens": 32333,
+     "top": "tasks/TASK_REVIEW_T125.md",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "c05",
+     "seconds": 0.009671859996160492,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 7250,
+     "tokens": 1813,
+     "top": "tasks/TASK_REVIEW_T125.md",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "c06",
+     "kind": "conceptual",
+     "question": "How does the kit compare a branch diff against a task's declared complexity lane?",
+     "grep_pattern": "lane",
+     "expected_paths": [
+      "scripts/lane_check.py"
+     ]
+    },
+    "context": {
+     "id": "c06",
+     "seconds": 0.13415701500343857,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 8841,
+     "tokens": 2211,
+     "top": "tasks/TASK_GUIDE_T144.md",
+     "top_score": 0.7171,
+     "indexing": false
+    },
+    "old": {
+     "id": "c06",
+     "seconds": 0.014684868001495488,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 34655,
+     "tokens": 8664,
+     "top": "tasks/TASK_REVIEW_T144.md",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "c06",
+     "seconds": 0.014530741005728487,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 5382,
+     "tokens": 1346,
+     "top": "tasks/TASK_REVIEW_T144.md",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "c07",
+     "kind": "conceptual",
+     "question": "How does the Linear board adapter fetch the list of tasks?",
+     "grep_pattern": "list_tasks",
+     "expected_paths": [
+      ".claude/hooks/lib/board/linear.py"
+     ]
+    },
+    "context": {
+     "id": "c07",
+     "seconds": 0.10971425799652934,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 3659,
+     "tokens": 915,
+     "top": ".claude/hooks/lib/board/__init__.py",
+     "top_score": 0.6532,
+     "indexing": false
+    },
+    "old": {
+     "id": "c07",
+     "seconds": 0.00973738400352886,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 24570,
+     "tokens": 6143,
+     "top": "tests/test_board_sync_pull.py",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "c07",
+     "seconds": 0.009889152999676298,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 3628,
+     "tokens": 907,
+     "top": "tests/test_board_sync_pull.py",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "c08",
+     "kind": "conceptual",
+     "question": "How are token costs measured from agent session transcripts?",
+     "grep_pattern": "transcript",
+     "expected_paths": [
+      "scripts/token_meter.py"
+     ]
+    },
+    "context": {
+     "id": "c08",
+     "seconds": 0.11699510200560326,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 6357,
+     "tokens": 1590,
+     "top": "tasks/TASK_GUIDE_T124.md",
+     "top_score": 0.6899,
+     "indexing": false
+    },
+    "old": {
+     "id": "c08",
+     "seconds": 0.010503612000320572,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 79252,
+     "tokens": 19813,
+     "top": "scripts/token_meter.py",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "c08",
+     "seconds": 0.010027155003626831,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 3972,
+     "tokens": 993,
+     "top": "scripts/token_meter.py",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "s01",
+     "kind": "symbol",
+     "question": "pull_moment",
+     "grep_pattern": "pull_moment",
+     "expected_paths": [
+      "scripts/pull_moment.py"
+     ]
+    },
+    "context": {
+     "id": "s01",
+     "seconds": 0.11485076700046193,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 3684,
+     "tokens": 921,
+     "top": "tests/test_pull_moments.py",
+     "top_score": 0.5839,
+     "indexing": false
+    },
+    "old": {
+     "id": "s01",
+     "seconds": 0.010519048002606723,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 24841,
+     "tokens": 6211,
+     "top": "tasks/TASK_REVIEW_T157.md",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "s01",
+     "seconds": 0.010485388003871776,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 5169,
+     "tokens": 1293,
+     "top": "tasks/TASK_REVIEW_T157.md",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "s02",
+     "kind": "symbol",
+     "question": "in_progress_ids",
+     "grep_pattern": "in_progress_ids",
+     "expected_paths": [
+      "skills/wake/scripts/dirty_worktrees.py"
+     ]
+    },
+    "context": {
+     "id": "s02",
+     "seconds": 0.1242090259984252,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 5041,
+     "tokens": 1261,
+     "top": "skills/wake/scripts/dirty_worktrees.py",
+     "top_score": 2.641,
+     "indexing": false
+    },
+    "old": {
+     "id": "s02",
+     "seconds": 0.010776324998005293,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 3891,
+     "tokens": 973,
+     "top": "skills/wake/scripts/dirty_worktrees.py",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "s02",
+     "seconds": 0.0094296539973584,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 2643,
+     "tokens": 661,
+     "top": "skills/wake/scripts/dirty_worktrees.py",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "s03",
+     "kind": "symbol",
+     "question": "safe_task_id",
+     "grep_pattern": "safe_task_id",
+     "expected_paths": [
+      ".claude/hooks/lib/board/moments.py"
+     ]
+    },
+    "context": {
+     "id": "s03",
+     "seconds": 0.13744854800461326,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 4177,
+     "tokens": 1045,
+     "top": ".claude/hooks/lib/board/moments.py",
+     "top_score": 2.7461,
+     "indexing": false
+    },
+    "old": {
+     "id": "s03",
+     "seconds": 0.009268686997529585,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 8460,
+     "tokens": 2115,
+     "top": ".claude/hooks/lib/board/moments.py",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "s03",
+     "seconds": 0.009537349993479438,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 2921,
+     "tokens": 731,
+     "top": ".claude/hooks/lib/board/moments.py",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "s04",
+     "kind": "symbol",
+     "question": "split_by_assignee",
+     "grep_pattern": "split_by_assignee",
+     "expected_paths": [
+      ".claude/hooks/lib/board/moments.py"
+     ]
+    },
+    "context": {
+     "id": "s04",
+     "seconds": 0.14675454200187232,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 6166,
+     "tokens": 1542,
+     "top": ".claude/hooks/lib/board/moments.py",
+     "top_score": 2.5649,
+     "indexing": false
+    },
+    "old": {
+     "id": "s04",
+     "seconds": 0.011175676001585089,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 10608,
+     "tokens": 2652,
+     "top": ".claude/hooks/lib/board/moments.py",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "s04",
+     "seconds": 0.009564646003127564,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 3430,
+     "tokens": 858,
+     "top": ".claude/hooks/lib/board/moments.py",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "s05",
+     "kind": "symbol",
+     "question": "harness_manifest_exclusions",
+     "grep_pattern": "harness_manifest_exclusions",
+     "expected_paths": [
+      "lib/harness-fetch.sh"
+     ]
+    },
+    "context": {
+     "id": "s05",
+     "seconds": 0.11747622700204374,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 12111,
+     "tokens": 3028,
+     "top": "tasks/TASK_REVIEW_T122.md",
+     "top_score": 0.6765,
+     "indexing": false
+    },
+    "old": {
+     "id": "s05",
+     "seconds": 0.008482330995320808,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 27607,
+     "tokens": 6902,
+     "top": "lib/harness-fetch.sh",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "s05",
+     "seconds": 0.008162359001289587,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 3302,
+     "tokens": 826,
+     "top": "lib/harness-fetch.sh",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "s06",
+     "kind": "symbol",
+     "question": "CLAUDE_STEP_LIMIT",
+     "grep_pattern": "CLAUDE_STEP_LIMIT",
+     "expected_paths": [
+      ".claude/hooks/pre_agent_step_limit.py"
+     ]
+    },
+    "context": {
+     "id": "s06",
+     "seconds": 0.11588042700168444,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 4354,
+     "tokens": 1089,
+     "top": "tests/test_site_content.py",
+     "top_score": 0.5984,
+     "indexing": false
+    },
+    "old": {
+     "id": "s06",
+     "seconds": 0.008262187999207526,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 26537,
+     "tokens": 6635,
+     "top": ".claude/hooks/tests/test_step_limit_self_clearing.py",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "s06",
+     "seconds": 0.007961253999383189,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 3295,
+     "tokens": 824,
+     "top": ".claude/hooks/tests/test_step_limit_self_clearing.py",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "s07",
+     "kind": "symbol",
+     "question": "bash_writes_file",
+     "grep_pattern": "bash_writes_file",
+     "expected_paths": [
+      "scripts/token_meter.py"
+     ]
+    },
+    "context": {
+     "id": "s07",
+     "seconds": 0.13172389200190082,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 5538,
+     "tokens": 1385,
+     "top": "scripts/token_meter.py",
+     "top_score": 2.593,
+     "indexing": false
+    },
+    "old": {
+     "id": "s07",
+     "seconds": 0.010186722996877506,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 33323,
+     "tokens": 8331,
+     "top": "scripts/token_meter.py",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "s07",
+     "seconds": 0.01019693600392202,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 2963,
+     "tokens": 741,
+     "top": "scripts/token_meter.py",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "d01",
+     "kind": "doc",
+     "question": "Why do we keep saved tool output inside the repo?",
+     "grep_pattern": "saved tool output|Saved tool output",
+     "expected_paths": [
+      "docs/ddr/0008-saved-tool-output-lives-inside-the-repo.md"
+     ]
+    },
+    "context": {
+     "id": "d01",
+     "seconds": 0.13325857399468077,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 7105,
+     "tokens": 1777,
+     "top": "docs/ddr/0008-saved-tool-output-lives-inside-the-repo.md",
+     "top_score": 0.5096,
+     "indexing": false
+    },
+    "old": {
+     "id": "d01",
+     "seconds": 0.00961555400135694,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 5033,
+     "tokens": 1259,
+     "top": "docs/ddr/0008-saved-tool-output-lives-inside-the-repo.md",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "d01",
+     "seconds": 0.009636492999561597,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 2224,
+     "tokens": 556,
+     "top": "docs/ddr/0008-saved-tool-output-lives-inside-the-repo.md",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "d02",
+     "kind": "doc",
+     "question": "Why is the installer one confirmed menu instead of several separate commands?",
+     "grep_pattern": "menu-driven|menu",
+     "expected_paths": [
+      "docs/adr/0002-one-confirmed-menu-driven-installer.md"
+     ]
+    },
+    "context": {
+     "id": "d02",
+     "seconds": 0.11538986400410067,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 9104,
+     "tokens": 2276,
+     "top": "memory/decisions.md",
+     "top_score": 0.5725,
+     "indexing": false
+    },
+    "old": {
+     "id": "d02",
+     "seconds": 0.013970070001960266,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 161072,
+     "tokens": 40268,
+     "top": "tasks/TASK_REVIEW_T115.md",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "d02",
+     "seconds": 0.01332727699627867,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 6106,
+     "tokens": 1527,
+     "top": "tasks/TASK_REVIEW_T115.md",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "d03",
+     "kind": "doc",
+     "question": "What goes in the verbatim-preserve list when a reply is shortened?",
+     "grep_pattern": "Verbatim-preserve|verbatim",
+     "expected_paths": [
+      "docs/claude-md/token-economy.md"
+     ]
+    },
+    "context": {
+     "id": "d03",
+     "seconds": 0.12320170199382119,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 7070,
+     "tokens": 1768,
+     "top": "docs/claude-md/token-economy.md",
+     "top_score": 0.5689,
+     "indexing": false
+    },
+    "old": {
+     "id": "d03",
+     "seconds": 0.013670202999492176,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 366815,
+     "tokens": 91704,
+     "top": "memory/learnings.md",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "d03",
+     "seconds": 0.013464096002280712,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 25063,
+     "tokens": 6266,
+     "top": "memory/learnings.md",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "d04",
+     "kind": "doc",
+     "question": "Why does Vital Slice extend Simplicity First, and what is AC-immunity?",
+     "grep_pattern": "AC-immunity",
+     "expected_paths": [
+      "docs/ddr/0005-vital-slice-extends-simplicity-first.md"
+     ]
+    },
+    "context": {
+     "id": "d04",
+     "seconds": 0.11703099799342453,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 8476,
+     "tokens": 2119,
+     "top": "docs/ddr/0005-vital-slice-extends-simplicity-first.md",
+     "top_score": 0.6225,
+     "indexing": false
+    },
+    "old": {
+     "id": "d04",
+     "seconds": 0.009357765993627254,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 20293,
+     "tokens": 5074,
+     "top": ".claude/hooks/tests/test_vital_slice.py",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "d04",
+     "seconds": 0.009499363004579209,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 2633,
+     "tokens": 659,
+     "top": ".claude/hooks/tests/test_vital_slice.py",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "m01",
+     "kind": "multi_hop",
+     "question": "Which script verifies the event-trace hash chain, and which test file covers the chain logic?",
+     "grep_pattern": "verify_trace|trace_chain",
+     "expected_paths": [
+      "scripts/verify_trace.py",
+      ".claude/hooks/tests/test_trace_chain.py"
+     ]
+    },
+    "context": {
+     "id": "m01",
+     "seconds": 0.12540391000220552,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 8521,
+     "tokens": 2131,
+     "top": "tasks/TASK_GUIDE_T148.md",
+     "top_score": 0.6154,
+     "indexing": false
+    },
+    "old": {
+     "id": "m01",
+     "seconds": 0.014438523998251185,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 28586,
+     "tokens": 7147,
+     "top": "tasks/TASK_REVIEW_T148.md",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "m01",
+     "seconds": 0.014608400997531135,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 8079,
+     "tokens": 2020,
+     "top": "tasks/TASK_REVIEW_T148.md",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "m02",
+     "kind": "multi_hop",
+     "question": "Where is the pull-moment command defined, and which test file tests it?",
+     "grep_pattern": "pull_moment",
+     "expected_paths": [
+      "scripts/pull_moment.py",
+      "tests/test_pull_moments.py"
+     ]
+    },
+    "context": {
+     "id": "m02",
+     "seconds": 0.12327858700155048,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 4895,
+     "tokens": 1224,
+     "top": "tasks/TASK_GUIDE_T171.md",
+     "top_score": 0.582,
+     "indexing": false
+    },
+    "old": {
+     "id": "m02",
+     "seconds": 0.010176583004067652,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 24841,
+     "tokens": 6211,
+     "top": "tasks/TASK_REVIEW_T157.md",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "m02",
+     "seconds": 0.00994648999767378,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 5169,
+     "tokens": 1293,
+     "top": "tasks/TASK_REVIEW_T157.md",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "m03",
+     "kind": "multi_hop",
+     "question": "Where is my_review_tasks defined, and which test checks the merge-gate review filter?",
+     "grep_pattern": "my_review_tasks",
+     "expected_paths": [
+      ".claude/hooks/lib/board/moments.py",
+      "tests/test_merge_gate_review_filter.py"
+     ]
+    },
+    "context": {
+     "id": "m03",
+     "seconds": 0.11812490800366504,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 6060,
+     "tokens": 1515,
+     "top": "skills/bugfix/SKILL.md",
+     "top_score": 0.6463,
+     "indexing": false
+    },
+    "old": {
+     "id": "m03",
+     "seconds": 0.010183685997617431,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 25693,
+     "tokens": 6424,
+     "top": ".claude/hooks/pre_bash_block_unsafe_merge.py",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "m03",
+     "seconds": 0.00956935800059,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 4168,
+     "tokens": 1042,
+     "top": ".claude/hooks/pre_bash_block_unsafe_merge.py",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "m04",
+     "kind": "multi_hop",
+     "question": "Which script compares a branch diff to the declared lane, and which test covers it?",
+     "grep_pattern": "lane_check",
+     "expected_paths": [
+      "scripts/lane_check.py",
+      "tests/test_lane_check.py"
+     ]
+    },
+    "context": {
+     "id": "m04",
+     "seconds": 0.115929961000802,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 9519,
+     "tokens": 2380,
+     "top": "tasks/TASK_REVIEW_T144.md",
+     "top_score": 0.5543,
+     "indexing": false
+    },
+    "old": {
+     "id": "m04",
+     "seconds": 0.009625914994103368,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 23118,
+     "tokens": 5780,
+     "top": "tasks/TASK_REVIEW_T144.md",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "m04",
+     "seconds": 0.009136282998952083,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 4858,
+     "tokens": 1215,
+     "top": "tasks/TASK_REVIEW_T144.md",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "m05",
+     "kind": "multi_hop",
+     "question": "Where is the harness_backup_path shell function defined, and which test script checks install backups?",
+     "grep_pattern": "harness_backup_path",
+     "expected_paths": [
+      "lib/harness-fetch.sh",
+      "tests/test_install_backups.sh"
+     ]
+    },
+    "context": {
+     "id": "m05",
+     "seconds": 0.12517364200175507,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 10248,
+     "tokens": 2562,
+     "top": "memory/decisions.md",
+     "top_score": 0.6825,
+     "indexing": false
+    },
+    "old": {
+     "id": "m05",
+     "seconds": 0.009227762006048579,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 24214,
+     "tokens": 6054,
+     "top": "tasks/TASK_GUIDE_T137.md",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "m05",
+     "seconds": 0.009642689998145215,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 4121,
+     "tokens": 1031,
+     "top": "tasks/TASK_GUIDE_T137.md",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "e01",
+     "kind": "exact_text",
+     "question": "is In Progress but unassigned",
+     "grep_pattern": "is In Progress but unassigned",
+     "expected_paths": [
+      ".claude/hooks/lib/board/moments.py"
+     ]
+    },
+    "context": {
+     "id": "e01",
+     "seconds": 0.11630054900160758,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 8846,
+     "tokens": 2212,
+     "top": "tests/test_merge_gate_review_filter.py",
+     "top_score": 0.4294,
+     "indexing": false
+    },
+    "old": {
+     "id": "e01",
+     "seconds": 0.00887256699934369,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 8316,
+     "tokens": 2079,
+     "top": ".claude/hooks/lib/board/moments.py",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "e01",
+     "seconds": 0.009856892000243533,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 3832,
+     "tokens": 958,
+     "top": ".claude/hooks/lib/board/moments.py",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "e02",
+     "kind": "exact_text",
+     "question": "Killing this call to prevent an infinite loop",
+     "grep_pattern": "Killing this call to prevent",
+     "expected_paths": [
+      ".claude/hooks/pre_agent_step_limit.py"
+     ]
+    },
+    "context": {
+     "id": "e02",
+     "seconds": 0.11588332000246737,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 8885,
+     "tokens": 2222,
+     "top": "skills/diagnose/SKILL.md",
+     "top_score": 0.4857,
+     "indexing": false
+    },
+    "old": {
+     "id": "e02",
+     "seconds": 0.009430701000383124,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 9569,
+     "tokens": 2393,
+     "top": ".claude/hooks/pre_agent_step_limit.py",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "e02",
+     "seconds": 0.009503909997874871,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 2305,
+     "tokens": 577,
+     "top": ".claude/hooks/pre_agent_step_limit.py",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "e03",
+     "kind": "exact_text",
+     "question": "changed while you were working",
+     "grep_pattern": "changed while you were working",
+     "expected_paths": [
+      "scripts/pull_moment.py"
+     ]
+    },
+    "context": {
+     "id": "e03",
+     "seconds": 0.12539789699803805,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 3914,
+     "tokens": 979,
+     "top": "tasks/TASK_GUIDE_T080.md",
+     "top_score": 0.3737,
+     "indexing": false
+    },
+    "old": {
+     "id": "e03",
+     "seconds": 0.008275053995021153,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 10313,
+     "tokens": 2579,
+     "top": "tests/test_pull_moments.py",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "e03",
+     "seconds": 0.00863378199574072,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 2062,
+     "tokens": 516,
+     "top": "tests/test_pull_moments.py",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "e04",
+     "kind": "exact_text",
+     "question": "UNANCHORED",
+     "grep_pattern": "UNANCHORED",
+     "expected_paths": [
+      "scripts/verify_trace.py"
+     ]
+    },
+    "context": {
+     "id": "e04",
+     "seconds": 0.11465376800333615,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 1618,
+     "tokens": 405,
+     "top": ".claude/markers/T115.exit",
+     "top_score": 0.3075,
+     "indexing": false
+    },
+    "old": {
+     "id": "e04",
+     "seconds": 0.007917773997178301,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 8127,
+     "tokens": 2032,
+     "top": "scripts/verify_trace.py",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "e04",
+     "seconds": 0.007569179993879516,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 2243,
+     "tokens": 561,
+     "top": "scripts/verify_trace.py",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "e05",
+     "kind": "exact_text",
+     "question": "Linear rejected the query (GraphQL error)",
+     "grep_pattern": "Linear rejected the query",
+     "expected_paths": [
+      ".claude/hooks/lib/board/linear.py"
+     ]
+    },
+    "context": {
+     "id": "e05",
+     "seconds": 0.1167086540008313,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 6376,
+     "tokens": 1594,
+     "top": "tests/test_board_decisions.py",
+     "top_score": 0.6095,
+     "indexing": false
+    },
+    "old": {
+     "id": "e05",
+     "seconds": 0.009162062000541482,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 21369,
+     "tokens": 5343,
+     "top": "tests/test_board_decisions.py",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "e05",
+     "seconds": 0.009934693996910937,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 2961,
+     "tokens": 741,
+     "top": "tests/test_board_decisions.py",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "k01",
+     "kind": "callers",
+     "question": "Which script outside tests calls safe_task_id?",
+     "grep_pattern": "safe_task_id\\(",
+     "expected_paths": [
+      "scripts/pull_moment.py"
+     ]
+    },
+    "context": {
+     "id": "k01",
+     "seconds": 0.12311692799994489,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 4712,
+     "tokens": 1178,
+     "top": "tests/test_pull_moments.py",
+     "top_score": 0.591,
+     "indexing": false
+    },
+    "old": {
+     "id": "k01",
+     "seconds": 0.010854334002942778,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 8362,
+     "tokens": 2091,
+     "top": ".claude/hooks/lib/board/moments.py",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "k01",
+     "seconds": 0.009742376001668163,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 2892,
+     "tokens": 723,
+     "top": ".claude/hooks/lib/board/moments.py",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "k02",
+     "kind": "callers",
+     "question": "Which files outside tests call chain_hash (not the file that defines it)?",
+     "grep_pattern": "chain_hash\\(",
+     "expected_paths": [
+      ".claude/hooks/post_tool_trace.py",
+      "scripts/verify_trace.py"
+     ]
+    },
+    "context": {
+     "id": "k02",
+     "seconds": 0.12976119599625235,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 10438,
+     "tokens": 2610,
+     "top": "tasks/TASK_REVIEW_T148.md",
+     "top_score": 0.5492,
+     "indexing": false
+    },
+    "old": {
+     "id": "k02",
+     "seconds": 0.0077682159972027875,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 13908,
+     "tokens": 3477,
+     "top": ".claude/hooks/tests/test_trace_chain.py",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "k02",
+     "seconds": 0.0086004699987825,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 3026,
+     "tokens": 757,
+     "top": ".claude/hooks/tests/test_trace_chain.py",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "k03",
+     "kind": "callers",
+     "question": "Which file outside tests calls my_review_tasks (not the file that defines it)?",
+     "grep_pattern": "my_review_tasks\\(",
+     "expected_paths": [
+      ".claude/hooks/pre_bash_block_unsafe_merge.py"
+     ]
+    },
+    "context": {
+     "id": "k03",
+     "seconds": 0.1250267210052698,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 2551,
+     "tokens": 638,
+     "top": "tasks/TASK_REVIEW_T114.md",
+     "top_score": 0.6041,
+     "indexing": false
+    },
+    "old": {
+     "id": "k03",
+     "seconds": 0.007997610002348665,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 8518,
+     "tokens": 2130,
+     "top": ".claude/hooks/lib/board/moments.py",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "k03",
+     "seconds": 0.008151262998580933,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 3960,
+     "tokens": 990,
+     "top": ".claude/hooks/lib/board/moments.py",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "k04",
+     "kind": "callers",
+     "question": "Which files outside tests call anchor_path (not the file that defines it)?",
+     "grep_pattern": "anchor_path\\(",
+     "expected_paths": [
+      ".claude/hooks/post_tool_trace.py",
+      "scripts/verify_trace.py"
+     ]
+    },
+    "context": {
+     "id": "k04",
+     "seconds": 0.1159518089989433,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 4857,
+     "tokens": 1215,
+     "top": ".claude/hooks/tests/conftest.py",
+     "top_score": 0.5934,
+     "indexing": false
+    },
+    "old": {
+     "id": "k04",
+     "seconds": 0.0077124250019551255,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 3584,
+     "tokens": 896,
+     "top": ".claude/hooks/lib/trace_chain.py",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "k04",
+     "seconds": 0.008816525994916447,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 2062,
+     "tokens": 516,
+     "top": ".claude/hooks/lib/trace_chain.py",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "k05",
+     "kind": "callers",
+     "question": "Which files outside tests call pull_cache (not the file that defines it)?",
+     "grep_pattern": "pull_cache\\(",
+     "expected_paths": [
+      ".claude/hooks/pre_bash_block_unsafe_merge.py",
+      "scripts/pull_moment.py"
+     ]
+    },
+    "context": {
+     "id": "k05",
+     "seconds": 0.11817229000007501,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 8284,
+     "tokens": 2071,
+     "top": ".claude/hooks/tests/test_memory_hook_heredoc_data.py",
+     "top_score": 0.5038,
+     "indexing": false
+    },
+    "old": {
+     "id": "k05",
+     "seconds": 0.007920213996840175,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 8539,
+     "tokens": 2135,
+     "top": ".claude/hooks/lib/board/moments.py",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "k05",
+     "seconds": 0.008724923995032441,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 2968,
+     "tokens": 742,
+     "top": ".claude/hooks/lib/board/moments.py",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "n01",
+     "kind": "negative",
+     "question": "Where is the MongoDB connection set up?",
+     "grep_pattern": "mongo",
+     "expected_paths": []
+    },
+    "context": {
+     "id": "n01",
+     "seconds": 0.11153652000211878,
+     "hit1": null,
+     "hit5": null,
+     "chars": 3112,
+     "tokens": 778,
+     "top": "tests/test_pull_moments.py",
+     "top_score": 0.272,
+     "indexing": false
+    },
+    "old": {
+     "id": "n01",
+     "seconds": 0.012143748994276393,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 0,
+     "tokens": 0,
+     "top": "(none)",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "n01",
+     "seconds": 0.011933114001294598,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 0,
+     "tokens": 0,
+     "top": "(none)",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "n02",
+     "kind": "negative",
+     "question": "Which module configures the RabbitMQ queue?",
+     "grep_pattern": "rabbitmq",
+     "expected_paths": []
+    },
+    "context": {
+     "id": "n02",
+     "seconds": 0.11806272700050613,
+     "hit1": null,
+     "hit5": null,
+     "chars": 5032,
+     "tokens": 1258,
+     "top": "tests/test_board_push.py",
+     "top_score": 0.4242,
+     "indexing": false
+    },
+    "old": {
+     "id": "n02",
+     "seconds": 0.006916393002029508,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 0,
+     "tokens": 0,
+     "top": "(none)",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "n02",
+     "seconds": 0.0057430180022493005,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 0,
+     "tokens": 0,
+     "top": "(none)",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "n03",
+     "kind": "negative",
+     "question": "Where is the PostgreSQL migration for the users table?",
+     "grep_pattern": "postgres",
+     "expected_paths": []
+    },
+    "context": {
+     "id": "n03",
+     "seconds": 0.16273140200064518,
+     "hit1": null,
+     "hit5": null,
+     "chars": 4182,
+     "tokens": 1046,
+     "top": "skills/migration-safety/SKILL.md",
+     "top_score": 0.4121,
+     "indexing": false
+    },
+    "old": {
+     "id": "n03",
+     "seconds": 0.010683772998163477,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 0,
+     "tokens": 0,
+     "top": "(none)",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "n03",
+     "seconds": 0.010028291995695326,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 0,
+     "tokens": 0,
+     "top": "(none)",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "n04",
+     "kind": "negative",
+     "question": "Where is the Elasticsearch index mapping defined?",
+     "grep_pattern": "elasticsearch",
+     "expected_paths": []
+    },
+    "context": {
+     "id": "n04",
+     "seconds": 0.12640194199775578,
+     "hit1": null,
+     "hit5": null,
+     "chars": 2461,
+     "tokens": 616,
+     "top": "packs/devops/skills/infra-safety/SKILL.md",
+     "top_score": 0.3337,
+     "indexing": false
+    },
+    "old": {
+     "id": "n04",
+     "seconds": 0.009087124002689961,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 0,
+     "tokens": 0,
+     "top": "(none)",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "n04",
+     "seconds": 0.008313647995237261,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 0,
+     "tokens": 0,
+     "top": "(none)",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "n05",
+     "kind": "negative",
+     "question": "Where is the Stripe payment webhook handled?",
+     "grep_pattern": "stripe",
+     "expected_paths": []
+    },
+    "context": {
+     "id": "n05",
+     "seconds": 0.10929140199732501,
+     "hit1": null,
+     "hit5": null,
+     "chars": 5314,
+     "tokens": 1329,
+     "top": "docs/token-focus-finding-2026-09-25.md",
+     "top_score": 0.2981,
+     "indexing": false
+    },
+    "old": {
+     "id": "n05",
+     "seconds": 0.013475334999384359,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 0,
+     "tokens": 0,
+     "top": "(none)",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "n05",
+     "seconds": 0.012578950998431537,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 0,
+     "tokens": 0,
+     "top": "(none)",
+     "top_score": null,
+     "indexing": false
+    }
+   }
+  ],
+  "summary": {
+   "context": {
+    "n": 34,
+    "hit1": 7,
+    "hit5": 16,
+    "median_s": 0.11853270400024485,
+    "tokens": 62103
+   },
+   "old": {
+    "n": 39,
+    "hit1": 15,
+    "hit5": 28,
+    "median_s": 0.00973738400352886,
+    "tokens": 365769
+   },
+   "old_bounded": {
+    "n": 39,
+    "hit1": 15,
+    "hit5": 28,
+    "median_s": 0.009642689998145215,
+    "tokens": 37332
+   }
+  },
+  "per_kind": {
+   "conceptual": {
+    "context": {
+     "n": 8,
+     "hit1": 0,
+     "hit5": 3
+    },
+    "old": {
+     "n": 8,
+     "hit1": 1,
+     "hit5": 4
+    },
+    "old_bounded": {
+     "n": 8,
+     "hit1": 1,
+     "hit5": 4
+    }
+   },
+   "symbol": {
+    "context": {
+     "n": 7,
+     "hit1": 4,
+     "hit5": 5
+    },
+    "old": {
+     "n": 7,
+     "hit1": 5,
+     "hit5": 5
+    },
+    "old_bounded": {
+     "n": 7,
+     "hit1": 5,
+     "hit5": 5
+    }
+   },
+   "doc": {
+    "context": {
+     "n": 4,
+     "hit1": 3,
+     "hit5": 4
+    },
+    "old": {
+     "n": 4,
+     "hit1": 1,
+     "hit5": 2
+    },
+    "old_bounded": {
+     "n": 4,
+     "hit1": 1,
+     "hit5": 2
+    }
+   },
+   "multi_hop": {
+    "context": {
+     "n": 5,
+     "hit1": 0,
+     "hit5": 1
+    },
+    "old": {
+     "n": 5,
+     "hit1": 0,
+     "hit5": 2
+    },
+    "old_bounded": {
+     "n": 5,
+     "hit1": 0,
+     "hit5": 2
+    }
+   },
+   "exact_text": {
+    "context": {
+     "n": 5,
+     "hit1": 0,
+     "hit5": 3
+    },
+    "old": {
+     "n": 5,
+     "hit1": 3,
+     "hit5": 5
+    },
+    "old_bounded": {
+     "n": 5,
+     "hit1": 3,
+     "hit5": 5
+    }
+   },
+   "callers": {
+    "context": {
+     "n": 5,
+     "hit1": 0,
+     "hit5": 0
+    },
+    "old": {
+     "n": 5,
+     "hit1": 0,
+     "hit5": 5
+    },
+    "old_bounded": {
+     "n": 5,
+     "hit1": 0,
+     "hit5": 5
+    }
+   },
+   "negative": {
+    "context": {
+     "n": 0,
+     "hit1": 0,
+     "hit5": 0
+    },
+    "old": {
+     "n": 5,
+     "hit1": 5,
+     "hit5": 5
+    },
+    "old_bounded": {
+     "n": 5,
+     "hit1": 5,
+     "hit5": 5
+    }
+   }
+  },
+  "indexing_note": false
+ },
+ "recommendation_text": "On 34 scored questions in script mode, the context way hit@5 16/34 against 28/39 (grep + whole-file Read) and 28/39 (bounded grep + ranged Read). Estimated tokens: 62103 vs 365769 vs 37332; median time 0.119s vs 0.010s vs 0.010s. With real agents the context agent was right 38/39 times and the grep+Read agent 39/39; total tokens 1097720 vs 792769, cost $2.72 vs $1.34, median time 8.0s vs 8.4s. Grep + Read was more accurate on: exact_text. Upkeep: a full re-index takes 6.7s and an incremental one 0.2s for 10 touched files; after an edit, search returned the old text until the file was re-indexed. Recommendation: use Grep/Glob/Read by default, with ranged reads, because it was as accurate and cheaper overall. Reach for context search first only when you have no keyword to grep - a natural-language question about intent or a decision. By real-agent tokens, context search was cheaper and at least as accurate on: symbol, doc; grep + Read was cheaper or more accurate on: conceptual, multi_hop, exact_text, callers, negative. Session lifecycle: context: Q2 cost $0.078 resumed in the same session vs $0.071 in a closed + fresh one (cache_creation 2080 vs 7722 tokens); old: Q2 cost $0.061 resumed in the same session vs $0.047 in a closed + fresh one (cache_creation 1171 vs 4050 tokens). A resume after the 5-minute cache window still read most of its prompt from cache, so the cache did not visibly expire; parallel chains share one prompt prefix and keep it warm, which this test cannot separate from expiry.",
+ "upkeep": {
+  "full_reindex_s": 6.68958587799716,
+  "files": 623,
+  "slices": 7213,
+  "noop_reindex_s": 0.23970421600097325,
+  "touch_1_reindex_s": 0.24077798199868994,
+  "touch_10_reindex_s": 0.2424450809994596,
+  "add_1_new_file_reindex_s": 0.26344409500597976,
+  "staleness": {
+   "new_file_found": true,
+   "after_edit_old_text_still_returned": true,
+   "after_edit_new_text_found": false,
+   "after_reindex_new_text_found": true,
+   "after_delete_before_reindex_still_returned": true,
+   "after_delete_and_reindex_still_returned": false
+  },
+  "git_status_unchanged": true
+ },
+ "agent": {
+  "rows": [
+   {
+    "q": {
+     "id": "c01",
+     "kind": "conceptual",
+     "question": "Where is a push blocked when one of my tasks is still In Progress?",
+     "grep_pattern": "my_blocking_tasks|In Progress",
+     "expected_paths": [
+      ".claude/hooks/pre_bash_block_unsafe_merge.py",
+      ".claude/hooks/lib/board/moments.py"
+     ]
+    },
+    "context": {
+     "seconds": 14.165,
+     "input": 10,
+     "output": 796,
+     "cache_read": 35022,
+     "cache_creation": 12900,
+     "tokens": 48728,
+     "cost": 0.1261644,
+     "turns": 5,
+     "hit": 1,
+     "error": false,
+     "session_id": "68063b8f-d4da-4871-a89c-12047c4745d4",
+     "answer": "1. `.claude/hooks/pre_bash_block_unsafe_merge.py`: this is the PreToolUse Bash hook (the \"merge gate\") that blocks `git push`/`git merge` while a task on `PROJECT_KANBAN.md` is In Progress. In `online` board mode, it first pulls the board and blocks only on tasks assigned to you.\n2. `.claude/hooks/tests/test_merge_gate_my_tasks.py`: its tests show the rule in practice, where your In Progress task blocks the push and a teammate's does not.\n\nThe index doesn't return the hook file's own code, so I'm naming it because the tests, task guides and `memory/learnings.md` all point to it as the entry po",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 7.817,
+     "input": 6,
+     "output": 416,
+     "cache_read": 16763,
+     "cache_creation": 4954,
+     "tokens": 22139,
+     "cost": 0.0513286,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "e72c1cb7-dd69-4c33-a928-e6a31b56ccb1",
+     "answer": "`.claude/hooks/pre_bash_block_unsafe_merge.py` is the file. It's the pre-Bash hook that catches `git push`, merge and rebase commands, and it blocks them with \"Tasks still In Progress: \u2026\" when any of your tasks are in the In Progress section of `PROJECT_KANBAN.md` (see lines 5\u20136, 458 and 485).",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "c02",
+     "kind": "conceptual",
+     "question": "What stops a sub-agent that makes too many tool calls without reaching Ready for Review?",
+     "grep_pattern": "STEP_LIMIT",
+     "expected_paths": [
+      ".claude/hooks/pre_agent_step_limit.py"
+     ]
+    },
+    "context": {
+     "seconds": 17.244,
+     "input": 10,
+     "output": 754,
+     "cache_read": 46246,
+     "cache_creation": 10748,
+     "tokens": 57758,
+     "cost": 0.1103532,
+     "turns": 5,
+     "hit": 1,
+     "error": false,
+     "session_id": "5dad0a53-b738-4fdf-8de0-73c9d8ddeeb8",
+     "answer": "1. `.claude/hooks/pre_agent_step_limit.py` \u2014 This PreToolUse hook counts each task's tool calls and blocks the call that goes over `CLAUDE_STEP_LIMIT` (default 90), so a stuck agent has to stop and report. Since T057 it resets the counter when it blocks, so it interrupts a loop rather than stopping it for good. Reaching Ready for Review doesn't reset the count, because `post_agent_move_to_review.py` only sends a reminder; the counter is only cleared by that self-reset or by expiring after 6 hours.\n2. `.claude/hooks/tests/test_step_limit_self_clearing.py` \u2014 Its tests check the default limit and",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 11.543,
+     "input": 6,
+     "output": 548,
+     "cache_read": 18410,
+     "cache_creation": 3885,
+     "tokens": 22849,
+     "cost": 0.045746,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "fd648209-96bd-4eca-8027-68a93a8b43ff",
+     "answer": "The most relevant file is `.claude/hooks/pre_agent_step_limit.py`. It's a PreToolUse hook that counts each task's tool calls per session and blocks the call that goes over `CLAUDE_STEP_LIMIT` (default 90), forcing the agent to stop and report.\n\nTwo other files add context:\n- `tasks/TASK_GUIDE_T057.md` explains the design change where the counter resets when the block fires. The over-limit call still dies, but the session isn't locked out for good.\n- `tasks/TASK_GUIDE_T056.md` explains why the counter is keyed by session as well as task: one session's used-up budget used to block other sessions",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "c03",
+     "kind": "conceptual",
+     "question": "How does the installer avoid destroying a project's existing file when it installs over it?",
+     "grep_pattern": "harness_backup_path|\\.bak-",
+     "expected_paths": [
+      "lib/harness-fetch.sh"
+     ]
+    },
+    "context": {
+     "seconds": 6.845,
+     "input": 4,
+     "output": 373,
+     "cache_read": 10113,
+     "cache_creation": 6254,
+     "tokens": 16744,
+     "cost": 0.0595306,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "182ad6e1-7597-48f4-961d-e6c513d25a8d",
+     "answer": "Most relevant files:\n\n1. `lib/harness-fetch.sh`: its public helper `harness_backup_path` runs before the kit's copy lands. It moves an existing destination that differs from the kit's to the first free `.bak`, `.bak.1`, `.bak.2`\u2026 and prints a `[warn]` line naming the backup. Identical content is left alone, and an existing backup is never overwritten.\n2. `memory/decisions.md`: the 2026-09-18 T112 decision entry (\"Install is backup-then-overwrite\") explains why it works this way. It also lists the exact rules for files, directories and symlinks.\n3. `setup.sh`: `install_would_back_up` and `plan_",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 12.554,
+     "input": 8,
+     "output": 793,
+     "cache_read": 25117,
+     "cache_creation": 4080,
+     "tokens": 29998,
+     "cost": 0.0535554,
+     "turns": 6,
+     "hit": 1,
+     "error": false,
+     "session_id": "1eebcba2-afab-41e9-a0c9-c6c472df6b17",
+     "answer": "**Answer:** `lib/harness-fetch.sh`. Its `harness_backup_path` function (around lines 254\u2013268) leaves the project's file alone if it already matches the kit's version. If it differs, the function moves it aside to `<file>.bak-<id>`, or to the next free `.N` name, and prints a `[warn]` line naming the backup. An earlier backup is never overwritten.\n\nRelated files:\n- `setup.sh`: the installer that calls this function before copying each file (e.g. line 330).\n- `tests/test_install_backups.sh`: the tests for this backup behaviour.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "c04",
+     "kind": "conceptual",
+     "question": "How do we detect that someone edited a task's event trace after it was written?",
+     "grep_pattern": "ANCHOR MISMATCH|anchor",
+     "expected_paths": [
+      "scripts/verify_trace.py",
+      ".claude/hooks/lib/trace_chain.py"
+     ]
+    },
+    "context": {
+     "seconds": 11.572,
+     "input": 4,
+     "output": 349,
+     "cache_read": 10110,
+     "cache_creation": 5879,
+     "tokens": 16342,
+     "cost": 0.05605,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "c355deb7-8523-4739-8695-f7c48c6674da",
+     "answer": "1. `scripts/verify_trace.py`\n2. `.claude/hooks/lib/trace_chain.py`\n3. `tasks/TASK_GUIDE_T148.md`\n\nEvery line in a trace links to the line before it through a hash, and the newest hash is also copied to a file outside the repo that agents can't write to. `verify_trace.py` checks both and reports INTACT, BROKEN at line N, ANCHOR MISMATCH at line N, or UNANCHORED. An ANCHOR MISMATCH catches an editor who changed a line and recomputed every hash after it. `trace_chain.py` holds the shared hashing and anchor-path code, and its docstring explains the scheme. The T148 task guide covers why it was bui",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 9.919,
+     "input": 6,
+     "output": 590,
+     "cache_read": 19128,
+     "cache_creation": 5275,
+     "tokens": 24999,
+     "cost": 0.0578496,
+     "turns": 4,
+     "hit": 1,
+     "error": false,
+     "session_id": "d1de9c7d-8d8c-44c2-9a38-19be56893012",
+     "answer": "1. `scripts/verify_trace.py`\n2. `.claude/hooks/lib/trace_chain.py`\n\nThe first is the checker you run as `python3 scripts/verify_trace.py <task>`. It compares the task's trace against a hash chain and against an anchor file kept outside the repo, and prints INTACT, BROKEN, ANCHOR MISMATCH, UNVERIFIED or UNANCHORED. The second explains how the check works: each trace line stores the hash of the line before it, and the hash of every line is also copied to `~/.claude/harness-anchors/`, which agents aren't allowed to write to.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "c05",
+     "kind": "conceptual",
+     "question": "How is the memory slice for a spawn prompt chosen from MEMORY.md?",
+     "grep_pattern": "memory.slice|memory_slice",
+     "expected_paths": [
+      "skills/craft-spawn-prompt/scripts/memory_slice.py"
+     ]
+    },
+    "context": {
+     "seconds": 9.104,
+     "input": 6,
+     "output": 430,
+     "cache_read": 19787,
+     "cache_creation": 8614,
+     "tokens": 28837,
+     "cost": 0.0814934,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "2864d05f-ed3a-4685-9728-c57e7f80e488",
+     "answer": "1. `skills/craft-spawn-prompt/scripts/memory_slice.py`: this script does the selection. It pulls match keys from the task guide (backticked file paths and their basenames, the `**Depends on**` task IDs, and the task's own ID). It then keeps every `MEMORY.md` index line that contains a key, ranks them by how many different keys they hit, and stops adding lines before the output would pass the 30-line / 4,000-char cap (see `build_hot_cold`).\n2. `tasks/TASK_GUIDE_T125.md`: the task that created the slice; its acceptance criteria set out those same key, grouping and cap rules in plain prose.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 13.915,
+     "input": 8,
+     "output": 697,
+     "cache_read": 26266,
+     "cache_creation": 4439,
+     "tokens": 31410,
+     "cost": 0.0547372,
+     "turns": 5,
+     "hit": 1,
+     "error": false,
+     "session_id": "68ba3d16-aa2a-4480-83ea-9d5f08eb8bf0",
+     "answer": "1. `skills/craft-spawn-prompt/scripts/memory_slice.py` is the script that builds the slice. It takes keys from the task guide: file paths in the *Files to Change* and *Files Must NOT Touch* tables, the IDs on the `**Depends on**` line, and the task's own ID. It then keeps only the `MEMORY.md` index lines that mention one of those keys. If the result is over the 30-line / 4,000-character cap, it drops the lines with the fewest key matches first.\n2. `skills/craft-spawn-prompt/SKILL.md` explains how this fits into the skill: step 4 of building a spawn prompt pastes the script's output in as-is.\n3",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "c06",
+     "kind": "conceptual",
+     "question": "How does the kit compare a branch diff against a task's declared complexity lane?",
+     "grep_pattern": "lane",
+     "expected_paths": [
+      "scripts/lane_check.py"
+     ]
+    },
+    "context": {
+     "seconds": 5.86,
+     "input": 4,
+     "output": 356,
+     "cache_read": 10113,
+     "cache_creation": 6151,
+     "tokens": 16624,
+     "cost": 0.058366600000000005,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "e26f841f-050d-4fe5-a3f4-86f502927616",
+     "answer": "1. `scripts/lane_check.py`: this is the script that does the comparison. It runs `git diff --numstat` over the `<base>...<head>` range, skips bookkeeping files like the kanban, `memory/` and lock files, and checks the remaining files and lines against a C0/C1/C2 budget table. It also applies a Gate 2 keyword floor, lists files the guide didn't predict, and prints one warning line that never blocks.\n2. `tasks/TASK_GUIDE_T144.md`: this is the task guide that designed the check, with its intent, acceptance criteria and approach.\n3. `PROJECT_SPEC.md`: its glossary entry for \"Lane\" says the lane is",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 8.078,
+     "input": 6,
+     "output": 457,
+     "cache_read": 17459,
+     "cache_creation": 2703,
+     "tokens": 20625,
+     "cost": 0.0342798,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "fd9a8823-9337-4341-9161-e1105c748dc8",
+     "answer": "The best match is **`scripts/lane_check.py`**. It's a Stage 4 check that only warns and never blocks. It diffs the branch against its merge point (`base...head`) and tests whether the result fits the budget for the task's declared Complexity lane: C0 allows 2 files and 30 changed lines, C1 allows 6 and 250, C2 allows 14 and 500, and C3 has no limit. Kanban, memory and review files, plus lockfiles, aren't counted.\n\nThe next most relevant files:\n- `tests/test_lane_check.py` contains the tests that show how the check behaves.\n- `docs/claude-md/pipeline-stages.md` describes where the check runs in",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "c07",
+     "kind": "conceptual",
+     "question": "How does the Linear board adapter fetch the list of tasks?",
+     "grep_pattern": "list_tasks",
+     "expected_paths": [
+      ".claude/hooks/lib/board/linear.py"
+     ]
+    },
+    "context": {
+     "seconds": 5.001,
+     "input": 4,
+     "output": 274,
+     "cache_read": 10109,
+     "cache_creation": 4051,
+     "tokens": 14438,
+     "cost": 0.0399258,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "e7207837-937b-474e-84be-37019df2a1bf",
+     "answer": "The best answer is `.claude/hooks/lib/board/linear.py`. It holds `LinearBoard` and the `LIST_QUERY` GraphQL query, which fetches issues one page of 100 at a time using `after`/`endCursor` cursors through `urllib.request`, and stops the pull on a 429 or when the rate limit runs out instead of retrying.\n\nSecond choice is `.claude/hooks/lib/board/base.py`, which defines the `BoardAdapter` interface and the `Task` type that `LinearBoard` implements.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 7.208,
+     "input": 6,
+     "output": 380,
+     "cache_read": 17743,
+     "cache_creation": 3296,
+     "tokens": 21425,
+     "cost": 0.0375406,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "dd924c46-2c9d-42b3-aa5a-d30b6dabdbbc",
+     "answer": "`.claude/hooks/lib/board/linear.py` is the answer. Its `list_tasks()` method (around line 130) sends the GraphQL query `LIST_QUERY` (line 26) to fetch issues 100 per page. It follows `pageInfo.hasNextPage` and `endCursor` to get each next page, and turns every issue into a task with `task_from_node`.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "c08",
+     "kind": "conceptual",
+     "question": "How are token costs measured from agent session transcripts?",
+     "grep_pattern": "transcript",
+     "expected_paths": [
+      "scripts/token_meter.py"
+     ]
+    },
+    "context": {
+     "seconds": 7.058,
+     "input": 4,
+     "output": 332,
+     "cache_read": 10105,
+     "cache_creation": 5705,
+     "tokens": 16146,
+     "cost": 0.054317,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "6b54f8c7-9b8f-4b21-8e3f-7009b3d00983",
+     "answer": "1. `scripts/token_meter.py`: this is the read-only tool that does the measuring. It reads the per-call `usage` objects in the Claude Code JSONL transcripts, counts each API call once by `message.id`, and prices input, cache writes, cache reads and output to get spend, context size and what each kind of content costs.\n2. `docs/token-focus-finding-2026-09-25.md`: this explains the method behind the tool, including where transcripts live, the pricing model and cache multipliers, the 3.5 characters-per-token estimate and the \"carry cost\" idea.\n3. `tasks/TASK_GUIDE_T124.md`: this is the task guide ",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 10.719,
+     "input": 8,
+     "output": 655,
+     "cache_read": 25512,
+     "cache_creation": 3612,
+     "tokens": 29787,
+     "cost": 0.0471304,
+     "turns": 5,
+     "hit": 1,
+     "error": false,
+     "session_id": "1ef2b31d-5d51-4ba4-a6d2-3fb02257879d",
+     "answer": "1. `scripts/token_meter.py`: its docstring gives the rules. It reads Claude Code session transcripts (`*.jsonl`), treats each assistant entry with `message.usage` as one API call and removes duplicates by `message.id`. It prices each call as (input + 2\u00d7 1h cache writes + 1.25\u00d7 5m cache writes + 0.1\u00d7 cache reads) \u00d7 input price, plus output \u00d7 output price.\n2. `docs/token-focus-finding-2026-09-25.md`: the script's docstring names this file as the source of its method and baseline.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "s01",
+     "kind": "symbol",
+     "question": "pull_moment",
+     "grep_pattern": "pull_moment",
+     "expected_paths": [
+      "scripts/pull_moment.py"
+     ]
+    },
+    "context": {
+     "seconds": 24.571,
+     "input": 8,
+     "output": 445,
+     "cache_read": 26497,
+     "cache_creation": 6719,
+     "tokens": 33669,
+     "cost": 0.0679834,
+     "turns": 4,
+     "hit": 1,
+     "error": false,
+     "session_id": "4a6e187e-4d8d-4e8a-a015-31dca22a6bec",
+     "answer": "- `scripts/pull_moment.py` is the script that runs a pull moment (`wake`, `spawn <ID>` or `review <ID>`). It pulls the board cache in online mode, warns if the pull fails, and checks whether a task's guide changed between spawn and review.\n- `tests/test_pull_moments.py` holds its tests. They cover each moment, how a failed pull is handled, local mode, and where each moment is called from.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 8.544,
+     "input": 6,
+     "output": 394,
+     "cache_read": 17505,
+     "cache_creation": 2634,
+     "tokens": 20539,
+     "cost": 0.032477,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "08cbb60c-82be-4ccd-be3e-5d47fc4f17b9",
+     "answer": "- `scripts/pull_moment.py`: this is the script that runs a pull moment (`wake`, `spawn <ID>` or `review <ID>`). It pulls the board cache in online mode, warns if a task guide changed since spawn, and never blocks work.\n- `.claude/hooks/lib/board/moments.py`: the shared board logic that pull moments use (I found it by name match and didn't open it).\n- `tests/test_pull_moments.py`: the tests for that behaviour (also not opened).",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "s02",
+     "kind": "symbol",
+     "question": "in_progress_ids",
+     "grep_pattern": "in_progress_ids",
+     "expected_paths": [
+      "skills/wake/scripts/dirty_worktrees.py"
+     ]
+    },
+    "context": {
+     "seconds": 5.488,
+     "input": 4,
+     "output": 180,
+     "cache_read": 10096,
+     "cache_creation": 4155,
+     "tokens": 14435,
+     "cost": 0.0388752,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "f81aff72-7d69-4544-b68d-25aa1fb7a25f",
+     "answer": "`skills/wake/scripts/dirty_worktrees.py`: it defines `in_progress_ids(board_path, id_pattern=r\"T\\d+\")` at lines 29\u201339, which reads the board file and returns the set of bold task IDs listed under the `### In Progress` heading.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 6.167,
+     "input": 4,
+     "output": 257,
+     "cache_read": 10806,
+     "cache_creation": 1458,
+     "tokens": 12525,
+     "cost": 0.0189812,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "58564d5c-b933-49bf-b559-41f475a3166b",
+     "answer": "1. `skills/wake/scripts/dirty_worktrees.py`: line 29 defines the `in_progress_ids(board_path, id_pattern=r\"T\\d+\")` function, and line 70 calls it.\n2. `tests/test_board_sync_pull.py`: line 143 is a test that calls this function on a `PROJECT_KANBAN.md` board.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "s03",
+     "kind": "symbol",
+     "question": "safe_task_id",
+     "grep_pattern": "safe_task_id",
+     "expected_paths": [
+      ".claude/hooks/lib/board/moments.py"
+     ]
+    },
+    "context": {
+     "seconds": 49.479,
+     "input": 4,
+     "output": 183,
+     "cache_read": 10095,
+     "cache_creation": 3541,
+     "tokens": 13823,
+     "cost": 0.034023,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "7a13ad40-0624-4870-a910-50cf00d24318",
+     "answer": "`.claude/hooks/lib/board/moments.py`: `safe_task_id` is defined here (lines 62\u201365). It normalizes the task ID and returns it only if it matches `PATH_SAFE_ID`, so it is safe to use as a state-file name; otherwise it returns `None`.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 9.544,
+     "input": 6,
+     "output": 437,
+     "cache_read": 17073,
+     "cache_creation": 1946,
+     "tokens": 19462,
+     "cost": 0.027746599999999996,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "f872e9f8-7ece-4f13-aa54-0d54ed477382",
+     "answer": "1. `.claude/hooks/lib/board/moments.py` defines `safe_task_id` at line 62. It normalizes the task ID and returns it only if it is safe to use in a state-file name; otherwise it returns `None`.\n2. `scripts/pull_moment.py` is the one place that calls it, at line 57, to check the `--task-id` argument.\n3. `tests/test_pull_moments.py` has a test at line 140 showing that an unsafe task ID is refused and nothing gets written.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "s04",
+     "kind": "symbol",
+     "question": "split_by_assignee",
+     "grep_pattern": "split_by_assignee",
+     "expected_paths": [
+      ".claude/hooks/lib/board/moments.py"
+     ]
+    },
+    "context": {
+     "seconds": 7.1,
+     "input": 4,
+     "output": 174,
+     "cache_read": 10096,
+     "cache_creation": 4198,
+     "tokens": 14472,
+     "cost": 0.0390992,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "693c6da6-9b52-40c8-adfb-10946146d352",
+     "answer": "`.claude/hooks/lib/board/moments.py`: it defines `split_by_assignee` at lines 108\u2013131. The function splits a board section's task rows into mine, teammates', unassigned, and warnings, matching each row's `@assignee` fields against `me`.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 10.451,
+     "input": 6,
+     "output": 374,
+     "cache_read": 16967,
+     "cache_creation": 1796,
+     "tokens": 19143,
+     "cost": 0.0252654,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "aaa78030-2870-4beb-ba32-dc7e5afa7681",
+     "answer": "`.claude/hooks/lib/board/moments.py` is the answer: it defines `split_by_assignee(rows, me, kanban, safe_side)` at line 108, and `my_blocking_tasks` and `my_review_tasks` in the same file call it.\n\n`memory/decisions.md` is second: line 2398 records the decision to make it the shared assignee split under those two functions.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "s05",
+     "kind": "symbol",
+     "question": "harness_manifest_exclusions",
+     "grep_pattern": "harness_manifest_exclusions",
+     "expected_paths": [
+      "lib/harness-fetch.sh"
+     ]
+    },
+    "context": {
+     "seconds": 5.484,
+     "input": 4,
+     "output": 227,
+     "cache_read": 10100,
+     "cache_creation": 6793,
+     "tokens": 17124,
+     "cost": 0.06092,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "786543e9-db7c-4322-9254-5dbfd5cab40f",
+     "answer": "`lib/harness-fetch.sh` defines the `harness_manifest_exclusions` function, which returns every `!<path>` exclusion line in MANIFEST as a literal path prefix (around lines 311\u2013316, next to `harness_is_excluded`).\n\nNext most relevant: `tests/test_manifest_exclusions.sh` is the test suite that checks every MANIFEST reader respects those `!` exclusions.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 17.281,
+     "input": 8,
+     "output": 723,
+     "cache_read": 25150,
+     "cache_creation": 3540,
+     "tokens": 29421,
+     "cost": 0.04784200000000001,
+     "turns": 5,
+     "hit": 1,
+     "error": false,
+     "session_id": "2864a003-9826-4835-9fec-379e54f43f73",
+     "answer": "`lib/harness-fetch.sh` is the answer. It defines the shell function `harness_manifest_exclusions` at line 314, which prints each `!`-excluded path from MANIFEST one per line, and the same file uses it at lines 182 and 323.\n\nAlso relevant:\n- `MANIFEST`: lines 25\u201331 hold the `!` exclusion lines that the function reads.\n- `tests/test_manifest_exclusions.sh`: the test suite that checks every MANIFEST reader handles those exclusions.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "s06",
+     "kind": "symbol",
+     "question": "CLAUDE_STEP_LIMIT",
+     "grep_pattern": "CLAUDE_STEP_LIMIT",
+     "expected_paths": [
+      ".claude/hooks/pre_agent_step_limit.py"
+     ]
+    },
+    "context": {
+     "seconds": 7.356,
+     "input": 4,
+     "output": 299,
+     "cache_read": 10105,
+     "cache_creation": 3911,
+     "tokens": 14319,
+     "cost": 0.039305,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "487d4d37-72b6-4fca-9ff2-4b02a56dac54",
+     "answer": "The file is `.claude/hooks/pre_agent_step_limit.py`. It's the hook that reads `CLAUDE_STEP_LIMIT` from the environment, with a default of 90, and blocks an agent when its step count goes over that limit.\n\nI found this through code that references the hook, not by opening the hook file itself. `tests/test_site_content.py` reads the default out of that file using the pattern `STEP_LIMIT = int(os.environ.get(\"CLAUDE_STEP_LIMIT\", \"<n>\"))`. `tasks/TASK_GUIDE_T081.md` gives the default as 90.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 5.686,
+     "input": 4,
+     "output": 296,
+     "cache_read": 10815,
+     "cache_creation": 4192,
+     "tokens": 15307,
+     "cost": 0.041635000000000005,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "908cb899-04d2-436e-89c4-eca8e935203e",
+     "answer": "1. `.claude/hooks/pre_agent_step_limit.py`: this is where `CLAUDE_STEP_LIMIT` is defined (line 64). It's an environment variable, default 90, that caps how many tool calls a task can make before the hook blocks further calls.\n2. `.claude/settings.json`: this registers that hook (line 77) and describes it as a guardrail against infinite loops and wasted tokens.\n3. `memory/decisions.md`: this records why the default was raised from 40 to 90 (around line 828).",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "s07",
+     "kind": "symbol",
+     "question": "bash_writes_file",
+     "grep_pattern": "bash_writes_file",
+     "expected_paths": [
+      "scripts/token_meter.py"
+     ]
+    },
+    "context": {
+     "seconds": 10.776,
+     "input": 4,
+     "output": 270,
+     "cache_read": 10096,
+     "cache_creation": 4213,
+     "tokens": 14583,
+     "cost": 0.0411392,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "c41a2153-32b5-42e9-8b15-74e07d7ce04e",
+     "answer": "The function is defined in `scripts/token_meter.py` (line 169). `bash_writes_file(command)` is a heuristic that returns True when a Bash command clearly changes a file. It checks three things: inline interpreter write bodies, redirections to real files, and commands that write.\n\nTwo related files:\n- `tests/test_token_meter.py` (around line 481) has its test cases, including the `NOT_WRITES` list of commands it should not flag.\n- `tasks/TASK_GUIDE_T128.md` gives the acceptance criteria it was built to meet.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 8.912,
+     "input": 6,
+     "output": 495,
+     "cache_read": 16940,
+     "cache_creation": 2276,
+     "tokens": 19717,
+     "cost": 0.03152,
+     "turns": 4,
+     "hit": 1,
+     "error": false,
+     "session_id": "3fa17e1b-6257-4128-9ece-f830e6686176",
+     "answer": "1. `scripts/token_meter.py` \u2014 `bash_writes_file(command)` is defined here, at `scripts/token_meter.py:169`. It's a heuristic that returns True when a Bash command clearly changes a file, and the meter uses it at line 350 to count Bash writes as edits.\n2. `tasks/TASK_REVIEW_T128.md` \u2014 the review record for the change (T128) that added the function, including its test results.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "d01",
+     "kind": "doc",
+     "question": "Why do we keep saved tool output inside the repo?",
+     "grep_pattern": "saved tool output|Saved tool output",
+     "expected_paths": [
+      "docs/ddr/0008-saved-tool-output-lives-inside-the-repo.md"
+     ]
+    },
+    "context": {
+     "seconds": 6.617,
+     "input": 4,
+     "output": 240,
+     "cache_read": 10106,
+     "cache_creation": 5606,
+     "tokens": 15956,
+     "cost": 0.0516852,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "dbb27055-836d-4ed4-84f8-e57aa7b5fbe1",
+     "answer": "`docs/ddr/0008-saved-tool-output-lives-inside-the-repo.md` is the design decision record for this exact choice. It says the user chose to keep the saved tool output in the repo over the Supervisor's advice, because the files can then be browsed with ordinary tools, removing a sub-agent's worktree also removes its logs, and cleanup stays in one hook. It also notes the decision is deferred because the compression hook it supports was parked.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 17.221,
+     "input": 6,
+     "output": 457,
+     "cache_read": 17069,
+     "cache_creation": 3526,
+     "tokens": 21058,
+     "cost": 0.0407858,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "1398e540-c04d-4d90-9fe8-ad0d5255bb50",
+     "answer": "`docs/ddr/0008-saved-tool-output-lives-inside-the-repo.md`: this design decision record says the project owner chose to keep the full copy of compressed Bash output in `.claude/hooks/.state/output/` because it's easier to see and manage next to the project. They made that call over the Supervisor's recommendation to store it outside the repo, and the record also lists the accepted downsides: secrets in the working tree, reliance on `.gitignore`, and old logs showing up in `grep -r` searches.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "d02",
+     "kind": "doc",
+     "question": "Why is the installer one confirmed menu instead of several separate commands?",
+     "grep_pattern": "menu-driven|menu",
+     "expected_paths": [
+      "docs/adr/0002-one-confirmed-menu-driven-installer.md"
+     ]
+    },
+    "context": {
+     "seconds": 8.024,
+     "input": 4,
+     "output": 346,
+     "cache_read": 10111,
+     "cache_creation": 6063,
+     "tokens": 16524,
+     "cost": 0.05746219999999999,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "4c8bd3d6-5809-440e-9279-09ec53aa6a8d",
+     "answer": "The best answer is `docs/adr/0002-one-confirmed-menu-driven-installer.md`. It is the decision record behind the single, flag-free `setup.sh` that asks for a confirmation before acting. It explains why the earlier split scripts and flags were dropped: a probe found 9 defects, including silent overwrites, and the user asked for \"one single command; options chosen from a list, not params the user must remember.\"\n\nSupporting files:\n- `memory/decisions.md` (the 2026-09-12 entry): a short summary of the same decision and its reasons.\n- `BRAINSTORMING_LOG.md`: the alternatives that were considered. F",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 8.982,
+     "input": 6,
+     "output": 364,
+     "cache_read": 18002,
+     "cache_creation": 3524,
+     "tokens": 21896,
+     "cost": 0.0390964,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "0e03cb40-e9d6-4689-90c6-b28cb7851a2c",
+     "answer": "The answer is `docs/adr/0002-one-confirmed-menu-driven-installer.md`. It's the decision record for exactly this choice. It explains the reasoning: separate `setup.sh` and `update.sh` commands with flags were broken and too complex, so the user asked for \"one single command; every option chosen from a list, never a parameter the user must remember.\"",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "d03",
+     "kind": "doc",
+     "question": "What goes in the verbatim-preserve list when a reply is shortened?",
+     "grep_pattern": "Verbatim-preserve|verbatim",
+     "expected_paths": [
+      "docs/claude-md/token-economy.md"
+     ]
+    },
+    "context": {
+     "seconds": 5.217,
+     "input": 4,
+     "output": 202,
+     "cache_read": 10112,
+     "cache_creation": 4622,
+     "tokens": 14940,
+     "cost": 0.0430544,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "4e50f418-3093-4b63-b79e-4613294ddbbd",
+     "answer": "`docs/claude-md/token-economy.md`: its \"Verbatim-preserve list\" section names what a reply must quote exactly and never shorten: code, exact error text, file paths, commands and security warnings.\n\n`CLAUDE.md` is the next place to look. Its Supervisor Communication Style section points to that file for the list.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 11.173,
+     "input": 8,
+     "output": 492,
+     "cache_read": 29508,
+     "cache_creation": 5123,
+     "tokens": 35131,
+     "cost": 0.056757600000000005,
+     "turns": 4,
+     "hit": 1,
+     "error": false,
+     "session_id": "a6f8a7e3-5c50-43c4-b338-298339fa9d2e",
+     "answer": "1. `docs/claude-md/token-economy.md`: its \"Verbatim-preserve list\" section (line 6) says five things must be quoted exactly, never paraphrased or shortened: code, exact error text, file paths, commands and security warnings.\n2. `CLAUDE.md`: lines 18, 28 and 120 repeat the same list and point to the token-economy doc above.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "d04",
+     "kind": "doc",
+     "question": "Why does Vital Slice extend Simplicity First, and what is AC-immunity?",
+     "grep_pattern": "AC-immunity",
+     "expected_paths": [
+      "docs/ddr/0005-vital-slice-extends-simplicity-first.md"
+     ]
+    },
+    "context": {
+     "seconds": 6.314,
+     "input": 4,
+     "output": 344,
+     "cache_read": 10117,
+     "cache_creation": 5455,
+     "tokens": 15920,
+     "cost": 0.0525594,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "20b8fc7f-aa54-4277-9287-2c3301821917",
+     "answer": "The best answer is in these two files:\n\n1. `docs/ddr/0005-vital-slice-extends-simplicity-first.md`: this is the decision record whose title is \"Vital Slice extends Simplicity First, in the guaranteed channel, bounded by AC-immunity\", so it explains both the reasoning and the bound.\n2. `memory/decisions.md` (T071 entry, around line 1264): it summarises that reasoning. Simplicity First stops agents from building what wasn't asked for and makes code shorter, but never says to rank the requested work and leave some out. AC-immunity is the counter-rule that a cut only shrinks the implementation, ne",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 8.41,
+     "input": 6,
+     "output": 414,
+     "cache_read": 18930,
+     "cache_creation": 3536,
+     "tokens": 22886,
+     "cost": 0.040378000000000004,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "6028294f-2177-4c14-aa8c-2565c064cf7b",
+     "answer": "The best match is `docs/ddr/0005-vital-slice-extends-simplicity-first.md`. It's the design decision record behind the Vital Slice rule: its title says Vital Slice \"extends Simplicity First, in the guaranteed channel, bounded by AC-immunity\", and point 4 (line 78) explains AC-immunity and calls it the rule's \"load-bearing sentence\".\n\nI only searched for the terms and read those two matching lines, not the whole file.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "m01",
+     "kind": "multi_hop",
+     "question": "Which script verifies the event-trace hash chain, and which test file covers the chain logic?",
+     "grep_pattern": "verify_trace|trace_chain",
+     "expected_paths": [
+      "scripts/verify_trace.py",
+      ".claude/hooks/tests/test_trace_chain.py"
+     ]
+    },
+    "context": {
+     "seconds": 8.565,
+     "input": 4,
+     "output": 397,
+     "cache_read": 10117,
+     "cache_creation": 6093,
+     "tokens": 16611,
+     "cost": 0.058723399999999995,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "2918aadf-25bb-40fa-8bfd-47a313604b70",
+     "answer": "1. `scripts/verify_trace.py`: this is the verifier. You run it as `python3 scripts/verify_trace.py <task>`. It checks `memory/event-trace/<task>.jsonl` against its hash chain and against the anchor file kept outside the repo, then prints INTACT, BROKEN, ANCHOR MISMATCH, UNANCHORED or UNVERIFIED.\n2. `.claude/hooks/tests/test_trace_chain.py`: this is the test file for the chain logic. It runs the real `post_tool_trace.py` hook in a temporary sandbox and checks that the `prev`/`hash` links start from \"genesis\" and that the verifier gives the right verdicts.\n\nThe shared chain code itself (`chain_h",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 9.166,
+     "input": 6,
+     "output": 619,
+     "cache_read": 17834,
+     "cache_creation": 3283,
+     "tokens": 21742,
+     "cost": 0.0422348,
+     "turns": 4,
+     "hit": 1,
+     "error": false,
+     "session_id": "bf34abb3-e38e-47f9-8da3-554d844f00fd",
+     "answer": "1. `scripts/verify_trace.py`: this script checks a task's event trace against its hash chain and its anchor. It reports INTACT, UNANCHORED, ANCHOR MISMATCH or UNVERIFIED for the trace.\n2. `.claude/hooks/tests/test_trace_chain.py`: this test file covers the chain logic. It tests prev/hash linking from genesis, canonical JSON, anchoring, and detection of edited or fully re-chained traces.\n\nThe chain code those two files use is in `.claude/hooks/lib/trace_chain.py`.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "m02",
+     "kind": "multi_hop",
+     "question": "Where is the pull-moment command defined, and which test file tests it?",
+     "grep_pattern": "pull_moment",
+     "expected_paths": [
+      "scripts/pull_moment.py",
+      "tests/test_pull_moments.py"
+     ]
+    },
+    "context": {
+     "seconds": 5.201,
+     "input": 4,
+     "output": 206,
+     "cache_read": 10110,
+     "cache_creation": 4245,
+     "tokens": 14565,
+     "cost": 0.040118,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "e9ec762a-02f3-4fdb-aaa4-0e9e171fc1e2",
+     "answer": "The command is defined in `scripts/pull_moment.py`, and its test file is `tests/test_pull_moments.py`. The tests run that script directly with the `wake`, `spawn` and `review` moments, and they also check that the script is listed in `MANIFEST`.\n\n1. `scripts/pull_moment.py`\n2. `tests/test_pull_moments.py`",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 8.744,
+     "input": 6,
+     "output": 601,
+     "cache_read": 17531,
+     "cache_creation": 2810,
+     "tokens": 20948,
+     "cost": 0.0380302,
+     "turns": 4,
+     "hit": 1,
+     "error": false,
+     "session_id": "5dbe8b7a-e405-40d2-963c-006bd826fd06",
+     "answer": "1. `scripts/pull_moment.py` defines the pull-moment command. It is an argparse CLI with three subcommands, `wake`, `spawn <ID>` and `review <ID>`, and it imports the moment logic from `.claude/hooks/lib/board/moments.py`.\n2. `tests/test_pull_moments.py` is the test file for it. It runs `scripts/pull_moment.py` in a subprocess, and it also checks that the command ships with the kit and that the skill and docs files call it.\n3. `.claude/hooks/lib/board/moments.py` holds the moment logic the command runs.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "m03",
+     "kind": "multi_hop",
+     "question": "Where is my_review_tasks defined, and which test checks the merge-gate review filter?",
+     "grep_pattern": "my_review_tasks",
+     "expected_paths": [
+      ".claude/hooks/lib/board/moments.py",
+      "tests/test_merge_gate_review_filter.py"
+     ]
+    },
+    "context": {
+     "seconds": 27.726,
+     "input": 12,
+     "output": 1066,
+     "cache_read": 56571,
+     "cache_creation": 11629,
+     "tokens": 69278,
+     "cost": 0.1257142,
+     "turns": 7,
+     "hit": 1,
+     "error": false,
+     "session_id": "898eb45a-7e08-426c-a6f4-f3be8a3d1490",
+     "answer": "1. `.claude/hooks/lib/board/moments.py` (lines 145\u2013159) defines `my_review_tasks`. It returns the Ready for Review task IDs whose verify evidence the merge gate checks: yours and unassigned ones. Teammates' tasks are only named in a note. It's called from `main()` in `.claude/hooks/pre_bash_block_unsafe_merge.py`.\n\n2. I couldn't find a test for the merge-gate review filter. The plan for T161 (`tasks/TASK_GUIDE_T161.md:74-80`) names a new test file, `tests/test_merge_gate_review_filter.py`, but that file isn't in the search index. Either it was never written or the index is out of date; I didn'",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 5.352,
+     "input": 4,
+     "output": 272,
+     "cache_read": 10827,
+     "cache_creation": 1579,
+     "tokens": 12682,
+     "cost": 0.020253399999999998,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "242a6c1e-830d-46a4-92d3-fa5f89e4cf08",
+     "answer": "1. `.claude/hooks/lib/board/moments.py`: `my_review_tasks` is defined on line 145.\n2. `tests/test_merge_gate_review_filter.py`: this is the test for the merge-gate review filter. It covers the call from `.claude/hooks/pre_bash_block_unsafe_merge.py:471`, and it also checks what happens when `my_review_tasks` raises an error.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "m04",
+     "kind": "multi_hop",
+     "question": "Which script compares a branch diff to the declared lane, and which test covers it?",
+     "grep_pattern": "lane_check",
+     "expected_paths": [
+      "scripts/lane_check.py",
+      "tests/test_lane_check.py"
+     ]
+    },
+    "context": {
+     "seconds": 12.872,
+     "input": 8,
+     "output": 516,
+     "cache_read": 31388,
+     "cache_creation": 8573,
+     "tokens": 40485,
+     "cost": 0.0852136,
+     "turns": 4,
+     "hit": 1,
+     "error": false,
+     "session_id": "a5ae28fc-5a7f-4d4b-8a21-0b9270bc46e1",
+     "answer": "- `scripts/lane_check.py`: this is the script. It runs `git diff --numstat` on a branch range such as `<base>...HEAD` and checks the result against the lane and Files to Change table declared in the task guide. It reports `FITS`, `EXCEEDS (...)` or `unpredicted: ...` but only warns and never blocks.\n- `tests/test_lane_check.py`: this is the test that covers it. It builds temporary git repos and runs the script against them, for example in `test_three_dot_ignores_base_advancing`.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 6.66,
+     "input": 6,
+     "output": 333,
+     "cache_read": 17448,
+     "cache_creation": 2430,
+     "tokens": 20217,
+     "cost": 0.029613599999999997,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "cfcdd44d-f0c3-4f9f-acbd-b9da7b929246",
+     "answer": "- `scripts/lane_check.py`: this is a warn-only Stage 4 check. It compares the branch diff (`<base>...<head>`) to the file and changed-line budget for the Complexity lane (C0\u2013C2) declared in the task guide.\n- `tests/test_lane_check.py`: this is the test file for that script.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "m05",
+     "kind": "multi_hop",
+     "question": "Where is the harness_backup_path shell function defined, and which test script checks install backups?",
+     "grep_pattern": "harness_backup_path",
+     "expected_paths": [
+      "lib/harness-fetch.sh",
+      "tests/test_install_backups.sh"
+     ]
+    },
+    "context": {
+     "seconds": 10.737,
+     "input": 8,
+     "output": 469,
+     "cache_read": 31328,
+     "cache_creation": 10668,
+     "tokens": 42473,
+     "cost": 0.1010216,
+     "turns": 4,
+     "hit": 1,
+     "error": false,
+     "session_id": "b8b9ae87-1826-49d5-aba1-c42b48d15aa8",
+     "answer": "1. `lib/harness-fetch.sh` \u2014 this is where the shell function `harness_backup_path() { ... }` is defined, starting around line 271, with its doc comment just above it.\n2. `tests/test_install_backups.sh` \u2014 this is the test script for install backups: it runs the real `setup.sh` against scratch repos and checks the `.bak` backup cases SC1\u2013SC7 from T112 (plus mutation check M1 and T137 backup naming).",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 6.016,
+     "input": 4,
+     "output": 235,
+     "cache_read": 10826,
+     "cache_creation": 3003,
+     "tokens": 14068,
+     "cost": 0.0309052,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "cfca5ef7-2b12-4f99-b324-d892b2bb2fdc",
+     "answer": "1. `lib/harness-fetch.sh`: the `harness_backup_path()` function is defined here at line 271, with its doc comment starting at line 254.\n2. `tests/test_install_backups.sh`: this is the test script for install backups, and it calls `harness_backup_path` directly (line 238).",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "e01",
+     "kind": "exact_text",
+     "question": "is In Progress but unassigned",
+     "grep_pattern": "is In Progress but unassigned",
+     "expected_paths": [
+      ".claude/hooks/lib/board/moments.py"
+     ]
+    },
+    "context": {
+     "seconds": 7.816,
+     "input": 4,
+     "output": 262,
+     "cache_read": 10099,
+     "cache_creation": 2833,
+     "tokens": 13198,
+     "cost": 0.0299398,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "1d35a2a4-6a50-42cd-b7e1-44f901918c14",
+     "answer": "1. `.claude/hooks/lib/board/moments.py`: its `my_blocking_tasks` function (lines 134\u2013142) produces the exact warning \"`{task_id} is In Progress but unassigned \u2014 not blocking`\", so unassigned In Progress tasks get a warning but don't block a push.\n2. `.claude/hooks/tests/test_merge_gate_my_tasks.py`: the test `test_unassigned_in_progress_does_not_block_but_warns` (lines 135\u2013139) checks that behaviour.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 7.516,
+     "input": 6,
+     "output": 548,
+     "cache_read": 17376,
+     "cache_creation": 2620,
+     "tokens": 20550,
+     "cost": 0.0354192,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "b682c37c-bc45-4b36-87ab-dbfacc3262ea",
+     "answer": "`.claude/hooks/lib/board/moments.py` is the answer. Its `my_blocking_tasks` function builds the exact warning \"{task_id} is In Progress but unassigned \u2014 not blocking\": the merge gate warns about In Progress tasks that have no assignee instead of blocking the push.\n\nRelated files:\n- `.claude/hooks/tests/test_merge_gate_my_tasks.py` has the test `test_unassigned_in_progress_does_not_block_but_warns`, which checks this behaviour.\n- `memory/decisions.md` (around line 2396) records why an unassigned Ready for Review row still blocks while an unassigned In Progress row only gets a warning.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "e02",
+     "kind": "exact_text",
+     "question": "Killing this call to prevent an infinite loop",
+     "grep_pattern": "Killing this call to prevent",
+     "expected_paths": [
+      ".claude/hooks/pre_agent_step_limit.py"
+     ]
+    },
+    "context": {
+     "seconds": 7.363,
+     "input": 4,
+     "output": 208,
+     "cache_read": 10104,
+     "cache_creation": 5913,
+     "tokens": 16229,
+     "cost": 0.053500799999999994,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "6cb91274-dc16-419c-88ca-dcdebe82c2b4",
+     "answer": "The file is `.claude/hooks/pre_agent_step_limit.py`. Its block message (lines 208\u2013218) contains the exact phrase \"Killing this call to prevent an infinite loop / token waste\". It sends that message when a task goes over `STEP_LIMIT` tool calls (90 by default), then resets the counter so the next call goes through.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 6.608,
+     "input": 4,
+     "output": 284,
+     "cache_read": 10814,
+     "cache_creation": 1630,
+     "tokens": 12732,
+     "cost": 0.020898800000000002,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "dad8d939-5c07-485c-ab16-07b39b14c561",
+     "answer": "`.claude/hooks/pre_agent_step_limit.py` \u2014 this hook prints the exact message \"Killing this call to prevent an infinite loop / token waste\" (line 212) when a task's run goes over its tool-call limit (`CLAUDE_STEP_LIMIT`).\n\n`.claude/settings.json` \u2014 this registers that hook; its description (line 77) says it kills a run after too many tool calls to stop infinite loops.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "e03",
+     "kind": "exact_text",
+     "question": "changed while you were working",
+     "grep_pattern": "changed while you were working",
+     "expected_paths": [
+      "scripts/pull_moment.py"
+     ]
+    },
+    "context": {
+     "seconds": 13.383,
+     "input": 8,
+     "output": 616,
+     "cache_read": 30231,
+     "cache_creation": 13760,
+     "tokens": 44615,
+     "cost": 0.12847820000000001,
+     "turns": 4,
+     "hit": 0,
+     "error": false,
+     "session_id": "ed1371ad-6e9a-41cc-bb18-0449a491ab1e",
+     "answer": "The closest match is `memory/learnings.md`, though the question is vague enough that this is a best guess.\n\n1. `memory/learnings.md:2745`: the T150 entry says a second Supervisor session was still working on the same repo, and the rule it records is to check commit times, ask before calling work abandoned, and re-read the board right before moving a row.\n2. `memory/learnings.md:606`: the T046 entry covers the board being changed on both sides during a task, and how to merge so the two edits don't conflict.",
+     "correct": 0
+    },
+    "old": {
+     "seconds": 8.5,
+     "input": 4,
+     "output": 398,
+     "cache_read": 10805,
+     "cache_creation": 2475,
+     "tokens": 13682,
+     "cost": 0.029937,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "349d78df-7f43-4012-96ee-d87de8d9eba7",
+     "answer": "`scripts/pull_moment.py` is the most relevant file. It checks whether a task's guide changed during the agent's work and prints \"`<ID>'s guide changed while you were working \u2014 review against the new version?`\" before Ready for Review.\n\n1. `scripts/pull_moment.py`: the code that runs the check and prints the message.\n2. `docs/claude-md/pipeline-stages.md`: says what to do when the message appears, which is to ask the user before reviewing (Pull moment 3).\n3. `PRD_online-board.md`: requirement FR-009, which asks for this check.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "e04",
+     "kind": "exact_text",
+     "question": "UNANCHORED",
+     "grep_pattern": "UNANCHORED",
+     "expected_paths": [
+      "scripts/verify_trace.py"
+     ]
+    },
+    "context": {
+     "seconds": 16.234,
+     "input": 10,
+     "output": 876,
+     "cache_read": 37655,
+     "cache_creation": 9690,
+     "tokens": 48231,
+     "cost": 0.102611,
+     "turns": 5,
+     "hit": 1,
+     "error": false,
+     "session_id": "5e2a5023-6d1f-4b21-bd6f-68d79fef1e6f",
+     "answer": "1. `scripts/verify_trace.py`: this script prints the `UNANCHORED` verdict, and its docstring explains it: an event trace with no chained line at all, meaning one written before T148, which exits 0.\n2. `.claude/hooks/tests/test_trace_chain.py`: these tests drive the hook and verifier and list `UNANCHORED` as one of the possible results, next to INTACT, BROKEN and ANCHOR MISMATCH.\n\nThe question is just the one word, so I took it to mean this trace-verification verdict. The word also shows up in `_UnanchoredShim` in `.claude/hooks/tests/test_quoted_spans_t099.py`, but there it means a regex with ",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 12.455,
+     "input": 6,
+     "output": 692,
+     "cache_read": 17363,
+     "cache_creation": 3263,
+     "tokens": 21324,
+     "cost": 0.0434406,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "f01a30ee-08a5-40b6-adc5-18b06e11c706",
+     "answer": "`scripts/verify_trace.py` is the best match. Your question was the single word \"UNANCHORED\", and in its uppercase form that is one of the verdicts this script defines (lines 8\u201312, 92, 107). It means the trace has no chained line at all, or its earliest lines predate the T148 hash chain, and the script exits 0 in that case.\n\nSupporting files:\n- `tasks/TASK_GUIDE_T148.md` specifies the `UNANCHORED` verdict (lines 62, 78).\n- `memory/decisions.md:2343` records the decision behind that set of verdicts.\n\nThe lowercase word also appears elsewhere in a different sense: Kanban-parsing bugs caused by re",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "e05",
+     "kind": "exact_text",
+     "question": "Linear rejected the query (GraphQL error)",
+     "grep_pattern": "Linear rejected the query",
+     "expected_paths": [
+      ".claude/hooks/lib/board/linear.py"
+     ]
+    },
+    "context": {
+     "seconds": 12.256,
+     "input": 8,
+     "output": 605,
+     "cache_read": 29865,
+     "cache_creation": 7490,
+     "tokens": 37968,
+     "cost": 0.078025,
+     "turns": 4,
+     "hit": 1,
+     "error": false,
+     "session_id": "34789024-6877-4efb-90ee-4d9cd2be3a60",
+     "answer": "1. `.claude/hooks/lib/board/linear.py`: `LinearBoard._post` (lines 100\u2013128) raises `BoardError(\"Linear rejected the query (GraphQL error)\")` when Linear's response has an `errors` field, isn't a dict, or has no `data` dict.\n2. `tests/test_board_sync_pull.py`: `test_graphql_error_echoing_key_is_redacted` checks that this GraphQL-error path never prints the API key and leaves the board unchanged.\n3. `tests/test_board_push.py`: `test_graphql_rejection_still_dropped` checks that a push Linear rejects this way is still removed from the outbox.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 7.469,
+     "input": 6,
+     "output": 383,
+     "cache_read": 17057,
+     "cache_creation": 1945,
+     "tokens": 19391,
+     "cost": 0.026655400000000003,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "a41bf40c-19ff-473d-9122-fb4297dc49c6",
+     "answer": "`.claude/hooks/lib/board/linear.py` (line 123): this is where the message \"Linear rejected the query (GraphQL error)\" comes from. The Linear board client raises `BoardError` with it whenever Linear's reply isn't a dict, has an `errors` field, or has no usable `data` object.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "k01",
+     "kind": "callers",
+     "question": "Which script outside tests calls safe_task_id?",
+     "grep_pattern": "safe_task_id\\(",
+     "expected_paths": [
+      "scripts/pull_moment.py"
+     ]
+    },
+    "context": {
+     "seconds": 25.796,
+     "input": 14,
+     "output": 800,
+     "cache_read": 77497,
+     "cache_creation": 16793,
+     "tokens": 95104,
+     "cost": 0.16589940000000003,
+     "turns": 7,
+     "hit": 1,
+     "error": false,
+     "session_id": "5364f5f0-e978-4e35-a84f-1c0439e373c6",
+     "answer": "`scripts/pull_moment.py` is the script. Its `main()` calls `moments.safe_task_id(args.task_id)` to check the task ID for the `spawn` and `review` moments. The function itself is defined in `.claude/hooks/lib/board/moments.py:62`. I found this with semantic search, not a full grep, so another non-test caller is possible but none showed up.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 5.186,
+     "input": 4,
+     "output": 180,
+     "cache_read": 10815,
+     "cache_creation": 1372,
+     "tokens": 12371,
+     "cost": 0.016755,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "937e9afb-aeb1-4b23-96d3-306a1c018c14",
+     "answer": "`scripts/pull_moment.py` is the only script outside the tests that calls `safe_task_id`: line 57 runs `moments.safe_task_id(args.task_id)` to check the `--task-id` argument. The function itself is defined in `.claude/hooks/lib/board/moments.py:62`.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "k02",
+     "kind": "callers",
+     "question": "Which files outside tests call chain_hash (not the file that defines it)?",
+     "grep_pattern": "chain_hash\\(",
+     "expected_paths": [
+      ".claude/hooks/post_tool_trace.py",
+      "scripts/verify_trace.py"
+     ]
+    },
+    "context": {
+     "seconds": 11.994,
+     "input": 6,
+     "output": 400,
+     "cache_read": 20264,
+     "cache_creation": 7273,
+     "tokens": 27943,
+     "cost": 0.0702608,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "3effac4f-19e6-4a1f-a73d-ac3d03c38a72",
+     "answer": "Two files outside tests call `chain_hash`, which is defined in `.claude/hooks/lib/trace_chain.py`:\n\n- `.claude/hooks/post_tool_trace.py`: its `append_record` function (lines 208\u2013237) calls it to set each new trace line's hash.\n- `scripts/verify_trace.py`: its `verify` function (lines 71\u2013116) calls it to check each line's hash and report the trace as BROKEN if one doesn't match.\n\nI found both through the index's call graph and saw the call in `verify` directly. I didn't open `append_record` itself, so that call comes from the index's name matching. The only other callers are in `.claude/hooks/t",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 6.418,
+     "input": 4,
+     "output": 296,
+     "cache_read": 10822,
+     "cache_creation": 1809,
+     "tokens": 12931,
+     "cost": 0.0225724,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "d4671c41-7399-425c-ba5c-96645fad2e61",
+     "answer": "Two files outside tests call `chain_hash`:\n\n1. `.claude/hooks/post_tool_trace.py` imports `chain_hash` (line 45) and calls it to set `record[\"hash\"]` (lines 225 and 229).\n2. `scripts/verify_trace.py` imports it (line 37) and calls it at line 97 to check that each record's stored hash is correct.\n\nThe function is defined in `.claude/hooks/lib/trace_chain.py:54`, and the only other caller is the test file `.claude/hooks/tests/test_trace_chain.py`.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "k03",
+     "kind": "callers",
+     "question": "Which file outside tests calls my_review_tasks (not the file that defines it)?",
+     "grep_pattern": "my_review_tasks\\(",
+     "expected_paths": [
+      ".claude/hooks/pre_bash_block_unsafe_merge.py"
+     ]
+    },
+    "context": {
+     "seconds": 7.105,
+     "input": 6,
+     "output": 263,
+     "cache_read": 17759,
+     "cache_creation": 3936,
+     "tokens": 21964,
+     "cost": 0.04032379999999999,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "81aef88c-3c2c-4581-8522-c3f99eb145e2",
+     "answer": "`.claude/hooks/pre_bash_block_unsafe_merge.py` is the caller: its `main()` function (around lines 391\u2013433) calls `my_review_tasks`, which is defined in `.claude/hooks/lib/board/moments.py`. I found this through the index's caller graph and didn't open the file to see the call line.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 4.277,
+     "input": 4,
+     "output": 181,
+     "cache_read": 10825,
+     "cache_creation": 1522,
+     "tokens": 12532,
+     "cost": 0.017977,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "96867374-9d79-4e73-bc48-431ade190527",
+     "answer": "`.claude/hooks/pre_bash_block_unsafe_merge.py` is the file you want. It imports `my_review_tasks` at line 46 and calls it at line 471. The function itself is defined in `.claude/hooks/lib/board/moments.py:145`, and no other non-test file calls it.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "k04",
+     "kind": "callers",
+     "question": "Which files outside tests call anchor_path (not the file that defines it)?",
+     "grep_pattern": "anchor_path\\(",
+     "expected_paths": [
+      ".claude/hooks/post_tool_trace.py",
+      "scripts/verify_trace.py"
+     ]
+    },
+    "context": {
+     "seconds": 8.302,
+     "input": 6,
+     "output": 372,
+     "cache_read": 20602,
+     "cache_creation": 6986,
+     "tokens": 27966,
+     "cost": 0.0674724,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "2fbc37d2-ca41-4db0-9251-cdef2bd9baea",
+     "answer": "Two non-test files call `anchor_path` (it's defined in `.claude/hooks/lib/trace_chain.py`):\n\n- `.claude/hooks/post_tool_trace.py`: its `_write_anchor` function (line 197) calls `anchor_path(ROOT, task_id)` to find the out-of-repo anchor file it adds to.\n- `scripts/verify_trace.py`: it imports `anchor_path` from `trace_chain` (line 37) and calls it in `main` (lines 122\u2013138) to find the anchor file it checks the trace against.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 5.386,
+     "input": 4,
+     "output": 249,
+     "cache_read": 10822,
+     "cache_creation": 1465,
+     "tokens": 12540,
+     "cost": 0.0188804,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "e0cc7e70-023e-41de-bc9a-50cb3945abde",
+     "answer": "- `.claude/hooks/post_tool_trace.py` \u2014 it imports `anchor_path` from `trace_chain` and calls it at line 199 (`anchor_path(ROOT, task_id)`).\n- `scripts/verify_trace.py` \u2014 it imports `anchor_path` too and calls it at line 132 (`anchor_path(ROOT, task)`).\n\nThe function is defined in `.claude/hooks/lib/trace_chain.py:73`, so that file is left out. No test files reference `anchor_path`.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "k05",
+     "kind": "callers",
+     "question": "Which files outside tests call pull_cache (not the file that defines it)?",
+     "grep_pattern": "pull_cache\\(",
+     "expected_paths": [
+      ".claude/hooks/pre_bash_block_unsafe_merge.py",
+      "scripts/pull_moment.py"
+     ]
+    },
+    "context": {
+     "seconds": 13.17,
+     "input": 10,
+     "output": 667,
+     "cache_read": 46772,
+     "cache_creation": 13883,
+     "tokens": 61332,
+     "cost": 0.1337984,
+     "turns": 5,
+     "hit": 1,
+     "error": false,
+     "session_id": "5974377b-4694-4529-b74d-586e604ff966",
+     "answer": "Two files outside tests call `pull_cache`, which is defined in `.claude/hooks/lib/board/moments.py`:\n\n1. `scripts/pull_moment.py`: its `main()` calls `moments.pull_cache(root)` for the wake, spawn and review moments, and prints the warning if the pull fails.\n2. `.claude/hooks/pre_bash_block_unsafe_merge.py`: the index's caller graph shows its `main()` (around line 391) calling it to pull the board cache before the merge gate runs, which is the fourth moment.\n\nI found these with the search index's caller graph and semantic search, not a full text grep, so a caller the index missed wouldn't show",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 4.799,
+     "input": 4,
+     "output": 230,
+     "cache_read": 10822,
+     "cache_creation": 1979,
+     "tokens": 13035,
+     "cost": 0.022612399999999998,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "d8bd8ded-f4a1-487f-b94f-4c22450b8484",
+     "answer": "The two files outside tests that call `pull_cache` are:\n\n- `.claude/hooks/pre_bash_block_unsafe_merge.py` imports `pull_cache` at line 46 and calls it at line 432 to refresh the board cache before the merge-gate check.\n- `scripts/pull_moment.py` calls `moments.pull_cache(root)` at line 64.\n\nThe function is defined in `.claude/hooks/lib/board/moments.py:46`.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "n01",
+     "kind": "negative",
+     "question": "Where is the MongoDB connection set up?",
+     "grep_pattern": "mongo",
+     "expected_paths": []
+    },
+    "context": {
+     "seconds": 8.875,
+     "input": 6,
+     "output": 297,
+     "cache_read": 21585,
+     "cache_creation": 13308,
+     "tokens": 35196,
+     "cost": 0.11674500000000002,
+     "turns": 3,
+     "hit": 0,
+     "error": false,
+     "session_id": "9ae1f1af-7b05-4c32-8def-007a1788509e",
+     "answer": "NOT FOUND\n\nI ran two searches, one for \"MongoDB connection\" and one for \"pymongo / MongoClient / mongoose connection string\". Nothing related to MongoDB came back. The only hits were unrelated test transcript fixtures with low relevance scores.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 6.458,
+     "input": 6,
+     "output": 311,
+     "cache_read": 16950,
+     "cache_creation": 1533,
+     "tokens": 18800,
+     "cost": 0.021898,
+     "turns": 3,
+     "hit": 0,
+     "error": false,
+     "session_id": "fb42f01b-1f63-46e0-a779-2d6342bc4e23",
+     "answer": "NOT FOUND",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "n02",
+     "kind": "negative",
+     "question": "Which module configures the RabbitMQ queue?",
+     "grep_pattern": "rabbitmq",
+     "expected_paths": []
+    },
+    "context": {
+     "seconds": 4.171,
+     "input": 4,
+     "output": 199,
+     "cache_read": 10105,
+     "cache_creation": 4162,
+     "tokens": 14470,
+     "cost": 0.039313,
+     "turns": 2,
+     "hit": 0,
+     "error": false,
+     "session_id": "b4c5f5af-3e1b-438f-b5c9-b01fc5a461cd",
+     "answer": "NOT FOUND\n\nNothing in this repository sets up a RabbitMQ queue. The closest search hits are unrelated: the offline \"outbox\" queue tests for the board sync (`tests/test_board_push.py`) and a general note on message queues in `agents/backend.md`. Neither one mentions RabbitMQ.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 11.92,
+     "input": 10,
+     "output": 713,
+     "cache_read": 30482,
+     "cache_creation": 2333,
+     "tokens": 33538,
+     "cost": 0.0390604,
+     "turns": 5,
+     "hit": 0,
+     "error": false,
+     "session_id": "f68111f9-4109-434f-b4b5-621c503f1b2a",
+     "answer": "NOT FOUND\n\nNone of the files set up RabbitMQ or any queue. The only times \"rabbit\" appears are in the phrase \"rabbit hole\". The closest match is a generic \"message broker\" health-check line in an agent doc, and it doesn't configure anything.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "n03",
+     "kind": "negative",
+     "question": "Where is the PostgreSQL migration for the users table?",
+     "grep_pattern": "postgres",
+     "expected_paths": []
+    },
+    "context": {
+     "seconds": 5.138,
+     "input": 4,
+     "output": 171,
+     "cache_read": 10107,
+     "cache_creation": 3174,
+     "tokens": 13456,
+     "cost": 0.030849400000000003,
+     "turns": 2,
+     "hit": 0,
+     "error": false,
+     "session_id": "deb4b694-776e-4cbb-9a5b-28a8729c9b60",
+     "answer": "NOT FOUND\n\nI searched the index and found no PostgreSQL migration for a users table. The closest file is `skills/migration-safety/SKILL.md`, but it's only a general checklist for reviewing migrations, not an actual migration file.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 6.691,
+     "input": 6,
+     "output": 346,
+     "cache_read": 18019,
+     "cache_creation": 2573,
+     "tokens": 20944,
+     "cost": 0.0311318,
+     "turns": 4,
+     "hit": 0,
+     "error": false,
+     "session_id": "1f5f7047-7aa1-4280-a824-70fe0b794cba",
+     "answer": "NOT FOUND",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "n04",
+     "kind": "negative",
+     "question": "Where is the Elasticsearch index mapping defined?",
+     "grep_pattern": "elasticsearch",
+     "expected_paths": []
+    },
+    "context": {
+     "seconds": 5.272,
+     "input": 6,
+     "output": 231,
+     "cache_read": 20320,
+     "cache_creation": 7683,
+     "tokens": 28240,
+     "cost": 0.070172,
+     "turns": 3,
+     "hit": 0,
+     "error": false,
+     "session_id": "0642b66b-3dd5-4778-8cfd-48acb8d21924",
+     "answer": "NOT FOUND",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 6.734,
+     "input": 6,
+     "output": 334,
+     "cache_read": 17000,
+     "cache_creation": 1926,
+     "tokens": 19266,
+     "cost": 0.025512000000000003,
+     "turns": 3,
+     "hit": 0,
+     "error": false,
+     "session_id": "3d3941e7-ed5c-41b7-9ad1-82149f81fcdc",
+     "answer": "NOT FOUND",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "n05",
+     "kind": "negative",
+     "question": "Where is the Stripe payment webhook handled?",
+     "grep_pattern": "stripe",
+     "expected_paths": []
+    },
+    "context": {
+     "seconds": 6.586,
+     "input": 6,
+     "output": 312,
+     "cache_read": 19470,
+     "cache_creation": 7226,
+     "tokens": 27014,
+     "cost": 0.067966,
+     "turns": 3,
+     "hit": 0,
+     "error": false,
+     "session_id": "d2c2f109-3e4e-42cb-bfe6-78d80791c511",
+     "answer": "NOT FOUND\n\nI ran two searches, one for the Stripe webhook handler and one for payment, checkout, billing and Stripe. Neither found any Stripe or payment-webhook code. The top results were about this repo's Claude Code hooks, docs on token and billing costs, and the site HTML, and none of them handle payments.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 9.026,
+     "input": 6,
+     "output": 379,
+     "cache_read": 17015,
+     "cache_creation": 1759,
+     "tokens": 19159,
+     "cost": 0.025079,
+     "turns": 3,
+     "hit": 0,
+     "error": false,
+     "session_id": "377fe403-71fe-417f-a569-c43ba9d99972",
+     "answer": "NOT FOUND\n\nI searched for \"stripe\" and \"webhook\" and found nothing about Stripe or payments. \"Webhook\" shows up only in generic guidance: API spec rules in `packs/api/agents/api-designer.md` and placeholder examples in the task-guide templates. No code in the repo handles a Stripe webhook.",
+     "correct": 1
+    }
+   }
+  ],
+  "summary": {
+   "context": {
+    "n": 39,
+    "correct": 38,
+    "median_s": 8.024,
+    "tokens": 1097720,
+    "cost": 2.7184530000000002
+   },
+   "old": {
+    "n": 39,
+    "correct": 39,
+    "median_s": 8.41,
+    "tokens": 792769,
+    "cost": 1.3435192
+   }
+  },
+  "per_kind": {
+   "conceptual": {
+    "context": {
+     "n": 8,
+     "correct": 8,
+     "tokens": 215617,
+     "cost": 0.586201
+    },
+    "old": {
+     "n": 8,
+     "correct": 8,
+     "tokens": 203232,
+     "cost": 0.3821676
+    }
+   },
+   "symbol": {
+    "context": {
+     "n": 7,
+     "correct": 7,
+     "tokens": 122425,
+     "cost": 0.321345
+    },
+    "old": {
+     "n": 7,
+     "correct": 7,
+     "tokens": 136114,
+     "cost": 0.2254672
+    }
+   },
+   "doc": {
+    "context": {
+     "n": 4,
+     "correct": 4,
+     "tokens": 63340,
+     "cost": 0.20476119999999998
+    },
+    "old": {
+     "n": 4,
+     "correct": 4,
+     "tokens": 100971,
+     "cost": 0.1770178
+    }
+   },
+   "multi_hop": {
+    "context": {
+     "n": 5,
+     "correct": 5,
+     "tokens": 183412,
+     "cost": 0.4107908
+    },
+    "old": {
+     "n": 5,
+     "correct": 5,
+     "tokens": 89657,
+     "cost": 0.1610372
+    }
+   },
+   "exact_text": {
+    "context": {
+     "n": 5,
+     "correct": 4,
+     "tokens": 160241,
+     "cost": 0.3925548
+    },
+    "old": {
+     "n": 5,
+     "correct": 5,
+     "tokens": 87679,
+     "cost": 0.15635100000000002
+    }
+   },
+   "callers": {
+    "context": {
+     "n": 5,
+     "correct": 5,
+     "tokens": 234309,
+     "cost": 0.47775480000000003
+    },
+    "old": {
+     "n": 5,
+     "correct": 5,
+     "tokens": 63409,
+     "cost": 0.0987972
+    }
+   },
+   "negative": {
+    "context": {
+     "n": 5,
+     "correct": 5,
+     "tokens": 118376,
+     "cost": 0.32504540000000004
+    },
+    "old": {
+     "n": 5,
+     "correct": 5,
+     "tokens": 111707,
+     "cost": 0.1426812
+    }
+   }
+  },
+  "spread": {
+   "c02": {
+    "context": {
+     "tokens": [
+      15397,
+      15780,
+      28232
+     ],
+     "cost": [
+      0.038972799999999995,
+      0.042720799999999996,
+      0.0663958
+     ],
+     "seconds": [
+      5.676,
+      5.763,
+      8.177
+     ],
+     "correct": [
+      3,
+      3
+     ]
+    },
+    "old": {
+     "tokens": [
+      13715,
+      23742,
+      27238
+     ],
+     "cost": [
+      0.0211788,
+      0.0309432,
+      0.044475
+     ],
+     "seconds": [
+      6.635,
+      9.625,
+      11.427
+     ],
+     "correct": [
+      3,
+      3
+     ]
+    }
+   },
+   "s03": {
+    "context": {
+     "tokens": [
+      12930,
+      12944,
+      13829
+     ],
+     "cost": [
+      0.00597,
+      0.017951599999999998,
+      0.0255396
+     ],
+     "seconds": [
+      4.317,
+      4.612,
+      6.291
+     ],
+     "correct": [
+      3,
+      3
+     ]
+    },
+    "old": {
+     "tokens": [
+      12452,
+      12500,
+      18885
+     ],
+     "cost": [
+      0.0096696,
+      0.010341600000000001,
+      0.0143826
+     ],
+     "seconds": [
+      5.744,
+      5.949,
+      7.338
+     ],
+     "correct": [
+      3,
+      3
+     ]
+    }
+   },
+   "m01": {
+    "context": {
+     "tokens": [
+      16461,
+      16513,
+      16567
+     ],
+     "cost": [
+      0.0092974,
+      0.048100399999999995,
+      0.04910439999999999
+     ],
+     "seconds": [
+      5.212,
+      5.585,
+      7.702
+     ],
+     "correct": [
+      3,
+      3
+     ]
+    },
+    "old": {
+     "tokens": [
+      21437,
+      21935,
+      28865
+     ],
+     "cost": [
+      0.027928,
+      0.031022800000000003,
+      0.0365564
+     ],
+     "seconds": [
+      9.493,
+      9.836,
+      12.935
+     ],
+     "correct": [
+      3,
+      3
+     ]
+    }
+   },
+   "e02": {
+    "context": {
+     "tokens": [
+      16268,
+      16280,
+      16289
+     ],
+     "cost": [
+      0.008379600000000001,
+      0.0085596,
+      0.0455952
+     ],
+     "seconds": [
+      4.643,
+      4.963,
+      9.368
+     ],
+     "correct": [
+      3,
+      3
+     ]
+    },
+    "old": {
+     "tokens": [
+      12844,
+      12898,
+      20621
+     ],
+     "cost": [
+      0.013697200000000001,
+      0.0143812,
+      0.025546600000000003
+     ],
+     "seconds": [
+      5.86,
+      6.672,
+      7.668
+     ],
+     "correct": [
+      3,
+      3
+     ]
+    }
+   },
+   "k04": {
+    "context": {
+     "tokens": [
+      16423,
+      16436,
+      16459
+     ],
+     "cost": [
+      0.0094972,
+      0.010217200000000001,
+      0.0477744
+     ],
+     "seconds": [
+      5.725,
+      6.693,
+      7.511
+     ],
+     "correct": [
+      3,
+      3
+     ]
+    },
+    "old": {
+     "tokens": [
+      12579,
+      12595,
+      12596
+     ],
+     "cost": [
+      0.007619600000000001,
+      0.0108724,
+      0.0108924
+     ],
+     "seconds": [
+      4.282,
+      4.917,
+      5.425
+     ],
+     "correct": [
+      3,
+      3
+     ]
+    }
+   }
+  },
+  "repeats": [
+   {
+    "seconds": 5.676,
+    "input": 4,
+    "output": 350,
+    "cache_read": 11244,
+    "cache_creation": 4182,
+    "tokens": 15780,
+    "cost": 0.042720799999999996,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "558cb4d6-6763-4b3d-8aef-fa7f323b7037",
+    "answer": "The hook named by those hits is `.claude/hooks/pre_agent_step_limit.py`. I didn't open it, but other files describe it the same way: it blocks a tool call once an agent passes its step limit without reaching Ready for Review. They also say the default limit is 90, raised from 40, and that since T057 the block clears itself, so it interrupts the run rather than halting it for good.\n\n1. `.claude/hooks/pre_agent_step_limit.py` \u2014 the hook that counts each agent's tool calls and blocks the one that goes over the limit.\n2. `tasks/TASK_GUIDE_T057.md` \u2014 records the hook's block message (\"exceeded 40 t",
+    "correct": 1,
+    "id": "c02",
+    "method": "context"
+   },
+   {
+    "seconds": 5.763,
+    "input": 4,
+    "output": 293,
+    "cache_read": 11244,
+    "cache_creation": 3856,
+    "tokens": 15397,
+    "cost": 0.038972799999999995,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "2f5bb8d0-0403-4ea9-89d1-c77bcaebf155",
+    "answer": "The hook lives at `.claude/hooks/pre_agent_step_limit.py`.\n\n`.claude/hooks/pre_agent_step_limit.py` \u2014 this hook stops runaway sub-agent loops by blocking tool calls once a task passes its step limit (`STEP_LIMIT`, 90 calls by default); it clears itself afterwards, so it interrupts the agent rather than halting it for good.\n\n`README.md` \u2014 names this hook as the guard against runaway tool-call loops and says the related `post_agent_move_to_review.py` hook only shows a reminder.",
+    "correct": 1,
+    "id": "c02",
+    "method": "context"
+   },
+   {
+    "seconds": 8.177,
+    "input": 6,
+    "output": 441,
+    "cache_read": 21119,
+    "cache_creation": 6666,
+    "tokens": 28232,
+    "cost": 0.0663958,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "85b6ee2e-8082-4cfd-81f5-8d3381913868",
+    "answer": "1. `.claude/hooks/pre_agent_step_limit.py`: this PreToolUse hook counts tool calls per task. Once a task goes past `CLAUDE_STEP_LIMIT` calls (90 by default) without reaching Ready for Review, it blocks the call. In the same step it resets the counter to 0, so the run is interrupted but never locked out for good.\n2. `README.md`: its summary names this hook as the guard that \"blocks runaway tool-call loops (default 90 calls).\"",
+    "correct": 1,
+    "id": "c02",
+    "method": "context"
+   },
+   {
+    "seconds": 6.635,
+    "input": 4,
+    "output": 393,
+    "cache_read": 11954,
+    "cache_creation": 1364,
+    "tokens": 13715,
+    "cost": 0.0211788,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "facc9da9-bbbd-40cf-9745-cd484960cf7f",
+    "answer": "1. `.claude/hooks/pre_agent_step_limit.py` \u2014 this PreToolUse hook counts each task's tool calls and blocks any call past `CLAUDE_STEP_LIMIT`, with a message saying the task went that many calls \"without reaching Ready for Review.\"\n2. `.claude/settings.json` \u2014 this file registers that hook on every tool and describes it as a guardrail that stops a task's run after `CLAUDE_STEP_LIMIT` tool calls.\n\nOlder notes say the default limit is 40 and the site says 90, so check the default in the hook script itself.",
+    "correct": 1,
+    "id": "c02",
+    "method": "old"
+   },
+   {
+    "seconds": 11.427,
+    "input": 6,
+    "output": 591,
+    "cache_read": 19555,
+    "cache_creation": 3590,
+    "tokens": 23742,
+    "cost": 0.044475,
+    "turns": 4,
+    "hit": 1,
+    "error": false,
+    "session_id": "a0142347-d65b-4019-8b0f-f6f091bf5506",
+    "answer": "`.claude/hooks/pre_agent_step_limit.py` is the answer. It's a PreToolUse hook that counts tool calls per Task ID and blocks a call once a task goes over `CLAUDE_STEP_LIMIT` (default 90), saying the agent made too many tool calls \"without reaching Ready for Review\" (line 211).\n\nSecond choice: `memory/decisions.md`, which records why the limit went from 40 to 90 and why each block now resets the counter (T057).",
+    "correct": 1,
+    "id": "c02",
+    "method": "old"
+   },
+   {
+    "seconds": 9.625,
+    "input": 8,
+    "output": 579,
+    "cache_read": 24856,
+    "cache_creation": 1795,
+    "tokens": 27238,
+    "cost": 0.0309432,
+    "turns": 4,
+    "hit": 1,
+    "error": false,
+    "session_id": "f7bcc3a2-1fc9-4a68-8a10-949c373d5e18",
+    "answer": "`.claude/hooks/pre_agent_step_limit.py` is the file that answers this. It's a PreToolUse hook that counts each task's tool calls and blocks the next call once the count passes `CLAUDE_STEP_LIMIT` (default 90), which makes the run stop and report back instead of looping.\n\nSince change T057, it resets the counter in the same step that blocks. So a stuck loop gets interrupted every 90 calls rather than stopped for good. Repeated blocks on the same task make the warning message stronger.\n\nThe related tests are in `.claude/hooks/tests/test_step_limit_self_clearing.py` and `.claude/hooks/tests/test_",
+    "correct": 1,
+    "id": "c02",
+    "method": "old"
+   },
+   {
+    "seconds": 6.291,
+    "input": 4,
+    "output": 156,
+    "cache_read": 11198,
+    "cache_creation": 1572,
+    "tokens": 12930,
+    "cost": 0.017951599999999998,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "75647a68-a133-4311-b0e8-aeb8cd20d7b8",
+    "answer": "`.claude/hooks/lib/board/moments.py` (lines 62\u201365) defines `safe_task_id`: it normalizes the task ID and returns it only if it matches `PATH_SAFE_ID`, so it can safely name a state file, and returns `None` otherwise.",
+    "correct": 1,
+    "id": "s03",
+    "method": "context"
+   },
+   {
+    "seconds": 4.317,
+    "input": 4,
+    "output": 170,
+    "cache_read": 12770,
+    "cache_creation": 0,
+    "tokens": 12944,
+    "cost": 0.00597,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "b3175c6c-67c5-4032-ad1f-404e5a8e6e07",
+    "answer": "`.claude/hooks/lib/board/moments.py`: this file defines `safe_task_id(task_id)` (lines 62\u201365). The function normalizes a task ID and returns it only if it is safe to use as a state-file name, meaning it matches `PATH_SAFE_ID`; otherwise it returns `None`.",
+    "correct": 1,
+    "id": "s03",
+    "method": "context"
+   },
+   {
+    "seconds": 4.612,
+    "input": 4,
+    "output": 189,
+    "cache_read": 11198,
+    "cache_creation": 2438,
+    "tokens": 13829,
+    "cost": 0.0255396,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "51bb2f88-1703-4074-8313-04e49b3d7e13",
+    "answer": "`.claude/hooks/lib/board/moments.py`: `safe_task_id` is defined here (lines 62\u201365). It normalizes a task ID and returns the canonical form only if it matches `PATH_SAFE_ID`, which means it's safe to use as a state-file name. Otherwise it returns `None`.",
+    "correct": 1,
+    "id": "s03",
+    "method": "context"
+   },
+   {
+    "seconds": 7.338,
+    "input": 6,
+    "output": 345,
+    "cache_read": 18053,
+    "cache_creation": 481,
+    "tokens": 18885,
+    "cost": 0.0143826,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "df990bcb-7bf4-4372-b35f-2982cc197475",
+    "answer": "1. `.claude/hooks/lib/board/moments.py` defines `safe_task_id` at line 62.\n2. `scripts/pull_moment.py` calls it at line 57 to check the `--task-id` argument.\n3. `tests/test_pull_moments.py` tests it at line 140 and checks that an unsafe task ID is refused and nothing gets written.",
+    "correct": 1,
+    "id": "s03",
+    "method": "old"
+   },
+   {
+    "seconds": 5.949,
+    "input": 4,
+    "output": 246,
+    "cache_read": 11908,
+    "cache_creation": 294,
+    "tokens": 12452,
+    "cost": 0.0096696,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "bc7be853-8bae-47f6-b7c2-5c4792e623c8",
+    "answer": "`.claude/hooks/lib/board/moments.py` is the file to read, because it defines `safe_task_id` (line 62).\n\nTwo others also touch it:\n- `scripts/pull_moment.py` calls it at line 57 to clean up the `--task-id` argument.\n- `tests/test_pull_moments.py` tests it at line 140, checking that an unsafe task ID is rejected and nothing gets written.",
+    "correct": 1,
+    "id": "s03",
+    "method": "old"
+   },
+   {
+    "seconds": 5.744,
+    "input": 4,
+    "output": 270,
+    "cache_read": 11908,
+    "cache_creation": 318,
+    "tokens": 12500,
+    "cost": 0.010341600000000001,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "9cae4f27-d2e2-4eca-94e3-ae3e3d932812",
+    "answer": "1. `.claude/hooks/lib/board/moments.py`: this is where `safe_task_id` is defined, at line 62.\n2. `scripts/pull_moment.py`: it calls `moments.safe_task_id` on the `--task-id` argument, at line 57.\n3. `tests/test_pull_moments.py`: its test at line 140 checks that an unsafe task ID is refused and nothing is written.",
+    "correct": 1,
+    "id": "s03",
+    "method": "old"
+   },
+   {
+    "seconds": 5.212,
+    "input": 4,
+    "output": 343,
+    "cache_read": 11242,
+    "cache_creation": 4872,
+    "tokens": 16461,
+    "cost": 0.048100399999999995,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "46ba3b46-93d4-4fa6-a3bb-0d2e596f3dc4",
+    "answer": "1. `scripts/verify_trace.py`: this script verifies the chain. Run it as `python3 scripts/verify_trace.py <task>`. It checks `memory/event-trace/<task>.jsonl` against its hash chain and against the anchor file kept outside the repo, then reports INTACT, BROKEN, ANCHOR MISMATCH, UNANCHORED or UNVERIFIED.\n2. `.claude/hooks/tests/test_trace_chain.py`: this test file covers the chain logic. It runs the real trace hook and the verifier in a temporary copy of the repo and checks the `prev`/`hash` links from genesis onward.\n\nThe shared hashing code both of them use is in `.claude/hooks/lib/trace_chain",
+    "correct": 1,
+    "id": "m01",
+    "method": "context"
+   },
+   {
+    "seconds": 5.585,
+    "input": 4,
+    "output": 356,
+    "cache_read": 11242,
+    "cache_creation": 4965,
+    "tokens": 16567,
+    "cost": 0.04910439999999999,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "d06aa39e-8cbd-464c-ac6e-fda0e903dc2d",
+    "answer": "1. `scripts/verify_trace.py`: this is the verifier script. You run `python3 scripts/verify_trace.py <task>` and it checks `memory/event-trace/<task>.jsonl` against its hash chain and its anchor file outside the repo, then reports INTACT, BROKEN, ANCHOR MISMATCH, UNANCHORED or UNVERIFIED.\n2. `.claude/hooks/tests/test_trace_chain.py`: this is the test file for the chain logic (task T148), covering chaining from `genesis`, the `prev`/`hash` links, anchoring and the verifier's verdicts.\n3. `.claude/hooks/lib/trace_chain.py`: this shared library holds the chain-hash and anchor code that both the tr",
+    "correct": 1,
+    "id": "m01",
+    "method": "context"
+   },
+   {
+    "seconds": 7.702,
+    "input": 4,
+    "output": 302,
+    "cache_read": 16207,
+    "cache_creation": 0,
+    "tokens": 16513,
+    "cost": 0.0092974,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "4a653fa6-3866-41cd-848b-f3faea9caf03",
+    "answer": "1. `scripts/verify_trace.py` is the script that checks a task's event trace against its hash chain and its out-of-repo anchor file. It prints INTACT, BROKEN, ANCHOR MISMATCH, UNVERIFIED or UNANCHORED.\n2. `.claude/hooks/tests/test_trace_chain.py` is the test file for the chain logic. It runs the real trace hook and the verifier in a temporary copy of the repo and checks that the hashes link back to \"genesis\" and that each verdict comes out right.\n\nBoth files use the shared chain code in `.claude/hooks/lib/trace_chain.py`.",
+    "correct": 1,
+    "id": "m01",
+    "method": "context"
+   },
+   {
+    "seconds": 9.493,
+    "input": 6,
+    "output": 603,
+    "cache_read": 18934,
+    "cache_creation": 1894,
+    "tokens": 21437,
+    "cost": 0.031022800000000003,
+    "turns": 4,
+    "hit": 1,
+    "error": false,
+    "session_id": "833c2a25-4f76-42ca-9ae5-fd225f802aed",
+    "answer": "1. `scripts/verify_trace.py`: this is the script that checks a task's event trace against its hash chain and anchor, and it reports INTACT, UNANCHORED, ANCHOR MISMATCH or UNVERIFIED.\n2. `.claude/hooks/tests/test_trace_chain.py`: this test file covers the chain logic; it imports `canonical` and `chain_hash` from `.claude/hooks/lib/trace_chain.py`, where that logic lives.",
+    "correct": 1,
+    "id": "m01",
+    "method": "old"
+   },
+   {
+    "seconds": 12.935,
+    "input": 8,
+    "output": 629,
+    "cache_read": 25882,
+    "cache_creation": 2346,
+    "tokens": 28865,
+    "cost": 0.0365564,
+    "turns": 5,
+    "hit": 1,
+    "error": false,
+    "session_id": "9b47e3d3-2437-4f0c-9291-45b9d76f936e",
+    "answer": "- `scripts/verify_trace.py`: this is the script that checks a task's event trace (`memory/event-trace/<task>.jsonl`) against its hash chain and its out-of-repo anchor file, and reports INTACT, UNANCHORED, BROKEN, ANCHOR MISMATCH or UNVERIFIED.\n- `.claude/hooks/tests/test_trace_chain.py`: this is the test file for the chain logic, which lives in `.claude/hooks/lib/trace_chain.py`. I picked it by its name and because it matched my searches for \"hash chain\" and \"verify\"; I didn't open it to read the tests.",
+    "correct": 1,
+    "id": "m01",
+    "method": "old"
+   },
+   {
+    "seconds": 9.836,
+    "input": 6,
+    "output": 667,
+    "cache_read": 19940,
+    "cache_creation": 1322,
+    "tokens": 21935,
+    "cost": 0.027928,
+    "turns": 4,
+    "hit": 1,
+    "error": false,
+    "session_id": "0b049192-8757-4ca0-93fc-9930cf440b9a",
+    "answer": "1. `scripts/verify_trace.py`: this is the verifier. You run it as `python3 scripts/verify_trace.py <task>`. It checks `memory/event-trace/<task>.jsonl` against the hash chain and the anchor file stored outside the repo, then prints one result: INTACT, UNANCHORED, BROKEN, ANCHOR MISMATCH or UNVERIFIED.\n2. `.claude/hooks/tests/test_trace_chain.py`: this is the test file for the chain logic. It tests `canonical`/`chain_hash` from `.claude/hooks/lib/trace_chain.py`, linking each line back to the first one, anchoring, and the intact, edited-line (BROKEN) and recomputed-chain (ANCHOR MISMATCH) cases",
+    "correct": 1,
+    "id": "m01",
+    "method": "old"
+   },
+   {
+    "seconds": 9.368,
+    "input": 4,
+    "output": 246,
+    "cache_read": 11216,
+    "cache_creation": 4802,
+    "tokens": 16268,
+    "cost": 0.0455952,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "1b6906ab-54d3-4c5e-abc9-a0a816c3ea94",
+    "answer": "`.claude/hooks/pre_agent_step_limit.py` is the file. Its block message says \"Killing this call to prevent an infinite loop / token waste\", and it sends that message when a task goes over the tool-call step limit. It then resets the counter, so the next call is allowed again.\n\n`tasks/TASK_GUIDE_T057.md` is a weaker match: it explains why this hook was made self-clearing and shows the old version of the message (\"Killing the run\u2026\").",
+    "correct": 1,
+    "id": "e02",
+    "method": "context"
+   },
+   {
+    "seconds": 4.643,
+    "input": 4,
+    "output": 258,
+    "cache_read": 16018,
+    "cache_creation": 0,
+    "tokens": 16280,
+    "cost": 0.008379600000000001,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "49cbd6cd-2ac0-43d9-b560-939dc1da91a4",
+    "answer": "The best match is `.claude/hooks/pre_agent_step_limit.py`. Its block message says \"Killing this call to prevent an infinite loop / token waste\" (around lines 208\u2013216). The hook sends that message once a task goes over `STEP_LIMIT` tool calls, and it resets the counter at the same time.\n\nA less direct match is `tasks/TASK_GUIDE_T057.md`, which records the older version of the message (\"Killing the run\u2026\") and the change to the self-clearing behaviour.",
+    "correct": 1,
+    "id": "e02",
+    "method": "context"
+   },
+   {
+    "seconds": 4.963,
+    "input": 4,
+    "output": 267,
+    "cache_read": 16018,
+    "cache_creation": 0,
+    "tokens": 16289,
+    "cost": 0.0085596,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "3e0f066c-686a-414a-b90d-dd057694342e",
+    "answer": "1. `.claude/hooks/pre_agent_step_limit.py` \u2014 it's the hook that sends the message \"Killing this call to prevent an infinite loop / token waste\" (around lines 207\u2013216). It sends it when a task goes past `STEP_LIMIT` tool calls (90 by default) without reaching Ready for Review, then resets the counter on its own.\n2. `tasks/TASK_GUIDE_T057.md` \u2014 the task guide that made this block self-clearing; it quotes the older wording, \"Killing the run\u2026\".",
+    "correct": 1,
+    "id": "e02",
+    "method": "context"
+   },
+   {
+    "seconds": 5.86,
+    "input": 4,
+    "output": 332,
+    "cache_read": 11926,
+    "cache_creation": 582,
+    "tokens": 12844,
+    "cost": 0.013697200000000001,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "a3876de7-67c6-4e49-b159-3168aaf88fbf",
+    "answer": "`.claude/hooks/pre_agent_step_limit.py` is the best match. It's the step-limit hook that prints the message \"Killing this call to prevent an infinite loop / token waste\" (line 212). It blocks a task's tool calls once the run passes `CLAUDE_STEP_LIMIT`.\n\nThe second-best match is `.claude/settings.json`, which registers this hook (around line 77) and describes it as the guardrail for preventing infinite loops.",
+    "correct": 1,
+    "id": "e02",
+    "method": "old"
+   },
+   {
+    "seconds": 6.672,
+    "input": 4,
+    "output": 353,
+    "cache_read": 11926,
+    "cache_creation": 615,
+    "tokens": 12898,
+    "cost": 0.0143812,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "7e56db5c-3a08-4353-b3d8-4459814b7b3b",
+    "answer": "1. `.claude/hooks/pre_agent_step_limit.py`: this hook prints the exact message \"Killing this call to prevent an infinite loop / token waste\" (line 212) when a task's run goes over `CLAUDE_STEP_LIMIT` tool calls.\n2. `.claude/settings.json`: it registers that hook as the \"deterministic guardrail\" that kills a run after too many tool calls (line 77).",
+    "correct": 1,
+    "id": "e02",
+    "method": "old"
+   },
+   {
+    "seconds": 7.668,
+    "input": 6,
+    "output": 365,
+    "cache_read": 18433,
+    "cache_creation": 1817,
+    "tokens": 20621,
+    "cost": 0.025546600000000003,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "2a2d556b-0cfd-4d56-855d-94a63c6fb61e",
+    "answer": "I found it: **`.claude/hooks/pre_agent_step_limit.py`**. The message \"Killing this call to prevent an infinite loop / token waste\" comes from this hook (around line 212). The hook stops a task's run after `CLAUDE_STEP_LIMIT` tool calls, and it's registered in `.claude/settings.json:77`.",
+    "correct": 1,
+    "id": "e02",
+    "method": "old"
+   },
+   {
+    "seconds": 7.511,
+    "input": 4,
+    "output": 326,
+    "cache_read": 11232,
+    "cache_creation": 4874,
+    "tokens": 16436,
+    "cost": 0.0477744,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "cc08262f-1cb8-491b-8622-fddaa498c2aa",
+    "answer": "Two files outside the tests use `anchor_path`. It's defined in `.claude/hooks/lib/trace_chain.py`, which I've left out.\n\n1. `.claude/hooks/post_tool_trace.py`: `_write_anchor` calls `anchor_path(ROOT, task_id)` to find the anchor file it appends to.\n2. `scripts/verify_trace.py`: it imports `anchor_path` from `trace_chain` to locate a task's anchor file before checking it. I saw the import but not the exact line where it's called.\n\nThese came from one search of the index; I didn't run a full text search of the repo.",
+    "correct": 1,
+    "id": "k04",
+    "method": "context"
+   },
+   {
+    "seconds": 6.693,
+    "input": 4,
+    "output": 349,
+    "cache_read": 16106,
+    "cache_creation": 0,
+    "tokens": 16459,
+    "cost": 0.010217200000000001,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "099565ef-eb5f-40cd-a5d5-0a9c60e63d45",
+    "answer": "There are two such files: `.claude/hooks/post_tool_trace.py` and `scripts/verify_trace.py`.\n\n- `.claude/hooks/post_tool_trace.py`: its `_write_anchor` function (lines 197\u2013205) calls `anchor_path(ROOT, task_id)` to find the anchor file it appends to.\n- `scripts/verify_trace.py`: it imports `anchor_path` from `trace_chain` (line 37) so it can locate and read the anchor file when checking a trace.\n\n`anchor_path` is defined in `.claude/hooks/lib/trace_chain.py`, so that file and the tests under `.claude/hooks/tests/` are left out. I found these with a semantic search rather than a full text search",
+    "correct": 1,
+    "id": "k04",
+    "method": "context"
+   },
+   {
+    "seconds": 5.725,
+    "input": 4,
+    "output": 313,
+    "cache_read": 16106,
+    "cache_creation": 0,
+    "tokens": 16423,
+    "cost": 0.0094972,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "2d473358-c592-4fb2-9c27-17d0f35eed9a",
+    "answer": "The two files outside tests that call `anchor_path` are below. It's defined in `.claude/hooks/lib/trace_chain.py:73`.\n\n1. `.claude/hooks/post_tool_trace.py`: `_write_anchor` (line 197) calls `anchor_path(ROOT, task_id)` to find the anchor file it appends to.\n2. `scripts/verify_trace.py`: imports `anchor_path` from `trace_chain` (line 37) to find the anchor file it checks a task's trace against.\n\nI found these with one semantic search, which only showed the import in `verify_trace.py`, not the line that calls it. A text search for `anchor_path` would confirm that no other files call it.",
+    "correct": 1,
+    "id": "k04",
+    "method": "context"
+   },
+   {
+    "seconds": 5.425,
+    "input": 4,
+    "output": 274,
+    "cache_read": 11942,
+    "cache_creation": 376,
+    "tokens": 12596,
+    "cost": 0.0108924,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "4613f9c3-c876-4666-90c7-64bc2c59c32b",
+    "answer": "Two files call `anchor_path` (it's defined at `.claude/hooks/lib/trace_chain.py:73`):\n\n1. `.claude/hooks/post_tool_trace.py`: imports it and calls `anchor_path(ROOT, task_id)` at line 199 to find a task's trace anchor file.\n2. `scripts/verify_trace.py`: imports it and calls `anchor_path(ROOT, task)` at line 132 to find the anchor file to check.\n\nNo test files reference it.",
+    "correct": 1,
+    "id": "k04",
+    "method": "old"
+   },
+   {
+    "seconds": 4.282,
+    "input": 4,
+    "output": 273,
+    "cache_read": 11942,
+    "cache_creation": 376,
+    "tokens": 12595,
+    "cost": 0.0108724,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "8a5dede1-1d23-4aec-85c9-f0e53361ebfc",
+    "answer": "Two non-test files call `anchor_path`:\n\n- `scripts/verify_trace.py` imports it from `trace_chain` and calls it at line 132 (`anchor_file = anchor_path(ROOT, task)`).\n- `.claude/hooks/post_tool_trace.py` imports it and calls it at line 199 (`path = anchor_path(ROOT, task_id)`).\n\nIt's defined in `.claude/hooks/lib/trace_chain.py:73`, so that file is left out.",
+    "correct": 1,
+    "id": "k04",
+    "method": "old"
+   },
+   {
+    "seconds": 4.917,
+    "input": 4,
+    "output": 257,
+    "cache_read": 12318,
+    "cache_creation": 0,
+    "tokens": 12579,
+    "cost": 0.007619600000000001,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "60c5e324-9bdf-4de9-bb5c-389032a17098",
+    "answer": "`anchor_path` is defined in `.claude/hooks/lib/trace_chain.py:73`. Outside tests, two files call it:\n\n1. `.claude/hooks/post_tool_trace.py` imports it at line 45 and calls `anchor_path(ROOT, task_id)` at line 199.\n2. `scripts/verify_trace.py` imports it at line 37 and calls `anchor_path(ROOT, task)` at line 132.",
+    "correct": 1,
+    "id": "k04",
+    "method": "old"
+   }
+  ],
+  "aborted": null
+ },
+ "spend": {
+  "spent": 6.796595799999999,
+  "runs": 142
+ },
+ "lifecycle": {
+  "steps": [
+   {
+    "seconds": 5.727,
+    "input": 4,
+    "output": 222,
+    "cache_read": 10110,
+    "cache_creation": 4225,
+    "tokens": 14561,
+    "cost": 0.040278,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "33afb60e-2cf6-4cc9-a6a2-7277a75076b3",
+    "answer": "`scripts/pull_moment.py`: this is the script that runs one pull moment. Its docstring shows the three commands, `wake` (session start), `spawn <ID>` (before spawning an agent) and `review <ID>` (before moving a task to Ready for Review).\n\nIt also says the fourth moment, before merge, runs inside `pre_bash_block_unsafe_merge.py` instead.",
+    "correct": 1,
+    "chain": "L1",
+    "method": "context",
+    "label": "q1"
+   },
+   {
+    "seconds": 3.214,
+    "input": 2,
+    "output": 176,
+    "cache_read": 8721,
+    "cache_creation": 335,
+    "tokens": 9234,
+    "cost": 0.0482302,
+    "turns": 1,
+    "hit": 1,
+    "error": false,
+    "session_id": "829794f7-b6b3-4311-bf79-c67db7c899aa",
+    "answer": "1. `tests/test_pull_moments.py` is the main test file for `scripts/pull_moment.py`. It runs the wake, spawn and review moments, for example `test_local_mode_moments_do_nothing`.\n2. `tests/test_board_decisions.py` also calls the script's `wake`, to check the \"new decisions from teammates\" line.\n3. `tests/test_board_triage.py` also calls the script's `wake`, to check the triage output.",
+    "correct": 1,
+    "chain": "L1",
+    "method": "context",
+    "label": "same_session"
+   },
+   {
+    "seconds": 7.799,
+    "input": 4,
+    "output": 181,
+    "cache_read": 10116,
+    "cache_creation": 4293,
+    "tokens": 14594,
+    "cost": 0.040003199999999996,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "8d818fcb-b7c6-4e3d-ab1f-95a2909de3c5",
+    "answer": "`tests/test_pull_moments.py` is the test file for `scripts/pull_moment.py`, the script that runs the wake, spawn and review pull moments. It calls the script with each of the three moments and checks that each command is wired into the skill or doc where that moment happens.",
+    "correct": 1,
+    "chain": "L1",
+    "method": "context",
+    "label": "fresh"
+   },
+   {
+    "seconds": 3.868,
+    "input": 2,
+    "output": 210,
+    "cache_read": 9056,
+    "cache_creation": 0,
+    "tokens": 9268,
+    "cost": 0.046297200000000004,
+    "turns": 1,
+    "hit": 1,
+    "error": false,
+    "session_id": "1be590df-9859-43fb-9322-2649b2213a1f",
+    "answer": "`tests/test_pull_moments.py` is the main test file for `scripts/pull_moment.py`. It runs the script's `wake`, `spawn` and `review` moments, for example checking that they do nothing in `local` board mode.\n\nTwo other files also call the script, but only for their own features:\n- `tests/test_board_decisions.py` checks the wake-time \"new decisions from teammates\" line.\n- `tests/test_board_triage.py` checks the triage output at wake.",
+    "correct": 1,
+    "chain": "L1",
+    "method": "context",
+    "label": "resume_after_372s"
+   },
+   {
+    "seconds": 4.826,
+    "input": 2,
+    "output": 207,
+    "cache_read": 9056,
+    "cache_creation": 0,
+    "tokens": 9265,
+    "cost": 0.0462372,
+    "turns": 1,
+    "hit": 1,
+    "error": false,
+    "session_id": "b3d96997-2624-4c60-8373-aa482eb301c9",
+    "answer": "1. `tests/test_pull_moments.py`: this is the main test file for `scripts/pull_moment.py`. It runs the `wake`, `spawn` and `review` moments, for example checking that they do nothing in `local` mode.\n2. `tests/test_board_decisions.py` also calls `pull_moment` `wake` to test the \"new decisions from teammates\" line.\n3. `tests/test_board_triage.py` also runs `pull_moment.py wake` to test triage.",
+    "correct": 1,
+    "chain": "L1",
+    "method": "context",
+    "label": "resume_after_3720s"
+   },
+   {
+    "seconds": 7.646,
+    "input": 6,
+    "output": 361,
+    "cache_read": 19728,
+    "cache_creation": 4182,
+    "tokens": 24277,
+    "cost": 0.0446456,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "b34a05de-08a4-4b60-a85f-10a12fab1755",
+    "answer": "1. `scripts/pull_moment.py`: this is the script that runs the `wake`, `spawn <ID>` and `review <ID>` pull moments. The spawn skill and the pipeline docs both call it, for example `python3 scripts/pull_moment.py spawn <ID>`.\n2. `.claude/hooks/lib/board/moments.py`: the library behind it, which does the actual pull-moment work, such as refreshing the board cache.",
+    "correct": 1,
+    "chain": "L1",
+    "method": "old",
+    "label": "q1"
+   },
+   {
+    "seconds": 9.794,
+    "input": 6,
+    "output": 391,
+    "cache_read": 28206,
+    "cache_creation": 1002,
+    "tokens": 29605,
+    "cost": 0.0661468,
+    "turns": 4,
+    "hit": 1,
+    "error": false,
+    "session_id": "b3e6ad09-84a6-4bc0-87c0-cd8d94a6d92d",
+    "answer": "1. `tests/test_pull_moments.py`: this is the dedicated test file for `scripts/pull_moment.py`, and it refers to `pull_moment` more often than any other test (8 times).\n2. `tests/test_board_triage.py`, `tests/test_board_decisions.py` and `tests/test_board_push.py` also mention `pull_moment`, but only 1\u20133 times each, so they likely touch the script only in passing.",
+    "correct": 1,
+    "chain": "L1",
+    "method": "old",
+    "label": "same_session"
+   },
+   {
+    "seconds": 7.298,
+    "input": 6,
+    "output": 407,
+    "cache_read": 20670,
+    "cache_creation": 5709,
+    "tokens": 26792,
+    "cost": 0.05797,
+    "turns": 4,
+    "hit": 1,
+    "error": false,
+    "session_id": "4504a3be-5db6-44ac-bfe9-994fab102b6a",
+    "answer": "`tests/test_pull_moments.py` is the test file. It runs `scripts/pull_moment.py` as a subprocess and checks its `wake`, `spawn` and `review` moments, including the guide-hash change check at Ready for Review.",
+    "correct": 1,
+    "chain": "L1",
+    "method": "old",
+    "label": "fresh"
+   },
+   {
+    "seconds": 6.558,
+    "input": 6,
+    "output": 378,
+    "cache_read": 28383,
+    "cache_creation": 477,
+    "tokens": 29244,
+    "cost": 0.0617222,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "a6cb8faa-ea1d-4377-9a65-b268d6c2f2f5",
+    "answer": "1. `tests/test_pull_moments.py`: this is the test file for `scripts/pull_moment.py`, matching it by name and containing the most references to the script (8 of the 15 found under `tests/`).\n\n`tests/test_board_triage.py`, `tests/test_board_decisions.py` and `tests/test_board_push.py` also mention `pull_moment`, but only in passing (1\u20133 references each). I didn't open the files to see how they use it.",
+    "correct": 1,
+    "chain": "L1",
+    "method": "old",
+    "label": "resume_after_372s"
+   },
+   {
+    "seconds": 7.624,
+    "input": 6,
+    "output": 367,
+    "cache_read": 28355,
+    "cache_creation": 426,
+    "tokens": 29154,
+    "cost": 0.06108860000000001,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "739ada35-649c-4018-ba8c-6d7ffbc82836",
+    "answer": "`tests/test_pull_moments.py` is the dedicated test file for `scripts/pull_moment.py`. It's named for the pull moments and references `pull_moment` most often (8 times). Three other test files (`tests/test_board_triage.py`, `tests/test_board_decisions.py`, `tests/test_board_push.py`) also mention `pull_moment` once to three times each, but they're about other board features. I only counted matches and didn't open any of these files.",
+    "correct": 1,
+    "chain": "L1",
+    "method": "old",
+    "label": "resume_after_3720s"
+   },
+   {
+    "seconds": 5.796,
+    "input": 4,
+    "output": 261,
+    "cache_read": 10110,
+    "cache_creation": 6180,
+    "tokens": 16555,
+    "cost": 0.056698,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "2ad1ed62-a7d2-4bfc-8cd8-55a27cfe7f3e",
+    "answer": "1. `scripts/verify_trace.py`: this script checks a task's trace (`memory/event-trace/<task>.jsonl`) against its hash chain and its anchor file stored outside the repo. It reports INTACT, BROKEN, ANCHOR MISMATCH, UNANCHORED or UNVERIFIED.\n2. `.claude/hooks/lib/trace_chain.py`: this shared library holds the hash and anchor-path logic that the verifier and the trace-writing hook both use.",
+    "correct": 1,
+    "chain": "L2",
+    "method": "context",
+    "label": "q1"
+   },
+   {
+    "seconds": 3.363,
+    "input": 2,
+    "output": 128,
+    "cache_read": 10676,
+    "cache_creation": 390,
+    "tokens": 11196,
+    "cost": 0.0645212,
+    "turns": 1,
+    "hit": 1,
+    "error": false,
+    "session_id": "c6f1aa7f-7cbf-4d53-a79b-c38b41aabab9",
+    "answer": "1. `.claude/hooks/lib/trace_chain.py`: `scripts/verify_trace.py` adds `.claude/hooks/lib` to `sys.path` and then runs `from trace_chain import GENESIS, anchor_path, chain_hash, safe_name`.",
+    "correct": 1,
+    "chain": "L2",
+    "method": "context",
+    "label": "same_session"
+   },
+   {
+    "seconds": 4.263,
+    "input": 4,
+    "output": 197,
+    "cache_read": 10123,
+    "cache_creation": 5613,
+    "tokens": 15937,
+    "cost": 0.050884599999999995,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "8db0fbf1-87d8-4a66-809c-b7e692fc9170",
+    "answer": "`.claude/hooks/lib/trace_chain.py`: this is the shared library that defines `chain_hash` and `anchor_path`, and the verifier script `scripts/verify_trace.py` imports both from it (`from trace_chain import GENESIS, anchor_path, chain_hash, safe_name`).",
+    "correct": 1,
+    "chain": "L2",
+    "method": "context",
+    "label": "fresh"
+   },
+   {
+    "seconds": 2.911,
+    "input": 2,
+    "output": 149,
+    "cache_read": 11066,
+    "cache_creation": 0,
+    "tokens": 11217,
+    "cost": 0.0618992,
+    "turns": 1,
+    "hit": 1,
+    "error": false,
+    "session_id": "2ae1613c-cb2b-4abc-90ca-9a421a35ca43",
+    "answer": "1. `.claude/hooks/lib/trace_chain.py`: `scripts/verify_trace.py` puts `.claude/hooks/lib` on `sys.path` and runs `from trace_chain import GENESIS, anchor_path, chain_hash, safe_name`, so both helpers come from this module.",
+    "correct": 1,
+    "chain": "L2",
+    "method": "context",
+    "label": "resume_after_372s"
+   },
+   {
+    "seconds": 12.353,
+    "input": 6,
+    "output": 402,
+    "cache_read": 19383,
+    "cache_creation": 4505,
+    "tokens": 24296,
+    "cost": 0.0479806,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "047c777e-852d-47bb-8a94-d79338368267",
+    "answer": "1. `scripts/verify_trace.py` is the script that checks it: it reads `memory/event-trace/<task>.jsonl` and the anchor file stored outside the repo, then prints a verdict of INTACT, UNANCHORED, BROKEN, ANCHOR MISMATCH or UNVERIFIED.\n2. `.claude/hooks/lib/trace_chain.py` is the shared library that builds and links the chain this script verifies. I'm inferring that from its name and from finding it in the trace-related search results; I didn't open it.",
+    "correct": 1,
+    "chain": "L2",
+    "method": "old",
+    "label": "q1"
+   },
+   {
+    "seconds": 6.145,
+    "input": 4,
+    "output": 272,
+    "cache_read": 19115,
+    "cache_creation": 787,
+    "tokens": 20178,
+    "cost": 0.06355559999999999,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "ffc720a0-c54a-40da-89e3-48d27d0d14f3",
+    "answer": "`.claude/hooks/lib/trace_chain.py` \u2014 `scripts/verify_trace.py:36-37` adds `.claude/hooks/lib` to `sys.path` and then runs `from trace_chain import GENESIS, anchor_path, chain_hash, safe_name`.",
+    "correct": 1,
+    "chain": "L2",
+    "method": "old",
+    "label": "same_session"
+   },
+   {
+    "seconds": 12.092,
+    "input": 6,
+    "output": 318,
+    "cache_read": 17054,
+    "cache_creation": 3121,
+    "tokens": 20499,
+    "cost": 0.0347628,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "40f48dc0-dcc9-4896-a09c-93a4954923a3",
+    "answer": "`.claude/hooks/lib/trace_chain.py` defines `chain_hash` (line 54) and `anchor_path` (line 73), and the verifier script `scripts/verify_trace.py` imports both from it at line 37.",
+    "correct": 1,
+    "chain": "L2",
+    "method": "old",
+    "label": "fresh"
+   },
+   {
+    "seconds": 4.626,
+    "input": 4,
+    "output": 281,
+    "cache_read": 19518,
+    "cache_creation": 361,
+    "tokens": 20164,
+    "cost": 0.060408199999999995,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "5e8c640f-0efa-424a-b6aa-330f820f309c",
+    "answer": "`.claude/hooks/lib/trace_chain.py`: at line 36, `scripts/verify_trace.py` adds `.claude/hooks/lib` to `sys.path`. Then at line 37 it runs `from trace_chain import GENESIS, anchor_path, chain_hash, safe_name`.",
+    "correct": 1,
+    "chain": "L2",
+    "method": "old",
+    "label": "resume_after_372s"
+   },
+   {
+    "seconds": 7.89,
+    "input": 4,
+    "output": 301,
+    "cache_read": 10121,
+    "cache_creation": 4883,
+    "tokens": 15309,
+    "cost": 0.047124200000000005,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "54a06a37-0437-4b44-a7b9-adf9bfe3ddec",
+    "answer": "The hook is `.claude/hooks/pre_agent_step_limit.py`. I didn't open it directly, though. Several task docs that cite it confirm its role:\n\n1. `.claude/hooks/pre_agent_step_limit.py` \u2014 its own block message says a task \"has exceeded N tool calls without reaching Ready for Review\" and stops the run (the default limit is now 90; it was 40 before).\n2. `.claude/hooks/tests/test_step_limit_self_clearing.py` \u2014 its tests show that the hook clears itself (T057): it blocks the call that crosses the limit, then lets the next call through.",
+    "correct": 1,
+    "chain": "L3",
+    "method": "context",
+    "label": "q1"
+   },
+   {
+    "seconds": 8.081,
+    "input": 6,
+    "output": 474,
+    "cache_read": 29298,
+    "cache_creation": 3083,
+    "tokens": 32861,
+    "cost": 0.0871518,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "116fd747-817b-420b-83b6-5618e89df0db",
+    "answer": "1. `.claude/hooks/tests/test_step_limit_self_clearing.py` is the T057 suite for `pre_agent_step_limit.py`'s self-clearing block. It runs the real hook and checks that the counter goes back to 0 after a block (`test_sc3_counter_reads_zero_after_block`, line 90) and that the next call is allowed.\n2. `.claude/hooks/tests/test_step_limit_session_scope.py` is the older T056 suite. It covers the counter restarting at 1 when it expires, but one of its cases still expects the old behaviour where the session stayed locked.",
+    "correct": 1,
+    "chain": "L3",
+    "method": "context",
+    "label": "same_session"
+   },
+   {
+    "seconds": 8.895,
+    "input": 6,
+    "output": 356,
+    "cache_read": 19881,
+    "cache_creation": 10293,
+    "tokens": 30536,
+    "cost": 0.0934642,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "ef4cd6fc-37f1-4ce2-ba43-af90003640a4",
+    "answer": "`.claude/hooks/tests/test_step_limit_self_clearing.py` is the file. It tests the T057 self-clearing block in `pre_agent_step_limit.py`, where the counter resets itself to 0 on the same call that blocks the sub-agent (see `test_sc3_counter_reads_zero_after_block`).",
+    "correct": 1,
+    "chain": "L3",
+    "method": "context",
+    "label": "fresh"
+   },
+   {
+    "seconds": 8.48,
+    "input": 6,
+    "output": 503,
+    "cache_read": 29710,
+    "cache_creation": 2549,
+    "tokens": 32768,
+    "cost": 0.0835422,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "5baa1d94-a48d-40f3-a2de-06f0bf20ca36",
+    "answer": "`.claude/hooks/tests/test_step_limit_self_clearing.py` is the test file. It runs the real `pre_agent_step_limit.py` hook and checks the T057 self-clearing behaviour: `test_sc3_counter_reads_zero_after_block` asserts the counter file goes back to `0` after a block, `test_sc2_call_after_block_is_allowed` (named in T057's task guide) checks that the next call gets through, and another test checks that the block message no longer tells you to reset the counter by hand.",
+    "correct": 1,
+    "chain": "L3",
+    "method": "context",
+    "label": "resume_after_372s"
+   },
+   {
+    "seconds": 19.022,
+    "input": 6,
+    "output": 424,
+    "cache_read": 17569,
+    "cache_creation": 3017,
+    "tokens": 21016,
+    "cost": 0.0361538,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "eabd6271-f2f9-4e7d-8e5e-9514795361e2",
+    "answer": "`.claude/hooks/pre_agent_step_limit.py` is the hook. It's a PreToolUse guardrail that counts tool calls per Task ID and blocks the task once it passes `CLAUDE_STEP_LIMIT` (90 by default), which forces a stuck run to stop and report. One detail: the block clears itself, so a looping task gets interrupted every 90 calls rather than halted for good. I only read the header docstring, which doesn't mention Ready for Review, so I haven't confirmed that part.",
+    "correct": 1,
+    "chain": "L3",
+    "method": "old",
+    "label": "q1"
+   },
+   {
+    "seconds": 7.186,
+    "input": 6,
+    "output": 389,
+    "cache_read": 24760,
+    "cache_creation": 1386,
+    "tokens": 26541,
+    "cost": 0.059997800000000004,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "e576ea8a-7b15-4a5c-ba52-4f2be42de202",
+    "answer": "`.claude/hooks/tests/test_step_limit_self_clearing.py` covers it: its docstring says it tests the T057 self-clearing block in `pre_agent_step_limit.py`, and it runs the real hook as a subprocess.\n\n`.claude/hooks/tests/test_step_limit_session_scope.py` is less relevant: its docstring says it still checks the old behaviour, where a session stays blocked once it hits the limit.",
+    "correct": 1,
+    "chain": "L3",
+    "method": "old",
+    "label": "same_session"
+   },
+   {
+    "seconds": 8.126,
+    "input": 6,
+    "output": 456,
+    "cache_read": 17428,
+    "cache_creation": 2465,
+    "tokens": 20355,
+    "cost": 0.0323496,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "03ef0cca-03dc-48b7-90a7-21cf96ea2fe9",
+    "answer": "1. `.claude/hooks/tests/test_step_limit_self_clearing.py`: this is the most direct answer. It tests how the step-limit hook (`.claude/hooks/pre_agent_step_limit.py`) clears its own block and resets its per-task step counter. It runs the real hook as a subprocess and checks the time-based expiry on its counter files.\n2. `.claude/hooks/tests/test_step_limit_session_scope.py`: related but older. It tests how the same hook's counter is scoped to a session, and still expects the old behaviour where an exhausted session stays blocked.",
+    "correct": 1,
+    "chain": "L3",
+    "method": "old",
+    "label": "fresh"
+   },
+   {
+    "seconds": 14.003,
+    "input": 6,
+    "output": 420,
+    "cache_read": 25086,
+    "cache_creation": 501,
+    "tokens": 26013,
+    "cost": 0.053603,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "fc5078d6-359d-4150-8b6a-f8630609f6af",
+    "answer": "The test file is `.claude/hooks/tests/test_step_limit_self_clearing.py`. Its name points straight at the self-clearing reset added in T057, where `pre_agent_step_limit.py` sets its counter back to 0 in the same call that blocks. It also has the most matches for T057, self-clear and `block_count`.\n\nThe runner-up is `.claude/hooks/tests/test_step_limit_session_scope.py`, which also refers to T057 and `block_count` but is mainly about counters being kept per session.\n\nI picked these from a search across the tests folder without opening either file, so I haven't checked the actual test cases.",
+    "correct": 1,
+    "chain": "L3",
+    "method": "old",
+    "label": "resume_after_372s"
+   },
+   {
+    "seconds": 9.16,
+    "input": 4,
+    "output": 346,
+    "cache_read": 10114,
+    "cache_creation": 6498,
+    "tokens": 16962,
+    "cost": 0.0609428,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "ef9c93b7-1be7-4042-a133-4bf11efcca85",
+    "answer": "The function is `harness_backup_path`, and it's defined in **`lib/harness-fetch.sh`**.\n\n- `lib/harness-fetch.sh`: this file defines `harness_backup_path <src> <dst>`, which moves a differing existing destination to the first free `<dst>.bak`, `.bak.1`, `.bak.2`\u2026 before the kit's copy is written. It is called from `harness_copy_manifest` and `install_claude`.\n- `memory/decisions.md`: the T112 decision entry describes this function and its rules.\n\nI didn't open `lib/harness-fetch.sh` itself. The location comes from the T112 decision entry and from a comment in `setup.sh` (`install_would_back_up`",
+    "correct": 1,
+    "chain": "L4",
+    "method": "context",
+    "label": "q1"
+   },
+   {
+    "seconds": 11.061,
+    "input": 6,
+    "output": 447,
+    "cache_read": 34194,
+    "cache_creation": 4511,
+    "tokens": 39158,
+    "cost": 0.11283359999999999,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "1c0e2dcf-a561-41c3-b255-9c6a6e934922",
+    "answer": "The test script is **`tests/test_install_backups.sh`**. Its header says it checks that a first install never destroys a project's own files: it runs the real `setup.sh` against scratch repos and confirms that differing paths are moved to `.bak` backups instead of being overwritten.\n\nIt covers SC1\u2013SC7 from T112, a check that restoring the old `rm -rf` makes the tests fail, and T137's backup naming. In T137 a backup is named `<dst>.bak-<commit>`, or `<dst>.bak-<date>` when no kit version is recorded. I only read the header, not the individual test cases.",
+    "correct": 1,
+    "chain": "L4",
+    "method": "context",
+    "label": "same_session"
+   },
+   {
+    "seconds": 8.843,
+    "input": 6,
+    "output": 455,
+    "cache_read": 20870,
+    "cache_creation": 10690,
+    "tokens": 32021,
+    "cost": 0.098818,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "dd121111-a8fc-4100-83e6-33b64b833603",
+    "answer": "The best match is **`tests/test_install_backups.sh`**. It runs the real `setup.sh` against scratch git repos and checks the backup behaviour from T112. When an existing path's content differs from the kit's copy, the installer moves it aside to a named `.bak` copy instead of deleting it. When the content is identical, it leaves the path alone.\n\nThat test exercises the backup code through a full install rather than calling the shell function on its own, and I found no test script that does call it directly. The function that makes the backup decision is `install_would_back_up` (with `harness_ba",
+    "correct": 1,
+    "chain": "L4",
+    "method": "context",
+    "label": "fresh"
+   },
+   {
+    "seconds": 3.995,
+    "input": 2,
+    "output": 242,
+    "cache_read": 11453,
+    "cache_creation": 0,
+    "tokens": 11697,
+    "cost": 0.0680814,
+    "turns": 1,
+    "hit": 1,
+    "error": false,
+    "session_id": "c0703ae2-2e12-47a3-9757-4dc77d772a46",
+    "answer": "`tests/test_install_backups.sh` is the test script for this. The T112 review notes (`tasks/TASK_REVIEW_T112.md`) list it as the new suite, and its cases cover:\n\n- moving a differing `CLAUDE.md`, `AGENTS.md` or `templates/` aside to `.bak`;\n- leaving identical paths alone;\n- choosing `.bak.1` and `.bak.2` when a `.bak` already exists;\n- moving a symlink as the link itself.\n\nI haven't opened the test file; this comes from the test output recorded in that review.",
+    "correct": 1,
+    "chain": "L4",
+    "method": "context",
+    "label": "resume_after_372s"
+   },
+   {
+    "seconds": 5.454,
+    "input": 4,
+    "output": 292,
+    "cache_read": 10824,
+    "cache_creation": 2977,
+    "tokens": 14097,
+    "cost": 0.0318368,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "8f88b873-e3c7-4df6-9b0d-68ceea242803",
+    "answer": "**`lib/harness-fetch.sh`** defines that function: `harness_backup_path <src> <dst>` (line 271). Its header comment (lines 23 and 254\u2013268) says it moves a differing `<dst>` aside to `<dst>.bak-<id>`, or the next free `.N`, before the installer overwrites it.\n\n`lib/harness-update.sh` is second: it calls `harness_backup_path` during reinstall (lines 240 and 804) but doesn't define it.",
+    "correct": 1,
+    "chain": "L4",
+    "method": "old",
+    "label": "q1"
+   },
+   {
+    "seconds": 6.482,
+    "input": 6,
+    "output": 362,
+    "cache_read": 24477,
+    "cache_creation": 1508,
+    "tokens": 26353,
+    "cost": 0.0560602,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "a29d5242-fe9b-4997-af18-ebd2e69a7a38",
+    "answer": "**`tests/test_install_backups.sh`** is the test for that behaviour. Its header says it checks that a first install never destroys a project's own files, and that the moved-aside copy is named `<dst>.bak-<commit>` (or `.bak-<today's date>` when there's no recorded kit version).\n\n`tests/test_update.sh` is second: it also checks the `.bak-` backups, but during an update.",
+    "correct": 1,
+    "chain": "L4",
+    "method": "old",
+    "label": "same_session"
+   },
+   {
+    "seconds": 13.571,
+    "input": 10,
+    "output": 818,
+    "cache_read": 32298,
+    "cache_creation": 4905,
+    "tokens": 38031,
+    "cost": 0.062099600000000005,
+    "turns": 6,
+    "hit": 1,
+    "error": false,
+    "session_id": "5d45d16b-f06d-4ae5-be1a-7b218b8d33f4",
+    "answer": "The test script is `tests/test_install_backups.sh`. It checks that a first install never destroys a project's own files. It runs the real `setup.sh` against scratch repos and is the only test that names `harness_backup_path`, the function that moves a differing existing path aside.\n\n`harness_backup_path` itself is defined at `lib/harness-fetch.sh:271`. It moves anything that differs to `<dst>.bak-<id>` before the installer overwrites it.",
+    "correct": 1,
+    "chain": "L4",
+    "method": "old",
+    "label": "fresh"
+   },
+   {
+    "seconds": 7.307,
+    "input": 6,
+    "output": 388,
+    "cache_read": 24836,
+    "cache_creation": 1133,
+    "tokens": 26363,
+    "cost": 0.053652000000000005,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "a8d02282-0f80-4517-abc5-c14b87635109",
+    "answer": "**`tests/test_install_backups.sh`** is the test for this. Its header (lines 2\u20139) says it checks that a first install never destroys a project's own files: a differing path is moved aside to `<dst>.bak-<commit>`, or `<dst>.bak-<date>` when no kit version is recorded. It does this by running the real `setup.sh` against throwaway git repos.\n\n`tests/test_update.sh` is second: a search shows it also refers to `.bak-` backups (5 matches), likely for the update path.",
+    "correct": 1,
+    "chain": "L4",
+    "method": "old",
+    "label": "resume_after_372s"
+   }
+  ],
+  "summary": {
+   "q1": {
+    "context": {
+     "input": 4,
+     "output": 282.5,
+     "cache_read": 10113.75,
+     "cache_creation": 5446.5,
+     "cost": 0.05126075,
+     "seconds": 7.14325,
+     "n": 4,
+     "correct": 4
+    },
+    "old": {
+     "input": 5.5,
+     "output": 369.75,
+     "cache_read": 16876,
+     "cache_creation": 3670.25,
+     "cost": 0.0401542,
+     "seconds": 11.118749999999999,
+     "n": 4,
+     "correct": 4
+    }
+   },
+   "same_session": {
+    "context": {
+     "input": 4,
+     "output": 306.25,
+     "cache_read": 20722.25,
+     "cache_creation": 2079.75,
+     "cost": 0.0781842,
+     "seconds": 6.42975,
+     "n": 4,
+     "correct": 4
+    },
+    "old": {
+     "input": 5.5,
+     "output": 353.5,
+     "cache_read": 24139.5,
+     "cache_creation": 1170.75,
+     "cost": 0.0614401,
+     "seconds": 7.40175,
+     "n": 4,
+     "correct": 4
+    }
+   },
+   "fresh": {
+    "context": {
+     "input": 5,
+     "output": 297.25,
+     "cache_read": 15247.5,
+     "cache_creation": 7722.25,
+     "cost": 0.0707925,
+     "seconds": 7.45,
+     "n": 4,
+     "correct": 4
+    },
+    "old": {
+     "input": 7,
+     "output": 499.75,
+     "cache_read": 21862.5,
+     "cache_creation": 4050,
+     "cost": 0.046795500000000004,
+     "seconds": 10.27175,
+     "n": 4,
+     "correct": 4
+    }
+   },
+   "resume_after_372s": {
+    "context": {
+     "input": 3,
+     "output": 276,
+     "cache_read": 15321.25,
+     "cache_creation": 637.25,
+     "cost": 0.064955,
+     "seconds": 4.8135,
+     "n": 4,
+     "correct": 4
+    },
+    "old": {
+     "input": 5.5,
+     "output": 366.75,
+     "cache_read": 24455.75,
+     "cache_creation": 618,
+     "cost": 0.05734635,
+     "seconds": 8.1235,
+     "n": 4,
+     "correct": 4
+    }
+   },
+   "resume_after_3720s": {
+    "context": {
+     "input": 2,
+     "output": 207,
+     "cache_read": 9056,
+     "cache_creation": 0,
+     "cost": 0.0462372,
+     "seconds": 4.826,
+     "n": 1,
+     "correct": 1
+    },
+    "old": {
+     "input": 6,
+     "output": 367,
+     "cache_read": 28355,
+     "cache_creation": 426,
+     "cost": 0.06108860000000001,
+     "seconds": 7.624,
+     "n": 1,
+     "correct": 1
+    }
+   }
+  },
+  "aborted": null
+ }
+}

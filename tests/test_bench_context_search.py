@@ -290,7 +290,8 @@ def test_grade_answer_per_kind():
     assert b.grade_answer(one, "see ./d/x.md") == 1
     neg = {"kind": "negative", "expected_paths": []}
     assert b.grade_answer(neg, "NOT FOUND") == 1
-    assert b.grade_answer(neg, "NOT FOUND, but see docs/x.md") == 0
+    assert b.grade_answer(neg, "**NOT FOUND**\n\nThe closest file, docs/x.md, is unrelated.") == 1
+    assert b.grade_answer(neg, "I think it is docs/x.md. NOT FOUND otherwise") == 0
     assert b.grade_answer(neg, "It is in lib/x.py") == 0
 
 
@@ -367,3 +368,12 @@ def test_upkeep_probe_leaves_the_checkout_clean(tmp_path, monkeypatch):
     out = b.run_upkeep(Fake(), str(tmp_path))
     assert out["git_status_unchanged"] and not os.path.exists(tmp_path / "zz_staleness_probe.md")
     assert out["staleness"]["after_edit_old_text_still_returned"] and not out["staleness"]["after_edit_new_text_found"]
+
+
+def test_regrade_recomputes_from_stored_answers():
+    q = {"id": "n", "kind": "negative", "expected_paths": []}
+    ok = {"error": False, "answer": "NOT FOUND\nnothing about x in lib/y.py", "correct": 0, "tokens": 1, "cost": 0.1, "seconds": 1}
+    bad = dict(ok, answer="it is lib/y.py")
+    data = {"agent": {"rows": [{"q": q, "context": dict(ok), "old": dict(bad)}], "repeats": []}}
+    out = b.regrade(data)["agent"]
+    assert out["summary"]["context"]["correct"] == 1 and out["summary"]["old"]["correct"] == 0

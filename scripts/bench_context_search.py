@@ -351,9 +351,7 @@ PER_RUN_BUDGET = 0.5   # --max-budget-usd for one `claude -p` run
 SPEND_CAP = 12.0       # cumulative across R3 + R4
 REPEAT_IDS = ["c02", "s03", "m01", "e02", "k04"]
 REPEATS = 3
-PATH_RE = re.compile(r"[\w/-]+\.(?:py|sh|md|json|html|toml|ya?ml|txt)\b")
-NOT_FOUND_RE = re.compile(r"not found|does not exist|doesn't exist|no such|no (?:file|module|code|"
-                          r"implementation|match)|nothing|none of|isn't|is not (?:present|in)", re.I)
+NOT_FOUND_RE = re.compile(r"not found", re.I)
 
 
 class BudgetExceeded(Exception):
@@ -415,12 +413,14 @@ def agent_command(method, root, url, persist=False, resume=None, fork=False):
 def grade_answer(q, answer):
     """1 if the agent's answer is right for this question's kind, else 0.
 
-    negative: says nothing was found and names no file. multi_hop / callers: names every
-    expected path. Others: names any expected path.
+    negative: the answer opens with NOT FOUND, as the prompt tells the agent to reply (later
+    sentences may name files that were checked and rejected). multi_hop / callers: names
+    every expected path. Others: names any expected path.
     """
     answer = answer or ""
     if q["kind"] == "negative":
-        return int(bool(NOT_FOUND_RE.search(answer)) and not PATH_RE.search(answer))
+        first = next((ln for ln in answer.splitlines() if ln.strip()), "")
+        return int(bool(NOT_FOUND_RE.match(first.strip(" *_`#>-"))))
     named = [norm_path(p) in answer for p in q["expected_paths"]]
     return int(all(named) if q["kind"] in ALL_KINDS else any(named))
 
@@ -657,6 +657,24 @@ def run_upkeep(client, root, probe_name="zz_staleness_probe.md"):
     return result
 
 
+def regrade(data):
+    """Recompute `correct` and the agent summaries from the stored answers (no new runs)."""
+    agent = data.get("agent")
+    if not agent:
+        return data
+    for r in agent["rows"]:
+        for m in ("context", "old"):
+            if not r[m]["error"]:
+                r[m]["correct"] = grade_answer(r["q"], r[m]["answer"])
+    kinds = {r["q"]["id"]: r["q"] for r in agent["rows"]}
+    for r in agent.get("repeats", []):
+        r["correct"] = 0 if r["error"] else grade_answer(kinds[r["id"]], r["answer"])
+    agent["summary"] = summarize_agent(agent["rows"])
+    agent["per_kind"] = agent_per_kind(agent["rows"])
+    agent["spread"] = spread(agent.get("repeats", []))
+    return data
+
+
 # ---------------------------------------------------------------- report
 
 def med(values):
@@ -808,8 +826,30 @@ def recommendation(data):
                  else "search saw the edit before a re-index")
         parts.append(f"Upkeep: a full re-index takes {u['full_reindex_s']:.1f}s and an incremental one "
                      f"{u['touch_10_reindex_s']:.1f}s for 10 touched files; after an edit, {stale}.")
-    for note in data.get("recommendation_notes", []):
-        parts.append(note)
+    if a:
+        cheaper = [k for k, v in a["per_kind"].items()
+                   if v["context"]["tokens"] < v["old"]["tokens"] and v["context"]["correct"] >= v["old"]["correct"]]
+        rest = [k for k in a["per_kind"] if k not in cheaper]
+        parts.append(
+            "Recommendation: use Grep/Glob/Read by default, with ranged reads, because it was as accurate and "
+            "cheaper overall. Reach for context search first only when you have no keyword to grep - a "
+            "natural-language question about intent or a decision. By real-agent tokens, context search was "
+            f"cheaper and at least as accurate on: {', '.join(cheaper) or 'no question kind'}; "
+            f"grep + Read was cheaper or more accurate on: {', '.join(rest) or 'no question kind'}.")
+    life = data.get("lifecycle")
+    if life:
+        sm = life["summary"]
+        get = lambda label, m: sm.get(label, {}).get(m)  # noqa: E731
+        bits = []
+        for m in ("context", "old"):
+            same, fresh = get("same_session", m), get("fresh", m)
+            if same and fresh:
+                bits.append(f"{m}: Q2 cost ${same['cost']:.3f} resumed in the same session vs ${fresh['cost']:.3f} "
+                            f"in a closed + fresh one (cache_creation {same['cache_creation']:.0f} vs {fresh['cache_creation']:.0f} tokens)")
+        if bits:
+            parts.append("Session lifecycle: " + "; ".join(bits) + ". A resume after the 5-minute cache window still "
+                         "read most of its prompt from cache, so the cache did not visibly expire; parallel chains "
+                         "share one prompt prefix and keep it warm, which this test cannot separate from expiry.")
     return " ".join(parts)
 
 
@@ -863,6 +903,7 @@ def main(argv=None):
     ap.add_argument("--agent", action="store_true", help="real-agent mode: all questions + repeats (claude -p; costs tokens)")
     ap.add_argument("--lifecycle", action="store_true", help="session lifecycle scenario (claude -p; costs tokens; ~1 hour)")
     ap.add_argument("--upkeep", action="store_true", help="index upkeep and staleness probe (re-indexes the root)")
+    ap.add_argument("--regrade", action="store_true", help="re-grade stored agent answers and rebuild the report (free)")
     ap.add_argument("--limit", type=int, default=None, help="only the first N questions")
     ap.add_argument("--repeats", type=int, default=REPEATS, help="repeat runs per fixed question and method")
     ap.add_argument("--cap", type=float, default=SPEND_CAP, help="abort when cumulative real-agent cost would pass this (USD)")
@@ -877,6 +918,11 @@ def main(argv=None):
     data = load_data(json_path)
     data["date"] = datetime.date.today().isoformat()
     budget = Budget(args.cap, os.path.splitext(json_path)[0] + ".spend.json")
+
+    if args.regrade:
+        save_data(regrade(data), md_path, json_path)
+        print(f"Regraded. Report: {md_path}")
+        return 0
 
     if args.agent or args.lifecycle:
         if not shutil.which("claude"):

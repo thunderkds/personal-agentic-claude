@@ -46,6 +46,8 @@ tmp/
 reports/*
 !reports/token-audit_*.md
 !reports/context-search-benchmark-*.md
+!reports/context-search-benchmark-*.json
+reports/context-search-benchmark-*.spend.json
 
 # ============================================================
 # Section 6: Hook runtime state (step counters, event traces)
