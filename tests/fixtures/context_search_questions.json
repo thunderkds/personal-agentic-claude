@@ -1,0 +1,24 @@
+{
+  "_note": "T171 ground truth. expected_paths drafted by the implementing agent; Supervisor signs off (oracle rule). Paths are relative to the indexed repo root.",
+  "questions": [
+    {"id": "c01", "kind": "conceptual", "question": "Where is a push blocked when one of my tasks is still In Progress?", "grep_pattern": "my_blocking_tasks|In Progress", "expected_paths": [".claude/hooks/pre_bash_block_unsafe_merge.py", ".claude/hooks/lib/board/moments.py"]},
+    {"id": "c02", "kind": "conceptual", "question": "What stops a sub-agent that makes too many tool calls without reaching Ready for Review?", "grep_pattern": "STEP_LIMIT", "expected_paths": [".claude/hooks/pre_agent_step_limit.py"]},
+    {"id": "c03", "kind": "conceptual", "question": "How does the installer avoid destroying a project's existing file when it installs over it?", "grep_pattern": "harness_backup_path|\\.bak-", "expected_paths": ["lib/harness-fetch.sh"]},
+    {"id": "c04", "kind": "conceptual", "question": "How do we detect that someone edited a task's event trace after it was written?", "grep_pattern": "ANCHOR MISMATCH|anchor", "expected_paths": ["scripts/verify_trace.py", ".claude/hooks/lib/trace_chain.py"]},
+    {"id": "c05", "kind": "conceptual", "question": "How is the memory slice for a spawn prompt chosen from MEMORY.md?", "grep_pattern": "memory.slice|memory_slice", "expected_paths": ["skills/craft-spawn-prompt/scripts/memory_slice.py"]},
+    {"id": "c06", "kind": "conceptual", "question": "How does the kit compare a branch diff against a task's declared complexity lane?", "grep_pattern": "lane", "expected_paths": ["scripts/lane_check.py"]},
+    {"id": "c07", "kind": "conceptual", "question": "How does the Linear board adapter fetch the list of tasks?", "grep_pattern": "list_tasks", "expected_paths": [".claude/hooks/lib/board/linear.py"]},
+    {"id": "c08", "kind": "conceptual", "question": "How are token costs measured from agent session transcripts?", "grep_pattern": "transcript", "expected_paths": ["scripts/token_meter.py"]},
+    {"id": "s01", "kind": "symbol", "question": "pull_moment", "grep_pattern": "pull_moment", "expected_paths": ["scripts/pull_moment.py"]},
+    {"id": "s02", "kind": "symbol", "question": "in_progress_ids", "grep_pattern": "in_progress_ids", "expected_paths": ["skills/wake/scripts/dirty_worktrees.py"]},
+    {"id": "s03", "kind": "symbol", "question": "safe_task_id", "grep_pattern": "safe_task_id", "expected_paths": [".claude/hooks/lib/board/moments.py"]},
+    {"id": "s04", "kind": "symbol", "question": "split_by_assignee", "grep_pattern": "split_by_assignee", "expected_paths": [".claude/hooks/lib/board/moments.py"]},
+    {"id": "s05", "kind": "symbol", "question": "harness_manifest_exclusions", "grep_pattern": "harness_manifest_exclusions", "expected_paths": ["lib/harness-fetch.sh"]},
+    {"id": "s06", "kind": "symbol", "question": "CLAUDE_STEP_LIMIT", "grep_pattern": "CLAUDE_STEP_LIMIT", "expected_paths": [".claude/hooks/pre_agent_step_limit.py"]},
+    {"id": "s07", "kind": "symbol", "question": "bash_writes_file", "grep_pattern": "bash_writes_file", "expected_paths": ["scripts/token_meter.py"]},
+    {"id": "d01", "kind": "doc", "question": "Why do we keep saved tool output inside the repo?", "grep_pattern": "saved tool output|Saved tool output", "expected_paths": ["docs/ddr/0008-saved-tool-output-lives-inside-the-repo.md"]},
+    {"id": "d02", "kind": "doc", "question": "Why is the installer one confirmed menu instead of several separate commands?", "grep_pattern": "menu-driven|menu", "expected_paths": ["docs/adr/0002-one-confirmed-menu-driven-installer.md"]},
+    {"id": "d03", "kind": "doc", "question": "What goes in the verbatim-preserve list when a reply is shortened?", "grep_pattern": "Verbatim-preserve|verbatim", "expected_paths": ["docs/claude-md/token-economy.md"]},
+    {"id": "d04", "kind": "doc", "question": "Why does Vital Slice extend Simplicity First, and what is AC-immunity?", "grep_pattern": "AC-immunity", "expected_paths": ["docs/ddr/0005-vital-slice-extends-simplicity-first.md"]}
+  ]
+}

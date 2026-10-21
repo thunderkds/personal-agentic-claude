@@ -33,8 +33,18 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured before any implementation commit.
+
+```
+2026-10-21T10:52:47Z
+$ ls scripts/bench_context_search.py tests/fixtures/context_search_questions.json tests/test_bench_context_search.py
+ls: cannot access 'scripts/bench_context_search.py': No such file or directory
+ls: cannot access 'tests/fixtures/context_search_questions.json': No such file or directory
+ls: cannot access 'tests/test_bench_context_search.py': No such file or directory
+$ python3 scripts/bench_context_search.py
+python3: can't open file '/home/hungnguyenhuu/workspace/pets/wt-t171/scripts/bench_context_search.py': [Errno 2] No such file or directory
+exit=2
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
