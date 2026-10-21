@@ -9,7 +9,7 @@ more correct and cheaper in tokens than Grep/Glob + Read?
 
 Definitions (the three script-mode methods, per question):
   Old way      `grep -rnIE <grep_pattern>` over the root (skips .git, __pycache__,
-               node_modules, .pytest_cache and the benchmark's own artifacts), files ranked
+               node_modules, .pytest_cache, event-trace logs and the benchmark's own artifacts), files ranked
                by match count (ties by path), then the top-ranked file is read in full.
                Text returned = the grep output + that file.
   Old, bounded How a careful agent works: `grep -rcIE` (file:count list, capped at 50 lines),
@@ -75,7 +75,8 @@ def main_checkout(path):
 
 
 DEFAULT_ROOT = os.environ.get("EASY_CONTEXT_ROOT") or main_checkout(ROOT)
-GREP_EXCLUDE_DIRS = [".git", "__pycache__", "node_modules", ".pytest_cache"]
+# event-trace holds the benchmark session's own logged commands (they quote every question).
+GREP_EXCLUDE_DIRS = [".git", "__pycache__", "node_modules", ".pytest_cache", "event-trace"]
 # Files that quote the benchmark's own questions would pollute both methods.
 GREP_EXCLUDE_FILES = ["context_search_questions.json", "TASK_GUIDE_T171.md", "TASK_REVIEW_T171.md",
                       "TASK_GUIDE_T172.md", "TASK_REVIEW_T172.md", "context-search-benchmark-*.md"]
@@ -389,7 +390,8 @@ def agent_prompt(question):
     return ("Find the file in this repository that best answers the question below. "
             "Do not edit anything. Reply with the repo-relative path(s) of the most "
             "relevant file(s), most relevant first, and one sentence why. If the repository has "
-            "nothing that answers it, reply exactly NOT FOUND and name no file.\n\n"
+            "nothing that answers it, reply exactly NOT FOUND and name no file. Ignore memory/event-trace/ "
+            "and tasks/TASK_*_T171.md, tasks/TASK_*_T172.md: they log this benchmark.\n\n"
             f"Question: {question}")
 
 
@@ -757,6 +759,8 @@ def render_upkeep(u):
              f"| re-index after touching 1 file (mtime only) | {u['touch_1_reindex_s']:.2f} |",
              f"| re-index after touching 10 files (mtime only) | {u['touch_10_reindex_s']:.2f} |",
              f"| re-index after adding 1 new file | {u.get('add_1_new_file_reindex_s', 0):.2f} |", "",
+             "Touching changes only the file's mtime, so the index skips the unchanged content: "
+             "those rows show the cost of the scan alone.", "",
              "**Staleness probe** (a new untracked file is indexed, edited, searched before re-index, then removed):", ""]
     st = u["staleness"]
     labels = {"new_file_found": "new file found by search after indexing",
