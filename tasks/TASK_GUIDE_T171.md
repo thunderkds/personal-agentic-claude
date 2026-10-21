@@ -124,6 +124,24 @@ Ground-truth `expected_paths` must be checked by a human (the Supervisor) before
 
 ---
 
+## Amendment — Round 2 (2026-10-21)
+
+User, 2026-10-21, after reading the round-1 report: *"test more case and update above artifact also, I mean for the close, and resume session also, the token need to reload or anything related, check more to make the correctly compare, move vision, give the final suggestion also"*. Then: *"automate approve, I just want the report"* — user pre-approves the round-1 ground truth, the T172 baseline repoint, and this round's spend.
+
+**Restated intent (round 2)**: make the comparison fairer and wider. Add more questions and harder kinds; add a realistic old way; run real agents on more questions with repeats; measure what a session costs when it is closed and started fresh, or resumed (context reload); measure the index's upkeep cost; end with a recommendation.
+
+| # | Criterion (testable) | Traces to |
+|---|----------------------|-----------|
+| R1 | Question set grows to ≥35. New kinds, ≥4 each: `multi_hop` (answer needs 2 files, e.g. "which test covers X and where is X"), `exact_text` (a literal error/message string), `callers` ("what calls `fn`"), `negative` (asks for something that does not exist; correct = answer says not found and claims no file; `expected_paths: []`). Round-1 questions stay unchanged. | "test more case" |
+| R2 | Script mode gains a third method `old_bounded`: `grep -rlIE` file list ranked by match count, then a ranged Read of ±40 lines around the first match in the top file, grep output capped at 50 lines — how a careful agent works. Report shows all three methods. | "make the correctly compare" |
+| R3 | Real-agent mode runs **all** questions once per method, plus 3 repeats of 5 fixed questions per method to show run-to-run spread (min/median/max of tokens, cost, time). Correctness graded per question kind. Keep the per-run `--max-budget-usd`; abort the batch if cumulative cost passes **$12**. | "test more case" |
+| R4 | New `--lifecycle` scenario, real agents, ≥4 two-question chains (Q2 is a follow-up that needs Q1's finding), per method: (a) **same session** — Q1, then Q2 via `--resume <session_id>` right away; (b) **resume after cache expiry** — Q1, wait ≥6 min, then `--resume` Q2; (c) **closed + fresh** — Q1, then Q2 in a new session that must re-find. Record per step: input, output, `cache_read_input_tokens`, `cache_creation_input_tokens`, cost, time, correct. Session persistence ON for these runs only. | "close, and resume session … the token need to reload" |
+| R5 | Index upkeep: time a full re-index (`index_path force=true`) and an incremental one after touching 1 and 10 files; report seconds. One staleness probe: after editing a file and before re-index, does `search_semantic` return the old text? Revert every edit; never leave the main checkout modified. | "move vision" |
+| R6 | Report (md) gains: per-kind accuracy, three-method script table, lifecycle table, run-to-run spread, upkeep, and a **Recommendation** paragraph (when to use which method), backed by numbers. Also emit `reports/context-search-benchmark-<date>.json` with all raw rows for the HTML report. | "give the final suggestion" |
+| R7 | Unit tests cover the new scoring (negative kind; multi-hop = all expected files needed for hit@5, any for hit@1 — or state otherwise), the bounded old way, budget abort, and lifecycle record parsing, with fakes (no server, no `claude`). | Hard-Stop Gate 5 |
+
+---
+
 ## Files to Change (Predicted)
 
 | File | Change |
