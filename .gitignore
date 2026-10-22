@@ -47,6 +47,9 @@ reports/*
 !reports/token-audit_*.md
 !reports/context-search-benchmark-*.md
 !reports/context-search-benchmark-*.json
+!reports/context-search-hybrid-*.md
+!reports/context-search-hybrid-*.json
+reports/context-search-hybrid-*.spend.json
 reports/context-search-benchmark-*.spend.json
 
 # ============================================================
