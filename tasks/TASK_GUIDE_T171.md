@@ -142,6 +142,23 @@ User, 2026-10-21, after reading the round-1 report: *"test more case and update 
 
 ---
 
+## Amendment — Round 3 (2026-10-22)
+
+User, 2026-10-22: *"this repos is heavy of document, so I want to try out another repos ~/workspace/project/beautifly/github/tapchat-apis."* Earlier the same session: *"automate approve, I just want the report"*.
+
+**Restated intent (round 3)**: rerun the comparison on a code-heavy repo — `tapchat-apis` (NestJS, 558 `.ts` of 588 tracked files) — so the verdict is not driven by this repo's Markdown share. Same methods, same scoring, new ground truth.
+
+| # | Criterion (testable) | Traces to |
+|---|----------------------|-----------|
+| T1 | `--questions <path>` selects the question file (default unchanged). New fixture `tests/fixtures/context_search_questions_tapchat.json`: ≥35 questions about tapchat-apis — ≥6 each of conceptual, symbol, callers, multi_hop (source + its spec/test), exact_text; ≥4 negative (zero grep matches, checked); ≥3 doc (its 6 `.md` files). Ground truth checked by grep in that repo. | "try out another repos" |
+| T2 | Grep exclusions configurable per target: for tapchat add `dist`, `coverage`, `node_modules`, `reports`, and grep only git-tracked content is preferred (`git grep` or equivalent) so ignored build output never counts. State the choice in the report. | fair compare |
+| T3 | Runs: script mode (3 methods), real-agent mode all questions once + 3 repeats of 5 questions, `--root /home/hungnguyenhuu/workspace/project/beautifly/github/tapchat-apis`. Lifecycle: 2 chains per method, no expiry wait. Upkeep: timing only (full + no-op re-index), **no staleness probe** (it would write a file into the target repo). Cap: **$10** total. | "try out" |
+| T4 | Target repo is **read-only**: no file written, staged, or deleted in it; `git status --short` there identical before and after (it has pre-existing user changes: staged `tsconfig.json`, untracked `reports/`). Real-agent runs use only read/search tools. | safety |
+| T5 | Output: `reports/context-search-benchmark-tapchat-2026-10-22.{md,json}` in the T171 worktree, same JSON shape as round 2, plus a short "this repo vs tapchat" comparison section in the md. | "combine" |
+| T6 | Unit tests for `--questions` and the per-target exclusions / tracked-only grep. | Hard-Stop Gate 5 |
+
+---
+
 ## Files to Change (Predicted)
 
 | File | Change |
