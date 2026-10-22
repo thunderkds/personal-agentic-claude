@@ -240,3 +240,129 @@ Touching changes only the file's mtime, so the index skips the unchanged content
 
 Main checkout `git status` unchanged afterwards: **yes**.
 
+
+---
+
+## Round 3 evidence (T1-T6, tapchat-apis)
+
+| Check | Result | Notes / output snippet |
+|-------|--------|------------------------|
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | pass | `tests/test_bench_context_search.py` (T6: `--questions` selection, tracked-only grep ignores ignored/untracked files, per-target exclude dirs, `git grep` leaves the repo untouched, read-only upkeep never touches a file, comparison section, labelled report paths) and fixture `tests/fixtures/context_search_questions_tapchat.json` (49 questions: 9 conceptual, 8 symbol, 6 doc, 7 multi_hop, 7 exact_text, 7 callers, 5 negative; 2 lifecycle chains). Output: `40 passed in 0.91s` |
+| Verification command run | pass | script mode, `--upkeep --no-probe`, `--lifecycle --no-expiry-wait`, `--agent` against tapchat-apis with `--grep-tracked --grep-exclude-dir dist/coverage/reports --cap 10`; spend $6.48 over 140 runs (cap $10) |
+| Negative cases hold (T4 read-only) | pass | `git -C tapchat-apis status --short` before: `M  tsconfig.json` / `?? reports/`; after: identical (diffed, empty). No staleness probe, no touch. All negative ground truth confirmed with zero `git grep` matches. |
+| verify | pass | full suite `1449 passed, 25 subtests passed in 33.10s`; all modes ran end to end |
+| Full smoke suite still green (no regression) | pass | `1449 passed, 25 subtests passed in 33.10s` |
+
+Grading: no rule changed after seeing round-3 results (the round-2 rule, "negative answer opens with NOT FOUND", was applied from the start). The one wrong agent answer (d05, old agent) named `src/rooms/entities/room.entity.ts` for a rooms-table question whose ground truth is `DATABASE_README.md`; it was left as scored.
+
+Limits: lifecycle ran 2 chains with no expiry wait, so there are no "resume after cache expiry" rows. Tracked-only `git grep` is the old-way scope here (ignored `dist`, `coverage`, `node_modules` and untracked `reports/` never count); the semantic index also holds only the 588 tracked files.
+
+### Generated report (per-question rows omitted; all rows in `reports/context-search-benchmark-tapchat-2026-10-22.md` and `.json`)
+
+# easy-context search vs grep + Read: benchmark (T171, 2026-10-22)
+
+## Recommendation
+
+On 44 scored questions in script mode, the context way hit@5 32/44 against 44/49 (grep + whole-file Read) and 44/49 (bounded grep + ranged Read). Estimated tokens: 85781 vs 172329 vs 24339; median time 0.154s vs 0.005s vs 0.006s. With real agents the context agent was right 49/49 times and the grep+Read agent 48/49; total tokens 1067225 vs 976491, cost $2.74 vs $1.80, median time 6.4s vs 7.3s. Context search was more accurate on: doc. Upkeep: a full re-index takes 5.0s and a no-op one 0.2s. Recommendation: use Grep/Glob/Read by default, with ranged reads: it cost $1.80 against $2.74 and was right 48/49 times against 49/49. Reach for context search first when you have no keyword to grep - a natural-language question about intent or a decision. By real-agent tokens, context search was cheaper and at least as accurate on: conceptual, doc, multi_hop; grep + Read was cheaper or more accurate on: symbol, exact_text, callers, negative. Session lifecycle: context: Q2 cost $0.145 resumed in the same session vs $0.073 in a closed + fresh one (cache_creation 5638 vs 7548 tokens); old: Q2 cost $0.070 resumed in the same session vs $0.038 in a closed + fresh one (cache_creation 774 vs 3273 tokens).
+
+Real-agent spend this round: **$6.48** over 140 `claude -p` runs (cap $10).
+
+## Script mode
+
+| id | kind | ctx s | old s | bnd s | ctx h1 | old h1 | bnd h1 | ctx h5 | old h5 | bnd h5 | ctx tok | old tok | bnd tok |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+
+Tokens are estimated (chars / 4). h1 / h5 = hit@1 / hit@5. n/a = not scored (semantic search on a negative question always returns hits; agent mode grades it).
+
+| method | median time (s) | hit@1 | hit@5 | total tokens (est) |
+|---|---|---|---|---|
+| context (search_semantic + get_slice) | 0.154 | 21/44 | 32/44 | 85781 |
+| old (grep -n + Read whole top file) | 0.005 | 23/49 | 44/49 | 172329 |
+| old, bounded (file list capped 50 + Read +-40 lines) | 0.006 | 23/49 | 44/49 | 24339 |
+
+**Accuracy per question kind (script mode, hit@1 / hit@5)**
+
+| kind | n | context | old | old, bounded |
+|---|---|---|---|---|
+| conceptual | 9 | 4/9 , 9/9 | 1/9 , 7/9 | 1/9 , 7/9 |
+| symbol | 8 | 7/8 , 7/8 | 0/8 , 7/8 | 0/8 , 7/8 |
+| doc | 6 | 2/6 , 6/6 | 5/6 , 5/6 | 5/6 , 5/6 |
+| multi_hop | 7 | 4/7 , 4/7 | 6/7 , 6/7 | 6/7 , 6/7 |
+| exact_text | 7 | 3/7 , 6/7 | 6/7 , 7/7 | 6/7 , 7/7 |
+| callers | 7 | 1/7 , 0/7 | 0/7 , 7/7 | 0/7 , 7/7 |
+| negative | 5 | n/a | 5/5 , 5/5 | 5/5 , 5/5 |
+
+## Real-agent mode (claude -p)
+
+| id | kind | ctx s | old s | ctx tokens | old tokens | ctx $ | old $ | ctx ok | old ok |
+|---|---|---|---|---|---|---|---|---|---|
+
+| method | median time (s) | correct | total tokens (real) | total cost (USD) |
+|---|---|---|---|---|
+| context agent (easy-context tools only) | 6.4 | 49/49 | 1067225 | 2.739 |
+| old agent (Grep, Glob, Read only) | 7.3 | 48/49 | 976491 | 1.800 |
+
+**Correctness and cost per question kind (real agents)**
+
+| kind | n | ctx correct | old correct | ctx tokens | old tokens | ctx $ | old $ |
+|---|---|---|---|---|---|---|---|
+| conceptual | 9 | 9/9 | 9/9 | 187680 | 240593 | 0.483 | 0.534 |
+| symbol | 8 | 8/8 | 8/8 | 134779 | 115540 | 0.326 | 0.193 |
+| doc | 6 | 6/6 | 5/6 | 97445 | 157401 | 0.269 | 0.335 |
+| multi_hop | 7 | 7/7 | 7/7 | 142695 | 150636 | 0.465 | 0.284 |
+| exact_text | 7 | 7/7 | 7/7 | 143747 | 115132 | 0.350 | 0.166 |
+| callers | 7 | 7/7 | 7/7 | 197485 | 90716 | 0.452 | 0.164 |
+| negative | 5 | 5/5 | 5/5 | 163394 | 106473 | 0.394 | 0.124 |
+
+**Run-to-run spread (3 repeats per method; min / median / max)**
+
+| question | method | tokens | cost (USD) | time (s) | correct |
+|---|---|---|---|---|---|
+
+## Session lifecycle: same session, resume after cache expiry, closed + fresh
+
+Mean per step over the chains. `cache_read` = prompt tokens re-read from cache; `cache_creation` = prompt tokens written to cache (reload cost).
+
+| step | method | n | correct | input | output | cache_read | cache_creation | cost (USD) | time (s) |
+|---|---|---|---|---|---|---|---|---|---|
+| Q1 (cold start, new session) | context | 2 | 2/2 | 4 | 328 | 5464 | 9882 | 0.0867 | 7.5 |
+| Q1 (cold start, new session) | old | 2 | 2/2 | 6 | 438 | 17435 | 5032 | 0.0525 | 8.1 |
+| Q2 same session (resume right away) | context | 2 | 2/2 | 6 | 309 | 34524 | 5638 | 0.1449 | 6.9 |
+| Q2 same session (resume right away) | old | 2 | 2/2 | 5 | 309 | 23486 | 774 | 0.0696 | 6.0 |
+| Q2 closed + fresh session (re-find) | context | 2 | 2/2 | 7 | 381 | 26274 | 7548 | 0.0733 | 8.5 |
+| Q2 closed + fresh session (re-find) | old | 2 | 2/2 | 6 | 424 | 17741 | 3273 | 0.0382 | 14.7 |
+
+## Index upkeep and staleness
+
+| operation | seconds |
+|---|---|
+| full re-index (force, 588 files / 3771 slices) | 5.03 |
+| re-index, nothing changed | 0.24 |
+
+Timing only: no file was touched or added in the target (read-only run), so there is no incremental or staleness measurement here.
+
+Target `git status` unchanged afterwards: **yes**.
+
+## Grep scope used for the old way
+
+`git grep` over git-tracked files only; skipped directories: .git, __pycache__, node_modules, .pytest_cache, event-trace, dist, coverage, reports.
+
+## This repo vs tapchat-apis
+
+| measure | this repo (Markdown-heavy) | tapchat-apis (code-heavy) |
+|---|---|---|
+| script hit@5, context | 16/34 | 32/44 |
+| script hit@5, old | 28/39 | 44/49 |
+| script hit@5, old_bounded | 28/39 | 44/49 |
+| script est. tokens, context | 62103 | 85781 |
+| script est. tokens, old | 365769 | 172329 |
+| script est. tokens, old_bounded | 37332 | 24339 |
+| agent correct, context | 38/39 | 49/49 |
+| agent tokens, context | 1097720 | 1067225 |
+| agent cost USD, context | 2.72 | 2.74 |
+| agent correct, old | 39/39 | 48/49 |
+| agent tokens, old | 792769 | 976491 |
+| agent cost USD, old | 1.34 | 1.80 |
+| agent cost ratio context / old | 2.02x | 1.52x |
+| full re-index (s) | 6.7 (623 files) | 5.0 (588 files) |
+

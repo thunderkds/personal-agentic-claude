@@ -857,11 +857,18 @@ def recommendation(data):
         cheaper = [k for k, v in a["per_kind"].items()
                    if v["context"]["tokens"] < v["old"]["tokens"] and v["context"]["correct"] >= v["old"]["correct"]]
         rest = [k for k in a["per_kind"] if k not in cheaper]
+        am = a["summary"]
+        c, o = am["context"], am["old"]
+        if o["cost"] <= c["cost"]:
+            lead = (f"Recommendation: use Grep/Glob/Read by default, with ranged reads: it cost ${o['cost']:.2f} against "
+                    f"${c['cost']:.2f} and was right {o['correct']}/{o['n']} times against {c['correct']}/{c['n']}.")
+        else:
+            lead = (f"Recommendation: use context search by default: it cost ${c['cost']:.2f} against ${o['cost']:.2f} "
+                    f"and was right {c['correct']}/{c['n']} times against {o['correct']}/{o['n']}.")
         parts.append(
-            "Recommendation: use Grep/Glob/Read by default, with ranged reads, because it was as accurate and "
-            "cheaper overall. Reach for context search first only when you have no keyword to grep - a "
-            "natural-language question about intent or a decision. By real-agent tokens, context search was "
-            f"cheaper and at least as accurate on: {', '.join(cheaper) or 'no question kind'}; "
+            lead + " Reach for context search first when you have no keyword to grep - a natural-language "
+            f"question about intent or a decision. By real-agent tokens, context search was cheaper and at least "
+            f"as accurate on: {', '.join(cheaper) or 'no question kind'}; "
             f"grep + Read was cheaper or more accurate on: {', '.join(rest) or 'no question kind'}.")
     life = data.get("lifecycle")
     if life:
@@ -874,9 +881,12 @@ def recommendation(data):
                 bits.append(f"{m}: Q2 cost ${same['cost']:.3f} resumed in the same session vs ${fresh['cost']:.3f} "
                             f"in a closed + fresh one (cache_creation {same['cache_creation']:.0f} vs {fresh['cache_creation']:.0f} tokens)")
         if bits:
-            parts.append("Session lifecycle: " + "; ".join(bits) + ". A resume after the 5-minute cache window still "
-                         "read most of its prompt from cache, so the cache did not visibly expire; parallel chains "
-                         "share one prompt prefix and keep it warm, which this test cannot separate from expiry.")
+            tail = "."
+            if any(k.startswith("resume_after") for k in sm):
+                tail = (". A resume after the 5-minute cache window still read most of its prompt from cache, so the "
+                        "cache did not visibly expire; parallel chains share one prompt prefix and keep it warm, "
+                        "which this test cannot separate from expiry.")
+            parts.append("Session lifecycle: " + "; ".join(bits) + tail)
     return " ".join(parts)
 
 
@@ -916,7 +926,7 @@ def build_markdown(data, compare=None):
         out += ["## Recommendation", "", data["recommendation_text"], ""]
     if data.get("spend"):
         out += [f"Real-agent spend this round: **${data['spend']['spent']:.2f}** over {data['spend']['runs']} `claude -p` runs "
-                f"(cap ${SPEND_CAP:.0f}).", ""]
+                f"(cap ${data['spend'].get('cap', SPEND_CAP):.0f}).", ""]
     if "script" in data:
         out += ["## Script mode", "", render_script(data["script"]), ""]
     if "agent" in data:
@@ -1025,7 +1035,7 @@ def main(argv=None):
             res = run_lifecycle(lifecycle_chains(args.questions), args.root, args.url, budget, not args.no_expiry_wait)
             data["lifecycle"] = {"steps": res["steps"], "summary": summarize_lifecycle(res["steps"]),
                                  "aborted": res["aborted"]}
-        data["spend"] = {"spent": budget.spent, "runs": budget.runs}
+        data["spend"] = {"spent": budget.spent, "runs": budget.runs, "cap": args.cap}
         save_data(data, md_path, json_path, compare)
         print(f"Spent ${budget.spent:.2f} over {budget.runs} runs. Report: {md_path}\nJSON: {json_path}")
         return 0

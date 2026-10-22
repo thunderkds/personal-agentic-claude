@@ -1,0 +1,5483 @@
+{
+ "grep_scope": "`git grep` over git-tracked files only; skipped directories: .git, __pycache__, node_modules, .pytest_cache, event-trace, dist, coverage, reports.",
+ "date": "2026-10-22",
+ "script": {
+  "rows": [
+   {
+    "q": {
+     "id": "c01",
+     "kind": "conceptual",
+     "question": "How does the server decide how many diamonds to charge a caller per second during a call?",
+     "grep_pattern": "DEFAULT_DIAMONDS_PER_SECOND",
+     "expected_paths": [
+      "src/websockets/in-call-websocket/services/billing.service.ts"
+     ]
+    },
+    "context": {
+     "id": "c01",
+     "seconds": 0.15731773400011662,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 9424,
+     "tokens": 2356,
+     "top": "src/websockets/in-call-websocket/services/billing.service.ts",
+     "top_score": 0.443,
+     "indexing": false
+    },
+    "old": {
+     "id": "c01",
+     "seconds": 0.005097074999866891,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 24298,
+     "tokens": 6075,
+     "top": "src/websockets/in-call-websocket/services/billing.service.spec.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "c01",
+     "seconds": 0.005422205999821017,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 2143,
+     "tokens": 536,
+     "top": "src/websockets/in-call-websocket/services/billing.service.spec.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "c02",
+     "kind": "conceptual",
+     "question": "How is an incoming Stripe webhook event checked to be genuine?",
+     "grep_pattern": "constructEvent|webhook",
+     "expected_paths": [
+      "src/payment-processor/stripe/stripe.service.ts"
+     ]
+    },
+    "context": {
+     "id": "c02",
+     "seconds": 0.12155377099998077,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 7477,
+     "tokens": 1870,
+     "top": "src/payment-processor/stripe/stripe.service.ts",
+     "top_score": 0.6439,
+     "indexing": false
+    },
+    "old": {
+     "id": "c02",
+     "seconds": 0.005727092000142875,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 39701,
+     "tokens": 9926,
+     "top": "src/rooms/services/dailyco.webhook.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "c02",
+     "seconds": 0.005981726999834791,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 4442,
+     "tokens": 1111,
+     "top": "src/rooms/services/dailyco.webhook.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "c03",
+     "kind": "conceptual",
+     "question": "Where are the global API rate limits set?",
+     "grep_pattern": "throttl|Throttl",
+     "expected_paths": [
+      "src/core/configs/throttler.config.ts"
+     ]
+    },
+    "context": {
+     "id": "c03",
+     "seconds": 0.15946875700001328,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 5074,
+     "tokens": 1269,
+     "top": "API_DESIGN.md",
+     "top_score": 0.4287,
+     "indexing": false
+    },
+    "old": {
+     "id": "c03",
+     "seconds": 0.005207810000229074,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 3024,
+     "tokens": 756,
+     "top": "src/app.module.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "c03",
+     "seconds": 0.0062836360002620495,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 1917,
+     "tokens": 480,
+     "top": "src/app.module.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "c04",
+     "kind": "conceptual",
+     "question": "How is a Firebase push notification sent to a user's device?",
+     "grep_pattern": "messaging\\(\\)",
+     "expected_paths": [
+      "src/fcm/fcm.service.ts"
+     ]
+    },
+    "context": {
+     "id": "c04",
+     "seconds": 0.11853711899993868,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 6658,
+     "tokens": 1665,
+     "top": "API_DESIGN.md",
+     "top_score": 0.5719,
+     "indexing": false
+    },
+    "old": {
+     "id": "c04",
+     "seconds": 0.007005183999808651,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 10003,
+     "tokens": 2501,
+     "top": "src/fcm/fcm.service.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "c04",
+     "seconds": 0.00678457799995158,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 2269,
+     "tokens": 568,
+     "top": "src/fcm/fcm.service.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "c05",
+     "kind": "conceptual",
+     "question": "How are server-sent events broadcast to connected clients?",
+     "grep_pattern": "Subject|Observable",
+     "expected_paths": [
+      "src/sse/sse.service.ts"
+     ]
+    },
+    "context": {
+     "id": "c05",
+     "seconds": 0.13343433099998947,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 3414,
+     "tokens": 854,
+     "top": "IN_CALL_WS_README.md",
+     "top_score": 0.6546,
+     "indexing": false
+    },
+    "old": {
+     "id": "c05",
+     "seconds": 0.005231258000094385,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 20691,
+     "tokens": 5173,
+     "top": "src/sse/sse.controller.spec.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "c05",
+     "seconds": 0.005968744000256265,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 1819,
+     "tokens": 455,
+     "top": "src/sse/sse.controller.spec.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "c06",
+     "kind": "conceptual",
+     "question": "How is the text of a call transcript screened for toxic content?",
+     "grep_pattern": "Toxic|toxic",
+     "expected_paths": [
+      "src/moderation/services/aws-comprehend.service.ts"
+     ]
+    },
+    "context": {
+     "id": "c06",
+     "seconds": 0.17509963800011974,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 6505,
+     "tokens": 1627,
+     "top": "src/moderation/services/aws-transcribe.service.ts",
+     "top_score": 0.5345,
+     "indexing": false
+    },
+    "old": {
+     "id": "c06",
+     "seconds": 0.005492387000231247,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 22773,
+     "tokens": 5694,
+     "top": "src/moderation/services/aws-comprehend.service.spec.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "c06",
+     "seconds": 0.00612235700009478,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 1658,
+     "tokens": 415,
+     "top": "src/moderation/services/aws-comprehend.service.spec.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "c07",
+     "kind": "conceptual",
+     "question": "How is a guest user issued a login token?",
+     "grep_pattern": "generateGuestToken|guest.*[Tt]oken",
+     "expected_paths": [
+      "src/helpers/jwt.helper.ts",
+      "src/auth/auth.service.ts"
+     ]
+    },
+    "context": {
+     "id": "c07",
+     "seconds": 0.1552683459999571,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 10306,
+     "tokens": 2577,
+     "top": "src/auth/auth.service.ts",
+     "top_score": 0.5639,
+     "indexing": false
+    },
+    "old": {
+     "id": "c07",
+     "seconds": 0.005001333000109298,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 24872,
+     "tokens": 6218,
+     "top": "src/helpers/jwt.helper.spec.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "c07",
+     "seconds": 0.006264497000302072,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 1318,
+     "tokens": 330,
+     "top": "src/helpers/jwt.helper.spec.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "c08",
+     "kind": "conceptual",
+     "question": "Where is the signature of a Daily.co webhook validated?",
+     "grep_pattern": "[Ss]ignature",
+     "expected_paths": [
+      "src/rooms/services/dailyco.webhook.ts",
+      "src/helpers/string.helpers.ts"
+     ]
+    },
+    "context": {
+     "id": "c08",
+     "seconds": 0.15395058800004335,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 6271,
+     "tokens": 1568,
+     "top": "API_DESIGN.md",
+     "top_score": 0.6776,
+     "indexing": false
+    },
+    "old": {
+     "id": "c08",
+     "seconds": 0.0061369469999590365,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 75936,
+     "tokens": 18984,
+     "top": "src/vouched/vouched.service.spec.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "c08",
+     "seconds": 0.007060793000164267,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 4082,
+     "tokens": 1021,
+     "top": "src/vouched/vouched.service.spec.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "c09",
+     "kind": "conceptual",
+     "question": "Which scheduled job pays out verified users through Tipalti in batches?",
+     "grep_pattern": "TIPALTI_PAYMENT_BATCH|PaymentBatch",
+     "expected_paths": [
+      "src/jobs/payout/tipalti-payment-batch.ts",
+      "src/jobs/jobs.service.ts"
+     ]
+    },
+    "context": {
+     "id": "c09",
+     "seconds": 0.15145331099984105,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 10662,
+     "tokens": 2666,
+     "top": "src/jobs/jobs.service.ts",
+     "top_score": 0.5808,
+     "indexing": false
+    },
+    "old": {
+     "id": "c09",
+     "seconds": 0.005161320999832242,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 22289,
+     "tokens": 5573,
+     "top": "src/jobs/payout/tipalti-payment-batch.spec.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "c09",
+     "seconds": 0.0055626719999963825,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 2271,
+     "tokens": 568,
+     "top": "src/jobs/payout/tipalti-payment-batch.spec.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "s01",
+     "kind": "symbol",
+     "question": "calculateAge",
+     "grep_pattern": "calculateAge",
+     "expected_paths": [
+      "src/helpers/age.helpers.ts"
+     ]
+    },
+    "context": {
+     "id": "s01",
+     "seconds": 0.1261642340000435,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 6329,
+     "tokens": 1583,
+     "top": "src/helpers/age.helpers.ts",
+     "top_score": 2.3572,
+     "indexing": false
+    },
+    "old": {
+     "id": "s01",
+     "seconds": 0.004612616000031267,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 4895,
+     "tokens": 1224,
+     "top": "src/helpers/age.helpers.spec.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "s01",
+     "seconds": 0.005848773999787227,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 1435,
+     "tokens": 359,
+     "top": "src/helpers/age.helpers.spec.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "s02",
+     "kind": "symbol",
+     "question": "AdminKeyGuard",
+     "grep_pattern": "AdminKeyGuard",
+     "expected_paths": [
+      "src/auth/guards/admin-key.guard.ts"
+     ]
+    },
+    "context": {
+     "id": "s02",
+     "seconds": 0.13809363800010033,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 6006,
+     "tokens": 1502,
+     "top": "src/auth/guards/admin-key.guard.ts",
+     "top_score": 2.6805,
+     "indexing": false
+    },
+    "old": {
+     "id": "s02",
+     "seconds": 0.004489088000354968,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 25733,
+     "tokens": 6434,
+     "top": "src/admin/admin.controller.spec.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "s02",
+     "seconds": 0.00541168200015818,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 3442,
+     "tokens": 861,
+     "top": "src/admin/admin.controller.spec.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "s03",
+     "kind": "symbol",
+     "question": "EventDispatcher",
+     "grep_pattern": "EventDispatcher",
+     "expected_paths": [
+      "src/websockets/in-call-websocket/events/event-dispatcher.ts"
+     ]
+    },
+    "context": {
+     "id": "s03",
+     "seconds": 0.11516642600008709,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 4732,
+     "tokens": 1183,
+     "top": "src/websockets/in-call-websocket/events/event-dispatcher.ts",
+     "top_score": 2.5485,
+     "indexing": false
+    },
+    "old": {
+     "id": "s03",
+     "seconds": 0.004409553000186861,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 36357,
+     "tokens": 9090,
+     "top": "src/websockets/in-call-websocket/in-call-websocket.gateway.spec.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "s03",
+     "seconds": 0.00578655900017111,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 2980,
+     "tokens": 745,
+     "top": "src/websockets/in-call-websocket/in-call-websocket.gateway.spec.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "s04",
+     "kind": "symbol",
+     "question": "TipaltiPaymentBatchService",
+     "grep_pattern": "TipaltiPaymentBatchService",
+     "expected_paths": [
+      "src/jobs/payout/tipalti-payment-batch.ts"
+     ]
+    },
+    "context": {
+     "id": "s04",
+     "seconds": 0.16112454399990384,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 7178,
+     "tokens": 1795,
+     "top": "src/jobs/payout/tipalti-payment-batch.ts",
+     "top_score": 2.6585,
+     "indexing": false
+    },
+    "old": {
+     "id": "s04",
+     "seconds": 0.004457057999843528,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 12512,
+     "tokens": 3128,
+     "top": "src/jobs/payout/tipalti-payment-batch.spec.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "s04",
+     "seconds": 0.005488755999977002,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 1753,
+     "tokens": 439,
+     "top": "src/jobs/payout/tipalti-payment-batch.spec.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "s05",
+     "kind": "symbol",
+     "question": "rawBodyMiddleware",
+     "grep_pattern": "rawBodyMiddleware",
+     "expected_paths": [
+      "src/middlewares/rawBody.middleware.ts"
+     ]
+    },
+    "context": {
+     "id": "s05",
+     "seconds": 0.16403431100025045,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 3573,
+     "tokens": 894,
+     "top": "src/middlewares/rawBody.middleware.ts",
+     "top_score": 2.5506,
+     "indexing": false
+    },
+    "old": {
+     "id": "s05",
+     "seconds": 0.004636144999949465,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 3508,
+     "tokens": 877,
+     "top": "src/middlewares/rawBody.middleware.spec.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "s05",
+     "seconds": 0.005237896999915392,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 1266,
+     "tokens": 317,
+     "top": "src/middlewares/rawBody.middleware.spec.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "s06",
+     "kind": "symbol",
+     "question": "THROTTLE_CONFIG",
+     "grep_pattern": "THROTTLE_CONFIG",
+     "expected_paths": [
+      "src/core/configs/throttler.config.ts"
+     ]
+    },
+    "context": {
+     "id": "s06",
+     "seconds": 0.11033862299973407,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 5123,
+     "tokens": 1281,
+     "top": "src/core/configs/throttler.config.ts",
+     "top_score": 0.5529,
+     "indexing": false
+    },
+    "old": {
+     "id": "s06",
+     "seconds": 0.004559088999940286,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 2381,
+     "tokens": 596,
+     "top": "src/app.module.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "s06",
+     "seconds": 0.005414869999640359,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 1924,
+     "tokens": 481,
+     "top": "src/app.module.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "s07",
+     "kind": "symbol",
+     "question": "WebSocketErrorHandler",
+     "grep_pattern": "WebSocketErrorHandler",
+     "expected_paths": [
+      "src/websockets/in-call-websocket/decorators/websocket-error-handler.decorator.ts"
+     ]
+    },
+    "context": {
+     "id": "s07",
+     "seconds": 0.15858227999979135,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 6250,
+     "tokens": 1563,
+     "top": "src/websockets/in-call-websocket/decorators/websocket-error-handler.decorator.ts",
+     "top_score": 2.7048,
+     "indexing": false
+    },
+    "old": {
+     "id": "s07",
+     "seconds": 0.004984400000012101,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 22813,
+     "tokens": 5704,
+     "top": "src/websockets/in-call-websocket/handlers/heartbeat.handler.spec.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "s07",
+     "seconds": 0.005911897999794746,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 3366,
+     "tokens": 842,
+     "top": "src/websockets/in-call-websocket/handlers/heartbeat.handler.spec.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "s08",
+     "kind": "symbol",
+     "question": "DEFAULT_DIAMONDS_PER_SECOND",
+     "grep_pattern": "DEFAULT_DIAMONDS_PER_SECOND",
+     "expected_paths": [
+      "src/core/constants/app.constant.ts"
+     ]
+    },
+    "context": {
+     "id": "s08",
+     "seconds": 0.11956431899989184,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 4772,
+     "tokens": 1193,
+     "top": "API_DESIGN.md",
+     "top_score": 0.4662,
+     "indexing": false
+    },
+    "old": {
+     "id": "s08",
+     "seconds": 0.004559608999898046,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 24298,
+     "tokens": 6075,
+     "top": "src/websockets/in-call-websocket/services/billing.service.spec.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "s08",
+     "seconds": 0.005749004999870522,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 2143,
+     "tokens": 536,
+     "top": "src/websockets/in-call-websocket/services/billing.service.spec.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "d01",
+     "kind": "doc",
+     "question": "How does the API version its endpoints, and what is a version-neutral endpoint?",
+     "grep_pattern": "[Vv]ersion-[Nn]eutral|VERSION_NEUTRAL",
+     "expected_paths": [
+      "API_VERSIONING.md"
+     ]
+    },
+    "context": {
+     "id": "d01",
+     "seconds": 0.146980135999911,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 3348,
+     "tokens": 837,
+     "top": "API_DESIGN.md",
+     "top_score": 0.7461,
+     "indexing": false
+    },
+    "old": {
+     "id": "d01",
+     "seconds": 0.009741038999891316,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 5089,
+     "tokens": 1273,
+     "top": "API_VERSIONING.md",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "d01",
+     "seconds": 0.00797589900003004,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 2032,
+     "tokens": 508,
+     "top": "API_VERSIONING.md",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "d02",
+     "kind": "doc",
+     "question": "What response format does the API use for errors and paginated lists?",
+     "grep_pattern": "[Pp]aginated Response|Error Response",
+     "expected_paths": [
+      "API_DESIGN.md"
+     ]
+    },
+    "context": {
+     "id": "d02",
+     "seconds": 0.14437369600000238,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 4952,
+     "tokens": 1238,
+     "top": "API_DESIGN.md",
+     "top_score": 0.6327,
+     "indexing": false
+    },
+    "old": {
+     "id": "d02",
+     "seconds": 0.008324359000198456,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 22762,
+     "tokens": 5691,
+     "top": "API_DESIGN.md",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "d02",
+     "seconds": 0.007764117999613518,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 1607,
+     "tokens": 402,
+     "top": "API_DESIGN.md",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "d03",
+     "kind": "doc",
+     "question": "Which database indexes exist on the transactions table and why?",
+     "grep_pattern": "Transaction Entity",
+     "expected_paths": [
+      "DATABASE_INDEXES.md"
+     ]
+    },
+    "context": {
+     "id": "d03",
+     "seconds": 0.14198730899988732,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 4627,
+     "tokens": 1157,
+     "top": "DATABASE_README.md",
+     "top_score": 0.6038,
+     "indexing": false
+    },
+    "old": {
+     "id": "d03",
+     "seconds": 0.005197407000196108,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 6355,
+     "tokens": 1589,
+     "top": "DATABASE_INDEXES.md",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "d03",
+     "seconds": 0.006693630999961897,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 2338,
+     "tokens": 585,
+     "top": "DATABASE_INDEXES.md",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "d04",
+     "kind": "doc",
+     "question": "What events does a client send over the in-call WebSocket to register a call?",
+     "grep_pattern": "register-call",
+     "expected_paths": [
+      "IN_CALL_WS_README.md"
+     ]
+    },
+    "context": {
+     "id": "d04",
+     "seconds": 0.11676252600000225,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 3531,
+     "tokens": 883,
+     "top": "IN_CALL_WS_README.md",
+     "top_score": 0.6983,
+     "indexing": false
+    },
+    "old": {
+     "id": "d04",
+     "seconds": 0.005392398000367393,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 6553,
+     "tokens": 1639,
+     "top": "IN_CALL_WS_README.md",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "d04",
+     "seconds": 0.006873885999993945,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 2762,
+     "tokens": 691,
+     "top": "IN_CALL_WS_README.md",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "d05",
+     "kind": "doc",
+     "question": "Which columns does the rooms table have?",
+     "grep_pattern": "rooms",
+     "expected_paths": [
+      "DATABASE_README.md"
+     ]
+    },
+    "context": {
+     "id": "d05",
+     "seconds": 0.1773403629999848,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 8945,
+     "tokens": 2237,
+     "top": "src/rooms/entities/room.entity.ts",
+     "top_score": 0.4472,
+     "indexing": false
+    },
+    "old": {
+     "id": "d05",
+     "seconds": 0.008093450000160374,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 35462,
+     "tokens": 8866,
+     "top": "src/rooms/rooms.controller.spec.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "d05",
+     "seconds": 0.007602532999953837,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 3230,
+     "tokens": 808,
+     "top": "src/rooms/rooms.controller.spec.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "d06",
+     "kind": "doc",
+     "question": "How do I run the app locally with Docker Compose?",
+     "grep_pattern": "Docker Compose",
+     "expected_paths": [
+      "README.md"
+     ]
+    },
+    "context": {
+     "id": "d06",
+     "seconds": 0.12311841100017773,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 4402,
+     "tokens": 1101,
+     "top": "bin/start-local.sh",
+     "top_score": 0.6308,
+     "indexing": false
+    },
+    "old": {
+     "id": "d06",
+     "seconds": 0.004825354000331572,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 16660,
+     "tokens": 4165,
+     "top": "README.md",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "d06",
+     "seconds": 0.005471069000122952,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 1064,
+     "tokens": 266,
+     "top": "README.md",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "m01",
+     "kind": "multi_hop",
+     "question": "Which file validates Tipalti webhook signatures, and which spec covers it?",
+     "grep_pattern": "validateTipaltiWebhookSignature",
+     "expected_paths": [
+      "src/payment-processor/tipalti/helpers/webhook-validation.helper.ts",
+      "src/payment-processor/tipalti/helpers/webhook-validation.helper.spec.ts"
+     ]
+    },
+    "context": {
+     "id": "m01",
+     "seconds": 0.154139664000013,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 7683,
+     "tokens": 1921,
+     "top": "src/payment-processor/processors/tipalti.processor.ts",
+     "top_score": 0.7155,
+     "indexing": false
+    },
+    "old": {
+     "id": "m01",
+     "seconds": 0.010383310000179335,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 12044,
+     "tokens": 3011,
+     "top": "src/payment-processor/tipalti/helpers/webhook-validation.helper.spec.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "m01",
+     "seconds": 0.007223818000056781,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 1581,
+     "tokens": 396,
+     "top": "src/payment-processor/tipalti/helpers/webhook-validation.helper.spec.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "m02",
+     "kind": "multi_hop",
+     "question": "Where is encryptFullQueryString defined, and which spec tests it?",
+     "grep_pattern": "encryptFullQueryString",
+     "expected_paths": [
+      "src/payment-processor/tipalti/helpers/key.helper.ts",
+      "src/payment-processor/tipalti/helpers/key.helper.spec.ts"
+     ]
+    },
+    "context": {
+     "id": "m02",
+     "seconds": 0.12672929700011082,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 13065,
+     "tokens": 3267,
+     "top": "src/payment-processor/tipalti/helpers/key.helper.spec.ts",
+     "top_score": 0.4294,
+     "indexing": false
+    },
+    "old": {
+     "id": "m02",
+     "seconds": 0.00514676300008432,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 8750,
+     "tokens": 2188,
+     "top": "src/payment-processor/tipalti/helpers/key.helper.spec.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "m02",
+     "seconds": 0.00585252099972422,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 1864,
+     "tokens": 466,
+     "top": "src/payment-processor/tipalti/helpers/key.helper.spec.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "m03",
+     "kind": "multi_hop",
+     "question": "Which guard enforces user roles, and which spec tests it?",
+     "grep_pattern": "RolesGuard",
+     "expected_paths": [
+      "src/auth/guards/roles.guard.ts",
+      "src/auth/guards/roles.guard.spec.ts"
+     ]
+    },
+    "context": {
+     "id": "m03",
+     "seconds": 0.1398705820001851,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 7722,
+     "tokens": 1931,
+     "top": "src/moderation/moderation.controller.ts",
+     "top_score": 0.4738,
+     "indexing": false
+    },
+    "old": {
+     "id": "m03",
+     "seconds": 0.004751977000069019,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 41012,
+     "tokens": 10253,
+     "top": "src/admin/admin.controller.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "m03",
+     "seconds": 0.005305972999849473,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 3527,
+     "tokens": 882,
+     "top": "src/admin/admin.controller.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "m04",
+     "kind": "multi_hop",
+     "question": "Where is the raw-body middleware defined, and which spec tests it?",
+     "grep_pattern": "rawBodyMiddleware",
+     "expected_paths": [
+      "src/middlewares/rawBody.middleware.ts",
+      "src/middlewares/rawBody.middleware.spec.ts"
+     ]
+    },
+    "context": {
+     "id": "m04",
+     "seconds": 0.19980693199977395,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 5165,
+     "tokens": 1292,
+     "top": "src/middlewares/rawBody.middleware.ts",
+     "top_score": 0.5796,
+     "indexing": false
+    },
+    "old": {
+     "id": "m04",
+     "seconds": 0.005472099999678903,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 3508,
+     "tokens": 877,
+     "top": "src/middlewares/rawBody.middleware.spec.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "m04",
+     "seconds": 0.006090699000196764,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 1266,
+     "tokens": 317,
+     "top": "src/middlewares/rawBody.middleware.spec.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "m05",
+     "kind": "multi_hop",
+     "question": "Which helper checks if a date is more than N days ago, and which spec tests it?",
+     "grep_pattern": "isExceededNumberOfDays",
+     "expected_paths": [
+      "src/helpers/date.helper.ts",
+      "src/helpers/date.helper.spec.ts"
+     ]
+    },
+    "context": {
+     "id": "m05",
+     "seconds": 0.16226598599996578,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 11975,
+     "tokens": 2994,
+     "top": "src/helpers/date.helper.ts",
+     "top_score": 0.5597,
+     "indexing": false
+    },
+    "old": {
+     "id": "m05",
+     "seconds": 0.004825932000130706,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 7840,
+     "tokens": 1960,
+     "top": "src/helpers/date.helper.spec.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "m05",
+     "seconds": 0.006330248999802279,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 1453,
+     "tokens": 364,
+     "top": "src/helpers/date.helper.spec.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "m06",
+     "kind": "multi_hop",
+     "question": "Which helper extracts the client IP from a request, and which spec tests it?",
+     "grep_pattern": "getClientIp",
+     "expected_paths": [
+      "src/helpers/ip-address.helper.ts",
+      "src/helpers/ip-address.helper.spec.ts"
+     ]
+    },
+    "context": {
+     "id": "m06",
+     "seconds": 0.12746972800005096,
+     "hit1": 1,
+     "hit5": 0,
+     "chars": 8249,
+     "tokens": 2063,
+     "top": "src/helpers/ip-address.helper.ts",
+     "top_score": 0.6696,
+     "indexing": false
+    },
+    "old": {
+     "id": "m06",
+     "seconds": 0.005084232999706728,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 19780,
+     "tokens": 4945,
+     "top": "src/helpers/ip-address.helper.spec.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "m06",
+     "seconds": 0.005264622000140662,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 1726,
+     "tokens": 432,
+     "top": "src/helpers/ip-address.helper.spec.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "m07",
+     "kind": "multi_hop",
+     "question": "Which service batches pending Tipalti payouts, and which spec tests it?",
+     "grep_pattern": "TipaltiPaymentBatchService",
+     "expected_paths": [
+      "src/jobs/payout/tipalti-payment-batch.ts",
+      "src/jobs/payout/tipalti-payment-batch.spec.ts"
+     ]
+    },
+    "context": {
+     "id": "m07",
+     "seconds": 0.10692719700000453,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 9931,
+     "tokens": 2483,
+     "top": "src/jobs/jobs.service.ts",
+     "top_score": 0.7178,
+     "indexing": false
+    },
+    "old": {
+     "id": "m07",
+     "seconds": 0.005098551000173757,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 12512,
+     "tokens": 3128,
+     "top": "src/jobs/payout/tipalti-payment-batch.spec.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "m07",
+     "seconds": 0.00587567599995964,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 1753,
+     "tokens": 439,
+     "top": "src/jobs/payout/tipalti-payment-batch.spec.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "e01",
+     "kind": "exact_text",
+     "question": "Invalid admin creation key",
+     "grep_pattern": "Invalid admin creation key",
+     "expected_paths": [
+      "src/auth/guards/admin-key.guard.ts"
+     ]
+    },
+    "context": {
+     "id": "e01",
+     "seconds": 0.15587728900027287,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 8271,
+     "tokens": 2068,
+     "top": "API_DESIGN.md",
+     "top_score": 0.4839,
+     "indexing": false
+    },
+    "old": {
+     "id": "e01",
+     "seconds": 0.00498948200038285,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 1647,
+     "tokens": 412,
+     "top": "src/auth/guards/admin-key.guard.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "e01",
+     "seconds": 0.006152103999738756,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 1469,
+     "tokens": 368,
+     "top": "src/auth/guards/admin-key.guard.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "e02",
+     "kind": "exact_text",
+     "question": "Invalid device token format",
+     "grep_pattern": "Invalid device token format",
+     "expected_paths": [
+      "src/auth/interceptors/device-token.interceptor.ts"
+     ]
+    },
+    "context": {
+     "id": "e02",
+     "seconds": 0.1740543680002702,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 4344,
+     "tokens": 1086,
+     "top": "API_DESIGN.md",
+     "top_score": 0.5819,
+     "indexing": false
+    },
+    "old": {
+     "id": "e02",
+     "seconds": 0.004836590999730106,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 2774,
+     "tokens": 694,
+     "top": "src/auth/interceptors/device-token.interceptor.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "e02",
+     "seconds": 0.005919631999859121,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 2552,
+     "tokens": 638,
+     "top": "src/auth/interceptors/device-token.interceptor.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "e03",
+     "kind": "exact_text",
+     "question": "Streaming session is not valid",
+     "grep_pattern": "Streaming session is not valid",
+     "expected_paths": [
+      "src/helpers/aws.helper.ts"
+     ]
+    },
+    "context": {
+     "id": "e03",
+     "seconds": 0.15607543300029647,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 6088,
+     "tokens": 1522,
+     "top": "src/helpers/aws.helper.ts",
+     "top_score": 0.6503,
+     "indexing": false
+    },
+    "old": {
+     "id": "e03",
+     "seconds": 0.0045441510001182905,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 7729,
+     "tokens": 1933,
+     "top": "src/helpers/aws.helper.spec.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "e03",
+     "seconds": 0.005332219999672816,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 2387,
+     "tokens": 597,
+     "top": "src/helpers/aws.helper.spec.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "e04",
+     "kind": "exact_text",
+     "question": "Payee ID is required for Tipalti payee retrieval",
+     "grep_pattern": "Payee ID is required",
+     "expected_paths": [
+      "src/payment-processor/processors/tipalti.processor.ts"
+     ]
+    },
+    "context": {
+     "id": "e04",
+     "seconds": 0.09441235400026926,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 5528,
+     "tokens": 1382,
+     "top": "src/payment-processor/types/create-payee-dto.interface.ts",
+     "top_score": 0.586,
+     "indexing": false
+    },
+    "old": {
+     "id": "e04",
+     "seconds": 0.005475079000007099,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 2858,
+     "tokens": 715,
+     "top": "src/payment-processor/processors/tipalti.processor.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "e04",
+     "seconds": 0.006530406999900151,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 2397,
+     "tokens": 600,
+     "top": "src/payment-processor/processors/tipalti.processor.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "e05",
+     "kind": "exact_text",
+     "question": "WebSocket client not found in execution context",
+     "grep_pattern": "WebSocket client not found",
+     "expected_paths": [
+      "src/websockets/in-call-websocket/decorators/websocket-validation.decorator.ts"
+     ]
+    },
+    "context": {
+     "id": "e05",
+     "seconds": 0.11759858199957307,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 7622,
+     "tokens": 1906,
+     "top": "src/websockets/in-call-websocket/in-call-websocket.gateway.ts",
+     "top_score": 0.6525,
+     "indexing": false
+    },
+    "old": {
+     "id": "e05",
+     "seconds": 0.004624235999926896,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 2323,
+     "tokens": 581,
+     "top": "src/websockets/in-call-websocket/decorators/websocket-validation.decorator.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "e05",
+     "seconds": 0.005750893000367796,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 1483,
+     "tokens": 371,
+     "top": "src/websockets/in-call-websocket/decorators/websocket-validation.decorator.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "e06",
+     "kind": "exact_text",
+     "question": "Transaction already refunded",
+     "grep_pattern": "Transaction already refunded",
+     "expected_paths": [
+      "src/payment/gateway/gateway.service.ts"
+     ]
+    },
+    "context": {
+     "id": "e06",
+     "seconds": 0.14853210000001127,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 7697,
+     "tokens": 1925,
+     "top": "src/payment/gateway/gateway.service.ts",
+     "top_score": 0.591,
+     "indexing": false
+    },
+    "old": {
+     "id": "e06",
+     "seconds": 0.004261574999873119,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 19111,
+     "tokens": 4778,
+     "top": "src/payment/gateway/gateway.service.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "e06",
+     "seconds": 0.00484422599993195,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 2903,
+     "tokens": 726,
+     "top": "src/payment/gateway/gateway.service.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "e07",
+     "kind": "exact_text",
+     "question": "New phone number must be provided",
+     "grep_pattern": "New phone number must be provided",
+     "expected_paths": [
+      "src/admin/admin.service.ts"
+     ]
+    },
+    "context": {
+     "id": "e07",
+     "seconds": 0.17696392000016203,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 12081,
+     "tokens": 3021,
+     "top": "src/admin/admin.service.ts",
+     "top_score": 0.5257,
+     "indexing": false
+    },
+    "old": {
+     "id": "e07",
+     "seconds": 0.004371155999706389,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 26368,
+     "tokens": 6592,
+     "top": "src/admin/admin.service.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "e07",
+     "seconds": 0.004874601000210532,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 2546,
+     "tokens": 637,
+     "top": "src/admin/admin.service.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "k01",
+     "kind": "callers",
+     "question": "Which file outside tests calls isValidAge (not the file that defines it)?",
+     "grep_pattern": "isValidAge\\(",
+     "expected_paths": [
+      "src/verified-users/verified-users.service.ts"
+     ]
+    },
+    "context": {
+     "id": "k01",
+     "seconds": 0.1731080770000517,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 10450,
+     "tokens": 2613,
+     "top": "src/moderation/services/audio-recording.service.spec.ts",
+     "top_score": 0.3822,
+     "indexing": false
+    },
+    "old": {
+     "id": "k01",
+     "seconds": 0.005147936999946978,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 4676,
+     "tokens": 1169,
+     "top": "src/helpers/age.helpers.spec.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "k01",
+     "seconds": 0.005442985000172484,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 1890,
+     "tokens": 473,
+     "top": "src/helpers/age.helpers.spec.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "k02",
+     "kind": "callers",
+     "question": "Which files outside tests call shuffleArray (not the file that defines it)?",
+     "grep_pattern": "shuffleArray\\(",
+     "expected_paths": [
+      "src/regular-users/regular-users.service.ts",
+      "src/verified-users/verified-users.service.ts"
+     ]
+    },
+    "context": {
+     "id": "k02",
+     "seconds": 0.16274272700002257,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 10792,
+     "tokens": 2698,
+     "top": "src/helpers/array.helper.spec.ts",
+     "top_score": 0.4555,
+     "indexing": false
+    },
+    "old": {
+     "id": "k02",
+     "seconds": 0.005093242999919312,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 4580,
+     "tokens": 1145,
+     "top": "src/helpers/array.helper.spec.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "k02",
+     "seconds": 0.0058473670001149,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 1412,
+     "tokens": 353,
+     "top": "src/helpers/array.helper.spec.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "k03",
+     "kind": "callers",
+     "question": "Which file outside tests calls getStreamingURL (not the file that defines it)?",
+     "grep_pattern": "getStreamingURL\\(",
+     "expected_paths": [
+      "src/rooms/rooms.service.ts"
+     ]
+    },
+    "context": {
+     "id": "k03",
+     "seconds": 0.17191549199969813,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 7587,
+     "tokens": 1897,
+     "top": "src/aws-s3/aws-s3.controller.spec.ts",
+     "top_score": 0.4246,
+     "indexing": false
+    },
+    "old": {
+     "id": "k03",
+     "seconds": 0.0049461150001661736,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 8233,
+     "tokens": 2059,
+     "top": "src/helpers/aws.helper.spec.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "k03",
+     "seconds": 0.00560215799987418,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 1891,
+     "tokens": 473,
+     "top": "src/helpers/aws.helper.spec.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "k04",
+     "kind": "callers",
+     "question": "Which files outside tests call getClientIp (not the file that defines it)?",
+     "grep_pattern": "getClientIp\\(",
+     "expected_paths": [
+      "src/auth/interceptors/user-insight.interceptor.ts",
+      "src/commons/decorators/ip-address.decorator.ts",
+      "src/commons/interceptors/track-document-version.interceptor.ts"
+     ]
+    },
+    "context": {
+     "id": "k04",
+     "seconds": 0.15620528299996295,
+     "hit1": 1,
+     "hit5": 0,
+     "chars": 6105,
+     "tokens": 1527,
+     "top": "src/commons/interceptors/track-document-version.interceptor.ts",
+     "top_score": 0.3926,
+     "indexing": false
+    },
+    "old": {
+     "id": "k04",
+     "seconds": 0.005216880000261881,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 16149,
+     "tokens": 4038,
+     "top": "src/helpers/ip-address.helper.spec.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "k04",
+     "seconds": 0.005606481000086205,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 2806,
+     "tokens": 702,
+     "top": "src/helpers/ip-address.helper.spec.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "k05",
+     "kind": "callers",
+     "question": "Which files outside tests call getFeedShuffleSeed (not the file that defines it)?",
+     "grep_pattern": "getFeedShuffleSeed\\(",
+     "expected_paths": [
+      "src/regular-users/regular-users.service.ts",
+      "src/verified-users/verified-users.service.ts"
+     ]
+    },
+    "context": {
+     "id": "k05",
+     "seconds": 0.16324485000041022,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 7870,
+     "tokens": 1968,
+     "top": "src/aws-s3/aws-s3.controller.spec.ts",
+     "top_score": 0.334,
+     "indexing": false
+    },
+    "old": {
+     "id": "k05",
+     "seconds": 0.004828657999951247,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 2639,
+     "tokens": 660,
+     "top": "src/helpers/feed.helpers.spec.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "k05",
+     "seconds": 0.005587662999914755,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 1875,
+     "tokens": 469,
+     "top": "src/helpers/feed.helpers.spec.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "k06",
+     "kind": "callers",
+     "question": "Which file outside tests calls getNameFromRoomUrl (not the file that defines it)?",
+     "grep_pattern": "getNameFromRoomUrl\\(",
+     "expected_paths": [
+      "src/websockets/in-call-websocket/handlers/register-call.handler.ts"
+     ]
+    },
+    "context": {
+     "id": "k06",
+     "seconds": 0.17047801799981244,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 6438,
+     "tokens": 1610,
+     "top": "src/helpers/string.helpers.ts",
+     "top_score": 0.4427,
+     "indexing": false
+    },
+    "old": {
+     "id": "k06",
+     "seconds": 0.004790302999936102,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 7907,
+     "tokens": 1977,
+     "top": "src/helpers/string.helpers.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "k06",
+     "seconds": 0.006089779999911116,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 2701,
+     "tokens": 676,
+     "top": "src/helpers/string.helpers.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "k07",
+     "kind": "callers",
+     "question": "Which file outside tests calls getChannelARNFromObjectKey (not the file that defines it)?",
+     "grep_pattern": "getChannelARNFromObjectKey\\(",
+     "expected_paths": [
+      "src/moderation/moderation.service.ts"
+     ]
+    },
+    "context": {
+     "id": "k07",
+     "seconds": 0.1553036980003526,
+     "hit1": 0,
+     "hit5": 0,
+     "chars": 11879,
+     "tokens": 2970,
+     "top": "src/rooms/rooms.service.spec.ts",
+     "top_score": 0.4254,
+     "indexing": false
+    },
+    "old": {
+     "id": "k07",
+     "seconds": 0.004532987999937177,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 7850,
+     "tokens": 1963,
+     "top": "src/helpers/string.helpers.ts",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "k07",
+     "seconds": 0.005618750999929034,
+     "hit1": 0,
+     "hit5": 1,
+     "chars": 2543,
+     "tokens": 636,
+     "top": "src/helpers/string.helpers.ts",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "n01",
+     "kind": "negative",
+     "question": "Where is the Kafka consumer configured?",
+     "grep_pattern": "[Kk]afka|KAFKA",
+     "expected_paths": []
+    },
+    "context": {
+     "id": "n01",
+     "seconds": 0.16586499899995033,
+     "hit1": null,
+     "hit5": null,
+     "chars": 5119,
+     "tokens": 1280,
+     "top": "README.md",
+     "top_score": 0.3634,
+     "indexing": false
+    },
+    "old": {
+     "id": "n01",
+     "seconds": 0.004747425999994448,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 0,
+     "tokens": 0,
+     "top": "(none)",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "n01",
+     "seconds": 0.004641973999696347,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 0,
+     "tokens": 0,
+     "top": "(none)",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "n02",
+     "kind": "negative",
+     "question": "Which module publishes messages to RabbitMQ?",
+     "grep_pattern": "[Rr]abbit[Mm][Qq]|RABBITMQ",
+     "expected_paths": []
+    },
+    "context": {
+     "id": "n02",
+     "seconds": 0.09654542199996285,
+     "hit1": null,
+     "hit5": null,
+     "chars": 5246,
+     "tokens": 1312,
+     "top": "src/websockets/in-call-websocket/in-call-websocket.gateway.ts",
+     "top_score": 0.4372,
+     "indexing": false
+    },
+    "old": {
+     "id": "n02",
+     "seconds": 0.007095430999925156,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 0,
+     "tokens": 0,
+     "top": "(none)",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "n02",
+     "seconds": 0.009542946999772539,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 0,
+     "tokens": 0,
+     "top": "(none)",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "n03",
+     "kind": "negative",
+     "question": "Where is the GraphQL schema defined?",
+     "grep_pattern": "[Gg]raph[Qq][Ll]",
+     "expected_paths": []
+    },
+    "context": {
+     "id": "n03",
+     "seconds": 0.1615460200000598,
+     "hit1": null,
+     "hit5": null,
+     "chars": 4783,
+     "tokens": 1196,
+     "top": "src/payment/gateway/gateway.controller.ts",
+     "top_score": 0.4172,
+     "indexing": false
+    },
+    "old": {
+     "id": "n03",
+     "seconds": 0.004772374000367563,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 0,
+     "tokens": 0,
+     "top": "(none)",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "n03",
+     "seconds": 0.004671253999731562,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 0,
+     "tokens": 0,
+     "top": "(none)",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "n04",
+     "kind": "negative",
+     "question": "Where is the Elasticsearch index mapping defined?",
+     "grep_pattern": "[Ee]lastic[Ss]earch",
+     "expected_paths": []
+    },
+    "context": {
+     "id": "n04",
+     "seconds": 0.1275944989997697,
+     "hit1": null,
+     "hit5": null,
+     "chars": 2908,
+     "tokens": 727,
+     "top": "DATABASE_README.md",
+     "top_score": 0.5326,
+     "indexing": false
+    },
+    "old": {
+     "id": "n04",
+     "seconds": 0.006402715000149328,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 0,
+     "tokens": 0,
+     "top": "(none)",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "n04",
+     "seconds": 0.006728979999934381,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 0,
+     "tokens": 0,
+     "top": "(none)",
+     "top_score": null,
+     "indexing": false
+    }
+   },
+   {
+    "q": {
+     "id": "n05",
+     "kind": "negative",
+     "question": "Where is Sentry error reporting set up?",
+     "grep_pattern": "[Ss]entry|SENTRY",
+     "expected_paths": []
+    },
+    "context": {
+     "id": "n05",
+     "seconds": 0.13229002400021272,
+     "hit1": null,
+     "hit5": null,
+     "chars": 8892,
+     "tokens": 2223,
+     "top": "pnpm-lock.yaml",
+     "top_score": 0.3491,
+     "indexing": false
+    },
+    "old": {
+     "id": "n05",
+     "seconds": 0.006036210999809555,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 0,
+     "tokens": 0,
+     "top": "(none)",
+     "top_score": null,
+     "indexing": false
+    },
+    "old_bounded": {
+     "id": "n05",
+     "seconds": 0.007885324999733712,
+     "hit1": 1,
+     "hit5": 1,
+     "chars": 0,
+     "tokens": 0,
+     "top": "(none)",
+     "top_score": null,
+     "indexing": false
+    }
+   }
+  ],
+  "summary": {
+   "context": {
+    "n": 44,
+    "hit1": 21,
+    "hit5": 32,
+    "median_s": 0.15395058800004335,
+    "tokens": 85781
+   },
+   "old": {
+    "n": 49,
+    "hit1": 23,
+    "hit5": 44,
+    "median_s": 0.005084232999706728,
+    "tokens": 172329
+   },
+   "old_bounded": {
+    "n": 49,
+    "hit1": 23,
+    "hit5": 44,
+    "median_s": 0.00585252099972422,
+    "tokens": 24339
+   }
+  },
+  "per_kind": {
+   "conceptual": {
+    "context": {
+     "n": 9,
+     "hit1": 4,
+     "hit5": 9
+    },
+    "old": {
+     "n": 9,
+     "hit1": 1,
+     "hit5": 7
+    },
+    "old_bounded": {
+     "n": 9,
+     "hit1": 1,
+     "hit5": 7
+    }
+   },
+   "symbol": {
+    "context": {
+     "n": 8,
+     "hit1": 7,
+     "hit5": 7
+    },
+    "old": {
+     "n": 8,
+     "hit1": 0,
+     "hit5": 7
+    },
+    "old_bounded": {
+     "n": 8,
+     "hit1": 0,
+     "hit5": 7
+    }
+   },
+   "doc": {
+    "context": {
+     "n": 6,
+     "hit1": 2,
+     "hit5": 6
+    },
+    "old": {
+     "n": 6,
+     "hit1": 5,
+     "hit5": 5
+    },
+    "old_bounded": {
+     "n": 6,
+     "hit1": 5,
+     "hit5": 5
+    }
+   },
+   "multi_hop": {
+    "context": {
+     "n": 7,
+     "hit1": 4,
+     "hit5": 4
+    },
+    "old": {
+     "n": 7,
+     "hit1": 6,
+     "hit5": 6
+    },
+    "old_bounded": {
+     "n": 7,
+     "hit1": 6,
+     "hit5": 6
+    }
+   },
+   "exact_text": {
+    "context": {
+     "n": 7,
+     "hit1": 3,
+     "hit5": 6
+    },
+    "old": {
+     "n": 7,
+     "hit1": 6,
+     "hit5": 7
+    },
+    "old_bounded": {
+     "n": 7,
+     "hit1": 6,
+     "hit5": 7
+    }
+   },
+   "callers": {
+    "context": {
+     "n": 7,
+     "hit1": 1,
+     "hit5": 0
+    },
+    "old": {
+     "n": 7,
+     "hit1": 0,
+     "hit5": 7
+    },
+    "old_bounded": {
+     "n": 7,
+     "hit1": 0,
+     "hit5": 7
+    }
+   },
+   "negative": {
+    "context": {
+     "n": 0,
+     "hit1": 0,
+     "hit5": 0
+    },
+    "old": {
+     "n": 5,
+     "hit1": 5,
+     "hit5": 5
+    },
+    "old_bounded": {
+     "n": 5,
+     "hit1": 5,
+     "hit5": 5
+    }
+   }
+  },
+  "indexing_note": false
+ },
+ "recommendation_text": "On 44 scored questions in script mode, the context way hit@5 32/44 against 44/49 (grep + whole-file Read) and 44/49 (bounded grep + ranged Read). Estimated tokens: 85781 vs 172329 vs 24339; median time 0.154s vs 0.005s vs 0.006s. With real agents the context agent was right 49/49 times and the grep+Read agent 48/49; total tokens 1067225 vs 976491, cost $2.74 vs $1.80, median time 6.4s vs 7.3s. Context search was more accurate on: doc. Upkeep: a full re-index takes 5.0s and a no-op one 0.2s. Recommendation: use Grep/Glob/Read by default, with ranged reads: it cost $1.80 against $2.74 and was right 48/49 times against 49/49. Reach for context search first when you have no keyword to grep - a natural-language question about intent or a decision. By real-agent tokens, context search was cheaper and at least as accurate on: conceptual, doc, multi_hop; grep + Read was cheaper or more accurate on: symbol, exact_text, callers, negative. Session lifecycle: context: Q2 cost $0.145 resumed in the same session vs $0.073 in a closed + fresh one (cache_creation 5638 vs 7548 tokens); old: Q2 cost $0.070 resumed in the same session vs $0.038 in a closed + fresh one (cache_creation 774 vs 3273 tokens).",
+ "upkeep": {
+  "full_reindex_s": 5.031984420000299,
+  "files": 588,
+  "slices": 3771,
+  "noop_reindex_s": 0.2419867250000607,
+  "git_status_unchanged": true
+ },
+ "lifecycle": {
+  "steps": [
+   {
+    "seconds": 6.485,
+    "input": 4,
+    "output": 305,
+    "cache_read": 5463,
+    "cache_creation": 9292,
+    "tokens": 15064,
+    "cost": 0.0815446,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "36ff19ee-29df-4ff6-8372-e87c72f540c5",
+    "answer": "1. `src/payment-processor/tipalti/helpers/webhook-validation.helper.ts`: its `validateTipaltiWebhookSignature` function does the actual check. It computes an HMAC-SHA256 of `timestamp-payload` with the webhook secret and compares it to the received signature using a constant-time comparison.\n2. `src/payment-processor/tipalti/tipalti.service.ts`: `TipaltiService.validateTipaltiWebhookSignature` reads the timestamp and signatures from the `Tipalti-Signature` header, rejects timestamps more than 5 minutes off, and calls the helper for each signature.",
+    "correct": 1,
+    "chain": "L1",
+    "method": "context",
+    "label": "q1"
+   },
+   {
+    "seconds": 4.277,
+    "input": 4,
+    "output": 263,
+    "cache_read": 18985,
+    "cache_creation": 5235,
+    "tokens": 24487,
+    "cost": 0.1324976,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "04311e6c-0837-46ba-a004-5be448dfd090",
+    "answer": "`src/payment-processor/tipalti/helpers/webhook-validation.helper.spec.ts` covers it: the file imports `validateTipaltiWebhookSignature`, `extractTipaltiSignatureParts` and `isTimestampValid` from `./webhook-validation.helper` and tests valid and invalid signatures, missing parameters, special and unicode characters, and header parsing.",
+    "correct": 1,
+    "chain": "L1",
+    "method": "context",
+    "label": "same_session"
+   },
+   {
+    "seconds": 6.707,
+    "input": 6,
+    "output": 370,
+    "cache_read": 20028,
+    "cache_creation": 6141,
+    "tokens": 26545,
+    "cost": 0.0605576,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "b86858e4-9bee-44f1-b67c-5017d8a6022c",
+    "answer": "`src/payment-processor/tipalti/helpers/webhook-validation.helper.spec.ts` is the spec. It tests `src/payment-processor/tipalti/helpers/webhook-validation.helper.ts`, which checks the signature of incoming Tipalti webhooks with HMAC-SHA256, and it imports `validateTipaltiWebhookSignature`, `extractTipaltiSignatureParts` and `isTimestampValid` from that file.",
+    "correct": 1,
+    "chain": "L1",
+    "method": "context",
+    "label": "fresh"
+   },
+   {
+    "seconds": 8.608,
+    "input": 6,
+    "output": 531,
+    "cache_read": 17537,
+    "cache_creation": 4534,
+    "tokens": 22608,
+    "cost": 0.0504234,
+    "turns": 4,
+    "hit": 1,
+    "error": false,
+    "session_id": "926d21b9-f243-42b6-97fb-b106ac01d3fe",
+    "answer": "1. `src/payment-processor/tipalti/helpers/webhook-validation.helper.ts`: its `validateTipaltiWebhookSignature` function does the actual check, computing an HMAC-SHA256 of `timestamp-payload` with the webhook secret and comparing it to the received signature in constant time.\n2. `src/payment/pay-out/pay-out-webhook.service.ts`: the webhook controller in `src/payment/gateway/gateway.controller.ts` calls this service's `validateWebhookSignature`, which hands the check to the payment processor.",
+    "correct": 1,
+    "chain": "L1",
+    "method": "old",
+    "label": "q1"
+   },
+   {
+    "seconds": 7.336,
+    "input": 6,
+    "output": 428,
+    "cache_read": 29177,
+    "cache_creation": 1034,
+    "tokens": 30645,
+    "cost": 0.0731148,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "acda4085-0965-438e-8eec-88f9c9efec2d",
+    "answer": "`src/payment-processor/tipalti/helpers/webhook-validation.helper.spec.ts` is the spec: it imports `validateTipaltiWebhookSignature`, `extractTipaltiSignatureParts` and `isTimestampValid` from `./webhook-validation.helper` and has a `describe` block that tests the signature check.",
+    "correct": 1,
+    "chain": "L1",
+    "method": "old",
+    "label": "same_session"
+   },
+   {
+    "seconds": 20.882,
+    "input": 6,
+    "output": 400,
+    "cache_read": 17522,
+    "cache_creation": 3774,
+    "tokens": 21702,
+    "cost": 0.0417204,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "e437c31d-d798-4cbf-87de-859efedd3bc0",
+    "answer": "`src/payment-processor/tipalti/helpers/webhook-validation.helper.spec.ts` is the spec file: it tests `validateTipaltiWebhookSignature` and `extractTipaltiSignatureParts` from `src/payment-processor/tipalti/helpers/webhook-validation.helper.ts`, which is the file that checks the signature on incoming Tipalti webhooks.",
+    "correct": 1,
+    "chain": "L1",
+    "method": "old",
+    "label": "fresh"
+   },
+   {
+    "seconds": 8.525,
+    "input": 4,
+    "output": 351,
+    "cache_read": 5466,
+    "cache_creation": 10472,
+    "tokens": 16293,
+    "cost": 0.0919052,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "25be85d2-00ca-44e1-8dea-4bd210857b6b",
+    "answer": "`src/websockets/in-call-websocket/services/billing.service.ts` is the answer. `BillingService` takes diamonds from the regular user's balance at the `DEFAULT_DIAMONDS_PER_SECOND` rate while the call is running. When the balance falls below one second's cost, it charges whatever is left. It also works out call time and what the verified user earned from that per-second rate.\n\nRelated: `src/websockets/in-call-websocket/handlers/diamonds-run-out.handler.ts` handles the moment a caller's diamonds run out. It runs one last billing step through the heartbeat handler, then sets the call status to \"di",
+    "correct": 1,
+    "chain": "L2",
+    "method": "context",
+    "label": "q1"
+   },
+   {
+    "seconds": 9.588,
+    "input": 8,
+    "output": 355,
+    "cache_read": 50063,
+    "cache_creation": 6040,
+    "tokens": 56466,
+    "cost": 0.1573698,
+    "turns": 4,
+    "hit": 1,
+    "error": false,
+    "session_id": "c2796047-d9c9-4c07-b906-e329e11488a6",
+    "answer": "`src/core/constants/app.constant.ts` defines `DEFAULT_DIAMONDS_PER_SECOND = 4` (line 11), and `billing.service.ts` imports the constant from there.",
+    "correct": 1,
+    "chain": "L2",
+    "method": "context",
+    "label": "same_session"
+   },
+   {
+    "seconds": 10.241,
+    "input": 8,
+    "output": 392,
+    "cache_read": 32520,
+    "cache_creation": 8956,
+    "tokens": 41876,
+    "cost": 0.086024,
+    "turns": 4,
+    "hit": 1,
+    "error": false,
+    "session_id": "6b52980e-ba48-4d1b-8ec2-d2315a292714",
+    "answer": "1. `src/core/constants/app.constant.ts`: it defines `DEFAULT_DIAMONDS_PER_SECOND = 4` (line 11), and the billing service imports this file.\n2. `src/websockets/in-call-websocket/services/billing.service.ts`: this is the in-call billing service that uses the constant to charge the caller and work out call time.",
+    "correct": 1,
+    "chain": "L2",
+    "method": "context",
+    "label": "fresh"
+   },
+   {
+    "seconds": 7.671,
+    "input": 6,
+    "output": 344,
+    "cache_read": 17333,
+    "cache_creation": 5530,
+    "tokens": 23213,
+    "cost": 0.054610599999999995,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "c1359fde-df6b-46c1-add5-f3d35efe676e",
+    "answer": "`src/websockets/in-call-websocket/services/billing.service.ts` is the answer: `BillingService` works out each charge as `timeline * DEFAULT_DIAMONDS_PER_SECOND` (for example at line 64) during an in-call WebSocket session.",
+    "correct": 1,
+    "chain": "L2",
+    "method": "old",
+    "label": "q1"
+   },
+   {
+    "seconds": 4.741,
+    "input": 4,
+    "output": 190,
+    "cache_read": 17796,
+    "cache_creation": 514,
+    "tokens": 18504,
+    "cost": 0.0660978,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "b8ff48ae-74e9-41b9-9b4e-e79a18c2c18a",
+    "answer": "`src/core/constants/app.constant.ts` defines it at line 11 as `export const DEFAULT_DIAMONDS_PER_SECOND = 4;`, and `BillingService` imports it from there.",
+    "correct": 1,
+    "chain": "L2",
+    "method": "old",
+    "label": "same_session"
+   },
+   {
+    "seconds": 8.429,
+    "input": 6,
+    "output": 448,
+    "cache_read": 17960,
+    "cache_creation": 2772,
+    "tokens": 21186,
+    "cost": 0.034752,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "4977cf9f-d5f9-4dfd-bf96-041047356fba",
+    "answer": "`src/core/constants/app.constant.ts` defines it (line 11: `export const DEFAULT_DIAMONDS_PER_SECOND = 4;`), and `src/websockets/in-call-websocket/services/billing.service.ts` imports it from there.\n\nThe value is 4, but comments in `billing.service.spec.ts` still say 2.25, so those comments are out of date.",
+    "correct": 1,
+    "chain": "L2",
+    "method": "old",
+    "label": "fresh"
+   }
+  ],
+  "summary": {
+   "q1": {
+    "context": {
+     "input": 4,
+     "output": 328,
+     "cache_read": 5464.5,
+     "cache_creation": 9882,
+     "cost": 0.0867249,
+     "seconds": 7.505000000000001,
+     "n": 2,
+     "correct": 2
+    },
+    "old": {
+     "input": 6,
+     "output": 437.5,
+     "cache_read": 17435,
+     "cache_creation": 5032,
+     "cost": 0.052516999999999994,
+     "seconds": 8.1395,
+     "n": 2,
+     "correct": 2
+    }
+   },
+   "same_session": {
+    "context": {
+     "input": 6,
+     "output": 309,
+     "cache_read": 34524,
+     "cache_creation": 5637.5,
+     "cost": 0.1449337,
+     "seconds": 6.932499999999999,
+     "n": 2,
+     "correct": 2
+    },
+    "old": {
+     "input": 5,
+     "output": 309,
+     "cache_read": 23486.5,
+     "cache_creation": 774,
+     "cost": 0.0696063,
+     "seconds": 6.0385,
+     "n": 2,
+     "correct": 2
+    }
+   },
+   "fresh": {
+    "context": {
+     "input": 7,
+     "output": 381,
+     "cache_read": 26274,
+     "cache_creation": 7548.5,
+     "cost": 0.0732908,
+     "seconds": 8.474,
+     "n": 2,
+     "correct": 2
+    },
+    "old": {
+     "input": 6,
+     "output": 424,
+     "cache_read": 17741,
+     "cache_creation": 3273,
+     "cost": 0.0382362,
+     "seconds": 14.6555,
+     "n": 2,
+     "correct": 2
+    }
+   }
+  },
+  "aborted": null
+ },
+ "spend": {
+  "spent": 6.479940200000001,
+  "runs": 140,
+  "cap": 10.0
+ },
+ "agent": {
+  "rows": [
+   {
+    "q": {
+     "id": "c01",
+     "kind": "conceptual",
+     "question": "How does the server decide how many diamonds to charge a caller per second during a call?",
+     "grep_pattern": "DEFAULT_DIAMONDS_PER_SECOND",
+     "expected_paths": [
+      "src/websockets/in-call-websocket/services/billing.service.ts"
+     ]
+    },
+    "context": {
+     "seconds": 12.948,
+     "input": 10,
+     "output": 595,
+     "cache_read": 45179,
+     "cache_creation": 10451,
+     "tokens": 56235,
+     "cost": 0.10458379999999999,
+     "turns": 5,
+     "hit": 1,
+     "error": false,
+     "session_id": "97cc834e-5890-4fbc-b6a9-169ce5e5a872",
+     "answer": "1. `src/websockets/in-call-websocket/services/billing.service.ts`: this is where the per-second charge happens: it multiplies elapsed seconds by `DEFAULT_DIAMONDS_PER_SECOND` and deducts that from the caller, and if the caller has less than one second's worth left, it takes whatever balance remains.\n2. `src/core/constants/app.constant.ts`: this sets the rate itself, a fixed `DEFAULT_DIAMONDS_PER_SECOND = 4`.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 6.465,
+     "input": 4,
+     "output": 351,
+     "cache_read": 10675,
+     "cache_creation": 2474,
+     "tokens": 13504,
+     "cost": 0.028963000000000003,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "574f8e24-11d2-4d4d-9cc5-edc0f5c6c6d3",
+     "answer": "1. `src/websockets/in-call-websocket/services/billing.service.ts`: this is where the server works out each in-call charge, as `timeline * DEFAULT_DIAMONDS_PER_SECOND`, and it charges only the remaining balance when that balance is below the per-second rate.\n2. `src/core/constants/app.constant.ts`: line 11 sets the rate itself, `DEFAULT_DIAMONDS_PER_SECOND = 4`, a fixed value rather than one that changes per user or per call.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "c02",
+     "kind": "conceptual",
+     "question": "How is an incoming Stripe webhook event checked to be genuine?",
+     "grep_pattern": "constructEvent|webhook",
+     "expected_paths": [
+      "src/payment-processor/stripe/stripe.service.ts"
+     ]
+    },
+    "context": {
+     "seconds": 5.502,
+     "input": 4,
+     "output": 389,
+     "cache_read": 9963,
+     "cache_creation": 4285,
+     "tokens": 14641,
+     "cost": 0.0440686,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "e7c5c9b3-b04e-41cd-9e03-b3dcf9faa569",
+     "answer": "1. `src/payment-processor/stripe/stripe.service.ts`: its `validateWebhookEvent` method (line 162) does the check. It rejects the request if the `stripe-signature` header is missing, if the `STRIPE_PAYMENT_WEBHOOK_SECRET_KEY` setting is empty, or if the payload isn't a raw Buffer. Then it calls Stripe's `webhooks.constructEvent` with the payload, signature and secret, which fails if the signature doesn't match.\n2. `src/payment-processor/processors/stripe.processor.ts`: `_processWebhookEvent` (line 286) calls that check before it handles any event.\n3. `src/payment/gateway/gateway.controller.ts`:",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 8.766,
+     "input": 6,
+     "output": 480,
+     "cache_read": 17637,
+     "cache_creation": 9092,
+     "tokens": 27215,
+     "cost": 0.0858874,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "87f569fb-3ea5-41f0-8c28-1bb7812967b2",
+     "answer": "`src/payment-processor/stripe/stripe.service.ts` is the file. Its `validateWebhookEvent` method (line 162) throws an error if the Stripe signature is missing. Otherwise it passes the raw `Buffer` body and the signature to Stripe's `webhooks.constructEvent` (line 183), which confirms the event really came from Stripe.\n\nTwo other files are part of the path:\n- `src/payment-processor/processors/stripe.processor.ts` (around line 287) hands the incoming signature and payload to that check.\n- `src/middlewares/rawBody.middleware.spec.ts` tests the middleware that keeps the raw request body, which the ",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "c03",
+     "kind": "conceptual",
+     "question": "Where are the global API rate limits set?",
+     "grep_pattern": "throttl|Throttl",
+     "expected_paths": [
+      "src/core/configs/throttler.config.ts"
+     ]
+    },
+    "context": {
+     "seconds": 5.755,
+     "input": 4,
+     "output": 239,
+     "cache_read": 9953,
+     "cache_creation": 4000,
+     "tokens": 14196,
+     "cost": 0.0387866,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "0cf418fd-ec87-4b85-b87a-6dbec6f4081c",
+     "answer": "1. `src/core/configs/throttler.config.ts`: this file defines `THROTTLE_CONFIG`, the global limit of 1000 requests per 60,000 ms (1 minute).\n2. `src/app.module.ts`: this file applies that config everywhere by registering `ThrottlerModule.forRoot(THROTTLE_CONFIG)` and setting `ThrottlerGuard` as the global `APP_GUARD`.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 5.022,
+     "input": 4,
+     "output": 285,
+     "cache_read": 10663,
+     "cache_creation": 1715,
+     "tokens": 12667,
+     "cost": 0.0215686,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "bc82c254-1fbe-4935-8e61-a47a37746d38",
+     "answer": "1. `src/core/configs/throttler.config.ts`: this is where the global rate limits are set, in `THROTTLE_CONFIG` (the list of `throttlers`).\n2. `src/app.module.ts`: this applies those limits to every route by loading `ThrottlerModule.forRoot(THROTTLE_CONFIG)` and registering `ThrottlerGuard` as a global guard.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "c04",
+     "kind": "conceptual",
+     "question": "How is a Firebase push notification sent to a user's device?",
+     "grep_pattern": "messaging\\(\\)",
+     "expected_paths": [
+      "src/fcm/fcm.service.ts"
+     ]
+    },
+    "context": {
+     "seconds": 6.632,
+     "input": 4,
+     "output": 194,
+     "cache_read": 9959,
+     "cache_creation": 4145,
+     "tokens": 14302,
+     "cost": 0.0390478,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "37e6ddda-f5dd-49d1-aabf-3f188047d146",
+     "answer": "`src/fcm/fcm.service.ts`. `sendNotificationToUser` (around line 172) finds the user's active device token, then `sendNotificationToToken` (around line 234) builds a data-only Firebase `Message` with that token and sends it through `firebaseApp.messaging().send()`.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 10.482,
+     "input": 6,
+     "output": 349,
+     "cache_read": 17380,
+     "cache_creation": 2518,
+     "tokens": 20253,
+     "cost": 0.030624000000000005,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "d5dfa184-7536-4122-b131-c3f13dbc487e",
+     "answer": "`src/fcm/fcm.service.ts` is the file that answers this. Its `sendNotificationToUser` method looks up the user's registered device token and passes it to `sendNotificationToToken`, which builds the message and sends it with `this.firebaseApp.messaging().send(message)`.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "c05",
+     "kind": "conceptual",
+     "question": "How are server-sent events broadcast to connected clients?",
+     "grep_pattern": "Subject|Observable",
+     "expected_paths": [
+      "src/sse/sse.service.ts"
+     ]
+    },
+    "context": {
+     "seconds": 4.948,
+     "input": 4,
+     "output": 186,
+     "cache_read": 9958,
+     "cache_creation": 4425,
+     "tokens": 14573,
+     "cost": 0.0411276,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "ea5c0bc0-50b0-4cc3-b310-28b736f6e4c7",
+     "answer": "`src/sse/sse.service.ts` is the answer. Its `SseService.broadcast()` method (lines 120\u2013131) collects the unique user IDs of all connected clients and calls `sendEventToUser()` for each, which pushes the event through a shared `eventSubject` stream.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 7.288,
+     "input": 6,
+     "output": 497,
+     "cache_read": 16912,
+     "cache_creation": 7730,
+     "tokens": 25145,
+     "cost": 0.0751864,
+     "turns": 4,
+     "hit": 1,
+     "error": false,
+     "session_id": "35c7f358-8cd2-4ba0-8697-b6c60928d539",
+     "answer": "1. `src/sse/sse.service.ts`: its `broadcast()` method collects each connected user ID and calls `sendEventToUser()` for each one, which pushes the event into a shared RxJS `Subject`. In `addClient()`, each client's stream is that Subject filtered down to its own user ID.\n2. `src/sse/sse.controller.ts`: the `@Sse('stream')` endpoint (`GET /v1/sse/stream`) is how clients connect, and it returns the stream that `sseService.addClient()` creates.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "c06",
+     "kind": "conceptual",
+     "question": "How is the text of a call transcript screened for toxic content?",
+     "grep_pattern": "Toxic|toxic",
+     "expected_paths": [
+      "src/moderation/services/aws-comprehend.service.ts"
+     ]
+    },
+    "context": {
+     "seconds": 7.486,
+     "input": 4,
+     "output": 343,
+     "cache_read": 9959,
+     "cache_creation": 4832,
+     "tokens": 15138,
+     "cost": 0.0475238,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "710bf0f4-d159-488b-805f-577b5de3845a",
+     "answer": "The best match is **`src/moderation/services/aws-comprehend.service.ts`**. In that file, `detectToxicContent` sends the text to AWS Comprehend's `DetectToxicContentCommand`. Text is flagged as toxic if any label in a fixed list scores at or above 0.5; the labels are PROFANITY, HATE_SPEECH, INSULT, GRAPHIC, HARASSMENT_OR_ABUSE, SEXUAL and VIOLENCE_OR_THREAT. `moderateContent` runs that check alongside sentiment analysis and lists the reasons for any violation.\n\nSecond: `src/moderation/services/aws-transcribe.service.ts`, which produces the call transcript text that gets screened.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 22.444,
+     "input": 14,
+     "output": 1552,
+     "cache_read": 59854,
+     "cache_creation": 7265,
+     "tokens": 68685,
+     "cost": 0.10118680000000001,
+     "turns": 9,
+     "hit": 1,
+     "error": false,
+     "session_id": "cb7d75a1-f2f4-4db4-8782-07853e08ed21",
+     "answer": "1. `src/moderation/services/aws-comprehend.service.ts`: this file holds the toxicity check. `detectToxicContent` sends the text to AWS Comprehend's `DetectToxicContentCommand` and flags it when a listed toxic label scores at least `TOXICITY_THRESHOLD = 0.5`. `moderateContent` then combines that result with sentiment analysis to decide whether the text is inappropriate and why.\n2. `src/moderation/moderation-webhook.controller.ts`: in the current flow, `moderation.service.ts` only starts a Transcribe job and an external Lambda processes the transcript, so this webhook is where the app receives t",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "c07",
+     "kind": "conceptual",
+     "question": "How is a guest user issued a login token?",
+     "grep_pattern": "generateGuestToken|guest.*[Tt]oken",
+     "expected_paths": [
+      "src/helpers/jwt.helper.ts",
+      "src/auth/auth.service.ts"
+     ]
+    },
+    "context": {
+     "seconds": 6.92,
+     "input": 4,
+     "output": 297,
+     "cache_read": 9953,
+     "cache_creation": 5703,
+     "tokens": 15957,
+     "cost": 0.053570599999999996,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "472b7621-d0ea-4db7-b8c5-7145623634e8",
+     "answer": "1. `src/auth/auth.service.ts`: `AuthService.guestSignin` (around lines 424\u2013472) handles guest login. It looks up the guest by the device ID sent in the `X-Device-Token` header, creating a new guest if none exists or updating the last activity time if one does, and then issues the JWT by calling `generateGuestToken(this.jwtService, guest.id, deviceId)`.\n2. `src/helpers/jwt.helper.ts`: this holds the guest-token helpers, including `generateGuestToken`, which signs the token, and `validateJwtToken`, which later checks guest tokens (scope `guest`).",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 9.031,
+     "input": 6,
+     "output": 477,
+     "cache_read": 18340,
+     "cache_creation": 4168,
+     "tokens": 22991,
+     "cost": 0.046576,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "a5df6168-b320-432c-a426-ad43671a0c5e",
+     "answer": "1. `src/auth/auth.service.ts` (`guestSignin`, around line 436): this looks up the guest for the device ID, or creates one, then calls `generateGuestToken` to issue the guest's JWT.\n2. `src/helpers/jwt.helper.ts` (`generateGuestToken`, line 56): this is the function that builds and signs the guest JWT from the guest ID and device ID.\n3. `src/auth/auth.controller.ts` (`POST guest/signin`, line 168): this is the endpoint that receives the device ID and calls `authService.guestSignin`.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "c08",
+     "kind": "conceptual",
+     "question": "Where is the signature of a Daily.co webhook validated?",
+     "grep_pattern": "[Ss]ignature",
+     "expected_paths": [
+      "src/rooms/services/dailyco.webhook.ts",
+      "src/helpers/string.helpers.ts"
+     ]
+    },
+    "context": {
+     "seconds": 6.116,
+     "input": 4,
+     "output": 273,
+     "cache_read": 9960,
+     "cache_creation": 4462,
+     "tokens": 14699,
+     "cost": 0.043164,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "a0be0eda-ad5f-49bb-888d-2c3413628dd2",
+     "answer": "1. `src/rooms/services/dailyco.webhook.ts`: `DailycoWebhookService.validateWebhookSignature` (around lines 400\u2013440) checks the `x-daily-signature` header and timestamp against the configured webhook HMAC secret.\n2. `src/helpers/string.helpers.ts`: `validateHmacSignature` (lines 108\u2013157) does the actual HMAC-SHA256 check, signing `timestamp.JSON(payload)` with the base64-decoded secret and comparing the result to the received signature.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 10.442,
+     "input": 6,
+     "output": 770,
+     "cache_read": 17312,
+     "cache_creation": 9994,
+     "tokens": 28082,
+     "cost": 0.0988384,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "30a600af-b9fe-4117-8735-df0e2037cd2c",
+     "answer": "1. `src/rooms/services/dailyco.webhook.ts`: `validateWebhookSignature()` (line 407) is the Daily.co-specific check; it validates the signature against the configured webhook HMAC secret.\n2. `src/helpers/string.helpers.ts`: `validateHmacSignature()` (line 117) does the actual HMAC-SHA256 calculation and comparison that the service calls.\n3. `src/rooms/controllers/dailyco-webhook.controller.ts`: it reads the `X-Webhook-Signature` and `X-Webhook-Timestamp` headers, calls the validator (line 176) and rejects the request if the signature is invalid.\n\nTwo security problems in `string.helpers.ts`:\n- ",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "c09",
+     "kind": "conceptual",
+     "question": "Which scheduled job pays out verified users through Tipalti in batches?",
+     "grep_pattern": "TIPALTI_PAYMENT_BATCH|PaymentBatch",
+     "expected_paths": [
+      "src/jobs/payout/tipalti-payment-batch.ts",
+      "src/jobs/jobs.service.ts"
+     ]
+    },
+    "context": {
+     "seconds": 9.332,
+     "input": 6,
+     "output": 459,
+     "cache_read": 20240,
+     "cache_creation": 7234,
+     "tokens": 27939,
+     "cost": 0.071124,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "1e61baef-9477-48b7-a17c-4c135d0fa0e1",
+     "answer": "1. `src/jobs/jobs.service.ts`: `setupTipaltiPaymentBatchCronJob` registers the `tipalti-payment-batch` cron job, which runs at 2 AM daily by default and is turned on by `TIPALTI_PAYMENT_BATCH_CRON_JOB_ENABLED`.\n2. `src/jobs/payout/tipalti-payment-batch.ts`: `TipaltiPaymentBatchService.processPendingPayoutTransactions` is what that job calls, and it pays out pending payout transactions in batches of up to `TIPALTI_PAYMENT_BATCH_SIZE`.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 7.573,
+     "input": 6,
+     "output": 423,
+     "cache_read": 17528,
+     "cache_creation": 4094,
+     "tokens": 22051,
+     "cost": 0.0447416,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "08cfcef6-6ef8-4c45-8cfc-8dcf48cfbd87",
+     "answer": "1. `src/jobs/payout/tipalti-payment-batch.ts` contains `TipaltiPaymentBatchService`, which is the job that pays out verified users through Tipalti in batches.\n2. `src/jobs/jobs.service.ts` is what schedules it: `setupTipaltiPaymentBatchCronJob()` registers that service as a cron job.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "s01",
+     "kind": "symbol",
+     "question": "calculateAge",
+     "grep_pattern": "calculateAge",
+     "expected_paths": [
+      "src/helpers/age.helpers.ts"
+     ]
+    },
+    "context": {
+     "seconds": 3.7,
+     "input": 4,
+     "output": 152,
+     "cache_read": 9946,
+     "cache_creation": 3242,
+     "tokens": 13344,
+     "cost": 0.030981199999999997,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "4a094256-1de7-450a-b1ca-2e3aacdc7316",
+     "answer": "`src/helpers/age.helpers.ts`: it defines and exports `calculateAge(birthdate: string)`, which takes a birthdate in `MM/DD/YYYY` format and returns the age, subtracting one if this year's birthday hasn't happened yet.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 6.176,
+     "input": 4,
+     "output": 260,
+     "cache_read": 10656,
+     "cache_creation": 1584,
+     "tokens": 12504,
+     "cost": 0.0200192,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "597ce4d2-050f-45d0-a3b1-3632b11240f5",
+     "answer": "1. `src/helpers/age.helpers.ts`: `calculateAge(birthdate: string)` is defined on line 6 and used by `isValidAge` on line 26.\n2. `src/helpers/age.helpers.spec.ts`: these are its unit tests, which show how it's expected to behave (for example, a 29 February birthdate, an age of 0, and a birthdate in the future returning -1).",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "s02",
+     "kind": "symbol",
+     "question": "AdminKeyGuard",
+     "grep_pattern": "AdminKeyGuard",
+     "expected_paths": [
+      "src/auth/guards/admin-key.guard.ts"
+     ]
+    },
+    "context": {
+     "seconds": 8.827,
+     "input": 4,
+     "output": 205,
+     "cache_read": 9950,
+     "cache_creation": 3243,
+     "tokens": 13402,
+     "cost": 0.032049999999999995,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "88a31b02-d5a5-4411-80f9-eb02dec50043",
+     "answer": "1. `src/auth/guards/admin-key.guard.ts`: this file defines the `AdminKeyGuard` class, which checks the `x-admin-key` request header against the `ADMIN_SECRET_KEY` config value and rejects missing or wrong keys with `UnauthorizedException`.\n2. `src/admin/admin.controller.ts`: this controller imports the guard and uses it on its admin routes.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 4.455,
+     "input": 4,
+     "output": 221,
+     "cache_read": 10660,
+     "cache_creation": 1382,
+     "tokens": 12267,
+     "cost": 0.017624,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "12429f6f-a5a0-40a9-a6a0-32120bd51792",
+     "answer": "1. `src/auth/guards/admin-key.guard.ts`: this is where the `AdminKeyGuard` class is defined (line 12).\n2. `src/admin/admin.controller.ts`: this file uses the guard through `@UseGuards(AdminKeyGuard)` (line 60).",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "s03",
+     "kind": "symbol",
+     "question": "EventDispatcher",
+     "grep_pattern": "EventDispatcher",
+     "expected_paths": [
+      "src/websockets/in-call-websocket/events/event-dispatcher.ts"
+     ]
+    },
+    "context": {
+     "seconds": 5.351,
+     "input": 4,
+     "output": 297,
+     "cache_read": 9948,
+     "cache_creation": 3534,
+     "tokens": 13783,
+     "cost": 0.0362176,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "74eb9bdf-27f0-4168-837e-de1fd3f30c07",
+     "answer": "1. `src/websockets/in-call-websocket/events/event-dispatcher.ts`: this file defines the `EventDispatcher` class, which routes in-call WebSocket events to their handlers through `registerHandler`, `dispatch`, `hasHandler` and `getRegisteredEvents`.\n2. `src/websockets/in-call-websocket/in-call-websocket.gateway.ts`: its `initializeEventHandlers` method shows how the gateway registers each in-call event handler with the dispatcher.\n3. `IN_CALL_WS_README.md`: this doc describes what the dispatcher is for and how to use it.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 6.029,
+     "input": 4,
+     "output": 372,
+     "cache_read": 10658,
+     "cache_creation": 1297,
+     "tokens": 12331,
+     "cost": 0.0199636,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "fae50c0f-1b90-4994-82bd-efb3cd91a289",
+     "answer": "`src/websockets/in-call-websocket/events/event-dispatcher.ts` is the file that defines `EventDispatcher`. The other matches only use it, test it or document it.\n\nNext most relevant:\n- `src/websockets/in-call-websocket/events/event-dispatcher.spec.ts`: its unit tests.\n- `src/websockets/in-call-websocket/in-call-websocket.gateway.ts`: the in-call WebSocket gateway that uses it.\n- `src/websockets/websockets.module.ts`: the module where it is registered.\n- `IN_CALL_WS_README.md`: documentation that mentions it.\n\nI found these by searching for the name and haven't opened the files.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "s04",
+     "kind": "symbol",
+     "question": "TipaltiPaymentBatchService",
+     "grep_pattern": "TipaltiPaymentBatchService",
+     "expected_paths": [
+      "src/jobs/payout/tipalti-payment-batch.ts"
+     ]
+    },
+    "context": {
+     "seconds": 3.927,
+     "input": 4,
+     "output": 171,
+     "cache_read": 9954,
+     "cache_creation": 3607,
+     "tokens": 13736,
+     "cost": 0.0342828,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "d196e909-b1ca-4a9a-9af9-d9ce7985f9a6",
+     "answer": "`src/jobs/payout/tipalti-payment-batch.ts`: this file defines the `@Injectable()` class `TipaltiPaymentBatchService`, which fetches pending payout transactions in batches and sends each batch to Tipalti through `PayOutService.createPaymentBatch`.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 9.408,
+     "input": 6,
+     "output": 535,
+     "cache_read": 16851,
+     "cache_creation": 2577,
+     "tokens": 19969,
+     "cost": 0.034710200000000004,
+     "turns": 4,
+     "hit": 1,
+     "error": false,
+     "session_id": "6a75a896-4636-4d87-aa2a-5319f6ddd5d9",
+     "answer": "1. `src/jobs/payout/tipalti-payment-batch.ts`: the `TipaltiPaymentBatchService` class is defined here, at line 15.\n2. `src/jobs/payout/tipalti-payment-batch.spec.ts`: this holds its unit tests.\n3. `src/jobs/jobs.module.ts`: this registers it as a provider and exports it, and `src/jobs/jobs.service.ts` injects it.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "s05",
+     "kind": "symbol",
+     "question": "rawBodyMiddleware",
+     "grep_pattern": "rawBodyMiddleware",
+     "expected_paths": [
+      "src/middlewares/rawBody.middleware.ts"
+     ]
+    },
+    "context": {
+     "seconds": 4.244,
+     "input": 4,
+     "output": 223,
+     "cache_read": 9951,
+     "cache_creation": 2136,
+     "tokens": 12314,
+     "cost": 0.0235542,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "a3768f78-b49d-4037-9872-8ec82700054d",
+     "answer": "1. `src/middlewares/rawBody.middleware.ts`: this file defines and exports `rawBodyMiddleware`, a `body-parser` `json` handler that saves the raw request buffer to `request.rawBody` for URLs listed in `URLS_WITH_RAW_BODY`.\n2. `src/commons/interfaces/request-with-raw-body.interface.ts`: this file defines the `RequestWithRawBody` type that the middleware uses.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 5.428,
+     "input": 4,
+     "output": 243,
+     "cache_read": 10661,
+     "cache_creation": 1826,
+     "tokens": 12734,
+     "cost": 0.021616200000000002,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "5215bb1e-d6b7-4d4c-888d-48b691df6d43",
+     "answer": "1. `src/middlewares/rawBody.middleware.ts`: this file defines and default-exports `rawBodyMiddleware()`, which saves the raw request body as a Buffer on `request.rawBody` (line 9).\n2. `src/main.ts`: this is where the middleware is registered for the whole app, with `app.use(rawBodyMiddleware())` at line 66.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "s06",
+     "kind": "symbol",
+     "question": "THROTTLE_CONFIG",
+     "grep_pattern": "THROTTLE_CONFIG",
+     "expected_paths": [
+      "src/core/configs/throttler.config.ts"
+     ]
+    },
+    "context": {
+     "seconds": 3.621,
+     "input": 4,
+     "output": 246,
+     "cache_read": 9953,
+     "cache_creation": 7303,
+     "tokens": 17506,
+     "cost": 0.06535060000000001,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "b65bc8cd-d275-4c8f-a2f4-7a785389a085",
+     "answer": "1. `src/core/configs/throttler.config.ts`: this is where `THROTTLE_CONFIG` is defined. It sets one throttler that allows 1000 requests per 60000 ms (1 minute).\n2. `src/app.module.ts`: this is where it's used. It's passed to `ThrottlerModule.forRoot(THROTTLE_CONFIG)`, and `ThrottlerGuard` is registered as the global `APP_GUARD`.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 3.725,
+     "input": 4,
+     "output": 248,
+     "cache_read": 10663,
+     "cache_creation": 1263,
+     "tokens": 12178,
+     "cost": 0.0172126,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "4bc937fb-d089-4710-885f-8375fc2daf34",
+     "answer": "1. `src/core/configs/throttler.config.ts`: this is where `THROTTLE_CONFIG` is defined and exported as a `ThrottlerModuleOptions` object (line 3).\n2. `src/app.module.ts`: this imports it and registers it with `ThrottlerModule.forRoot(THROTTLE_CONFIG)` (line 33).",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "s07",
+     "kind": "symbol",
+     "question": "WebSocketErrorHandler",
+     "grep_pattern": "WebSocketErrorHandler",
+     "expected_paths": [
+      "src/websockets/in-call-websocket/decorators/websocket-error-handler.decorator.ts"
+     ]
+    },
+    "context": {
+     "seconds": 4.23,
+     "input": 4,
+     "output": 178,
+     "cache_read": 9952,
+     "cache_creation": 2627,
+     "tokens": 12761,
+     "cost": 0.026582400000000003,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "aa34c7f8-16cd-4eda-b1ea-e4d0bcd71037",
+     "answer": "`src/websockets/in-call-websocket/decorators/websocket-error-handler.decorator.ts`: it defines the `WebSocketErrorHandler(action)` decorator. The decorator wraps WebSocket event handlers, catches and logs errors, sends a formatted error response back to the client socket, and then throws the error again.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 5.738,
+     "input": 6,
+     "output": 351,
+     "cache_read": 16943,
+     "cache_creation": 2834,
+     "tokens": 20134,
+     "cost": 0.0331046,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "35f8385a-8632-4eb9-902b-182f8f4ed542",
+     "answer": "`src/websockets/in-call-websocket/decorators/websocket-error-handler.decorator.ts` defines the `WebSocketErrorHandler(action)` method decorator: it catches errors thrown by in-call WebSocket handlers, logs them, sends an `ErrorResponse` back to the client socket and then throws the error again.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "s08",
+     "kind": "symbol",
+     "question": "DEFAULT_DIAMONDS_PER_SECOND",
+     "grep_pattern": "DEFAULT_DIAMONDS_PER_SECOND",
+     "expected_paths": [
+      "src/core/constants/app.constant.ts"
+     ]
+    },
+    "context": {
+     "seconds": 7.693,
+     "input": 8,
+     "output": 428,
+     "cache_read": 29646,
+     "cache_creation": 7851,
+     "tokens": 37933,
+     "cost": 0.0773292,
+     "turns": 4,
+     "hit": 1,
+     "error": false,
+     "session_id": "755709f1-a5ca-4814-805d-807ad082e2c1",
+     "answer": "1. `src/core/constants/app.constant.ts` defines it as `export const DEFAULT_DIAMONDS_PER_SECOND = 4;`, the rate of diamonds charged per second of a call.\n2. `src/websockets/in-call-websocket/services/billing.service.ts` uses it in `billingAfterCall` to check whether the caller's balance covers another second and to work out the call's total billed seconds.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 7.065,
+     "input": 4,
+     "output": 358,
+     "cache_read": 10673,
+     "cache_creation": 2388,
+     "tokens": 13423,
+     "cost": 0.028414599999999998,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "19d51042-8f36-4121-8d7c-a09dffd70989",
+     "answer": "1. `src/core/constants/app.constant.ts`: this is where the constant is defined, at line 11 (`export const DEFAULT_DIAMONDS_PER_SECOND = 4;`).\n2. `src/websockets/in-call-websocket/services/billing.service.ts`: this is the main place it's used, to work out in-call diamond charges (timeline \u00d7 rate) and to check for insufficient balance.\n\nSome comments in `billing.service.spec.ts` are out of date: they say the rate is 2.25 or \"135 diamonds\" for 60 seconds, but the constant is 4.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "d01",
+     "kind": "doc",
+     "question": "How does the API version its endpoints, and what is a version-neutral endpoint?",
+     "grep_pattern": "[Vv]ersion-[Nn]eutral|VERSION_NEUTRAL",
+     "expected_paths": [
+      "API_VERSIONING.md"
+     ]
+    },
+    "context": {
+     "seconds": 4.732,
+     "input": 4,
+     "output": 282,
+     "cache_read": 9966,
+     "cache_creation": 3599,
+     "tokens": 13851,
+     "cost": 0.0364412,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "4d3adb60-0023-4d80-9422-d6cfafa07620",
+     "answer": "1. `API_VERSIONING.md`: this is the document about how versioning works. It says `main.ts` turns on URI versioning (`VersioningType.URI`) with the global prefix `api` and a default version of `1`. Version-neutral endpoints such as `/api/health` and `/api/` have no version number in their path.\n2. `API_DESIGN.md`: this has a shorter summary. Versioned endpoints live under `/api/v1/*`, and version-neutral ones under `/api/*` are for health checks and system endpoints, not business logic.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 7.928,
+     "input": 6,
+     "output": 494,
+     "cache_read": 16998,
+     "cache_creation": 3739,
+     "tokens": 21237,
+     "cost": 0.0432156,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "b3d72309-6361-4385-b0d9-ae993e3b60a0",
+     "answer": "1. `API_VERSIONING.md`: This doc answers both parts. Endpoints are versioned through the URL, under a global `api` prefix with a default version of `1` (so routes look like `/api/v1/...`). A version-neutral endpoint is a utility route like `/api/health` that's marked `@Version(VERSION_NEUTRAL)` and is reached without a version prefix.\n2. `src/main.ts`: This is the actual versioning setup the doc describes (`app.enableVersioning({ type: VersioningType.URI, ... })` at line 57).\n3. `src/app.controller.ts`: This is a real version-neutral endpoint in the code (`@Version(VERSION_NEUTRAL)` at line 13",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "d02",
+     "kind": "doc",
+     "question": "What response format does the API use for errors and paginated lists?",
+     "grep_pattern": "[Pp]aginated Response|Error Response",
+     "expected_paths": [
+      "API_DESIGN.md"
+     ]
+    },
+    "context": {
+     "seconds": 4.142,
+     "input": 4,
+     "output": 262,
+     "cache_read": 9958,
+     "cache_creation": 5617,
+     "tokens": 15841,
+     "cost": 0.0521836,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "c772bef5-9691-457b-9aba-03f90736cbb0",
+     "answer": "1. `API_DESIGN.md`: Its \"Response Formats\" section describes both. Paginated lists come back as `{ data: [...], meta: { total, limit, offset, totalPages, currentPage, hasNext, hasPrevious } }`, and errors come back as `{ statusCode, message, error }`.\n2. `src/commons/interfaces/pagination.interface.ts`: This defines the `PaginatedResponse<T>` type (`{ meta, data: T[] }`) that list endpoints use in code.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 5.774,
+     "input": 6,
+     "output": 354,
+     "cache_read": 17632,
+     "cache_creation": 2929,
+     "tokens": 20921,
+     "cost": 0.0340624,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "f56129d9-6e46-48d4-abc3-668cdbfd3bd1",
+     "answer": "`API_DESIGN.md` is the file that answers this. Its \"Response Format\" section describes the paginated list structure and the error response structure (`statusCode`/`message`/`error`), and its \"Error Handling\" section covers error status codes and the error response format.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "d03",
+     "kind": "doc",
+     "question": "Which database indexes exist on the transactions table and why?",
+     "grep_pattern": "Transaction Entity",
+     "expected_paths": [
+      "DATABASE_INDEXES.md"
+     ]
+    },
+    "context": {
+     "seconds": 6.376,
+     "input": 4,
+     "output": 249,
+     "cache_read": 9958,
+     "cache_creation": 4676,
+     "tokens": 14887,
+     "cost": 0.0443956,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "87420aa5-18e5-4dac-bc82-40a5d77c9035",
+     "answer": "1. `DATABASE_INDEXES.md`: its \"Transaction Entity\" section (lines 89\u2013109) lists every index on the transactions table and why each one exists: single indexes on `user_id`, `type` and `status`, plus the composite `idx_transaction_user_status` for looking up a user's transactions by status.\n2. `src/transactions/entities/transaction.entity.ts`: this is where those indexes are actually declared with TypeORM `@Index` decorators, and they match what the doc describes.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 8.237,
+     "input": 6,
+     "output": 630,
+     "cache_read": 17863,
+     "cache_creation": 3145,
+     "tokens": 21644,
+     "cost": 0.0413566,
+     "turns": 4,
+     "hit": 1,
+     "error": false,
+     "session_id": "8cc8ba7a-6667-4694-9543-c02cf0f39ec1",
+     "answer": "1. `DATABASE_INDEXES.md`: its \"4. Transaction Entity\" section lists the transaction indexes and why each one exists. There are single-column indexes on `user_id`, `type` and `status`, plus the composite `idx_transaction_user_status`, all there to speed up user history, type filtering and status queries.\n2. `src/transactions/entities/transaction.entity.ts`: this is where the indexes are actually declared in code, as `@Index()` decorators and the composite `@Index('idx_transaction_user_status', ['userId', 'status'])`.\n3. `src/migrations/1756464500977-add-index-fields.ts` and `src/migrations/1756",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "d04",
+     "kind": "doc",
+     "question": "What events does a client send over the in-call WebSocket to register a call?",
+     "grep_pattern": "register-call",
+     "expected_paths": [
+      "IN_CALL_WS_README.md"
+     ]
+    },
+    "context": {
+     "seconds": 8.397,
+     "input": 6,
+     "output": 395,
+     "cache_read": 18366,
+     "cache_creation": 4589,
+     "tokens": 23356,
+     "cost": 0.048309200000000004,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "1fc11b30-46e4-477e-9c41-daee586b4539",
+     "answer": "1. `IN_CALL_WS_README.md`: its \"WebSocket Events \u2192 Client \u2192 Server Events\" section lists the events a client sends over the in-call WebSocket, including the register-call event.\n2. `src/websockets/in-call-websocket/in-call-websocket.gateway.ts`: this is where the server subscribes to `InCallEvents.REGISTER_CALL` and passes the `RegisterPayload` to `src/websockets/in-call-websocket/handlers/register-call.handler.ts`.\n\nI found the README section by its heading and didn't open its contents.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 11.426,
+     "input": 8,
+     "output": 726,
+     "cache_read": 27047,
+     "cache_creation": 4872,
+     "tokens": 32653,
+     "cost": 0.0589374,
+     "turns": 5,
+     "hit": 1,
+     "error": false,
+     "session_id": "7b483f07-df43-411d-85e3-a730cf01b925",
+     "answer": "1. `IN_CALL_WS_README.md`: its \"Client \u2192 Server Events\" section says the client sends `register-call` with `{ regularUserId, verifiedUserId, roomId, roomUrl, roomToken }` to register a call, and the server replies with `call-registered`.\n2. `src/websockets/in-call-websocket/enums/in-call-events.enum.ts`: this enum is where the event names are defined, including `REGISTER_CALL = 'register-call'`.\n3. `src/websockets/in-call-websocket/handlers/register-call.handler.ts`: this is the server code that handles the `register-call` event.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "d05",
+     "kind": "doc",
+     "question": "Which columns does the rooms table have?",
+     "grep_pattern": "rooms",
+     "expected_paths": [
+      "DATABASE_README.md"
+     ]
+    },
+    "context": {
+     "seconds": 6.165,
+     "input": 4,
+     "output": 320,
+     "cache_read": 9953,
+     "cache_creation": 6051,
+     "tokens": 16328,
+     "cost": 0.05681460000000001,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "0ebaca88-8ce9-4769-bd2f-660f6a293252",
+     "answer": "1. `src/rooms/entities/room.entity.ts` is the TypeORM `Room` entity mapped to the `rooms` table, so its column definitions are the current schema. Columns: `id`, `room_id`, `room_url`, `streaming_channel_arn`, `streaming_playback_url`, `regular_rating_score`, `verified_rating_score`, `start_time`, `end_time`, `regular_user_id`, `verified_user_id`, `guest_id`, `is_deleted`, `created_at`, `updated_at`.\n2. `DATABASE_README.md` has a table of the same `rooms` columns (section \"5. rooms\", around line 161) with the types, constraints and a description of each.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 8.886,
+     "input": 6,
+     "output": 487,
+     "cache_read": 17460,
+     "cache_creation": 3918,
+     "tokens": 21871,
+     "cost": 0.0446,
+     "turns": 3,
+     "hit": 0,
+     "error": false,
+     "session_id": "d9449101-f153-4a41-ad8a-f854339b1bb1",
+     "answer": "1. `src/rooms/entities/room.entity.ts`: this TypeORM entity (`@Entity({ name: 'rooms' })`) defines every current column: `id`, `room_id`, `room_url`, `streaming_channel_arn`, `streaming_playback_url`, `regular_rating_score`, `verified_rating_score`, `start_time`, `end_time`, `regular_user_id`, `verified_user_id`, `guest_id`, `is_deleted`, `created_at` and `updated_at`.\n2. `src/migrations/1751955763677-add-room-table.ts`: this migration created the table first, and later migrations (`add-guest-to-room`, `add-streaming-channel-arn-field`, `add-streaming-playback-url`) added more columns. I didn'",
+     "correct": 0
+    }
+   },
+   {
+    "q": {
+     "id": "d06",
+     "kind": "doc",
+     "question": "How do I run the app locally with Docker Compose?",
+     "grep_pattern": "Docker Compose",
+     "expected_paths": [
+      "README.md"
+     ]
+    },
+    "context": {
+     "seconds": 4.016,
+     "input": 4,
+     "output": 251,
+     "cache_read": 9957,
+     "cache_creation": 2970,
+     "tokens": 13182,
+     "cost": 0.0307874,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "db226f30-390d-4224-a3a9-608dc6d993b6",
+     "answer": "1. `README.md`: its \"Using Docker Compose (Easiest)\" section (lines 31\u201344) shows the two ways to start the app, `./bin/start-local.sh` or `docker compose -f docker-compose.local.yml up --build`, and explains that this starts PostgreSQL plus the app with hot reload at `http://localhost:3000`.\n2. `bin/start-local.sh`: this is the script that runs `docker compose -f docker-compose.local.yml up --build` from the project root.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 11.411,
+     "input": 6,
+     "output": 506,
+     "cache_read": 26384,
+     "cache_creation": 12179,
+     "tokens": 39075,
+     "cost": 0.1128528,
+     "turns": 4,
+     "hit": 1,
+     "error": false,
+     "session_id": "f2b0a889-bc87-4d19-8132-1be1da8e303e",
+     "answer": "1. `README.md`: its \"Using Docker Compose (Easiest)\" section (around line 31) gives the local run command, `docker compose -f docker-compose.local.yml up --build`.\n2. `docker-compose.local.yml`: this is the local Compose file that command uses, and it builds from `Dockerfile.local`.\n3. `bin/start-local.sh`: a helper script that runs the same `docker compose -f docker-compose.local.yml up --build` command.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "m01",
+     "kind": "multi_hop",
+     "question": "Which file validates Tipalti webhook signatures, and which spec covers it?",
+     "grep_pattern": "validateTipaltiWebhookSignature",
+     "expected_paths": [
+      "src/payment-processor/tipalti/helpers/webhook-validation.helper.ts",
+      "src/payment-processor/tipalti/helpers/webhook-validation.helper.spec.ts"
+     ]
+    },
+    "context": {
+     "seconds": 9.324,
+     "input": 6,
+     "output": 466,
+     "cache_read": 20016,
+     "cache_creation": 10265,
+     "tokens": 30753,
+     "cost": 0.0954672,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "cfda8f2e-9e11-42a9-9ecb-d0c22f460d88",
+     "answer": "1. `src/payment-processor/tipalti/helpers/webhook-validation.helper.ts`: its `validateTipaltiWebhookSignature` function builds the HMAC-SHA256 signature over `timestamp-payload` and compares it in constant time to the signature it received.\n2. `src/payment-processor/tipalti/helpers/webhook-validation.helper.spec.ts`: this is the spec that tests that helper, with cases for a valid signature, a wrong signature, and a missing secret, payload or timestamp.\n\nAlso relevant: `src/payment-processor/tipalti/tipalti.service.ts` (`TipaltiService.validateTipaltiWebhookSignature`) reads the `Tipalti-Signat",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 9.926,
+     "input": 6,
+     "output": 447,
+     "cache_read": 17543,
+     "cache_creation": 3801,
+     "tokens": 21797,
+     "cost": 0.042880600000000005,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "bdcb5889-ca26-46e1-9eea-cfbd14c3dc55",
+     "answer": "1. `src/payment-processor/tipalti/helpers/webhook-validation.helper.ts`: this file validates the signatures. It exports `validateTipaltiWebhookSignature` and `extractTipaltiSignatureParts`.\n2. `src/payment-processor/tipalti/helpers/webhook-validation.helper.spec.ts`: this is the spec that covers it. It imports both functions and tests correct, incorrect, missing and empty signatures.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "m02",
+     "kind": "multi_hop",
+     "question": "Where is encryptFullQueryString defined, and which spec tests it?",
+     "grep_pattern": "encryptFullQueryString",
+     "expected_paths": [
+      "src/payment-processor/tipalti/helpers/key.helper.ts",
+      "src/payment-processor/tipalti/helpers/key.helper.spec.ts"
+     ]
+    },
+    "context": {
+     "seconds": 7.253,
+     "input": 4,
+     "output": 293,
+     "cache_read": 9964,
+     "cache_creation": 5924,
+     "tokens": 16185,
+     "cost": 0.0552608,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "381e81b1-d16c-45a1-9fd1-f0145ff3822c",
+     "answer": "1. `src/payment-processor/tipalti/helpers/key.helper.ts`: this is where `encryptFullQueryString` is defined (lines 11\u201319). It hashes the query string with HMAC-SHA256 using the private key, reading both as latin-1 to match the Python implementation.\n2. `src/payment-processor/tipalti/helpers/key.helper.spec.ts`: this spec tests it in the `describe('encryptFullQueryString')` block, checking hash length, consistency, different keys and queries, empty input and special or unicode characters. Its `generateKey` tests also call it to build the expected hashes.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 6.238,
+     "input": 4,
+     "output": 273,
+     "cache_read": 10674,
+     "cache_creation": 2071,
+     "tokens": 13022,
+     "cost": 0.0241788,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "fa134446-a212-44d7-a71d-d412ef604c9c",
+     "answer": "1. `src/payment-processor/tipalti/helpers/key.helper.ts`: `encryptFullQueryString` is defined here at line 11, and `generateKey` in the same file calls it (line 33).\n2. `src/payment-processor/tipalti/helpers/key.helper.spec.ts`: this spec tests it in a `describe('encryptFullQueryString')` block, and also uses it to build the expected hashes in the `generateKey` tests.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "m03",
+     "kind": "multi_hop",
+     "question": "Which guard enforces user roles, and which spec tests it?",
+     "grep_pattern": "RolesGuard",
+     "expected_paths": [
+      "src/auth/guards/roles.guard.ts",
+      "src/auth/guards/roles.guard.spec.ts"
+     ]
+    },
+    "context": {
+     "seconds": 5.264,
+     "input": 4,
+     "output": 348,
+     "cache_read": 9960,
+     "cache_creation": 9886,
+     "tokens": 20198,
+     "cost": 0.088056,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "688df7f4-3c26-40d6-bfbd-a99d82959bbc",
+     "answer": "1. `src/auth/guards/roles.guard.ts`: `RolesGuard` reads the roles that `@RequiredRoles` puts on a route. If the request has no user, it throws `ForbiddenException`. It also throws one when none of the user's `groups` matches a required role.\n2. `src/auth/guards/roles.guard.spec.ts`: this spec tests `RolesGuard.canActivate`. It covers routes with no required roles, users who have a matching role or one of several, and denials for missing users or the wrong role.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 6.548,
+     "input": 6,
+     "output": 437,
+     "cache_read": 17259,
+     "cache_creation": 2058,
+     "tokens": 19760,
+     "cost": 0.0286798,
+     "turns": 4,
+     "hit": 1,
+     "error": false,
+     "session_id": "c9b0316a-5bb5-45f5-9711-90fc329d2cd7",
+     "answer": "1. `src/auth/guards/roles.guard.ts`: this file defines `RolesGuard`, the guard that enforces user roles.\n2. `src/auth/guards/roles.guard.spec.ts`: this is the spec that tests it; it imports `RolesGuard` and has a `describe('RolesGuard', \u2026)` block.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "m04",
+     "kind": "multi_hop",
+     "question": "Where is the raw-body middleware defined, and which spec tests it?",
+     "grep_pattern": "rawBodyMiddleware",
+     "expected_paths": [
+      "src/middlewares/rawBody.middleware.ts",
+      "src/middlewares/rawBody.middleware.spec.ts"
+     ]
+    },
+    "context": {
+     "seconds": 6.332,
+     "input": 4,
+     "output": 295,
+     "cache_read": 9963,
+     "cache_creation": 6683,
+     "tokens": 16945,
+     "cost": 0.0613726,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "0a085692-c12b-4dce-aa13-8d0d3bfeecba",
+     "answer": "1. `src/middlewares/rawBody.middleware.ts`: this file defines `rawBodyMiddleware()`. It returns a body-parser `json` handler whose `verify` callback saves `request.rawBody` for any URL listed in `URLS_WITH_RAW_BODY`, which is currently only the Stripe webhook.\n2. `src/middlewares/rawBody.middleware.spec.ts`: this is the spec that tests it. It checks that the middleware returns a 3-argument handler, creates a `RawBodyMiddleware` logger, and uses the `URLS_WITH_RAW_BODY` constant.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 7.313,
+     "input": 6,
+     "output": 413,
+     "cache_read": 16832,
+     "cache_creation": 1872,
+     "tokens": 19123,
+     "cost": 0.0266264,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "73c7dd09-2c57-4223-8a31-337098d2c0ae",
+     "answer": "- `src/middlewares/rawBody.middleware.ts`: this file defines the raw-body middleware, which it exports as the default `rawBodyMiddleware()` factory.\n- `src/middlewares/rawBody.middleware.spec.ts`: this is the spec that tests it; it imports `rawBodyMiddleware` along with `URLS_WITH_RAW_BODY` from `src/core/constants/app.constant.ts`.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "m05",
+     "kind": "multi_hop",
+     "question": "Which helper checks if a date is more than N days ago, and which spec tests it?",
+     "grep_pattern": "isExceededNumberOfDays",
+     "expected_paths": [
+      "src/helpers/date.helper.ts",
+      "src/helpers/date.helper.spec.ts"
+     ]
+    },
+    "context": {
+     "seconds": 5.308,
+     "input": 4,
+     "output": 226,
+     "cache_read": 9966,
+     "cache_creation": 5106,
+     "tokens": 15302,
+     "cost": 0.047377199999999994,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "39fbbfac-de0c-44c3-a4dd-2a46cdb6fd23",
+     "answer": "1. `src/helpers/date.helper.ts`: the helper is `isExceededNumberOfDays(date, days)` at line 38, and it returns true when the date is more than `days` days in the past.\n2. `src/helpers/date.helper.spec.ts`: this spec tests it, covering the exact boundary, future and current dates, null and undefined inputs, an invalid date object, and zero, negative and large day counts.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 13.148,
+     "input": 8,
+     "output": 792,
+     "cache_read": 26611,
+     "cache_creation": 5300,
+     "tokens": 32711,
+     "cost": 0.06359419999999999,
+     "turns": 6,
+     "hit": 1,
+     "error": false,
+     "session_id": "c3106e1a-cc79-4339-886a-10e0c7e5f2b9",
+     "answer": "1. `src/helpers/date.helper.ts`: the helper is `isExceededNumberOfDays(date, days)` at line 38, which returns true when the date is more than `days` days before now.\n2. `src/helpers/date.helper.spec.ts`: this spec tests it in the `describe('isExceededNumberOfDays', ...)` block starting at line 102.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "m06",
+     "kind": "multi_hop",
+     "question": "Which helper extracts the client IP from a request, and which spec tests it?",
+     "grep_pattern": "getClientIp",
+     "expected_paths": [
+      "src/helpers/ip-address.helper.ts",
+      "src/helpers/ip-address.helper.spec.ts"
+     ]
+    },
+    "context": {
+     "seconds": 5.416,
+     "input": 4,
+     "output": 271,
+     "cache_read": 9964,
+     "cache_creation": 5161,
+     "tokens": 15400,
+     "cost": 0.048716800000000005,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "b157c349-a584-48cd-8f12-b2ee6a0d7374",
+     "answer": "- `src/helpers/ip-address.helper.ts`: its `getClientIp(request)` function gets the client IP. It checks proxy headers (X-Forwarded-For, X-Real-IP, CF-Connecting-IP and others) and then the direct connection, prefers IPv4, and returns `'unknown'` if it finds nothing.\n- `src/helpers/ip-address.helper.spec.ts`: this is the spec that tests `getClientIp`, with cases for each header and for picking IPv4 when several IPs are present.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 11.493,
+     "input": 6,
+     "output": 574,
+     "cache_read": 16799,
+     "cache_creation": 4769,
+     "tokens": 22148,
+     "cost": 0.0530158,
+     "turns": 4,
+     "hit": 1,
+     "error": false,
+     "session_id": "df073e7a-f513-4f33-ace8-66b52739974f",
+     "answer": "1. `src/helpers/ip-address.helper.ts`: this file defines `getClientIp(request)` (`src/helpers/ip-address.helper.ts:77`), which reads the client IP from the `request-ip` library and from headers like `X-Forwarded-For`, `X-Real-IP` and `CF-Connecting-IP`, returning an IPv4 address when it finds one.\n2. `src/helpers/ip-address.helper.spec.ts`: this is the spec that tests it; it imports and covers `getClientIp`, plus the related helpers `isIPv4`, `extractIPv4FromMapped` and `getAllIpsFromRequest`.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "m07",
+     "kind": "multi_hop",
+     "question": "Which service batches pending Tipalti payouts, and which spec tests it?",
+     "grep_pattern": "TipaltiPaymentBatchService",
+     "expected_paths": [
+      "src/jobs/payout/tipalti-payment-batch.ts",
+      "src/jobs/payout/tipalti-payment-batch.spec.ts"
+     ]
+    },
+    "context": {
+     "seconds": 6.918,
+     "input": 6,
+     "output": 333,
+     "cache_read": 20378,
+     "cache_creation": 7195,
+     "tokens": 27912,
+     "cost": 0.06831960000000001,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "d10394ad-8413-4c9f-984b-864f59dec967",
+     "answer": "1. `src/jobs/payout/tipalti-payment-batch.ts` is the service. Its `processPendingPayoutTransactions()` method splits pending payout transactions into batches and creates a Tipalti payment batch for each one.\n2. `src/jobs/payout/tipalti-payment-batch.spec.ts` is the spec that tests it. It covers splitting into multiple batches, skipping an empty batch and handling errors when a batch can't be created.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 8.018,
+     "input": 6,
+     "output": 465,
+     "cache_read": 17541,
+     "cache_creation": 4063,
+     "tokens": 22075,
+     "cost": 0.04533620000000001,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "f9e6227c-4b27-421f-98f0-9477b67b848f",
+     "answer": "- `src/jobs/payout/tipalti-payment-batch.ts`: this has `TipaltiPaymentBatchService`, whose `processPendingPayoutTransactions()` counts the pending payout transactions and processes them in batches, one page at a time.\n- `src/jobs/payout/tipalti-payment-batch.spec.ts`: this is the spec for that service (`describe('TipaltiPaymentBatchService')`), including tests for when there are no pending transactions, when there are several batches, and when an error occurs.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "e01",
+     "kind": "exact_text",
+     "question": "Invalid admin creation key",
+     "grep_pattern": "Invalid admin creation key",
+     "expected_paths": [
+      "src/auth/guards/admin-key.guard.ts"
+     ]
+    },
+    "context": {
+     "seconds": 3.954,
+     "input": 4,
+     "output": 195,
+     "cache_read": 9950,
+     "cache_creation": 5490,
+     "tokens": 15639,
+     "cost": 0.049826,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "e07f2f70-9c7e-4ba8-a1a6-5b06bd834fae",
+     "answer": "`src/auth/guards/admin-key.guard.ts`: its `AdminKeyGuard.canActivate` (lines 17\u201344) throws `UnauthorizedException('Invalid admin creation key')` when the `x-admin-key` request header doesn't match the `ADMIN_SECRET_KEY` setting.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 7.302,
+     "input": 6,
+     "output": 513,
+     "cache_read": 17838,
+     "cache_creation": 2723,
+     "tokens": 21080,
+     "cost": 0.0356356,
+     "turns": 4,
+     "hit": 1,
+     "error": false,
+     "session_id": "9e2ae7b9-21d9-4e36-885c-9dac43fca601",
+     "answer": "1. `src/auth/guards/admin-key.guard.ts`: this guard throws `UnauthorizedException('Invalid admin creation key')` at line 38. That happens when the `x-admin-key` request header doesn't match `ADMIN_SECRET_KEY`.\n2. `src/admin/admin.controller.ts`: this applies that guard (`@UseGuards(AdminKeyGuard)`) to the admin-creation endpoint, which needs the `x-admin-key` header.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "e02",
+     "kind": "exact_text",
+     "question": "Invalid device token format",
+     "grep_pattern": "Invalid device token format",
+     "expected_paths": [
+      "src/auth/interceptors/device-token.interceptor.ts"
+     ]
+    },
+    "context": {
+     "seconds": 10.371,
+     "input": 8,
+     "output": 367,
+     "cache_read": 26801,
+     "cache_creation": 5255,
+     "tokens": 32431,
+     "cost": 0.0547722,
+     "turns": 4,
+     "hit": 1,
+     "error": false,
+     "session_id": "7f042d9f-67c8-446d-91f9-0491bbf5dbb9",
+     "answer": "`src/auth/interceptors/device-token.interceptor.ts`: its `DeviceTokenInterceptor.intercept` method (lines 43\u201350) logs a warning and throws `BadRequestException('Invalid device token format')` when the `X-Device-Token` header isn't a string or is empty after trimming.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 8.708,
+     "input": 4,
+     "output": 216,
+     "cache_read": 10658,
+     "cache_creation": 1412,
+     "tokens": 12290,
+     "cost": 0.017763599999999997,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "0fdd6902-4075-4791-84e6-4e2bf8368eea",
+     "answer": "`src/auth/interceptors/device-token.interceptor.ts`: this interceptor logs the warning \"Invalid device token format\" and throws a `BadRequestException` with that same message (lines 44\u201349).",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "e03",
+     "kind": "exact_text",
+     "question": "Streaming session is not valid",
+     "grep_pattern": "Streaming session is not valid",
+     "expected_paths": [
+      "src/helpers/aws.helper.ts"
+     ]
+    },
+    "context": {
+     "seconds": 6.52,
+     "input": 4,
+     "output": 229,
+     "cache_read": 9950,
+     "cache_creation": 5212,
+     "tokens": 15395,
+     "cost": 0.048282,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "d7898311-e425-4cad-b21f-f05ab1b0e797",
+     "answer": "1. `src/helpers/aws.helper.ts`: `getStreamingURL` throws `'Streaming session is not valid'` when the IVS channel's `ingestEndpoint` or `streamKey.value` is missing.\n2. `src/rooms/rooms.service.ts`: `RoomsService.create` calls `getStreamingURL` when building the RTMP streaming config for a new room, so this is where the error shows up.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 7.128,
+     "input": 6,
+     "output": 442,
+     "cache_read": 17245,
+     "cache_creation": 2103,
+     "tokens": 19796,
+     "cost": 0.029137000000000003,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "468ee857-1244-454f-b917-4a9a61195fcc",
+     "answer": "1. `src/helpers/aws.helper.ts`: line 10 throws the \"Streaming session is not valid\" error. `getStreamingURL` throws it when the IVS `CreateChannelCommandOutput` has no `channel.ingestEndpoint` or no `streamKey.value`.\n2. `src/helpers/aws.helper.spec.ts`: its tests list the exact inputs that set off this error.\n3. `src/rooms/rooms.service.ts`: this is where the room's streaming session is created (around line 66), just before the stream URL is built.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "e04",
+     "kind": "exact_text",
+     "question": "Payee ID is required for Tipalti payee retrieval",
+     "grep_pattern": "Payee ID is required",
+     "expected_paths": [
+      "src/payment-processor/processors/tipalti.processor.ts"
+     ]
+    },
+    "context": {
+     "seconds": 4.272,
+     "input": 4,
+     "output": 286,
+     "cache_read": 9960,
+     "cache_creation": 4308,
+     "tokens": 14558,
+     "cost": 0.04219199999999999,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "20763fa0-05f2-4d92-be5a-9bbfdcc38a3e",
+     "answer": "1. `src/payment-processor/processors/tipalti.processor.ts`: its `TipaltiProcessor._getPayee` method (lines 27\u201334) throws `'Payee ID is required for Tipalti payee retrieval'` when `payeeId` is missing, then calls `getPayeeByPayeeId`.\n2. `src/payment-processor/tipalti/tipalti.service.ts`: `TipaltiService.getPayeeByPayeeId` (lines 56\u201365) is the method that actually fetches the payee from Tipalti once the ID check passes.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 4.141,
+     "input": 4,
+     "output": 230,
+     "cache_read": 10670,
+     "cache_creation": 1211,
+     "tokens": 12115,
+     "cost": 0.016438,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "6dc49216-0bab-4e1c-81da-8b5c15304a56",
+     "answer": "`src/payment-processor/processors/tipalti.processor.ts` is the only source file that contains this exact error message. At line 29 it throws `Error('Payee ID is required for Tipalti payee retrieval')` when no payee ID is provided for the payee lookup.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "e05",
+     "kind": "exact_text",
+     "question": "WebSocket client not found in execution context",
+     "grep_pattern": "WebSocket client not found",
+     "expected_paths": [
+      "src/websockets/in-call-websocket/decorators/websocket-validation.decorator.ts"
+     ]
+    },
+    "context": {
+     "seconds": 10.637,
+     "input": 8,
+     "output": 367,
+     "cache_read": 28752,
+     "cache_creation": 6443,
+     "tokens": 35570,
+     "cost": 0.0646664,
+     "turns": 4,
+     "hit": 1,
+     "error": false,
+     "session_id": "10f0e961-1959-4031-a2d7-69c985a631ab",
+     "answer": "`src/websockets/in-call-websocket/decorators/websocket-validation.decorator.ts`: the `SocketServer` parameter decorator throws `'WebSocket client not found in execution context'` when the second argument from `ExecutionContext.getArgs()`, the client socket, is missing.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 6.184,
+     "input": 6,
+     "output": 394,
+     "cache_read": 16755,
+     "cache_creation": 1886,
+     "tokens": 19041,
+     "cost": 0.026343,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "59b085df-f577-4243-b4a1-1d89720ce0ba",
+     "answer": "`src/websockets/in-call-websocket/decorators/websocket-validation.decorator.ts`. Line 58 throws this exact error. It happens in the `SocketServer` param decorator when `ctx.getArgs()[1]` (the client socket) is missing.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "e06",
+     "kind": "exact_text",
+     "question": "Transaction already refunded",
+     "grep_pattern": "Transaction already refunded",
+     "expected_paths": [
+      "src/payment/gateway/gateway.service.ts"
+     ]
+    },
+    "context": {
+     "seconds": 6.459,
+     "input": 4,
+     "output": 172,
+     "cache_read": 9949,
+     "cache_creation": 4576,
+     "tokens": 14701,
+     "cost": 0.0420538,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "5019f533-b81d-42c8-8bcd-92924f88085b",
+     "answer": "`src/payment/gateway/gateway.service.ts`: its `GatewayService.refund` method (around line 254) throws `BadRequestException('Transaction already refunded')` when the transaction's status is already `TransactionStatus.REFUNDED`.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 7.487,
+     "input": 6,
+     "output": 396,
+     "cache_read": 16678,
+     "cache_creation": 1507,
+     "tokens": 18587,
+     "cost": 0.023335599999999998,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "a350bc0f-9087-40d8-9e0a-4986f8348355",
+     "answer": "`src/payment/gateway/gateway.service.ts` is the file. At line 255, the refund flow throws `BadRequestException('Transaction already refunded')` when the transaction's status is already `TransactionStatus.REFUNDED`.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "e07",
+     "kind": "exact_text",
+     "question": "New phone number must be provided",
+     "grep_pattern": "New phone number must be provided",
+     "expected_paths": [
+      "src/admin/admin.service.ts"
+     ]
+    },
+    "context": {
+     "seconds": 5.091,
+     "input": 4,
+     "output": 220,
+     "cache_read": 9949,
+     "cache_creation": 5280,
+     "tokens": 15453,
+     "cost": 0.048645799999999996,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "27cc6374-db71-42c3-8f65-5fd07bcac8e5",
+     "answer": "1. `src/admin/admin.service.ts`: `AdminService.updateCognitoPhoneNumber` (around line 199) throws `BadRequestException('New phone number must be provided')` when the new phone number is null or empty.\n2. `src/admin/admin.service.spec.ts`: its tests (around lines 428\u2013438) check that this exception is thrown for both a null and an empty-string new phone number.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 5.604,
+     "input": 4,
+     "output": 232,
+     "cache_read": 10659,
+     "cache_creation": 1328,
+     "tokens": 12223,
+     "cost": 0.017411799999999998,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "12a27a3a-21c6-4458-88ff-8c4becf7da50",
+     "answer": "1. `src/admin/admin.service.ts` \u2014 line 199 throws `BadRequestException('New phone number must be provided')` when the admin phone-number update is called without a new number.\n2. `src/admin/admin.service.spec.ts` \u2014 its tests at lines 428\u2013434 check that this exception is thrown when the new number is null or an empty string.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "k01",
+     "kind": "callers",
+     "question": "Which file outside tests calls isValidAge (not the file that defines it)?",
+     "grep_pattern": "isValidAge\\(",
+     "expected_paths": [
+      "src/verified-users/verified-users.service.ts"
+     ]
+    },
+    "context": {
+     "seconds": 7.095,
+     "input": 6,
+     "output": 323,
+     "cache_read": 17578,
+     "cache_creation": 4031,
+     "tokens": 21938,
+     "cost": 0.0422476,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "e1deb337-a571-4cb4-94b9-3b138a77d2e2",
+     "answer": "`src/verified-users/verified-users.service.ts`: its `VerifiedUsersService.verifyKYCInformation` method (around lines 480\u2013520) is the only non-test code that calls `isValidAge`, which is defined in `src/helpers/age.helpers.ts`.\n\nThe only other file that uses it is the test file `src/helpers/age.helpers.spec.ts`. I found this through the code index's call and import links and didn't open the method itself.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 3.782,
+     "input": 4,
+     "output": 226,
+     "cache_read": 10675,
+     "cache_creation": 1597,
+     "tokens": 12502,
+     "cost": 0.019447,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "743e1553-9c75-47bb-aa07-4f3a3313a8a9",
+     "answer": "`src/verified-users/verified-users.service.ts` is the only file outside tests that calls `isValidAge`. It imports it from `src/helpers/age.helpers.ts` (where it's defined) and calls it at lines 503 and 548 to check a date of birth against `MINIMUM_AGE_REQUIRED`.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "k02",
+     "kind": "callers",
+     "question": "Which files outside tests call shuffleArray (not the file that defines it)?",
+     "grep_pattern": "shuffleArray\\(",
+     "expected_paths": [
+      "src/regular-users/regular-users.service.ts",
+      "src/verified-users/verified-users.service.ts"
+     ]
+    },
+    "context": {
+     "seconds": 6.322,
+     "input": 6,
+     "output": 376,
+     "cache_read": 19876,
+     "cache_creation": 6823,
+     "tokens": 27081,
+     "cost": 0.0661032,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "29f43e84-b7fb-4fd2-ba4d-92ec44fedc7a",
+     "answer": "Two non-test files call it:\n\n- `src/regular-users/regular-users.service.ts`\n- `src/verified-users/verified-users.service.ts`\n\nBoth call `shuffleArray` inside their `findAllWithPagination` method to put the paginated users in random order. `shuffleArray` is defined in `src/helpers/array.helper.ts`. `src/rooms/services/dailyco.webhook.ts` imports from that file too, but it uses `getVideoTrackBySessionId`, not `shuffleArray`.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 7.009,
+     "input": 4,
+     "output": 251,
+     "cache_read": 10675,
+     "cache_creation": 1825,
+     "tokens": 12755,
+     "cost": 0.021771,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "1985672f-d5d8-40b7-a41e-4e09cdead483",
+     "answer": "Two non-test files call `shuffleArray` (it's defined in `src/helpers/array.helper.ts`):\n\n- `src/verified-users/verified-users.service.ts` imports it and calls it twice, on `onlineUsers` and `offlineUsers` (lines 151\u2013152).\n- `src/regular-users/regular-users.service.ts` imports it and calls it once, on `data` (line 121).",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "k03",
+     "kind": "callers",
+     "question": "Which file outside tests calls getStreamingURL (not the file that defines it)?",
+     "grep_pattern": "getStreamingURL\\(",
+     "expected_paths": [
+      "src/rooms/rooms.service.ts"
+     ]
+    },
+    "context": {
+     "seconds": 7.298,
+     "input": 6,
+     "output": 266,
+     "cache_read": 20804,
+     "cache_creation": 7093,
+     "tokens": 28169,
+     "cost": 0.0662488,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "92990722-9236-471a-9083-a2a60dfb65a8",
+     "answer": "`src/rooms/rooms.service.ts`: `RoomsService.create` (starting at line 40) imports and calls `getStreamingURL`, which is defined in `src/helpers/aws.helper.ts`. The only other caller is the test file `aws.helper.spec.ts`.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 5.664,
+     "input": 4,
+     "output": 217,
+     "cache_read": 10677,
+     "cache_creation": 1991,
+     "tokens": 12889,
+     "cost": 0.0224194,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "1413c426-06ad-4861-9841-179bea7bfa62",
+     "answer": "`src/rooms/rooms.service.ts`: it's the only non-test file that calls `getStreamingURL`. It imports the function from `src/helpers/aws.helper.ts`, where it's defined, and calls it at line 83 (`url: getStreamingURL(streamingSession)`).",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "k04",
+     "kind": "callers",
+     "question": "Which files outside tests call getClientIp (not the file that defines it)?",
+     "grep_pattern": "getClientIp\\(",
+     "expected_paths": [
+      "src/auth/interceptors/user-insight.interceptor.ts",
+      "src/commons/decorators/ip-address.decorator.ts",
+      "src/commons/interceptors/track-document-version.interceptor.ts"
+     ]
+    },
+    "context": {
+     "seconds": 10.336,
+     "input": 8,
+     "output": 609,
+     "cache_read": 29918,
+     "cache_creation": 7242,
+     "tokens": 37777,
+     "cost": 0.07613160000000001,
+     "turns": 5,
+     "hit": 1,
+     "error": false,
+     "session_id": "96637ef2-f201-487b-826d-ead0efc26498",
+     "answer": "- `src/commons/decorators/ip-address.decorator.ts` \u2014 the `IpAddress` param decorator calls `getClientIp(request)` to get the caller's IP.\n- `src/commons/interceptors/track-document-version.interceptor.ts` \u2014 its `extractIpAddress` method returns `getClientIp(request)`.\n- `src/auth/interceptors/user-insight.interceptor.ts` \u2014 imports `getClientIp` from `../../helpers/ip-address.helper` for user-insight tracking (I saw the import but didn't open the line that calls it).\n\nThe function is defined in `src/helpers/ip-address.helper.ts`, and the only other file that imports it is the test `src/helpers/",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 6.438,
+     "input": 4,
+     "output": 388,
+     "cache_read": 10674,
+     "cache_creation": 3856,
+     "tokens": 14922,
+     "cost": 0.0407588,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "e248a046-bd1c-4400-96da-575f5b41e697",
+     "answer": "Three source files call `getClientIp` from `src/helpers/ip-address.helper.ts`. Each one imports it and calls it on the request:\n\n1. `src/auth/interceptors/user-insight.interceptor.ts:87`: uses it to set `ipAddress` in the user insight data.\n2. `src/commons/interceptors/track-document-version.interceptor.ts:105`: returns `getClientIp(request)` as the client IP when tracking document versions.\n3. `src/commons/decorators/ip-address.decorator.ts:25`: the IP address parameter decorator returns `getClientIp(request)`.\n\nI left out the test file `src/helpers/ip-address.helper.spec.ts`. I also left out",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "k05",
+     "kind": "callers",
+     "question": "Which files outside tests call getFeedShuffleSeed (not the file that defines it)?",
+     "grep_pattern": "getFeedShuffleSeed\\(",
+     "expected_paths": [
+      "src/regular-users/regular-users.service.ts",
+      "src/verified-users/verified-users.service.ts"
+     ]
+    },
+    "context": {
+     "seconds": 8.707,
+     "input": 6,
+     "output": 427,
+     "cache_read": 21300,
+     "cache_creation": 7991,
+     "tokens": 29724,
+     "cost": 0.076752,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "c21c5d2c-ad9a-4ee5-acec-67d9fa095f63",
+     "answer": "Two non-test files call `getFeedShuffleSeed` (defined in `src/helpers/feed.helpers.ts`):\n\n1. `src/regular-users/regular-users.service.ts` imports it and calls it in `RegularUsersService.findAllWithPagination` (around lines 88\u2013141) to shuffle the order of regular users.\n2. `src/verified-users/verified-users.service.ts` imports it and calls it in `VerifiedUsersService.findAllWithPagination` (around lines 109\u2013163) to shuffle the order of verified users.\n\nThe only other file that uses it is `src/helpers/feed.helpers.spec.ts`, which is a test. This list comes from the code index's import and call l",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 9.005,
+     "input": 4,
+     "output": 270,
+     "cache_read": 10680,
+     "cache_creation": 1720,
+     "tokens": 12674,
+     "cost": 0.021312,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "40c1437e-52c5-45ee-b2be-e8e8fb83f3a0",
+     "answer": "- `src/regular-users/regular-users.service.ts`\n- `src/verified-users/verified-users.service.ts`\n\nThese are the only two non-test files that import `getFeedShuffleSeed` from `src/helpers/feed.helpers.ts`, where it's defined. Each calls it as a fallback when no shuffle seed is passed in (`shuffleSeed || getFeedShuffleSeed()`, at line 104 and line 125).",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "k06",
+     "kind": "callers",
+     "question": "Which file outside tests calls getNameFromRoomUrl (not the file that defines it)?",
+     "grep_pattern": "getNameFromRoomUrl\\(",
+     "expected_paths": [
+      "src/websockets/in-call-websocket/handlers/register-call.handler.ts"
+     ]
+    },
+    "context": {
+     "seconds": 6.068,
+     "input": 6,
+     "output": 301,
+     "cache_read": 18737,
+     "cache_creation": 5724,
+     "tokens": 24768,
+     "cost": 0.0555834,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "e16f8b4a-764b-41e2-aa5c-4cbfb6246943",
+     "answer": "`src/websockets/in-call-websocket/handlers/register-call.handler.ts`: `RegisterCallHandler.handle` (lines 50\u2013108) calls `getNameFromRoomUrl`, which is defined in `src/helpers/string.helpers.ts`, to get the room name from the room URL.\n\nThe index's call graph shows this as the only non-test caller. I didn't run a full text search, so a caller the index missed is possible.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 6.1,
+     "input": 4,
+     "output": 242,
+     "cache_read": 10681,
+     "cache_creation": 1294,
+     "tokens": 12221,
+     "cost": 0.0173442,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "8657b359-9f58-4870-8f53-9d04796e05aa",
+     "answer": "`src/websockets/in-call-websocket/handlers/register-call.handler.ts`: this is the only non-test file that calls `getNameFromRoomUrl`. It imports it at line 22 and uses it at line 55 to get the room name from `payload.roomUrl`. The function itself is defined in `src/helpers/string.helpers.ts:99`.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "k07",
+     "kind": "callers",
+     "question": "Which file outside tests calls getChannelARNFromObjectKey (not the file that defines it)?",
+     "grep_pattern": "getChannelARNFromObjectKey\\(",
+     "expected_paths": [
+      "src/moderation/moderation.service.ts"
+     ]
+    },
+    "context": {
+     "seconds": 7.683,
+     "input": 6,
+     "output": 319,
+     "cache_read": 20344,
+     "cache_creation": 7359,
+     "tokens": 28028,
+     "cost": 0.0693448,
+     "turns": 3,
+     "hit": 1,
+     "error": false,
+     "session_id": "f5119bfa-ecef-4156-9346-8a0e779e82a9",
+     "answer": "`src/moderation/moderation.service.ts`: its `ModerationService.handleImageModeration` method calls `getChannelARNFromObjectKey` (defined in `src/helpers/string.helpers.ts`) to get the channel ARN from an image moderation object key, then uses that ARN to look up the room. It's the only non-test caller the index shows; I checked with the index tools and didn't run a full-text grep.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 8.338,
+     "input": 4,
+     "output": 224,
+     "cache_read": 10683,
+     "cache_creation": 1842,
+     "tokens": 12753,
+     "cost": 0.0213686,
+     "turns": 2,
+     "hit": 1,
+     "error": false,
+     "session_id": "bdcf9867-8db5-4178-a0ee-2ece1c791e5a",
+     "answer": "`src/moderation/moderation.service.ts`: it's the only non-test file that calls `getChannelARNFromObjectKey`. It imports the function from `src/helpers/string.helpers.ts`, where it's defined, and calls it at `src/moderation/moderation.service.ts:175`.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "n01",
+     "kind": "negative",
+     "question": "Where is the Kafka consumer configured?",
+     "grep_pattern": "[Kk]afka|KAFKA",
+     "expected_paths": []
+    },
+    "context": {
+     "seconds": 6.433,
+     "input": 6,
+     "output": 295,
+     "cache_read": 17903,
+     "cache_creation": 5022,
+     "tokens": 23226,
+     "cost": 0.049680600000000005,
+     "turns": 3,
+     "hit": 0,
+     "error": false,
+     "session_id": "7bd017f6-e515-401b-a1e8-43b6956aef45",
+     "answer": "NOT FOUND\n\nI ran two searches of the indexed repo. Neither turned up any Kafka consumer setup, Kafka client library or broker settings. The messaging setup that does exist is Redis caching and WebSocket gateways, not Kafka.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 7.216,
+     "input": 6,
+     "output": 268,
+     "cache_read": 16656,
+     "cache_creation": 1330,
+     "tokens": 18260,
+     "cost": 0.019355200000000003,
+     "turns": 3,
+     "hit": 0,
+     "error": false,
+     "session_id": "80152e34-5ff0-4cee-aa4b-f364d6f49b97",
+     "answer": "NOT FOUND",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "n02",
+     "kind": "negative",
+     "question": "Which module publishes messages to RabbitMQ?",
+     "grep_pattern": "[Rr]abbit[Mm][Qq]|RABBITMQ",
+     "expected_paths": []
+    },
+    "context": {
+     "seconds": 11.199,
+     "input": 8,
+     "output": 340,
+     "cache_read": 31333,
+     "cache_creation": 9489,
+     "tokens": 41170,
+     "cost": 0.0890106,
+     "turns": 4,
+     "hit": 0,
+     "error": false,
+     "session_id": "53401582-a673-40de-9408-47f05c6cfaea",
+     "answer": "NOT FOUND",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 11.685,
+     "input": 8,
+     "output": 624,
+     "cache_read": 22928,
+     "cache_creation": 1814,
+     "tokens": 25374,
+     "cost": 0.0316096,
+     "turns": 4,
+     "hit": 0,
+     "error": false,
+     "session_id": "6c9d5a4b-1da1-4120-b31a-0c0635c5beea",
+     "answer": "NOT FOUND\n\nI searched the whole repo for `amqp`, `rabbit`, `sendToQueue`, `.publish(` and `queue`, without regard to case. The only matches were unrelated dependencies in `pnpm-lock.yaml` (`queue-microtask`, `yocto-queue`). No source file uses RabbitMQ or an AMQP client.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "n03",
+     "kind": "negative",
+     "question": "Where is the GraphQL schema defined?",
+     "grep_pattern": "[Gg]raph[Qq][Ll]",
+     "expected_paths": []
+    },
+    "context": {
+     "seconds": 6.084,
+     "input": 6,
+     "output": 365,
+     "cache_read": 19363,
+     "cache_creation": 6725,
+     "tokens": 26459,
+     "cost": 0.0649966,
+     "turns": 3,
+     "hit": 0,
+     "error": false,
+     "session_id": "f1af00e8-0b56-4c51-a0fd-c188dd076e02",
+     "answer": "NOT FOUND\n\nI searched twice and found no GraphQL in this repository: no `GraphQLModule`, resolvers, `@ObjectType`/`@Query`/`@Mutation` decorators, `gql` type definitions or `.graphql` files. The search matched only the TypeORM/PostgreSQL schema docs and the OpenAPI response schemas, which don't answer the question.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 8.941,
+     "input": 6,
+     "output": 456,
+     "cache_read": 17087,
+     "cache_creation": 1783,
+     "tokens": 19332,
+     "cost": 0.026825400000000003,
+     "turns": 4,
+     "hit": 0,
+     "error": false,
+     "session_id": "54e065e9-9a75-41db-a935-f659dc5c4969",
+     "answer": "NOT FOUND\n\nThere's no GraphQL schema in this repository's source. I found no `.graphql`/`.gql` files, and the code has no `typeDefs`, resolvers, Apollo server or `buildSchema` calls. The only `.graphql` files are NestJS scaffolding templates inside `node_modules/`.",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "n04",
+     "kind": "negative",
+     "question": "Where is the Elasticsearch index mapping defined?",
+     "grep_pattern": "[Ee]lastic[Ss]earch",
+     "expected_paths": []
+    },
+    "context": {
+     "seconds": 7.949,
+     "input": 6,
+     "output": 305,
+     "cache_read": 18151,
+     "cache_creation": 8256,
+     "tokens": 26718,
+     "cost": 0.07580220000000001,
+     "turns": 3,
+     "hit": 0,
+     "error": false,
+     "session_id": "4755eb03-2eaf-47ca-b110-b653123002cc",
+     "answer": "NOT FOUND\n\nI couldn't find any Elasticsearch code in this repo. Search runs as PostgreSQL `ILIKE` queries through TypeORM, and the only index definitions are database indexes set with TypeORM `@Index` decorators on the entities.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 8.75,
+     "input": 8,
+     "output": 440,
+     "cache_read": 23094,
+     "cache_creation": 1770,
+     "tokens": 25312,
+     "cost": 0.027610799999999998,
+     "turns": 4,
+     "hit": 0,
+     "error": false,
+     "session_id": "4a2bb0e1-5f6f-4fe9-918b-2e7788b29cd0",
+     "answer": "NOT FOUND",
+     "correct": 1
+    }
+   },
+   {
+    "q": {
+     "id": "n05",
+     "kind": "negative",
+     "question": "Where is Sentry error reporting set up?",
+     "grep_pattern": "[Ss]entry|SENTRY",
+     "expected_paths": []
+    },
+    "context": {
+     "seconds": 10.541,
+     "input": 8,
+     "output": 557,
+     "cache_read": 33203,
+     "cache_creation": 12053,
+     "tokens": 45821,
+     "cost": 0.1142366,
+     "turns": 4,
+     "hit": 0,
+     "error": false,
+     "session_id": "6316234c-480b-4adb-8efb-5a95c1bb18d2",
+     "answer": "NOT FOUND\n\nSentry isn't set up anywhere in this repo. `@sentry/*` is not among the dependencies in `package.json` (it would sit next to `@sendgrid/mail`, and it doesn't), and searches for Sentry setup code turned up nothing.",
+     "correct": 1
+    },
+    "old": {
+     "seconds": 5.475,
+     "input": 6,
+     "output": 253,
+     "cache_read": 16650,
+     "cache_creation": 1286,
+     "tokens": 18195,
+     "cost": 0.018702,
+     "turns": 3,
+     "hit": 0,
+     "error": false,
+     "session_id": "261db8e0-27fa-492e-baa6-7f384db1ea18",
+     "answer": "NOT FOUND\n\nI searched the whole repository, including build output and dependencies, for \"sentry\" in any capitalization and found no matches.",
+     "correct": 1
+    }
+   }
+  ],
+  "summary": {
+   "context": {
+    "n": 49,
+    "correct": 49,
+    "median_s": 6.376,
+    "tokens": 1067225,
+    "cost": 2.7394228
+   },
+   "old": {
+    "n": 49,
+    "correct": 48,
+    "median_s": 7.302,
+    "tokens": 976491,
+    "cost": 1.8001624
+   }
+  },
+  "per_kind": {
+   "conceptual": {
+    "context": {
+     "n": 9,
+     "correct": 9,
+     "tokens": 187680,
+     "cost": 0.4829968
+    },
+    "old": {
+     "n": 9,
+     "correct": 9,
+     "tokens": 240593,
+     "cost": 0.5335722
+    }
+   },
+   "symbol": {
+    "context": {
+     "n": 8,
+     "correct": 8,
+     "tokens": 134779,
+     "cost": 0.326348
+    },
+    "old": {
+     "n": 8,
+     "correct": 8,
+     "tokens": 115540,
+     "cost": 0.192665
+    }
+   },
+   "doc": {
+    "context": {
+     "n": 6,
+     "correct": 6,
+     "tokens": 97445,
+     "cost": 0.2689316
+    },
+    "old": {
+     "n": 6,
+     "correct": 5,
+     "tokens": 157401,
+     "cost": 0.3350248
+    }
+   },
+   "multi_hop": {
+    "context": {
+     "n": 7,
+     "correct": 7,
+     "tokens": 142695,
+     "cost": 0.4645702
+    },
+    "old": {
+     "n": 7,
+     "correct": 7,
+     "tokens": 150636,
+     "cost": 0.2843118
+    }
+   },
+   "exact_text": {
+    "context": {
+     "n": 7,
+     "correct": 7,
+     "tokens": 143747,
+     "cost": 0.3504382
+    },
+    "old": {
+     "n": 7,
+     "correct": 7,
+     "tokens": 115132,
+     "cost": 0.1660646
+    }
+   },
+   "callers": {
+    "context": {
+     "n": 7,
+     "correct": 7,
+     "tokens": 197485,
+     "cost": 0.4524114
+    },
+    "old": {
+     "n": 7,
+     "correct": 7,
+     "tokens": 90716,
+     "cost": 0.16442099999999998
+    }
+   },
+   "negative": {
+    "context": {
+     "n": 5,
+     "correct": 5,
+     "tokens": 163394,
+     "cost": 0.39372660000000004
+    },
+    "old": {
+     "n": 5,
+     "correct": 5,
+     "tokens": 106473,
+     "cost": 0.124103
+    }
+   }
+  },
+  "spread": {
+   "c02": {
+    "context": {
+     "tokens": [
+      14629,
+      14635,
+      14651
+     ],
+     "cost": [
+      0.010366,
+      0.010806,
+      0.0364132
+     ],
+     "seconds": [
+      5.026,
+      5.524,
+      6.552
+     ],
+     "correct": [
+      3,
+      3
+     ]
+    },
+    "old": {
+     "tokens": [
+      21653,
+      27208,
+      31422
+     ],
+     "cost": [
+      0.02527,
+      0.043003,
+      0.0781364
+     ],
+     "seconds": [
+      9.718,
+      12.084,
+      16.28
+     ],
+     "correct": [
+      3,
+      3
+     ]
+    }
+   },
+   "s03": {
+    "context": {
+     "tokens": [
+      13757,
+      13765,
+      13766
+     ],
+     "cost": [
+      0.008252800000000001,
+      0.0082728,
+      0.0282792
+     ],
+     "seconds": [
+      4.217,
+      4.865,
+      5.072
+     ],
+     "correct": [
+      3,
+      3
+     ]
+    },
+    "old": {
+     "tokens": [
+      13462,
+      19156,
+      19219
+     ],
+     "cost": [
+      0.018898400000000003,
+      0.0200906,
+      0.0209932
+     ],
+     "seconds": [
+      5.291,
+      5.718,
+      7.001
+     ],
+     "correct": [
+      3,
+      3
+     ]
+    }
+   },
+   "m01": {
+    "context": {
+     "tokens": [
+      30791,
+      30813,
+      47805
+     ],
+     "cost": [
+      0.0526756,
+      0.0531396,
+      0.1121386
+     ],
+     "seconds": [
+      8.85,
+      9.052,
+      13.761
+     ],
+     "correct": [
+      3,
+      3
+     ]
+    },
+    "old": {
+     "tokens": [
+      21265,
+      22145,
+      22529
+     ],
+     "cost": [
+      0.0230714,
+      0.0351394,
+      0.040456
+     ],
+     "seconds": [
+      7.558,
+      9.467,
+      10.29
+     ],
+     "correct": [
+      3,
+      3
+     ]
+    }
+   },
+   "e02": {
+    "context": {
+     "tokens": [
+      13643,
+      13675,
+      32421
+     ],
+     "cost": [
+      0.006908200000000001,
+      0.026275200000000002,
+      0.0270358
+     ],
+     "seconds": [
+      3.855,
+      4.679,
+      12.95
+     ],
+     "correct": [
+      3,
+      3
+     ]
+    },
+    "old": {
+     "tokens": [
+      12173,
+      12306,
+      33235
+     ],
+     "cost": [
+      0.009925200000000002,
+      0.0106172,
+      0.0581442
+     ],
+     "seconds": [
+      6.011,
+      6.467,
+      12.372
+     ],
+     "correct": [
+      2,
+      3
+     ]
+    }
+   },
+   "k04": {
+    "context": {
+     "tokens": [
+      37734,
+      37894,
+      38098
+     ],
+     "cost": [
+      0.036127599999999996,
+      0.0384846,
+      0.0721302
+     ],
+     "seconds": [
+      10.299,
+      12.402,
+      19.215
+     ],
+     "correct": [
+      3,
+      3
+     ]
+    },
+    "old": {
+     "tokens": [
+      14865,
+      14910,
+      14943
+     ],
+     "cost": [
+      0.0320756,
+      0.0329756,
+      0.0336356
+     ],
+     "seconds": [
+      4.967,
+      5.694,
+      6.829
+     ],
+     "correct": [
+      3,
+      3
+     ]
+    }
+   }
+  },
+  "repeats": [
+   {
+    "seconds": 5.026,
+    "input": 4,
+    "output": 381,
+    "cache_read": 10926,
+    "cache_creation": 3324,
+    "tokens": 14635,
+    "cost": 0.0364132,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "0f21b2f1-8ac4-48f9-a482-1cad6a5c0c4a",
+    "answer": "1. `src/payment-processor/stripe/stripe.service.ts`: its `validateWebhookEvent` method (lines 156\u2013196) does the check. It rejects a missing `stripe-signature` header, loads `STRIPE_PAYMENT_WEBHOOK_SECRET_KEY` and makes sure the payload is a raw Buffer, then calls `stripe.webhooks.constructEvent(payload, signature, secretKey)`, which throws if the signature doesn't match.\n2. `src/payment/gateway/gateway.controller.ts`: the `stripe/webhook` endpoint reads the `stripe-signature` header and the raw request body, then passes both on for that check.\n3. `src/payment-processor/processors/stripe.proces",
+    "correct": 1,
+    "id": "c02",
+    "method": "context"
+   },
+   {
+    "seconds": 5.524,
+    "input": 4,
+    "output": 397,
+    "cache_read": 14250,
+    "cache_creation": 0,
+    "tokens": 14651,
+    "cost": 0.010806,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "4911d811-8018-4f82-9009-3f6f1856b3f4",
+    "answer": "1. `src/payment-processor/stripe/stripe.service.ts`: `StripeService.validateWebhookEvent` (lines 156\u2013196) does the check. It rejects a request that has no signature or when `STRIPE_PAYMENT_WEBHOOK_SECRET_KEY` isn't set, makes sure the payload is the raw `Buffer`, and then calls Stripe's `webhooks.constructEvent(payload, signature, secretKey)` to verify the signature, throwing an error if verification fails.\n2. `src/payment/gateway/gateway.controller.ts`: the public `POST stripe/webhook` endpoint reads the `stripe-signature` header and the raw request body, then passes them on for validation.\n3",
+    "correct": 1,
+    "id": "c02",
+    "method": "context"
+   },
+   {
+    "seconds": 6.552,
+    "input": 4,
+    "output": 375,
+    "cache_read": 14250,
+    "cache_creation": 0,
+    "tokens": 14629,
+    "cost": 0.010366,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "d3ebe6b3-3c86-43b5-a287-1b2bc2f3bb09",
+    "answer": "1. `src/payment-processor/stripe/stripe.service.ts`: `validateWebhookEvent` (lines 156\u2013196) does the check. It rejects requests that have no signature, loads `STRIPE_PAYMENT_WEBHOOK_SECRET_KEY` from config, requires the payload to be a raw `Buffer`, then calls Stripe's `webhooks.constructEvent(payload, signature, secretKey)` to verify the signature, and throws if it fails.\n2. `src/payment-processor/processors/stripe.processor.ts`: `_processWebhookEvent` calls that validation before it passes the event on to a handler.\n3. `src/payment/gateway/gateway.controller.ts`: the `stripe/webhook` endpoin",
+    "correct": 1,
+    "id": "c02",
+    "method": "context"
+   },
+   {
+    "seconds": 16.28,
+    "input": 8,
+    "output": 588,
+    "cache_read": 27615,
+    "cache_creation": 3211,
+    "tokens": 31422,
+    "cost": 0.043003,
+    "turns": 4,
+    "hit": 1,
+    "error": false,
+    "session_id": "33094c2b-e0f1-495e-a175-dff3b9710b7e",
+    "answer": "1. `src/payment-processor/stripe/stripe.service.ts`: this file does the actual check by passing the raw body (which must be a Buffer), the `stripe-signature` header and `STRIPE_PAYMENT_WEBHOOK_SECRET_KEY` to `this.client.webhooks.constructEvent`, and it throws if the signature doesn't match.\n2. `src/payment/gateway/gateway.controller.ts`: this is the webhook endpoint, which reads the `stripe-signature` header (line 355) and hands it to that check.",
+    "correct": 1,
+    "id": "c02",
+    "method": "old"
+   },
+   {
+    "seconds": 9.718,
+    "input": 6,
+    "output": 466,
+    "cache_read": 18602,
+    "cache_creation": 8134,
+    "tokens": 27208,
+    "cost": 0.0781364,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "98ea3464-17a0-40dd-8dea-1417f61f1226",
+    "answer": "The best answer is `src/payment-processor/stripe/stripe.service.ts`. Its `validateWebhookEvent` method rejects a request with no Stripe signature, then passes the raw payload and signature to Stripe's `webhooks.constructEvent`, which confirms the event really came from Stripe.\n\nAlso relevant:\n- `src/payment-processor/processors/stripe.processor.ts` hands the incoming webhook's signature and payload to that check (around line 287).\n- `src/middlewares/rawBody.middleware.spec.ts` tests the middleware that keeps the raw request body. The check needs that unparsed body to work.",
+    "correct": 1,
+    "id": "c02",
+    "method": "old"
+   },
+   {
+    "seconds": 12.084,
+    "input": 6,
+    "output": 510,
+    "cache_read": 19750,
+    "cache_creation": 1387,
+    "tokens": 21653,
+    "cost": 0.02527,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "5581f387-b3c4-4b63-8829-41ce2328b0b7",
+    "answer": "1. `src/payment-processor/stripe/stripe.service.ts`: its `validateWebhookEvent` method (line 162) rejects a request with no signature, makes sure the payload is a raw Buffer, then calls Stripe's `webhooks.constructEvent` with the signature and the webhook secret to verify the event is genuine.\n2. `src/payment/gateway/gateway.controller.ts`: the Stripe webhook endpoint (around line 355) reads the `stripe-signature` header and the raw body and passes them along; the request then goes through `gateway.service.ts`, `pay-in.service.ts` and `stripe.processor.ts` before reaching that check.",
+    "correct": 1,
+    "id": "c02",
+    "method": "old"
+   },
+   {
+    "seconds": 4.865,
+    "input": 4,
+    "output": 269,
+    "cache_read": 10896,
+    "cache_creation": 2588,
+    "tokens": 13757,
+    "cost": 0.0282792,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "d3315cbc-db6a-4283-92e1-edb24afdf849",
+    "answer": "1. `src/websockets/in-call-websocket/events/event-dispatcher.ts` defines the `EventDispatcher` class, which registers handlers for in-call WebSocket events and sends each event to its handler.\n2. `src/websockets/in-call-websocket/in-call-websocket.gateway.ts` is where the gateway registers all its event handlers with `EventDispatcher` (in `initializeEventHandlers`).\n3. `IN_CALL_WS_README.md` has a section describing what `EventDispatcher` is for and how to use it.",
+    "correct": 1,
+    "id": "s03",
+    "method": "context"
+   },
+   {
+    "seconds": 5.072,
+    "input": 4,
+    "output": 277,
+    "cache_read": 13484,
+    "cache_creation": 0,
+    "tokens": 13765,
+    "cost": 0.008252800000000001,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "afac9fbb-97fa-4aa1-a916-760eb110b391",
+    "answer": "1. `src/websockets/in-call-websocket/events/event-dispatcher.ts`: this file defines the `EventDispatcher` class, which registers handlers for each in-call event and sends each event to its handler.\n2. `src/websockets/in-call-websocket/in-call-websocket.gateway.ts`: this is where the gateway hooks up all the in-call event handlers to the `EventDispatcher` (see `initializeEventHandlers`).\n3. `IN_CALL_WS_README.md`: this explains what the `EventDispatcher` is for and how it should be used.",
+    "correct": 1,
+    "id": "s03",
+    "method": "context"
+   },
+   {
+    "seconds": 4.217,
+    "input": 4,
+    "output": 278,
+    "cache_read": 13484,
+    "cache_creation": 0,
+    "tokens": 13766,
+    "cost": 0.0082728,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "051d9423-3d20-4f7f-be1f-74aa9908a6e9",
+    "answer": "1. `src/websockets/in-call-websocket/events/event-dispatcher.ts`: this file defines the `EventDispatcher` class, which registers handlers for in-call websocket events and sends each event to its handler with `dispatch`.\n2. `src/websockets/in-call-websocket/in-call-websocket.gateway.ts`: the gateway's `initializeEventHandlers` method is where each in-call event gets its handler registered with the dispatcher.\n3. `IN_CALL_WS_README.md`: the docs explain what the dispatcher is for and how it should be used.",
+    "correct": 1,
+    "id": "s03",
+    "method": "context"
+   },
+   {
+    "seconds": 7.001,
+    "input": 6,
+    "output": 403,
+    "cache_read": 17753,
+    "cache_creation": 1057,
+    "tokens": 19219,
+    "cost": 0.0200906,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "5cbeb6dc-5ac3-48f9-a2ea-3d28dc9146c5",
+    "answer": "1. `src/websockets/in-call-websocket/events/event-dispatcher.ts`: this file defines the `EventDispatcher` class, which stores a handler for each in-call WebSocket event (`registerHandler`) and sends incoming events to the right one (`dispatch`).\n2. `src/websockets/in-call-websocket/in-call-websocket.gateway.ts`: this is where `EventDispatcher` gets used.",
+    "correct": 1,
+    "id": "s03",
+    "method": "old"
+   },
+   {
+    "seconds": 5.718,
+    "input": 6,
+    "output": 345,
+    "cache_read": 17752,
+    "cache_creation": 1053,
+    "tokens": 19156,
+    "cost": 0.018898400000000003,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "cfeaff9b-6386-460f-96d7-0bcbabb7fa5a",
+    "answer": "`src/websockets/in-call-websocket/events/event-dispatcher.ts` is where the `EventDispatcher` class is defined. It's an injectable NestJS service that registers handlers for each in-call event type and sends incoming socket events to the matching handler.",
+    "correct": 1,
+    "id": "s03",
+    "method": "old"
+   },
+   {
+    "seconds": 5.291,
+    "input": 4,
+    "output": 320,
+    "cache_read": 11606,
+    "cache_creation": 1532,
+    "tokens": 13462,
+    "cost": 0.0209932,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "7ef7b75e-8f09-49fe-8629-ca0a81a5f413",
+    "answer": "1. `src/websockets/in-call-websocket/events/event-dispatcher.ts`: this is the source file that defines the `EventDispatcher` class for the in-call websocket events.\n2. `src/websockets/in-call-websocket/events/event-dispatcher.spec.ts`: its unit tests show how the dispatcher is expected to behave.",
+    "correct": 1,
+    "id": "s03",
+    "method": "old"
+   },
+   {
+    "seconds": 13.761,
+    "input": 8,
+    "output": 704,
+    "cache_read": 35733,
+    "cache_creation": 11360,
+    "tokens": 47805,
+    "cost": 0.1121386,
+    "turns": 5,
+    "hit": 1,
+    "error": false,
+    "session_id": "bc3b55f9-7d90-464b-869a-8fed591bec82",
+    "answer": "Validation file:\n- `src/payment-processor/tipalti/helpers/webhook-validation.helper.ts`: `validateTipaltiWebhookSignature` builds the string `timestamp-payload`, signs it with HMAC-SHA256 using the secret key, and compares the result to the received signature with `crypto.timingSafeEqual`. The same file has `extractTipaltiSignatureParts` and `isTimestampValid`.\n\nSpec file:\n- `src/payment-processor/tipalti/helpers/webhook-validation.helper.spec.ts`: it imports the three helper functions above and tests them.\n\nRelated files:\n- `src/payment-processor/tipalti/tipalti.service.ts`: its `TipaltiServi",
+    "correct": 1,
+    "id": "m01",
+    "method": "context"
+   },
+   {
+    "seconds": 8.85,
+    "input": 6,
+    "output": 514,
+    "cache_read": 25578,
+    "cache_creation": 4715,
+    "tokens": 30813,
+    "cost": 0.0531396,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "9f06791f-f251-46c9-b0bc-05676ce265c4",
+    "answer": "1. `src/payment-processor/tipalti/helpers/webhook-validation.helper.ts`: this file does the signature check. It builds the string `timestamp-payload`, computes an HMAC-SHA256 of it with the webhook secret, and compares the result to the received signature in constant time. It also contains `extractTipaltiSignatureParts` and `isTimestampValid`.\n2. `src/payment-processor/tipalti/helpers/webhook-validation.helper.spec.ts`: this is the spec for that helper. It tests valid and invalid signatures, missing parameters, how the signature header is parsed, and the timestamp checks.\n3. `src/payment-proce",
+    "correct": 1,
+    "id": "m01",
+    "method": "context"
+   },
+   {
+    "seconds": 9.052,
+    "input": 6,
+    "output": 490,
+    "cache_read": 25578,
+    "cache_creation": 4717,
+    "tokens": 30791,
+    "cost": 0.0526756,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "7fdd20a8-e4f1-40db-b3e1-3d92f40acc1c",
+    "answer": "1. `src/payment-processor/tipalti/helpers/webhook-validation.helper.ts` is the file that does the validation. Its `validateTipaltiWebhookSignature` function builds an HMAC-SHA256 over `timestamp-payload` and compares it to the received signature in constant time. The same file also has the helpers `extractTipaltiSignatureParts` and `isTimestampValid`.\n2. `src/payment-processor/tipalti/helpers/webhook-validation.helper.spec.ts` is the spec that covers it. It imports those three functions and tests valid signatures, wrong signatures and missing parameters.\n\n`src/payment-processor/tipalti/tipalti",
+    "correct": 1,
+    "id": "m01",
+    "method": "context"
+   },
+   {
+    "seconds": 9.467,
+    "input": 6,
+    "output": 635,
+    "cache_read": 18500,
+    "cache_creation": 3004,
+    "tokens": 22145,
+    "cost": 0.040456,
+    "turns": 4,
+    "hit": 1,
+    "error": false,
+    "session_id": "5db82b36-f089-45e1-b827-6e9d5897577d",
+    "answer": "1. `src/payment-processor/tipalti/helpers/webhook-validation.helper.ts`: this file defines `validateTipaltiWebhookSignature`, which checks the signature with HMAC-SHA256 over `timestamp-payload` using a constant-time compare, along with helpers that parse the `Tipalti-Signature` header and check the timestamp is no more than 5 minutes old.\n2. `src/payment-processor/tipalti/helpers/webhook-validation.helper.spec.ts`: this spec tests that file, covering valid and invalid signatures, missing parameters, special characters, unicode and long payloads, plus header parsing.",
+    "correct": 1,
+    "id": "m01",
+    "method": "old"
+   },
+   {
+    "seconds": 7.558,
+    "input": 6,
+    "output": 610,
+    "cache_read": 19537,
+    "cache_creation": 2376,
+    "tokens": 22529,
+    "cost": 0.0351394,
+    "turns": 4,
+    "hit": 1,
+    "error": false,
+    "session_id": "a6ca83c2-ffcc-4294-b162-2ad42ae62fa1",
+    "answer": "1. `src/payment-processor/tipalti/helpers/webhook-validation.helper.ts`: `validateTipaltiWebhookSignature` checks the signature by computing an HMAC-SHA256 of `timestamp-payload` and comparing it in constant time, with helpers to parse the `Tipalti-Signature` header and check the 5-minute timestamp window.\n2. `src/payment-processor/tipalti/helpers/webhook-validation.helper.spec.ts`: this is the spec that tests it, with `describe` blocks for `validateTipaltiWebhookSignature`, `extractTipaltiSignatureParts` and `isTimestampValid`.",
+    "correct": 1,
+    "id": "m01",
+    "method": "old"
+   },
+   {
+    "seconds": 10.29,
+    "input": 6,
+    "output": 447,
+    "cache_read": 19537,
+    "cache_creation": 1275,
+    "tokens": 21265,
+    "cost": 0.0230714,
+    "turns": 3,
+    "hit": 1,
+    "error": false,
+    "session_id": "79146727-53ab-4fef-81be-f2e0a34d1b9d",
+    "answer": "1. `src/payment-processor/tipalti/helpers/webhook-validation.helper.ts`: this file defines `validateTipaltiWebhookSignature` and `extractTipaltiSignatureParts`, which check Tipalti webhook signatures.\n2. `src/payment-processor/tipalti/helpers/webhook-validation.helper.spec.ts`: this is the spec that covers it, testing that correct signatures pass and wrong ones are rejected.",
+    "correct": 1,
+    "id": "m01",
+    "method": "old"
+   },
+   {
+    "seconds": 3.855,
+    "input": 4,
+    "output": 178,
+    "cache_read": 10896,
+    "cache_creation": 2565,
+    "tokens": 13643,
+    "cost": 0.026275200000000002,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "bc28f07c-bdd9-4e74-a56a-ffaf6397ef0a",
+    "answer": "`src/auth/interceptors/device-token.interceptor.ts`\n\nThis interceptor checks that the `X-Device-Token` header is present and well-formed, and throws a `BadRequestException` when the token is missing or invalid, which is where an \"invalid device token format\" error comes from.",
+    "correct": 1,
+    "id": "e02",
+    "method": "context"
+   },
+   {
+    "seconds": 12.95,
+    "input": 8,
+    "output": 349,
+    "cache_read": 30319,
+    "cache_creation": 1745,
+    "tokens": 32421,
+    "cost": 0.0270358,
+    "turns": 4,
+    "hit": 1,
+    "error": false,
+    "session_id": "cb53043f-ccaf-40ef-b29e-f76cd38cbef9",
+    "answer": "`src/auth/interceptors/device-token.interceptor.ts` (lines 43\u201349): this interceptor throws the `BadRequestException('Invalid device token format')` error when the `X-Device-Token` header is not a string or is empty or only whitespace.",
+    "correct": 1,
+    "id": "e02",
+    "method": "context"
+   },
+   {
+    "seconds": 4.679,
+    "input": 4,
+    "output": 210,
+    "cache_read": 13461,
+    "cache_creation": 0,
+    "tokens": 13675,
+    "cost": 0.006908200000000001,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "90dec718-5dd6-4bf5-bc87-5931b69d637e",
+    "answer": "`src/auth/interceptors/device-token.interceptor.ts`: this interceptor checks the format of the `X-Device-Token` header and throws a BadRequestException when the token is missing or invalid, which is where an \"invalid device token format\" error comes from. I found it with a semantic search and confirmed it from the class's doc comment; I didn't open the method body to see the exact error text.",
+    "correct": 1,
+    "id": "e02",
+    "method": "context"
+   },
+   {
+    "seconds": 6.011,
+    "input": 4,
+    "output": 226,
+    "cache_read": 11606,
+    "cache_creation": 470,
+    "tokens": 12306,
+    "cost": 0.0106172,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "e166c264-a137-4349-a17b-3188ecc20281",
+    "answer": "`src/auth/interceptors/device-token.interceptor.ts`\n\nThis interceptor checks the device token's format. If the check fails, it logs a warning and throws `BadRequestException('Invalid device token format')` at lines 44\u201349.",
+    "correct": 1,
+    "id": "e02",
+    "method": "old"
+   },
+   {
+    "seconds": 12.372,
+    "input": 8,
+    "output": 983,
+    "cache_read": 28141,
+    "cache_creation": 4103,
+    "tokens": 33235,
+    "cost": 0.0581442,
+    "turns": 5,
+    "hit": 0,
+    "error": false,
+    "session_id": "fae2d18d-f384-4b4b-b174-048061525b18",
+    "answer": "**src/fcm/dtos/register-device-token.dto.ts**: this DTO decides whether a device token's format is valid. It only requires `deviceId` and `fcmToken` to be non-empty strings (`@IsString()`, `@IsNotEmpty()`), and anything else is rejected with a 400 validation error.\n\nTwo caveats. The exact message \"Invalid device token format\" doesn't appear anywhere in the source. Tokens that pass this check but that Firebase rejects end up in the `catch` block in `src/fcm/fcm.service.ts:271`, which throws \"Failed to send notification\".",
+    "correct": 0,
+    "id": "e02",
+    "method": "old"
+   },
+   {
+    "seconds": 6.467,
+    "input": 4,
+    "output": 257,
+    "cache_read": 11606,
+    "cache_creation": 306,
+    "tokens": 12173,
+    "cost": 0.009925200000000002,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "225cc91e-9d5f-4f11-9058-7bf6ce005696",
+    "answer": "`src/auth/interceptors/device-token.interceptor.ts`: this is where the \"Invalid device token format\" message comes from. The interceptor logs it as a warning (line 44) and then throws it as a `BadRequestException` (line 49).\n\n`src/auth/auth.controller.ts` is also related: line 195 is the API docs entry for the Bad Request response (\"Missing or invalid device token\").",
+    "correct": 1,
+    "id": "e02",
+    "method": "old"
+   },
+   {
+    "seconds": 19.215,
+    "input": 8,
+    "output": 681,
+    "cache_read": 30871,
+    "cache_creation": 6538,
+    "tokens": 38098,
+    "cost": 0.0721302,
+    "turns": 4,
+    "hit": 1,
+    "error": false,
+    "session_id": "7dce0b6b-190e-4f84-99e5-daaef3263566",
+    "answer": "Three non-test files call `getClientIp`, which is defined in `src/helpers/ip-address.helper.ts`:\n\n1. `src/auth/interceptors/user-insight.interceptor.ts`: `extractRequestData` calls `getClientIp(request)` to fill `ipAddress` in the tracking log saved to Redis.\n2. `src/commons/interceptors/track-document-version.interceptor.ts`: `extractIpAddress` returns `getClientIp(request as requestIp.Request)`.\n3. `src/commons/decorators/ip-address.decorator.ts`: imports the helper to build the IP address parameter decorator. I only saw a cut-off import line here (`import { get\u2026`), not the call itself, so t",
+    "correct": 1,
+    "id": "k04",
+    "method": "context"
+   },
+   {
+    "seconds": 12.402,
+    "input": 8,
+    "output": 593,
+    "cache_read": 34978,
+    "cache_creation": 2155,
+    "tokens": 37734,
+    "cost": 0.036127599999999996,
+    "turns": 5,
+    "hit": 1,
+    "error": false,
+    "session_id": "c395b0eb-eaf7-435d-a3ec-0a93c43b12ec",
+    "answer": "- `src/commons/decorators/ip-address.decorator.ts`: its `IpAddress` param decorator returns `getClientIp(request)`.\n- `src/commons/interceptors/track-document-version.interceptor.ts`: `extractIpAddress` returns `getClientIp(request)`.\n- `src/auth/interceptors/user-insight.interceptor.ts`: it imports `getClientIp` from `src/helpers/ip-address.helper.ts`; I saw the import but not the line that calls it.\n\n`getClientIp` is defined in `src/helpers/ip-address.helper.ts`. The only other file that imports it is the test `ip-address.helper.spec.ts`, so I left it out.",
+    "correct": 1,
+    "id": "k04",
+    "method": "context"
+   },
+   {
+    "seconds": 10.299,
+    "input": 8,
+    "output": 686,
+    "cache_read": 34983,
+    "cache_creation": 2217,
+    "tokens": 37894,
+    "cost": 0.0384846,
+    "turns": 4,
+    "hit": 1,
+    "error": false,
+    "session_id": "6a551448-ea85-42ec-ae4a-fcfaa83a3aae",
+    "answer": "1. `src/commons/interceptors/track-document-version.interceptor.ts`: its `extractIpAddress` method calls `getClientIp(request)`.\n2. `src/auth/interceptors/user-insight.interceptor.ts`: it imports `getClientIp` from `../../helpers/ip-address.helper` to collect the IP for user-insight tracking.\n3. `src/commons/decorators/ip-address.decorator.ts`: it imports from the IP helper and appears to use `getClientIp` in its IP-address parameter decorator.\n\nI saw the call itself only in the first file. For the user-insight interceptor I saw the import of `getClientIp` but not the line that calls it. For t",
+    "correct": 1,
+    "id": "k04",
+    "method": "context"
+   },
+   {
+    "seconds": 5.694,
+    "input": 4,
+    "output": 329,
+    "cache_read": 11638,
+    "cache_creation": 2894,
+    "tokens": 14865,
+    "cost": 0.0320756,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "b851a077-aa56-4c5c-b059-989bbc996c0e",
+    "answer": "Three non-test files import and call `getClientIp`, which is defined in `src/helpers/ip-address.helper.ts`:\n\n- `src/auth/interceptors/user-insight.interceptor.ts` uses it to set `ipAddress` on line 87.\n- `src/commons/decorators/ip-address.decorator.ts` uses it to supply the decorator's return value on line 25.\n- `src/commons/interceptors/track-document-version.interceptor.ts` uses it to get the request's IP on line 105.\n\nThe only other caller is the test file `src/helpers/ip-address.helper.spec.ts`, which you asked me to leave out.",
+    "correct": 1,
+    "id": "k04",
+    "method": "old"
+   },
+   {
+    "seconds": 4.967,
+    "input": 4,
+    "output": 374,
+    "cache_read": 11638,
+    "cache_creation": 2894,
+    "tokens": 14910,
+    "cost": 0.0329756,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "81fce486-8045-4532-b0ee-4fc9aac6ad3c",
+    "answer": "Three non-test files call `getClientIp`, which is defined in `src/helpers/ip-address.helper.ts:77`:\n\n- `src/auth/interceptors/user-insight.interceptor.ts` (line 87): sets `ipAddress` from `getClientIp(request)` when recording user insight.\n- `src/commons/interceptors/track-document-version.interceptor.ts` (line 105): returns `getClientIp(request)` to tag tracked document versions with the client IP.\n- `src/commons/decorators/ip-address.decorator.ts` (line 25): returns `getClientIp(request)` from the IP address parameter decorator.\n\nThe helper file's other mentions are its own code and doc exam",
+    "correct": 1,
+    "id": "k04",
+    "method": "old"
+   },
+   {
+    "seconds": 6.829,
+    "input": 4,
+    "output": 407,
+    "cache_read": 11638,
+    "cache_creation": 2894,
+    "tokens": 14943,
+    "cost": 0.0336356,
+    "turns": 2,
+    "hit": 1,
+    "error": false,
+    "session_id": "6e14d73a-89d6-4e87-8dc2-c215aa16713f",
+    "answer": "Three source files outside tests import `getClientIp` from `src/helpers/ip-address.helper.ts` and call it:\n\n1. `src/commons/interceptors/track-document-version.interceptor.ts:105` calls it to get the request's IP address.\n2. `src/commons/decorators/ip-address.decorator.ts:25` is the IP-address decorator, and it returns the result of `getClientIp(request)`.\n3. `src/auth/interceptors/user-insight.interceptor.ts:87` calls it to fill the `ipAddress` field.\n\nOther matches don't count. `src/helpers/ip-address.helper.ts` is the file that defines the function. Its calls at lines 81 and 156 go to the `",
+    "correct": 1,
+    "id": "k04",
+    "method": "old"
+   }
+  ],
+  "aborted": null
+ }
+}
