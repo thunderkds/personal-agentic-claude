@@ -366,3 +366,87 @@ Target `git status` unchanged afterwards: **yes**.
 | agent cost ratio context / old | 2.02x | 1.52x |
 | full re-index (s) | 6.7 (623 files) | 5.0 (588 files) |
 
+
+---
+
+## Round 4 evidence (H1-H5, hybrid vs grep-only)
+
+| Check | Result | Notes / output snippet |
+|-------|--------|------------------------|
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | pass | `tests/test_bench_hybrid.py` (12 tests: paired diff on run means, bootstrap CI with fixed seed and known input, the verdict function on KEEP / DROP / INCONCLUSIVE fixtures, tool-call extraction from a stream-json sample, route adherence and overhead, command and prompt construction, end-to-end analyze). Output with the round-2/3 file: `52 passed in 1.15s` |
+| Verification command run | pass | `python3 scripts/bench_hybrid.py --yes`: 352 runs (88 questions x 2 methods x 2 runs, interleaved), 0 errors, no reruns; `VERDICT: KEEP`; spend $11.29 (cap $20) |
+| Negative cases hold (H4 read-only) | pass | tapchat-apis `git status --short` before and after: `M  tsconfig.json` / `?? reports/` (identical, diffed) |
+| verify | pass | full suite `1461 passed, 25 subtests passed in 33.94s` |
+| Full smoke suite still green (no regression) | pass | `1461 passed, 25 subtests passed in 33.94s` |
+
+The rule, prompts, routing text and graders were committed (0fe8311) before the first run and not changed afterwards.
+
+Read the verdict with this caveat (from the numbers below): hybrid called `search_semantic` in only 4 of 176 runs (all `doc` questions). The agents followed "Grep by default" almost always, so hybrid behaved like grep-only with extra tools loaded. KEEP is reached through the rule's second branch: hybrid answered 1 more question correctly on tapchat (97/98 vs 96/98; the grep-only miss is e02 run 2), and the pooled cost CI upper bound (+$0.0004) is within 10% of grep-only's mean cost ($0.0329). Cost is not shown lower (the CI includes 0), and tokens are higher by about 4.8k per question (CI excludes 0), which is the tool-schema weight; cost stayed level because of cache pricing.
+
+# Round 4: hybrid vs grep-only (T171, 2026-10-22)
+
+**VERDICT: KEEP**
+
+Pre-registered rule: KEEP if hybrid correctness >= grep_only on both repos AND (pooled cost CI upper bound <= 0, OR hybrid strictly higher on one repo with the bound <= +10% of grep_only's mean cost). DROP if the pooled cost CI lower bound > 0 and hybrid is not strictly higher on either repo. Otherwise INCONCLUSIVE.
+
+## Totals per repo (all runs)
+
+| repo | method | runs | cost (USD) | tokens | correct |
+|---|---|---|---|---|---|
+| tapchat | grep_only | 98 | 3.366 | 1934303 | 96/98 |
+| tapchat | hybrid | 98 | 3.074 | 2371639 | 97/98 |
+| this_repo | grep_only | 78 | 2.433 | 1558683 | 78/78 |
+| this_repo | hybrid | 78 | 2.412 | 1970953 | 78/78 |
+
+## Paired mean d = hybrid - grep_only, cost (USD) per question (95% bootstrap CI, 10,000 resamples, seed 171)
+
+| scope | mean d [CI] |
+|---|---|
+| pooled | -0.0018 [-0.0040, +0.0004] |
+| tapchat | -0.0030 [-0.0065, +0.0004] |
+| this_repo | -0.0003 [-0.0028, +0.0022] |
+| kind: conceptual | -0.0016 [-0.0085, +0.0051] |
+| kind: symbol | -0.0034 [-0.0074, -0.0000] |
+| kind: doc | +0.0014 [-0.0054, +0.0085] |
+| kind: multi_hop | -0.0049 [-0.0124, +0.0018] |
+| kind: exact_text | -0.0005 [-0.0041, +0.0040] |
+| kind: callers | +0.0009 [+0.0000, +0.0016] |
+| kind: negative | -0.0039 [-0.0116, +0.0010] |
+
+## Paired mean d = hybrid - grep_only, tokens per question (95% bootstrap CI, 10,000 resamples, seed 171)
+
+| scope | mean d [CI] |
+|---|---|
+| pooled | +4827 [+3889, +5803] |
+| tapchat | +4463 [+3447, +5452] |
+| this_repo | +5286 [+3558, +7145] |
+| kind: conceptual | +6775 [+4240, +9302] |
+| kind: symbol | +2861 [+1091, +4254] |
+| kind: doc | +4630 [-64, +10530] |
+| kind: multi_hop | +4746 [+2956, +6589] |
+| kind: exact_text | +5003 [+3504, +6757] |
+| kind: callers | +3661 [+2873, +4065] |
+| kind: negative | +5950 [+3850, +8256] |
+
+Mean grep_only cost per question: $0.0329.
+
+## Route adherence (hybrid runs that called `search_semantic`)
+
+| kind | called / runs |
+|---|---|
+| conceptual | 0/34 (0%) |
+| symbol | 0/30 (0%) |
+| doc | 4/20 (20%) |
+| multi_hop | 0/24 (0%) |
+| exact_text | 0/24 (0%) |
+| callers | 0/24 (0%) |
+| negative | 0/20 (0%) |
+
+## Fixed overhead of carrying the tools
+
+172 hybrid runs never called `search_semantic`. They cost $0.0307 on average against $0.0326 for grep_only on the same questions (difference -0.0020).
+
+tapchat git status before: 'M  tsconfig.json\n?? reports/'; after: 'M  tsconfig.json\n?? reports/'; identical: True
+
+Spend: $11.29 over 352 runs (cap $20).
+
