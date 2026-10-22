@@ -159,6 +159,33 @@ User, 2026-10-22: *"this repos is heavy of document, so I want to try out anothe
 
 ---
 
+## Amendment — Round 4 (2026-10-22): hybrid vs grep-only, keep-or-drop decision
+
+User, 2026-10-22: *"try out the new way apply first … use the grep as default and use the context for the case, when we combine them, is it better than the only grep one … I need the evidence to keep the context solution or just drop it"*.
+
+**Restated intent (round 4)**: test the proposed combined rule as it would ship, against grep-only, on both repos, and decide from evidence whether to keep easy-context or drop it.
+
+**Methods (real agents only, `claude -p`, same flags as rounds 2–3):**
+- `grep_only`: tools `Grep,Glob,Read`. Prompt = the round-2/3 old-agent prompt.
+- `hybrid`: tools `Grep,Glob,Read` + `mcp__easy-context__search_semantic`, `mcp__easy-context__get_slice` (no `get_related`: the rule routes callers to Grep). Prompt = the same prompt plus this routing rule, verbatim:
+  > How to search: use Grep/Glob and ranged Reads by default — for names, exact text, callers, a file and its tests, and checking that something does not exist. Use `search_semantic` first only for a question in plain words about intent, docs or decisions ("where is X done", "why did we choose X") when you have no good keyword; then confirm with a ranged Read.
+
+**Pre-registered decision rule (fixed before any run; do not change after seeing results):**
+- Per question, paired difference d = hybrid − grep_only, using the mean of the 2 runs per method. Report mean d for cost and tokens with a 95% bootstrap CI (10,000 resamples over questions, seed 171), pooled over both repos and per repo; also per question kind.
+- **KEEP** context search if hybrid correctness ≥ grep_only on both repos AND (pooled cost CI upper bound ≤ 0, OR hybrid correctness is strictly higher on at least one repo with pooled cost CI upper bound ≤ +10%).
+- **DROP** if pooled cost CI lower bound > 0 and hybrid correctness is not strictly higher on either repo.
+- Otherwise **INCONCLUSIVE** — report which way it leans.
+
+| # | Criterion (testable) | Traces to |
+|---|----------------------|-----------|
+| H1 | Both methods run on all questions of both repos (39 + 49), **2 runs per method per question**, interleaved (q1 grep, q1 hybrid, q2 …) so time-of-day/cache drift hits both equally. Same graders as rounds 2–3 (negative = opens with NOT FOUND). | "is it better than the only grep one" |
+| H2 | Use `--output-format stream-json --verbose` (or equivalent) to record which tools each run called. Report for `hybrid`: share of runs that called `search_semantic` per question kind (route adherence), and cost of hybrid runs that never called it vs grep_only (= the fixed overhead of carrying the tools). | evidence for the cause |
+| H3 | Report section "Round 4: hybrid vs grep-only" in a new `reports/context-search-hybrid-2026-10-22.{md,json}`: totals per repo, paired mean d + CI (pooled, per repo, per kind), correctness, route adherence, overhead, and the verdict line `VERDICT: KEEP | DROP | INCONCLUSIVE` computed by code from the rule above. | "I need the evidence" |
+| H4 | Spend cap **$20** for this round; abort and report if cumulative would pass it. tapchat-apis stays read-only (`git status --short` identical before/after). | safety |
+| H5 | Unit tests: paired-diff + bootstrap CI (fixed seed, known input), the verdict function on KEEP/DROP/INCONCLUSIVE fixtures, tool-call extraction from a stream-json sample. | Hard-Stop Gate 5 |
+
+---
+
 ## Files to Change (Predicted)
 
 | File | Change |
