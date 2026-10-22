@@ -377,3 +377,112 @@ def test_regrade_recomputes_from_stored_answers():
     data = {"agent": {"rows": [{"q": q, "context": dict(ok), "old": dict(bad)}], "repeats": []}}
     out = b.regrade(data)["agent"]
     assert out["summary"]["context"]["correct"] == 1 and out["summary"]["old"]["correct"] == 0
+
+
+# ---- round 3 (T1-T6): --questions, per-target grep scope, read-only upkeep, comparison
+
+TAPCHAT = os.path.join(ROOT, "tests", "fixtures", "context_search_questions_tapchat.json")
+
+
+def _git_repo(tmp_path):
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    (tmp_path / ".gitignore").write_text("dist/\n")
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "a.ts").write_text("needle\nneedle\n")
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "b.md").write_text("needle\n")
+    (tmp_path / "dist").mkdir()
+    (tmp_path / "dist" / "a.js").write_text("needle\n" * 50)  # ignored build output
+    (tmp_path / "untracked.txt").write_text("needle\n" * 90)
+    subprocess.run(["git", "-C", str(tmp_path), "add", ".gitignore", "src", "docs"], check=True)
+    subprocess.run(["git", "-C", str(tmp_path), "-c", "user.email=a@b", "-c", "user.name=n", "commit", "-qm", "i"], check=True)
+    return tmp_path
+
+
+@pytest.fixture
+def scope():
+    saved = dict(b.GREP_SCOPE)
+    yield b.GREP_SCOPE
+    b.GREP_SCOPE.clear()
+    b.GREP_SCOPE.update(saved)
+
+
+def test_tracked_grep_ignores_build_output_and_untracked(tmp_path, scope):
+    repo = _git_repo(tmp_path)
+    scope["tracked"] = True
+    out = b.old_way({"grep_pattern": "needle"}, str(repo))
+    assert out["ranked"] == ["src/a.ts", "docs/b.md"]
+    out = b.old_bounded({"grep_pattern": "needle"}, str(repo))
+    assert out["ranked"] == ["src/a.ts", "docs/b.md"]
+
+
+def test_working_tree_grep_counts_untracked_files(tmp_path, scope):
+    repo = _git_repo(tmp_path)
+    scope["tracked"] = False
+    scope["exclude_dirs"] = b.GREP_EXCLUDE_DIRS + ["dist"]
+    ranked = b.old_way({"grep_pattern": "needle"}, str(repo))["ranked"]
+    assert ranked[0] == "untracked.txt" and "dist/a.js" not in ranked
+
+
+def test_per_target_exclude_dirs_apply_in_tracked_mode(tmp_path, scope):
+    repo = _git_repo(tmp_path)
+    scope["tracked"] = True
+    scope["exclude_dirs"] = b.GREP_EXCLUDE_DIRS + ["docs"]
+    assert b.old_way({"grep_pattern": "needle"}, str(repo))["ranked"] == ["src/a.ts"]
+
+
+def test_tracked_grep_does_not_touch_the_repo(tmp_path, scope):
+    repo = _git_repo(tmp_path)
+    before = subprocess.run(["git", "-C", str(repo), "status", "--short"], capture_output=True, text=True).stdout
+    scope["tracked"] = True
+    b.old_way({"grep_pattern": "needle"}, str(repo))
+    b.old_bounded({"grep_pattern": "needle"}, str(repo))
+    assert subprocess.run(["git", "-C", str(repo), "status", "--short"], capture_output=True, text=True).stdout == before
+
+
+def test_questions_option_selects_the_fixture_and_default_is_unchanged():
+    assert b.load_questions()[0]["id"] == "c01"
+    tap = b.load_questions(TAPCHAT)
+    assert len(tap) >= 35 and tap != b.load_questions()
+    assert len(b.lifecycle_chains(TAPCHAT)) == 2
+
+
+def test_tapchat_fixture_mix():
+    qs = b.load_questions(TAPCHAT)
+    kinds = [q["kind"] for q in qs]
+    for k in ("conceptual", "symbol", "callers", "multi_hop", "exact_text"):
+        assert kinds.count(k) >= 6, k
+    assert kinds.count("negative") >= 4 and kinds.count("doc") >= 3
+    assert all(bool(q["expected_paths"]) == (q["kind"] != "negative") for q in qs)
+
+
+def test_tapchat_ground_truth_exists_when_the_repo_is_present():
+    root = "/home/hungnguyenhuu/workspace/project/beautifly/github/tapchat-apis"
+    if not os.path.isdir(root):
+        pytest.skip("tapchat-apis not on this machine")
+    for q in b.load_questions(TAPCHAT):
+        for path in q["expected_paths"]:
+            assert os.path.exists(os.path.join(root, path)), (q["id"], path)
+
+
+def test_upkeep_without_probe_writes_nothing(tmp_path, monkeypatch):
+    repo = _git_repo(tmp_path)
+    calls = []
+    monkeypatch.setattr(b, "reindex", lambda client, force=False: (calls.append(force) or 0.1, {"files": 3, "slices": 4}))
+    monkeypatch.setattr(b.os, "utime", lambda *a, **k: pytest.fail("touched a file"))
+    out = b.run_upkeep(object(), str(repo), probe=False)
+    assert calls == [True, False] and out["git_status_unchanged"] and "staleness" not in out
+    assert "Timing only" in b.render_upkeep(out)
+
+
+def test_report_scope_and_comparison_sections(tmp_path):
+    q = {"id": "q1", "kind": "doc", "question": "x", "expected_paths": ["p"], "grep_pattern": "x"}
+    rows = [_row(q, ["p"], ["p"])]
+    ag = {"rows": [], "per_kind": {}, "summary": {m: {"n": 1, "correct": 1, "median_s": 1, "tokens": 10, "cost": 0.1} for m in ("context", "old")}}
+    mk = lambda: {"script": {"rows": rows, "summary": b.summarize_script(rows), "per_kind": b.summarize_kinds(rows)}, "agent": ag}  # noqa: E731
+    data = dict(mk(), grep_scope="`git grep` over git-tracked files only; skipped directories: dist.")
+    md, js = str(tmp_path / "r.md"), str(tmp_path / "r.json")
+    b.save_data(data, md, js, compare=("repo A", mk(), "repo B", data))
+    text = open(md).read()
+    assert "## This repo vs tapchat-apis" in text and "repo A" in text and "git grep" in text
+    assert b.report_paths("2026-10-22", "tapchat")[1].endswith("context-search-benchmark-tapchat-2026-10-22.json")

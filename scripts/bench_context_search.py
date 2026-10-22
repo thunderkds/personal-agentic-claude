@@ -204,19 +204,30 @@ BOUNDED_LIST_CAP = 50
 BOUNDED_CONTEXT_LINES = 40
 
 
-def grep_command(flags, pattern):
-    cmd = ["grep", flags, pattern]
-    cmd += [f"--exclude-dir={d}" for d in GREP_EXCLUDE_DIRS]
-    cmd += [f"--exclude={f}" for f in GREP_EXCLUDE_FILES]
-    return cmd + ["."]
+# Grep scope for the old way. `tracked` greps only git-tracked files (`git grep`), so ignored
+# build output (dist, coverage, node_modules) never counts; `exclude_dirs` always apply.
+GREP_SCOPE = {"tracked": False, "exclude_dirs": list(GREP_EXCLUDE_DIRS)}
+
+
+def grep_run(flags, pattern, root):
+    """Run grep (or git grep when GREP_SCOPE['tracked']); stdout text, same line format."""
+    dirs, files = GREP_SCOPE["exclude_dirs"], GREP_EXCLUDE_FILES
+    if GREP_SCOPE["tracked"]:
+        cmd = ["git", "grep", "--no-color", flags.replace("r", "").replace("E", ""), "-E", pattern, "--", "."]
+        cmd += [f":(exclude){d}" for d in dirs] + [f":(exclude,glob)**/{f}" for f in files]
+        env = dict(os.environ, GIT_OPTIONAL_LOCKS="0")  # never write to the target's .git
+    else:
+        cmd = ["grep", flags, pattern] + [f"--exclude-dir={d}" for d in dirs]
+        cmd += [f"--exclude={f}" for f in files] + ["."]
+        env = None
+    return subprocess.run(cmd, cwd=root, capture_output=True, text=True, errors="replace", env=env).stdout
 
 
 def old_way(question, root):
     """Grep then Read the top file in full. Returns dict(ranked, chars)."""
-    done = subprocess.run(grep_command("-rnIE", question["grep_pattern"]), cwd=root,
-                          capture_output=True, text=True, errors="replace")
-    ranked = rank_files(done.stdout)
-    chars = len(done.stdout)
+    out = grep_run("-rnIE", question["grep_pattern"], root)
+    ranked = rank_files(out)
+    chars = len(out)
     if ranked:
         try:
             with open(os.path.join(root, ranked[0]), encoding="utf-8", errors="replace") as fh:
@@ -253,9 +264,7 @@ def ranged_read(root, path, pattern, context=BOUNDED_CONTEXT_LINES):
 
 def old_bounded(question, root):
     """How a careful agent works: file list ranked by match count (capped), ranged Read."""
-    done = subprocess.run(grep_command("-rcIE", question["grep_pattern"]), cwd=root,
-                          capture_output=True, text=True, errors="replace")
-    counts = rank_counts(done.stdout)
+    counts = rank_counts(grep_run("-rcIE", question["grep_pattern"], root))
     listing = "\n".join(f"{p}:{c}" for p, c in counts[:BOUNDED_LIST_CAP])
     chars = len(listing)
     if counts:
@@ -384,12 +393,15 @@ class Budget:
                     json.dump({"spent": self.spent, "runs": self.runs}, fh)
 
 
+PROMPT_IGNORE = ("Ignore memory/event-trace/ and tasks/TASK_*_T171.md, tasks/TASK_*_T172.md: "
+                 "they log this benchmark.")
+
+
 def agent_prompt(question):
     return ("Find the file in this repository that best answers the question below. "
             "Do not edit anything. Reply with the repo-relative path(s) of the most "
             "relevant file(s), most relevant first, and one sentence why. If the repository has "
-            "nothing that answers it, reply exactly NOT FOUND and name no file. Ignore memory/event-trace/ "
-            "and tasks/TASK_*_T171.md, tasks/TASK_*_T172.md: they log this benchmark.\n\n"
+            "nothing that answers it, reply exactly NOT FOUND and name no file. " + PROMPT_IGNORE + "\n\n"
             f"Question: {question}")
 
 
@@ -553,8 +565,9 @@ def run_chain(method, chain, root, url, budget, waits=(LIFECYCLE_WAIT_S,), sleep
     return steps
 
 
-def run_lifecycle(chains, root, url, budget):
-    jobs = [(m, c, ((LIFECYCLE_WAIT_S, LIFECYCLE_LONG_WAIT_S) if i == 0 else (LIFECYCLE_WAIT_S,)))
+def run_lifecycle(chains, root, url, budget, expiry_waits=True):
+    jobs = [(m, c, (((LIFECYCLE_WAIT_S, LIFECYCLE_LONG_WAIT_S) if i == 0 else (LIFECYCLE_WAIT_S,))
+                    if expiry_waits else ()))
             for i, c in enumerate(chains) for m in ("context", "old")]
     steps, aborted = [], None
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(jobs)) as pool:
@@ -620,13 +633,19 @@ def git_dirty(root):
                           text=True).stdout.splitlines()
 
 
-def run_upkeep(client, root, probe_name="zz_staleness_probe.md"):
-    """Time full and incremental re-index; probe staleness with a new untracked file."""
+def run_upkeep(client, root, probe_name="zz_staleness_probe.md", probe=True):
+    """Time full and no-op re-index; with probe=True also touch files and probe staleness.
+
+    probe=False never writes to the root (not even an mtime): timing of the index only.
+    """
     before = git_dirty(root)
     result = {}
     result["full_reindex_s"], entry = reindex(client, force=True)
     result["files"], result["slices"] = entry.get("files"), entry.get("slices")
     result["noop_reindex_s"], _ = reindex(client)
+    if not probe:
+        result["git_status_unchanged"] = git_dirty(root) == before
+        return result
     for n in (1, 10):
         for f in tracked_files(root, n):
             os.utime(os.path.join(root, f))  # touch: mtime only, content unchanged
@@ -773,22 +792,28 @@ def render_lifecycle(data):
 def render_upkeep(u):
     lines = ["| operation | seconds |", "|---|---|",
              f"| full re-index (force, {u.get('files')} files / {u.get('slices')} slices) | {u['full_reindex_s']:.2f} |",
-             f"| re-index, nothing changed | {u['noop_reindex_s']:.2f} |",
-             f"| re-index after touching 1 file (mtime only) | {u['touch_1_reindex_s']:.2f} |",
-             f"| re-index after touching 10 files (mtime only) | {u['touch_10_reindex_s']:.2f} |",
-             f"| re-index after adding 1 new file | {u.get('add_1_new_file_reindex_s', 0):.2f} |", "",
-             "Touching changes only the file's mtime, so the index skips the unchanged content: "
-             "those rows show the cost of the scan alone.", "",
-             "**Staleness probe** (a new untracked file is indexed, edited, searched before re-index, then removed):", ""]
-    st = u["staleness"]
-    labels = {"new_file_found": "new file found by search after indexing",
-              "after_edit_old_text_still_returned": "after edit, before re-index: search still returns the OLD text",
-              "after_edit_new_text_found": "after edit, before re-index: search finds the NEW text",
-              "after_reindex_new_text_found": "after re-index: search finds the new text",
-              "after_delete_before_reindex_still_returned": "after delete, before re-index: deleted file still returned",
-              "after_delete_and_reindex_still_returned": "after delete and re-index: deleted file still returned"}
-    lines += [f"- {labels[k]}: **{'yes' if st[k] else 'no'}**" for k in labels if k in st]
-    lines += ["", f"Main checkout `git status` unchanged afterwards: **{'yes' if u['git_status_unchanged'] else 'NO'}**."]
+             f"| re-index, nothing changed | {u['noop_reindex_s']:.2f} |"]
+    if "touch_1_reindex_s" in u:
+        lines += [f"| re-index after touching 1 file (mtime only) | {u['touch_1_reindex_s']:.2f} |",
+                  f"| re-index after touching 10 files (mtime only) | {u['touch_10_reindex_s']:.2f} |",
+                  f"| re-index after adding 1 new file | {u.get('add_1_new_file_reindex_s', 0):.2f} |", "",
+                  "Touching changes only the file's mtime, so the index skips the unchanged content: "
+                  "those rows show the cost of the scan alone.", ""]
+    else:
+        lines += ["", "Timing only: no file was touched or added in the target (read-only run), so there is no "
+                  "incremental or staleness measurement here.", ""]
+    st = u.get("staleness")
+    if st:
+        lines += ["**Staleness probe** (a new untracked file is indexed, edited, searched before re-index, then removed):", ""]
+        labels = {"new_file_found": "new file found by search after indexing",
+                  "after_edit_old_text_still_returned": "after edit, before re-index: search still returns the OLD text",
+                  "after_edit_new_text_found": "after edit, before re-index: search finds the NEW text",
+                  "after_reindex_new_text_found": "after re-index: search finds the new text",
+                  "after_delete_before_reindex_still_returned": "after delete, before re-index: deleted file still returned",
+                  "after_delete_and_reindex_still_returned": "after delete and re-index: deleted file still returned"}
+        lines += [f"- {labels[k]}: **{'yes' if st[k] else 'no'}**" for k in labels if k in st]
+        lines.append("")
+    lines.append(f"Target `git status` unchanged afterwards: **{'yes' if u['git_status_unchanged'] else 'NO'}**.")
     return "\n".join(lines)
 
 
@@ -819,7 +844,9 @@ def recommendation(data):
         if loses:
             parts.append("Grep + Read was more accurate on: " + ", ".join(loses) + ".")
     u = data.get("upkeep")
-    if u:
+    if u and "staleness" not in u:
+        parts.append(f"Upkeep: a full re-index takes {u['full_reindex_s']:.1f}s and a no-op one {u['noop_reindex_s']:.1f}s.")
+    elif u:
         st = u["staleness"]
         stale = ("search returned the old text until the file was re-indexed"
                  if st.get("after_edit_old_text_still_returned") and not st.get("after_edit_new_text_found")
@@ -853,7 +880,37 @@ def recommendation(data):
     return " ".join(parts)
 
 
-def build_markdown(data):
+def render_comparison(name_a, a, name_b, b):
+    """Side-by-side of two benchmark JSON datasets (documents-heavy repo vs code-heavy repo)."""
+    def script(d, m):
+        return d["script"]["summary"][m]
+
+    def agent(d, m):
+        return d["agent"]["summary"][m]
+
+    lines = [f"| measure | {name_a} | {name_b} |", "|---|---|---|"]
+    if "script" in a and "script" in b:
+        for m in METHODS:
+            sa, sb = script(a, m), script(b, m)
+            lines.append(f"| script hit@5, {m} | {sa['hit5']}/{sa['n']} | {sb['hit5']}/{sb['n']} |")
+        for m in METHODS:
+            lines.append(f"| script est. tokens, {m} | {script(a, m)['tokens']} | {script(b, m)['tokens']} |")
+    if "agent" in a and "agent" in b:
+        for m in ("context", "old"):
+            sa, sb = agent(a, m), agent(b, m)
+            lines.append(f"| agent correct, {m} | {sa['correct']}/{sa['n']} | {sb['correct']}/{sb['n']} |")
+            lines.append(f"| agent tokens, {m} | {sa['tokens']} | {sb['tokens']} |")
+            lines.append(f"| agent cost USD, {m} | {sa['cost']:.2f} | {sb['cost']:.2f} |")
+        ra = agent(a, "context")["cost"] / max(agent(a, "old")["cost"], 1e-9)
+        rb = agent(b, "context")["cost"] / max(agent(b, "old")["cost"], 1e-9)
+        lines.append(f"| agent cost ratio context / old | {ra:.2f}x | {rb:.2f}x |")
+    if "upkeep" in a and "upkeep" in b:
+        lines.append(f"| full re-index (s) | {a['upkeep']['full_reindex_s']:.1f} ({a['upkeep'].get('files')} files) | "
+                     f"{b['upkeep']['full_reindex_s']:.1f} ({b['upkeep'].get('files')} files) |")
+    return "\n".join(lines)
+
+
+def build_markdown(data, compare=None):
     out = [f"# easy-context search vs grep + Read: benchmark (T171, {data.get('date', '')})", ""]
     if data.get("recommendation_text"):
         out += ["## Recommendation", "", data["recommendation_text"], ""]
@@ -869,12 +926,16 @@ def build_markdown(data):
                 render_lifecycle(data["lifecycle"]), ""]
     if "upkeep" in data:
         out += ["## Index upkeep and staleness", "", render_upkeep(data["upkeep"]), ""]
+    if data.get("grep_scope"):
+        out += ["## Grep scope used for the old way", "", data["grep_scope"], ""]
+    if compare:
+        out += ["## This repo vs tapchat-apis", "", render_comparison(*compare), ""]
     return "\n".join(out)
 
 
-def report_paths(today=None):
+def report_paths(today=None, label=""):
     today = today or datetime.date.today().isoformat()
-    base = os.path.join(ROOT, "reports", f"context-search-benchmark-{today}")
+    base = os.path.join(ROOT, "reports", f"context-search-benchmark-{label + '-' if label else ''}{today}")
     return base + ".md", base + ".json"
 
 
@@ -885,13 +946,13 @@ def load_data(json_path):
     return {}
 
 
-def save_data(data, md_path, json_path):
+def save_data(data, md_path, json_path, compare=None):
     os.makedirs(os.path.dirname(json_path), exist_ok=True)
     data["recommendation_text"] = recommendation(data)
     with open(json_path, "w", encoding="utf-8") as fh:
         json.dump(data, fh, indent=1)
     with open(md_path, "w", encoding="utf-8") as fh:
-        fh.write(build_markdown(data))
+        fh.write(build_markdown(data, compare))
 
 
 # ---------------------------------------------------------------- main
@@ -903,6 +964,14 @@ def main(argv=None):
     ap.add_argument("--agent", action="store_true", help="real-agent mode: all questions + repeats (claude -p; costs tokens)")
     ap.add_argument("--lifecycle", action="store_true", help="session lifecycle scenario (claude -p; costs tokens; ~1 hour)")
     ap.add_argument("--upkeep", action="store_true", help="index upkeep and staleness probe (re-indexes the root)")
+    ap.add_argument("--questions", default=QUESTIONS, help="question file (default: this repo's fixture)")
+    ap.add_argument("--label", default="", help="report name label, e.g. tapchat")
+    ap.add_argument("--grep-tracked", action="store_true", help="old way greps only git-tracked files (git grep)")
+    ap.add_argument("--grep-exclude-dir", action="append", default=[], help="extra directory the old way skips (repeatable)")
+    ap.add_argument("--prompt-ignore", default=None, help="sentence telling agents which paths to ignore")
+    ap.add_argument("--no-probe", action="store_true", help="--upkeep: timing only; write nothing in the root")
+    ap.add_argument("--no-expiry-wait", action="store_true", help="--lifecycle: skip the cache-expiry waits")
+    ap.add_argument("--compare-with", default=None, help="JSON of another run; adds a comparison section")
     ap.add_argument("--regrade", action="store_true", help="re-grade stored agent answers and rebuild the report (free)")
     ap.add_argument("--limit", type=int, default=None, help="only the first N questions")
     ap.add_argument("--repeats", type=int, default=REPEATS, help="repeat runs per fixed question and method")
@@ -910,17 +979,28 @@ def main(argv=None):
     ap.add_argument("--yes", action="store_true", help="do not ask before real-agent runs")
     ap.add_argument("--report", default=None, help="markdown report file (the JSON sits beside it)")
     args = ap.parse_args(argv)
-    md_path, json_path = report_paths()
+    md_path, json_path = report_paths(label=args.label)
+    GREP_SCOPE["tracked"] = args.grep_tracked
+    GREP_SCOPE["exclude_dirs"] = list(GREP_EXCLUDE_DIRS) + args.grep_exclude_dir
+    global PROMPT_IGNORE
+    if args.prompt_ignore is not None:
+        PROMPT_IGNORE = args.prompt_ignore
     if args.report:
         md_path = args.report
         json_path = os.path.splitext(args.report)[0] + ".json"
-    questions = load_questions(limit=args.limit)
+    questions = load_questions(args.questions, limit=args.limit)
     data = load_data(json_path)
+    data["grep_scope"] = (("`git grep` over git-tracked files only" if args.grep_tracked else "`grep -r` over the working tree")
+                          + "; skipped directories: " + ", ".join(GREP_SCOPE["exclude_dirs"]) + ".")
+    compare = None
+    if args.compare_with:
+        with open(args.compare_with, encoding="utf-8") as fh:
+            compare = ("this repo (Markdown-heavy)", json.load(fh), "tapchat-apis (code-heavy)", data)
     data["date"] = datetime.date.today().isoformat()
     budget = Budget(args.cap, os.path.splitext(json_path)[0] + ".spend.json")
 
     if args.regrade:
-        save_data(regrade(data), md_path, json_path)
+        save_data(regrade(data), md_path, json_path, compare)
         print(f"Regraded. Report: {md_path}")
         return 0
 
@@ -930,7 +1010,7 @@ def main(argv=None):
             return 2
         runs = 2 * len(questions) + (2 * args.repeats * len(REPEAT_IDS) if args.agent else 0)
         if args.lifecycle:
-            runs = 2 * 4 * len(lifecycle_chains())
+            runs = 2 * 4 * len(lifecycle_chains(args.questions))
         print(f"Real-agent mode: about {runs} `claude -p` runs; cap ${args.cap:.2f} "
               f"(already spent ${budget.spent:.2f}).")
         if not args.yes and input("Continue? [y/N] ").strip().lower() != "y":
@@ -942,11 +1022,11 @@ def main(argv=None):
                              "per_kind": agent_per_kind(res["rows"]), "spread": spread(res["repeats"]),
                              "repeats": res["repeats"], "aborted": res["aborted"]}
         if args.lifecycle:
-            res = run_lifecycle(lifecycle_chains(), args.root, args.url, budget)
+            res = run_lifecycle(lifecycle_chains(args.questions), args.root, args.url, budget, not args.no_expiry_wait)
             data["lifecycle"] = {"steps": res["steps"], "summary": summarize_lifecycle(res["steps"]),
                                  "aborted": res["aborted"]}
         data["spend"] = {"spent": budget.spent, "runs": budget.runs}
-        save_data(data, md_path, json_path)
+        save_data(data, md_path, json_path, compare)
         print(f"Spent ${budget.spent:.2f} over {budget.runs} runs. Report: {md_path}\nJSON: {json_path}")
         return 0
 
@@ -954,7 +1034,7 @@ def main(argv=None):
     try:
         client.start()
         if args.upkeep:
-            data["upkeep"] = run_upkeep(client, args.root)
+            data["upkeep"] = run_upkeep(client, args.root, probe=not args.no_probe)
         else:
             rows = run_script_mode(questions, client, args.root)
             data["script"] = {"rows": rows, "summary": summarize_script(rows), "per_kind": summarize_kinds(rows),
@@ -962,7 +1042,7 @@ def main(argv=None):
     except ServerError as err:
         print(str(err), file=sys.stderr)
         return 2
-    save_data(data, md_path, json_path)
+    save_data(data, md_path, json_path, compare)
     print(f"Report: {md_path}\nJSON: {json_path}")
     return 0
 
