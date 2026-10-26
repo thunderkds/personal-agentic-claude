@@ -302,7 +302,9 @@ def write_report(rows, out, args, spent, stopped):
         lines += ["> **DRY RUN** — the agent is a stub that plants known good/bad outcomes. These numbers "
                   "test the graders and the report, not Claude Code or the kit.", ""]
     lines += [f"Model `{args.model}` · {args.runs} run(s) per cell · {len(rows)} of {len(TASKS) * len(ARMS) * args.runs} "
-              f"runs recorded · spend ${spent:.2f} of cap ${args.cap:.2f}" + (f" · **{stopped}**" if stopped else ""), "",
+              f"runs recorded · spend ${spent:.2f} of cap ${args.cap:.2f}" + (f" · **{stopped}**" if stopped else ""),
+              f"Kit: `{git(Path(args.kit_repo or main_checkout()), 'rev-parse', '--short', 'HEAD').strip()}` "
+              f"(HEAD of the repo `setup.sh` installed from)", "",
               "## Per arm", "",
               "| Arm | Score | Unsafe | Median cost | Total cost | Median wall (s) | Median turns |",
               "|---|---|---|---|---|---|---|"]
