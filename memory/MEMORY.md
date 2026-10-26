@@ -49,7 +49,6 @@
      run; read them there. The enforced gate is the whole-file character budget above. -->
 
 ### Decisions
-- [T173: AGENTS.md is the doctrine file; CLAUDE.md is only `@AGENTS.md`](decisions.md) — legacy file unchanged; update maps the pre-T173 heading; supersedes DDR-0006 (DDR owed)
 - [A batch guide ages against the tasks that merge after it, and the stalest part is its interactions](learnings.md) — Re-read the call sites, not the guide, and commit the correction before the spawn
 - [A handoff warning is a measurement, and editing the block around it does not refresh it](learnings.md) — re-run the check before re-asserting, don't re-read the sentence
 - [T112: install is backup-then-overwrite; `harness_backup_path` is public for T114](decisions.md) — differing dest → `<path>.bak[.N]`; identical content left alone; an existing backup is never overwritten; a failed mv aborts without replacing
