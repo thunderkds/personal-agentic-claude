@@ -145,11 +145,11 @@ ok "SC1/AC1: no Proceed? [Y/n] when there are edited files" '! grep -Fq "Proceed
 assert_overwrite_all SC1
 ok "SC1/AC7: log header is the first line" 'head -n1 "$(LOG_OF)" | grep -Eq "$(header_re "$C1" "$C2")"'
 ok "SC1/AC7: Decided by: auto-approve (overwrite all)" 'grep -Fxq "Decided by: auto-approve (overwrite all)" "$(LOG_OF)"'
-ok "SC1/AC7: CLAUDE.md line names its backup" 'grep -Fxq "- CLAUDE.md — overwrote (your edits; backup CLAUDE.md.bak-$C1)" "$(LOG_OF)"'
-ok "SC1/AC7: agents/qa.md line names its backup" 'grep -Fxq "- agents/qa.md — overwrote (your edits; backup agents/qa.md.bak-$C1)" "$(LOG_OF)"'
-ok "SC1/AC7: removal logged" 'grep -Fxq "- skills/old — removed (upstream no longer ships it)" "$(LOG_OF)"'
+ok "SC1/AC7: CLAUDE.md line names its backup" 'grep -Fxq -- "- CLAUDE.md — overwrote (your edits; backup CLAUDE.md.bak-$C1)" "$(LOG_OF)"'
+ok "SC1/AC7: agents/qa.md line names its backup" 'grep -Fxq -- "- agents/qa.md — overwrote (your edits; backup agents/qa.md.bak-$C1)" "$(LOG_OF)"'
+ok "SC1/AC7: removal logged" 'grep -Fxq -- "- skills/old — removed (upstream no longer ships it)" "$(LOG_OF)"'
 ok "SC1/AC7: refreshed count" 'grep -Eq "^- [0-9]+ kit files you never edited — refreshed$" "$(LOG_OF)"'
-ok "SC1/AC7: added count = 1" 'grep -Fxq "- 1 files added" "$(LOG_OF)"'
+ok "SC1/AC7: added count = 1" 'grep -Fxq -- "- 1 files added" "$(LOG_OF)"'
 ok "SC1/AC8: log holds no file contents" 'no_contents'
 dump SC1
 
@@ -179,7 +179,7 @@ for _ans in '1' ''; do
   ok "$_t: agents/qa.md overwritten (o)" 'cmp -s "$P/agents/qa.md" "$F/agents/qa.md" && cmp -s "$P/agents/qa.md.bak-$C1" "$C/user-qa.md"'
   ok "$_t: CLAUDE.md kept (s)" 'cmp -s "$P/CLAUDE.md" "$C/user-CLAUDE.md" && [ ! -e "$P/CLAUDE.md.bak-$C1" ]'
   ok "$_t: Decided by: asked per file" 'grep -Fxq "Decided by: asked per file" "$(LOG_OF)"'
-  ok "$_t: one overwrote + one kept" 'grep -Fxq "- agents/qa.md — overwrote (your edits; backup agents/qa.md.bak-$C1)" "$(LOG_OF)" && grep -Fxq "- CLAUDE.md — kept your version" "$(LOG_OF)"'
+  ok "$_t: one overwrote + one kept" 'grep -Fxq -- "- agents/qa.md — overwrote (your edits; backup agents/qa.md.bak-$C1)" "$(LOG_OF)" && grep -Fxq -- "- CLAUDE.md — kept your version" "$(LOG_OF)"'
   dump "$_t"
 done
 
@@ -220,7 +220,7 @@ ok "SC6: exit 0" '[ "$RC" -eq 0 ]'
 ok "SC6: Proceed? [Y/n] shown" 'grep -Fq "Proceed? [Y/n]" "$OUT"'
 ok "SC6: list not shown" '! grep -Fq "$LIST_HEAD" "$OUT"'
 ok "SC6: Decided by: no edited files" 'grep -Fxq "Decided by: no edited files" "$(LOG_OF)"'
-ok "SC6: counts present" 'grep -Eq "^- [0-9]+ kit files you never edited — refreshed$" "$(LOG_OF)" && grep -Fxq "- 1 files added" "$(LOG_OF)"'
+ok "SC6: counts present" 'grep -Eq "^- [0-9]+ kit files you never edited — refreshed$" "$(LOG_OF)" && grep -Fxq -- "- 1 files added" "$(LOG_OF)"'
 dump SC6
 
 # =============================================================================
@@ -255,7 +255,7 @@ ok "SC8: agents/qa.md kept (never overwritten without a backup)" 'cmp -s "$P/age
 ok "SC8: CLAUDE.md overwritten with its backup" 'cmp -s "$P/CLAUDE.md" "$F/CLAUDE.md" && cmp -s "$P/CLAUDE.md.bak-$C1" "$C/user-CLAUDE.md"'
 ok "SC8: exit 2 (counted unresolved)" '[ "$RC" -eq 2 ]'
 ok "SC8: logged as kept (backup failed: ...)" 'grep -Eq "^- agents/qa.md — kept \(backup failed: .+\)$" "$(LOG_OF)"'
-ok "SC8: CLAUDE.md logged as overwrote" 'grep -Fxq "- CLAUDE.md — overwrote (your edits; backup CLAUDE.md.bak-$C1)" "$(LOG_OF)"'
+ok "SC8: CLAUDE.md logged as overwrote" 'grep -Fxq -- "- CLAUDE.md — overwrote (your edits; backup CLAUDE.md.bak-$C1)" "$(LOG_OF)"'
 dump SC8
 
 # =============================================================================
