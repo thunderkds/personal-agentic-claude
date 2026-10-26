@@ -944,6 +944,15 @@ def _blocking_hook_count():
     return count
 
 
+def test_skills_heading_count_matches_source():
+    """T173 AC12: the `Skills (N)` heading equals the number of skills/*/ folders."""
+    m = re.search(r"<h2>Skills \((\d+)\)</h2>", _raw_page_text())
+    assert m, "no `Skills (N)` heading on the page"
+    assert int(m.group(1)) == len(_skill_dirs()), (
+        f"heading says Skills ({m.group(1)}), source has {len(_skill_dirs())}"
+    )
+
+
 def test_quick_reference_counts_match_source():
     """AC5: skill, spawnable-role and blocking-hook counts, each derived here."""
     text = _quick_reference_text()

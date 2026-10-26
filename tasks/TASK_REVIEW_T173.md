@@ -69,6 +69,14 @@ $ head -1 CLAUDE.md; wc -lc CLAUDE.md AGENTS.md; grep claude_md_source .claude/h
 
 The installed project gets the full doctrine in `CLAUDE.md` (186 lines) and the 55-line thin adapter in `AGENTS.md`.
 
+**AC 11/12 amendment BEFORE** (verbatim `site/index.html` lines at HEAD before the amendment commits):
+
+```
+497:  <li><code>1) New project</code> (<code>CLAUDE.md</code>) — the default with no terminal.</li>
+541:<h2>Skills (30)</h2>
+733:<tr><td data-label="Path"><code>AGENTS.md</code></td><td data-label="What it contains">Provider adapter for Codex — see Providers below</td></tr>
+```
+
 **AFTER**: Supervisor, 2026-10-26, T173 kit `5e67e0c`, scratch new-project install:
 
 ```
