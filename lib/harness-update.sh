@@ -147,12 +147,19 @@ build_fresh_file_list() {
 # Reads the terminal (tty_read, /dev/tty) — never stdin, which under `curl | sh`
 # is the script itself (T114). With no terminal, or on EOF, it does NOT guess —
 # returns "eof" so the caller skips the file and flags the run for a re-run.
+# UPDATE_MODE (T174) is set only by setup.sh's choose_update_mode, at a terminal;
+# it is assigned here so no environment value can select an auto mode.
 CONFLICT_DECISION=""
+UPDATE_MODE=ask
 prompt_conflict() {
   _cur="$1"   # working-copy path
   _fresh="$2" # freshly-fetched upstream path
   # No terminal: nobody to ask, so print no prompt — the caller's warning says it.
   [ "$TTY_OK" -eq 1 ] || { CONFLICT_DECISION="eof"; return 0; }
+  case "$UPDATE_MODE" in
+    overwrite_all) CONFLICT_DECISION="o"; return 0 ;;
+    keep_all)      CONFLICT_DECISION="s"; return 0 ;;
+  esac
   while :; do
     printf '  Resolve: [o]verwrite / [s]kip / [v]iew diff again: ' >&2
     if ! tty_read; then
@@ -176,7 +183,14 @@ prompt_conflict() {
 # a caller can tell "installed" apart from "skipped/left alone".
 # _force_conflict=1 skips the untouched/no-diff fast paths and always prompts
 # (used when the caller could not establish which upstream file backs $_dst).
+# Each outcome is also appended to $UPDATE_OUTCOMES as kind<TAB>path<TAB>detail
+# for the update log (T174): added, refreshed, overwrote, kept, backup_failed.
 LAST_FILE_INSTALLED=0
+UPDATE_OUTCOMES=""
+record_outcome() {
+  [ -n "$UPDATE_OUTCOMES" ] || return 0
+  printf '%s\t%s\t%s\n' "$1" "$2" "${3:-}" >> "$UPDATE_OUTCOMES"
+}
 process_one_file() {
   _src="$1"
   _dst="$2"
@@ -194,6 +208,7 @@ process_one_file() {
     install_file "$_src" "$_dst"
     LAST_FILE_INSTALLED=1
     printf '%s\t%s\n' "$_rel" "$_fresh_hash" >> "$_decisions"
+    record_outcome added "$_rel"
     log_info "new file installed: $_rel"
     return
   fi
@@ -207,6 +222,7 @@ process_one_file() {
       install_file "$_src" "$_dst"
       LAST_FILE_INSTALLED=1
       printf '%s\t%s\n' "$_rel" "$_fresh_hash" >> "$_decisions"
+      record_outcome refreshed "$_rel"
       return
     fi
 
@@ -217,6 +233,7 @@ process_one_file() {
       install_file "$_src" "$_dst"
       LAST_FILE_INSTALLED=1
       printf '%s\t%s\n' "$_rel" "$_fresh_hash" >> "$_decisions"
+      record_outcome refreshed "$_rel"
       return
     fi
   fi
@@ -229,24 +246,39 @@ process_one_file() {
   else
     log_warn "conflict: '$_rel' is not recorded in the lock and differs from upstream"
   fi
-  log_info "diff (current vs upstream) for $_rel:"
-  diff -u "$_dst" "$_src" >&2 || true
+  # An auto mode (T174) was chosen without looking at diffs, so none is shown.
+  if [ "$UPDATE_MODE" = ask ]; then
+    log_info "diff (current vs upstream) for $_rel:"
+    diff -u "$_dst" "$_src" >&2 || true
+  fi
 
   prompt_conflict "$_dst" "$_src"
   case "$CONFLICT_DECISION" in
     o)
       # The user's version is moved aside first (T137); if that fails, it stays
-      # where it is — never overwritten without a backup.
-      if ! harness_backup_path "$_src" "$_dst"; then
-        UNRESOLVED=$((UNRESOLVED + 1))
+      # where it is — never overwritten without a backup. The free name is taken
+      # first so the log names the backup harness_backup_path actually made.
+      _bk_name=$(harness_backup_name "$_dst")
+      _bk_err="$HARNESS_TEMP_DIR/.update-backup-err"
+      if ! harness_backup_path "$_src" "$_dst" 2>"$_bk_err"; then
+        cat "$_bk_err" >&2
+        BACKUP_FAILED=$((BACKUP_FAILED + 1))
         if [ -n "$_rec_hash" ]; then
           printf '%s\t%s\n' "$_rel" "$_rec_hash" >> "$_decisions"
         fi
+        _bk_why=$(sed -n 's/^mv: //p' "$_bk_err" | head -n1)
+        record_outcome backup_failed "$_rel" "${_bk_why:-could not move it to ${_bk_name#./}}"
         return
       fi
+      cat "$_bk_err" >&2
       install_file "$_src" "$_dst"
       LAST_FILE_INSTALLED=1
       printf '%s\t%s\n' "$_rel" "$_fresh_hash" >> "$_decisions"
+      if [ -e "$_bk_name" ] || [ -L "$_bk_name" ]; then
+        record_outcome overwrote "$_rel" "${_bk_name#./}"
+      else
+        record_outcome refreshed "$_rel"   # identical to upstream: nothing to back up
+      fi
       log_info "overwrote: $_rel"
       ;;
     s)
@@ -254,6 +286,7 @@ process_one_file() {
       if [ -n "$_rec_hash" ]; then
         printf '%s\t%s\n' "$_rel" "$_rec_hash" >> "$_decisions"
       fi
+      record_outcome kept "$_rel"
       log_info "skipped: $_rel (kept your local version)"
       ;;
     eof)
@@ -261,6 +294,7 @@ process_one_file() {
       if [ -n "$_rec_hash" ]; then
         printf '%s\t%s\n' "$_rel" "$_rec_hash" >> "$_decisions"
       fi
+      record_outcome kept "$_rel"
       log_warn "no input for '$_rel' — left your local version untouched; re-run interactively to resolve."
       ;;
   esac
@@ -268,7 +302,10 @@ process_one_file() {
 
 # ── Compare + update every MANIFEST file, recording final hashes ─────────────
 # Sets UNRESOLVED to the count of conflicts left unresolved due to no input.
+# BACKUP_FAILED counts files kept because their backup failed (T174); run_update
+# resets it, since process_claude_md adds to it after process_files.
 UNRESOLVED=0
+BACKUP_FAILED=0
 process_files() {
   _lock="$1"
   _list="$2"
@@ -459,10 +496,12 @@ carry_over_unprocessed() {
       esac
       if ! grep -Fxq "$_unit" "$_removed_units" 2>/dev/null; then
         printf '%s\n' "$_unit" >> "$_removed_units"
+        record_outcome removed "$_unit"
         log_info "removed '$_unit' — upstream no longer ships it and you never edited it."
       fi
     else
       printf '%s\t%s\n' "$_k" "$_h" >> "$_decisions"
+      record_outcome kept_unshipped "$_k"
       log_warn "upstream no longer ships '$_k' — you edited it, so it is kept (delete it yourself if you no longer want it)."
     fi
   done
@@ -669,15 +708,15 @@ plan_update() {
   printf '  - Kit files you never edited are refreshed from upstream.\n'
   printf '  - Files to add or restore: %s\n' "$_p_new"
   if [ "$TTY_OK" -eq 1 ]; then
-    printf '  - You edited these; you will be asked about each one ([o]verwrite / [s]kip).\n'
-    printf '    [o]verwrite moves your version to <file>.%s first:\n' "$(harness_backup_suffix)"
+    printf '  - You edited these; next you choose: ask about each one, overwrite all, or keep all.\n'
+    printf '    Overwriting moves your version to <file>.%s first:\n' "$(harness_backup_suffix)"
   else
     printf '  - You edited these; with no terminal they are kept as they are:\n'
   fi
   plan_list "$_p_ask" "(none)"
   plan_print_removals "$_p_rm" "$_p_keep"
   if [ "$TTY_OK" -eq 1 ]; then
-    printf '  - Backed up: only a file you choose to [o]verwrite. [s]kip keeps your edit in place.\n'
+    printf '  - Backed up: only a file you choose to overwrite. Keeping it leaves your edit in place.\n'
   else
     printf '  - Backed up: nothing. Update keeps your edits in place instead.\n'
   fi
@@ -751,6 +790,77 @@ reproject_harnesses() {
   fi
 }
 
+# ── Update log (T174) ────────────────────────────────────────────────────────
+# One entry per Update run, prepended to .claude/update-log.md: the kit versions,
+# how the edited files were decided, one line per edited file and per removal,
+# and counts for the rest. Paths, outcomes and counts only — never contents.
+update_decided_by() {
+  if [ ! -s "$HARNESS_TEMP_DIR/.plan-ask" ]; then
+    printf 'no edited files'
+  elif [ "$TTY_OK" -ne 1 ]; then
+    printf 'no terminal (kept edits)'
+  else
+    case "$UPDATE_MODE" in
+      overwrite_all) printf 'auto-approve (overwrite all)' ;;
+      keep_all)      printf 'auto-approve (keep all)' ;;
+      *)             printf 'asked per file' ;;
+    esac
+  fi
+}
+
+render_update_log_entry() {
+  _old="${HARNESS_PREV_COMMIT:-}"
+  case "$_old" in ''|*[!0-9a-f]*) _old=unknown ;; esac
+  printf '## %s — Update %s → %s\n' "$(date '+%Y-%m-%d %H:%M')" "$_old" "${HARNESS_KIT_COMMIT:-unknown}"
+  printf 'Decided by: %s\n' "$(update_decided_by)"
+  while IFS='	' read -r _o_kind _o_path _o_detail; do
+    case "$_o_kind" in
+      overwrote)      printf -- '- %s — overwrote (your edits; backup %s)\n' "$_o_path" "$_o_detail" ;;
+      kept)           printf -- '- %s — kept your version\n' "$_o_path" ;;
+      backup_failed)  printf -- '- %s — kept (backup failed: %s)\n' "$_o_path" "$_o_detail" ;;
+      removed)        printf -- '- %s — removed (upstream no longer ships it)\n' "$_o_path" ;;
+      kept_unshipped) printf -- '- %s — kept (you edited it; upstream no longer ships it)\n' "$_o_path" ;;
+    esac
+  done < "$UPDATE_OUTCOMES"
+  printf -- '- %s kit files you never edited — refreshed\n' "$(grep -c '^refreshed	' "$UPDATE_OUTCOMES")"
+  printf -- '- %s files added\n' "$(grep -c '^added	' "$UPDATE_OUTCOMES")"
+}
+
+# A failure here warns and returns: the log never changes the update's outcome.
+# A symlink or non-file at the path is refused, so nothing is written through it.
+write_update_log() {
+  _ul="./.claude/update-log.md"
+  _ul_entry="$HARNESS_TEMP_DIR/.update-log-entry"
+  if [ -L "$_ul" ] || { [ -e "$_ul" ] && [ ! -f "$_ul" ]; }; then
+    log_warn "$_ul is not a plain file — this run was not added to the update log."
+    return 0
+  fi
+  if ! render_update_log_entry > "$_ul_entry" 2>/dev/null; then
+    log_warn "Could not prepare the update log entry — $_ul was left as it was."
+    return 0
+  fi
+  if [ ! -e "$_ul" ]; then
+    if cat "$_ul_entry" > "$_ul" 2>/dev/null; then
+      log_info "Recorded this run in $_ul."
+    else
+      log_warn "Could not write $_ul — this run was not added to the update log."
+    fi
+    return 0
+  fi
+  # Prepend through a temp file in the same directory, then rename: the older
+  # entries are copied unchanged, and cp -p keeps the log's own mode.
+  if _ul_tmp=$(mktemp "./.claude/.update-log.XXXXXX" 2>/dev/null) \
+     && cp -p "$_ul" "$_ul_tmp" 2>/dev/null \
+     && { cat "$_ul_entry"; printf '\n'; cat "$_ul"; } > "$_ul_tmp" 2>/dev/null \
+     && mv -f "$_ul_tmp" "$_ul" 2>/dev/null; then
+    log_info "Recorded this run in $_ul."
+    return 0
+  fi
+  [ -n "${_ul_tmp:-}" ] && rm -f "$_ul_tmp"
+  log_warn "Could not write $_ul — this run was not added to the update log."
+  return 0
+}
+
 # ── The Update action (update.sh's former main, after the fetch) ─────────────
 run_update() {
   _lock="$1"
@@ -758,12 +868,15 @@ run_update() {
   _fresh_list="$3"
   decisions="$HARNESS_TEMP_DIR/.update-decisions"
   processed="$HARNESS_TEMP_DIR/.update-processed"
-  : > "$decisions"; : > "$processed"
+  UPDATE_OUTCOMES="$HARNESS_TEMP_DIR/.update-outcomes"
+  BACKUP_FAILED=0
+  : > "$decisions"; : > "$processed"; : > "$UPDATE_OUTCOMES"
 
   process_files "$_lock" "$_fresh_list" "$decisions" "$processed"
   process_claude_md "$_lock" "$decisions" "$processed"
   carry_over_unprocessed "$_lock" "$_manifest" "$decisions" "$processed" "$_fresh_list"
   write_new_lock "$decisions" "$_lock" "$FINAL_CLAUDE_MD_SOURCE"
+  write_update_log
 
   # AFTER the file copy, so every hook the merged entries reference is on disk
   # (memory/learnings.md, T074).
@@ -771,8 +884,13 @@ run_update() {
   reproject_harnesses "$_manifest"
   log_info "Update complete. Re-recorded $_lock"
 
+  if [ "$BACKUP_FAILED" -gt 0 ]; then
+    log_error "$BACKUP_FAILED file(s) could not be backed up, so they were kept as they are — see .claude/update-log.md."
+  fi
   if [ "$UNRESOLVED" -gt 0 ]; then
     log_error "$UNRESOLVED conflict(s) could not be resolved (no interactive input). Re-run setup.sh in a terminal and choose Update to resolve them."
+  fi
+  if [ "$BACKUP_FAILED" -gt 0 ] || [ "$UNRESOLVED" -gt 0 ]; then
     exit 2
   fi
   if [ "$SETTINGS_FAILED" -ne 0 ]; then

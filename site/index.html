@@ -419,6 +419,21 @@ Choose [1]:</pre>
   Before changing anything it shows a plan — files to ask about, files to remove because the kit no
   longer ships them, anything to back up — and ends with <code>Proceed? [Y/n]</code>.
 </p>
+<p class="lead">
+  If the plan lists files you edited, one question about all of them replaces <code>Proceed? [Y/n]</code>:
+</p>
+<pre class="install">How should Update treat your edited files?
+  1) Ask me about each one
+  2) Overwrite all of them (each backed up first)
+  3) Keep all of them
+  4) Cancel
+Choice [1]:</pre>
+<ul class="lead">
+  <li><strong>1</strong> asks about each file, as in the table below. Enter picks it.</li>
+  <li><strong>2</strong> moves each file to <code>&lt;file&gt;.bak-&lt;commit&gt;</code>, then
+    overwrites it. A file it cannot back up is kept.</li>
+  <li><strong>3</strong> keeps every edit. <strong>4</strong> changes nothing.</li>
+</ul>
 <ul class="lead">
   <li>Answer <code>n</code> to go back to the menu. <strong>Cancel changes nothing.</strong></li>
   <li><strong>No terminal</strong> (CI, containers, <code>ssh</code> without <code>-t</code>) — no
@@ -446,6 +461,23 @@ Choose [1]:</pre>
 <p>
   In <code>.claude/harness-lock.json</code>, which also records the kit's commit ID as
   <code>kit_commit</code> — the version a <code>.bak-&lt;commit&gt;</code> backup is named after.
+</p>
+</details>
+<p class="lead">
+  Every Update run adds a dated entry to the top of <code>.claude/update-log.md</code>: how your
+  edited files were decided, what happened to each one, and counts for the rest.
+</p>
+<details>
+<summary>An update log entry</summary>
+<pre class="install">## 2026-10-26 14:05 — Update 75040d9 → b122017
+Decided by: auto-approve (overwrite all)
+- CLAUDE.md — overwrote (your edits; backup CLAUDE.md.bak-75040d9)
+- agents/qa.md — overwrote (your edits; backup agents/qa.md.bak-75040d9)
+- 41 kit files you never edited — refreshed
+- 2 files added</pre>
+<p>
+  The log holds paths, outcomes and counts only, never file contents. Older entries stay below,
+  unchanged. Cancel adds no entry.
 </p>
 </details>
 <p class="lead">

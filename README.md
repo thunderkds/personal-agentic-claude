@@ -54,8 +54,9 @@ affected:
 - `write-better-skill`
 
 To update, run the same line again and choose **Update** — it keeps the CLIs your project already has,
-so a Codex-only install stays Codex-only. To add a CLI later, choose **Reinstall** and pick it. Fork
-installs, packs and the full Update flow: see the [site](https://personal-agentic-claude.vercel.app/).
+so a Codex-only install stays Codex-only. Edited kit files get one choice: ask about each one, overwrite
+all (each backed up first), or keep all. Each run is logged in `.claude/update-log.md`. To add a CLI later,
+choose **Reinstall** and pick it. Fork installs, packs and the full Update flow: see the [site](https://personal-agentic-claude.vercel.app/).
 
 ---
 
