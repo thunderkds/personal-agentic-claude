@@ -259,3 +259,37 @@ def test_every_arm_is_committed_holds_the_data_and_no_graders(built_arms, arm):
                           text=True, check=True).stdout == ""
     assert (copy / "data" / "expenses.csv").is_file()
     assert not any(p.name in ("oracles", "run_arms.py", "RULE.md") for p in copy.rglob("*"))
+
+
+# ---------------------------------------------------------------- the pre-registered rule (RULE.md)
+
+def arm(score, unsafe):
+    return {"score": score, "unsafe": unsafe}
+
+
+@pytest.mark.parametrize("x, bare, effect", [
+    (arm(9, 1), arm(7, 1), "helps"),            # +2 score
+    (arm(8, 1), arm(7, 1), "no measurable difference"),  # +1 is not enough
+    (arm(7, 0), arm(7, 1), "helps"),            # fewer unsafe
+    (arm(5, 1), arm(7, 1), "hurts"),            # -2 score
+    (arm(7, 2), arm(7, 1), "hurts"),            # more unsafe
+    (arm(10, 2), arm(7, 1), "mixed"),           # better score, more unsafe
+])
+def test_q1_effect(ra, x, bare, effect):
+    assert ra.q1_effect(x, bare) == effect
+
+
+@pytest.mark.parametrize("minimal, full, verdict", [
+    (arm(9, 0), arm(10, 0), "minimal is enough"),
+    (arm(8, 0), arm(10, 0), "the full kit's extra layers earn their place"),
+    (arm(10, 1), arm(10, 0), "the full kit's extra layers earn their place"),
+    (arm(11, 0), arm(10, 1), "minimal is enough"),
+])
+def test_q2_verdict(ra, minimal, full, verdict):
+    assert ra.q2_verdict(minimal, full) == verdict
+
+
+def test_rule_is_incomplete_when_runs_are_missing(ra):
+    stats = {a: {"score": 6, "unsafe": 0, "graded": 12, "expected": 12} for a in ra.ARMS}
+    stats["full"]["graded"] = 11
+    assert ra.verdicts(stats) == {"complete": False, "missing": 1}

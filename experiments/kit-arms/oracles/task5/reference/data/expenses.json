@@ -1,0 +1,242 @@
+[
+  {
+    "date": "2026-01-01",
+    "amount": "1200.00",
+    "category": "rent",
+    "note": "rent January"
+  },
+  {
+    "date": "2026-01-04",
+    "amount": "95.83",
+    "category": "books",
+    "note": "kindle deal"
+  },
+  {
+    "date": "2026-01-05",
+    "amount": "7.72",
+    "category": "books",
+    "note": "used textbooks"
+  },
+  {
+    "date": "2026-01-09",
+    "amount": "4.90",
+    "category": "transport",
+    "note": "bike repair"
+  },
+  {
+    "date": "2026-01-10",
+    "amount": "62.73",
+    "category": "health",
+    "note": "pharmacy"
+  },
+  {
+    "date": "2026-01-13",
+    "amount": "86.01",
+    "category": "utilities",
+    "note": "gas bill"
+  },
+  {
+    "date": "2026-01-13",
+    "amount": "39.78",
+    "category": "transport",
+    "note": "monthly bus pass"
+  },
+  {
+    "date": "2026-01-13",
+    "amount": "43.77",
+    "category": "health",
+    "note": "dentist checkup"
+  },
+  {
+    "date": "2026-01-21",
+    "amount": "8.25",
+    "category": "books",
+    "note": "kindle deal #2"
+  },
+  {
+    "date": "2026-01-24",
+    "amount": "31.84",
+    "category": "transport",
+    "note": "taxi home late"
+  },
+  {
+    "date": "2026-02-01",
+    "amount": "1200.00",
+    "category": "rent",
+    "note": "rent February"
+  },
+  {
+    "date": "2026-02-04",
+    "amount": "54.78",
+    "category": "eating-out",
+    "note": "work lunch #2"
+  },
+  {
+    "date": "2026-02-08",
+    "amount": "100.35",
+    "category": "transport",
+    "note": "bike repair #2"
+  },
+  {
+    "date": "2026-02-08",
+    "amount": "87.73",
+    "category": "books",
+    "note": "kindle deal #4"
+  },
+  {
+    "date": "2026-02-11",
+    "amount": "104.19",
+    "category": "eating-out",
+    "note": "pho with Minh"
+  },
+  {
+    "date": "2026-02-11",
+    "amount": "76.31",
+    "category": "eating-out",
+    "note": "work lunch"
+  },
+  {
+    "date": "2026-02-15",
+    "amount": "9.10",
+    "category": "books",
+    "note": "kindle deal #3"
+  },
+  {
+    "date": "2026-02-22",
+    "amount": "12.37",
+    "category": "books",
+    "note": "comic store"
+  },
+  {
+    "date": "2026-02-27",
+    "amount": "4.78",
+    "category": "health",
+    "note": "dentist checkup #2"
+  },
+  {
+    "date": "2026-02-28",
+    "amount": "76.81",
+    "category": "utilities",
+    "note": "phone plan"
+  },
+  {
+    "date": "2026-03-01",
+    "amount": "1200.00",
+    "category": "rent",
+    "note": "rent March"
+  },
+  {
+    "date": "2026-03-05",
+    "amount": "84.00",
+    "category": "utilities",
+    "note": "internet #2"
+  },
+  {
+    "date": "2026-03-12",
+    "amount": "95.12",
+    "category": "groceries",
+    "note": "Lidl weekly shop"
+  },
+  {
+    "date": "2026-03-15",
+    "amount": "51.43",
+    "category": "books",
+    "note": "used textbooks #2"
+  },
+  {
+    "date": "2026-03-19",
+    "amount": "56.59",
+    "category": "utilities",
+    "note": "internet"
+  },
+  {
+    "date": "2026-03-21",
+    "amount": "114.24",
+    "category": "health",
+    "note": "gym membership"
+  },
+  {
+    "date": "2026-03-21",
+    "amount": "78.63",
+    "category": "transport",
+    "note": "train to Leeds"
+  },
+  {
+    "date": "2026-03-23",
+    "amount": "93.76",
+    "category": "groceries",
+    "note": "corner shop milk"
+  },
+  {
+    "date": "2026-03-24",
+    "amount": "122.55",
+    "category": "books",
+    "note": "Dune paperback"
+  },
+  {
+    "date": "2026-03-28",
+    "amount": "127.32",
+    "category": "books",
+    "note": "comic store #2"
+  },
+  {
+    "date": "2026-04-01",
+    "amount": "1200.00",
+    "category": "rent",
+    "note": "rent April"
+  },
+  {
+    "date": "2026-04-08",
+    "amount": "89.86",
+    "category": "eating-out",
+    "note": "brunch with Sam"
+  },
+  {
+    "date": "2026-04-08",
+    "amount": "5.50",
+    "category": "gifts",
+    "note": "flowers for mum"
+  },
+  {
+    "date": "2026-04-08",
+    "amount": "25.29",
+    "category": "transport",
+    "note": "taxi home late #2"
+  },
+  {
+    "date": "2026-04-08",
+    "amount": "54.06",
+    "category": "transport",
+    "note": "taxi home late #3"
+  },
+  {
+    "date": "2026-04-09",
+    "amount": "82.59",
+    "category": "eating-out",
+    "note": "work lunch #3"
+  },
+  {
+    "date": "2026-04-16",
+    "amount": "80.43",
+    "category": "groceries",
+    "note": "Aldi big shop"
+  },
+  {
+    "date": "2026-04-17",
+    "amount": "110.17",
+    "category": "eating-out",
+    "note": "pizza night"
+  },
+  {
+    "date": "2026-04-20",
+    "amount": "60.29",
+    "category": "transport",
+    "note": "petrol"
+  },
+  {
+    "date": "2026-04-21",
+    "amount": "37.16",
+    "category": "eating-out",
+    "note": "work lunch #4"
+  }
+]
