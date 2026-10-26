@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-10-20
+**Last updated**: 2026-10-21
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -88,6 +88,7 @@
 
 
 ### Ready for Review
+- [ ] **T171** — Benchmark easy-context search vs. grep + Read on time, correctness and token cost (script mode + real-agent mode) | common-infrastructure | C2 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T171.md` | Depends on: none | Round 4 2026-10-22 @ `0359d11`: hybrid (grep default + context for plain-word intent/docs) vs grep-only, 2 runs × 88 q, pre-registered rule frozen in `0fe8311` before runs → VERDICT KEEP (no harm: pooled cost d −$0.0018 [−0.0040, +0.0004], correct 175/176 vs 174/176) but route adherence 4/176 (2.3%) so no benefit shown; spend $11.29/352 runs; 52 tests pass. Round 3 2026-10-22: tapchat-apis (code-heavy, read-only target, git status unchanged) @ `22a8dce`, 40 unit tests pass, suite 1449 passed, spend $6.48/140 runs; context 49/49 vs grep 48/49, cost $2.74 vs $1.80. Ready for Review 2026-10-21 (round 2): branch `feat/t171-context-search-bench` @ `15e5eca`, 31 unit tests pass, suite 1440 passed; 39 questions, lifecycle + upkeep; spend $6.80/142 runs; user pre-approved ground truth ("automate approve"). Verdict: grep + ranged Read by default, context search for doc/decision lookups. Started 2026-10-21 in `../wt-t171`. Registered 2026-10-21: user: "make some tests … call from the context and the old way, compare these with the time, the correctly and the token cost"; method = Both (AskUserQuestion).
 
 
 ### Done
