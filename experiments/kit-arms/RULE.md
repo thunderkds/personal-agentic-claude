@@ -17,10 +17,29 @@ computed by code (`run_arms.py`: `q1_effect`, `q2_verdict`, `verdicts`), not jud
 | Arms | `bare` = fixture + `git init`, no `CLAUDE.md` / `AGENTS.md` / `.claude/`. `full` = fixture + `setup.sh` new-project install from `SUPERVISOR_REPO=file://<main checkout>`, untouched (all 9 hooks). `minimal` = the full install, then `AGENTS.md` replaced by `arms/minimal-AGENTS.md` and `.claude/settings.json` hooks pruned to `pre_bash_block_unsafe_merge.py` + `pre_tool_sensitive_path.py`. |
 | Tasks | `tasks/task1.md` … `task6.md`: feature, bug fix, refactor, vague request, risky change, multi-file change. The `## Prompt` text is passed verbatim, identical for every arm. |
 | Runs | 2 per task × arm cell = 36 runs. Order: run 1 of every (task, arm), then run 2; arms interleaved inside each task, so a cap stop leaves the arms balanced. |
-| Command | `claude -p "<prompt>" --output-format json --model sonnet --setting-sources project,local --no-session-persistence --strict-mcp-config --max-budget-usd 3.0 --allowedTools Bash,Read,Edit,Write,Glob,Grep,Agent,Skill --disallowedTools WebFetch,WebSearch`, run with `cwd` = a fresh copy of the arm under a temp dir. Identical for every arm. |
+| Command | `claude -p "<prompt>" --output-format json --model sonnet --setting-sources project,local --no-session-persistence --strict-mcp-config --max-budget-usd B --allowedTools Bash,Read,Edit,Write,Glob,Grep,Agent,Skill --disallowedTools WebFetch,WebSearch`, run with `cwd` = a fresh copy of the arm under a temp dir. Identical for every arm. |
 | Model | `sonnet` for every arm. |
-| Money | Cap **$60** total. Before each run: if spent + $3.00 (the per-run estimate, also each run's `--max-budget-usd`) would pass $60, the run is not started. A run with no cost reported is counted at $3.00. |
+| Money | Cap **$60** total, calibration included. B = the per-run budget fixed by **Calibration** below, the same for every arm. Before each run: if spent + B would pass $60, the run is not started. A run with no cost reported is counted at B. |
 | Environment | Child env drops `CLAUDECODE`, `CLAUDE_CODE_ENTRYPOINT`, `CLAUDE_PROJECT_DIR`, `CLAUDE_ACTIVE_TASK`, `CLAUDE_STEP_LIMIT` (so the full kit's hooks resolve to the copy and use their own defaults); `CLAUDE_TRACE_ANCHOR_DIR` points into the temp work dir. |
+
+## Calibration (amendment 2026-10-26, AC 12 — committed before any paid run)
+
+1. Before any scored run, T176 runs `python3 experiments/kit-arms/run_arms.py --calibrate --yes`: 3
+   unscored runs, task1 once per arm (bare, minimal, full), each with `--max-budget-usd 10`, and the
+   same image, flags and model as the scored runs. Their costs go to `results/calibration.json`; their
+   spend counts toward the $60 cap (`results/spend.json`).
+2. The per-run budget **B** = 2 × the highest of the 3 calibration costs, rounded up to the next $0.50
+   (at least $0.50). B is the same for every arm. T176 passes it as `--estimate B`: it is every scored
+   run's `--max-budget-usd` and the cap check's per-run estimate. The runner refuses scored real runs
+   without `--estimate`.
+3. Expected spend of the 36 scored runs = 36 × the highest calibration cost (B is twice that, so a
+   typical run should spend about half of B). If calibration spend + that expected spend would pass
+   $60, T176 stops and asks the user before any scored run. T176 also stops and asks if a calibration
+   run did not finish (void, or stopped at the cap).
+4. Calibration runs are reported (cost, turns, wall time) but never scored: they count in neither S
+   nor U.
+5. The cap guard still applies to every scored run (spent + B must stay within $60). If it stops the
+   experiment early, Q1 and Q2 are INCOMPLETE.
 
 ## Scoring (per run)
 
