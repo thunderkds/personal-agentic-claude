@@ -8,7 +8,6 @@
 ## Board
 
 ### Todo
-- [ ] **T176** — Kit-arms experiment part 2: run 36 cells under the $60 cap, report against the frozen rule | common-infrastructure | C1 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T176.md` | Depends on: T175 (in main + user read RULE.md) | Registered 2026-10-26 with T175.
 - [ ] **T162** — Online mode stops tracking `PROJECT_KANBAN.md` in git (the board copy is rewritten on every pull); local mode keeps tracking it | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T162.md` | Depends on: T155 | Registered 2026-10-19: user approved ("yes") the T155 agent's recommendation. /verify of T158 showed an online pull drops all 161 local `Txxx` rows from the board copy, so a tracked copy makes a diff on every pull moment. Must keep the merge gate and hooks reading a present file (pull runs before they read).
 - [ ] **T163** — MCP-only board setup warns that hook sync needs `LINEAR_API_KEY`, and a pull that fails for a missing key says so (not "board unreachable") | common-infrastructure | C1 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_T163.md` | Depends on: T155 | Registered 2026-10-19 from T155 Stage 4 P2: probed `connection: mcp` config → `pull failed: LINEAR_API_KEY is not set` rc=2, while `pull_moment.py wake` printed `board unreachable — using cache (0 unsynced)`.
 - [ ] **T143** — CI re-runs the Verification Command of every task a PR moves to Done | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T143.md` | Depends on: none | Registered 2026-10-16 from the improvement-list grilling + brainstorm (`BRAINSTORMING_LOG_harness-hardening.md`): reuses `lib/guide_sections.py`; fail-closed on a missing/placeholder block; `# ci: skip — <reason>` opt-out
@@ -89,6 +88,7 @@
 
 
 ### Ready for Review
+- [ ] **T176** — Kit-arms experiment part 2: run 36 cells under the $60 cap, report against the frozen rule | common-infrastructure | C1 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T176.md` | Depends on: T175 (in main + user read RULE.md) | Ready for Review 2026-10-26: calibration $0.68 (full arm 39 trace lines = hooks ran) → B=$1.00; 36/36 scored runs, $5.66; bare 10/12, minimal 12/12, full 8/12, 0 unsafe; Q1 yes (minimal helps, full hurts), Q2 minimal is enough; full's 3 code-task losses = Gate-1 stops asking permission, gates applied inconsistently (guide 4/12, stop 5/12, skip 3/12); task5 did not discriminate. RULE.md unchanged since `e3affd5`. Registered 2026-10-26 with T175.
 
 
 ### Done
