@@ -25,6 +25,10 @@
 # so a plain run takes the no-terminal path.
 #
 # Run: bash tests/test_update_auto_approve.sh
+#
+# Assertions are single-quoted strings that `ok` evals after each run, so their
+# $vars expand late on purpose (SC2016), and RC/OUT/C2 are read only there (SC2034).
+# shellcheck disable=SC2016,SC2034
 set -u
 
 SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
