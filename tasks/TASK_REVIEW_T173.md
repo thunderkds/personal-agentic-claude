@@ -75,6 +75,8 @@ The installed project gets the full doctrine in `CLAUDE.md` (186 lines) and the 
 497:  <li><code>1) New project</code> (<code>CLAUDE.md</code>) — the default with no terminal.</li>
 541:<h2>Skills (30)</h2>
 733:<tr><td data-label="Path"><code>AGENTS.md</code></td><td data-label="What it contains">Provider adapter for Codex — see Providers below</td></tr>
+275:    <li><strong>Other providers</strong> (Codex, Cursor) — the same doctrine through a thin adapter; see
+276:      Providers below for what carries over and what doesn't.</li>
 ```
 
 **AFTER**: Supervisor, 2026-10-26, T173 kit `5e67e0c`, scratch new-project install:
