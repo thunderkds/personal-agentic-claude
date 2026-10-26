@@ -33,8 +33,68 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured by common-infrastructure on the base `af8f1d2` (no T174 commit yet). Scratch
+project under `mktemp -d`, installed from a local `file://` kit fixture, `CLAUDE.md` and
+`agents/qa.md` edited, fixture bumped, then Update run in a pty (`script -qec`) with answers
+Enter (Update), Enter (Proceed), `s`, `s`. ANSI colours stripped. The plan ends in `Proceed? [Y/n]`,
+each edited file gets its own `Resolve:` prompt, and no `.claude/update-log.md` is written:
+
+```
+== 2026-10-26T04:07:22Z kit=/home/hungnguyenhuu/workspace/pets/wt-t174 @ af8f1d2 fixture=12d0839
+
+
+s
+s
+[info]  Using repo: file:///tmp/tmp.dDARtZfTLu/fixture
+[info]  Fetching (shallow clone): file:///tmp/tmp.dDARtZfTLu/fixture
+
+Easy Kit is already installed in /tmp/tmp.dDARtZfTLu/project.
+  1) Update (keeps your edits)
+  2) Reinstall (backs up your edits)
+  3) Cancel
+Choose [1]: 
+Plan: Update Easy Kit in /tmp/tmp.dDARtZfTLu/project (keeps your edits)
+  - Kit files you never edited are refreshed from upstream.
+  - Files to add or restore: 0
+  - You edited these; you will be asked about each one ([o]verwrite / [s]kip).
+    [o]verwrite moves your version to <file>.bak-2b6279f first:
+      agents/qa.md
+      CLAUDE.md
+  - Upstream no longer ships these and you never edited them; they will be removed:
+      (none)
+  - Upstream no longer ships these, but you edited them; they will be kept:
+      (none)
+  - Backed up: only a file you choose to [o]verwrite. [s]kip keeps your edit in place.
+  - Hooks: Easy Kit entries are merged into .claude/settings.json (your own entries are kept).
+Proceed? [Y/n] [warn]  conflict: 'agents/qa.md' has local changes since install
+[info]  diff (current vs upstream) for agents/qa.md:
+--- ./agents/qa.md	2026-10-26 11:07:22.790129537 +0700
++++ /tmp/harness-fetch.O5jhh8/agents/qa.md	2026-10-26 11:07:22.860529458 +0700
+@@ -1,2 +1,2 @@
+ agent v1
+-my edit
++v2
+  Resolve: [o]verwrite / [s]kip / [v]iew diff again: [info]  skipped: agents/qa.md (kept your local version)
+[warn]  conflict: 'CLAUDE.md' has local changes since install
+[info]  diff (current vs upstream) for CLAUDE.md:
+--- ./CLAUDE.md	2026-10-26 11:07:22.790129537 +0700
++++ /tmp/harness-fetch.O5jhh8/CLAUDE.md	2026-10-26 11:07:22.860529458 +0700
+@@ -1,3 +1,3 @@
+ GREENFIELD RULES
+ v1
+-my edit
++v2
+  Resolve: [o]verwrite / [s]kip / [v]iew diff again: [info]  skipped: CLAUDE.md (kept your local version)
+[warn]  .claude/settings.json not found in fetched Easy Kit — hook wiring left unchanged.
+[info]  Claude Code: re-pointed .claude/{skills,agents} at the plain-root canon.
+[info]  Update complete. Re-recorded ./.claude/harness-lock.json
+== exit: 0
+== $ ls .claude/update-log.md
+ls: cannot access '.claude/update-log.md': No such file or directory
+== $ ls *.bak* agents/*.bak*
+ls: cannot access '*.bak*': No such file or directory
+ls: cannot access 'agents/*.bak*': No such file or directory
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
