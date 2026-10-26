@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-10-20
+**Last updated**: 2026-10-26
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -8,6 +8,7 @@
 ## Board
 
 ### Todo
+- [ ] **T173** — AGENTS.md is the primary doctrine file; CLAUDE.md is only `@AGENTS.md` | common-infrastructure | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T173.md` | Depends on: T170 (edits `CLAUDE.md:65`; merge `main` first) | Registered 2026-10-26: user: "update the content from CLAUDE.md to AGENT.md and the CLAUDE.md will refer to AGENT.md only"; Claude Code reads AGENTS.md from v2.1.277 (installed 2.1.310; code.claude.com/docs/en/memory); D1 legacy file stays full, D2 pinned tests repointed (AskUserQuestion); D3 `@AGENTS.md` import, not a symlink; supersedes DDR-0006 primary-file choice (DDR owed). Branch `feat/t173-agents-md-primary` in `../wt-t173`.
 - [ ] **T162** — Online mode stops tracking `PROJECT_KANBAN.md` in git (the board copy is rewritten on every pull); local mode keeps tracking it | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T162.md` | Depends on: T155 | Registered 2026-10-19: user approved ("yes") the T155 agent's recommendation. /verify of T158 showed an online pull drops all 161 local `Txxx` rows from the board copy, so a tracked copy makes a diff on every pull moment. Must keep the merge gate and hooks reading a present file (pull runs before they read).
 - [ ] **T163** — MCP-only board setup warns that hook sync needs `LINEAR_API_KEY`, and a pull that fails for a missing key says so (not "board unreachable") | common-infrastructure | C1 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_T163.md` | Depends on: T155 | Registered 2026-10-19 from T155 Stage 4 P2: probed `connection: mcp` config → `pull failed: LINEAR_API_KEY is not set` rc=2, while `pull_moment.py wake` printed `board unreachable — using cache (0 unsynced)`.
 - [ ] **T143** — CI re-runs the Verification Command of every task a PR moves to Done | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T143.md` | Depends on: none | Registered 2026-10-16 from the improvement-list grilling + brainstorm (`BRAINSTORMING_LOG_harness-hardening.md`): reuses `lib/guide_sections.py`; fail-closed on a missing/placeholder block; `# ci: skip — <reason>` opt-out
