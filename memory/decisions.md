@@ -2452,3 +2452,12 @@ D2 pinned tests repointed to `AGENTS.md` / the T173 commit, none deleted (list i
 **Why**: Claude Code reads `AGENTS.md` natively from v2.1.277 (installed 2.1.310), so DDR-0006's premise — "`AGENTS.md` is auto-read by Codex and not by Claude Code" — no longer holds; one file now serves every CLI.
 **Supersedes**: DDR-0006's "`CLAUDE.md` stays primary" (T090). DDR owed — parked until the ADR/DDR MCP task lands.
 **Files**: AGENTS.md, CLAUDE.md, lib/harness-update.sh, scripts/validate.sh, scripts/smoke-install.sh, .cursor/rules/agent-base.mdc, docs/MULTI_AGENT.md, tests/test_agents_md_primary.py, tests/test_update_claude_md.sh
+
+## T174: Update settles all edited files with one plan-screen choice, and logs every run to `.claude/update-log.md` (2026-10-26)
+**Date**: 2026-10-26 · **Source**: user request ("Update for the auto-approve with the decision logs") + AskUserQuestion D1/D2 with previews
+**Decision**: When the Update plan lists edited files, `Proceed? [Y/n]` becomes `1) Ask me about each one / 2) Overwrite all of them (each backed up first) / 3) Keep all of them / 4) Cancel` (D1, user: "On the plan screen"). Every Update run prepends a dated entry to `.claude/update-log.md` (D2, user: "Every Update run"): kit versions, "Decided by", one line per edited file and removal, counts.
+No flag or env var selects an auto mode — ADR-0002 (`UPDATE_MODE=ask` is assigned when `lib/harness-update.sh` loads). No terminal keeps edits and exits 2, now with a log entry. Overwrite-all backs up first (T137); a failed backup keeps the file and prints its own message (`BACKUP_FAILED`), not "no interactive input". Choice 4 exits via `cancel_run`.
+The log refuses a symlink/non-file path, writes via `mktemp` in `.claude/` + `mv`, and holds paths/outcomes/counts only. Term: **update log** (glossary) — not the board's Decision Log.
+**Why**: per-file prompts do not scale to many edited files, and outcomes were printed to the screen only, so nobody could later see what an update did.
+**Open**: "N kit files you never edited — refreshed" also counts byte-identical files.
+**Files**: setup.sh, lib/harness-update.sh, tests/test_update_auto_approve.sh, tests/test_one_command_menu.sh, .github/workflows/ci.yml, site/index.html, README.md
