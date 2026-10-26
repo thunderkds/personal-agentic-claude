@@ -262,7 +262,7 @@ process_one_file() {
       _bk_err="$HARNESS_TEMP_DIR/.update-backup-err"
       if ! harness_backup_path "$_src" "$_dst" 2>"$_bk_err"; then
         cat "$_bk_err" >&2
-        UNRESOLVED=$((UNRESOLVED + 1))
+        BACKUP_FAILED=$((BACKUP_FAILED + 1))
         if [ -n "$_rec_hash" ]; then
           printf '%s\t%s\n' "$_rel" "$_rec_hash" >> "$_decisions"
         fi
@@ -302,7 +302,10 @@ process_one_file() {
 
 # ── Compare + update every MANIFEST file, recording final hashes ─────────────
 # Sets UNRESOLVED to the count of conflicts left unresolved due to no input.
+# BACKUP_FAILED counts files kept because their backup failed (T174); run_update
+# resets it, since process_claude_md adds to it after process_files.
 UNRESOLVED=0
+BACKUP_FAILED=0
 process_files() {
   _lock="$1"
   _list="$2"
@@ -866,6 +869,7 @@ run_update() {
   decisions="$HARNESS_TEMP_DIR/.update-decisions"
   processed="$HARNESS_TEMP_DIR/.update-processed"
   UPDATE_OUTCOMES="$HARNESS_TEMP_DIR/.update-outcomes"
+  BACKUP_FAILED=0
   : > "$decisions"; : > "$processed"; : > "$UPDATE_OUTCOMES"
 
   process_files "$_lock" "$_fresh_list" "$decisions" "$processed"
@@ -880,8 +884,13 @@ run_update() {
   reproject_harnesses "$_manifest"
   log_info "Update complete. Re-recorded $_lock"
 
+  if [ "$BACKUP_FAILED" -gt 0 ]; then
+    log_error "$BACKUP_FAILED file(s) could not be backed up, so they were kept as they are — see .claude/update-log.md."
+  fi
   if [ "$UNRESOLVED" -gt 0 ]; then
     log_error "$UNRESOLVED conflict(s) could not be resolved (no interactive input). Re-run setup.sh in a terminal and choose Update to resolve them."
+  fi
+  if [ "$BACKUP_FAILED" -gt 0 ] || [ "$UNRESOLVED" -gt 0 ]; then
     exit 2
   fi
   if [ "$SETTINGS_FAILED" -ne 0 ]; then
