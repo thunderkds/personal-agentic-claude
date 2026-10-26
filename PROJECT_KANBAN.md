@@ -8,7 +8,6 @@
 ## Board
 
 ### Todo
-- [ ] **T175** — Kit-arms experiment part 1: fixture app, 6 graded tasks, runner, pre-registered keep/cut rule (no paid runs) | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T175.md` | Depends on: none | Registered 2026-10-26: user: "the agent is good now, so the flow, or the architecture that we are building is waste … any thought related?" → measured comparison → "2, I want to have a full picture"; D1 3 arms (full/minimal/bare), D2 fixture app with 6 task kinds, D3 $60 cap (AskUserQuestion); D4 split build/run. Branch `feat/t175-kit-arms-fixture` in `../wt-t175`.
 - [ ] **T176** — Kit-arms experiment part 2: run 36 cells under the $60 cap, report against the frozen rule | common-infrastructure | C1 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T176.md` | Depends on: T175 (in main + user read RULE.md) | Registered 2026-10-26 with T175.
 - [ ] **T162** — Online mode stops tracking `PROJECT_KANBAN.md` in git (the board copy is rewritten on every pull); local mode keeps tracking it | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T162.md` | Depends on: T155 | Registered 2026-10-19: user approved ("yes") the T155 agent's recommendation. /verify of T158 showed an online pull drops all 161 local `Txxx` rows from the board copy, so a tracked copy makes a diff on every pull moment. Must keep the merge gate and hooks reading a present file (pull runs before they read).
 - [ ] **T163** — MCP-only board setup warns that hook sync needs `LINEAR_API_KEY`, and a pull that fails for a missing key says so (not "board unreachable") | common-infrastructure | C1 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_T163.md` | Depends on: T155 | Registered 2026-10-19 from T155 Stage 4 P2: probed `connection: mcp` config → `pull failed: LINEAR_API_KEY is not set` rc=2, while `pull_moment.py wake` printed `board unreachable — using cache (0 unsynced)`.
@@ -90,6 +89,7 @@
 
 
 ### Ready for Review
+- [ ] **T175** — Kit-arms experiment part 1: fixture app, 6 graded tasks, runner, pre-registered keep/cut rule (no paid runs) | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T175.md` | Depends on: none | Ready for Review 2026-10-26 @ `d2ff7c8`: fixture `tally` (424 lines, 33 tests), 6 tasks, oracles proven to discriminate, Docker sandbox per run, `--calibrate`, RULE.md frozen (`44b3107`, calibration amendment `e3affd5`); 58 tests, dry run 36 cells $0; Stage 4 P1s fixed by user decisions; `/verify` + user read of RULE.md/prompts pending. Registered 2026-10-26: user: "the agent is good now, so the flow, or the architecture that we are building is waste … any thought related?" → measured comparison → "2, I want to have a full picture"; D1 3 arms (full/minimal/bare), D2 fixture app with 6 task kinds, D3 $60 cap (AskUserQuestion); D4 split build/run. Branch `feat/t175-kit-arms-fixture` in `../wt-t175`.
 
 
 ### Done
