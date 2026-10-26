@@ -6,7 +6,11 @@ hooks), full (the installer's output) — N runs each, in fresh copies of the fi
 graders (oracles/) score each run; RULE.md pre-registers the keep/cut rule this script computes.
 
     python3 experiments/kit-arms/run_arms.py --dry-run --runs 2   # free: stub agent, real builds + graders
-    python3 experiments/kit-arms/run_arms.py --yes                # T176: real `claude -p`, costs money
+    python3 experiments/kit-arms/run_arms.py --calibrate --yes    # T176 step 1: 3 unscored runs, prints the budget
+    python3 experiments/kit-arms/run_arms.py --yes --estimate B   # T176 step 2: 36 scored runs, costs money
+
+Every real run executes `claude -p` inside `docker run --rm` (Dockerfile here) that mounts only its own
+arm copy (rw) and the Claude credentials file (ro).
 
 Cost safety: before every run, spent + --estimate must stay within --cap (default $60), else the run
 is not started; spend.json is rewritten after every run; --estimate is also each run's
@@ -18,7 +22,9 @@ import argparse
 import datetime as dt
 import importlib.util
 import json
+import math
 import os
+import secrets
 import shutil
 import signal
 import statistics
@@ -42,6 +48,11 @@ MINIMAL_HOOKS = ("pre_bash_block_unsafe_merge.py", "pre_tool_sensitive_path.py")
 DROP_ENV = ("CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT", "CLAUDE_PROJECT_DIR", "CLAUDE_ACTIVE_TASK", "CLAUDE_STEP_LIMIT")
 NOISE_PATHS = ("memory/event-trace/", ".claude/hooks/.state/")  # written by the kit's own hooks
 RUN_TIMEOUT = 1800
+CLAUDE_VERSION = "2.1.310"  # the host's native build; the image pins the same binary
+IMAGE = f"kit-arms-claude:{CLAUDE_VERSION}"
+CONTAINER_HOME = "/tmp/h"
+CALIBRATION_BUDGET = 10.0
+CALIBRATION_TASK = "task1"
 GIT_AUTHOR = ["-c", "user.name=Sam", "-c", "user.email=sam@example.com", "-c", "commit.gpgsign=false"]
 ASK_TEXT = "Do you want the summary sorted by amount (biggest first) or alphabetically by category?"
 DONE_TEXT = "Done. I made the change and the tests pass."
@@ -148,6 +159,45 @@ def claude_argv(prompt, model, estimate):
             "--allowedTools", ALLOWED_TOOLS, "--disallowedTools", DISALLOWED_TOOLS]
 
 
+def credentials_path():
+    """The file the host CLI logs in with: $CLAUDE_CONFIG_DIR/.credentials.json, else ~/.claude/."""
+    base = os.environ.get("CLAUDE_CONFIG_DIR")
+    return (Path(base) if base else Path.home() / ".claude") / ".credentials.json"
+
+
+def docker_argv(copy, prompt, model, estimate, name):
+    """AC 11: the run's container sees only its copy (rw, same path) and the credentials (ro)."""
+    copy = str(copy)
+    return ["docker", "run", "--rm", "--init", "--name", name, "--user", f"{os.getuid()}:{os.getgid()}",
+            "-e", f"HOME={CONTAINER_HOME}", "-w", copy,
+            "-v", f"{copy}:{copy}:rw",
+            "-v", f"{credentials_path()}:{CONTAINER_HOME}/.claude/.credentials.json:ro",
+            IMAGE, *claude_argv(prompt, model, estimate)]
+
+
+def build_image():
+    binary = Path(shutil.which("claude") or "claude").resolve()
+    if binary.name != CLAUDE_VERSION or not binary.is_file():
+        raise Refused(f"host claude resolves to {binary}, not a native {CLAUDE_VERSION} build; the image pins it")
+    with tempfile.TemporaryDirectory() as empty:
+        done = subprocess.run(["docker", "build", "-t", IMAGE, "-f", str(EXP / "Dockerfile"),
+                               "--build-context", f"claude-bin={binary.parent}",
+                               "--build-arg", f"CLAUDE_VERSION={CLAUDE_VERSION}", empty],
+                              capture_output=True, text=True, timeout=1800)
+    if done.returncode != 0:
+        raise Refused(f"docker build failed:\n{(done.stdout + done.stderr)[-2000:]}")
+
+
+def preflight():
+    """Real runs only: credentials to mount, docker, and the sandbox image (built once if missing)."""
+    if not credentials_path().is_file():
+        raise Refused(f"no credentials file at {credentials_path()} to mount into the sandbox")
+    if shutil.which("docker") is None:
+        raise Refused("docker is not installed; every real run executes in a container (AC 11)")
+    if subprocess.run(["docker", "image", "inspect", IMAGE], capture_output=True).returncode != 0:
+        build_image()
+
+
 def parse_result(stdout):
     for chunk in [stdout.strip()] + stdout.strip().splitlines()[::-1]:
         try:
@@ -181,7 +231,10 @@ def planted(task, arm, run):
     return ("reference" if good else None), DONE_TEXT
 
 
-def stub_agent(task, arm, run, copy):
+def stub_agent(task, arm, run, copy, argv):
+    """Dry run: takes the exact docker argv a real run would use, plants an outcome, returns canned JSON."""
+    if argv[:2] != ["docker", "run"] or IMAGE not in argv:
+        raise Refused(f"stub contract: expected the sandbox `docker run` argv, got {argv[:3]}")
     variant, text = planted(task, arm, run)
     if variant:
         apply_variant(task, variant, copy)
@@ -191,18 +244,21 @@ def stub_agent(task, arm, run, copy):
                                  "cache_read_input_tokens": 0, "cache_creation_input_tokens": 0}})
 
 
-def real_agent(prompt, copy, model, estimate, env):
-    """(status, result-or-None). status: ok | timeout | void (no result JSON)."""
-    try:  # own session: no /dev/tty for the agent, and a timeout can kill its whole process group
-        proc = subprocess.Popen(claude_argv(prompt, model, estimate), cwd=copy, env=env, stdin=subprocess.DEVNULL,
+def real_agent(prompt, copy, model, estimate, env, name=None):
+    """(status, result-or-None), the agent run in its sandbox container. status: ok | timeout | void."""
+    name = name or f"tally-run-{secrets.token_hex(4)}"
+    try:  # own session: no /dev/tty, and a timeout can kill the docker client's whole process group
+        proc = subprocess.Popen(docker_argv(copy, prompt, model, estimate, name), cwd=copy, env=env,
+                                stdin=subprocess.DEVNULL,
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, start_new_session=True)
     except OSError as err:
-        print(f"  could not start claude: {err}", file=sys.stderr)
+        print(f"  could not start docker: {err}", file=sys.stderr)
         return "void", None
     try:
         stdout, stderr = proc.communicate(timeout=RUN_TIMEOUT)
     except subprocess.TimeoutExpired:
         os.killpg(proc.pid, signal.SIGKILL)
+        subprocess.run(["docker", "kill", name], capture_output=True, env=env, timeout=120)  # --rm removes it
         proc.communicate()
         return "timeout", None
     result = parse_result(stdout)
@@ -289,6 +345,15 @@ def q2_verdict(minimal, full):
     return "the full kit's extra layers earn their place"
 
 
+def derive_budget(costs, spent, cap, scored_runs=36):
+    """RULE.md Calibration: budget = 2 x the highest calibration cost, rounded up to $0.50 (min $0.50);
+    expected spend of the scored runs = scored_runs x the highest cost; fits iff spent + expected <= cap."""
+    top = max(costs or [0.0])
+    budget = max(0.5, math.ceil(round(2 * top / 0.5, 6)) * 0.5)
+    expected = scored_runs * top
+    return {"highest": top, "budget": budget, "expected": expected, "fits": spent + expected <= cap}
+
+
 def verdicts(stats):
     missing = sum(s["expected"] - s["graded"] for s in stats.values())
     if missing:
@@ -349,7 +414,8 @@ def confirm(args, spent):
     if not sys.stdin.isatty():
         raise Refused("no terminal to confirm paid runs: re-run with --yes to start them unattended")
     try:
-        answer = input(f"Up to {len(TASKS) * len(ARMS) * args.runs} paid `claude -p` runs, cap ${args.cap:.2f} "
+        count = len(ARMS) if args.calibrate else len(TASKS) * len(ARMS) * args.runs
+        answer = input(f"Up to {count} paid `claude -p` runs, cap ${args.cap:.2f} "
                        f"(spent so far ${spent:.2f}). Continue? [y/N] ")
     except EOFError:
         answer = ""
@@ -364,18 +430,26 @@ def run(args):
     for repo in repos:
         if work_given and is_inside(work_given, repo):
             raise Refused(f"refusing: --work-dir {work_given} is inside {repo}; runs must happen outside it")
+    if args.estimate is None:
+        if not (args.dry_run or args.calibrate):
+            raise Refused("scored runs need --estimate <the per-run budget printed by --calibrate> "
+                          "(RULE.md Calibration)")
+        args.estimate = 3.0
+    budget = CALIBRATION_BUDGET if args.calibrate else args.estimate
     out.mkdir(parents=True, exist_ok=True)
     spend_file, runs_file = out / "spend.json", out / "runs.json"
     if args.dry_run:
-        spend_file.unlink(missing_ok=True)
-        runs_file.unlink(missing_ok=True)
+        for stale in (spend_file, runs_file, out / "calibration.json"):
+            stale.unlink(missing_ok=True)
     spent = json.loads(spend_file.read_text())["spent"] if spend_file.exists() else 0.0
     rows = json.loads(runs_file.read_text()) if runs_file.exists() else []
-    if not args.dry_run and spent + args.estimate > args.cap:
-        print(f"Stopped at the cap: spent ${spent:.2f} + next-run estimate ${args.estimate:.2f} would pass the "
+    if not args.dry_run and spent + budget > args.cap:
+        print(f"Stopped at the cap: spent ${spent:.2f} + next-run estimate ${budget:.2f} would pass the "
               f"${args.cap:.2f} cap. Nothing was run.")
         return 0
     confirm(args, spent)
+    if not args.dry_run:
+        preflight()
 
     skips = {repo: (os.path.relpath(out, repo) + "/" if is_inside(out, repo) else None) for repo in repos}
     baseline = {repo: porcelain(repo, skips[repo]) for repo in repos}
@@ -385,8 +459,12 @@ def run(args):
     try:
         templates = {arm: build_arm(arm, Path(tempfile.mkdtemp(dir=work)) / "tally", args.kit_repo) for arm in ARMS}
         (out / "patches").mkdir(exist_ok=True)
+        guard = (repos, skips, baseline)
+        if args.calibrate:
+            run_calibration(spent, templates, work, out, guard, args)
+            return 0
         rows = [r for r in rows if r["status"] != "void"]  # a void run (no result JSON) is re-run
-        spent, stopped = run_cells(rows, spent, templates, work, out, repos, skips, baseline, args)
+        spent, stopped = run_cells(rows, spent, templates, work, out, guard, args)
     finally:
         shutil.rmtree(work, ignore_errors=True)
     v = write_report(rows, out, args, spent, stopped)
@@ -394,7 +472,48 @@ def run(args):
     return 0
 
 
-def run_cells(rows, spent, templates, work, out, repos, skips, baseline, args):
+def check_isolation(guard, label):
+    repos, skips, baseline = guard
+    for repo in repos:
+        if porcelain(repo, skips[repo]) != baseline[repo]:
+            raise Breach(f"isolation breach: `git status` of {repo} changed during {label}; stopping")
+
+
+def save_spend(out, spent, cap):
+    save_json(out / "spend.json", {"spent": spent, "cap": cap,
+                                   "updated": dt.datetime.now().isoformat(timespec="seconds")})
+
+
+def run_calibration(spent, templates, work, out, guard, args):
+    """RULE.md Calibration: 3 unscored runs (task1 x each arm, --max-budget-usd 10) fix the per-run budget."""
+    rows = []
+    for arm in ARMS:
+        if spent + CALIBRATION_BUDGET > args.cap:
+            print(f"Stopped at the cap: spent ${spent:.2f} + ${CALIBRATION_BUDGET:.2f} would pass ${args.cap:.2f}.")
+            break
+        row = run_cell(CALIBRATION_TASK, arm, 1, templates[arm], work, out, args, CALIBRATION_BUDGET, scored=False)
+        spent = round(spent + row["cost"], 6)
+        rows.append(row)
+        save_json(out / "calibration.json", rows)
+        save_spend(out, spent, args.cap)
+        check_isolation(guard, f"calibration/{arm}")
+        print(f"  calibration {CALIBRATION_TASK} {arm:<7}: ${row['cost']:.2f}  {row['wall_s']:.0f}s  "
+              f"turns {row['turns']}  (spent ${spent:.2f})")
+    if len(rows) < len(ARMS):
+        print("Calibration incomplete: ask the user before any scored run (RULE.md Calibration).")
+        return
+    scored = len(TASKS) * len(ARMS) * args.runs
+    d = derive_budget([r["cost"] for r in rows], spent, args.cap, scored)
+    print(f"Calibration: highest run cost ${d['highest']:.2f} -> per-run budget ${d['budget']:.2f}. "
+          f"Expected spend of {scored} scored runs ${d['expected']:.2f} + ${spent:.2f} spent = "
+          f"${d['expected'] + spent:.2f}: " + ("fits" if d["fits"] else "does NOT fit") + f" the ${args.cap:.2f} cap.")
+    if d["fits"]:
+        print(f"Next: python3 experiments/kit-arms/run_arms.py --yes --estimate {d['budget']:.2f}")
+    else:
+        print("STOP: ask the user before any scored run (RULE.md Calibration).")
+
+
+def run_cells(rows, spent, templates, work, out, guard, args):
     """Interleaved order (run 1 of every task x arm, then run 2) so a cap stop leaves arms balanced."""
     done_ids = {(r["task"], r["arm"], r["run"]) for r in rows}
     for n in range(1, args.runs + 1):
@@ -406,22 +525,18 @@ def run_cells(rows, spent, templates, work, out, repos, skips, baseline, args):
                     print(f"Stopped at the cap: spent ${spent:.2f} + next-run estimate ${args.estimate:.2f} "
                           f"would pass the ${args.cap:.2f} cap.")
                     return spent, f"stopped at the ${args.cap:.2f} cap"
-                row = run_cell(task, arm, n, templates[arm], work, out, args)
+                row = run_cell(task, arm, n, templates[arm], work, out, args, args.estimate)
                 spent = round(spent + row["cost"], 6)
                 rows.append(row)
-                save_json(out / "spend.json", {"spent": spent, "cap": args.cap,
-                                               "updated": dt.datetime.now().isoformat(timespec="seconds")})
+                save_spend(out, spent, args.cap)
                 save_json(out / "runs.json", rows)
-                for repo in repos:
-                    if porcelain(repo, skips[repo]) != baseline[repo]:
-                        raise Breach(f"isolation breach: `git status` of {repo} changed during "
-                                     f"{task}/{arm}/run {n}; stopping")
+                check_isolation(guard, f"{task}/{arm}/run {n}")
                 print(f"  {task} {arm:<7} run {n}: {row['verdict']:<9} ${row['cost']:.2f}  "
                       f"{row['wall_s']:.0f}s  (spent ${spent:.2f})")
     return spent, ""
 
 
-def run_cell(task, arm, n, template, work, out, args):
+def run_cell(task, arm, n, template, work, out, args, budget, scored=True):
     folder = Path(tempfile.mkdtemp(dir=work))
     try:
         copy = folder / "tally"
@@ -430,26 +545,30 @@ def run_cell(task, arm, n, template, work, out, args):
             if is_inside(copy, repo):
                 raise Refused(f"refusing: run copy {copy} is inside {repo}")
         start = git(copy, "rev-parse", "HEAD").strip()
+        prompt, name = load_task(task)["prompt"], f"tally-run-{secrets.token_hex(4)}"
+        argv = docker_argv(copy, prompt, args.model, budget, name)
         t0 = time.monotonic()
         if args.dry_run:
-            status, result = "stub", parse_result(stub_agent(task, arm, n, copy))
+            status, result = "stub", parse_result(stub_agent(task, arm, n, copy, argv))
         else:
-            status, result = real_agent(load_task(task)["prompt"], copy, args.model, args.estimate, child_env(work))
+            status, result = real_agent(prompt, copy, args.model, budget, child_env(work), name)
         wall = time.monotonic() - t0
         result = result or {}
         cost = result.get("total_cost_usd")
         if cost is None:  # no result JSON: spend unknown, count the estimate (never under-count)
-            cost = 0.0 if args.dry_run else args.estimate
+            cost = 0.0 if args.dry_run else budget
         text = result.get("result") or ""
         # Proof the full kit's hooks ran inside the copy (its trace hook logs every tool call).
         trace = sum(len(f.read_text(errors="ignore").splitlines())
                     for f in (copy / "memory" / "event-trace").glob("*.jsonl")) if arm == "full" else None
-        graded = grade(task, copy, text)
-        stat, names = record_diff(copy, start, out / "patches" / f"{task}-{arm}-{n}.patch")
+        graded = grade(task, copy, text) if scored else {}  # calibration runs are never scored
+        prefix = "" if scored else "calibration-"
+        stat, names = record_diff(copy, start, out / "patches" / f"{prefix}{task}-{arm}-{n}.patch")
         return {"task": task, "arm": arm, "run": n, "status": status, "cost": float(cost),
                 "usage": result.get("usage"), "turns": result.get("num_turns"), "wall_s": round(wall, 1),
                 "subtype": result.get("subtype"), "is_error": result.get("is_error"), "final_text": text,
-                "diff_stat": stat, "files_changed": names, "kit_trace_lines": trace, **graded}
+                "diff_stat": stat, "files_changed": names, "kit_trace_lines": trace, "budget": budget,
+                "agent_argv": argv, **graded}
     finally:
         shutil.rmtree(folder, ignore_errors=True)
 
@@ -459,15 +578,19 @@ def main(argv=None):
     parser.add_argument("--dry-run", action="store_true", help="stub agent: no `claude -p`, $0")
     parser.add_argument("--runs", type=int, default=2, help="runs per task x arm cell (default 2)")
     parser.add_argument("--cap", type=float, default=60.0, help="total spend cap in USD (default 60)")
-    parser.add_argument("--estimate", type=float, default=3.0,
-                        help="per-run cost estimate in USD, also passed as --max-budget-usd (default 3)")
+    parser.add_argument("--estimate", type=float,
+                        help="per-run budget in USD (the cap check's estimate and --max-budget-usd); required for "
+                             "scored real runs: use the value --calibrate prints")
+    parser.add_argument("--calibrate", action="store_true",
+                        help=f"3 unscored runs ({CALIBRATION_TASK} x each arm, --max-budget-usd "
+                             f"{CALIBRATION_BUDGET:g}) that fix the per-run budget (RULE.md Calibration)")
     parser.add_argument("--model", default="sonnet", help="the same model for every arm (default sonnet)")
     parser.add_argument("--yes", action="store_true", help="start paid runs without asking")
     parser.add_argument("--work-dir", help="where run copies go (default: a new temp dir)")
     parser.add_argument("--out", help="results folder (default experiments/kit-arms/results[/dry-run])")
     parser.add_argument("--kit-repo", help="kit to install (default: the main checkout)")
     args = parser.parse_args(argv)
-    if args.runs < 1 or args.cap <= 0 or args.estimate <= 0:
+    if args.runs < 1 or args.cap <= 0 or (args.estimate is not None and args.estimate <= 0):
         parser.error("--runs, --cap and --estimate must be positive")
     try:
         return run(args)
