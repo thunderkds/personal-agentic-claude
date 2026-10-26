@@ -8,7 +8,6 @@
 ## Board
 
 ### Todo
-- [ ] **T174** — Update can overwrite or keep all edited files in one choice on the plan screen, and logs every decision to `.claude/update-log.md` | common-infrastructure | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T174.md` | Depends on: none | Registered 2026-10-26: user: "checking if we support 'Update for the auto-approve with the decision logs'" → not supported → "yes, plan it as a new task"; D1 plan-screen numbered list (no flag, ADR-0002), D2 log every Update run (AskUserQuestion with previews). Branch `feat/t174-update-auto-approve` in `../wt-t174`.
 - [ ] **T162** — Online mode stops tracking `PROJECT_KANBAN.md` in git (the board copy is rewritten on every pull); local mode keeps tracking it | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T162.md` | Depends on: T155 | Registered 2026-10-19: user approved ("yes") the T155 agent's recommendation. /verify of T158 showed an online pull drops all 161 local `Txxx` rows from the board copy, so a tracked copy makes a diff on every pull moment. Must keep the merge gate and hooks reading a present file (pull runs before they read).
 - [ ] **T163** — MCP-only board setup warns that hook sync needs `LINEAR_API_KEY`, and a pull that fails for a missing key says so (not "board unreachable") | common-infrastructure | C1 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_T163.md` | Depends on: T155 | Registered 2026-10-19 from T155 Stage 4 P2: probed `connection: mcp` config → `pull failed: LINEAR_API_KEY is not set` rc=2, while `pull_moment.py wake` printed `board unreachable — using cache (0 unsynced)`.
 - [ ] **T143** — CI re-runs the Verification Command of every task a PR moves to Done | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T143.md` | Depends on: none | Registered 2026-10-16 from the improvement-list grilling + brainstorm (`BRAINSTORMING_LOG_harness-hardening.md`): reuses `lib/guide_sections.py`; fail-closed on a missing/placeholder block; `# ci: skip — <reason>` opt-out
@@ -89,6 +88,7 @@
 
 
 ### Ready for Review
+- [ ] **T174** — Update can overwrite or keep all edited files in one choice on the plan screen, and logs every decision to `.claude/update-log.md` | common-infrastructure | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T174.md` | Depends on: none | Ready for Review 2026-10-26: branch `feat/t174-update-auto-approve` @ `67d0ae7`; new suite 90 passed (RED 35/49 at `75dcfa7`), full Verification Command exit 0, suite 1447 passed; code-review 0 P0/P1, P2 fixed (`67d0ae7`), security no findings; 3 mutants caught (agent M1, Supervisor M2/M3); site copy rendered 1280/390px; `/verify` pending (user-only). Registered 2026-10-26: user: "checking if we support 'Update for the auto-approve with the decision logs'" → not supported → "yes, plan it as a new task"; D1 plan-screen numbered list (no flag, ADR-0002), D2 log every Update run (AskUserQuestion with previews). Branch `feat/t174-update-auto-approve` in `../wt-t174`.
 
 
 ### Done

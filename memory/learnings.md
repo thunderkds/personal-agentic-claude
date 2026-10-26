@@ -2848,3 +2848,6 @@ highest ID anywhere, not only `PROJECT_KANBAN.md` on the checked-out branch. Ren
   turned 5 budget tests red. Before adding a hot-tier line, run
   `python3 -m pytest -q .claude/hooks/tests/test_memory_channel_and_budget.py::test_live_memory_md_is_within_budget_today`;
   if it has no headroom, keep the entry cold-tier only.
+- **`grep -Fxq "- path"` reads a pattern starting with `-` as an option and fails quietly** (T174). Seven assertions
+  in `tests/test_update_auto_approve.sh` passed or failed for the wrong reason until written `grep -Fxq -- "- …"`.
+  Any test matching Markdown list lines needs the `--`.
