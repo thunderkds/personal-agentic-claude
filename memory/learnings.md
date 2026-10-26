@@ -2840,3 +2840,6 @@ highest ID anywhere, not only `PROJECT_KANBAN.md` on the checked-out branch. Ren
 - **Headless frontend agents mis-report Startup reads and leave servers running** (T166–T168). Two rounds
   listed `PROJECT_SPEC.md`/`agents/frontend.md` that were only line-counted, and one left `http.server 8167`.
   The spawn prompt now asks for honest reads and for cleanup; still check `ps` after each run.
+- **Verify an instruction-file change with tool-less headless runs plus a non-import control** (T173). Ask `claude -p` (all tools
+  disallowed) a question only the moved text answers, in a scratch install. A control whose `CLAUDE.md` holds the backticked
+  `` `@AGENTS.md` `` (text, not an import) must answer UNKNOWN; without that control a correct answer could come from anywhere.
