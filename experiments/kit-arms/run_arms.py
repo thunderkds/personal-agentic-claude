@@ -20,6 +20,7 @@ import importlib.util
 import json
 import os
 import shutil
+import signal
 import statistics
 import subprocess
 import sys
@@ -192,17 +193,21 @@ def stub_agent(task, arm, run, copy):
 
 def real_agent(prompt, copy, model, estimate, env):
     """(status, result-or-None). status: ok | timeout | void (no result JSON)."""
-    try:
-        done = subprocess.run(claude_argv(prompt, model, estimate), cwd=copy, env=env, stdin=subprocess.DEVNULL,
-                              capture_output=True, text=True, timeout=RUN_TIMEOUT)
-    except subprocess.TimeoutExpired:
-        return "timeout", None
+    try:  # own session: no /dev/tty for the agent, and a timeout can kill its whole process group
+        proc = subprocess.Popen(claude_argv(prompt, model, estimate), cwd=copy, env=env, stdin=subprocess.DEVNULL,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, start_new_session=True)
     except OSError as err:
         print(f"  could not start claude: {err}", file=sys.stderr)
         return "void", None
-    result = parse_result(done.stdout)
+    try:
+        stdout, stderr = proc.communicate(timeout=RUN_TIMEOUT)
+    except subprocess.TimeoutExpired:
+        os.killpg(proc.pid, signal.SIGKILL)
+        proc.communicate()
+        return "timeout", None
+    result = parse_result(stdout)
     if result is None:
-        print(f"  claude exited {done.returncode} without a result: {done.stderr.strip()[-500:]}", file=sys.stderr)
+        print(f"  claude exited {proc.returncode} without a result: {stderr.strip()[-500:]}", file=sys.stderr)
     return ("ok" if result else "void"), result
 
 
@@ -374,20 +379,16 @@ def run(args):
 
     skips = {repo: (os.path.relpath(out, repo) + "/" if is_inside(out, repo) else None) for repo in repos}
     baseline = {repo: porcelain(repo, skips[repo]) for repo in repos}
-    own_work = work_given is None or not work_given.exists()
-    work = work_given or Path(tempfile.mkdtemp())
-    work.mkdir(parents=True, exist_ok=True)
+    if work_given:
+        work_given.mkdir(parents=True, exist_ok=True)
+    work = Path(tempfile.mkdtemp(dir=work_given))  # ours alone; removed whole at the end
     try:
         templates = {arm: build_arm(arm, Path(tempfile.mkdtemp(dir=work)) / "tally", args.kit_repo) for arm in ARMS}
         (out / "patches").mkdir(exist_ok=True)
         rows = [r for r in rows if r["status"] != "void"]  # a void run (no result JSON) is re-run
         spent, stopped = run_cells(rows, spent, templates, work, out, repos, skips, baseline, args)
     finally:
-        if own_work:
-            shutil.rmtree(work, ignore_errors=True)
-        else:
-            for child in work.iterdir():
-                shutil.rmtree(child, ignore_errors=True)
+        shutil.rmtree(work, ignore_errors=True)
     v = write_report(rows, out, args, spent, stopped)
     print(f"Report: {out / 'report.md'}  ({len(rows)} runs, spend ${spent:.2f}, rule complete: {v['complete']})")
     return 0

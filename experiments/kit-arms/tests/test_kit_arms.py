@@ -9,6 +9,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -169,6 +170,18 @@ def test_sc4_dry_run_builds_grades_reports_and_never_calls_claude(stub_env, tmp_
     assert not (tmp_path / "work").exists() or not any((tmp_path / "work").iterdir())
 
 
+def test_existing_work_dir_keeps_files_the_runner_did_not_create(stub_env, tmp_path):
+    env, marker = stub_env
+    work = tmp_path / "work"
+    work.mkdir()
+    (work / "mine.txt").write_text("not the runner's")
+    done = run_runner(["--dry-run", "--runs", "1", "--work-dir", str(work), "--out", str(tmp_path / "out")],
+                      env, tmp_path)
+    assert done.returncode == 0, done.stdout + done.stderr
+    assert sorted(p.name for p in work.iterdir()) == ["mine.txt"]
+    assert not marker.exists()
+
+
 # ---------------------------------------------------------------- SC 5-7: cost and isolation guards
 
 def test_sc5_cap_stops_before_the_next_run(stub_env, tmp_path):
@@ -293,3 +306,43 @@ def test_rule_is_incomplete_when_runs_are_missing(ra):
     stats = {a: {"score": 6, "unsafe": 0, "graded": 12, "expected": 12} for a in ra.ARMS}
     stats["full"]["graded"] = 11
     assert ra.verdicts(stats) == {"complete": False, "missing": 1}
+
+
+# ---------------------------------------------------------------- real-mode agent path, against PATH stubs
+
+def stub_claude(tmp_path, monkeypatch, body):
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    (bin_dir / "claude").write_text("#!/bin/sh\n" + body)
+    (bin_dir / "claude").chmod(0o755)
+    monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ['PATH']}")
+    return dict(os.environ)
+
+
+def test_real_agent_parses_the_result_json(ra, tmp_path, monkeypatch):
+    env = stub_claude(tmp_path, monkeypatch, """echo '{"type":"result","result":"hi?","total_cost_usd":0.42,"num_turns":3}'\n""")
+    status, result = ra.real_agent("p", tmp_path, "sonnet", 1.0, env)
+    assert status == "ok" and result["total_cost_usd"] == 0.42
+
+
+def test_real_agent_without_result_is_void(ra, tmp_path, monkeypatch):
+    env = stub_claude(tmp_path, monkeypatch, "echo 'API Error: overloaded' >&2\nexit 1\n")
+    assert ra.real_agent("p", tmp_path, "sonnet", 1.0, env) == ("void", None)
+
+
+def test_real_agent_timeout_kills_the_whole_process_group(ra, tmp_path, monkeypatch):
+    pid_file = tmp_path / "child.pid"
+    env = stub_claude(tmp_path, monkeypatch, f"sleep 60 &\necho $! > '{pid_file}'\nwait\n")
+    monkeypatch.setattr(ra, "RUN_TIMEOUT", 1)
+    started = time.monotonic()
+    assert ra.real_agent("p", tmp_path, "sonnet", 1.0, env) == ("timeout", None)
+    assert time.monotonic() - started < 15, "the runner waited for the agent's children to finish on their own"
+    child = int(pid_file.read_text())
+    for _ in range(50):
+        try:
+            os.kill(child, 0)
+        except ProcessLookupError:
+            break
+        time.sleep(0.1)
+    else:
+        pytest.fail(f"grandchild {child} still running after the timeout")
