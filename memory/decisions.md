@@ -2440,3 +2440,15 @@ local → `reports/` HTML page via `thinking-report session=resolution` (user: "
 both → one line in the guide's optional `## Questions Log`.
 **Terms**: Citation (not "evidence" — that is the Evidence table), Fact question / Choice question (not "intent" — that is Stage 2's restated requirement), Scanner. Added to `PROJECT_SPEC.md` glossary.
 **Why**: two scanners with the same prompt make the same mistake, so areas differ; a Choice question answered by scanners is a guess (Ask vs. Guess). Option C's hook rejected: completion signals are unreliable (T044). No DDR: ADR/DDR docs are parked.
+
+## T173: AGENTS.md is the doctrine file; CLAUDE.md is only the import `@AGENTS.md` (2026-10-26)
+**Date**: 2026-10-26 · **Source**: user request + AskUserQuestion D1/D2; Claude Code docs `code.claude.com/docs/en/memory` § AGENTS.md
+**Decision**: The full Supervisor doctrine moves verbatim from `CLAUDE.md` to `AGENTS.md`; `CLAUDE.md` is exactly `@AGENTS.md\n` (user: "update the content from CLAUDE.md to AGENT.md and the CLAUDE.md will refer to AGENT.md only").
+D3 import, not a symlink: the docs say the Edit/Write tools refuse to write through a symlink, and Windows clones check a symlink out as a one-line text file.
+D1 `CLAUDE_LEGACY.md` stays a full file (user: "Leave legacy as is"). Consequence: a legacy install still receives the new-project `AGENTS.md` through `MANIFEST`, so Codex there reads new-project doctrine; Claude Code there reads the legacy `CLAUDE.md` only (default `claude-md-or-agents-md`).
+D2 pinned tests repointed to `AGENTS.md` / the T173 commit, none deleted (list in `tasks/TASK_REVIEW_T173.md`).
+`update.sh`: `resolve_claude_md_source` also maps the pre-T173 heading `# Claude Project Supervisor Guidelines` to source `CLAUDE.md` on an old lock, because the new upstream first line is `@AGENTS.md`.
+`AGENTS.md` keeps a short non-Claude CLI section (what Codex/Cursor cannot enforce) carried over from the old thin adapter.
+**Why**: Claude Code reads `AGENTS.md` natively from v2.1.277 (installed 2.1.310), so DDR-0006's premise — "`AGENTS.md` is auto-read by Codex and not by Claude Code" — no longer holds; one file now serves every CLI.
+**Supersedes**: DDR-0006's "`CLAUDE.md` stays primary" (T090). DDR owed — parked until the ADR/DDR MCP task lands.
+**Files**: AGENTS.md, CLAUDE.md, lib/harness-update.sh, scripts/validate.sh, scripts/smoke-install.sh, .cursor/rules/agent-base.mdc, docs/MULTI_AGENT.md, tests/test_agents_md_primary.py, tests/test_update_claude_md.sh
