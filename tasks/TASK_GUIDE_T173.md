@@ -85,6 +85,8 @@ User decisions (AskUserQuestion, 2026-10-26):
 | 8 | Tooling reads the doctrine where it now lives: `scripts/validate.sh` check 3 (path references resolve) and check 4 (mandatory folders) and `scripts/test-claude-md-refs.sh` read `AGENTS.md`. A missing path referenced in `AGENTS.md` fails `validate.sh`. | the content moved |
 | 9 | Shipped pointers to a doctrine section say `AGENTS.md`: in `agents/`, `skills/`, `templates/`, `docs/claude-md/`, `site/`, `README.md`, every text that sends the reader to a section of the doctrine (e.g. "CLAUDE.md's Response Standard", "see CLAUDE.md for the operational commands") names `AGENTS.md`. A text about the file `CLAUDE.md` itself (installer, the import) keeps the name. | a pointer into a one-line file looks live and is not (T085 failure class) |
 | 10 | Negative: `CLAUDE_LEGACY.md` is byte-identical to the branch base; no files in the Out-of-scope list change; no test assertion is deleted (each repoint listed before → after). | D1, D2 |
+| 11 | Amendment 2026-10-26 (user: "did you update the README and guide page for this update" → "go ahead"): `site/index.html` describes the new layout everywhere. (a) Repository layout: the `AGENTS.md` row says it is the full doctrine (not "Provider adapter for Codex"), and a `CLAUDE.md` row says it holds only the import `@AGENTS.md`. (b) Install variants: `1) New project` names `CLAUDE.md` = `@AGENTS.md` + the full `AGENTS.md`, not `CLAUDE.md` alone. No layout, CSS or markup-structure change. | AC 9 — the site is a shipped pointer surface |
+| 12 | The `<h2>Skills (N)</h2>` heading and the quick-reference `N skills` link both equal the number of `skills/*/` folders (31 today; T170 updated only the quick reference). A new test in `tests/test_site_content.py` fails if either count disagrees with the folder count. | found at T173 review; same page |
 
 ---
 
@@ -101,6 +103,7 @@ User decisions (AskUserQuestion, 2026-10-26):
 | 5 | `AGENTS.md` with one referenced path removed | `validate.sh` exits non-zero naming the path | automated |
 | 6 | Grep of shipped dirs for a doctrine-section pointer to `CLAUDE.md` | zero hits | automated test |
 | 7 | Headless `claude -p` in a scratch install | correct Gate 5 title, no Read of `AGENTS.md` in the tool log | Stage 5 `/verify` (live agent run) |
+| 8 | Built site, headless Chrome 1280px and 390px | AC 11/12 text visible, no overflow; heading reads `Skills (31)` | Supervisor screenshot + `tests/test_site_content.py` |
 
 ### Verification Command (exact, runnable)
 
@@ -197,3 +200,4 @@ New `tests/test_agents_md_primary.py` for AC 1, 2, 6, 7, 9, 10 (written first, R
 ---
 
 ## Questions Log
+- 2026-10-26 Is the guide page (`site/index.html`) fully updated for T173? → No: Repository layout `AGENTS.md` row, Install variants line 497, and `Skills (30)` heading (T170 leftover) were stale; added AC 11/12, user: "go ahead".
