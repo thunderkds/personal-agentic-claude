@@ -2851,3 +2851,9 @@ highest ID anywhere, not only `PROJECT_KANBAN.md` on the checked-out branch. Ren
 - **`grep -Fxq "- path"` reads a pattern starting with `-` as an option and fails quietly** (T174). Seven assertions
   in `tests/test_update_auto_approve.sh` passed or failed for the wrong reason until written `grep -Fxq -- "- …"`.
   Any test matching Markdown list lines needs the `--`.
+- **Mutation-testing an isolation guard can break the isolation it guards** (T175). The mutant with the cwd
+  guard removed created `kit-arms-work-should-not-exist/` inside the main checkout. Run such mutants against
+  a throwaway repo, never the real one.
+- **`communicate()` after `proc.kill()` blocks until grandchildren close the pipes** (T175). A timed-out
+  `claude -p` left children holding stdout, so the runner hung. Start agents with `start_new_session=True`
+  and kill the group with `os.killpg`; test that the timeout returns in seconds.
