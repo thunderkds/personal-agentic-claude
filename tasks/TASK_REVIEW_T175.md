@@ -33,8 +33,15 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured by common-infrastructure before the first implementation commit (worktree `/home/hungnguyenhuu/workspace/pets/wt-t175`):
+
+```
+2026-10-26T07:52:26Z
+$ ls experiments
+ls: cannot access 'experiments': No such file or directory
+$ git log --oneline -1
+ac257ad plan(T175,T176): kit-arms experiment — fixture + graders + pre-registered rule (T175), 36 paid runs under $60 (T176); D1 3 arms, D2 fixture, D3 cap, D4 split
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
