@@ -18,7 +18,7 @@
 | Verification command run | ☑ pass | Run 2026-10-26T14:56:45Z at `f66550d` (agent), tail: `task6 full    run 2: fail      $0.00  0s  (spent $0.00)` / `Report: /tmp/kit-arms-r2-dry/report.md  (36 runs, spend $0.00, rule complete: True)` / `0` (RULE.md diff vs `e3affd5`: 0 lines). Dry run: 36 rows, turns_used 1/2/3 = 12/12/12, replies used 12 per arm, spend $0.00. |
 | Negative cases hold | ☑ pass | Finished change without trailing `?` gets no reply; missing `session_id` ends the run after turn 1 and counts the turn's budget; never-finishing run stops at 3 turns even when replies.json holds 3 replies; spent 22.5 + 3 x $1.00 > $25 stops before any run with no docker call; grade2 fails `guessed-B`, untouched fixture, and asked-without-change. Main checkout `git status --porcelain` identical before and after the verification command; `docker ps -a --filter name=tally-run -q` = 0. Round 1 frozen paths: `git diff 504eab0 -- experiments/kit-arms/{RULE.md,fixture,tasks,oracles,arms,Dockerfile,results} ':!experiments/kit-arms/oracles/task4/grade2.py'` = 0 lines at `e579d5d`; the only change under `oracles/` is the new file `oracles/task4/grade2.py`. |
 | verify | ☐ pass / ☐ fail / ☐ N/A | (user-only; Supervisor) |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | (Stage 4 reviewer) Affected set: `experiments/kit-arms/run_arms.py`, `replies.json`, `oracles/task4/grade2.py`, `RULE-2.md`, `tests/test_kit_arms.py`. No kit file touched. |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | (Stage 4, Supervisor, 2026-10-26, diff `c92bf96..0b002b6`) Affected set: `experiments/kit-arms/run_arms.py`, `replies.json`, `oracles/task4/grade2.py`, `RULE-2.md`, `tests/test_kit_arms.py`. No kit file touched. |
 | Full smoke suite still green (no regression) | ☑ pass | All 58 round-1 kit-arms tests still pass inside the 74 (round-1 `claude_argv`/`docker_argv` output unchanged when `home` is not given). Kit suites not run: no kit file changed. |
 | **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | No UI: Python runner and data files only. |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | No UI: Python runner and data files only. |
@@ -61,3 +61,22 @@ HEAD f66550d
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
+
+---
+
+## Stage 4 — code-review + security (Supervisor, 2026-10-26)
+
+Scope: `git diff c92bf96..HEAD -- experiments/kit-arms`. Lane: `lane: C2, 5 files, 539 lines, EXCEEDS (lines 539 > 500)` (warn-only: 209 of the lines are tests). Entry point `run_arms.py --followup` present. Startup reads: complete (role guide arrived as the system prompt).
+
+| Sev | File | Finding | Conf | Action |
+|---|---|---|---|---|
+| P0 | — | None. | — | — |
+| P1 | — | None. | — | — |
+| P2 | `run_arms.py` `followup_cell` | Validity check 3 (`--resume` finds the session) cannot be tested with the stub; a wrong session-store path would only show during the paid batch. | 75 | Before the batch, one tiny real resume check (~$0.05, needs the user's go): turn 1 "remember the word X", turn 2 `--resume` "what was the word?", same per-run HOME. |
+| P3 | `run_arms.py` `tree_differs` | Duplicates `oracles/task4/grade.py`'s `tree_differs`; grade.py is frozen, so the copy is acceptable. | 100 | None. |
+| P3 | TASK_GUIDE AC 6 command | `--out results/round2` resolves against the cwd; from the repo root it lands outside `experiments/kit-arms/`. | 100 | Run the batch without `--out` (default is `experiments/kit-arms/results/round2/`). |
+
+Security (Medium risk; manual pass over the same diff, as for T170): the only new surface is the per-run HOME mount. It is a fresh temp directory next to the copy, never the real HOME; the credentials stay `:ro`; `--user 1000:1000`; the directory is removed in `run_cell`'s `finally`. SC4 asserts the mount list is exactly copy rw + run-HOME rw + credentials ro. No findings.
+
+Verdict: no P0/P1, 0 fixes applied. Ready for the user's go on the paid batch.
+
