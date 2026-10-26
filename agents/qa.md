@@ -124,4 +124,5 @@ Status: [in-progress | ready-for-review | blocked]
 Verdict: [pass | fail] — [evidence]
 Changed files: [list]
 Blockers / notes: [any]
+Question (if blocked): [fact|choice] <question>
 ```

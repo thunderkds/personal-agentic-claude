@@ -2429,3 +2429,14 @@ companion cards, easy-verifier-mcp (`id="verifier"` kept for old links) and easy
 came from Supervisor screenshots, not tests — layout claims need a look at 1280px and 375px. T165/T166 passed
 /verify; for T167/T168 the user waived /verify ("no need to verify, mark done") — recorded as N/A, not pass.
 **Files**: site/index.html, tests/test_site_content.py, tests/test_docs_t151.py
+
+## T170: a confused Fact question is answered from a Citation or by 2 independent scanners; a Choice question goes to the user (2026-10-20)
+**Date**: 2026-10-20 · **Source**: `brainstorming` Option B + `grill-with-docs` on `BRAINSTORMING_LOG_confusion-resolution.md`
+**Decision**: New `resolve-question` skill, run by the Supervisor (sub-agents have no Agent tool; they report `Status: blocked` + `Question:`).
+Choice question → user at once. Fact question → Supervisor answers if it can give a Citation (user: "if supervisor go the answer with evidence, its good for make the choice"),
+else 2 read-only `Explore` scanners (3 for Medium/High risk), each on a distinct area; accepted only when ≥2 agree with Citations, else HITL.
+Log: online → `board_sync.py push comment <ID> question` (+ `decide` when it settles a choice) (user: "send the logs, decision as comment to linear");
+local → `reports/` HTML page via `thinking-report session=resolution` (user: "as HTML page is oke, and refer the link to the task guide also");
+both → one line in the guide's optional `## Questions Log`.
+**Terms**: Citation (not "evidence" — that is the Evidence table), Fact question / Choice question (not "intent" — that is Stage 2's restated requirement), Scanner. Added to `PROJECT_SPEC.md` glossary.
+**Why**: two scanners with the same prompt make the same mistake, so areas differ; a Choice question answered by scanners is a guess (Ask vs. Guess). Option C's hook rejected: completion signals are unreliable (T044). No DDR: ADR/DDR docs are parked.

@@ -2835,6 +2835,8 @@ highest ID anywhere, not only `PROJECT_KANBAN.md` on the checked-out branch. Ren
   Drafting `TASK_GUIDE_T168.md` in the session scratchpad put a T168 row on the *main checkout's* board.
   It also registers on the main checkout while the real guide lives in a worktree (T166, T167).
   After writing a guide, check `git -C <main> status` and move the row to the branch's board.
+  Before discarding such a main-checkout row, check the branch board holds it (T171/T172, 2026-10-26:
+  the rows existed only on main; the guides were already on their branches).
 - **Headless frontend agents mis-report Startup reads and leave servers running** (T166–T168). Two rounds
   listed `PROJECT_SPEC.md`/`agents/frontend.md` that were only line-counted, and one left `http.server 8167`.
   The spawn prompt now asks for honest reads and for cleanup; still check `ps` after each run.
