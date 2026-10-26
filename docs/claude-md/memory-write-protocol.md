@@ -1,6 +1,6 @@
 # Memory Write Protocol
 
-> Extracted from `CLAUDE.md` — full detail. See `CLAUDE.md` for the pointer back to this file.
+> Extracted from `AGENTS.md` — full detail. See `AGENTS.md` for the pointer back to this file.
 
 - **Writer**: Supervisor only. Sub-agents never write to memory directly.
 - **Hot tier** (`memory/MEMORY.md`): ≤50,000 characters. Supervisor-curated index. One-line summaries + links to cold files. Each spawn prompt carries its task's **memory slice** (`craft-spawn-prompt`'s `memory_slice.py`: the index lines naming the task's files, dependencies or ID); the whole file is not pasted, and the agent reads `memory/MEMORY.md` in full only if its work reaches something the slice does not cover.

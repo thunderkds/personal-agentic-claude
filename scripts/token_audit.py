@@ -28,7 +28,7 @@ DEFAULT_TRACE_DIR = os.path.join(ROOT, "memory", "event-trace")
 DEFAULT_REPORT_PATH = os.path.join(ROOT, "reports", "token-audit_2026-07-21.md")
 WINDOW_DATE = "2026-07-21"
 
-# Skill -> Token Audit Log `event` tag, per CLAUDE.md's `## Skills vs Agents`
+# Skill -> Token Audit Log `event` tag, per AGENTS.md's `## Skills vs Agents`
 # stage index. `wake` is handled separately as the literal `cold-start` event.
 STAGE_MAP = {
     "brainstorming": "stage-0.5",

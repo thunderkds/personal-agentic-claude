@@ -49,7 +49,7 @@ ROOT = Path(__file__).resolve().parents[3]
 # downstream repo. Enumerated explicitly rather than globbed, so adding a new
 # contract location is a deliberate act.
 SHIPPING_FILES = [
-    "CLAUDE.md",
+    "AGENTS.md",  # T173: the doctrine moved here from CLAUDE.md (now the import @AGENTS.md)
     "CLAUDE_LEGACY.md",
     "README.md",
     "setup.sh",

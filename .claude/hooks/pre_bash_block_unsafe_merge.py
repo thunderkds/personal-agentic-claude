@@ -255,7 +255,7 @@ UNCHECKED_PASS_PATTERN = re.compile(r"☐\s*pass\b", re.IGNORECASE)
 # `python3 "$CLAUDE_PROJECT_DIR"/.claude/hooks/...`. But since T064 the Evidence
 # table lives in `tasks/TASK_REVIEW_Txxx.md`, which the agent creates **in its
 # worktree, on its task branch** — Stage 3 is worktree-isolated by mandate
-# (`CLAUDE.md`), so until the branch merges that file does not exist in the main
+# (`AGENTS.md`), so until the branch merges that file does not exist in the main
 # checkout at all. Every worktree-isolated task therefore read as
 # `(no evidence row)`; three consecutive sessions paid for it by hand-landing the
 # review file on the integration branch before merging.

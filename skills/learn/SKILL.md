@@ -116,7 +116,7 @@ Scan all active LRs for pattern overlap (same domain area / recurring behaviour 
 
 > "Pattern detected across LR-NNNN and LR-MMMM: [shared pattern]. Want me to draft a `learn-[slug]` skill stub that encodes this pattern permanently?"
 
-**On user approval only**: draft a `SKILL.md` stub per `templates/SKILL_template.md`, output it as a fenced markdown code block, and instruct: "Save this as `skills/learn-[slug]/SKILL.md` and register it in CLAUDE.md."
+**On user approval only**: draft a `SKILL.md` stub per `templates/SKILL_template.md`, output it as a fenced markdown code block, and instruct: "Save this as `skills/learn-[slug]/SKILL.md` and register it in AGENTS.md."
 
 **Never write the file automatically** — the promotion step outputs a code block and stops; the Write tool must not be called for the stub. If no overlap, skip silently.
 

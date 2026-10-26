@@ -185,6 +185,7 @@ def test_ac8_role_guide_report_format_has_exactly_one_question_line(role):
 
 # AC 9 -------------------------------------------------------------------------------------
 def test_ac9_claude_md_lists_skill_on_cross_cutting_line():
-    lines = [l for l in (ROOT / "CLAUDE.md").read_text(encoding="utf-8").splitlines()
+    # T173: the doctrine moved from CLAUDE.md to AGENTS.md (CLAUDE.md is the import @AGENTS.md).
+    lines = [l for l in (ROOT / "AGENTS.md").read_text(encoding="utf-8").splitlines()
              if "Cross-cutting (any stage" in l]
     assert len(lines) == 1 and "`resolve-question`" in lines[0]

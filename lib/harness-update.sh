@@ -289,6 +289,11 @@ process_files() {
 # compares CLAUDE.md's first line against each candidate's first line in the
 # fetched temp clone. Sets CLAUDE_MD_SOURCE to the winning filename, or
 # "conflict" when neither/both match — never guessed.
+# Since T173 upstream CLAUDE.md is the one-line import "@AGENTS.md", so an
+# untouched pre-T173 install (doctrine still in CLAUDE.md) no longer shares its
+# first line. That old heading also identifies CLAUDE.md (T173 AC 5c); it is
+# not CLAUDE_LEGACY.md's heading, so it cannot make both candidates match.
+PRE_T173_CLAUDE_MD_HEADING="# Claude Project Supervisor Guidelines"
 CLAUDE_MD_SOURCE=""
 resolve_claude_md_source() {
   _lock="$1"
@@ -316,6 +321,7 @@ resolve_claude_md_source() {
     _cand_path="$HARNESS_TEMP_DIR/$_cand"
     [ -f "$_cand_path" ] || continue
     _cand_first=$(head -n1 "$_cand_path")
+    if [ "$_cand" = CLAUDE.md ] && [ "$_dst_first" = "$PRE_T173_CLAUDE_MD_HEADING" ]; then _cand_first="$_dst_first"; fi
     if [ "$_dst_first" = "$_cand_first" ]; then
       if [ -n "$_match" ]; then
         CLAUDE_MD_SOURCE="conflict"

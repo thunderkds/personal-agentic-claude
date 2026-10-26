@@ -1,5 +1,7 @@
 #!/bin/sh
 # test-claude-md-refs.sh — reference-resolution + scope-guard test for CLAUDE.md (T039).
+# Since T173 the doctrine lives in AGENTS.md (CLAUDE.md is the one-line import `@AGENTS.md`), so
+# every check reads AGENTS.md; BASELINE_REF predates T173 and is still read as CLAUDE.md.
 #
 # Validates that the `## Skills vs Agents` dedup did not break any live reference and
 # stayed within the agreed scope bounds. Checks (AC numbers from
@@ -36,7 +38,7 @@
 set -eu
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-CLAUDE_MD="$ROOT/CLAUDE.md"
+CLAUDE_MD="$ROOT/AGENTS.md"
 BASELINE_REF="${BASELINE_REF:-99940b8}"
 FAIL=0
 
@@ -50,7 +52,7 @@ pass() {
 }
 
 if [ ! -f "$CLAUDE_MD" ]; then
-  printf 'test-claude-md-refs: ERROR — CLAUDE.md not found at %s\n' "$CLAUDE_MD" >&2
+  printf 'test-claude-md-refs: ERROR — AGENTS.md not found at %s\n' "$CLAUDE_MD" >&2
   exit 1
 fi
 

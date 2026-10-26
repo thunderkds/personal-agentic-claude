@@ -177,7 +177,7 @@ Check every claim in the draft against a source, not against plausibility:
 Registration checklist for any new skill:
 - [ ] Folder name matches `name:` frontmatter exactly
 - [ ] Frontmatter satisfies *Agent Skills Spec Conformance* above — verified by `python3 -m pytest .claude/hooks/tests/test_skill_spec_conformance.py`, not by re-deriving the rules
-- [ ] Added to the custom-skill table in `CLAUDE.md`
+- [ ] Added to the custom-skill table in `AGENTS.md`
 - [ ] One-liner added to `memory/MEMORY.md` hot tier
 - [ ] `description` uses trigger phrasing (model-invoked) or human summary (user-invoked)
 

@@ -11,6 +11,9 @@
 #     (T114: re-running on an installed project now asks first; the no-terminal
 #     default is Update, which keeps edits — see tests/test_one_command_menu.sh)
 #   - no $SUPERVISOR_PATH / ~/.supervisor directory is created or required
+#   - T173: installing the REAL kit (this checkout's HEAD), new-project mode gives
+#     CLAUDE.md == "@AGENTS.md" and AGENTS.md == the kit's full doctrine; legacy mode
+#     gives CLAUDE.md == CLAUDE_LEGACY.md byte-for-byte
 #
 # Runs non-interactively: stdin from /dev/null and no terminal (the suite detaches
 # itself, tests/lib/pty.sh), so setup.sh takes its printed safe defaults.
@@ -259,6 +262,37 @@ if grep -q 'STALE CONTENT FROM OLD INSTALL' "$TARGET4/.claude/skills.bak/brainst
   pass "test4: the stale directory was preserved at .claude/skills.bak, not deleted"
 else
   fail "test4: stale content was not preserved at .claude/skills.bak"
+fi
+
+# ── test5 (T173): the real kit delivers the CLAUDE.md -> AGENTS.md import pair ──
+# Clones this checkout's HEAD (file://$REPO_ROOT), so it compares against HEAD's
+# committed files, never the working tree.
+kit_file() { git -C "$REPO_ROOT" show "HEAD:$1"; }
+TARGET5="$WORK/target5-new"
+mkdir -p "$TARGET5" && git -C "$TARGET5" init -q
+( cd "$TARGET5" && SUPERVISOR_REPO="file://$REPO_ROOT" SUPERVISOR_PATH="$NO_CLONE" \
+    bash "$SETUP" </dev/null >"$WORK/t5.log" 2>&1 )
+if [ "$(cat "$TARGET5/CLAUDE.md" 2>/dev/null)" = "@AGENTS.md" ] \
+   && kit_file CLAUDE.md | cmp -s - "$TARGET5/CLAUDE.md"; then
+  pass "test5: new-project CLAUDE.md is exactly the import @AGENTS.md"
+else
+  fail "test5: new-project CLAUDE.md is not the import (see $WORK/t5.log)"
+fi
+if kit_file AGENTS.md | cmp -s - "$TARGET5/AGENTS.md" \
+   && grep -q '^### Hard-Stop Gates' "$TARGET5/AGENTS.md"; then
+  pass "test5: new-project AGENTS.md is the kit's full doctrine"
+else
+  fail "test5: new-project AGENTS.md is not the kit's full doctrine"
+fi
+TARGET5L="$WORK/target5-legacy"
+mkdir -p "$TARGET5L" && git -C "$TARGET5L" init -q
+# Enter (Install), Enter (CLIs), "2" (existing / legacy project), Enter, Enter (accept the plan).
+( cd "$TARGET5L" && run_in_pty '\n\n2\n\n\n' \
+    "SUPERVISOR_REPO=file://$REPO_ROOT SUPERVISOR_PATH=$NO_CLONE bash '$SETUP'" >"$WORK/t5l.log" 2>&1 )
+if kit_file CLAUDE_LEGACY.md | cmp -s - "$TARGET5L/CLAUDE.md"; then
+  pass "test5: legacy CLAUDE.md is CLAUDE_LEGACY.md byte-for-byte"
+else
+  fail "test5: legacy CLAUDE.md differs from CLAUDE_LEGACY.md (see $WORK/t5l.log)"
 fi
 
 # ── Summary ──────────────────────────────────────────────────────────────────

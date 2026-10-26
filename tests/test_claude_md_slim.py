@@ -1,9 +1,13 @@
-"""T169 scope extension: CLAUDE.md stays at or under 200 lines and keeps the rules the cuts must not lose."""
+"""T169 scope extension: CLAUDE.md stays at or under 200 lines and keeps the rules the cuts must not lose.
+
+REPOINTED by T173 (`CLAUDE.md` -> `AGENTS.md`): the doctrine moved to AGENTS.md and CLAUDE.md is
+the one-line import `@AGENTS.md`, so the cap and the kept rules apply to AGENTS.md (T173 AC 7).
+"""
 import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-TEXT = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
+TEXT = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
 
 
 def _norm(t: str) -> str:

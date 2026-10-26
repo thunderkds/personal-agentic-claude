@@ -272,7 +272,7 @@
   <ul class="lead">
     <li><strong>Pipeline</strong> — plan → spawn isolated sub-agents → review → integrate → ship.</li>
     <li><strong>Claude Code</strong> — the Supervisor session and its hooks enforce every stage.</li>
-    <li><strong>Other providers</strong> (Codex, Cursor) — the same doctrine through a thin adapter; see
+    <li><strong>Other providers</strong> (Codex, Cursor) — Codex reads the full doctrine in <code>AGENTS.md</code>. Cursor gets a thin adapter. See
       Providers below for what carries over and what doesn't.</li>
   </ul>
   <p class="lead">
@@ -494,7 +494,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
   <li><code>2) Existing / legacy project</code> — for an existing codebase. Uses
     <code>CLAUDE_LEGACY.md</code>, which adds legacy-codebase guidance (risk hotspots, strangler-fig
     patterns).</li>
-  <li><code>1) New project</code> (<code>CLAUDE.md</code>) — the default with no terminal.</li>
+  <li><code>1) New project</code> — the default with no terminal. You get <code>CLAUDE.md</code> (only <code>@AGENTS.md</code>) and the full <code>AGENTS.md</code>.</li>
 </ul>
 </section>
 
@@ -538,7 +538,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 </section>
 
 <section id="skills">
-<h2>Skills (30)</h2>
+<h2>Skills (31)</h2>
 <p class="lead">
   One inline instruction set loaded per invocation, grouped by which pipeline stage it belongs to.
 </p>
@@ -673,8 +673,9 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <section id="providers">
 <h2>Providers</h2>
 <p class="lead">
-  <code>CLAUDE.md</code> plus <code>docs/claude-md/</code> stay the one primary source of truth.
-  Every other provider gets a thin adapter file in the channel that provider actually auto-reads.
+  <code>AGENTS.md</code> plus <code>docs/claude-md/</code> stay the one primary source of truth.
+  Codex reads it directly; Claude Code reads it through the one-line <code>CLAUDE.md</code> import.
+  Cursor gets a thin adapter.
 </p>
 <details>
 <summary>What an adapter carries</summary>
@@ -685,10 +686,10 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 </details>
 <div class="table-wrap">
 <table>
-<thead><tr><th>Adapter</th><th>Auto-read by</th><th>What it carries</th></tr></thead>
+<thead><tr><th>File</th><th>Auto-read by</th><th>What it carries</th></tr></thead>
 <tbody>
-<tr><td data-label="Adapter"><code>AGENTS.md</code></td><td data-label="Auto-read by">Codex</td><td data-label="What it carries">Karpathy principle names, Hard-Stop Gate titles, the untrusted-content boundary rule, and the "no TASK_GUIDE = no work" rule — inlined, not just linked</td></tr>
-<tr><td data-label="Adapter"><code>.cursor/<wbr>rules/<wbr>agent-<wbr>base.mdc</code></td><td data-label="Auto-read by">Cursor (<code>alwaysApply: true</code>)</td><td data-label="What it carries">The same inlined non-negotiables as <code>AGENTS.md</code></td></tr>
+<tr><td data-label="File"><code>AGENTS.md</code></td><td data-label="Auto-read by">Codex; Claude Code through the <code>CLAUDE.md</code> import</td><td data-label="What it carries">The full doctrine, plus a short section naming what Codex and Cursor cannot enforce</td></tr>
+<tr><td data-label="File"><code>.cursor/<wbr>rules/<wbr>agent-<wbr>base.mdc</code></td><td data-label="Auto-read by">Cursor (<code>alwaysApply: true</code>)</td><td data-label="What it carries">Karpathy principle names, Hard-Stop Gate titles, the untrusted-content boundary rule, and the "no TASK_GUIDE = no work" rule, inlined from <code>AGENTS.md</code></td></tr>
 </tbody>
 </table>
 </div>
@@ -729,7 +730,8 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <tr><td data-label="Path"><code>skills/</code></td><td data-label="What it contains">Canon custom skills (DDR-0007)</td></tr>
 <tr><td data-label="Path"><code>.claude/agents/</code></td><td data-label="What it contains">Committed <strong>relative symlink</strong> onto <code>agents/</code> so Claude Code can discover it (<code>.claude/<wbr>agents -&gt; ../agents</code>)</td></tr>
 <tr><td data-label="Path"><code>.claude/skills/</code></td><td data-label="What it contains">Committed <strong>relative symlink</strong> onto <code>skills/</code> so Claude Code can discover it (<code>.claude/<wbr>skills -&gt; ../skills</code>)</td></tr>
-<tr><td data-label="Path"><code>AGENTS.md</code></td><td data-label="What it contains">Provider adapter for Codex — see Providers below</td></tr>
+<tr><td data-label="Path"><code>AGENTS.md</code></td><td data-label="What it contains">The full doctrine. Codex reads it directly. Claude Code reads it through the <code>CLAUDE.md</code> import</td></tr>
+<tr><td data-label="Path"><code>CLAUDE.md</code></td><td data-label="What it contains">Holds only the import <code>@AGENTS.md</code></td></tr>
 <tr><td data-label="Path"><code>.cursor/<wbr>rules/<wbr>agent-<wbr>base.mdc</code></td><td data-label="What it contains">Provider adapter for Cursor — see Providers below</td></tr>
 <tr><td data-label="Path"><code>tasks/</code></td><td data-label="What it contains">Task guides generated at Stage 2 (per project)</td></tr>
 <tr><td data-label="Path"><code>templates/</code></td><td data-label="What it contains">Blank templates for PRD, PROJECT_SPEC, task board, TASK_GUIDE, and more</td></tr>

@@ -30,6 +30,6 @@ AUTHORING CHECKLIST (delete before saving):
 [ ] Adapted to THIS framework — external deps stripped, decisions land in PROJECT_SPEC.md (not new conventions)
 [ ] Karpathy override block present; only relevant principles
 [ ] Communication Protocol with a Default Notification line
-[ ] Registered in CLAUDE.md custom-skill table + README "Custom skills" table
+[ ] Registered in AGENTS.md custom-skill table + README "Custom skills" table
 [ ] Any bundled scripts live in scripts/ and are chmod +x, with a smoke test
 -->

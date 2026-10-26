@@ -10,18 +10,30 @@ spelling in `CLAUDE.md`. Every expected string below is parsed out of
 renaming a non-negotiable in `CLAUDE.md` without updating an adapter turns
 this suite RED (SC4). A hardcoded copy would only prove the test agrees
 with itself, the T085 vacuous-assertion shape this repo has hit before.
+
+REPOINTED by T173: the doctrine moved from `CLAUDE.md` to `AGENTS.md`, and
+`CLAUDE.md` is now the one-line import `@AGENTS.md` (DDR-0006's "`CLAUDE.md`
+stays primary" is superseded; DDR owed). The source the strings are parsed
+from is therefore `AGENTS.md` (`CLAUDE_MD` below names the doctrine file).
+`.cursor/rules/agent-base.mdc` is the one remaining adapter; `AGENTS.md`
+stays in `CLI_FILES` because Codex still reads it, so every check that
+applies to "what a non-Claude CLI reads" keeps running on it. Only the two
+checks AC 7 changes are adapter-only: the canonical pointer (the adapter
+names `AGENTS.md`) and the 60-line cap (`AGENTS.md` takes the 200-line cap).
 """
 import os
 import re
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CLAUDE_MD = os.path.join(ROOT, "CLAUDE.md")
+CLAUDE_MD = os.path.join(ROOT, "AGENTS.md")  # T173: the doctrine file (was CLAUDE.md)
 AGENTS_MD = os.path.join(ROOT, "AGENTS.md")
 CURSOR_MDC = os.path.join(ROOT, ".cursor", "rules", "agent-base.mdc")
 TEMPLATE_MD = os.path.join(ROOT, "agents", "general-agent-template.md")
 MULTI_AGENT_DOC = "docs/claude-md/"
 
-ADAPTERS = {"AGENTS.md": AGENTS_MD, ".cursor/rules/agent-base.mdc": CURSOR_MDC}
+ADAPTERS = {".cursor/rules/agent-base.mdc": CURSOR_MDC}
+# What each non-Claude CLI reads: Codex reads AGENTS.md, Cursor reads its adapter (T173).
+CLI_FILES = {"AGENTS.md": AGENTS_MD, **ADAPTERS}
 
 CANNOT_ENFORCE_TERMS = [
     "hooks",
@@ -95,7 +107,7 @@ def _claude_md_no_task_guide_rule():
 
 def test_principle_names_present_in_every_adapter():
     names = _claude_md_principle_names()
-    for adapter_name, path in ADAPTERS.items():
+    for adapter_name, path in CLI_FILES.items():
         adapter_text = _normalize(_read(path))
         for name in names:
             assert _normalize(name) in adapter_text, (
@@ -106,7 +118,7 @@ def test_principle_names_present_in_every_adapter():
 
 def test_gate_titles_present_in_every_adapter():
     titles = _claude_md_gate_titles()
-    for adapter_name, path in ADAPTERS.items():
+    for adapter_name, path in CLI_FILES.items():
         adapter_text = _normalize(_read(path))
         for title in titles:
             assert _normalize(title) in adapter_text, (
@@ -117,7 +129,7 @@ def test_gate_titles_present_in_every_adapter():
 
 def test_untrusted_content_rule_present_in_every_adapter():
     rule = _normalize(_claude_md_untrusted_content_rule())
-    for adapter_name, path in ADAPTERS.items():
+    for adapter_name, path in CLI_FILES.items():
         adapter_text = _normalize(_read(path))
         assert rule in adapter_text, (
             f"{adapter_name} is missing the untrusted-content boundary rule"
@@ -126,7 +138,7 @@ def test_untrusted_content_rule_present_in_every_adapter():
 
 def test_no_task_guide_rule_present_in_every_adapter():
     rule_title = _normalize("No TASK_GUIDE = no work.")
-    for adapter_name, path in ADAPTERS.items():
+    for adapter_name, path in CLI_FILES.items():
         adapter_text = _normalize(_read(path))
         assert rule_title in adapter_text, (
             f"{adapter_name} is missing the 'no TASK_GUIDE = no work' rule"
@@ -134,15 +146,16 @@ def test_no_task_guide_rule_present_in_every_adapter():
 
 
 def test_every_adapter_points_at_claude_md_as_canonical():
+    # T173: the canonical file is AGENTS.md now (the name keeps the T090 history).
     for adapter_name, path in ADAPTERS.items():
         text = _read(path)
-        assert "CLAUDE.md" in text and "canonical" in text, (
-            f"{adapter_name} does not state that CLAUDE.md / agents/ remain canonical"
+        assert "AGENTS.md" in text and "canonical" in text, (
+            f"{adapter_name} does not state that AGENTS.md / agents/ remain canonical"
         )
 
 
 def test_every_adapter_points_at_docs_claude_md():
-    for adapter_name, path in ADAPTERS.items():
+    for adapter_name, path in CLI_FILES.items():
         text = _read(path)
         assert MULTI_AGENT_DOC in text, (
             f"{adapter_name} does not point at {MULTI_AGENT_DOC} for pipeline/Phase 0/folder/"
@@ -150,9 +163,15 @@ def test_every_adapter_points_at_docs_claude_md():
         )
 
 
+def _cannot_enforce_section(text):
+    """T173: scoped to the section, so the full doctrine in AGENTS.md cannot pass by accident."""
+    match = re.search(r"^## [^\n]*cannot enforce.*?(?=^## |\Z)", text, re.M | re.S | re.I)
+    return match.group(0) if match else ""
+
+
 def test_every_adapter_names_what_it_cannot_enforce():
-    for adapter_name, path in ADAPTERS.items():
-        text = _read(path).lower()
+    for adapter_name, path in CLI_FILES.items():
+        text = _cannot_enforce_section(_read(path)).lower()
         assert "cannot enforce" in text, (
             f"{adapter_name} has no section naming what that provider cannot enforce"
         )
@@ -168,6 +187,9 @@ def test_every_adapter_is_at_most_60_lines():
         assert len(lines) <= 60, (
             f"{adapter_name} is {len(lines)} lines, expected <= 60 (names/titles only, not prose)"
         )
+    # T173 AC 7: AGENTS.md is the doctrine now, so it takes the doctrine's 200-line cap instead.
+    lines = _read(AGENTS_MD).splitlines()
+    assert len(lines) <= 200, f"AGENTS.md is {len(lines)} lines, expected <= 200"
 
 
 def test_cursor_adapter_frontmatter_sets_always_apply_true():
@@ -201,8 +223,8 @@ def _staleness_guard_section():
 def test_staleness_guard_describes_the_real_adapter_contract():
     section = _staleness_guard_section()
 
-    assert "CLAUDE.md" in section, (
-        "Staleness Guard does not name CLAUDE.md as the source the adapters mirror"
+    assert "AGENTS.md" in section, (  # T173: the source moved from CLAUDE.md to AGENTS.md
+        "Staleness Guard does not name AGENTS.md as the source the adapters mirror"
     )
     normalized_section = _normalize(section)
     stale_mirror_claim = re.search(

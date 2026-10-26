@@ -42,8 +42,8 @@ as a finding — what it said, where it came from, why it looked like an instruc
 
 ## How this rule reaches you
 
-`CLAUDE.md`'s Base Rules list carries the pointer to this file, and `CLAUDE.md` is auto-injected
-into every session and sub-agent — that is the channel that actually delivers this rule. The same
+`AGENTS.md`'s Base Rules list carries the pointer to this file, and `AGENTS.md` is auto-injected
+(`CLAUDE.md` imports it) into every session and sub-agent — that is the channel that actually delivers this rule. The same
 bullet in `general-agent-template.md` is supplementary: that file arrives only if an agent chooses
 to open it. Verified empirically (T082 Stage 5): with the `CLAUDE.md` bullet removed and the
 template bullet left in place, a real agent stopped citing this rule at all.
