@@ -122,7 +122,8 @@ T069_BASELINE_REF = "8d6d56b"
 # REPOINTED AGAIN by T169 (`c3016fa` -> `19c139f`, the review-fixed edit commit; CLAUDE.md line cap raise to 218 user-approved 2026-10-20): T169 adds the Writing Principles section to CLAUDE.md
 # and one clause to the Response Standard bullet in CLAUDE.md and the template. Repointed, NOT deleted.
 # REPOINTED once more by T169 scope extension (`19c139f` -> `9294eee`, then `9294eee` -> `09e552d` by D6, numeric caps dropped from the Writing Principles table): CLAUDE.md slimmed 218 -> 186 lines (General Agent Template, Mandatory Session Startup, opening list, Final Instruction). User-approved 2026-10-20.
-T070_BASELINE_REF = "09e552d"  # T169 scope extension: CLAUDE.md slimming
+# REPOINTED AGAIN by T170 (`09e552d` -> `a830bb8`, T170's edit commit; user-approved 2026-10-20): CLAUDE.md gains `resolve-question` on the cross-cutting skill line. Still 186 lines. Repointed, NOT deleted.
+T070_BASELINE_REF = "a830bb8"  # T170: resolve-question on the cross-cutting skill line
 
 # T082's own edit commit (same commit as the repoint above). T082 adds a mandatory Base Rule bullet
 # to `general-agent-template.md` too (the same untrusted-content pointer) — a legitimate, required
@@ -437,7 +438,12 @@ T127_BASELINE_REF = "998166d"
 # `<`. `274a52a` is T133's edit commit.
 T133_BASELINE_REF = "19c139f"  # T169: the Response Standard bullet gains a pointer clause (c-infra only)
 
-AC7_ROLE_BASELINE = {"c-infra": T133_BASELINE_REF}  # key must match ROLE_GUIDES above
+# REPOINTED AGAIN by T170 for `c-infra` only: the report format's `Question (if blocked): [fact|choice]
+# <question>` line adds 48 chars, breaching c-infra's T133 floor (floor raise user-approved
+# 2026-10-20). backend/frontend/qa keep T066's floor and strict `<`. `a830bb8` is T170's edit commit.
+T170_BASELINE_REF = "a830bb8"
+
+AC7_ROLE_BASELINE = {"c-infra": T170_BASELINE_REF}  # key must match ROLE_GUIDES above
 
 
 def baseline_loaded_chars(role: str) -> int:
