@@ -14,15 +14,15 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_resolve_question.py` (14 test functions, 20 cases incl. parametrized: AC1–AC9; RED commit `cff857e` before implementation `a830bb8`). Supervisor re-run 2026-10-26 at `b69b3e7`: `20 passed in 0.02s` |
+| Verification command run | ☑ pass | `python3 -m pytest -q tests/test_resolve_question.py .claude/hooks/tests/test_vital_slice.py tests/test_site_content.py` → `119 passed in 0.49s` (Supervisor, 2026-10-26, `b69b3e7`) |
+| Negative cases hold | ☑ pass | Supervisor mutants on `b69b3e7`, each reverted (`git status` clean after): M1 delete `agents/qa.md:127` `Question (if blocked): [fact|choice] <question>` → `1 failed, 19 passed`; M2 `SKILL.md:25` "never to Scanners" → "also to Scanners" → `1 failed, 19 passed` |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Reviewed `git diff main...HEAD` (16 files): new `skills/resolve-question/SKILL.md`, `skills/thinking-report/SKILL.md` (`session=resolution`), one report-format line in each `agents/*.md`, `CLAUDE.md:65` cross-cutting line, `site/index.html` (count + chip), glossary, decisions. Hooks, scripts, install path not touched → skipped. Security review (Medium risk) 2026-10-26: no findings — docs/skill text plus two static HTML text edits, no executable code, no new tool grant (Scanners are read-only `Explore`). |
+| Full smoke suite still green (no regression) | ☑ pass | `python3 -m pytest -q tests .claude/hooks/tests` → `1435 passed, 25 subtests passed in 36.52s`; `sh scripts/validate.sh` → `validate.sh: PASS` (Supervisor, 2026-10-26, `b69b3e7`; branch has 0 commits behind `main`) |
+| **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | Text-only edit to `site/index.html`: `30 skills` → `31 skills` (line 294) and one `<span class="chip">resolve-question</span>` added to the existing "Any stage" chip row (line 581). No CSS, layout or markup-structure change. |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ pass | The new chip reuses the existing `.chip` class, same as its 16 neighbours; no new token, color or font. Checked by reading the diff. |
+| **UI: Responsiveness at target viewports** | ☐ N/A | The chip row already wraps (`p.chips`, T166/T167); one more short chip adds no new overflow case. No layout change to test. |
 
 ---
 
@@ -64,9 +64,19 @@ prior save line `:121`: `SAVE → reports/thinking-report_<branch-arg>_<YYYYMMDD
 Prior `site/index.html:582` (Any stage chips, no `resolve-question`):
 `<span class="chip">strategy</span><span class="chip">teach</span><span class="chip">thinking-report</span><span class="chip">wake</span>`
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**: same command, Supervisor at `b69b3e7`:
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```
+$ ls skills/resolve-question; grep -n "Question (if blocked)" agents/*.md
+SKILL.md
+agents/common-infrastructure.md:117:Question (if blocked): [fact|choice] <question>
+agents/frontend.md:122:Question (if blocked): [fact|choice] <question>
+agents/backend.md:123:Question (if blocked): [fact|choice] <question>
+agents/qa.md:127:Question (if blocked): [fact|choice] <question>
+```
 
-**WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
-implementing agent alone]
+**DELTA**: A confused Supervisor or sub-agent can now get a fact question answered from quoted
+`file:line` Citations (or 2–3 independent read-only Scanners), and only choice questions reach the user.
+
+**WITNESS**: Supervisor, 2026-10-26 — re-ran the verification command, the full suite and two
+mutants in `../wt-t170` with `active_task` = T170 (`memory/event-trace/T170.jsonl`).
