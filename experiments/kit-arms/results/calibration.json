@@ -1,0 +1,275 @@
+[
+ {
+  "task": "task1",
+  "arm": "bare",
+  "run": 1,
+  "status": "ok",
+  "cost": 0.0819036,
+  "usage": {
+   "input_tokens": 12,
+   "cache_creation_input_tokens": 12331,
+   "cache_read_input_tokens": 107856,
+   "output_tokens": 2177,
+   "output_tokens_details": {
+    "thinking_tokens": 74
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 12331,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "global",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 301,
+     "cache_read_input_tokens": 22652,
+     "cache_creation_input_tokens": 204,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 204
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "turns": 11,
+  "wall_s": 19.8,
+  "subtype": "success",
+  "is_error": false,
+  "final_text": "`tally summary --month YYYY-MM` now works, and the full test suite passes (35 tests, including two new ones for this).\n\n- **With a valid month:** `python3 -m tally summary --month 2026-03` counts only expenses dated in March 2026. If that month has no expenses, it prints `No expenses.`, the same as an empty ledger.\n- **With an invalid month:** `2026-13`, `march`, `2026-00` and `2026-3` all print `error: invalid month '\u2026' (expected YYYY-MM)` to stderr and exit with status 2, like `list --since` does. I made the format strict, so `2026-3` is rejected and you need `2026-03`.\n- **Without `--month`:** `summary` behaves exactly as before.\n\nThe change is in `src/tally/cli.py` (a new `parse_month` helper plus the option on `summary`), and the new tests are in `tests/test_cli.py`.",
+  "diff_stat": " src/tally/cli.py  | 12 ++++++++++++\n tests/test_cli.py | 16 ++++++++++++++++\n 2 files changed, 28 insertions(+)\n",
+  "files_changed": [
+   "src/tally/cli.py",
+   "tests/test_cli.py"
+  ],
+  "kit_trace_lines": null,
+  "budget": 10.0,
+  "agent_argv": [
+   "docker",
+   "run",
+   "--rm",
+   "--init",
+   "--name",
+   "tally-run-1c1e5038",
+   "--user",
+   "1000:1000",
+   "-e",
+   "HOME=/tmp/h",
+   "-w",
+   "/tmp/tmpiw75jsty/tmpx9mx32_s/tally",
+   "-v",
+   "/tmp/tmpiw75jsty/tmpx9mx32_s/tally:/tmp/tmpiw75jsty/tmpx9mx32_s/tally:rw",
+   "-v",
+   "/home/hungnguyenhuu/.claude-personal/.credentials.json:/tmp/h/.claude/.credentials.json:ro",
+   "kit-arms-claude:2.1.310",
+   "claude",
+   "-p",
+   "Can you add a `--month` option to `tally summary`? I want to see the totals for just one month, e.g. `python3 -m tally summary --month 2026-03` should only count expenses dated in March 2026. If I give it a month that isn't valid (like `2026-13` or `march`) it should print an error and exit with status 2, the same way `list --since` does with a bad date. Without `--month` it should keep working exactly like it does now.",
+   "--output-format",
+   "json",
+   "--model",
+   "sonnet",
+   "--setting-sources",
+   "project,local",
+   "--no-session-persistence",
+   "--strict-mcp-config",
+   "--max-budget-usd",
+   "10.0",
+   "--allowedTools",
+   "Bash,Read,Edit,Write,Glob,Grep,Agent,Skill",
+   "--disallowedTools",
+   "WebFetch,WebSearch"
+  ]
+ },
+ {
+  "task": "task1",
+  "arm": "minimal",
+  "run": 1,
+  "status": "ok",
+  "cost": 0.11622040000000002,
+  "usage": {
+   "input_tokens": 14,
+   "cache_creation_input_tokens": 18344,
+   "cache_read_input_tokens": 160764,
+   "output_tokens": 2674,
+   "output_tokens_details": {
+    "thinking_tokens": 119
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 18344,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "global",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 369,
+     "cache_read_input_tokens": 28447,
+     "cache_creation_input_tokens": 422,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 422
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "turns": 13,
+  "wall_s": 26.2,
+  "subtype": "success",
+  "is_error": false,
+  "final_text": "`tally summary --month YYYY-MM` now counts only expenses dated in that month. The full suite passes (36 tests, including three new ones for this option). I also ran the CLI against a scratch data file:\n\n- **Valid month:** `summary --month 2026-03` showed only March's food at $10.00. The April rent expense was left out.\n- **No option:** `summary` still shows every category and the grand total, as before.\n- **Invalid month:** `--month 2026-13` and `--month march` each print `error: not a valid month (use YYYY-MM): '\u2026'` to stderr and exit with status 2.\n\nI didn't write the tests before the code, so I never saw them fail first. That departs from the repo's tests-first rule.\n\nA valid month with no expenses (say `--month 2026-04` when nothing is in April) prints `No expenses.` and exits 0, the same as an empty data file does today.\n\nI added a small `parse_month` helper in `src/tally/models.py` next to `parse_date`. The option and the filtering are in `src/tally/cli.py`, and the tests are in `tests/test_cli.py`. I haven't committed anything.",
+  "diff_stat": " src/tally/cli.py    |  6 +++++-\n src/tally/models.py |  9 +++++++++\n tests/test_cli.py   | 22 ++++++++++++++++++++++\n 3 files changed, 36 insertions(+), 1 deletion(-)\n",
+  "files_changed": [
+   "src/tally/cli.py",
+   "src/tally/models.py",
+   "tests/test_cli.py"
+  ],
+  "kit_trace_lines": null,
+  "budget": 10.0,
+  "agent_argv": [
+   "docker",
+   "run",
+   "--rm",
+   "--init",
+   "--name",
+   "tally-run-dd7234f4",
+   "--user",
+   "1000:1000",
+   "-e",
+   "HOME=/tmp/h",
+   "-w",
+   "/tmp/tmpiw75jsty/tmpg29ges5q/tally",
+   "-v",
+   "/tmp/tmpiw75jsty/tmpg29ges5q/tally:/tmp/tmpiw75jsty/tmpg29ges5q/tally:rw",
+   "-v",
+   "/home/hungnguyenhuu/.claude-personal/.credentials.json:/tmp/h/.claude/.credentials.json:ro",
+   "kit-arms-claude:2.1.310",
+   "claude",
+   "-p",
+   "Can you add a `--month` option to `tally summary`? I want to see the totals for just one month, e.g. `python3 -m tally summary --month 2026-03` should only count expenses dated in March 2026. If I give it a month that isn't valid (like `2026-13` or `march`) it should print an error and exit with status 2, the same way `list --since` does with a bad date. Without `--month` it should keep working exactly like it does now.",
+   "--output-format",
+   "json",
+   "--model",
+   "sonnet",
+   "--setting-sources",
+   "project,local",
+   "--no-session-persistence",
+   "--strict-mcp-config",
+   "--max-budget-usd",
+   "10.0",
+   "--allowedTools",
+   "Bash,Read,Edit,Write,Glob,Grep,Agent,Skill",
+   "--disallowedTools",
+   "WebFetch,WebSearch"
+  ]
+ },
+ {
+  "task": "task1",
+  "arm": "full",
+  "run": 1,
+  "status": "ok",
+  "cost": 0.4850263,
+  "usage": {
+   "input_tokens": 26,
+   "cache_creation_input_tokens": 47789,
+   "cache_read_input_tokens": 550324,
+   "output_tokens": 7142,
+   "output_tokens_details": {
+    "thinking_tokens": 1006
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 47789,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "global",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 552,
+     "cache_read_input_tokens": 57308,
+     "cache_creation_input_tokens": 1006,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 1006
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "turns": 21,
+  "wall_s": 109.3,
+  "subtype": "success",
+  "is_error": false,
+  "final_text": "`tally summary --month YYYY-MM` now counts only expenses dated in that month. The full test suite passes (38 passed), and I ran the CLI by hand against a small test file.\n\n- **Valid month:** with a March and an April expense, `--month 2026-03` showed only the March ones, `food $10.00` and `total $10.00`, exit 0.\n- **Bad month:** `2026-13` and `march` each print `error: not a valid month (use YYYY-MM): '...'` to stderr and exit 2. The new tests also cover `2026-00`, `2026-3` and an empty value. A bad month fails even if the data file is empty.\n- **No expenses in the month:** it prints `No expenses.` and exits 0, like the existing empty case.\n- **No `--month`:** output is unchanged, and the existing summary test passes untouched.\n\nThe format is strict: only `YYYY-MM` is accepted, and `2026-3` is rejected. The change is in `cli.py`, `models.py` (new `parse_month`) and `reports.py` (new `in_month`), with five new tests in `tests/test_cli.py`.\n\nYour project rules require a task guide before any code, so I created `tasks/TASK_GUIDE_T001.md` and `PROJECT_KANBAN.md` and had the backend agent make the change. The task is in \"Ready for Review\", not Done. The required `code-review` hasn't run, and nothing is committed.\n\n**Do you want me to run `code-review` on this and then commit?**\n\nI also skipped the model recommendation step. It needs a CLI model table in a `PROJECT_SPEC.md` that this repo doesn't have, so the agent ran on the default model.",
+  "diff_stat": " .claude/hooks/.state/active_task                   |   2 +\n ...count_9bdf738fbf2546ecb8ddb91d8d9c0600_T001.txt |   2 +\n PROJECT_KANBAN.md                                  |  38 ++++++\n memory/event-trace/T001.jsonl                      |  23 ++++\n memory/event-trace/_untagged.jsonl                 |  16 +++\n src/tally/cli.py                                   |   6 +-\n src/tally/models.py                                |   8 ++\n src/tally/reports.py                               |   5 +\n tasks/TASK_GUIDE_T001.md                           | 132 +++++++++++++++++++++\n tasks/TASK_REVIEW_T001.md                          |  56 +++++++++\n tests/test_cli.py                                  |  32 +++++\n 11 files changed, 319 insertions(+), 1 deletion(-)\n",
+  "files_changed": [
+   "PROJECT_KANBAN.md",
+   "src/tally/cli.py",
+   "src/tally/models.py",
+   "src/tally/reports.py",
+   "tasks/TASK_GUIDE_T001.md",
+   "tasks/TASK_REVIEW_T001.md",
+   "tests/test_cli.py"
+  ],
+  "kit_trace_lines": 39,
+  "budget": 10.0,
+  "agent_argv": [
+   "docker",
+   "run",
+   "--rm",
+   "--init",
+   "--name",
+   "tally-run-8ea779a7",
+   "--user",
+   "1000:1000",
+   "-e",
+   "HOME=/tmp/h",
+   "-w",
+   "/tmp/tmpiw75jsty/tmp7j6jw7nr/tally",
+   "-v",
+   "/tmp/tmpiw75jsty/tmp7j6jw7nr/tally:/tmp/tmpiw75jsty/tmp7j6jw7nr/tally:rw",
+   "-v",
+   "/home/hungnguyenhuu/.claude-personal/.credentials.json:/tmp/h/.claude/.credentials.json:ro",
+   "kit-arms-claude:2.1.310",
+   "claude",
+   "-p",
+   "Can you add a `--month` option to `tally summary`? I want to see the totals for just one month, e.g. `python3 -m tally summary --month 2026-03` should only count expenses dated in March 2026. If I give it a month that isn't valid (like `2026-13` or `march`) it should print an error and exit with status 2, the same way `list --since` does with a bad date. Without `--month` it should keep working exactly like it does now.",
+   "--output-format",
+   "json",
+   "--model",
+   "sonnet",
+   "--setting-sources",
+   "project,local",
+   "--no-session-persistence",
+   "--strict-mcp-config",
+   "--max-budget-usd",
+   "10.0",
+   "--allowedTools",
+   "Bash,Read,Edit,Write,Glob,Grep,Agent,Skill",
+   "--disallowedTools",
+   "WebFetch,WebSearch"
+  ]
+ }
+]
