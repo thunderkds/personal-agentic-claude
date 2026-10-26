@@ -17,7 +17,7 @@
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
 | Verification command run | ☐ pass / ☐ fail | [paste actual output] |
 | Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
+| verify | ☑ N/A | `/verify T176` run by the user, 2026-10-26: SKIP — no runtime surface (the diff is result data, REPORT.md, the board and a learning; no code). Cross-check of the data instead — pass: per-arm totals recomputed from `runs.json` (36 rows, 0 void) match REPORT.md (bare 10/12 $1.04, minimal 12/12 $1.33, full 8/12 $2.61, 0 unsafe); `git diff e3affd5 -- RULE.md` = 0 lines. Finding: real total spend is $5.66 (`spend.json`: $4.98 scored + $0.68 calibration); the "$6.34" in commit d4ea282's message counts calibration twice. No paid re-run (memory: never probe with paid modes). |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
 | Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
