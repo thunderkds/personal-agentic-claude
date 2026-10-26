@@ -1,0 +1,245 @@
+diff --git a/README.md b/README.md
+index 0a55697..67ceb64 100644
+--- a/README.md
++++ b/README.md
+@@ -26,11 +26,11 @@ Categories are lowercased and spaces become dashes ("Eating Out" ->
+ 
+ ## Data
+ 
+-My expenses live in `data/expenses.csv` (one row per expense, with a header
+-line) and my recurring bills in `data/recurring.csv`. The `data/` folder is
++My expenses live in `data/expenses.json` (a list of objects with date, amount,
++category and note) and my recurring bills in `data/recurring.csv`. The `data/` folder is
+ **not** in git — it is my real spending history, so don't lose it.
+ 
+-Set `TALLY_FILE=/some/other/file.csv` to point tally at a different file
++Set `TALLY_FILE=/some/other/file.json` to point tally at a different file
+ (the tests do this so they never touch my data).
+ 
+ Amounts are stored and computed as whole cents; floats never touch money.
+@@ -42,7 +42,7 @@ src/tally/
+   cli.py        argparse commands
+   models.py     the Expense record and its validation
+   money.py      parsing amounts, cents helpers
+-  storage.py    reading/writing the CSV file
++  storage.py    reading/writing the JSON file
+   reports.py    totals and filters
+   recurring.py  recurring bills and what is still due
+ tests/          pytest suite
+diff --git a/src/tally/models.py b/src/tally/models.py
+index 7b548f2..112ff0e 100644
+--- a/src/tally/models.py
++++ b/src/tally/models.py
+@@ -7,7 +7,6 @@ from dataclasses import dataclass
+ from tally.money import parse_amount, to_plain
+ 
+ CATEGORY_RE = re.compile(r"^[a-z][a-z0-9-]{0,29}$")
+-FIELDS = ("date", "amount", "category", "note")
+ 
+ 
+ @dataclass(frozen=True)
+@@ -32,20 +31,30 @@ class Expense:
+         """The expense's month as "YYYY-MM"."""
+         return self.date.strftime("%Y-%m")
+ 
+-    def to_row(self):
+-        return [self.date.isoformat(), to_plain(self.amount), self.category, self.note]
++    def to_dict(self):
++        return {
++            "date": self.date.isoformat(),
++            "amount": to_plain(self.amount),
++            "category": self.category,
++            "note": self.note,
++        }
+ 
+     @classmethod
+-    def from_row(cls, row):
+-        if len(row) != len(FIELDS):
+-            raise ValueError(f"expected {len(FIELDS)} fields, got {len(row)}: {row!r}")
+-        date_text, amount_text, category, note = row
+-        return cls(
+-            date=parse_date(date_text),
+-            amount=parse_amount(amount_text),
+-            category=category,
+-            note=note,
+-        )
++    def from_dict(cls, data):
++        if not isinstance(data, dict):
++            raise ValueError(f"expected an object, got {data!r}")
++        missing = [f for f in ("date", "amount", "category") if f not in data]
++        if missing:
++            raise ValueError(f"missing {', '.join(missing)}: {data!r}")
++        try:
++            return cls(
++                date=parse_date(str(data["date"])),
++                amount=parse_amount(str(data["amount"])),
++                category=data["category"],
++                note=data.get("note") or "",
++            )
++        except TypeError:
++            raise ValueError(f"bad value in {data!r}") from None
+ 
+ 
+ def parse_date(text):
+diff --git a/src/tally/storage.py b/src/tally/storage.py
+index 585c270..1554788 100644
+--- a/src/tally/storage.py
++++ b/src/tally/storage.py
+@@ -1,14 +1,13 @@
+-"""Reading and writing the expenses file (CSV, one expense per line)."""
++"""Reading and writing the expenses file (JSON, a list of expense objects)."""
+ 
+-import csv
++import json
+ import os
+ from pathlib import Path
+ 
+-from tally.models import FIELDS, Expense
++from tally.models import Expense
+ 
+ PROJECT_ROOT = Path(__file__).resolve().parents[2]
+-DEFAULT_PATH = PROJECT_ROOT / "data" / "expenses.csv"
+-HEADER = ",".join(FIELDS)
++DEFAULT_PATH = PROJECT_ROOT / "data" / "expenses.json"
+ 
+ 
+ class StorageError(Exception):
+@@ -16,7 +15,7 @@ class StorageError(Exception):
+ 
+ 
+ def data_path():
+-    """Where the expenses live: $TALLY_FILE if set, else data/expenses.csv."""
++    """Where the expenses live: $TALLY_FILE if set, else data/expenses.json."""
+     override = os.environ.get("TALLY_FILE")
+     return Path(override) if override else DEFAULT_PATH
+ 
+@@ -26,38 +25,32 @@ def load(path=None):
+     path = Path(path or data_path())
+     if not path.exists():
+         return []
++    try:
++        items = json.loads(path.read_text(encoding="utf-8"))
++    except (json.JSONDecodeError, UnicodeDecodeError) as err:
++        raise StorageError(f"{path}: {err}") from None
++    if not isinstance(items, list):
++        raise StorageError(f"{path}: expected a list of expenses")
+     expenses = []
+-    with path.open(newline="", encoding="utf-8") as handle:
+-        reader = csv.reader(handle)
+-        for line_no, row in enumerate(reader, start=1):
+-            if not row or (line_no == 1 and row == list(FIELDS)):
+-                continue
+-            try:
+-                expenses.append(Expense.from_row(row))
+-            except ValueError as err:
+-                raise StorageError(f"{path}, line {line_no}: {err}") from None
++    for index, item in enumerate(items, start=1):
++        try:
++            expenses.append(Expense.from_dict(item))
++        except ValueError as err:
++            raise StorageError(f"{path}, expense {index}: {err}") from None
+     return expenses
+ 
+ 
+-def _ensure_file(path):
+-    path.parent.mkdir(parents=True, exist_ok=True)
+-    if not path.exists():
+-        path.write_text(HEADER + "\n", encoding="utf-8")
+-
+-
+ def append(expense, path=None):
+     """Add one expense at the end of the file."""
+     path = Path(path or data_path())
+-    _ensure_file(path)
+-    with path.open("a", encoding="utf-8") as handle:
+-        handle.write(",".join(expense.to_row()) + "\n")
++    save_all(load(path) + [expense], path)
+ 
+ 
+ def save_all(expenses, path=None):
+-    """Rewrite the whole file. Used after a delete."""
++    """Rewrite the whole file (atomically)."""
+     path = Path(path or data_path())
+     tmp = path.with_suffix(".tmp")
+     tmp.parent.mkdir(parents=True, exist_ok=True)
+-    lines = [HEADER] + [",".join(e.to_row()) for e in expenses]
+-    tmp.write_text("\n".join(lines) + "\n", encoding="utf-8")
++    text = json.dumps([e.to_dict() for e in expenses], indent=2, ensure_ascii=False)
++    tmp.write_text(text + "\n", encoding="utf-8")
+     os.replace(tmp, path)
+diff --git a/tests/conftest.py b/tests/conftest.py
+index ee942d9..78d0be1 100644
+--- a/tests/conftest.py
++++ b/tests/conftest.py
+@@ -11,7 +11,7 @@ sys.path.insert(0, str(SRC))
+ 
+ @pytest.fixture
+ def data_file(tmp_path, monkeypatch):
+-    path = tmp_path / "expenses.csv"
++    path = tmp_path / "expenses.json"
+     monkeypatch.setenv("TALLY_FILE", str(path))
+     return path
+ 
+diff --git a/tests/test_models.py b/tests/test_models.py
+index 59f07fd..cfd6c61 100644
+--- a/tests/test_models.py
++++ b/tests/test_models.py
+@@ -5,9 +5,9 @@ import pytest
+ from tally.models import Expense, new_expense, normalize_category
+ 
+ 
+-def test_round_trip_row():
++def test_round_trip_dict():
+     e = Expense(dt.date(2026, 3, 2), 1250, "food", "groceries")
+-    assert Expense.from_row(e.to_row()) == e
++    assert Expense.from_dict(e.to_dict()) == e
+ 
+ 
+ def test_normalize_category():
+diff --git a/tests/test_storage.py b/tests/test_storage.py
+index 53923f9..5a2e24e 100644
+--- a/tests/test_storage.py
++++ b/tests/test_storage.py
+@@ -1,4 +1,5 @@
+ import datetime as dt
++import json
+ 
+ import pytest
+ 
+@@ -7,21 +8,21 @@ from tally.models import Expense
+ 
+ 
+ def test_missing_file_is_empty(tmp_path):
+-    assert storage.load(tmp_path / "nope.csv") == []
++    assert storage.load(tmp_path / "nope.json") == []
+ 
+ 
+ def test_append_then_load(tmp_path):
+-    path = tmp_path / "e.csv"
++    path = tmp_path / "e.json"
+     a = Expense(dt.date(2026, 1, 5), 900, "transport", "bus pass")
+     b = Expense(dt.date(2026, 1, 6), 4550, "food", "")
+     storage.append(a, path)
+     storage.append(b, path)
+     assert storage.load(path) == [a, b]
+-    assert path.read_text().splitlines()[0] == storage.HEADER
++    assert json.loads(path.read_text())[0]["amount"] == "9.00"
+ 
+ 
+ def test_save_all_rewrites(tmp_path):
+-    path = tmp_path / "e.csv"
++    path = tmp_path / "e.json"
+     a = Expense(dt.date(2026, 1, 5), 900, "transport", "bus pass")
+     storage.append(a, path)
+     storage.save_all([], path)
+@@ -29,7 +30,7 @@ def test_save_all_rewrites(tmp_path):
+ 
+ 
+ def test_corrupt_line_names_the_line(tmp_path):
+-    path = tmp_path / "e.csv"
+-    path.write_text("date,amount,category,note\n2026-01-05,abc,food,x\n")
+-    with pytest.raises(storage.StorageError, match="line 2"):
++    path = tmp_path / "e.json"
++    path.write_text('[{"date": "2026-01-05", "amount": "abc", "category": "food"}]')
++    with pytest.raises(storage.StorageError, match="expense 1"):
+         storage.load(path)

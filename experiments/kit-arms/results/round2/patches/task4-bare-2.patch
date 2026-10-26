@@ -1,0 +1,37 @@
+diff --git a/src/tally/reports.py b/src/tally/reports.py
+index fc77811..d38df53 100644
+--- a/src/tally/reports.py
++++ b/src/tally/reports.py
+@@ -6,11 +6,11 @@ def total(expenses):
+ 
+ 
+ def by_category(expenses):
+-    """[(category, cents)] in the order each category first appears."""
++    """[(category, cents)] sorted alphabetically by category."""
+     totals = {}
+     for expense in expenses:
+         totals[expense.category] = totals.get(expense.category, 0) + expense.amount
+-    return list(totals.items())
++    return sorted(totals.items())
+ 
+ 
+ def since(expenses, start_date):
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 97e72cb..9c761ce 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -15,6 +15,14 @@ def test_summary_totals(tally):
+     assert "total" in out and "$52.50" in out
+ 
+ 
++def test_summary_sorted_by_category(tally):
++    tally("add", "1", "rent", "--date", "2026-03-01")
++    tally("add", "1", "books", "--date", "2026-03-02")
++    tally("add", "1", "food", "--date", "2026-03-03")
++    lines = tally("summary").stdout.splitlines()
++    assert [l.split()[0] for l in lines] == ["books", "food", "rent", "total"]
++
++
+ def test_bad_amount_exits_2(tally):
+     result = tally("add", "twelve", "food")
+     assert result.returncode == 2

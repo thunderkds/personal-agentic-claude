@@ -1,0 +1,90 @@
+diff --git a/memory/event-trace/_untagged.jsonl b/memory/event-trace/_untagged.jsonl
+new file mode 100644
+index 0000000..6f83634
+--- /dev/null
++++ b/memory/event-trace/_untagged.jsonl
+@@ -0,0 +1,6 @@
++{"timestamp": "2026-10-26T15:21:13.916799+00:00", "tool_name": "Skill", "summary": "{\"skill\": \"wake\"}", "is_error": false, "prev": "genesis", "hash": "4059f9925ef9c133eda9d516163c2bb1686d9e99e4892c2020442f4558c877e4"}
++{"timestamp": "2026-10-26T15:21:14.131886+00:00", "tool_name": "Glob", "summary": "{\"pattern\": \"tally/**/*.py\"}", "is_error": false, "prev": "4059f9925ef9c133eda9d516163c2bb1686d9e99e4892c2020442f4558c877e4", "hash": "016c7b68a350610d2a7a85c3feb1406522dc2290d316fe36c3dfe4280e0930eb"}
++{"timestamp": "2026-10-26T15:21:14.356876+00:00", "tool_name": "Glob", "summary": "{\"pattern\": \"tasks/*\"}", "is_error": false, "prev": "016c7b68a350610d2a7a85c3feb1406522dc2290d316fe36c3dfe4280e0930eb", "hash": "7ecd07ae7585d4de33b7f7af1a0fd33373caf02da9ad27dfe0bbf733ade6191d"}
++{"timestamp": "2026-10-26T15:21:15.679679+00:00", "tool_name": "Bash", "summary": "{\"command\": \"git log --oneline -10; ls PROJECT_KANBAN.md memory 2>&1 | head; cat src/tally/cli.py; cat src/tally/reports.py\"}", "is_error": false, "prev": "7ecd07ae7585d4de33b7f7af1a0fd33373caf02da9ad27dfe0bbf733ade6191d", "hash": "ff55a121b44d7233f6acde85b352e7a0cbd18949715dbab7298a868a1d239041"}
++{"timestamp": "2026-10-26T15:21:18.701688+00:00", "tool_name": "Bash", "summary": "{\"command\": \"grep -n \\\"def parse_date\\\" -A12 src/tally/models.py; grep -n \\\"since\\\\|summary\\\" -B2 -A12 tests/test_cli.py | head -80; sed -n 1,30p tests/test_cli.py\"}", "is_error": false, "prev": "ff55a121b44d7233f6acde85b352e7a0cbd18949715dbab7298a868a1d239041", "hash": "61d9fc15ea115227b42bd962f63d2cb78adfe1b24131af39a54c05e15ff1258e"}
++{"timestamp": "2026-10-26T15:21:25.366091+00:00", "tool_name": "Bash", "summary": "{\"command\": \"python3 - <<'E'\\nimport re\\np='src/tally/models.py'\\ns=open(p).read()\\ns=s.replace('''def normalize_category''','''def parse_month(text):\\n    \\\"\\\"\\\"Parse \\\"YYYY-MM\\\" into (year, month). Raises ValueError with a readable message.\\\"\\\"\\\"\\n    try:\\n        if len(text.strip()) != 7:\\n    ", "is_error": false, "prev": "61d9fc15ea115227b42bd962f63d2cb78adfe1b24131af39a54c05e15ff1258e", "hash": "6242dec2d46d23e884ca0b5995a65402f492198c0516f5c90f3fdd9a80ffda3d"}
+diff --git a/src/tally/cli.py b/src/tally/cli.py
+index cde1108..0796915 100644
+--- a/src/tally/cli.py
++++ b/src/tally/cli.py
+@@ -5,7 +5,7 @@ import datetime as dt
+ import sys
+ 
+ from tally import __version__, recurring, reports, storage
+-from tally.models import new_expense, normalize_category, parse_date
++from tally.models import new_expense, normalize_category, parse_date, parse_month
+ from tally.money import parse_amount, split_evenly
+ 
+ 
+@@ -38,6 +38,9 @@ def cmd_list(args):
+ 
+ def cmd_summary(args):
+     expenses = storage.load()
++    if args.month:
++        year, month = parse_month(args.month)
++        expenses = [e for e in expenses if (e.date.year, e.date.month) == (year, month)]
+     if not expenses:
+         print("No expenses.")
+         return 0
+@@ -108,6 +111,7 @@ def build_parser():
+     lst.set_defaults(func=cmd_list)
+ 
+     summary = sub.add_parser("summary", help="totals per category")
++    summary.add_argument("--month", help="only expenses in this month, YYYY-MM")
+     summary.set_defaults(func=cmd_summary)
+ 
+     top = sub.add_parser("top", help="the biggest single expenses")
+diff --git a/src/tally/models.py b/src/tally/models.py
+index 7b548f2..e4740eb 100644
+--- a/src/tally/models.py
++++ b/src/tally/models.py
+@@ -56,6 +56,17 @@ def parse_date(text):
+         raise ValueError(f"not a valid date (use YYYY-MM-DD): {text!r}") from None
+ 
+ 
++def parse_month(text):
++    """Parse "YYYY-MM" into (year, month). Raises ValueError with a readable message."""
++    try:
++        if len(text.strip()) != 7:
++            raise ValueError
++        parsed = dt.datetime.strptime(text.strip(), "%Y-%m")
++    except ValueError:
++        raise ValueError(f"not a valid month (use YYYY-MM): {text!r}") from None
++    return parsed.year, parsed.month
++
++
+ def normalize_category(text):
+     """User input "Eating Out" -> "eating-out"."""
+     return "-".join(text.strip().lower().split())
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 97e72cb..df934b9 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -15,6 +15,20 @@ def test_summary_totals(tally):
+     assert "total" in out and "$52.50" in out
+ 
+ 
++def test_summary_month(tally):
++    tally("add", "10", "food", "--date", "2026-03-02")
++    tally("add", "5", "food", "--date", "2026-04-01")
++    out = tally("summary", "--month", "2026-03").stdout
++    assert "$10.00" in out and "$15.00" not in out
++
++
++def test_summary_bad_month_exits_2(tally):
++    for bad in ("2026-13", "march"):
++        result = tally("summary", "--month", bad)
++        assert result.returncode == 2
++        assert "error:" in result.stderr
++
++
+ def test_bad_amount_exits_2(tally):
+     result = tally("add", "twelve", "food")
+     assert result.returncode == 2

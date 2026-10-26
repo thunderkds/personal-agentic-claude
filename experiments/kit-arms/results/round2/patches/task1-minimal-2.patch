@@ -1,0 +1,87 @@
+diff --git a/src/tally/cli.py b/src/tally/cli.py
+index cde1108..0796915 100644
+--- a/src/tally/cli.py
++++ b/src/tally/cli.py
+@@ -5,7 +5,7 @@ import datetime as dt
+ import sys
+ 
+ from tally import __version__, recurring, reports, storage
+-from tally.models import new_expense, normalize_category, parse_date
++from tally.models import new_expense, normalize_category, parse_date, parse_month
+ from tally.money import parse_amount, split_evenly
+ 
+ 
+@@ -38,6 +38,9 @@ def cmd_list(args):
+ 
+ def cmd_summary(args):
+     expenses = storage.load()
++    if args.month:
++        year, month = parse_month(args.month)
++        expenses = [e for e in expenses if (e.date.year, e.date.month) == (year, month)]
+     if not expenses:
+         print("No expenses.")
+         return 0
+@@ -108,6 +111,7 @@ def build_parser():
+     lst.set_defaults(func=cmd_list)
+ 
+     summary = sub.add_parser("summary", help="totals per category")
++    summary.add_argument("--month", help="only expenses in this month, YYYY-MM")
+     summary.set_defaults(func=cmd_summary)
+ 
+     top = sub.add_parser("top", help="the biggest single expenses")
+diff --git a/src/tally/models.py b/src/tally/models.py
+index 7b548f2..56f1e6f 100644
+--- a/src/tally/models.py
++++ b/src/tally/models.py
+@@ -56,6 +56,18 @@ def parse_date(text):
+         raise ValueError(f"not a valid date (use YYYY-MM-DD): {text!r}") from None
+ 
+ 
++def parse_month(text):
++    """Parse "YYYY-MM" into (year, month). Raises ValueError with a readable message."""
++    text = text.strip()
++    try:
++        if len(text) != 7:
++            raise ValueError
++        first = dt.date.fromisoformat(text + "-01")
++    except ValueError:
++        raise ValueError(f"not a valid month (use YYYY-MM): {text!r}") from None
++    return first.year, first.month
++
++
+ def normalize_category(text):
+     """User input "Eating Out" -> "eating-out"."""
+     return "-".join(text.strip().lower().split())
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 97e72cb..2faec59 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -15,6 +15,28 @@ def test_summary_totals(tally):
+     assert "total" in out and "$52.50" in out
+ 
+ 
++def test_summary_month(tally):
++    tally("add", "10", "food", "--date", "2026-03-01")
++    tally("add", "5", "food", "--date", "2026-03-31")
++    tally("add", "40", "books", "--date", "2026-04-01")
++    tally("add", "99", "rent", "--date", "2026-02-28")
++    out = tally("summary", "--month", "2026-03").stdout
++    assert "$15.00" in out and "books" not in out and "rent" not in out
++
++
++def test_summary_month_without_expenses(tally):
++    tally("add", "10", "food", "--date", "2026-03-01")
++    result = tally("summary", "--month", "2026-05")
++    assert result.returncode == 0 and "No expenses." in result.stdout
++
++
++def test_summary_bad_month_exits_2(tally):
++    for bad in ("2026-13", "march", "2026-3", "2026-03-01"):
++        result = tally("summary", "--month", bad)
++        assert result.returncode == 2, bad
++        assert "error:" in result.stderr
++
++
+ def test_bad_amount_exits_2(tally):
+     result = tally("add", "twelve", "food")
+     assert result.returncode == 2

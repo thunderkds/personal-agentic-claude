@@ -1,0 +1,343 @@
+diff --git a/README.md b/README.md
+index 0a55697..b6368a9 100644
+--- a/README.md
++++ b/README.md
+@@ -26,11 +26,11 @@ Categories are lowercased and spaces become dashes ("Eating Out" ->
+ 
+ ## Data
+ 
+-My expenses live in `data/expenses.csv` (one row per expense, with a header
+-line) and my recurring bills in `data/recurring.csv`. The `data/` folder is
++My expenses live in `data/expenses.json` (a list of objects with `date`,
++`amount`, `category` and `note`) and my recurring bills in `data/recurring.json`. The `data/` folder is
+ **not** in git — it is my real spending history, so don't lose it.
+ 
+-Set `TALLY_FILE=/some/other/file.csv` to point tally at a different file
++Set `TALLY_FILE=/some/other/file.json` to point tally at a different file
+ (the tests do this so they never touch my data).
+ 
+ Amounts are stored and computed as whole cents; floats never touch money.
+@@ -42,7 +42,7 @@ src/tally/
+   cli.py        argparse commands
+   models.py     the Expense record and its validation
+   money.py      parsing amounts, cents helpers
+-  storage.py    reading/writing the CSV file
++  storage.py    reading/writing the JSON file
+   reports.py    totals and filters
+   recurring.py  recurring bills and what is still due
+ tests/          pytest suite
+diff --git a/src/tally/models.py b/src/tally/models.py
+index 7b548f2..3dc56f7 100644
+--- a/src/tally/models.py
++++ b/src/tally/models.py
+@@ -32,19 +32,28 @@ class Expense:
+         """The expense's month as "YYYY-MM"."""
+         return self.date.strftime("%Y-%m")
+ 
+-    def to_row(self):
+-        return [self.date.isoformat(), to_plain(self.amount), self.category, self.note]
++    def to_dict(self):
++        return {
++            "date": self.date.isoformat(),
++            "amount": to_plain(self.amount),
++            "category": self.category,
++            "note": self.note,
++        }
+ 
+     @classmethod
+-    def from_row(cls, row):
+-        if len(row) != len(FIELDS):
+-            raise ValueError(f"expected {len(FIELDS)} fields, got {len(row)}: {row!r}")
+-        date_text, amount_text, category, note = row
++    def from_dict(cls, data):
++        if not isinstance(data, dict):
++            raise ValueError(f"expected an object, got {data!r}")
++        missing = [f for f in FIELDS if f not in data]
++        if missing:
++            raise ValueError(f"missing {', '.join(missing)}")
++        if not all(isinstance(data[f], str) for f in FIELDS):
++            raise ValueError("date, amount, category and note must all be strings")
+         return cls(
+-            date=parse_date(date_text),
+-            amount=parse_amount(amount_text),
+-            category=category,
+-            note=note,
++            date=parse_date(data["date"]),
++            amount=parse_amount(data["amount"]),
++            category=data["category"],
++            note=data["note"],
+         )
+ 
+ 
+diff --git a/src/tally/recurring.py b/src/tally/recurring.py
+index cd35554..2618e19 100644
+--- a/src/tally/recurring.py
++++ b/src/tally/recurring.py
+@@ -1,14 +1,14 @@
+ """Recurring bills (rent, phone, subscriptions) and which ones are still due.
+ 
+-Recurring bills live in data/recurring.csv next to the expenses file:
++Recurring bills live in data/recurring.json next to the expenses file, as a
++list of objects:
+ 
+-    category,amount,day,note
+-    rent,1200.00,1,flat on Elm St
++    [{"category": "rent", "amount": "1200.00", "day": 1, "note": "flat on Elm St"}]
+ 
+ `day` is the day of the month the bill is normally paid (1-28).
+ """
+ 
+-import csv
++import json
+ from dataclasses import dataclass
+ from pathlib import Path
+ 
+@@ -36,25 +36,30 @@ class Bill:
+ 
+ 
+ def bills_path():
+-    return Path(storage.data_path()).with_name("recurring.csv")
++    return Path(storage.data_path()).with_name("recurring.json")
+ 
+ 
+ def load_bills(path=None):
+     path = Path(path or bills_path())
+     if not path.exists():
+         return []
++    try:
++        items = json.loads(path.read_text(encoding="utf-8"))
++    except ValueError as err:
++        raise storage.StorageError(f"{path}: {err}") from None
++    if not isinstance(items, list):
++        raise storage.StorageError(f"{path}: expected a list of bills")
+     bills = []
+-    with path.open(newline="", encoding="utf-8") as handle:
+-        for line_no, row in enumerate(csv.DictReader(handle), start=2):
+-            try:
+-                bills.append(Bill(
+-                    category=row["category"],
+-                    amount=parse_amount(row["amount"]),
+-                    day=int(row["day"]),
+-                    note=row.get("note") or "",
+-                ))
+-            except (KeyError, TypeError, ValueError) as err:
+-                raise storage.StorageError(f"{path}, line {line_no}: {err}") from None
++    for number, item in enumerate(items, start=1):
++        try:
++            bills.append(Bill(
++                category=item["category"],
++                amount=parse_amount(item["amount"]),
++                day=item["day"],
++                note=item.get("note") or "",
++            ))
++        except (KeyError, TypeError, AttributeError, ValueError) as err:
++            raise storage.StorageError(f"{path}, entry {number}: {err}") from None
+     return bills
+ 
+ 
+diff --git a/src/tally/storage.py b/src/tally/storage.py
+index 585c270..38e5bec 100644
+--- a/src/tally/storage.py
++++ b/src/tally/storage.py
+@@ -1,14 +1,13 @@
+-"""Reading and writing the expenses file (CSV, one expense per line)."""
++"""Reading and writing the expenses file (JSON, a list of expense objects)."""
+ 
+-import csv
++import json
+ import os
+ from pathlib import Path
+ 
+-from tally.models import FIELDS, Expense
++from tally.models import Expense
+ 
+ PROJECT_ROOT = Path(__file__).resolve().parents[2]
+-DEFAULT_PATH = PROJECT_ROOT / "data" / "expenses.csv"
+-HEADER = ",".join(FIELDS)
++DEFAULT_PATH = PROJECT_ROOT / "data" / "expenses.json"
+ 
+ 
+ class StorageError(Exception):
+@@ -16,7 +15,7 @@ class StorageError(Exception):
+ 
+ 
+ def data_path():
+-    """Where the expenses live: $TALLY_FILE if set, else data/expenses.csv."""
++    """Where the expenses live: $TALLY_FILE if set, else data/expenses.json."""
+     override = os.environ.get("TALLY_FILE")
+     return Path(override) if override else DEFAULT_PATH
+ 
+@@ -26,38 +25,32 @@ def load(path=None):
+     path = Path(path or data_path())
+     if not path.exists():
+         return []
++    try:
++        items = json.loads(path.read_text(encoding="utf-8"))
++    except ValueError as err:
++        raise StorageError(f"{path}: {err}") from None
++    if not isinstance(items, list):
++        raise StorageError(f"{path}: expected a list of expenses")
+     expenses = []
+-    with path.open(newline="", encoding="utf-8") as handle:
+-        reader = csv.reader(handle)
+-        for line_no, row in enumerate(reader, start=1):
+-            if not row or (line_no == 1 and row == list(FIELDS)):
+-                continue
+-            try:
+-                expenses.append(Expense.from_row(row))
+-            except ValueError as err:
+-                raise StorageError(f"{path}, line {line_no}: {err}") from None
++    for number, item in enumerate(items, start=1):
++        try:
++            expenses.append(Expense.from_dict(item))
++        except ValueError as err:
++            raise StorageError(f"{path}, entry {number}: {err}") from None
+     return expenses
+ 
+ 
+-def _ensure_file(path):
+-    path.parent.mkdir(parents=True, exist_ok=True)
+-    if not path.exists():
+-        path.write_text(HEADER + "\n", encoding="utf-8")
+-
+-
+ def append(expense, path=None):
+     """Add one expense at the end of the file."""
+     path = Path(path or data_path())
+-    _ensure_file(path)
+-    with path.open("a", encoding="utf-8") as handle:
+-        handle.write(",".join(expense.to_row()) + "\n")
++    save_all(load(path) + [expense], path)
+ 
+ 
+ def save_all(expenses, path=None):
+-    """Rewrite the whole file. Used after a delete."""
++    """Rewrite the whole file (via a temp file, so a crash can't truncate it)."""
+     path = Path(path or data_path())
+     tmp = path.with_suffix(".tmp")
+     tmp.parent.mkdir(parents=True, exist_ok=True)
+-    lines = [HEADER] + [",".join(e.to_row()) for e in expenses]
+-    tmp.write_text("\n".join(lines) + "\n", encoding="utf-8")
++    text = json.dumps([e.to_dict() for e in expenses], indent=2, ensure_ascii=False)
++    tmp.write_text(text + "\n", encoding="utf-8")
+     os.replace(tmp, path)
+diff --git a/tests/conftest.py b/tests/conftest.py
+index ee942d9..78d0be1 100644
+--- a/tests/conftest.py
++++ b/tests/conftest.py
+@@ -11,7 +11,7 @@ sys.path.insert(0, str(SRC))
+ 
+ @pytest.fixture
+ def data_file(tmp_path, monkeypatch):
+-    path = tmp_path / "expenses.csv"
++    path = tmp_path / "expenses.json"
+     monkeypatch.setenv("TALLY_FILE", str(path))
+     return path
+ 
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 97e72cb..8a98f95 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -46,10 +46,17 @@ def test_split(tally):
+ 
+ 
+ def test_due(tally, data_file):
+-    data_file.with_name("recurring.csv").write_text(
+-        "category,amount,day,note\nrent,1200.00,1,flat\nphone,30.00,20,mobile\n"
++    data_file.with_name("recurring.json").write_text(
++        '[{"category": "rent", "amount": "1200.00", "day": 1, "note": "flat"},'
++        ' {"category": "phone", "amount": "30.00", "day": 20, "note": "mobile"}]'
+     )
+     tally("add", "1200", "rent", "--date", "2026-03-01")
+     assert tally("due", "--today", "2026-03-10").stdout.strip() == "Nothing due."
+     out = tally("due", "--today", "2026-04-25").stdout
+     assert "rent" in out and "phone" in out
++
++
++def test_due_bad_bill_file_exits_nonzero(tally, data_file):
++    data_file.with_name("recurring.json").write_text('[{"category": "rent"}]')
++    r = tally("due", "--today", "2026-03-10")
++    assert r.returncode != 0 and "entry 1" in r.stderr
+diff --git a/tests/test_models.py b/tests/test_models.py
+index 59f07fd..cfd6c61 100644
+--- a/tests/test_models.py
++++ b/tests/test_models.py
+@@ -5,9 +5,9 @@ import pytest
+ from tally.models import Expense, new_expense, normalize_category
+ 
+ 
+-def test_round_trip_row():
++def test_round_trip_dict():
+     e = Expense(dt.date(2026, 3, 2), 1250, "food", "groceries")
+-    assert Expense.from_row(e.to_row()) == e
++    assert Expense.from_dict(e.to_dict()) == e
+ 
+ 
+ def test_normalize_category():
+diff --git a/tests/test_storage.py b/tests/test_storage.py
+index 53923f9..bc6cb5b 100644
+--- a/tests/test_storage.py
++++ b/tests/test_storage.py
+@@ -1,4 +1,5 @@
+ import datetime as dt
++import json
+ 
+ import pytest
+ 
+@@ -7,21 +8,24 @@ from tally.models import Expense
+ 
+ 
+ def test_missing_file_is_empty(tmp_path):
+-    assert storage.load(tmp_path / "nope.csv") == []
++    assert storage.load(tmp_path / "nope.json") == []
+ 
+ 
+ def test_append_then_load(tmp_path):
+-    path = tmp_path / "e.csv"
++    path = tmp_path / "e.json"
+     a = Expense(dt.date(2026, 1, 5), 900, "transport", "bus pass")
+     b = Expense(dt.date(2026, 1, 6), 4550, "food", "")
+     storage.append(a, path)
+     storage.append(b, path)
+     assert storage.load(path) == [a, b]
+-    assert path.read_text().splitlines()[0] == storage.HEADER
++    assert json.loads(path.read_text()) == [
++        {"date": "2026-01-05", "amount": "9.00", "category": "transport", "note": "bus pass"},
++        {"date": "2026-01-06", "amount": "45.50", "category": "food", "note": ""},
++    ]
+ 
+ 
+ def test_save_all_rewrites(tmp_path):
+-    path = tmp_path / "e.csv"
++    path = tmp_path / "e.json"
+     a = Expense(dt.date(2026, 1, 5), 900, "transport", "bus pass")
+     storage.append(a, path)
+     storage.save_all([], path)
+@@ -29,7 +33,24 @@ def test_save_all_rewrites(tmp_path):
+ 
+ 
+ def test_corrupt_line_names_the_line(tmp_path):
+-    path = tmp_path / "e.csv"
+-    path.write_text("date,amount,category,note\n2026-01-05,abc,food,x\n")
+-    with pytest.raises(storage.StorageError, match="line 2"):
++    path = tmp_path / "e.json"
++    path.write_text(
++        '[{"date": "2026-01-05", "amount": "9.00", "category": "food", "note": ""},'
++        ' {"date": "2026-01-06", "amount": "abc", "category": "food", "note": "x"}]'
++    )
++    with pytest.raises(storage.StorageError, match="entry 2"):
++        storage.load(path)
++
++
++def test_invalid_json_is_a_storage_error(tmp_path):
++    path = tmp_path / "e.json"
++    path.write_text("not json")
++    with pytest.raises(storage.StorageError, match="e.json"):
++        storage.load(path)
++
++
++def test_missing_key_is_a_storage_error(tmp_path):
++    path = tmp_path / "e.json"
++    path.write_text('[{"date": "2026-01-05"}]')
++    with pytest.raises(storage.StorageError, match="entry 1"):
+         storage.load(path)

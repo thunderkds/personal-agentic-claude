@@ -1,0 +1,33 @@
+diff --git a/src/tally/cli.py b/src/tally/cli.py
+index cde1108..aa762da 100644
+--- a/src/tally/cli.py
++++ b/src/tally/cli.py
+@@ -41,7 +41,7 @@ def cmd_summary(args):
+     if not expenses:
+         print("No expenses.")
+         return 0
+-    for category, cents in reports.by_category(expenses):
++    for category, cents in sorted(reports.by_category(expenses), key=lambda item: (-item[1], item[0])):
+         dollars = f"${cents // 100:,}.{cents % 100:02d}"
+         print(f"{category:<14} {dollars:>11}")
+     grand = reports.total(expenses)
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 97e72cb..7120bb3 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -15,6 +15,15 @@ def test_summary_totals(tally):
+     assert "total" in out and "$52.50" in out
+ 
+ 
++def test_summary_biggest_total_first(tally):
++    tally("add", "5", "food", "--date", "2026-03-02")
++    tally("add", "1200", "rent", "--date", "2026-03-03")
++    tally("add", "40", "books", "--date", "2026-03-04")
++    tally("add", "40", "art", "--date", "2026-03-05")
++    lines = tally("summary").stdout.splitlines()
++    assert [line.split()[0] for line in lines] == ["rent", "art", "books", "food", "total"]
++
++
+ def test_bad_amount_exits_2(tally):
+     result = tally("add", "twelve", "food")
+     assert result.returncode == 2

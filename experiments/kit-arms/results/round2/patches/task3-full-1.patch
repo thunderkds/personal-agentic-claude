@@ -1,0 +1,137 @@
+diff --git a/memory/event-trace/_untagged.jsonl b/memory/event-trace/_untagged.jsonl
+new file mode 100644
+index 0000000..fd9bcd2
+--- /dev/null
++++ b/memory/event-trace/_untagged.jsonl
+@@ -0,0 +1,18 @@
++{"timestamp": "2026-10-26T15:11:31.553094+00:00", "tool_name": "Skill", "summary": "{\"skill\": \"wake\"}", "is_error": false, "prev": "genesis", "hash": "1067a59e67a115fe664a73bf62bf5862e381bb5e9207509157f40325f82d25e5"}
++{"timestamp": "2026-10-26T15:11:32.362257+00:00", "tool_name": "Grep", "summary": "{\"pattern\": \"cents|\\\\$\", \"path\": \"/tmp/tmpesbb1l8e/tmp794wkaju/tally/src/tally\", \"output_mode\": \"content\"}", "is_error": false, "prev": "1067a59e67a115fe664a73bf62bf5862e381bb5e9207509157f40325f82d25e5", "hash": "82ea5e8f5714d70ffb9e3725cc3faf61357d4aab17f44ae0e26241260640911f"}
++{"timestamp": "2026-10-26T15:11:34.305702+00:00", "tool_name": "Bash", "summary": "{\"command\": \"git log --oneline -10; ls; cat PROJECT_KANBAN.md 2>&1 | head -30; ls tasks memory 2>&1 | head; ls tests 2>&1\"}", "is_error": false, "prev": "82ea5e8f5714d70ffb9e3725cc3faf61357d4aab17f44ae0e26241260640911f", "hash": "3d65b504aa993f6868a72caad788301e10e487d2af87beae2fcc5262f7ece50d"}
++{"timestamp": "2026-10-26T15:11:34.495800+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmp794wkaju/tally/src/tally/cli.py\"}", "is_error": false, "prev": "3d65b504aa993f6868a72caad788301e10e487d2af87beae2fcc5262f7ece50d", "hash": "4992de01079582ee4833c03f7a08ae26fc1e174b9ffacb05e46edc54a2ad1f30"}
++{"timestamp": "2026-10-26T15:11:34.672330+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmp794wkaju/tally/src/tally/money.py\"}", "is_error": false, "prev": "4992de01079582ee4833c03f7a08ae26fc1e174b9ffacb05e46edc54a2ad1f30", "hash": "dea2c3ff7d0b7440b746345db5fc8ee4c9c55daf87a5a5b8d9be16fa6f4dbc1c"}
++{"timestamp": "2026-10-26T15:11:47.838048+00:00", "tool_name": "Edit", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmp794wkaju/tally/src/tally/money.py\", \"old_string\": \"def split_evenly(\", \"new_string\": \"def format_amount(cents):\\n    \\\"\\\"\\\"Cents as a display string with thousands separators: 123456 -> \\\"$1,234.56\\\".\\\"\\\"\\\"\\n    return f\\\"${cents // 100:,}.{cents % 100:02d}\\\"\\n\\n\\n", "is_error": false, "prev": "dea2c3ff7d0b7440b746345db5fc8ee4c9c55daf87a5a5b8d9be16fa6f4dbc1c", "hash": "72b8032f54165b19a7fa3497b9493b07a3b37dc00b8f97ac83b3619f866b4ccb"}
++{"timestamp": "2026-10-26T15:11:48.502246+00:00", "tool_name": "Edit", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmp794wkaju/tally/src/tally/cli.py\", \"old_string\": \"from tally.money import parse_amount, split_evenly\", \"new_string\": \"from tally.money import format_amount, parse_amount, split_evenly\", \"replace_all\": false}", "is_error": false, "prev": "72b8032f54165b19a7fa3497b9493b07a3b37dc00b8f97ac83b3619f866b4ccb", "hash": "76a32bfb5180c374a838c9a39199fa4a87b7c0694efe7acc7835d8ead48d446f"}
++{"timestamp": "2026-10-26T15:11:49.236202+00:00", "tool_name": "Edit", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmp794wkaju/tally/src/tally/cli.py\", \"old_string\": \"f\\\"${expense.amount // 100:,}.{expense.amount % 100:02d}\\\"\", \"new_string\": \"format_amount(expense.amount)\", \"replace_all\": false}", "is_error": false, "prev": "76a32bfb5180c374a838c9a39199fa4a87b7c0694efe7acc7835d8ead48d446f", "hash": "b4d40bfc04a7796893c32ebaeb7959767bed08377945bbb78d5a64ba8d80f958"}
++{"timestamp": "2026-10-26T15:11:50.067963+00:00", "tool_name": "Edit", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmp794wkaju/tally/src/tally/cli.py\", \"old_string\": \"        dollars = f\\\"${e.amount // 100:,}.{e.amount % 100:02d}\\\"\\n        print(f\\\"{number:>4}\", \"new_string\": \"        dollars = format_amount(e.amount)\\n        print(f\\\"{number:>4}\", \"replace_all\": false}", "is_error": false, "prev": "b4d40bfc04a7796893c32ebaeb7959767bed08377945bbb78d5a64ba8d80f958", "hash": "eaaa77ede760f97a0fab5070ddb2fc0125923ec552f19f838e2b2ae917227d5b"}
++{"timestamp": "2026-10-26T15:11:50.704261+00:00", "tool_name": "Edit", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmp794wkaju/tally/src/tally/cli.py\", \"old_string\": \"f\\\"${cents // 100:,}.{cents % 100:02d}\\\"\", \"new_string\": \"format_amount(cents)\", \"replace_all\": false}", "is_error": false, "prev": "eaaa77ede760f97a0fab5070ddb2fc0125923ec552f19f838e2b2ae917227d5b", "hash": "3def6e203022283726fb2d1cb700a6276bc1229119b84763fecb510ac608f815"}
++{"timestamp": "2026-10-26T15:11:51.371344+00:00", "tool_name": "Edit", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmp794wkaju/tally/src/tally/cli.py\", \"old_string\": \"f\\\"${grand // 100:,}.{grand % 100:02d}\\\"\", \"new_string\": \"format_amount(grand)\", \"replace_all\": false}", "is_error": false, "prev": "3def6e203022283726fb2d1cb700a6276bc1229119b84763fecb510ac608f815", "hash": "429a7ef21680e7f8cdd5ec9a11abd0107a17327ce8f7c7bb9c4cf6d6629571c6"}
++{"timestamp": "2026-10-26T15:11:52.279777+00:00", "tool_name": "Edit", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmp794wkaju/tally/src/tally/cli.py\", \"old_string\": \"        dollars = f\\\"${e.amount // 100:,}.{e.amount % 100:02d}\\\"\\n        print(f\\\"{dollars:>11}  {e.date\", \"new_string\": \"        dollars = format_amount(e.amount)\\n        print(f\\\"{dollars:>11}  {e.date\", \"replace", "is_error": false, "prev": "429a7ef21680e7f8cdd5ec9a11abd0107a17327ce8f7c7bb9c4cf6d6629571c6", "hash": "061ead77745f2b8b9eb2d0a924a5bce1e47dea10e81d73a35c555dbf459e028a"}
++{"timestamp": "2026-10-26T15:11:52.945070+00:00", "tool_name": "Edit", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmp794wkaju/tally/src/tally/cli.py\", \"old_string\": \"f\\\"${share // 100:,}.{share % 100:02d}\\\"\", \"new_string\": \"format_amount(share)\", \"replace_all\": false}", "is_error": false, "prev": "061ead77745f2b8b9eb2d0a924a5bce1e47dea10e81d73a35c555dbf459e028a", "hash": "bb2383c59413775fb351b5189c1c2e8697fa939cd8f706b00867fce0d1555de3"}
++{"timestamp": "2026-10-26T15:11:53.637851+00:00", "tool_name": "Edit", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmp794wkaju/tally/src/tally/cli.py\", \"old_string\": \"f\\\"${bill.amount // 100:,}.{bill.amount % 100:02d}\\\"\", \"new_string\": \"format_amount(bill.amount)\", \"replace_all\": false}", "is_error": false, "prev": "bb2383c59413775fb351b5189c1c2e8697fa939cd8f706b00867fce0d1555de3", "hash": "99d03c88decddd15d62eaf06667bdb1d7f27ec3fd7e3810fb676064a8b8868ea"}
++{"timestamp": "2026-10-26T15:11:53.938452+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmp794wkaju/tally/tests/test_money.py\"}", "is_error": false, "prev": "99d03c88decddd15d62eaf06667bdb1d7f27ec3fd7e3810fb676064a8b8868ea", "hash": "42bd2848e37e7a443e0d213bd1ce14b9ccafe162df14bc3515efa8e287785320"}
++{"timestamp": "2026-10-26T15:11:57.285565+00:00", "tool_name": "Edit", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmp794wkaju/tally/tests/test_money.py\", \"old_string\": \"from tally.money import parse_amount, split_evenly, to_plain\\n\", \"new_string\": \"from tally.money import format_amount, parse_amount, split_evenly, to_plain\\n\", \"replace_all\": false}", "is_error": false, "prev": "42bd2848e37e7a443e0d213bd1ce14b9ccafe162df14bc3515efa8e287785320", "hash": "5f926c09528d646368ce0f9c963b3736ce500b7953b8a7bcbf51f45c6ce412f8"}
++{"timestamp": "2026-10-26T15:11:58.342374+00:00", "tool_name": "Edit", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmp794wkaju/tally/tests/test_money.py\", \"old_string\": \"def test_split_evenly_adds_up():\", \"new_string\": \"@pytest.mark.parametrize(\\\"cents, text\\\", [\\n    (0, \\\"$0.00\\\"), (5, \\\"$0.05\\\"), (100, \\\"$1.00\\\"), (123456, \\\"$1,234.56\\\"),\\n    (100000000, \\\"$1,000,000.00\\\"),\\n]", "is_error": false, "prev": "5f926c09528d646368ce0f9c963b3736ce500b7953b8a7bcbf51f45c6ce412f8", "hash": "cfce93cd43e67688303f3c96c76af12181ec9862043f9dc2e505710a1d6f1865"}
++{"timestamp": "2026-10-26T15:12:01.061474+00:00", "tool_name": "Bash", "summary": "{\"command\": \"grep -n '// 100' src/tally/*.py; python3 -m pytest -q 2>&1 | tail -5\"}", "is_error": false, "prev": "cfce93cd43e67688303f3c96c76af12181ec9862043f9dc2e505710a1d6f1865", "hash": "2badee9127f67c584a86054f5e6e838cb9a9a312d00e4ff0d8b74b6a5f3f3eb3"}
+diff --git a/src/tally/cli.py b/src/tally/cli.py
+index cde1108..cbda78d 100644
+--- a/src/tally/cli.py
++++ b/src/tally/cli.py
+@@ -6,14 +6,14 @@ import sys
+ 
+ from tally import __version__, recurring, reports, storage
+ from tally.models import new_expense, normalize_category, parse_date
+-from tally.money import parse_amount, split_evenly
++from tally.money import format_amount, parse_amount, split_evenly
+ 
+ 
+ def cmd_add(args):
+     date = parse_date(args.date) if args.date else None
+     expense = new_expense(args.amount, args.category, args.note or "", date=date)
+     storage.append(expense)
+-    dollars = f"${expense.amount // 100:,}.{expense.amount % 100:02d}"
++    dollars = format_amount(expense.amount)
+     print(f"Added {dollars} to {expense.category} on {expense.date.isoformat()}.")
+     return 0
+ 
+@@ -31,7 +31,7 @@ def cmd_list(args):
+         print("No expenses.")
+         return 0
+     for number, e in numbered:
+-        dollars = f"${e.amount // 100:,}.{e.amount % 100:02d}"
++        dollars = format_amount(e.amount)
+         print(f"{number:>4}  {e.date.isoformat()}  {dollars:>11}  {e.category:<14} {e.note}")
+     return 0
+ 
+@@ -42,10 +42,10 @@ def cmd_summary(args):
+         print("No expenses.")
+         return 0
+     for category, cents in reports.by_category(expenses):
+-        dollars = f"${cents // 100:,}.{cents % 100:02d}"
++        dollars = format_amount(cents)
+         print(f"{category:<14} {dollars:>11}")
+     grand = reports.total(expenses)
+-    dollars = f"${grand // 100:,}.{grand % 100:02d}"
++    dollars = format_amount(grand)
+     print(f"{'total':<14} {dollars:>11}")
+     return 0
+ 
+@@ -54,7 +54,7 @@ def cmd_top(args):
+     if args.count < 1:
+         raise ValueError("count must be at least 1")
+     for e in reports.largest(storage.load(), args.count):
+-        dollars = f"${e.amount // 100:,}.{e.amount % 100:02d}"
++        dollars = format_amount(e.amount)
+         print(f"{dollars:>11}  {e.date.isoformat()}  {e.category:<14} {e.note}")
+     return 0
+ 
+@@ -63,7 +63,7 @@ def cmd_split(args):
+     cents = parse_amount(args.amount)
+     shares = split_evenly(cents, args.people)
+     for person, share in enumerate(shares, start=1):
+-        dollars = f"${share // 100:,}.{share % 100:02d}"
++        dollars = format_amount(share)
+         print(f"person {person}: {dollars}")
+     return 0
+ 
+@@ -75,7 +75,7 @@ def cmd_due(args):
+         print("Nothing due.")
+         return 0
+     for bill in due:
+-        dollars = f"${bill.amount // 100:,}.{bill.amount % 100:02d}"
++        dollars = format_amount(bill.amount)
+         print(f"{bill.category:<14} {dollars:>11}  (day {bill.day}) {bill.note}".rstrip())
+     return 0
+ 
+diff --git a/src/tally/money.py b/src/tally/money.py
+index 755de5c..741f37c 100644
+--- a/src/tally/money.py
++++ b/src/tally/money.py
+@@ -27,6 +27,11 @@ def to_plain(cents):
+     return f"{cents // 100}.{cents % 100:02d}"
+ 
+ 
++def format_amount(cents):
++    """Cents as a display string with thousands separators: 123456 -> "$1,234.56"."""
++    return f"${cents // 100:,}.{cents % 100:02d}"
++
++
+ def split_evenly(cents, parts):
+     """Split an amount into `parts` shares that add back up to exactly `cents`.
+ 
+diff --git a/tests/test_money.py b/tests/test_money.py
+index c31d239..966f0e1 100644
+--- a/tests/test_money.py
++++ b/tests/test_money.py
+@@ -1,6 +1,6 @@
+ import pytest
+ 
+-from tally.money import parse_amount, split_evenly, to_plain
++from tally.money import format_amount, parse_amount, split_evenly, to_plain
+ 
+ 
+ @pytest.mark.parametrize("text, cents", [
+@@ -22,6 +22,14 @@ def test_to_plain():
+     assert to_plain(7) == "0.07"
+ 
+ 
++@pytest.mark.parametrize("cents, text", [
++    (0, "$0.00"), (5, "$0.05"), (100, "$1.00"), (123456, "$1,234.56"),
++    (100000000, "$1,000,000.00"),
++])
++def test_format_amount(cents, text):
++    assert format_amount(cents) == text
++
++
+ def test_split_evenly_adds_up():
+     assert split_evenly(100, 3) == [34, 33, 33]
+     assert sum(split_evenly(1001, 7)) == 1001

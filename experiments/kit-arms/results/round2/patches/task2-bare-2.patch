@@ -1,0 +1,46 @@
+diff --git a/src/tally/storage.py b/src/tally/storage.py
+index 585c270..460e6dd 100644
+--- a/src/tally/storage.py
++++ b/src/tally/storage.py
+@@ -49,8 +49,8 @@ def append(expense, path=None):
+     """Add one expense at the end of the file."""
+     path = Path(path or data_path())
+     _ensure_file(path)
+-    with path.open("a", encoding="utf-8") as handle:
+-        handle.write(",".join(expense.to_row()) + "\n")
++    with path.open("a", newline="", encoding="utf-8") as handle:
++        csv.writer(handle, lineterminator="\n").writerow(expense.to_row())
+ 
+ 
+ def save_all(expenses, path=None):
+@@ -58,6 +58,8 @@ def save_all(expenses, path=None):
+     path = Path(path or data_path())
+     tmp = path.with_suffix(".tmp")
+     tmp.parent.mkdir(parents=True, exist_ok=True)
+-    lines = [HEADER] + [",".join(e.to_row()) for e in expenses]
+-    tmp.write_text("\n".join(lines) + "\n", encoding="utf-8")
++    with tmp.open("w", newline="", encoding="utf-8") as handle:
++        writer = csv.writer(handle, lineterminator="\n")
++        writer.writerow(FIELDS)
++        writer.writerows(e.to_row() for e in expenses)
+     os.replace(tmp, path)
+diff --git a/tests/test_storage.py b/tests/test_storage.py
+index 53923f9..38044b7 100644
+--- a/tests/test_storage.py
++++ b/tests/test_storage.py
+@@ -28,6 +28,15 @@ def test_save_all_rewrites(tmp_path):
+     assert storage.load(path) == []
+ 
+ 
++def test_note_with_comma_and_quotes_round_trips(tmp_path):
++    path = tmp_path / "e.csv"
++    a = Expense(dt.date(2026, 1, 5), 1840, "eating-out", 'pho, then "bubble" tea')
++    storage.append(a, path)
++    assert storage.load(path) == [a]
++    storage.save_all([a], path)
++    assert storage.load(path) == [a]
++
++
+ def test_corrupt_line_names_the_line(tmp_path):
+     path = tmp_path / "e.csv"
+     path.write_text("date,amount,category,note\n2026-01-05,abc,food,x\n")

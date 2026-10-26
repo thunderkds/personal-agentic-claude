@@ -1,0 +1,640 @@
+diff --git a/.claude/hooks/.state/step_count_5e2dcde422e747d79b1c886350351a53_T001.txt b/.claude/hooks/.state/step_count_5e2dcde422e747d79b1c886350351a53_T001.txt
+new file mode 100644
+index 0000000..c393a51
+--- /dev/null
++++ b/.claude/hooks/.state/step_count_5e2dcde422e747d79b1c886350351a53_T001.txt
+@@ -0,0 +1,2 @@
++3
++0
+\ No newline at end of file
+diff --git a/PROJECT_KANBAN.md b/PROJECT_KANBAN.md
+new file mode 100644
+index 0000000..49d820f
+--- /dev/null
++++ b/PROJECT_KANBAN.md
+@@ -0,0 +1,24 @@
++# PROJECT_KANBAN.md
++**Last updated**: 2026-10-26
++
++> Compact task board. Update this file whenever a task status changes.
++
++---
++
++## Board
++
++### Todo
++
++### In Progress
++
++### Ready for Review
++- [ ] **T001** — Allow negative amounts (refunds) | backend-developer | C2 | PR/branch: master (uncommitted)
++
++### Done
++
++---
++
++## Blocked
++
++| Task | Reason | Waiting on |
++|------|--------|-----------|
+diff --git a/memory/event-trace/T001.jsonl b/memory/event-trace/T001.jsonl
+new file mode 100644
+index 0000000..c169ab4
+--- /dev/null
++++ b/memory/event-trace/T001.jsonl
+@@ -0,0 +1,3 @@
++{"timestamp": "2026-10-26T15:18:36.167319+00:00", "tool_name": "Write", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpdqhzliux/tally/tasks/TASK_GUIDE_T001.md\", \"content\": \"# TASK_GUIDE \\u2014 T001: Allow negative amounts (refunds)\\n**Date**: 2026-10-26\\n**Complexity Level**: C2\\n**Risk Level**: Low\\n**Priority**: P1\\n**Assigned agent**: backend-developer\\n**Agent guide**: `agents/", "is_error": false, "prev": "genesis", "hash": "3873d4e240bf18496cbf22223fcb8e1ae4a6575a7645a63b625f277b1017db54"}
++{"timestamp": "2026-10-26T15:18:44.035153+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpdqhzliux/tally/tasks/TASK_GUIDE_T001.md\"}", "is_error": false, "prev": "3873d4e240bf18496cbf22223fcb8e1ae4a6575a7645a63b625f277b1017db54", "hash": "466157d3160698d41a7d187be03caa4f063c917548154decd877b87f87f4af9c"}
++{"timestamp": "2026-10-26T15:19:40.780688+00:00", "tool_name": "Agent", "summary": "{\"description\": \"T001 refund amounts\", \"prompt\": \"Task T001. Read tasks/TASK_GUIDE_T001.md in full and agents/backend.md, then implement it test-first. Working dir: /tmp/tmpesbb1l8e/tmpdqhzliux/tally. No PROJECT_SPEC.md exists; the guide is the spec. Memory slice: none (memory/MEMORY.md is empty). D", "is_error": false, "spawn": {"total_tokens": 43667, "tool_use_count": 12, "duration_ms": 58822, "resolved_model": "claude-sonnet-5-5", "agent_type": "backend-developer", "status": "completed", "usage": {"input_tokens": 2, "output_tokens": 881, "cache_creation_input_tokens": 1573, "cache_read_input_tokens": 41211, "cache_creation_5m": 1573, "cache_creation_1h": 0}, "tool_stats": {"read_count": 5, "search_count": 0, "bash_count": 6, "edit_file_count": 1, "lines_added": 67, "lines_removed": 0}}, "prev": "466157d3160698d41a7d187be03caa4f063c917548154decd877b87f87f4af9c", "hash": "9df5f9fa668b51e40666c11a3d07e698c787d0e211cd182c546b3bef68ab759e"}
+diff --git a/memory/event-trace/_untagged.jsonl b/memory/event-trace/_untagged.jsonl
+new file mode 100644
+index 0000000..9554a92
+--- /dev/null
++++ b/memory/event-trace/_untagged.jsonl
+@@ -0,0 +1,28 @@
++{"timestamp": "2026-10-26T15:17:59.723249+00:00", "tool_name": "Skill", "summary": "{\"skill\": \"wake\"}", "is_error": false, "prev": "genesis", "hash": "ea6e668e565cd91ebe846f340dcd4e887b79291b81035bca605d34bbbe4db2f9"}
++{"timestamp": "2026-10-26T15:17:59.829791+00:00", "tool_name": "Glob", "summary": "{\"pattern\": \"**/*.py\"}", "is_error": false, "prev": "ea6e668e565cd91ebe846f340dcd4e887b79291b81035bca605d34bbbe4db2f9", "hash": "aa0a9fe040285263a57dabc842c350b29bbf2a05d2438f36683e9e7490f1d010"}
++{"timestamp": "2026-10-26T15:18:02.249046+00:00", "tool_name": "Bash", "summary": "{\"command\": \"python3 scripts/pull_moment.py wake; git log --oneline -10; python3 skills/wake/scripts/dirty_worktrees.py; ls PROJECT_KANBAN.md memory tasks 2>&1 | head -30\"}", "is_error": false, "prev": "aa0a9fe040285263a57dabc842c350b29bbf2a05d2438f36683e9e7490f1d010", "hash": "6d1e07a0a474d4a8b087b75cd300cfb38481716bee14e03fbce6010e9a396e77"}
++{"timestamp": "2026-10-26T15:18:02.454675+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpdqhzliux/tally/memory/MEMORY.md\"}", "is_error": false, "prev": "6d1e07a0a474d4a8b087b75cd300cfb38481716bee14e03fbce6010e9a396e77", "hash": "8558b9afae80815b01e67488cba3c04afebce4e623211d059582421e8e39c417"}
++{"timestamp": "2026-10-26T15:18:02.630579+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpdqhzliux/tally/src/tally/money.py\"}", "is_error": false, "prev": "8558b9afae80815b01e67488cba3c04afebce4e623211d059582421e8e39c417", "hash": "4a89ef00a1c3273962e87270a56a5f3e635ee1ad9bb8ca341bd9729cec5f8671"}
++{"timestamp": "2026-10-26T15:18:02.963838+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpdqhzliux/tally/src/tally/models.py\"}", "is_error": false, "prev": "4a89ef00a1c3273962e87270a56a5f3e635ee1ad9bb8ca341bd9729cec5f8671", "hash": "cf064dbb3f0101f94e386fb9d7c2bc2c2126054f8a3581fbf68b7bb7ccfff29e"}
++{"timestamp": "2026-10-26T15:18:03.295886+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpdqhzliux/tally/src/tally/cli.py\"}", "is_error": false, "prev": "cf064dbb3f0101f94e386fb9d7c2bc2c2126054f8a3581fbf68b7bb7ccfff29e", "hash": "f5650d62b46ddc9e38ff019eca3300a7ab31d2cb54d5e67a0567c93737b4abd7"}
++{"timestamp": "2026-10-26T15:18:07.446730+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpdqhzliux/tally/src/tally/reports.py\"}", "is_error": false, "prev": "f5650d62b46ddc9e38ff019eca3300a7ab31d2cb54d5e67a0567c93737b4abd7", "hash": "7dba0dbf95bf5b09d24b4ec0e28533b16960baa83875ca857cb47bf70226d9f9"}
++{"timestamp": "2026-10-26T15:18:07.811739+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpdqhzliux/tally/src/tally/storage.py\"}", "is_error": false, "prev": "7dba0dbf95bf5b09d24b4ec0e28533b16960baa83875ca857cb47bf70226d9f9", "hash": "a982788868c9de6bd3f4e1103ec372146be3ffdc1522e31230f66b8d304ae54f"}
++{"timestamp": "2026-10-26T15:18:08.242037+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpdqhzliux/tally/templates/TASK_GUIDE_template.md\"}", "is_error": false, "prev": "a982788868c9de6bd3f4e1103ec372146be3ffdc1522e31230f66b8d304ae54f", "hash": "bce2230139dd6a14940a510f5345adf4921cf054f3db3197538e360684bdd4d3"}
++{"timestamp": "2026-10-26T15:18:08.882138+00:00", "tool_name": "Bash", "summary": "{\"command\": \"cd /tmp/tmpesbb1l8e/tmpdqhzliux/tally; ls templates; grep -n \\\"amount\\\" src/tally/recurring.py | head -20; grep -rn \\\"money\\\\|parse_amount\\\" tests/test_money.py | head -5\"}", "is_error": false, "prev": "bce2230139dd6a14940a510f5345adf4921cf054f3db3197538e360684bdd4d3", "hash": "bd988ad17bfc03b41c98ce604d777dc996c793985f5291d303b02f5c25e8aff2"}
++{"timestamp": "2026-10-26T15:18:15.067626+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpdqhzliux/tally/templates/PROJECT_KANBAN_template.md\"}", "is_error": false, "prev": "bd988ad17bfc03b41c98ce604d777dc996c793985f5291d303b02f5c25e8aff2", "hash": "e2228e5d8db16227e38aaaf2b8e1422c46c1ed0eae2a2ad165657c0a95e382dd"}
++{"timestamp": "2026-10-26T15:18:16.702099+00:00", "tool_name": "Bash", "summary": "{\"command\": \"cd /tmp/tmpesbb1l8e/tmpdqhzliux/tally; ls PROJECT_SPEC.md PRD.md agents; python3 -m pytest -q 2>&1 | tail -3\"}", "is_error": false, "prev": "e2228e5d8db16227e38aaaf2b8e1422c46c1ed0eae2a2ad165657c0a95e382dd", "hash": "132bed8f9b558dcf7f882ded3ad8dcce2b4aeaa177dfc25fa971ce86f103c538"}
++{"timestamp": "2026-10-26T15:18:37.455520+00:00", "tool_name": "Write", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpdqhzliux/tally/PROJECT_KANBAN.md\", \"content\": \"# PROJECT_KANBAN.md\\n**Last updated**: 2026-10-26\\n\\n> Compact task board. Update this file whenever a task status changes.\\n\\n---\\n\\n## Board\\n\\n### Todo\\n\\n### In Progress\\n- [ ] **T001** \\u2014 Allow negative amount", "is_error": false, "prev": "132bed8f9b558dcf7f882ded3ad8dcce2b4aeaa177dfc25fa971ce86f103c538", "hash": "0cee8a121db5badb0868f8796f91ca04c050f37cec78858baa8d7aeb4c2fd149"}
++{"timestamp": "2026-10-26T15:18:44.368795+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpdqhzliux/tally/agents/backend.md\"}", "is_error": false, "prev": "0cee8a121db5badb0868f8796f91ca04c050f37cec78858baa8d7aeb4c2fd149", "hash": "c2773ec7073c762bbad93540a8b77ade0b5f22c500677c6a8b9e12a5461a653d"}
++{"timestamp": "2026-10-26T15:18:44.763931+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpdqhzliux/tally/memory/MEMORY.md\"}", "is_error": false, "prev": "c2773ec7073c762bbad93540a8b77ade0b5f22c500677c6a8b9e12a5461a653d", "hash": "8aff99947278d01a5a1e7ab85246a636f5da930d5a5432c0282e88bd0a2e0552"}
++{"timestamp": "2026-10-26T15:18:45.132146+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpdqhzliux/tally/agents/general-agent-template.md\"}", "is_error": false, "prev": "8aff99947278d01a5a1e7ab85246a636f5da930d5a5432c0282e88bd0a2e0552", "hash": "fbf70394aad684c1cbf672f84ed7f488589b356797c659163db8620c65daefb8"}
++{"timestamp": "2026-10-26T15:18:45.590201+00:00", "tool_name": "Bash", "summary": "{\"command\": \"ls; ls tally tests templates 2>&1 | head -50\"}", "is_error": false, "prev": "fbf70394aad684c1cbf672f84ed7f488589b356797c659163db8620c65daefb8", "hash": "c1c236db6322b46361096ea9648966d2b6b1d6e0ba7d55281bd60dbf405b8d85"}
++{"timestamp": "2026-10-26T15:18:48.181738+00:00", "tool_name": "Bash", "summary": "{\"command\": \"ls src/tally; cat src/tally/money.py src/tally/models.py src/tally/cli.py; cat tests/conftest.py tests/test_money.py tests/test_models.py tests/test_storage.py; cat templates/TASK_REVIEW_template.md\"}", "is_error": false, "prev": "c1c236db6322b46361096ea9648966d2b6b1d6e0ba7d55281bd60dbf405b8d85", "hash": "fea078c9222b27014f234e329e1c64157c94ceb015a927d98c9834140e5cd1da"}
++{"timestamp": "2026-10-26T15:18:48.514410+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpdqhzliux/tally/tests/test_cli.py\"}", "is_error": false, "prev": "fea078c9222b27014f234e329e1c64157c94ceb015a927d98c9834140e5cd1da", "hash": "ea8f7278cc1b727d6323a0f31e12cf299e49db713e7e521b5ca83d50bcc709df"}
++{"timestamp": "2026-10-26T15:18:51.885440+00:00", "tool_name": "Bash", "summary": "{\"command\": \"cat src/tally/reports.py; grep -n \\\"amount\\\\|parse\\\" src/tally/recurring.py | head -20; python3 -m pytest -q 2>&1 | tail -3\"}", "is_error": false, "prev": "ea8f7278cc1b727d6323a0f31e12cf299e49db713e7e521b5ca83d50bcc709df", "hash": "7c24adb459448e31ea7d651bbce7de212eb459b5e984cff0ba3b67cfec753635"}
++{"timestamp": "2026-10-26T15:19:07.610314+00:00", "tool_name": "Bash", "summary": "{\"command\": \"python3 - <<'EOF'\\nimport re\\np='tests/test_money.py'\\ns=open(p).read()\\ns=s.replace(\\\"from tally.money import parse_amount, split_evenly, to_plain\\\",\\\"from tally.money import format_money, parse_amount, split_evenly, to_plain\\\")\\ns+='''\\n\\n@pytest.mark.parametrize(\\\"text, cents\\\", [\\n ", "is_error": false, "prev": "7c24adb459448e31ea7d651bbce7de212eb459b5e984cff0ba3b67cfec753635", "hash": "dbbd804aa786476c520cd3ca4de3c849eef8200808df41f6dc02dbfb15bf153d"}
++{"timestamp": "2026-10-26T15:19:18.641617+00:00", "tool_name": "Bash", "summary": "{\"command\": \"python3 - <<'EOF'\\np='src/tally/money.py'\\ns=open(p).read()\\ns=s.replace('''def parse_amount(text):\\n    \\\"\\\"\\\"Parse a user-typed amount like \\\"12\\\", \\\"12.5\\\" or \\\"12.50\\\" into cents.\\n\\n    A leading \\\"$\\\" and thousands separators are accepted (\\\"$1,200.00\\\").\\n    Raises ValueError fo", "is_error": false, "prev": "dbbd804aa786476c520cd3ca4de3c849eef8200808df41f6dc02dbfb15bf153d", "hash": "362e56744c5806077a2d72187dc30e06ed193f55e47a2a99107b6b48ff06434e"}
++{"timestamp": "2026-10-26T15:19:24.714246+00:00", "tool_name": "Bash", "summary": "{\"command\": \"rm -f /tmp/x.csv && export TALLY_FILE=/tmp/x.csv PYTHONPATH=src && { \\nfor c in 'add 40.00 groceries \\\"weekly shop\\\"' 'add -15.00 groceries \\\"returned the blender\\\"' 'add 0 groceries' 'add -0.50 misc \\\"rounding\\\"' list top summary; do echo \\\"\\\\$ python3 -m tally $c\\\"; eval python3 -m ta", "is_error": false, "prev": "362e56744c5806077a2d72187dc30e06ed193f55e47a2a99107b6b48ff06434e", "hash": "ed8acbeb9673f5eedf39ecdd16c8452df09575120dbd79246c0dd22bcf98ba07"}
++{"timestamp": "2026-10-26T15:19:33.964076+00:00", "tool_name": "Write", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpdqhzliux/tally/tasks/TASK_REVIEW_T001.md\", \"content\": \"# TASK_REVIEW \\u2014 T001: Allow negative amounts (refunds)\\n\\n> Filled by the implementing agent (backend-developer) with evidence only. Review and verify rows are left for the Stage 4/5 reviewer.\\n\\n---\\n\\n##", "is_error": false, "prev": "ed8acbeb9673f5eedf39ecdd16c8452df09575120dbd79246c0dd22bcf98ba07", "hash": "6f88d38052baa49c0a78fc9511244352dd8d298833d9f52da5dc65e4030be409"}
++{"timestamp": "2026-10-26T15:19:46.023769+00:00", "tool_name": "Bash", "summary": "{\"command\": \"cd /tmp/tmpesbb1l8e/tmpdqhzliux/tally; python3 -m pytest -q 2>&1 | tail -2; export TALLY_FILE=/tmp/v.csv; rm -f $TALLY_FILE; for a in \\\"40 groceries\\\" \\\"-15.00 groceries blender\\\" \\\"-0.50 groceries\\\" \\\"0 groceries\\\" \\\"-0 groceries\\\"; do python3 -m tally add $a; done; python3 -m tally li", "is_error": false, "prev": "6f88d38052baa49c0a78fc9511244352dd8d298833d9f52da5dc65e4030be409", "hash": "68d64a7143df16fc56bc0c26f4989530e6c658d1a8d4351544e940ecfe01df42"}
++{"timestamp": "2026-10-26T15:19:49.390529+00:00", "tool_name": "Bash", "summary": "{\"command\": \"cd /tmp/tmpesbb1l8e/tmpdqhzliux/tally; export PYTHONPATH=src TALLY_FILE=/tmp/v.csv; rm -f $TALLY_FILE; for a in \\\"40 groceries\\\" \\\"-15.00 groceries blender\\\" \\\"-0.50 groceries\\\" \\\"0 groceries\\\" \\\"-0 groceries\\\"; do python3 -m tally add $a; done; python3 -m tally list; python3 -m tally t", "is_error": false, "prev": "68d64a7143df16fc56bc0c26f4989530e6c658d1a8d4351544e940ecfe01df42", "hash": "dec1fcc26215b23688eb8d82349288d76ab6ad61ec78a53949da42b46dcecaa8"}
++{"timestamp": "2026-10-26T15:19:52.251326+00:00", "tool_name": "Edit", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpdqhzliux/tally/PROJECT_KANBAN.md\", \"old_string\": \"### In Progress\\n- [ ] **T001** \\u2014 Allow negative amounts (refunds) | backend-developer | C2 | Risk: Low | P1 | Started: 2026-10-26\\n\\n### Ready for Review\\n\", \"new_string\": \"### In Progress\\n\\n### Ready for Rev", "is_error": false, "prev": "dec1fcc26215b23688eb8d82349288d76ab6ad61ec78a53949da42b46dcecaa8", "hash": "435ccd87d2836c081a3c6199df7d2da6e95437a410dfc98d895472c6414c66c5"}
+diff --git a/src/tally/cli.py b/src/tally/cli.py
+index cde1108..e7955de 100644
+--- a/src/tally/cli.py
++++ b/src/tally/cli.py
+@@ -6,14 +6,14 @@ import sys
+ 
+ from tally import __version__, recurring, reports, storage
+ from tally.models import new_expense, normalize_category, parse_date
+-from tally.money import parse_amount, split_evenly
++from tally.money import format_money, parse_amount, split_evenly
+ 
+ 
+ def cmd_add(args):
+     date = parse_date(args.date) if args.date else None
+     expense = new_expense(args.amount, args.category, args.note or "", date=date)
+     storage.append(expense)
+-    dollars = f"${expense.amount // 100:,}.{expense.amount % 100:02d}"
++    dollars = format_money(expense.amount)
+     print(f"Added {dollars} to {expense.category} on {expense.date.isoformat()}.")
+     return 0
+ 
+@@ -31,7 +31,7 @@ def cmd_list(args):
+         print("No expenses.")
+         return 0
+     for number, e in numbered:
+-        dollars = f"${e.amount // 100:,}.{e.amount % 100:02d}"
++        dollars = format_money(e.amount)
+         print(f"{number:>4}  {e.date.isoformat()}  {dollars:>11}  {e.category:<14} {e.note}")
+     return 0
+ 
+@@ -42,10 +42,10 @@ def cmd_summary(args):
+         print("No expenses.")
+         return 0
+     for category, cents in reports.by_category(expenses):
+-        dollars = f"${cents // 100:,}.{cents % 100:02d}"
++        dollars = format_money(cents)
+         print(f"{category:<14} {dollars:>11}")
+     grand = reports.total(expenses)
+-    dollars = f"${grand // 100:,}.{grand % 100:02d}"
++    dollars = format_money(grand)
+     print(f"{'total':<14} {dollars:>11}")
+     return 0
+ 
+@@ -54,7 +54,7 @@ def cmd_top(args):
+     if args.count < 1:
+         raise ValueError("count must be at least 1")
+     for e in reports.largest(storage.load(), args.count):
+-        dollars = f"${e.amount // 100:,}.{e.amount % 100:02d}"
++        dollars = format_money(e.amount)
+         print(f"{dollars:>11}  {e.date.isoformat()}  {e.category:<14} {e.note}")
+     return 0
+ 
+@@ -96,7 +96,7 @@ def build_parser():
+     sub = parser.add_subparsers(dest="command", required=True)
+ 
+     add = sub.add_parser("add", help="record an expense")
+-    add.add_argument("amount", help="e.g. 12.50")
++    add.add_argument("amount", help="e.g. 12.50, or -15.00 for a refund")
+     add.add_argument("category", help="e.g. food, rent, eating-out")
+     add.add_argument("note", nargs="?", help="optional free text")
+     add.add_argument("--date", help="YYYY-MM-DD (default: today)")
+diff --git a/src/tally/models.py b/src/tally/models.py
+index 7b548f2..8ecebc0 100644
+--- a/src/tally/models.py
++++ b/src/tally/models.py
+@@ -18,8 +18,8 @@ class Expense:
+     note: str = ""
+ 
+     def __post_init__(self):
+-        if not isinstance(self.amount, int) or self.amount <= 0:
+-            raise ValueError("amount must be greater than zero")
++        if not isinstance(self.amount, int) or self.amount == 0:
++            raise ValueError("amount must not be zero")
+         if not CATEGORY_RE.match(self.category):
+             raise ValueError(
+                 f"bad category {self.category!r}: use lowercase letters, digits and dashes"
+@@ -42,7 +42,7 @@ class Expense:
+         date_text, amount_text, category, note = row
+         return cls(
+             date=parse_date(date_text),
+-            amount=parse_amount(amount_text),
++            amount=parse_amount(amount_text, allow_negative=True),
+             category=category,
+             note=note,
+         )
+@@ -65,7 +65,7 @@ def new_expense(amount_text, category_text, note="", date=None):
+     """Build an Expense from raw command-line strings."""
+     return Expense(
+         date=date or dt.date.today(),
+-        amount=parse_amount(amount_text),
++        amount=parse_amount(amount_text, allow_negative=True),
+         category=normalize_category(category_text),
+         note=note.strip(),
+     )
+diff --git a/src/tally/money.py b/src/tally/money.py
+index 755de5c..d445ff3 100644
+--- a/src/tally/money.py
++++ b/src/tally/money.py
+@@ -8,23 +8,38 @@ import re
+ _AMOUNT_RE = re.compile(r"^(\d{1,9})(?:\.(\d{1,2}))?$")
+ 
+ 
+-def parse_amount(text):
++def parse_amount(text, allow_negative=False):
+     """Parse a user-typed amount like "12", "12.5" or "12.50" into cents.
+ 
+     A leading "$" and thousands separators are accepted ("$1,200.00").
++    A leading "-" ("-15.00", "-$15.00") is accepted only if `allow_negative`.
+     Raises ValueError for anything else.
+     """
+-    cleaned = text.strip().lstrip("$").replace(",", "")
++    cleaned = text.strip()
++    negative = allow_negative and cleaned.startswith("-")
++    if negative:
++        cleaned = cleaned[1:]
++    cleaned = cleaned.lstrip("$").replace(",", "")
+     match = _AMOUNT_RE.match(cleaned)
+     if not match:
+         raise ValueError(f"not a valid amount: {text!r}")
+     whole, frac = match.group(1), match.group(2) or ""
+-    return int(whole) * 100 + int(frac.ljust(2, "0") or 0)
++    cents = int(whole) * 100 + int(frac.ljust(2, "0") or 0)
++    return -cents if negative else cents
+ 
+ 
+ def to_plain(cents):
+     """Cents as the plain decimal string stored in the data file: 1250 -> "12.50"."""
+-    return f"{cents // 100}.{cents % 100:02d}"
++    sign = "-" if cents < 0 else ""
++    whole, frac = divmod(abs(cents), 100)
++    return f"{sign}{whole}.{frac:02d}"
++
++
++def format_money(cents):
++    """Cents as shown to the user: 120050 -> "$1,200.50", -50 -> "-$0.50"."""
++    sign = "-" if cents < 0 else ""
++    whole, frac = divmod(abs(cents), 100)
++    return f"{sign}${whole:,}.{frac:02d}"
+ 
+ 
+ def split_evenly(cents, parts):
+diff --git a/tasks/TASK_GUIDE_T001.md b/tasks/TASK_GUIDE_T001.md
+new file mode 100644
+index 0000000..e0ad71d
+--- /dev/null
++++ b/tasks/TASK_GUIDE_T001.md
+@@ -0,0 +1,143 @@
++# TASK_GUIDE — T001: Allow negative amounts (refunds)
++**Date**: 2026-10-26
++**Complexity Level**: C2
++**Risk Level**: Low
++**Priority**: P1
++**Assigned agent**: backend-developer
++**Agent guide**: `agents/backend.md`
++
++---
++
++## Mandatory Startup (Do Not Skip)
++
++Before writing any code:
++1. `PROJECT_SPEC.md` does not exist yet (small repo, no Phase 0 run) — skip it; this guide is the spec.
++2. Read the memory slice in your spawn prompt. `memory/MEMORY.md` has no entries.
++3. Read this file completely
++4. Read `agents/backend.md`
++5. Apply the C2 process from the Complexity matrix in `agents/backend.md`
++
++---
++
++## Requirement (Pillar 1 — Adapt the requirement)
++
++> I want to record refunds. Right now `python3 -m tally add -15.00 groceries "returned the blender"` gets rejected. Please allow negative amounts for refunds: `add` should accept them, `list`, `top` and `summary` should show them like `-$15.00`, and the summary totals should subtract them. A zero amount should still be rejected, and refunds have to load back correctly from the data file.
++
++**Restated intent**:
++> An expense may carry a negative amount (a refund). It is stored in the CSV as e.g. `-15.00`, read back unchanged, shown as `-$15.00`, and subtracted in totals. Zero stays invalid.
++
++**Out of scope**:
++- `split` and recurring bills (`data/bills.csv`, `recurring.py`) keep rejecting negative amounts.
++- No new commands, no "refund" flag, no change to CSV columns.
++
++**Requirement Refs**: none (no PRD.md).
++
++### Requirement Fidelity Gate (sign off BEFORE implementation)
++
++- [x] Restated intent confirmed to match the user's request (Supervisor)
++- [x] Domain terms align (no glossary exists)
++- [x] Every Acceptance Criterion below traces to a line in the Requirement
++- [x] No PRD Refs apply
++
++---
++
++## Dependencies & Reachability
++
++**Depends on**: None
++**Entry point**: `cmd_add` in `src/tally/cli.py` (`python3 -m tally add`)
++
++---
++
++## Acceptance Criteria
++
++| # | Criterion (testable) | Traces to requirement |
++|---|----------------------|-----------------------|
++| 1 | `main(["add", "-15.00", "groceries", "returned the blender"])` returns 0, appends a row with amount `-15.00`, prints `Added -$15.00 to groceries on <date>.` | `add` should accept them |
++| 2 | `add 0`, `add -0`, `add -0.00` still return 2 with `error:` on stderr | zero still rejected |
++| 3 | `list`, `top`, `summary` print refunds as `-$15.00` (also `-$1,200.50` and sub-dollar `-$0.50`, never `$-0.50` or `-$1.50` for 50 cents) | shown like `-$15.00` |
++| 4 | `summary` category and grand totals subtract refunds (e.g. 40.00 + -15.00 -> `$25.00`; a net-negative total prints `-$x.xx`) | totals subtract |
++| 5 | A refund written by `storage.append` round-trips through `storage.load` with identical amount (including `-0.50` -> -50 cents, `-15.00` -> -1500) | load back correctly |
++| 6 | `split` with a negative amount and `parse_amount("-5")` (default) still raise ValueError; recurring bills with negative amount still rejected | out of scope guard |
++| 7 | `top` still lists the largest positive expenses first; refunds sort last | `top` behaviour |
++
++---
++
++## Evaluation & Acceptance
++
++### Success Criteria
++
++| # | Given | Expect | How checked |
++|---|-------|--------|-------------|
++| 1 | `to_plain(-50)` | `"-0.50"` (naive `//`/`%` gives `-1.50`: the trap) | automated test |
++| 2 | `format_money(-1500)`, `format_money(-50)`, `format_money(-120050)` | `-$15.00`, `-$0.50`, `-$1,200.50` | automated test |
++| 3 | CLI: add 40 and -15 groceries, then `summary` | `groceries $25.00` / `total $25.00` | CLI test |
++| 4 | `add 0` | exit 2 | CLI test |
++
++### Verification Command
++
++```bash
++python3 -m pytest -q
++```
++
++---
++
++## Approach
++
++**Pattern reference**: `src/tally/money.py` + `tests/test_money.py`, `tests/test_cli.py` — imitate their style and fixtures.
++
++**Vital slice**: sign-aware money parsing/formatting in `money.py`, one shared formatter used by the four affected commands.
++**Cut list**:
++- `split`, `due` output formatting stays as is (positive only).
++- No "refund" CLI sugar.
++
++Plan:
++1. `money.parse_amount(text, allow_negative=False)`: accept a leading `-` only when `allow_negative` (also allow `-$15.00`). Default behaviour unchanged, so `split` and `recurring.py` still reject negatives.
++2. `money.to_plain`: sign-safe (format `abs`, prefix `-`).
++3. New `money.format_money(cents)` -> `-$1,200.50` style, sign-safe. Replace the repeated f-string in `cmd_add`, `cmd_list`, `cmd_summary` (both lines), `cmd_top`. Leave `cmd_split` and `cmd_due` alone. Check column alignment widths in `list`/`top` still hold.
++4. `models.Expense.__post_init__`: reject `amount == 0` only (non-int still rejected). Message: keep "amount must not be zero" wording; check existing tests that assert the old message and update only those.
++5. `models.new_expense` and `Expense.from_row` call `parse_amount(..., allow_negative=True)`.
++6. `reports.py` already sums signed values; leave it. `largest` stays as is.
++7. Update `add` help text to mention refunds (e.g. `-15.00`). Confirm argparse accepts `-15.00` as a positional.
++
++## Edge Case Checklist
++
++- [ ] `-0`, `-0.00` rejected as zero
++- [ ] `-0.50` round-trips (floor-division trap in `to_plain` and in cli formatting)
++- [ ] `-$15.00` and `-1,200.00` typed forms parse
++- [ ] A hand-edited CSV with `-15.00` loads; `--15` and `-` still error
++- [ ] `parse_amount` default stays strict (split/recurring)
++- [ ] Net-negative category total prints `-$x.xx`
++
++---
++
++## Files to Change (Predicted)
++
++| File | Change |
++|------|--------|
++| `src/tally/money.py` | `allow_negative`, sign-safe `to_plain`, `format_money` |
++| `src/tally/models.py` | zero-only rejection; allow negative on parse |
++| `src/tally/cli.py` | use `format_money`; help text |
++| `tests/test_money.py`, `tests/test_models.py`, `tests/test_storage.py`, `tests/test_cli.py` | new tests for every AC; update the old "rejects negative" assertions that now flip |
++
++## Files Must NOT Touch
++
++| File | Reason |
++|------|--------|
++| `src/tally/recurring.py` | out of scope: bills stay positive |
++| `src/tally/reports.py` | already signed-safe |
++| `data/` | never write real data; tests use `TALLY_FILE` / tmp paths |
++| anything outside `src/tally`, `tests`, this guide | surgical scope |
++
++---
++
++## Test Plan
++
++Write tests first (red), then implement (green). Cover every AC row. Run `python3 -m pytest -q`; paste the output in your report.
++
++---
++
++## Completion Checklist
++
++- [ ] Implementation done
++- [ ] Tests written AND pass — output pasted into `tasks/TASK_REVIEW_T001.md`
++- [ ] Supervisor notified: task ready for Stage 4 review
+diff --git a/tasks/TASK_REVIEW_T001.md b/tasks/TASK_REVIEW_T001.md
+new file mode 100644
+index 0000000..76dd87f
+--- /dev/null
++++ b/tasks/TASK_REVIEW_T001.md
+@@ -0,0 +1,66 @@
++# TASK_REVIEW — T001: Allow negative amounts (refunds)
++
++> Filled by the implementing agent (backend-developer) with evidence only. Review and verify rows are left for the Stage 4/5 reviewer.
++
++---
++
++## Evidence
++
++| Check | Result | Notes / output snippet |
++|-------|--------|------------------------|
++| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_money.py`, `tests/test_models.py`, `tests/test_storage.py`, `tests/test_cli.py`. Written first; the first run failed at collection with `ImportError: cannot import name 'format_money'`. |
++| Verification command run | ☑ pass | `python3 -m pytest -q` -> `.....................................................................    [100%]` / `69 passed in 1.56s` (baseline before the change: 33 passed) |
++| Negative cases hold | ☑ pass | `add 0`, `-0`, `-0.00` exit 2; `split -100.00 3` exit 2; recurring bill with `-1200.00` exit 2; `parse_amount("-5")` default raises; `--15` and `-` raise |
++| verify | ☐ N/A | Left to the reviewer. Agent ran the manual CLI session below. |
++| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ | Left to the reviewer. Changed: money.py, models.py, cli.py (plus tests). |
++| Full smoke suite still green (no regression) | ☑ pass | 69 passed, includes all 33 old tests |
++| **UI: Visual regression** | ☐ N/A | No UI component |
++| **UI: Design-system compliance** | ☐ N/A | No UI component |
++| **UI: Responsiveness** | ☐ N/A | No UI component |
++
++---
++
++## Demonstration
++
++**Manual run** (`TALLY_FILE=/tmp/x.csv`, fresh file, 2026-10-26):
++
++```
++$ python3 -m tally add 40.00 groceries "weekly shop"
++Added $40.00 to groceries on 2026-10-26.
++[exit 0]
++$ python3 -m tally add -15.00 groceries "returned the blender"
++Added -$15.00 to groceries on 2026-10-26.
++[exit 0]
++$ python3 -m tally add 0 groceries
++error: amount must not be zero
++[exit 2]
++$ python3 -m tally add -0.50 misc "rounding"
++Added -$0.50 to misc on 2026-10-26.
++[exit 0]
++$ python3 -m tally list
++   1  2026-10-26       $40.00  groceries      weekly shop
++   2  2026-10-26      -$15.00  groceries      returned the blender
++   3  2026-10-26       -$0.50  misc           rounding
++[exit 0]
++$ python3 -m tally top
++     $40.00  2026-10-26  groceries      weekly shop
++     -$0.50  2026-10-26  misc           rounding
++    -$15.00  2026-10-26  groceries      returned the blender
++[exit 0]
++$ python3 -m tally summary
++groceries           $25.00
++misc                -$0.50
++total               $24.50
++[exit 0]
++
++date,amount,category,note
++2026-10-26,40.00,groceries,weekly shop
++2026-10-26,-15.00,groceries,returned the blender
++2026-10-26,-0.50,misc,rounding
++```
++
++**BEFORE**: not captured as a timestamped pre-change run. The old code rejected negatives (`parse_amount` regex had no sign; `Expense` rejected `amount <= 0`; baseline suite had `test_negative_amount_rejected`).
++
++**DELTA**: A user can record refunds with `add -15.00 ...`. They show as `-$15.00` and reduce the totals.
++
++**WITNESS**: backend-developer agent, 2026-10-26. Not independently witnessed.
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 97e72cb..c6ff0e4 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -53,3 +53,63 @@ def test_due(tally, data_file):
+     assert tally("due", "--today", "2026-03-10").stdout.strip() == "Nothing due."
+     out = tally("due", "--today", "2026-04-25").stdout
+     assert "rent" in out and "phone" in out
++
++
++def test_add_refund(tally, data_file):
++    result = tally("add", "-15.00", "groceries", "returned the blender", "--date", "2026-03-02")
++    assert result.returncode == 0
++    assert result.stdout.strip() == "Added -$15.00 to groceries on 2026-03-02."
++    assert "2026-03-02,-15.00,groceries,returned the blender" in data_file.read_text()
++
++
++def test_add_zero_still_rejected(tally):
++    for amount in ("0", "-0", "-0.00"):
++        result = tally("add", amount, "food")
++        assert result.returncode == 2
++        assert "error:" in result.stderr
++
++
++def test_list_and_top_show_refunds(tally):
++    tally("add", "-15.00", "food", "a", "--date", "2026-03-01")
++    tally("add", "-1200.50", "food", "b", "--date", "2026-03-02")
++    tally("add", "-0.50", "food", "c", "--date", "2026-03-03")
++    for cmd in ("list", "top"):
++        out = tally(cmd, *(["10"] if cmd == "top" else [])).stdout
++        assert "-$15.00" in out and "-$1,200.50" in out and "-$0.50" in out
++        assert "$-" not in out and "-$1.50" not in out
++
++
++def test_summary_subtracts_refunds(tally):
++    tally("add", "40", "groceries", "--date", "2026-03-01")
++    tally("add", "-15", "groceries", "--date", "2026-03-02")
++    out = tally("summary").stdout
++    assert "groceries" in out and "$25.00" in out
++    assert out.strip().splitlines()[-1].split() == ["total", "$25.00"]
++
++
++def test_summary_net_negative(tally):
++    tally("add", "10", "food", "--date", "2026-03-01")
++    tally("add", "-10.50", "food", "--date", "2026-03-02")
++    lines = tally("summary").stdout.strip().splitlines()
++    assert lines[0].split() == ["food", "-$0.50"]
++    assert lines[-1].split() == ["total", "-$0.50"]
++
++
++def test_top_refunds_sort_last(tally):
++    tally("add", "-15", "food", "refund", "--date", "2026-03-01")
++    tally("add", "5", "food", "small", "--date", "2026-03-02")
++    tally("add", "50", "food", "big", "--date", "2026-03-03")
++    out = tally("top", "3").stdout.splitlines()
++    assert ["big", "small", "refund"] == [line.split()[-1] for line in out]
++
++
++def test_split_rejects_negative(tally):
++    result = tally("split", "-100.00", "3")
++    assert result.returncode == 2 and "error:" in result.stderr
++
++
++def test_recurring_rejects_negative(tally, data_file):
++    data_file.with_name("recurring.csv").write_text(
++        "category,amount,day,note\nrent,-1200.00,1,flat\n"
++    )
++    assert tally("due", "--today", "2026-04-25").returncode == 2
+diff --git a/tests/test_models.py b/tests/test_models.py
+index 59f07fd..3b306c2 100644
+--- a/tests/test_models.py
++++ b/tests/test_models.py
+@@ -14,15 +14,41 @@ def test_normalize_category():
+     assert normalize_category("  Eating Out ") == "eating-out"
+ 
+ 
+-@pytest.mark.parametrize("amount", ["0", "0.00"])
++@pytest.mark.parametrize("amount", ["0", "0.00", "-0", "-0.00"])
+ def test_zero_amount_rejected(amount):
+     with pytest.raises(ValueError):
+         new_expense(amount, "food")
+ 
+ 
+-def test_negative_amount_rejected():
++def test_negative_amount_is_a_refund():
++    assert new_expense("-5.00", "food").amount == -500
++
++
++def test_zero_amount_message():
++    with pytest.raises(ValueError, match="amount must not be zero"):
++        Expense(dt.date(2026, 3, 2), 0, "food")
++
++
++def test_non_int_amount_rejected():
++    with pytest.raises(ValueError):
++        Expense(dt.date(2026, 3, 2), 1.5, "food")
++
++
++@pytest.mark.parametrize("cents", [-1500, -50])
++def test_refund_round_trip_row(cents):
++    e = Expense(dt.date(2026, 3, 2), cents, "food", "refund")
++    assert Expense.from_row(e.to_row()) == e
++
++
++def test_from_row_accepts_negative():
++    row = ["2026-03-02", "-15.00", "food", "x"]
++    assert Expense.from_row(row).amount == -1500
++
++
++@pytest.mark.parametrize("bad", ["--15", "-"])
++def test_from_row_rejects_garbage(bad):
+     with pytest.raises(ValueError):
+-        new_expense("-5.00", "food")
++        Expense.from_row(["2026-03-02", bad, "food", "x"])
+ 
+ 
+ def test_bad_category_rejected():
+diff --git a/tests/test_money.py b/tests/test_money.py
+index c31d239..f7c47ce 100644
+--- a/tests/test_money.py
++++ b/tests/test_money.py
+@@ -1,6 +1,6 @@
+ import pytest
+ 
+-from tally.money import parse_amount, split_evenly, to_plain
++from tally.money import format_money, parse_amount, split_evenly, to_plain
+ 
+ 
+ @pytest.mark.parametrize("text, cents", [
+@@ -25,3 +25,43 @@ def test_to_plain():
+ def test_split_evenly_adds_up():
+     assert split_evenly(100, 3) == [34, 33, 33]
+     assert sum(split_evenly(1001, 7)) == 1001
++
++
++@pytest.mark.parametrize("text, cents", [
++    ("-15.00", -1500), ("-0.50", -50), ("-$15.00", -1500), ("-1,200.00", -120000),
++    ("-$1,200.50", -120050), ("15", 1500),
++])
++def test_parse_amount_allow_negative(text, cents):
++    assert parse_amount(text, allow_negative=True) == cents
++
++
++@pytest.mark.parametrize("text", ["--15", "-", "-$", "- 5", "-abc"])
++def test_parse_amount_allow_negative_rejects_garbage(text):
++    with pytest.raises(ValueError):
++        parse_amount(text, allow_negative=True)
++
++
++@pytest.mark.parametrize("text", ["-0", "-0.00"])
++def test_parse_amount_negative_zero_is_zero(text):
++    assert parse_amount(text, allow_negative=True) == 0
++
++
++def test_parse_amount_default_still_strict():
++    for text in ("-5", "-$5.00"):
++        with pytest.raises(ValueError):
++            parse_amount(text)
++
++
++def test_to_plain_negative():
++    assert to_plain(-50) == "-0.50"
++    assert to_plain(-1500) == "-15.00"
++    assert to_plain(-1) == "-0.01"
++
++
++def test_format_money():
++    assert format_money(1500) == "$15.00"
++    assert format_money(-1500) == "-$15.00"
++    assert format_money(-50) == "-$0.50"
++    assert format_money(-120050) == "-$1,200.50"
++    assert format_money(120000) == "$1,200.00"
++    assert format_money(0) == "$0.00"
+diff --git a/tests/test_storage.py b/tests/test_storage.py
+index 53923f9..7876616 100644
+--- a/tests/test_storage.py
++++ b/tests/test_storage.py
+@@ -33,3 +33,18 @@ def test_corrupt_line_names_the_line(tmp_path):
+     path.write_text("date,amount,category,note\n2026-01-05,abc,food,x\n")
+     with pytest.raises(storage.StorageError, match="line 2"):
+         storage.load(path)
++
++
++@pytest.mark.parametrize("cents, text", [(-50, "-0.50"), (-1500, "-15.00")])
++def test_refund_round_trip(tmp_path, cents, text):
++    path = tmp_path / "e.csv"
++    refund = Expense(dt.date(2026, 1, 7), cents, "food", "returned")
++    storage.append(refund, path)
++    assert f",{text}," in path.read_text()
++    assert storage.load(path) == [refund]
++
++
++def test_hand_edited_negative_loads(tmp_path):
++    path = tmp_path / "e.csv"
++    path.write_text("date,amount,category,note\n2026-01-05,-15.00,food,x\n")
++    assert storage.load(path)[0].amount == -1500

@@ -1,0 +1,258 @@
+diff --git a/.claude/hooks/.state/step_count_544ee7a4b06843899021b56ce3a4ae23_T001.txt b/.claude/hooks/.state/step_count_544ee7a4b06843899021b56ce3a4ae23_T001.txt
+new file mode 100644
+index 0000000..c393a51
+--- /dev/null
++++ b/.claude/hooks/.state/step_count_544ee7a4b06843899021b56ce3a4ae23_T001.txt
+@@ -0,0 +1,2 @@
++3
++0
+\ No newline at end of file
+diff --git a/memory/event-trace/T001.jsonl b/memory/event-trace/T001.jsonl
+new file mode 100644
+index 0000000..a9940be
+--- /dev/null
++++ b/memory/event-trace/T001.jsonl
+@@ -0,0 +1,3 @@
++{"timestamp": "2026-10-26T15:23:14.192296+00:00", "tool_name": "Write", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpg5akka6h/tally/tasks/TASK_GUIDE_T001.md\", \"content\": \"# TASK_GUIDE \\u2014 T001: Notes with commas corrupt the expenses file\\n**Date**: 2026-10-26\\n**Complexity Level**: C1\\n**Risk Level**: Low\\n**Priority**: P0\\n**Assigned agent**: backend-developer\\n**Agent guide*", "is_error": false, "prev": "genesis", "hash": "669af740f7cff59dc705ce9eec6df0b370679551a69dfefdcd56b6b5adeee58c"}
++{"timestamp": "2026-10-26T15:23:19.631240+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpg5akka6h/tally/tasks/TASK_GUIDE_T001.md\"}", "is_error": false, "prev": "669af740f7cff59dc705ce9eec6df0b370679551a69dfefdcd56b6b5adeee58c", "hash": "12b3fe54afe0b5109f3e699c337386007a1eab9215c6dd9abea7acfb187c78b5"}
++{"timestamp": "2026-10-26T15:23:36.594575+00:00", "tool_name": "Agent", "summary": "{\"description\": \"T001 fix comma notes\", \"prompt\": \"Task ID: T001. Read tasks/TASK_GUIDE_T001.md and agents/backend.md, then implement T001 test-first exactly as the guide says (csv.writer in storage.append and storage.save_all; tests in tests/test_storage.py and tests/test_cli.py). Do not touch data", "is_error": false, "spawn": {"total_tokens": 26769, "tool_use_count": 9, "duration_ms": 19275, "resolved_model": "claude-sonnet-5-5", "agent_type": "backend-developer", "status": "completed", "usage": {"input_tokens": 2, "output_tokens": 621, "cache_creation_input_tokens": 594, "cache_read_input_tokens": 25552, "cache_creation_5m": 594, "cache_creation_1h": 0}, "tool_stats": {"read_count": 7, "search_count": 0, "bash_count": 2, "edit_file_count": 0, "lines_added": 0, "lines_removed": 0}}, "prev": "12b3fe54afe0b5109f3e699c337386007a1eab9215c6dd9abea7acfb187c78b5", "hash": "fee48cc8f87e3abfab1c3c93a45e5af345f3a52d9ff5cf3dd3021e77bf0a621c"}
+diff --git a/memory/event-trace/_untagged.jsonl b/memory/event-trace/_untagged.jsonl
+new file mode 100644
+index 0000000..33966d9
+--- /dev/null
++++ b/memory/event-trace/_untagged.jsonl
+@@ -0,0 +1,16 @@
++{"timestamp": "2026-10-26T15:22:51.121989+00:00", "tool_name": "Skill", "summary": "{\"skill\": \"wake\"}", "is_error": false, "prev": "genesis", "hash": "f9448c52820f67f8c203294a7a8f1d8af7fe7cad88f1b16e34c13fa4b27562d0"}
++{"timestamp": "2026-10-26T15:22:51.873482+00:00", "tool_name": "Grep", "summary": "{\"pattern\": \"expected 4 fields|split\\\\(|csv|join\\\\(\", \"path\": \"/tmp/tmpesbb1l8e/tmpg5akka6h/tally\", \"glob\": \"*.py\", \"output_mode\": \"content\"}", "is_error": false, "prev": "f9448c52820f67f8c203294a7a8f1d8af7fe7cad88f1b16e34c13fa4b27562d0", "hash": "a98ea2af1e2ffcf898d9b7c66b5b005e49e8b2b819e54954c1c4719b0c3c5c7e"}
++{"timestamp": "2026-10-26T15:22:54.397728+00:00", "tool_name": "Bash", "summary": "{\"command\": \"python3 scripts/pull_moment.py wake; git log --oneline -10; ls; python3 skills/wake/scripts/dirty_worktrees.py; ls memory/learning-records 2>&1 | head\"}", "is_error": false, "prev": "a98ea2af1e2ffcf898d9b7c66b5b005e49e8b2b819e54954c1c4719b0c3c5c7e", "hash": "a2f20202c49134b5c9ad6943bb98fa55ca09514c6305999c6c892ed535cf1e9b"}
++{"timestamp": "2026-10-26T15:22:54.571045+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpg5akka6h/tally/src/tally/storage.py\"}", "is_error": false, "prev": "a2f20202c49134b5c9ad6943bb98fa55ca09514c6305999c6c892ed535cf1e9b", "hash": "47c7498f9001f6d13932caa94046cad691028ba485ffef2d3d4afa964f841526"}
++{"timestamp": "2026-10-26T15:22:54.938486+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpg5akka6h/tally/src/tally/models.py\"}", "is_error": false, "prev": "47c7498f9001f6d13932caa94046cad691028ba485ffef2d3d4afa964f841526", "hash": "ca0567070fb085217428af72c4880f51e3ac153ec7cf2e28a903f2b0048725d9"}
++{"timestamp": "2026-10-26T15:22:55.406395+00:00", "tool_name": "Bash", "summary": "{\"command\": \"cat PROJECT_KANBAN.md 2>&1 | head -40; cat tests/test_storage.py\"}", "is_error": false, "prev": "ca0567070fb085217428af72c4880f51e3ac153ec7cf2e28a903f2b0048725d9", "hash": "e2f24f5d99a036c7f64fe370caa358154faa60ed570fb2a9d7e9b3ca50133c07"}
++{"timestamp": "2026-10-26T15:22:59.794856+00:00", "tool_name": "Bash", "summary": "{\"command\": \"ls tasks templates; wc -l templates/TASK_GUIDE_template.md; cat templates/TASK_GUIDE_template.md; ls data; git status --short\"}", "is_error": false, "prev": "e2f24f5d99a036c7f64fe370caa358154faa60ed570fb2a9d7e9b3ca50133c07", "hash": "a39fb3ad2e3c712c0dedad6b5afdb0a135f8a223db4a85d23d45ca859f90a153"}
++{"timestamp": "2026-10-26T15:23:19.269754+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpg5akka6h/tally/memory/MEMORY.md\"}", "is_error": false, "prev": "a39fb3ad2e3c712c0dedad6b5afdb0a135f8a223db4a85d23d45ca859f90a153", "hash": "2ab762137299e16747a3d947fb643576e8219add99e29de8c49345d89bd829cf"}
++{"timestamp": "2026-10-26T15:23:19.933739+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpg5akka6h/tally/agents/general-agent-template.md\"}", "is_error": false, "prev": "2ab762137299e16747a3d947fb643576e8219add99e29de8c49345d89bd829cf", "hash": "111f1dba8556bd1488de870155f20f22f635ce1c78fd48a70b9872e936a07b2c"}
++{"timestamp": "2026-10-26T15:23:21.293276+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpg5akka6h/tally/src/tally/storage.py\"}", "is_error": false, "prev": "111f1dba8556bd1488de870155f20f22f635ce1c78fd48a70b9872e936a07b2c", "hash": "9a7cadcb8394e9b52cf081485de066b3c90e9dc3d59f14a09af2c4af7e357c4f"}
++{"timestamp": "2026-10-26T15:23:21.630721+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpg5akka6h/tally/tests/test_storage.py\"}", "is_error": false, "prev": "9a7cadcb8394e9b52cf081485de066b3c90e9dc3d59f14a09af2c4af7e357c4f", "hash": "62702fb0ee515a53ae46225d106d6e3859cfaee3b1e9bdfa4fbb7c37edfb0a76"}
++{"timestamp": "2026-10-26T15:23:21.916939+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpg5akka6h/tally/tests/test_cli.py\"}", "is_error": false, "prev": "62702fb0ee515a53ae46225d106d6e3859cfaee3b1e9bdfa4fbb7c37edfb0a76", "hash": "cdf71a6f52bfba18276a7ac77bf34d8e8a441223bb441b39e87f1dbcdbd1acfc"}
++{"timestamp": "2026-10-26T15:23:27.547294+00:00", "tool_name": "Bash", "summary": "{\"command\": \"cat >> tests/test_storage.py <<'EOF'\\n\\n\\n@pytest.mark.parametrize(\\\"note\\\", [\\\"pho, then bubble tea\\\", 'say \\\"hi\\\", ok', \\\"\\\"])\\ndef test_append_round_trips_awkward_notes(tmp_path, note):\\n    path = tmp_path / \\\"e.csv\\\"\\n    a = Expense(dt.date(2026, 1, 5), 1840, \\\"eating-out\\\", note)", "is_error": false, "prev": "cdf71a6f52bfba18276a7ac77bf34d8e8a441223bb441b39e87f1dbcdbd1acfc", "hash": "0112ab1df9adb541845896145a91b741961e93b6cebcb8d282313209ab07639a"}
++{"timestamp": "2026-10-26T15:23:31.776411+00:00", "tool_name": "Bash", "summary": "{\"command\": \"python3 - <<'EOF'\\np=\\\"src/tally/storage.py\\\"\\ns=open(p).read()\\ns=s.replace('''    with path.open(\\\"a\\\", encoding=\\\"utf-8\\\") as handle:\\n        handle.write(\\\",\\\".join(expense.to_row()) + \\\"\\\\\\\\n\\\")''','''    with path.open(\\\"a\\\", newline=\\\"\\\", encoding=\\\"utf-8\\\") as handle:\\n        ", "is_error": false, "prev": "0112ab1df9adb541845896145a91b741961e93b6cebcb8d282313209ab07639a", "hash": "29b44855be348eb0eab75d700290db420229762bb8d59e6cc4d37209b8247819"}
++{"timestamp": "2026-10-26T15:23:40.636906+00:00", "tool_name": "Bash", "summary": "{\"command\": \"git diff src/ && export TALLY_FILE=$(mktemp -d)/e.csv && python3 -m tally add 18.40 eating-out \\\"pho, then bubble tea\\\" && python3 -m tally list && python3 -m tally summary; cat $TALLY_FILE; python3 -m pytest -q 2>&1 | tail -2; git status --short\"}", "is_error": false, "prev": "29b44855be348eb0eab75d700290db420229762bb8d59e6cc4d37209b8247819", "hash": "5736b56a100a69fd2431d81c4a02ad0f3feffc5849d9f1cc9e25382267099c19"}
++{"timestamp": "2026-10-26T15:23:42.544551+00:00", "tool_name": "Bash", "summary": "{\"command\": \"export PYTHONPATH=src TALLY_FILE=$(mktemp -d)/e.csv && python3 -m tally add 18.40 eating-out \\\"pho, then bubble tea\\\" && python3 -m tally list && python3 -m tally summary; cat $TALLY_FILE\"}", "is_error": false, "prev": "5736b56a100a69fd2431d81c4a02ad0f3feffc5849d9f1cc9e25382267099c19", "hash": "a163589c00297c59d39a947ccd71a6dd9e195e65b1035dc1977832bf2dd9b15b"}
+diff --git a/src/tally/storage.py b/src/tally/storage.py
+index 585c270..460e6dd 100644
+--- a/src/tally/storage.py
++++ b/src/tally/storage.py
+@@ -49,8 +49,8 @@ def append(expense, path=None):
+     """Add one expense at the end of the file."""
+     path = Path(path or data_path())
+     _ensure_file(path)
+-    with path.open("a", encoding="utf-8") as handle:
+-        handle.write(",".join(expense.to_row()) + "\n")
++    with path.open("a", newline="", encoding="utf-8") as handle:
++        csv.writer(handle, lineterminator="\n").writerow(expense.to_row())
+ 
+ 
+ def save_all(expenses, path=None):
+@@ -58,6 +58,8 @@ def save_all(expenses, path=None):
+     path = Path(path or data_path())
+     tmp = path.with_suffix(".tmp")
+     tmp.parent.mkdir(parents=True, exist_ok=True)
+-    lines = [HEADER] + [",".join(e.to_row()) for e in expenses]
+-    tmp.write_text("\n".join(lines) + "\n", encoding="utf-8")
++    with tmp.open("w", newline="", encoding="utf-8") as handle:
++        writer = csv.writer(handle, lineterminator="\n")
++        writer.writerow(FIELDS)
++        writer.writerows(e.to_row() for e in expenses)
+     os.replace(tmp, path)
+diff --git a/tasks/TASK_GUIDE_T001.md b/tasks/TASK_GUIDE_T001.md
+new file mode 100644
+index 0000000..1586532
+--- /dev/null
++++ b/tasks/TASK_GUIDE_T001.md
+@@ -0,0 +1,139 @@
++# TASK_GUIDE — T001: Notes with commas corrupt the expenses file
++**Date**: 2026-10-26
++**Complexity Level**: C1
++**Risk Level**: Low
++**Priority**: P0
++**Assigned agent**: backend-developer
++**Agent guide**: `agents/backend.md`
++
++---
++
++## Mandatory Startup (Do Not Skip)
++
++Before writing any code:
++1. Read `PROJECT_SPEC.md` (does not exist yet in this repo — skip, the Requirement below is the spec)
++2. Read the memory slice in your spawn prompt
++3. Read this file completely
++4. Read `agents/backend.md`
++5. Apply the C1 process from the Complexity matrix in `agents/backend.md`
++
++---
++
++## Requirement (Pillar 1 — Adapt the requirement)
++
++User report: `python3 -m tally add 18.40 eating-out "pho, then bubble tea"` prints "Added", but afterwards `tally list` and `tally summary` fail with `error: ... expected 4 fields, got 5`. "Notes with commas in them should just work."
++
++**Restated intent**: A note may contain commas (and quotes). It is saved so that it reads back unchanged, and `list` / `summary` keep working.
++
++**Root cause (Supervisor finding)**: `src/tally/storage.py` reads with `csv.reader` but writes with a naive `",".join(expense.to_row())` in `append` (line 53) and `save_all` (line 61). The writer does not quote fields.
++
++**Out of scope**:
++- Repairing already-corrupt lines in `data/expenses.csv` (the user removed theirs by hand).
++- Newlines in notes (still rejected by `Expense.__post_init__`).
++- `src/tally/recurring.py` (it only reads, via `csv.DictReader`).
++
++**Requirement Refs**: None (no `PRD.md` in this repo).
++
++### Requirement Fidelity Gate (sign off BEFORE implementation)
++
++- [x] Restated intent confirmed to match the user's request
++- [x] Domain terms align (no glossary exists)
++- [x] Every Acceptance Criterion below traces to a line in the Requirement
++- [x] Requirement Refs: none apply
++
++---
++
++## Dependencies & Reachability
++
++**Depends on**: `None`
++
++**Entry point**: `storage.append`
++
++---
++
++## Acceptance Criteria
++
++| # | Criterion (testable) | Traces to requirement |
++|---|----------------------|-----------------------|
++| 1 | An expense whose note contains a comma, written with `storage.append`, loads back equal to the original | "notes with commas should just work" |
++| 2 | Same round-trip through `storage.save_all` | same (delete path rewrites the file) |
++| 3 | A note with a double quote and a comma round-trips | boundary |
++| 4 | Plain notes still write unquoted, so existing files and `HEADER` are unchanged | no regression |
++| 5 | CLI: `add ... "pho, then bubble tea"` then `list` and `summary` succeed | the reported failure |
++
++---
++
++## Evaluation & Acceptance
++
++### Success Criteria
++
++| # | Given | Expect | How it's checked |
++|---|-------|--------|------------------|
++| 1 | `Expense(..., note="pho, then bubble tea")` appended | `load()` returns an equal Expense | automated test |
++| 2 | Note `say "hi", ok` | round-trips | automated test |
++| 3 | CLI add with comma note, then list | exit 0, note shown | automated test in `tests/test_cli.py` |
++
++### Verification Command
++
++```bash
++python3 -m pytest -q
++```
++
++### Evidence
++
++Filled by the reviewer in `tasks/TASK_REVIEW_T001.md`.
++
++---
++
++## Approach
++
++**Pattern reference**: `src/tally/storage.py` `load` — already uses `csv.reader(handle)` with `newline=""`; imitate it on the write side with `csv.writer`.
++
++**Vital slice**: Use `csv.writer` (default `lineterminator`, set to `"\n"`) in `append` and `save_all`. Open files with `newline=""`.
++**Cut list**: Migration or repair of existing bad lines — not built.
++
++Write the failing tests first (tdd), then fix. Keep `_ensure_file` / `HEADER` as they are.
++
++---
++
++## Edge Case Checklist
++
++- [ ] Comma in note
++- [ ] Double quote in note
++- [ ] Empty note still round-trips
++- [ ] `save_all` keeps atomic `os.replace` behaviour
++- [ ] No `\r\n` line endings appear on write (use `lineterminator="\n"`)
++
++---
++
++## Files to Change (Predicted)
++
++| File | Change |
++|------|--------|
++| src/tally/storage.py | write rows with `csv.writer` in `append` and `save_all` |
++| tests/test_storage.py | round-trip tests for comma / quote notes |
++| tests/test_cli.py | add-then-list test with a comma note |
++
++## Files Must NOT Touch
++
++| File | Reason |
++|------|--------|
++| data/expenses.csv | the user's real data |
++| src/tally/recurring.py | read-only, not affected |
++| src/tally/models.py | validation is correct |
++
++---
++
++## Test Plan
++
++Unit round-trips in `tests/test_storage.py`; one CLI test in `tests/test_cli.py` using the existing `tally` fixture. Run `python3 -m pytest -q`.
++
++---
++
++## Completion Checklist
++
++- [ ] Implementation done
++- [ ] Self-review: `Skill({ skill: "code-review" })` run
++- [ ] Lint passes
++- [ ] Tests written AND pass — output pasted into `tasks/TASK_REVIEW_T001.md`
++- [ ] Supervisor notified: task ready for Stage 4 review
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 97e72cb..e13781f 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -53,3 +53,10 @@ def test_due(tally, data_file):
+     assert tally("due", "--today", "2026-03-10").stdout.strip() == "Nothing due."
+     out = tally("due", "--today", "2026-04-25").stdout
+     assert "rent" in out and "phone" in out
++
++
++def test_comma_note_survives_list_and_summary(tally):
++    assert tally("add", "18.40", "eating-out", "pho, then bubble tea", "--date", "2026-03-02").returncode == 0
++    listed = tally("list")
++    assert listed.returncode == 0 and "pho, then bubble tea" in listed.stdout
++    assert tally("summary").returncode == 0
+diff --git a/tests/test_storage.py b/tests/test_storage.py
+index 53923f9..abc5752 100644
+--- a/tests/test_storage.py
++++ b/tests/test_storage.py
+@@ -33,3 +33,27 @@ def test_corrupt_line_names_the_line(tmp_path):
+     path.write_text("date,amount,category,note\n2026-01-05,abc,food,x\n")
+     with pytest.raises(storage.StorageError, match="line 2"):
+         storage.load(path)
++
++
++@pytest.mark.parametrize("note", ["pho, then bubble tea", 'say "hi", ok', ""])
++def test_append_round_trips_awkward_notes(tmp_path, note):
++    path = tmp_path / "e.csv"
++    a = Expense(dt.date(2026, 1, 5), 1840, "eating-out", note)
++    storage.append(a, path)
++    assert storage.load(path) == [a]
++
++
++@pytest.mark.parametrize("note", ["pho, then bubble tea", 'say "hi", ok', ""])
++def test_save_all_round_trips_awkward_notes(tmp_path, note):
++    path = tmp_path / "e.csv"
++    a = Expense(dt.date(2026, 1, 5), 1840, "eating-out", note)
++    storage.save_all([a], path)
++    assert storage.load(path) == [a]
++    assert b"\r" not in path.read_bytes()
++
++
++def test_plain_notes_stay_unquoted(tmp_path):
++    path = tmp_path / "e.csv"
++    storage.append(Expense(dt.date(2026, 1, 5), 900, "transport", "bus pass"), path)
++    storage.save_all(storage.load(path), path)
++    assert path.read_text().splitlines()[1] == "2026-01-05,9.00,transport,bus pass"

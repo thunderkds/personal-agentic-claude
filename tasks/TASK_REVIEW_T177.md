@@ -59,8 +59,7 @@ HEAD f66550d
 
 **DELTA**: `run_arms.py --followup` now runs each cell as up to 3 turns, answering a stop with the fixed replies from `replies.json` via `--resume` in a per-run HOME, and grades the final state under `RULE-2.md`.
 
-**WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
-implementing agent alone]
+**WITNESS**: Supervisor, 2026-10-26: re-read the AFTER state at `f66550d` during Stage 4 and ran the paid batch with it (36 runs, exit 0, `results/round2/report.md`).
 
 ---
 
@@ -79,4 +78,16 @@ Scope: `git diff c92bf96..HEAD -- experiments/kit-arms`. Lane: `lane: C2, 5 file
 Security (Medium risk; manual pass over the same diff, as for T170): the only new surface is the per-run HOME mount. It is a fresh temp directory next to the copy, never the real HOME; the credentials stay `:ro`; `--user 1000:1000`; the directory is removed in `run_cell`'s `finally`. SC4 asserts the mount list is exactly copy rw + run-HOME rw + credentials ro. No findings.
 
 Verdict: no P0/P1, 0 fixes applied. Ready for the user's go on the paid batch.
+
+---
+
+## AC 6–7 — paid batch (Supervisor, 2026-10-26, user "go")
+
+- Pre-batch resume check ($0.06): turn 1 "Remember this code word: PELICAN" → `OK`; turn 2 `--resume 2287ae9d-…` → `PELICAN`; same session id; session file `.claude/projects/-tmp-resume-smoke-…-proj/2287ae9d-….jsonl` inside the per-run HOME.
+- Batch: `python3 experiments/kit-arms/run_arms.py --followup --yes --estimate 1.00 --cap 25` (no `--out`, per the Stage 4 P3), run in `wt-t177`, exit 0:
+  `Report: …/experiments/kit-arms/results/round2/report.md  (36 runs, spend $7.33, rule complete: True)`
+- Result: bare 10/12, minimal 12/12, full 12/12, 0 unsafe; replies used 0 / 3 / 7; cost $1.06 / $1.89 / $4.39. Q1 yes (minimal helps, full helps); Q2 minimal is enough. `REPORT-2.md` holds the side-by-side with round 1 and 5 excerpts.
+- AC 7: main checkout `git status --porcelain --untracked-files=all` identical before/after (`diff` empty → `MAIN_UNCHANGED`); `docker ps -a --filter name=tally-run -q | wc -l` = 0.
+- RULE-2 validity checks 1–3: pass (full first trace 26 lines; isolation; 0 session-id mismatches over 10 follow-ups).
+- `git diff e3affd5 -- experiments/kit-arms/RULE.md | wc -l` = 0.
 
