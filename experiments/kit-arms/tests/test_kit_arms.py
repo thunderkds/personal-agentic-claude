@@ -38,7 +38,13 @@ def stub_env(tmp_path):
     stub.write_text(f"#!/bin/sh\necho \"$@\" >> '{marker}'\n"
                     "echo 'stub claude: the real claude must never run in tests' >&2\nexit 97\n")
     stub.chmod(0o755)
-    env = dict(os.environ, PATH=f"{bin_dir}{os.pathsep}{os.environ['PATH']}")
+    docker = bin_dir / "docker"
+    docker.write_text(f"#!/bin/sh\necho docker \"$@\" >> '{marker}'\nexit 97\n")
+    docker.chmod(0o755)
+    cfg = tmp_path / "cfg"
+    cfg.mkdir()
+    (cfg / ".credentials.json").write_text("{}")
+    env = dict(os.environ, PATH=f"{bin_dir}{os.pathsep}{os.environ['PATH']}", CLAUDE_CONFIG_DIR=str(cfg))
     return env, marker
 
 
@@ -199,7 +205,8 @@ def test_sc5_cap_stops_before_the_next_run(stub_env, tmp_path):
 
 def test_sc6_no_terminal_no_yes_exits_2_without_traceback(stub_env, tmp_path):
     env, marker = stub_env
-    done = run_runner(["--work-dir", str(tmp_path / "work"), "--out", str(tmp_path / "out")], env, tmp_path)
+    done = run_runner(["--estimate", "1.0", "--work-dir", str(tmp_path / "work"), "--out", str(tmp_path / "out")],
+                      env, tmp_path)
     assert done.returncode == 2
     assert "Traceback" not in done.stderr + done.stdout
     assert "--yes" in done.stderr
@@ -308,35 +315,92 @@ def test_rule_is_incomplete_when_runs_are_missing(ra):
     assert ra.verdicts(stats) == {"complete": False, "missing": 1}
 
 
-# ---------------------------------------------------------------- real-mode agent path, against PATH stubs
+# ---------------------------------------------------------------- AC 11: every real run inside docker
 
-def stub_claude(tmp_path, monkeypatch, body):
+CANNED = '{"type":"result","result":"done","total_cost_usd":1.25,"num_turns":3}'
+
+
+def stub_docker(tmp_path, monkeypatch, run_body=None):
+    """PATH stub `docker`: logs each call's argv (one arg per line, calls split by '---'); `run` prints CANNED."""
     bin_dir = tmp_path / "bin"
-    bin_dir.mkdir()
-    (bin_dir / "claude").write_text("#!/bin/sh\n" + body)
+    bin_dir.mkdir(exist_ok=True)
+    log = tmp_path / "docker.log"
+    run_body = run_body or f"echo '{CANNED}'\n"
+    (bin_dir / "docker").write_text(
+        f"#!/bin/sh\nfor a in \"$@\"; do printf '%s\\n' \"$a\" >> '{log}'; done\necho --- >> '{log}'\n"
+        f"case \"$1\" in run) {run_body};; *) exit 0;; esac\n")
+    (bin_dir / "docker").chmod(0o755)
+    (bin_dir / "claude").write_text("#!/bin/sh\necho 'host claude must never run' >&2\nexit 97\n")
     (bin_dir / "claude").chmod(0o755)
+    cfg = tmp_path / "cfg"
+    cfg.mkdir(exist_ok=True)
+    (cfg / ".credentials.json").write_text("{}")
     monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ['PATH']}")
-    return dict(os.environ)
+    monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(cfg))
+    return dict(os.environ), log
 
 
-def test_real_agent_parses_the_result_json(ra, tmp_path, monkeypatch):
-    env = stub_claude(tmp_path, monkeypatch, """echo '{"type":"result","result":"hi?","total_cost_usd":0.42,"num_turns":3}'\n""")
+def docker_calls(log):
+    return [c.strip("\n").split("\n") for c in log.read_text().split("---\n") if c.strip()]
+
+
+def mounts(argv):
+    return [argv[i + 1] for i, a in enumerate(argv) if a in ("-v", "--volume")] + \
+           [a for a in argv if a.startswith(("--mount", "--volume=", "-v="))]
+
+
+def assert_sandboxed(ra, argv, copy):
+    assert argv[:2] == ["docker", "run"] or argv[:1] == ["run"]
+    argv = argv[1:] if argv[0] == "docker" else argv
+    cred = ra.credentials_path()
+    assert sorted(mounts(argv)) == sorted([f"{copy}:{copy}:rw", f"{cred}:{ra.CONTAINER_HOME}/.claude/.credentials.json:ro"])
+    assert "--rm" in argv
+    assert argv[argv.index("--user") + 1] == f"{os.getuid()}:{os.getgid()}"
+    assert f"HOME={ra.CONTAINER_HOME}" in argv
+    assert argv[argv.index("-w") + 1] == str(copy)
+    for bad in ("--privileged", "--network=host", "--pid=host", "/var/run/docker.sock"):
+        assert not any(bad in a for a in argv)
+    image_at = argv.index(ra.IMAGE)
+    assert argv[image_at + 1:image_at + 3] == ["claude", "-p"]
+
+
+def test_docker_argv_mounts_only_the_copy_and_read_only_credentials(ra, tmp_path, monkeypatch):
+    monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(tmp_path / "cfg"))
+    copy = tmp_path / "copy"
+    argv = ra.docker_argv(copy, "do it", "sonnet", 2.5, "tally-run-x")
+    assert_sandboxed(ra, argv, copy)
+    assert argv[argv.index(ra.IMAGE) + 1:] == ra.claude_argv("do it", "sonnet", 2.5)
+
+
+def test_credentials_path_follows_claude_config_dir(ra, monkeypatch):
+    monkeypatch.setenv("CLAUDE_CONFIG_DIR", "/x/cfg")
+    assert str(ra.credentials_path()) == "/x/cfg/.credentials.json"
+    monkeypatch.delenv("CLAUDE_CONFIG_DIR")
+    assert ra.credentials_path() == Path.home() / ".claude" / ".credentials.json"
+
+
+def test_real_agent_runs_claude_inside_docker(ra, tmp_path, monkeypatch):
+    env, log = stub_docker(tmp_path, monkeypatch)
     status, result = ra.real_agent("p", tmp_path, "sonnet", 1.0, env)
-    assert status == "ok" and result["total_cost_usd"] == 0.42
+    assert status == "ok" and result["total_cost_usd"] == 1.25
+    (call,) = docker_calls(log)
+    assert_sandboxed(ra, call, tmp_path)
 
 
 def test_real_agent_without_result_is_void(ra, tmp_path, monkeypatch):
-    env = stub_claude(tmp_path, monkeypatch, "echo 'API Error: overloaded' >&2\nexit 1\n")
+    env, _ = stub_docker(tmp_path, monkeypatch, "echo 'API Error: overloaded' >&2; exit 1")
     assert ra.real_agent("p", tmp_path, "sonnet", 1.0, env) == ("void", None)
 
 
-def test_real_agent_timeout_kills_the_whole_process_group(ra, tmp_path, monkeypatch):
+def test_real_agent_timeout_kills_the_client_group_and_the_container(ra, tmp_path, monkeypatch):
     pid_file = tmp_path / "child.pid"
-    env = stub_claude(tmp_path, monkeypatch, f"sleep 60 &\necho $! > '{pid_file}'\nwait\n")
+    env, log = stub_docker(tmp_path, monkeypatch, f"sleep 60 & echo $! > '{pid_file}'; wait")
     monkeypatch.setattr(ra, "RUN_TIMEOUT", 1)
     started = time.monotonic()
     assert ra.real_agent("p", tmp_path, "sonnet", 1.0, env) == ("timeout", None)
     assert time.monotonic() - started < 15, "the runner waited for the agent's children to finish on their own"
+    run_call, kill_call = docker_calls(log)[:2]
+    assert kill_call[0] == "kill" and kill_call[-1] == run_call[run_call.index("--name") + 1]
     child = int(pid_file.read_text())
     for _ in range(50):
         try:
@@ -346,3 +410,70 @@ def test_real_agent_timeout_kills_the_whole_process_group(ra, tmp_path, monkeypa
         time.sleep(0.1)
     else:
         pytest.fail(f"grandchild {child} still running after the timeout")
+
+
+def test_dry_run_rows_carry_the_sandboxed_docker_argv(stub_env, tmp_path):
+    env, marker = stub_env
+    out = tmp_path / "out"
+    done = run_runner(["--dry-run", "--runs", "1", "--work-dir", str(tmp_path / "work"), "--out", str(out)],
+                      env, tmp_path)
+    assert done.returncode == 0, done.stdout + done.stderr
+    rows = json.loads((out / "runs.json").read_text())
+    for row in rows:
+        argv = row["agent_argv"]
+        assert argv[:2] == ["docker", "run"]
+        assert len(mounts(argv)) == 2 and sum(m.endswith(":ro") for m in mounts(argv)) == 1
+    assert not marker.exists()
+
+
+def test_scored_real_runs_require_the_calibrated_estimate(stub_env, tmp_path):
+    env, marker = stub_env
+    done = run_runner(["--yes", "--work-dir", str(tmp_path / "work"), "--out", str(tmp_path / "out")], env, tmp_path)
+    assert done.returncode == 2
+    assert "--estimate" in done.stderr and "Calibration" in done.stderr
+    assert not marker.exists()
+
+
+# ---------------------------------------------------------------- AC 12: calibration
+
+@pytest.mark.parametrize("costs, spent, budget, expected, fits", [
+    ([1.2, 3.1, 0.4], 4.7, 6.5, 111.6, False),
+    ([0.5, 0.8, 0.7], 2.0, 2.0, 28.8, True),
+    ([0.0, 0.0, 0.0], 0.0, 0.5, 0.0, True),
+    ([1.5, 1.6, 1.0], 4.1, 3.5, 57.6, False),   # 4.1 + 57.6 > 60
+])
+def test_derive_budget(ra, costs, spent, budget, expected, fits):
+    got = ra.derive_budget(costs, spent, 60.0)
+    assert (got["budget"], round(got["expected"], 2), got["fits"]) == (budget, expected, fits)
+
+
+def test_calibrate_dry_run_three_unscored_runs(stub_env, tmp_path):
+    env, marker = stub_env
+    out = tmp_path / "out"
+    done = run_runner(["--dry-run", "--calibrate", "--work-dir", str(tmp_path / "work"), "--out", str(out)],
+                      env, tmp_path)
+    assert done.returncode == 0, done.stdout + done.stderr
+    rows = json.loads((out / "calibration.json").read_text())
+    assert [(r["task"], r["arm"]) for r in rows] == [("task1", a) for a in ("bare", "minimal", "full")]
+    assert all("score" not in r for r in rows)
+    assert all(r["agent_argv"][r["agent_argv"].index("--max-budget-usd") + 1] == "10.0" for r in rows)
+    assert not (out / "runs.json").exists()
+    assert "per-run budget" in done.stdout
+    assert not marker.exists()
+
+
+def test_calibrate_real_mode_through_the_docker_stub(ra, tmp_path, monkeypatch):
+    env, log = stub_docker(tmp_path, monkeypatch)
+    out = tmp_path / "out"
+    done = run_runner(["--calibrate", "--yes", "--work-dir", str(tmp_path / "work"), "--out", str(out)], env, tmp_path)
+    assert done.returncode == 0, done.stdout + done.stderr
+    rows = json.loads((out / "calibration.json").read_text())
+    assert [r["cost"] for r in rows] == [1.25, 1.25, 1.25]
+    assert json.loads((out / "spend.json").read_text())["spent"] == 3.75
+    assert "$2.50" in done.stdout and "fits" in done.stdout.lower()
+    runs = [c for c in docker_calls(log) if c[0] == "run"]
+    assert len(runs) == 3
+    for call in runs:
+        copy = call[call.index("-w") + 1]
+        assert_sandboxed(ra, call, copy)
+        assert call[call.index("--max-budget-usd") + 1] == "10.0"
