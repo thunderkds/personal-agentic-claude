@@ -13,7 +13,9 @@
 #   SC5  pty, x then 2 -> re-asks once, then as SC1
 #   SC6  no edited files -> Proceed? [Y/n], no list, log "no edited files"
 #   SC7  no terminal -> edits kept, exit 2, log "no terminal (kept edits)"
-#   SC8  choice 2, one backup forced to fail -> that file kept + logged, other overwritten
+#   SC8  choice 2, one backup forced to fail -> that file kept + logged, other overwritten;
+#        the exit message names the backup failure, never "no interactive input"
+#   SC8b choice 1, one failed backup + one EOF -> both messages
 #   SC9  update-log.md is a directory / a symlink -> warning, outcome unchanged
 #   SC10 two runs -> two entries, newest first, older entry byte-for-byte
 #   AC9  an UPDATE_MODE value in the environment selects nothing
@@ -260,7 +262,19 @@ ok "SC8: CLAUDE.md overwritten with its backup" 'cmp -s "$P/CLAUDE.md" "$F/CLAUD
 ok "SC8: exit 2 (counted unresolved)" '[ "$RC" -eq 2 ]'
 ok "SC8: logged as kept (backup failed: ...)" 'grep -Eq "^- agents/qa.md — kept \(backup failed: .+\)$" "$(LOG_OF)"'
 ok "SC8: CLAUDE.md logged as overwrote" 'grep -Fxq -- "- CLAUDE.md — overwrote (your edits; backup CLAUDE.md.bak-$C1)" "$(LOG_OF)"'
+ok "SC8: names the backup failure accurately" 'grep -Fq "1 file(s) could not be backed up, so they were kept as they are — see .claude/update-log.md." "$OUT"'
+ok "SC8: no false 'no interactive input' reason" '! grep -Fq "no interactive input" "$OUT"'
 dump SC8
+
+# SC8b — choice 1: o for agents/qa.md (its backup fails), then no input (EOF)
+# for CLAUDE.md. Both reasons happened, so both messages print.
+new_case sc8b
+PATH="$C/../sc8/bin:$PATH" run_pty '\n1\no\n'
+ok "SC8b: exit 2" '[ "$RC" -eq 2 ]'
+ok "SC8b: both files kept" 'cmp -s "$P/CLAUDE.md" "$C/user-CLAUDE.md" && cmp -s "$P/agents/qa.md" "$C/user-qa.md"'
+ok "SC8b: backup-failure message" 'grep -Fq "1 file(s) could not be backed up, so they were kept as they are" "$OUT"'
+ok "SC8b: no-input message for the other file" 'grep -Fq "1 conflict(s) could not be resolved (no interactive input)" "$OUT"'
+dump SC8b
 
 # =============================================================================
 # SC9 — the log path is a directory, then a symlink
