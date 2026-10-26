@@ -6,7 +6,7 @@ description: Dual-triggered self-assessment of session context health — invoke
 ## Role: Context Health Self-Assessor
 
 You are the Supervisor running an honest, on-demand check of your own session health. This
-operationalizes the "Self-monitoring for context overwhelm" rule in `CLAUDE.md` — that rule says
+operationalizes the "Self-monitoring for context overwhelm" rule in `AGENTS.md` — that rule says
 *when* to notice; this skill is the concrete, repeatable form the check takes once noticed, and the
 form the user can invoke directly instead of waiting for you to notice.
 
@@ -27,7 +27,7 @@ form the user can invoke directly instead of waiting for you to notice.
 
 #### 1. Determine Trigger
 
-- **Automatic**: you invoked this yourself because you noticed one of the signs in `CLAUDE.md`'s
+- **Automatic**: you invoked this yourself because you noticed one of the signs in `AGENTS.md`'s
   self-monitoring rule. Name which sign, concretely (e.g. "I had to re-read an earlier decision I
   should have already had in hand" — not just "context feels long").
 - **Manual**: the user ran `/compact-advisor`. No sign is assumed — assess fresh, and it's fine to
@@ -70,7 +70,7 @@ Never run either compaction yourself — state the recommendation and let the us
 
 ### Communication Protocol
 
-- **Default Notification** (automatic trigger): use CLAUDE.md's exact phrasing — "I'm noticing this
+- **Default Notification** (automatic trigger): use AGENTS.md's exact phrasing — "I'm noticing this
   session's context is getting large / harder to track — want me to compact before continuing?" —
   followed by the one concrete sign from Step 1 that triggered it. Do not invent a variant wording.
 - **Default Notification** (manual trigger): "compact-advisor: [verdict] — [one-line reason]."

@@ -4,8 +4,8 @@
 # Verifies the repo can be deployed cleanly and that every reference resolves:
 #   1. MANIFEST entries all exist on disk
 #   2. Skills + agents carry valid YAML frontmatter (name + description)
-#   3. File paths referenced inside CLAUDE.md actually exist
-#   4. Required folders/templates listed in CLAUDE.md are present
+#   3. File paths referenced inside AGENTS.md (the doctrine; CLAUDE.md only imports it) exist
+#   4. Required folders/templates listed in AGENTS.md are present
 #
 # Pure POSIX sh + grep/sed — no external deps. Exit non-zero on any failure.
 # Usage: sh scripts/validate.sh   (run from repo root)
@@ -60,10 +60,11 @@ for f in agents/*.md; do
   check_frontmatter "$f"
 done
 
-# ── 3. File paths referenced in CLAUDE.md exist ──────────────────────────────
+# ── 3. File paths referenced in AGENTS.md exist ──────────────────────────────
 # Extract backticked tokens that look like in-repo paths (contain '/', end in a
 # file/dir name). Skip per-project generated paths that are gitignored.
-section "Path references in CLAUDE.md resolve"
+section "Path references in AGENTS.md resolve"
+[ -f AGENTS.md ] || err "AGENTS.md (the doctrine file) is missing"
 skip_path() {
   case "$1" in
     tasks/TASK_GUIDE_Txxx.md|tasks/*) return 0 ;;   # generated per project
@@ -80,19 +81,19 @@ skip_path() {
 # (Subshells can't set FAIL in POSIX sh, so failures are tallied into a file.)
 MISSFILE="$(mktemp)"
 # shellcheck disable=SC2016  # backticks in the regex are literal, not expansion
-grep -oE '`[A-Za-z0-9_./-]+`' CLAUDE.md \
+grep -oE '`[A-Za-z0-9_./-]+`' AGENTS.md \
   | tr -d '`' \
   | grep '/' \
   | grep -E '\.(md|json|py|sh)$' \
   | sort -u \
   | while IFS= read -r p; do
       if skip_path "$p"; then continue; fi
-      if [ -e "$p" ]; then ok "$p"; else err "CLAUDE.md references missing path: $p"; printf 'x' >> "$MISSFILE"; fi
+      if [ -e "$p" ]; then ok "$p"; else err "AGENTS.md references missing path: $p"; printf 'x' >> "$MISSFILE"; fi
     done
 [ ! -s "$MISSFILE" ] || FAIL=1
 rm -f "$MISSFILE"
 
-# ── 4. Mandatory folders from CLAUDE.md ──────────────────────────────────────
+# ── 4. Mandatory folders from AGENTS.md ──────────────────────────────────────
 section "Mandatory framework folders present"
 for d in agents skills templates; do
   if [ -d "$d" ]; then ok "$d/"; else err "required folder missing: $d/"; fi

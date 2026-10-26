@@ -125,7 +125,7 @@ Completion criterion: if terms found, glossary updated; if none found, step expl
 
 #### Phase 4 — Discoverability Check
 
-Verify that `CLAUDE.md` or `AGENTS.md` mentions `docs/solutions/` so future agents know to scan it before starting work in documented areas. If the reference is absent, add one line to the relevant section of `CLAUDE.md`:
+Verify that `CLAUDE.md` or `AGENTS.md` mentions `docs/solutions/` so future agents know to scan it before starting work in documented areas. If the reference is absent, add one line to the relevant section of `AGENTS.md`:
 
 > "Before implementing in [category], scan `docs/solutions/[category]/` for documented patterns and known pitfalls."
 

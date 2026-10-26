@@ -93,22 +93,26 @@ output. Pause and ask if intent is unclear."
 
 - `-p` / `--print` is the non-interactive (headless) mode.
 - `.cursor/rules/agent-base.mdc` already exists in this repo (`alwaysApply: true`), so Cursor honors
-  the same base rules as Claude sub-agents automatically — see "Shared adapters" below.
+  the same base rules as Claude sub-agents automatically — see "Doctrine file and adapter" below.
 
 ---
 
-## Shared adapters (`AGENTS.md`, `.cursor/rules/agent-base.mdc`)
+## Doctrine file and adapter (`AGENTS.md`, `.cursor/rules/agent-base.mdc`)
 
-`AGENTS.md` (read by Codex, and increasingly others) and `.cursor/rules/agent-base.mdc` (read by
-Cursor) are **required, thin adapters** — not optional conveniences. Each inlines the kit's
-non-negotiables (the four Karpathy principle names, the six Hard-Stop Gate titles, the
-untrusted-content boundary rule, and "no TASK_GUIDE = no work") so a Codex-only or Cursor-only user
-receives them through a guaranteed channel, and points at `docs/claude-md/` for everything else.
+`AGENTS.md` is the kit's doctrine file (T173). Codex reads it directly; Claude Code reads it through
+`CLAUDE.md`, which holds only the import `@AGENTS.md`. It ends with a short section naming what a
+non-Claude CLI cannot enforce.
 
-They gain content but not authority: `CLAUDE.md` + `.claude/agents/` remain canonical for the
-supervisor, and both adapters carry that line. See
-`docs/ddr/0006-provider-adapters-inline-non-negotiables.md` for the full decision record and
-`tests/test_provider_adapters.py` for the conformance test that keeps them in sync with `CLAUDE.md`.
+`.cursor/rules/agent-base.mdc` (read by Cursor) is a **required, thin adapter** — not an optional
+convenience. It inlines the kit's non-negotiables (the four Karpathy principle names, the six
+Hard-Stop Gate titles, the untrusted-content boundary rule, and "no TASK_GUIDE = no work") so a
+Cursor-only user receives them through a guaranteed channel, and points at `docs/claude-md/` for
+everything else.
+
+It gains content but not authority: `AGENTS.md` + `agents/` remain canonical, and the adapter carries
+that line. `docs/ddr/0006-provider-adapters-inline-non-negotiables.md` records the original decision
+(its "`CLAUDE.md` stays primary" premise is superseded by T173); `tests/test_provider_adapters.py`
+is the conformance test that keeps the adapter in sync with `AGENTS.md`.
 
 ---
 

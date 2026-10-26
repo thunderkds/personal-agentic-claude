@@ -673,8 +673,9 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <section id="providers">
 <h2>Providers</h2>
 <p class="lead">
-  <code>CLAUDE.md</code> plus <code>docs/claude-md/</code> stay the one primary source of truth.
-  Every other provider gets a thin adapter file in the channel that provider actually auto-reads.
+  <code>AGENTS.md</code> plus <code>docs/claude-md/</code> stay the one primary source of truth.
+  Codex reads it directly; Claude Code reads it through the one-line <code>CLAUDE.md</code> import.
+  Cursor gets a thin adapter.
 </p>
 <details>
 <summary>What an adapter carries</summary>
@@ -685,10 +686,10 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 </details>
 <div class="table-wrap">
 <table>
-<thead><tr><th>Adapter</th><th>Auto-read by</th><th>What it carries</th></tr></thead>
+<thead><tr><th>File</th><th>Auto-read by</th><th>What it carries</th></tr></thead>
 <tbody>
-<tr><td data-label="Adapter"><code>AGENTS.md</code></td><td data-label="Auto-read by">Codex</td><td data-label="What it carries">Karpathy principle names, Hard-Stop Gate titles, the untrusted-content boundary rule, and the "no TASK_GUIDE = no work" rule — inlined, not just linked</td></tr>
-<tr><td data-label="Adapter"><code>.cursor/<wbr>rules/<wbr>agent-<wbr>base.mdc</code></td><td data-label="Auto-read by">Cursor (<code>alwaysApply: true</code>)</td><td data-label="What it carries">The same inlined non-negotiables as <code>AGENTS.md</code></td></tr>
+<tr><td data-label="File"><code>AGENTS.md</code></td><td data-label="Auto-read by">Codex; Claude Code through the <code>CLAUDE.md</code> import</td><td data-label="What it carries">The full doctrine, plus a short section naming what Codex and Cursor cannot enforce</td></tr>
+<tr><td data-label="File"><code>.cursor/<wbr>rules/<wbr>agent-<wbr>base.mdc</code></td><td data-label="Auto-read by">Cursor (<code>alwaysApply: true</code>)</td><td data-label="What it carries">Karpathy principle names, Hard-Stop Gate titles, the untrusted-content boundary rule, and the "no TASK_GUIDE = no work" rule, inlined from <code>AGENTS.md</code></td></tr>
 </tbody>
 </table>
 </div>

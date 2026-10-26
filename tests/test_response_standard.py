@@ -24,7 +24,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 TEMPLATE = ROOT / "agents" / "general-agent-template.md"
-CLAUDE_MD = ROOT / "CLAUDE.md"
+# REPOINTED by T173: the doctrine moved to AGENTS.md; CLAUDE.md is the one-line import
+# `@AGENTS.md`, so the Supervisor channel these tests pin is now AGENTS.md.
+CLAUDE_MD = ROOT / "AGENTS.md"
 ROLE_GUIDES = [
     ROOT / "agents" / name
     for name in ("backend.md", "frontend.md", "qa.md", "common-infrastructure.md")

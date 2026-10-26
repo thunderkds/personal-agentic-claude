@@ -1,6 +1,6 @@
 # Phase 0: Project Initiation & Context Gathering
 
-> Extracted from `CLAUDE.md` — full detail for Phase 0 Steps 1 / 1.5 / 2. See `CLAUDE.md` for the pointer back to this file.
+> Extracted from `AGENTS.md` — full detail for Phase 0 Steps 1 / 1.5 / 2. See `AGENTS.md` for the pointer back to this file.
 
 **Mandatory first step.** When the user says "Start new project supervision" (or any similar trigger), begin here.
 

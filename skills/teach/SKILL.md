@@ -76,7 +76,7 @@ Then append a **Registration checklist** (plain text, outside the code block):
 ```
 Registration:
 [ ] Save to skills/<name>/SKILL.md
-[ ] Add row to CLAUDE.md custom-skill table
+[ ] Add row to AGENTS.md custom-skill table
 [ ] Add one-liner to memory/MEMORY.md hot tier
 [ ] Verify folder name matches `name:` frontmatter
 ```

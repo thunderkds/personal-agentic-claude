@@ -37,7 +37,7 @@ ROOT = Path(__file__).resolve().parents[3]
 
 # The three stale shipping files this task rewrites.
 POINTER_FILES = [
-    "CLAUDE.md",
+    "AGENTS.md",  # T173: the doctrine moved here from CLAUDE.md (now the import @AGENTS.md)
     "docs/claude-md/pipeline-stages.md",
     "templates/TASK_GUIDE_template.md",
 ]

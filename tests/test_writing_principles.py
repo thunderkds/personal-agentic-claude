@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-CLAUDE_MD = ROOT / "CLAUDE.md"
+CLAUDE_MD = ROOT / "AGENTS.md"  # T173: the doctrine moved here; CLAUDE.md is the import @AGENTS.md
 ADAPTERS = [ROOT / "AGENTS.md", ROOT / ".cursor" / "rules" / "agent-base.mdc"]
 HEADING = "## Writing Principles (ASD-STE100)"
 

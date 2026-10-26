@@ -169,7 +169,7 @@ AC6_DOCS = [
     "templates/TASK_GUIDE_template.md",
     "docs/claude-md/pipeline-stages.md",
     "docs/claude-md/memory-write-protocol.md",
-    "CLAUDE.md",
+    "AGENTS.md",  # T173: the doctrine moved here from CLAUDE.md (now the import @AGENTS.md)
 ]
 FULL_READ = re.compile(r"`memory/MEMORY\.md`[^.\n]{0,40}\bin full\b(?P<rest>[^\n]{0,20})")
 

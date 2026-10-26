@@ -68,6 +68,7 @@ assert_exists() {
 
 printf '\n== Asserting installed artifacts ==\n'
 assert_exists CLAUDE.md
+assert_exists AGENTS.md
 assert_exists agents
 assert_exists skills
 assert_exists .claude/agents
@@ -82,11 +83,14 @@ assert_exists memory/learnings.md
 assert_exists tasks
 assert_exists .claude/harness-lock.json
 
-# Greenfield default must install the greenfield CLAUDE.md (not legacy).
-if grep -q "Project Supervisor" "$TARGET/CLAUDE.md" 2>/dev/null; then
-  printf '  [ok]   CLAUDE.md is the supervisor ruleset\n'
+# Greenfield default must install the greenfield CLAUDE.md (not legacy). Since T173 the
+# supervisor ruleset lives in AGENTS.md and CLAUDE.md is exactly the import "@AGENTS.md".
+if [ "$(cat "$TARGET/CLAUDE.md" 2>/dev/null)" = "@AGENTS.md" ] \
+   && [ "$(wc -l < "$TARGET/CLAUDE.md" | tr -d ' ')" = 1 ] \
+   && grep -q "Project Supervisor" "$TARGET/AGENTS.md" 2>/dev/null; then
+  printf '  [ok]   CLAUDE.md imports AGENTS.md, the supervisor ruleset\n'
 else
-  printf '  [FAIL] CLAUDE.md content unexpected\n'; FAIL=1
+  printf '  [FAIL] CLAUDE.md / AGENTS.md content unexpected\n'; FAIL=1
 fi
 
 # Direct-to-repo model always copies real files — never symlinks.

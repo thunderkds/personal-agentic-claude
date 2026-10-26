@@ -10,7 +10,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-CLAUDE_MD = ROOT / "CLAUDE.md"
+CLAUDE_MD = ROOT / "AGENTS.md"  # T173: the doctrine moved here; CLAUDE.md is the import @AGENTS.md
 DOC = ROOT / "docs" / "claude-md" / "token-economy.md"
 REVIEW = ROOT / "skills" / "code-review" / "SKILL.md"
 TEMPLATE = ROOT / "agents" / "general-agent-template.md"
