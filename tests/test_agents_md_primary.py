@@ -6,12 +6,15 @@ AC 2  — `CLAUDE.md` is exactly `@AGENTS.md\\n`; `AGENTS.md` holds no bare `@pa
 AC 6  — `AGENTS.md` keeps one short section naming what non-Claude CLIs cannot enforce.
 AC 7  — the Cursor adapter names `AGENTS.md` as canonical (<= 60 lines); `AGENTS.md` <= 200 lines
         and <= 32768 bytes (Codex `project_doc_max_bytes` default).
+AC 8  — `scripts/validate.sh` fails, naming the path, when `AGENTS.md` references a missing file.
 AC 9  — no shipped text points at a doctrine section of `CLAUDE.md`.
 AC 10 — `CLAUDE_LEGACY.md` is byte-identical to the branch base; T173 commits touch no
         historical record.
 """
 import re
+import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -184,3 +187,24 @@ def test_ac10_t173_commits_touch_no_historical_record():
         touched.update(p for p in out.splitlines() if p)
     bad = sorted(p for p in touched if p.startswith(OUT_OF_SCOPE) and p not in T173_OWN)
     assert not bad, f"T173 commits changed out-of-scope file(s): {bad}"
+
+
+# ── AC 8 ──────────────────────────────────────────────────────────────────────
+def _validate(cwd: Path) -> subprocess.CompletedProcess:
+    return subprocess.run(["sh", "scripts/validate.sh"], cwd=cwd, capture_output=True, text=True)
+
+
+def test_ac8_validate_fails_when_agents_md_references_a_missing_path():
+    missing = "docs/claude-md/pipeline-stages.md"
+    assert f"`{missing}`" in _text(AGENTS_MD), "fixture path must be referenced in AGENTS.md"
+    with tempfile.TemporaryDirectory() as tmp:
+        copy = Path(tmp) / "repo"
+        shutil.copytree(ROOT, copy, symlinks=True, ignore=shutil.ignore_patterns(".git"))
+
+        control = _validate(copy)  # unmodified copy passes, so the failure below is not vacuous
+        assert control.returncode == 0, control.stdout + control.stderr
+
+        (copy / missing).unlink()
+        result = _validate(copy)
+        assert result.returncode != 0
+        assert f"AGENTS.md references missing path: {missing}" in result.stdout + result.stderr
