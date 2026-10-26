@@ -1,4 +1,4 @@
-# TASK_REVIEW — T177: [Short Title]
+# TASK_REVIEW — T177: Kit-arms round 2 — a scripted user answers at each stop
 
 > Sibling of `tasks/TASK_GUIDE_T177.md`. Everything here is **filled by the reviewer at Stage
 > 4/5** — it is deliberately NOT in the guide, because the implementing agent re-reads the guide on
@@ -33,8 +33,17 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured by common-infrastructure at the start of T177, before any file in the worktree changed (HEAD `c92bf96`, git status clean; no implementation commit exists yet):
+
+```
+2026-10-26T10:09:25Z
+$ python3 experiments/kit-arms/run_arms.py --help | grep -c -- --followup
+0
+$ ls experiments/kit-arms/replies.json experiments/kit-arms/RULE-2.md 2>&1
+ls: cannot access 'experiments/kit-arms/replies.json': No such file or directory
+ls: cannot access 'experiments/kit-arms/RULE-2.md': No such file or directory
+HEAD c92bf96
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
