@@ -52,6 +52,7 @@ User, 2026-10-26: "2, I want to have a full picture" — a measured comparison o
 
 | # | Criterion (testable) | Traces to requirement |
 |---|----------------------|-----------------------|
+| 0 | Calibration first (T175 AC 12): `run_arms.py --calibrate --yes` makes 3 unscored runs (task 1 × 3 arms, `--max-budget-usd 10`), inside the Docker sandbox (T175 AC 11). The per-run budget is set to 2 × the highest calibration cost, rounded up to $0.50. If 36 × that budget's expected spend would pass the remaining cap, stop and report to the Supervisor before any scored run. | user decision |
 | 1 | All 36 cells run with `run_arms.py --runs 2 --cap 60 --yes` from a scratch copy, on one model for all arms (the model is named in the report); total spend ≤ $60.00, read from the persisted spend file. If the cap stops the run early, the report says which cells did not run and applies the rule only to complete task × arm pairs. | D3 |
 | 2 | `experiments/kit-arms/results/` holds the raw JSON (every run's row: cost, tokens, wall time, turns, final text, diff stat, verdict) and `REPORT.md`: per-arm totals, per-task table, the Q1/Q2 verdicts exactly as `RULE.md` defines them, the small-sample caveat, and 3–5 short excerpts of agent behaviour that explain a result (e.g. what each arm did on task 4 and task 5). | full picture |
 | 3 | `RULE.md` is byte-identical to its pre-registration commit (`git diff <that commit> -- experiments/kit-arms/RULE.md` empty). | method |
