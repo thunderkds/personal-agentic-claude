@@ -33,8 +33,41 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured by common-infrastructure at the branch base, before any T173 commit; HEAD `4d32f76` = `c573bbf` + the plan commit, which touches only `tasks/TASK_GUIDE_T173.md`):
+
+```
+$ date -u; git rev-parse --short HEAD
+2026-10-26T03:02:08Z
+4d32f76
+$ head -3 CLAUDE.md AGENTS.md
+==> CLAUDE.md <==
+# Claude Project Supervisor Guidelines
+**Version:** 1.17 (Unified Agentic Operating System) <br>
+**Role:** Project Supervisor AI
+
+==> AGENTS.md <==
+# AGENTS.md
+
+This is a thin adapter for non-Claude agentic CLIs (Codex, etc.) — auto-read at the repo root.
+$ wc -l CLAUDE.md AGENTS.md
+  186 CLAUDE.md
+   55 AGENTS.md
+  241 total
+$ cd $(mktemp -d) && git init -q && SUPERVISOR_REPO=file:///home/hungnguyenhuu/workspace/pets/wt-t173 sh /home/hungnguyenhuu/workspace/pets/wt-t173/setup.sh </dev/null   # no terminal -> new-project default
+exit=0
+[info]  Installed .claude/settings.json (copy). Restart Claude Code to activate hooks.
+[info]  Wrote ./.claude/harness-lock.json (117 file hashes).
+[info]  CLAUDE source: CLAUDE.md | lock: .claude/harness-lock.json
+[info]  CLIs: Claude Code, Codex
+$ head -1 CLAUDE.md; wc -lc CLAUDE.md AGENTS.md; grep claude_md_source .claude/harness-lock.json
+# Claude Project Supervisor Guidelines
+  186 16898 CLAUDE.md
+   55  2994 AGENTS.md
+  241 19892 total
+  "claude_md_source": "CLAUDE.md",
+```
+
+The installed project gets the full doctrine in `CLAUDE.md` (186 lines) and the 55-line thin adapter in `AGENTS.md`.
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
