@@ -2857,7 +2857,7 @@ highest ID anywhere, not only `PROJECT_KANBAN.md` on the checked-out branch. Ren
 - **`communicate()` after `proc.kill()` blocks until grandchildren close the pipes** (T175). A timed-out
   `claude -p` left children holding stdout, so the runner hung. Start agents with `start_new_session=True`
   and kill the group with `os.killpg`; test that the timeout returns in seconds.
-- **Kit-arms experiment: a 26-line AGENTS.md beat the full kit on one-shot tasks** (T176, 2026-10-26, $6.34,
+- **Kit-arms experiment: a 26-line AGENTS.md beat the full kit on one-shot tasks** (T176, 2026-10-26, $5.66 incl. $0.68 calibration,
   `experiments/kit-arms/results/REPORT.md`). Scores out of 12: bare 10, minimal 12, full 8; 0 unsafe in every arm.
   The full kit's 3 code-task losses were Hard-Stop Gate 1 stops asking permission, not bad code. It applied its
   gates inconsistently on identical prompts (wrote a guide 4/12, stopped 5/12, skipped 3/12). Only minimal asked
