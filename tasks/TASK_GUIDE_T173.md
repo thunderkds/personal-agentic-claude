@@ -65,7 +65,7 @@ User decisions (AskUserQuestion, 2026-10-26):
 
 ## Dependencies & Reachability
 
-**Depends on**: T170 — its branch `docs/t170-resolve-question` edits `CLAUDE.md:65` (cross-cutting skills line). Start implementation only after T170 is in `main`; then `git merge main` into this branch first, so the moved text includes T170's line.
+**Depends on**: T170 — its branch `docs/t170-resolve-question` edits `CLAUDE.md:65` (cross-cutting skills line). The Supervisor merged that branch into this one at `c573bbf` (2026-10-26; T170's PR is not in `main` yet because `gh` is not logged in). The branch base for AC 1 is `c573bbf`. T170's PR must reach `main` before T173's does.
 
 **Entry point**: `@AGENTS.md` (the whole content of `CLAUDE.md`)
 
@@ -132,7 +132,7 @@ python3 -m pytest -q tests .claude/hooks/tests && sh scripts/validate.sh && sh s
 - DDR file (parked, see Out of scope).
 
 Steps:
-1. `git merge main` (after T170 lands). Record BEFORE (verbatim prior `CLAUDE.md` head + `AGENTS.md` head) in the review file.
+1. Record BEFORE (branch base `c573bbf`) (verbatim prior `CLAUDE.md` head + `AGENTS.md` head) in the review file.
 2. Write the RED tests for AC 1, 2, 6, 7, 9, 10 first.
 3. Move: `AGENTS.md` ← base `CLAUDE.md` content + AC 6 section; `CLAUDE.md` ← `@AGENTS.md\n`.
 4. Installer/update (AC 4, 5), validate/refs scripts (AC 8), adapters (AC 7), shipped pointers (AC 9).
