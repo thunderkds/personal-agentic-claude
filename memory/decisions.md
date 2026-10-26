@@ -2429,3 +2429,35 @@ companion cards, easy-verifier-mcp (`id="verifier"` kept for old links) and easy
 came from Supervisor screenshots, not tests — layout claims need a look at 1280px and 375px. T165/T166 passed
 /verify; for T167/T168 the user waived /verify ("no need to verify, mark done") — recorded as N/A, not pass.
 **Files**: site/index.html, tests/test_site_content.py, tests/test_docs_t151.py
+
+## T170: a confused Fact question is answered from a Citation or by 2 independent scanners; a Choice question goes to the user (2026-10-20)
+**Date**: 2026-10-20 · **Source**: `brainstorming` Option B + `grill-with-docs` on `BRAINSTORMING_LOG_confusion-resolution.md`
+**Decision**: New `resolve-question` skill, run by the Supervisor (sub-agents have no Agent tool; they report `Status: blocked` + `Question:`).
+Choice question → user at once. Fact question → Supervisor answers if it can give a Citation (user: "if supervisor go the answer with evidence, its good for make the choice"),
+else 2 read-only `Explore` scanners (3 for Medium/High risk), each on a distinct area; accepted only when ≥2 agree with Citations, else HITL.
+Log: online → `board_sync.py push comment <ID> question` (+ `decide` when it settles a choice) (user: "send the logs, decision as comment to linear");
+local → `reports/` HTML page via `thinking-report session=resolution` (user: "as HTML page is oke, and refer the link to the task guide also");
+both → one line in the guide's optional `## Questions Log`.
+**Terms**: Citation (not "evidence" — that is the Evidence table), Fact question / Choice question (not "intent" — that is Stage 2's restated requirement), Scanner. Added to `PROJECT_SPEC.md` glossary.
+**Why**: two scanners with the same prompt make the same mistake, so areas differ; a Choice question answered by scanners is a guess (Ask vs. Guess). Option C's hook rejected: completion signals are unreliable (T044). No DDR: ADR/DDR docs are parked.
+
+## T173: AGENTS.md is the doctrine file; CLAUDE.md is only the import `@AGENTS.md` (2026-10-26)
+**Date**: 2026-10-26 · **Source**: user request + AskUserQuestion D1/D2; Claude Code docs `code.claude.com/docs/en/memory` § AGENTS.md
+**Decision**: The full Supervisor doctrine moves verbatim from `CLAUDE.md` to `AGENTS.md`; `CLAUDE.md` is exactly `@AGENTS.md\n` (user: "update the content from CLAUDE.md to AGENT.md and the CLAUDE.md will refer to AGENT.md only").
+D3 import, not a symlink: the docs say the Edit/Write tools refuse to write through a symlink, and Windows clones check a symlink out as a one-line text file.
+D1 `CLAUDE_LEGACY.md` stays a full file (user: "Leave legacy as is"). Consequence: a legacy install still receives the new-project `AGENTS.md` through `MANIFEST`, so Codex there reads new-project doctrine; Claude Code there reads the legacy `CLAUDE.md` only (default `claude-md-or-agents-md`).
+D2 pinned tests repointed to `AGENTS.md` / the T173 commit, none deleted (list in `tasks/TASK_REVIEW_T173.md`).
+`update.sh`: `resolve_claude_md_source` also maps the pre-T173 heading `# Claude Project Supervisor Guidelines` to source `CLAUDE.md` on an old lock, because the new upstream first line is `@AGENTS.md`.
+`AGENTS.md` keeps a short non-Claude CLI section (what Codex/Cursor cannot enforce) carried over from the old thin adapter.
+**Why**: Claude Code reads `AGENTS.md` natively from v2.1.277 (installed 2.1.310), so DDR-0006's premise — "`AGENTS.md` is auto-read by Codex and not by Claude Code" — no longer holds; one file now serves every CLI.
+**Supersedes**: DDR-0006's "`CLAUDE.md` stays primary" (T090). DDR owed — parked until the ADR/DDR MCP task lands.
+**Files**: AGENTS.md, CLAUDE.md, lib/harness-update.sh, scripts/validate.sh, scripts/smoke-install.sh, .cursor/rules/agent-base.mdc, docs/MULTI_AGENT.md, tests/test_agents_md_primary.py, tests/test_update_claude_md.sh
+
+## T174: Update settles all edited files with one plan-screen choice, and logs every run to `.claude/update-log.md` (2026-10-26)
+**Date**: 2026-10-26 · **Source**: user request ("Update for the auto-approve with the decision logs") + AskUserQuestion D1/D2 with previews
+**Decision**: When the Update plan lists edited files, `Proceed? [Y/n]` becomes `1) Ask me about each one / 2) Overwrite all of them (each backed up first) / 3) Keep all of them / 4) Cancel` (D1, user: "On the plan screen"). Every Update run prepends a dated entry to `.claude/update-log.md` (D2, user: "Every Update run"): kit versions, "Decided by", one line per edited file and removal, counts.
+No flag or env var selects an auto mode — ADR-0002 (`UPDATE_MODE=ask` is assigned when `lib/harness-update.sh` loads). No terminal keeps edits and exits 2, now with a log entry. Overwrite-all backs up first (T137); a failed backup keeps the file and prints its own message (`BACKUP_FAILED`), not "no interactive input". Choice 4 exits via `cancel_run`.
+The log refuses a symlink/non-file path, writes via `mktemp` in `.claude/` + `mv`, and holds paths/outcomes/counts only. Term: **update log** (glossary) — not the board's Decision Log.
+**Why**: per-file prompts do not scale to many edited files, and outcomes were printed to the screen only, so nobody could later see what an update did.
+**Open**: "N kit files you never edited — refreshed" also counts byte-identical files.
+**Files**: setup.sh, lib/harness-update.sh, tests/test_update_auto_approve.sh, tests/test_one_command_menu.sh, .github/workflows/ci.yml, site/index.html, README.md

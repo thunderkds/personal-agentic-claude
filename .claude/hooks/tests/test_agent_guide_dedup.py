@@ -122,7 +122,9 @@ T069_BASELINE_REF = "8d6d56b"
 # REPOINTED AGAIN by T169 (`c3016fa` -> `19c139f`, the review-fixed edit commit; CLAUDE.md line cap raise to 218 user-approved 2026-10-20): T169 adds the Writing Principles section to CLAUDE.md
 # and one clause to the Response Standard bullet in CLAUDE.md and the template. Repointed, NOT deleted.
 # REPOINTED once more by T169 scope extension (`19c139f` -> `9294eee`, then `9294eee` -> `09e552d` by D6, numeric caps dropped from the Writing Principles table): CLAUDE.md slimmed 218 -> 186 lines (General Agent Template, Mandatory Session Startup, opening list, Final Instruction). User-approved 2026-10-20.
-T070_BASELINE_REF = "09e552d"  # T169 scope extension: CLAUDE.md slimming
+# REPOINTED AGAIN by T170 (`09e552d` -> `a830bb8`, T170's edit commit; user-approved 2026-10-20): CLAUDE.md gains `resolve-question` on the cross-cutting skill line. Still 186 lines. Repointed, NOT deleted.
+# REPOINTED AGAIN by T173 (`CLAUDE.md`@`a830bb8` -> `AGENTS.md`@`8080fdb`, T173's edit commit; D2 user-approved 2026-10-26): the doctrine moved from CLAUDE.md to AGENTS.md and CLAUDE.md is the one-line import `@AGENTS.md`. The pinned file is now AGENTS.md. Repointed, NOT deleted.
+T070_BASELINE_REF = "8080fdb"  # T173: the doctrine lives in AGENTS.md
 
 # T082's own edit commit (same commit as the repoint above). T082 adds a mandatory Base Rule bullet
 # to `general-agent-template.md` too (the same untrusted-content pointer) — a legitimate, required
@@ -273,7 +275,7 @@ def test_ac4_no_guide_tells_an_agent_to_re_read_its_own_system_prompt():
 # --------------------------------------------------------------------------
 # AC5 / AC10 — file-wide negatives.
 # --------------------------------------------------------------------------
-@pytest.mark.parametrize("rel,ref", [("CLAUDE.md", T070_BASELINE_REF)])
+@pytest.mark.parametrize("rel,ref", [("AGENTS.md", T070_BASELINE_REF)])  # T173: was CLAUDE.md
 def test_ac5_ac10_out_of_scope_files_are_byte_identical_to_the_baseline(rel, ref):
     assert (ROOT / rel).read_bytes() == read_at(rel, ref), (
         f"{rel} changed. CLAUDE.md never reaches a sub-agent at all, so its overlap with the "
@@ -437,7 +439,12 @@ T127_BASELINE_REF = "998166d"
 # `<`. `274a52a` is T133's edit commit.
 T133_BASELINE_REF = "19c139f"  # T169: the Response Standard bullet gains a pointer clause (c-infra only)
 
-AC7_ROLE_BASELINE = {"c-infra": T133_BASELINE_REF}  # key must match ROLE_GUIDES above
+# REPOINTED AGAIN by T170 for `c-infra` only: the report format's `Question (if blocked): [fact|choice]
+# <question>` line adds 48 chars, breaching c-infra's T133 floor (floor raise user-approved
+# 2026-10-20). backend/frontend/qa keep T066's floor and strict `<`. `a830bb8` is T170's edit commit.
+T170_BASELINE_REF = "a830bb8"
+
+AC7_ROLE_BASELINE = {"c-infra": T170_BASELINE_REF}  # key must match ROLE_GUIDES above
 
 
 def baseline_loaded_chars(role: str) -> int:

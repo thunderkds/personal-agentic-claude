@@ -19,6 +19,14 @@
 #   M1.  mutation: ignore recorded source, always resolve greenfield -> SC2 must fail
 #   M2.  mutation: disable the recorded-source branch entirely -> SC7 must fail
 #   M3.  mutation: remove the allowlist check on the recorded source -> SC8 must fail
+#   T173a. pre-T173 install, unedited, lock records CLAUDE.md -> CLAUDE.md == "@AGENTS.md",
+#          AGENTS.md == the full doctrine, no prompt
+#   T173b. pre-T173 install, customized CLAUDE.md -> edit-safe ask; no input -> exit 2, edit kept
+#   T173c. pre-T173 install, old lock (no claude_md_source), pre-T173 heading -> resolves to
+#          CLAUDE.md (not conflict), CLAUDE.md == "@AGENTS.md", lock records CLAUDE.md
+#   T173d. pre-T173 legacy install, old lock -> still resolves to CLAUDE_LEGACY.md, never the import
+#   T173e. project's own AGENTS.md, no lock entry -> edit-safe ask; no input -> exit 2, file kept
+#   M4.  mutation: drop the pre-T173 heading recognition -> T173c must fail
 #
 # Brownfield installs and conflict answers are driven through a real pty
 # (`script -qec`) because setup.sh's prompts read /dev/tty (T114) and are
@@ -541,6 +549,145 @@ PYEOF
   fi
 else
   fail "M3: setup failed for mutation-control fixture — see $WORK/setup.log"; cat "$WORK/setup.log" >&2
+fi
+
+# =============================================================================
+# T173 — the kit moves its doctrine from CLAUDE.md to AGENTS.md; CLAUDE.md
+# becomes the one-line import "@AGENTS.md". Two fixture kits: OLD is the
+# pre-T173 shape (doctrine in CLAUDE.md under the real pre-T173 heading, thin
+# AGENTS.md), NEW is the T173 shape. Install from OLD, update from NEW.
+# =============================================================================
+PRE_T173_HEADING='# Claude Project Supervisor Guidelines'
+FIX_OLD="$WORK/fixture-pre-t173"
+FIX_NEW="$WORK/fixture-t173"
+build_kit() {
+  mkdir -p "$1/agents"
+  printf 'agent-content\n' > "$1/agents/backend.md"
+  printf '%s\n' "$2" > "$1/CLAUDE.md"
+  printf '%s\n' "$3" > "$1/AGENTS.md"
+  printf 'CLAUDE LEGACY SUPERVISOR - Operating Protocol\n%s\n' "$4" > "$1/CLAUDE_LEGACY.md"
+  printf 'agents\nAGENTS.md\n' > "$1/MANIFEST"
+  git -C "$1" init -q
+  git -C "$1" add -A
+  git -C "$1" -c user.email=test@example.com -c user.name=Test commit -q -m "kit"
+}
+build_kit "$FIX_OLD" "$PRE_T173_HEADING
+old doctrine v1" "# AGENTS.md
+thin adapter v1" "legacy v1"
+build_kit "$FIX_NEW" "@AGENTS.md" "# AGENTS.md — Project Supervisor Guidelines
+full doctrine v2" "legacy v2"
+
+t173_setup() {  # $1 target, $2 = brownfield to pick the legacy project type
+  mkdir -p "$1" && git -C "$1" init -q
+  if [ "${2:-}" = brownfield ]; then
+    ( cd "$1" && printf '\n\n2\n\n\n' | SHELL=/bin/sh script -qec \
+        "SUPERVISOR_REPO=file://$FIX_OLD bash $SETUP" "$WORK/t173.typescript" >"$WORK/setup.log" 2>&1 )
+  else
+    ( cd "$1" && SUPERVISOR_REPO="file://$FIX_OLD" bash "$SETUP" </dev/null >"$WORK/setup.log" 2>&1 )
+  fi
+}
+t173_update() {  # $1 target, $2 update.sh to run (default: the real one)
+  ( cd "$1" && SUPERVISOR_REPO="file://$FIX_NEW" bash "${2:-$UPDATE}" </dev/null >"$WORK/update.log" 2>&1 )
+}
+strip_source() {
+  sed -i.orig '/"claude_md_source"/d' "$1/.claude/harness-lock.json" && rm -f "$1/.claude/harness-lock.json.orig"
+}
+
+# T173a — unmodified pre-T173 install, lock records CLAUDE.md.
+TA="$WORK/t173a"
+if t173_setup "$TA"; then
+  t173_update "$TA"; _rc=$?
+  [ "$_rc" -eq 0 ] && pass "T173a: update.sh exited 0" || { fail "T173a: update.sh exited $_rc"; cat "$WORK/update.log" >&2; }
+  cmp -s "$TA/CLAUDE.md" "$FIX_NEW/CLAUDE.md" && [ "$(cat "$TA/CLAUDE.md")" = "@AGENTS.md" ] \
+    && pass "T173a: CLAUDE.md is the one-line import @AGENTS.md" \
+    || fail "T173a: CLAUDE.md is not the import (got: $(head -n1 "$TA/CLAUDE.md"))"
+  cmp -s "$TA/AGENTS.md" "$FIX_NEW/AGENTS.md" \
+    && pass "T173a: AGENTS.md is the full doctrine" || fail "T173a: AGENTS.md was not refreshed"
+  grep -q "conflict" "$WORK/update.log" \
+    && fail "T173a: unexpected conflict prompt for untouched files" || pass "T173a: no prompt fired"
+else
+  fail "T173a: setup failed — see $WORK/setup.log"; cat "$WORK/setup.log" >&2
+fi
+
+# T173b — customized CLAUDE.md: the existing edit-safe ask, never a silent overwrite.
+TB="$WORK/t173b"
+if t173_setup "$TB"; then
+  printf 'USER CUSTOM LINE T173\n' >> "$TB/CLAUDE.md"
+  t173_update "$TB"; _rc=$?
+  [ "$_rc" -eq 2 ] && pass "T173b: update.sh exits 2 on the unresolved CLAUDE.md ask" \
+    || fail "T173b: expected exit 2, got $_rc"
+  grep -q "USER CUSTOM LINE T173" "$TB/CLAUDE.md" && grep -qxF "$PRE_T173_HEADING" "$TB/CLAUDE.md" \
+    && pass "T173b: customized CLAUDE.md kept" || fail "T173b: customized CLAUDE.md was overwritten"
+  grep -q "conflict: 'CLAUDE.md'" "$WORK/update.log" \
+    && pass "T173b: the ask names CLAUDE.md" || { fail "T173b: no CLAUDE.md ask"; cat "$WORK/update.log" >&2; }
+else
+  fail "T173b: setup failed — see $WORK/setup.log"; cat "$WORK/setup.log" >&2
+fi
+
+# T173c — old lock without claude_md_source, first line is the pre-T173 heading.
+TC="$WORK/t173c"
+if t173_setup "$TC"; then
+  strip_source "$TC"
+  t173_update "$TC"; _rc=$?
+  [ "$_rc" -eq 0 ] && pass "T173c: update.sh exited 0 against an old lock" \
+    || { fail "T173c: update.sh exited $_rc"; cat "$WORK/update.log" >&2; }
+  [ "$(cat "$TC/CLAUDE.md")" = "@AGENTS.md" ] \
+    && pass "T173c: pre-T173 heading resolved to CLAUDE.md; CLAUDE.md is the import" \
+    || fail "T173c: CLAUDE.md not updated (got: $(head -n1 "$TC/CLAUDE.md"))"
+  grep -q "conflict: 'CLAUDE.md'" "$WORK/update.log" \
+    && fail "T173c: resolved to conflict, not CLAUDE.md" || pass "T173c: no CLAUDE.md conflict"
+  [ "$(lock_field "$TC/.claude/harness-lock.json" claude_md_source)" = "CLAUDE.md" ] \
+    && pass "T173c: rewritten lock records claude_md_source=CLAUDE.md" \
+    || fail "T173c: rewritten lock lacks claude_md_source=CLAUDE.md"
+else
+  fail "T173c: setup failed — see $WORK/setup.log"; cat "$WORK/setup.log" >&2
+fi
+
+# T173d — legacy install with an old lock still resolves to CLAUDE_LEGACY.md.
+TD="$WORK/t173d"
+if t173_setup "$TD" brownfield; then
+  strip_source "$TD"
+  t173_update "$TD"; _rc=$?
+  [ "$_rc" -eq 0 ] && pass "T173d: update.sh exited 0" || { fail "T173d: update.sh exited $_rc"; cat "$WORK/update.log" >&2; }
+  cmp -s "$TD/CLAUDE.md" "$FIX_NEW/CLAUDE_LEGACY.md" \
+    && pass "T173d: legacy CLAUDE.md == fresh CLAUDE_LEGACY.md, never the import" \
+    || fail "T173d: legacy CLAUDE.md misrouted (got: $(head -n1 "$TD/CLAUDE.md"))"
+else
+  fail "T173d: setup failed — see $WORK/setup.log"; cat "$WORK/setup.log" >&2
+fi
+
+# T173e — the project's own AGENTS.md (no lock entry) is asked about, never silently replaced.
+TE="$WORK/t173e"
+if t173_setup "$TE"; then
+  sed -i.orig '/"AGENTS.md":/d' "$TE/.claude/harness-lock.json" && rm -f "$TE/.claude/harness-lock.json.orig"
+  printf '# my own agents file\n' > "$TE/AGENTS.md"
+  t173_update "$TE"; _rc=$?
+  [ "$_rc" -eq 2 ] && pass "T173e: update.sh exits 2 on the unresolved AGENTS.md ask" \
+    || fail "T173e: expected exit 2, got $_rc"
+  [ "$(cat "$TE/AGENTS.md")" = "# my own agents file" ] \
+    && pass "T173e: the project's own AGENTS.md kept" || fail "T173e: the project's AGENTS.md was replaced"
+else
+  fail "T173e: setup failed — see $WORK/setup.log"; cat "$WORK/setup.log" >&2
+fi
+
+# M4 — mutation control: drop the pre-T173 heading recognition. T173c must then fail.
+M4_DIR=$(make_mutant mutant4 '/_cand_first="\$_dst_first"/d')
+if cmp -s "$UPDATE_LIB" "$M4_DIR/lib/harness-update.sh"; then
+  fail "M4: mutation did not change the update logic — sed pattern did not match"
+else
+  pass "M4: mutation landed (mutant differs from lib/harness-update.sh)"
+fi
+TM4="$WORK/t173-m4"
+if t173_setup "$TM4"; then
+  strip_source "$TM4"
+  t173_update "$TM4" "$M4_DIR/update.sh"
+  if [ "$(cat "$TM4/CLAUDE.md")" != "@AGENTS.md" ] && grep -q "conflict: 'CLAUDE.md'" "$WORK/update.log"; then
+    pass "M4: mutant resolves the pre-T173 heading to conflict (T173c would fail)"
+  else
+    fail "M4: mutant did not reproduce the expected T173c failure — mutation may be inert"
+  fi
+else
+  fail "M4: setup failed — see $WORK/setup.log"; cat "$WORK/setup.log" >&2
 fi
 
 printf '\n----- summary: %s passed, %s failed -----\n' "$PASS" "$FAIL"

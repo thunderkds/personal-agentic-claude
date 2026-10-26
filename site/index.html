@@ -272,7 +272,7 @@
   <ul class="lead">
     <li><strong>Pipeline</strong> — plan → spawn isolated sub-agents → review → integrate → ship.</li>
     <li><strong>Claude Code</strong> — the Supervisor session and its hooks enforce every stage.</li>
-    <li><strong>Other providers</strong> (Codex, Cursor) — the same doctrine through a thin adapter; see
+    <li><strong>Other providers</strong> (Codex, Cursor) — Codex reads the full doctrine in <code>AGENTS.md</code>. Cursor gets a thin adapter. See
       Providers below for what carries over and what doesn't.</li>
   </ul>
   <p class="lead">
@@ -291,7 +291,7 @@
   <dt>Stages</dt>
   <dd>Phase 0 → 0.5 → 1 → 1.5 → 2 → 3 → 4 → 5</dd>
   <dt>Roster</dt>
-  <dd><a href="#agent-roles">4 spawnable roles</a> &middot; <a href="#skills">30 skills</a> &middot; <a href="#hooks">4 blocking hooks (of 9)</a></dd>
+  <dd><a href="#agent-roles">4 spawnable roles</a> &middot; <a href="#skills">31 skills</a> &middot; <a href="#hooks">4 blocking hooks (of 9)</a></dd>
 </dl>
 </div>
 </section>
@@ -419,6 +419,21 @@ Choose [1]:</pre>
   Before changing anything it shows a plan — files to ask about, files to remove because the kit no
   longer ships them, anything to back up — and ends with <code>Proceed? [Y/n]</code>.
 </p>
+<p class="lead">
+  If the plan lists files you edited, one question about all of them replaces <code>Proceed? [Y/n]</code>:
+</p>
+<pre class="install">How should Update treat your edited files?
+  1) Ask me about each one
+  2) Overwrite all of them (each backed up first)
+  3) Keep all of them
+  4) Cancel
+Choice [1]:</pre>
+<ul class="lead">
+  <li><strong>1</strong> asks about each file, as in the table below. Enter picks it.</li>
+  <li><strong>2</strong> moves each file to <code>&lt;file&gt;.bak-&lt;commit&gt;</code>, then
+    overwrites it. A file it cannot back up is kept.</li>
+  <li><strong>3</strong> keeps every edit. <strong>4</strong> changes nothing.</li>
+</ul>
 <ul class="lead">
   <li>Answer <code>n</code> to go back to the menu. <strong>Cancel changes nothing.</strong></li>
   <li><strong>No terminal</strong> (CI, containers, <code>ssh</code> without <code>-t</code>) — no
@@ -446,6 +461,23 @@ Choose [1]:</pre>
 <p>
   In <code>.claude/harness-lock.json</code>, which also records the kit's commit ID as
   <code>kit_commit</code> — the version a <code>.bak-&lt;commit&gt;</code> backup is named after.
+</p>
+</details>
+<p class="lead">
+  Every Update run adds a dated entry to the top of <code>.claude/update-log.md</code>: how your
+  edited files were decided, what happened to each one, and counts for the rest.
+</p>
+<details>
+<summary>An update log entry</summary>
+<pre class="install">## 2026-10-26 14:05 — Update 75040d9 → b122017
+Decided by: auto-approve (overwrite all)
+- CLAUDE.md — overwrote (your edits; backup CLAUDE.md.bak-75040d9)
+- agents/qa.md — overwrote (your edits; backup agents/qa.md.bak-75040d9)
+- 41 kit files you never edited — refreshed
+- 2 files added</pre>
+<p>
+  The log holds paths, outcomes and counts only, never file contents. Older entries stay below,
+  unchanged. Cancel adds no entry.
 </p>
 </details>
 <p class="lead">
@@ -494,7 +526,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
   <li><code>2) Existing / legacy project</code> — for an existing codebase. Uses
     <code>CLAUDE_LEGACY.md</code>, which adds legacy-codebase guidance (risk hotspots, strangler-fig
     patterns).</li>
-  <li><code>1) New project</code> (<code>CLAUDE.md</code>) — the default with no terminal.</li>
+  <li><code>1) New project</code> — the default with no terminal. You get <code>CLAUDE.md</code> (only <code>@AGENTS.md</code>) and the full <code>AGENTS.md</code>.</li>
 </ul>
 </section>
 
@@ -538,7 +570,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 </section>
 
 <section id="skills">
-<h2>Skills (30)</h2>
+<h2>Skills (31)</h2>
 <p class="lead">
   One inline instruction set loaded per invocation, grouped by which pipeline stage it belongs to.
 </p>
@@ -578,7 +610,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
   <h3>Any stage</h3>
   <p class="chips">
     <span class="chip">compact-advisor</span><span class="chip">compact-memory</span><span class="chip">compound</span><span class="chip">compound-refresh</span>
-    <span class="chip">learn</span><span class="chip">optimize</span><span class="chip">resolve-pr-feedback</span><span class="chip">slim-skills</span>
+    <span class="chip">learn</span><span class="chip">optimize</span><span class="chip">resolve-pr-feedback</span><span class="chip">resolve-question</span><span class="chip">slim-skills</span>
     <span class="chip">strategy</span><span class="chip">teach</span><span class="chip">thinking-report</span><span class="chip">wake</span>
     <span class="chip">write-better-skill</span>
   </p>
@@ -673,8 +705,9 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <section id="providers">
 <h2>Providers</h2>
 <p class="lead">
-  <code>CLAUDE.md</code> plus <code>docs/claude-md/</code> stay the one primary source of truth.
-  Every other provider gets a thin adapter file in the channel that provider actually auto-reads.
+  <code>AGENTS.md</code> plus <code>docs/claude-md/</code> stay the one primary source of truth.
+  Codex reads it directly; Claude Code reads it through the one-line <code>CLAUDE.md</code> import.
+  Cursor gets a thin adapter.
 </p>
 <details>
 <summary>What an adapter carries</summary>
@@ -685,10 +718,10 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 </details>
 <div class="table-wrap">
 <table>
-<thead><tr><th>Adapter</th><th>Auto-read by</th><th>What it carries</th></tr></thead>
+<thead><tr><th>File</th><th>Auto-read by</th><th>What it carries</th></tr></thead>
 <tbody>
-<tr><td data-label="Adapter"><code>AGENTS.md</code></td><td data-label="Auto-read by">Codex</td><td data-label="What it carries">Karpathy principle names, Hard-Stop Gate titles, the untrusted-content boundary rule, and the "no TASK_GUIDE = no work" rule — inlined, not just linked</td></tr>
-<tr><td data-label="Adapter"><code>.cursor/<wbr>rules/<wbr>agent-<wbr>base.mdc</code></td><td data-label="Auto-read by">Cursor (<code>alwaysApply: true</code>)</td><td data-label="What it carries">The same inlined non-negotiables as <code>AGENTS.md</code></td></tr>
+<tr><td data-label="File"><code>AGENTS.md</code></td><td data-label="Auto-read by">Codex; Claude Code through the <code>CLAUDE.md</code> import</td><td data-label="What it carries">The full doctrine, plus a short section naming what Codex and Cursor cannot enforce</td></tr>
+<tr><td data-label="File"><code>.cursor/<wbr>rules/<wbr>agent-<wbr>base.mdc</code></td><td data-label="Auto-read by">Cursor (<code>alwaysApply: true</code>)</td><td data-label="What it carries">Karpathy principle names, Hard-Stop Gate titles, the untrusted-content boundary rule, and the "no TASK_GUIDE = no work" rule, inlined from <code>AGENTS.md</code></td></tr>
 </tbody>
 </table>
 </div>
@@ -729,7 +762,8 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <tr><td data-label="Path"><code>skills/</code></td><td data-label="What it contains">Canon custom skills (DDR-0007)</td></tr>
 <tr><td data-label="Path"><code>.claude/agents/</code></td><td data-label="What it contains">Committed <strong>relative symlink</strong> onto <code>agents/</code> so Claude Code can discover it (<code>.claude/<wbr>agents -&gt; ../agents</code>)</td></tr>
 <tr><td data-label="Path"><code>.claude/skills/</code></td><td data-label="What it contains">Committed <strong>relative symlink</strong> onto <code>skills/</code> so Claude Code can discover it (<code>.claude/<wbr>skills -&gt; ../skills</code>)</td></tr>
-<tr><td data-label="Path"><code>AGENTS.md</code></td><td data-label="What it contains">Provider adapter for Codex — see Providers below</td></tr>
+<tr><td data-label="Path"><code>AGENTS.md</code></td><td data-label="What it contains">The full doctrine. Codex reads it directly. Claude Code reads it through the <code>CLAUDE.md</code> import</td></tr>
+<tr><td data-label="Path"><code>CLAUDE.md</code></td><td data-label="What it contains">Holds only the import <code>@AGENTS.md</code></td></tr>
 <tr><td data-label="Path"><code>.cursor/<wbr>rules/<wbr>agent-<wbr>base.mdc</code></td><td data-label="What it contains">Provider adapter for Cursor — see Providers below</td></tr>
 <tr><td data-label="Path"><code>tasks/</code></td><td data-label="What it contains">Task guides generated at Stage 2 (per project)</td></tr>
 <tr><td data-label="Path"><code>templates/</code></td><td data-label="What it contains">Blank templates for PRD, PROJECT_SPEC, task board, TASK_GUIDE, and more</td></tr>

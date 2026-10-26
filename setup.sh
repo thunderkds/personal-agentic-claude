@@ -640,6 +640,11 @@ confirm_plan() {
     log_info "No terminal — proceeding with the plan above."
     return 0
   fi
+  # An Update plan that lists edited files asks how to treat them instead (T174).
+  if [ "$ACTION" = update ] && [ -s "$HARNESS_TEMP_DIR/.plan-ask" ]; then
+    choose_update_mode
+    return 0
+  fi
   while :; do
     printf 'Proceed? [Y/n] '
     if ! tty_read; then
@@ -657,6 +662,31 @@ confirm_plan() {
 cancel_run() {
   log_info "Cancelled — nothing was changed."
   exit 0
+}
+
+# Sets UPDATE_MODE (lib/harness-update.sh) to ask | overwrite_all | keep_all.
+# Enter takes 1 (today's per-file prompt); invalid input re-asks; Cancel or EOF
+# exits through cancel_run with nothing written. Only reached at a terminal.
+choose_update_mode() {
+  printf 'How should Update treat your edited files?\n'
+  printf '  1) Ask me about each one\n'
+  printf '  2) Overwrite all of them (each backed up first)\n'
+  printf '  3) Keep all of them\n'
+  printf '  4) Cancel\n'
+  while :; do
+    printf 'Choice [1]: '
+    if ! tty_read; then
+      printf '\n'
+      cancel_run
+    fi
+    case "$TTY_ANSWER" in
+      ''|1) UPDATE_MODE=ask; return 0 ;;
+      2)    UPDATE_MODE=overwrite_all; return 0 ;;
+      3)    UPDATE_MODE=keep_all; return 0 ;;
+      4)    cancel_run ;;
+      *)    printf 'Please enter 1, 2, 3 or 4.\n' ;;
+    esac
+  done
 }
 
 # Would the install move this existing path aside? The same test

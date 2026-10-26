@@ -59,7 +59,7 @@ LINE_CAPS = {
     "agents/frontend.md": 142,
     "agents/common-infrastructure.md": 137,
     "agents/qa.md": 129,
-    "CLAUDE.md": 186,  # T169 scope extension: slimmed 218 -> 186 (user: <=200); cap ratchets down to the new count
+    "AGENTS.md": 196,  # T169 scope extension: slimmed 218 -> 186 (user: <=200); cap ratchets down to the new count. T173: the doctrine moved to AGENTS.md (186 + opening line + non-Claude CLI section = 196)
     TASK_GUIDE_TEMPLATE: 197,
 }
 
@@ -104,7 +104,7 @@ def words(text: str) -> list[str]:
 # Anti-vacuity gate. Every assertion below reads a file by path.
 # --------------------------------------------------------------------------
 def test_every_inspected_file_exists():
-    targets = list(ROLE_GUIDES.values()) + [TASK_GUIDE_TEMPLATE, "CLAUDE.md", "CLAUDE_LEGACY.md"]
+    targets = list(ROLE_GUIDES.values()) + [TASK_GUIDE_TEMPLATE, "AGENTS.md", "CLAUDE_LEGACY.md"]  # T173: was CLAUDE.md
     missing = [rel for rel in targets if not (ROOT / rel).is_file()]
     assert not missing, f"file(s) missing, so this module inspects nothing: {missing}"
 
@@ -185,7 +185,7 @@ def test_ac4_no_operative_file_names_a_percentage(rel):
 
 
 def test_ac5_claude_md_names_the_heuristic_exactly_once_and_labels_it():
-    text = read("CLAUDE.md")
+    text = read("AGENTS.md")  # T173: the doctrine moved here from CLAUDE.md (now the import @AGENTS.md)
     assert text.count("80/20") == 1, (
         f"CLAUDE.md mentions 80/20 {text.count('80/20')} times; DDR-0005 §3 says exactly once"
     )
@@ -259,7 +259,7 @@ def test_ac8_the_two_simplicity_first_compression_lines_survive():
     be an equally green way to pass that test, so assert they are still there."""
     needles = ["If 200 lines can be 50, rewrite", "If 200 lines can be 50, write 50"]
     found = {n: 0 for n in needles}
-    for rel in list(ROLE_GUIDES.values()) + ["CLAUDE.md", ".claude/hooks/tests/test_memory_channel_and_budget.py"]:
+    for rel in list(ROLE_GUIDES.values()) + ["AGENTS.md", ".claude/hooks/tests/test_memory_channel_and_budget.py"]:  # T173: was CLAUDE.md
         for n in needles:
             found[n] += read(rel).count(n)
     assert all(v >= 2 for v in found.values()), (

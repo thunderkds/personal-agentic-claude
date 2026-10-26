@@ -72,7 +72,12 @@ The supervisor repo (`per-agentic-claude`) is a general framework. A `MANIFEST` 
 | Outbox | Local queue of writes (status, milestone comments, decisions) that could not reach the board; replayed idempotently when it is reachable. |
 | Pull moment | One of the four times the board cache refreshes: session start (`wake`), before spawning an agent, before Ready for Review, before merge. |
 | Decision Log | The single shared "Project Decisions" document on the board: dated, attributed entries, each linked to the task it came from. `memory/decisions.md` is its board cache. |
+| Update log | `.claude/update-log.md` in an installed project: one dated entry per **Update** run, newest on top, listing each edited file's outcome and how it was decided (asked per file, auto-approve, no terminal) (T174). Project-owned, never a kit file. Not the Decision Log. |
 | My task | A board task assigned to the current user. Only my tasks are triaged (FR-011) and only my In Progress tasks block my push/merge. |
+| Citation | A `file:line` plus the quoted text at that line that answers a question in `resolve-question` (T170). The Supervisor or a scanner supplies it. **Not "evidence"**: Evidence is the TASK_GUIDE Evidence table filled at Stage 4/5. |
+| Fact question | A question the repo can answer with a Citation (where a rule lives, what a script does). `resolve-question` answers it from a Citation or from scanners (T170). |
+| Choice question | A question only the user can decide (scope, trade-off, preference). `resolve-question` sends it to the user at once, never to scanners (T170). **Not "intent"**: intent is the requirement restated at Stage 2 / the Requirement Fidelity Gate. |
+| Scanner | A read-only `Explore` agent that `resolve-question` starts to search one assigned area of the repo (code, docs/memory, or git history) for a Fact question. It returns an answer with Citations, or "not found" (T170). |
 
 ---
 

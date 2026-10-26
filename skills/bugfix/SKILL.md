@@ -193,7 +193,7 @@ Completion criterion: code-review findings addressed; fix verified against menta
 
 ### Step 6 — Integrate
 
-Run `Skill({ skill: "verify" })`, confirm the original symptom no longer reproduces, update KANBAN to Done, trigger the diff-driven memory pass (see CLAUDE.md Stage 5).
+Run `Skill({ skill: "verify" })`, confirm the original symptom no longer reproduces, update KANBAN to Done, trigger the diff-driven memory pass (see AGENTS.md Stage 5).
 
 If the post-mortem in the TASK_GUIDE identifies a systemic issue (missing test seam, tangled callers, wrong abstraction), flag it to the user as a follow-up task — do not silently discard it.
 

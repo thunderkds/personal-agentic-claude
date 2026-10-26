@@ -2835,6 +2835,19 @@ highest ID anywhere, not only `PROJECT_KANBAN.md` on the checked-out branch. Ren
   Drafting `TASK_GUIDE_T168.md` in the session scratchpad put a T168 row on the *main checkout's* board.
   It also registers on the main checkout while the real guide lives in a worktree (T166, T167).
   After writing a guide, check `git -C <main> status` and move the row to the branch's board.
+  Before discarding such a main-checkout row, check the branch board holds it (T171/T172, 2026-10-26:
+  the rows existed only on main; the guides were already on their branches).
 - **Headless frontend agents mis-report Startup reads and leave servers running** (T166–T168). Two rounds
   listed `PROJECT_SPEC.md`/`agents/frontend.md` that were only line-counted, and one left `http.server 8167`.
   The spawn prompt now asks for honest reads and for cleanup; still check `ps` after each run.
+- **Verify an instruction-file change with tool-less headless runs plus a non-import control** (T173). Ask `claude -p` (all tools
+  disallowed) a question only the moved text answers, in a scratch install. A control whose `CLAUDE.md` holds the backticked
+  `` `@AGENTS.md` `` (text, not an import) must answer UNKNOWN; without that control a correct answer could come from anywhere.
+- **The post-git hook's "≤50,000 characters" is not the live hot-tier cap** (T173). The ratchet in
+  `HOT_TIER_CHAR_BUDGET` was 42,000 on 2026-10-26; one ~190-char index line took `MEMORY.md` to 42,134 and
+  turned 5 budget tests red. Before adding a hot-tier line, run
+  `python3 -m pytest -q .claude/hooks/tests/test_memory_channel_and_budget.py::test_live_memory_md_is_within_budget_today`;
+  if it has no headroom, keep the entry cold-tier only.
+- **`grep -Fxq "- path"` reads a pattern starting with `-` as an option and fails quietly** (T174). Seven assertions
+  in `tests/test_update_auto_approve.sh` passed or failed for the wrong reason until written `grep -Fxq -- "- …"`.
+  Any test matching Markdown list lines needs the `--`.

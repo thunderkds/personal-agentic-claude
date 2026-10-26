@@ -193,14 +193,15 @@ fi
 T=$(installed_repo plan-update)
 printf '\nMY EDIT\n' >> "$T/$EDITED"
 git -C "$FIXTURE" rm -q -r skills/optimize && git -C "$FIXTURE" commit -q -m "stop shipping optimize"
-pty_setup "$T" '1\nn\n3\n'; RC=$?
-ASK_AT=$(line_of "$T.log" 'Proceed? [Y/n]')
+# T174: with an edited file the plan ends in the edited-files list; 4) Cancel.
+pty_setup "$T" '1\n4\n'; RC=$?
+ASK_AT=$(line_of "$T.log" 'How should Update treat your edited files?')
 RM_AT=$(line_of "$T.log" '      skills/optimize')
 EDIT_AT=$(line_of "$T.log" "      $EDITED")
 if [ "$RC" -eq 0 ] && [ "$RM_AT" -gt 0 ] && [ "$RM_AT" -lt "$ASK_AT" ] \
    && [ "$EDIT_AT" -gt 0 ] && [ "$EDIT_AT" -lt "$ASK_AT" ] \
    && grep -q 'they will be removed' "$T.log" && [ -d "$T/skills/optimize" ]; then
-  pass "AC3: Update plan names the removal (skills/optimize) and the edited file before Proceed"
+  pass "AC3: Update plan names the removal (skills/optimize) and the edited file before the edited-files list"
 else
   fail "AC3: Update plan contents (rc=$RC rm=$RM_AT edit=$EDIT_AT ask=$ASK_AT)"; cat "$T.log" >&2
 fi

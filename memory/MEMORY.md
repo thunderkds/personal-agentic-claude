@@ -105,7 +105,7 @@
 - [T080 merged: the skill contract is discoverable from the README](decisions.md) — 8-line contract in `## Custom Skills`, pointer-not-copy
 - [T082 merged: untrusted-content trust boundary](decisions.md) — rules live in `docs/claude-md/untrusted-content-boundary.md`
 
-- [T090 merged: provider adapters, split by mandate](decisions.md) — `CLAUDE.md` stays primary
+- [T090 merged: provider adapters, split by mandate](decisions.md) — `CLAUDE.md` stayed primary until T173
 - [The hot-tier budget is stated as 50,000 in 5 places, enforced at 45,000](learnings.md) — broke `main`
 - [setup.sh clones the remote, so unmerged work is unverifiable](learnings.md) — an install can run green and build a tree without your change
 - [Blocked != broken in a verify verdict](learnings.md) — T090's provider surface was unreachable on auth; keep observed apart from inferred, never round up to PASS

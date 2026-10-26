@@ -1,6 +1,6 @@
 # Code Naming Conventions
 
-> Extracted from `CLAUDE.md` — full naming table. See `CLAUDE.md` for the pointer back to this file.
+> Extracted from `AGENTS.md` — full naming table. See `AGENTS.md` for the pointer back to this file.
 
 Mandatory for all sub-agents (Backend, Frontend, Common-Infrastructure, QA) when writing or reviewing code. Applies to source code only — not skill/agent/infra naming.
 

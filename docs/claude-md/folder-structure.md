@@ -1,6 +1,6 @@
 # Folder Structure Requirements (Mandatory)
 
-> Extracted from `CLAUDE.md` — full detail for the mandatory root-level folder structure. See `CLAUDE.md` for the pointer back to this file.
+> Extracted from `AGENTS.md` — full detail for the mandatory root-level folder structure. See `AGENTS.md` for the pointer back to this file.
 
 The project root **must** contain these folders:
 

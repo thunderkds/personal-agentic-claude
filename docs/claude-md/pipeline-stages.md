@@ -1,6 +1,6 @@
 # 5-Stage Agentic Pipeline
 
-> Extracted from `CLAUDE.md` — full detail for Stage 0.5 through Stage 5. See `CLAUDE.md` for the pointer back to this file and the Mandatory Session Startup / Hard-Stop Gates, which remain inline there.
+> Extracted from `AGENTS.md` — full detail for Stage 0.5 through Stage 5. See `AGENTS.md` for the pointer back to this file and the Mandatory Session Startup / Hard-Stop Gates, which remain inline there.
 
 Strictly follow this order. Never skip or reorder stages.
 
