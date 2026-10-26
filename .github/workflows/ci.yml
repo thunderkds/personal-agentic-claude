@@ -69,5 +69,8 @@ jobs:
       - name: MANIFEST exclusions test suite (T122)
         run: bash tests/test_manifest_exclusions.sh
 
+      - name: Update auto-approve and update log test suite (T174)
+        run: bash tests/test_update_auto_approve.sh
+
       - name: CI wires every shell suite (drift guard)
         run: python3 tests/test_ci_wires_shell_suites.py
