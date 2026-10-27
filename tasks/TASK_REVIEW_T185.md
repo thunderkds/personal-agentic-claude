@@ -33,9 +33,9 @@ P0: none. P1: 1 (process). P2: 3. P3: 2. Safe fixes applied: 0 (no code P0/P1).
 | P1 (process) | agent report | Startup reads: `agents/frontend.md` not read; `PROJECT_SPEC.md` only skimmed — Permanent-Rule reads (T129 check) | 100 | Recorded. No code impact found in review; user decides whether it blocks merge |
 | P2 | catalog `permissions.defaultMode` | The `bypassPermissions` value lowers safety but the row carries no "lowers safety" badge (guide Catalog note: "bypass lowersSafety") | 100 | Suggest: badge text "bypass lowers safety", or a per-value warning in the row |
 | P2 | `.github/workflows/ci.yml` | Neither `node --test "tests/settings_tool/*.mjs"` nor `tests/test_site_content.py` runs in CI (site pytest gap pre-dates T185) | 100 | Follow-up task; out of T185 file scope |
-| P2 | catalog `knownKeys` | Holds only catalog keys + a few named ones, not the full reference key list | 100 | Forwarded to T186 (its W2 unknown-key rule needs the full list) |
+| P2 | catalog `knownKeys` | Holds only catalog keys + a few named ones, not the full reference key list | 100 | Forwarded to T187 (its W2 unknown-key rule needs the full list) |
 | P3 | catalog `why` text | `blockReadsOutsideWorkingDirectories` says "sibling worktrees (../wt-tNNN)" and `disableBypassPermissionsMode` says "not a gate" — kit-internal wording on a public page | 75 | Suggest plain wording |
-| P3 | guide | Verification Command `node --test tests/settings_tool/` fails on Node 26.7 (directory read as module) | 100 | Fixed on `main` in both T185 and T186 guides: quoted glob form |
+| P3 | guide | Verification Command `node --test tests/settings_tool/` fails on Node 26.7 (directory read as module) | 100 | Fixed on `main` in both T185 and T187 guides: quoted glob form |
 
 Visual check (Supervisor viewed `tool-1280.png` and `tool-768.png`): two columns at 1280, stacked at 768; output pane scrolls inside its own box (`max-height: 28rem; overflow: auto`, focusable). Light theme: N/A — the site is dark-only by design.
 

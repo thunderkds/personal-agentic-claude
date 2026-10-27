@@ -1,5 +1,5 @@
 # TASK_GUIDE — T184: Kit settings defaults from the Claude Code settings reference — credential read-denies, destructive-command `ask` rules (merged add-only), worktree base ref, skill-listing budget check
-**Status**: CLOSED 2026-10-27, will not do — user: "the config should go by the taste, we no need to update as initial". Kept as the content source (evaluation table) for T185/T186.
+**Status**: CLOSED 2026-10-27, will not do — user: "the config should go by the taste, we no need to update as initial". Kept as the content source (evaluation table) for T185/T187.
 **Date**: 2026-10-27
 **Complexity Level**: C2
 **Risk Level**: Medium

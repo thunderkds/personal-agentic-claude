@@ -57,14 +57,14 @@ Therefore the site's roster content is **asserted against the source of truth by
 Adding a skill without updating the page must fail the suite. A page that merely *looks* right is
 not accepted.
 
-## Settings tool (T185, T186)
+## Settings tool (T185, T187)
 
 User request 2026-10-27: "design a section that user can click on the settings and we can generate the settings for users, by the way support they paste their current settings and we check the settings following, it will looks like the support for the pick/format/visualize the settings". Context: the kit does **not** install settings defaults ("the config should go by the taste" — T184 closed); the site helps each developer build their own.
 
 One section, `#settings-tool`, two modes:
 
 - **Build** (T185) — pick settings from a catalog, set values, choose the target file (user / project / local), copy the generated JSON.
-- **Check** (T186) — paste an existing `settings.json`, get it formatted, validated against the catalog and the chosen target file, and shown as a grouped visual tree; load it into Build to edit.
+- **Check** (T187) — paste an existing `settings.json`, get it formatted, validated against the catalog and the chosen target file, and shown as a grouped visual tree; load it into Build to edit.
 
 Hard rules for the tool:
 

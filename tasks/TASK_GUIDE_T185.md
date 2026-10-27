@@ -26,9 +26,9 @@ Before writing any code:
 User, 2026-10-27, verbatim: "design a section that user can click on the settings and we can generate the settings for users, by the way support they paste their current settings and we check the settings following, it will looks like the support for the pick/format/visualize the settings". Earlier: "the config should go by the taste, we no need to update as initial" (kit installs no defaults — T184 closed).
 
 **Restated intent**:
-> A developer opens the kit site, clicks the Claude Code settings they want, sets each value, chooses which file it is for (`~/.claude/settings.json`, `.claude/settings.json`, `.claude/settings.local.json`), and copies a valid, formatted JSON file. The tool explains each setting in one line and never offers a key that the chosen file ignores. This task is the **pick + generate** half; paste / check / visualize is T186.
+> A developer opens the kit site, clicks the Claude Code settings they want, sets each value, chooses which file it is for (`~/.claude/settings.json`, `.claude/settings.json`, `.claude/settings.local.json`), and copies a valid, formatted JSON file. The tool explains each setting in one line and never offers a key that the chosen file ignores. This task is the **pick + generate** half; paste / check / visualize is T187.
 
-**Out of scope** (T186 owns these): paste input, validation findings, the visual tree, "load pasted into Build".
+**Out of scope** (T187 owns these): paste input, validation findings, the visual tree, "load pasted into Build".
 Also out: installing anything into a project; the full ~250-key reference (catalog is curated, see below); managed-settings keys as pickable items.
 
 **Requirement Refs**: none (site request, user-originated 2026-10-27).
@@ -52,7 +52,7 @@ Also out: installing anything into a project; the full ~250-key reference (catal
 
 ```
 ┌ Settings tool ───────────────────────────────────────────────────────────────┐
-│ [ Build ]  [ Check ]  ← mode tabs (Check is T186; until then shown disabled)│
+│ [ Build ]  [ Check ]  ← mode tabs (Check is T187; until then shown disabled)│
 │ Target file: (•) User ~/.claude/settings.json  ( ) Project  ( ) Local       │
 │ Start from:  [Safe baseline] [Solo engineer] [Team project] [Empty]         │
 ├──────────────── catalog (left) ───────────────┬──── output (right) ────────┤
@@ -90,7 +90,7 @@ Seed settings (each needs a `why`; facts from the reference — do not invent ra
 - **Model & effort**: `model`; `effortLevel` enum `low|medium|high|xhigh`; `maxEffortLevel` adds `max`; `fallbackModel` (list); `alwaysThinkingEnabled`; `showThinkingSummaries`; `fastMode`; `promptCacheTtl` / `subagentPromptCacheTtl` enum `5m|1h`; `language`; `outputStyle`.
 - **Memory & context**: `autoMemoryEnabled` (default true); `autoMemoryDirectory`; `autoCompactEnabled`; `autoCompactWindow` number 100000–1000000; `idleCompaction`; `claudeMdExcludes`; `bashOutputMaxChars` 4000–128000 since 2.1.261; `skillListingBudgetFraction` >0 ≤1 default 0.01; `fileCheckpointingEnabled`; `plansDirectory` (relative to project root).
 - **Git & attribution**: `attribution.commit`, `attribution.pr` (strings, `""` hides), `attribution.sessionUrl` bool; `includeGitInstructions`; `prUrlTemplate`.
-- **Hooks & MCP**: `disableAllHooks` (lowersSafety — also disables the kit's gates); `enableAllProjectMcpServers` (lowersSafety); `enabledMcpjsonServers`; `disabledMcpjsonServers`; `allowedHttpHookUrls`. (`hooks` itself: not editable in Build — shown read-only in T186.)
+- **Hooks & MCP**: `disableAllHooks` (lowersSafety — also disables the kit's gates); `enableAllProjectMcpServers` (lowersSafety); `enabledMcpjsonServers`; `disabledMcpjsonServers`; `allowedHttpHookUrls`. (`hooks` itself: not editable in Build — shown read-only in T187.)
 - **Interface**: `statusLine` (command string), `theme`, `showTurnDuration`, `preferredNotifChannel` enum `auto|terminal_bell|iterm2|iterm2_with_bell|kitty|ghostty|notifications_disabled`, `respectGitignore`.
 - **Updates & privacy**: `autoUpdatesChannel` enum `latest|stable`; `minimumVersion`; `cleanupPeriodDays` integer ≥1 default 30; `feedbackSurveyRate` 0–1; `env` (object; `why` warns values are plain text — never put tokens here).
 
@@ -105,7 +105,7 @@ Presets:
 
 | # | Criterion (testable) | Traces to requirement |
 |---|----------------------|-----------------------|
-| 1 | `<section id="settings-tool">` with `<h2>Settings tool</h2>`, nav link under "Getting started" after "Update flow"; Build mode works; Check tab present but disabled with "coming soon" until T186 | "design a section" |
+| 1 | `<section id="settings-tool">` with `<h2>Settings tool</h2>`, nav link under "Getting started" after "Update flow"; Build mode works; Check tab present but disabled with "coming soon" until T187 | "design a section" |
 | 2 | Clicking a catalog row's checkbox adds/removes that key in the output; changing its control changes the value; nested keys (`permissions.deny`) are emitted as nested objects | "click on the settings and we can generate" |
 | 3 | Output is always valid JSON (`JSON.parse` round-trips) with 2-space indent and a working Copy button (clipboard with select-text fallback) | "generate the settings" / "format" |
 | 4 | Target-file switch hides and removes keys not honoured by that file and states how many were removed | Correct settings per file |
@@ -168,12 +168,12 @@ node --test "tests/settings_tool/*.mjs" && python3 -m pytest tests/test_site_con
 
 **Pattern reference**: `site/index.html` existing inline `<script>` blocks (style, no framework) and `#update-flow` markup; `tests/test_site_content.py` `test_all_scripts_are_inline` / `test_no_external_assets` for test style.
 
-Split the script in two inline blocks: `<script id="settings-tool-core">` = pure functions only (`loadCatalog`, `applyPreset`, `generate(selection, target) -> {json, removed}`, `validateValue(entry, value)`), no DOM access; and a UI block that wires the DOM. Node tests read `site/index.html`, extract the `settings-tool-core` block text and run it in `node:vm` — this keeps one file, no build, no package.json. T186 adds its checker functions to the same core block.
+Split the script in two inline blocks: `<script id="settings-tool-core">` = pure functions only (`loadCatalog`, `applyPreset`, `generate(selection, target) -> {json, removed}`, `validateValue(entry, value)`), no DOM access; and a UI block that wires the DOM. Node tests read `site/index.html`, extract the `settings-tool-core` block text and run it in `node:vm` — this keeps one file, no build, no package.json. T187 adds its checker functions to the same core block.
 
 **Vital slice**: catalog JSON + `generate()` + Safety & permissions and Model & effort categories rendered + target switch + Copy.
 **Cut list**:
 - Per-key deep links beyond one link per row to the reference page anchor
-- Editing `hooks` in Build (read-only display arrives with T186)
+- Editing `hooks` in Build (read-only display arrives with T187)
 - URL-hash sharing of a selection
 - Managed-settings keys as pickable rows
 

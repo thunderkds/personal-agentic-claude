@@ -2865,6 +2865,6 @@ highest ID anywhere, not only `PROJECT_KANBAN.md` on the checked-out branch. Ren
 - **The hot tier's real cap is the test's `HOT_TIER_CHAR_BUDGET` (42,000 chars), not the 50,000 in AGENTS.md** (T185).
   `MEMORY.md` sat at ~41,6xx chars, so two new index lines broke 5 tests on `main`. Before adding a hot-tier
   line, run `pytest .claude/hooks/tests/test_token_audit_format.py -q`; near the cap, write cold-tier only.
-- **A sub-agent's Verification Command is not the full suite** (T186). The agent ran only its task command; the
+- **A sub-agent's Verification Command is not the full suite** (T187). The agent ran only its task command; the
   Supervisor's full `pytest .claude/hooks/tests/ tests/` run found a corpus test reading the review file's
   unfilled `verify` row. Always run the full suite at Stage 4.

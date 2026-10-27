@@ -1,6 +1,6 @@
-# TASK_REVIEW — T186: Site Settings tool, part 2 — Check mode
+# TASK_REVIEW — T187: Site Settings tool, part 2 — Check mode
 
-> Sibling of `tasks/TASK_GUIDE_T186.md`. Everything here is **filled by the reviewer at Stage
+> Sibling of `tasks/TASK_GUIDE_T187.md`. Everything here is **filled by the reviewer at Stage
 > 4/5** — it is deliberately NOT in the guide, because the implementing agent re-reads the guide on
 > every turn and never fills these two sections.
 >
@@ -37,7 +37,7 @@ Startup reads: all Permanent-Rule reads present (PROJECT_SPEC.md, guide, agents/
 | P2 | catalog `knownKeys` | `$schema` is reported W2 "unknown key" — real settings files often carry it (editor schema hint), so most real pastes get a false warning | 100 | Suggest: treat `$schema` as known and ignored. User decision (not in the reference) |
 | P2 | agent process | Agent ran only the task's Verification Command, not the full suite | 100 | Recorded; Supervisor ran it (above) |
 | P3 | `maskText` | Free-text masking skips token runs that contain `/` (keeps paths readable), so a base64 secret with `/` inside a hook command or `apiKeyHelper` string can show. `env` values use the full guide rule | 75 | Documented limit; tighten later if wanted |
-| P3 | T185 friction | Ticking an empty list setting emits nothing; a filter with no match shows a blank list | 100 | Still open (outside T186 edits) |
+| P3 | T185 friction | Ticking an empty list setting emits nothing; a filter with no match shows a blank list | 100 | Still open (outside T187 edits) |
 | P3 | parse | Duplicate JSON keys are not detected (`JSON.parse` keeps the last) | 100 | Documented limit |
 
 **security-review** (Medium risk; focus XSS via pasted text, persistence/transmission) — no findings.

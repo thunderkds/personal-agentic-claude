@@ -1,4 +1,4 @@
-# TASK_GUIDE — T186: Site Settings tool, part 2 — Check mode: paste a `settings.json`, format it, validate it against the catalog and target file, visualize it, load it into Build
+# TASK_GUIDE — T187: Site Settings tool, part 2 — Check mode: paste a `settings.json`, format it, validate it against the catalog and target file, visualize it, load it into Build
 **Date**: 2026-10-27
 **Complexity Level**: C2
 **Risk Level**: Medium
@@ -196,7 +196,7 @@ Parse with `JSON.parse` inside try/catch; derive line/column from the error posi
 | `site/index.html` | Check mode UI, core functions, scoped CSS |
 | `tests/settings_tool/test_check.mjs` | One test per rule, round trip, masking, robustness |
 | `tests/settings_tool/fixtures/*.json` | Synthetic fixtures (no real user files) |
-| `tasks/TASK_REVIEW_T186.md` | Evidence |
+| `tasks/TASK_REVIEW_T187.md` | Evidence |
 
 ## Files Must NOT Touch
 
@@ -220,7 +220,7 @@ TDD per rule in `tests/settings_tool/test_check.mjs`; round-trip property test o
 - [ ] Implementation done
 - [ ] Self-review: `Skill({ skill: "code-review" })` run
 - [ ] Security review: `Skill({ skill: "security-review" })` run (Medium risk)
-- [ ] Tests written AND pass — output pasted into `tasks/TASK_REVIEW_T186.md` (Hard-Stop Gate 5)
+- [ ] Tests written AND pass — output pasted into `tasks/TASK_REVIEW_T187.md` (Hard-Stop Gate 5)
 - [ ] UI Evidence rows filled (Hard-Stop Gate 6)
 - [ ] `Skill({ skill: "verify" })` run
 - [ ] Supervisor notified: task ready for Stage 4 review
