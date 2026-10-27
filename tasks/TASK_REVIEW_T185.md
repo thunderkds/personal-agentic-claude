@@ -1,4 +1,4 @@
-# TASK_REVIEW — T185: [Short Title]
+# TASK_REVIEW — T185: Site Settings tool, part 1 — Build mode
 
 > Sibling of `tasks/TASK_GUIDE_T185.md`. Everything here is **filled by the reviewer at Stage
 > 4/5** — it is deliberately NOT in the guide, because the implementing agent re-reads the guide on
@@ -18,11 +18,28 @@
 | Verification command run | pass | `node --test "tests/settings_tool/*.mjs" && python3 -m pytest tests/test_site_content.py -q` -> ℹ tests 16 ℹ pass 16 ℹ fail 0 / 68 passed in 0.12s. The guide form `node --test tests/settings_tool/` fails on Node 26.7 (directory arg is read as a module path), so the glob form is used |
 | Negative cases hold | pass | Mutation: catalog entry `model` with `why` removed -> pytest test_settings_catalog_shape_and_version_stamp FAILED and node 'catalog ... required shape' FAILED (pass 15 / fail 1); restored -> 16/16 and 68 passed. Out-of-range numbers omitted, user-only keys removed on project/local |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | pass | Supervisor code-review 2026-10-27: scope = `site/index.html` (new `#settings-tool` section, catalog, core + UI scripts, scoped CSS), `tests/settings_tool/test_generate.mjs`, `tests/test_site_content.py`. No callers outside the page. lane_check: `C2, 3 files, 779 lines, EXCEEDS (lines 779 > 500)` — ~330 lines are the inline catalog JSON (data), so C2 stands |
+| Full smoke suite still green (no regression) | pass | Supervisor re-run in worktree: `sh scripts/validate.sh` → `validate.sh: PASS`; `python3 -m pytest .claude/hooks/tests/ tests/ -q` → `1452 passed, 25 subtests passed in 30.34s`; `node --test "tests/settings_tool/*.mjs"` → `tests 16 · pass 16 · fail 0` |
 | **UI: Visual regression (diff or verdict pasted)** | pass (self-assessed) | Headless Chrome via CDP, Team project preset + Project target: 1280px shows catalog left, output right (4 keys · valid); 375px stacks. Screenshots in scratchpad (tool-375/768/1280.png), Supervisor to confirm visually |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | pass | test_settings_tool_css_adds_no_color_literals (no #hex/rgb/hsl in the scoped CSS); reuses .tag, .chip, pre.install, details, code styles |
 | **UI: Responsiveness at target viewports** | pass for the tool; page-level finding | CDP at 375/768/1280: columns 343px / 440px (stacked) / 2x454px. documentElement.scrollWidth is 375 / 851 / 1265 at 375/768/1280. The 851px at 768 is the existing hooks table (TABLE right edge 851), same value on the pre-change page, not from #settings-tool. Light theme: the page has dark tokens only, so no light capture exists |
+
+### Stage 4 — code-review (Supervisor, 2026-10-27)
+
+P0: none. P1: 1 (process). P2: 3. P3: 2. Safe fixes applied: 0 (no code P0/P1).
+
+| Sev | Where | Finding | Conf | Action |
+|-----|-------|---------|------|--------|
+| P1 (process) | agent report | Startup reads: `agents/frontend.md` not read; `PROJECT_SPEC.md` only skimmed — Permanent-Rule reads (T129 check) | 100 | Recorded. No code impact found in review; user decides whether it blocks merge |
+| P2 | catalog `permissions.defaultMode` | The `bypassPermissions` value lowers safety but the row carries no "lowers safety" badge (guide Catalog note: "bypass lowersSafety") | 100 | Suggest: badge text "bypass lowers safety", or a per-value warning in the row |
+| P2 | `.github/workflows/ci.yml` | Neither `node --test "tests/settings_tool/*.mjs"` nor `tests/test_site_content.py` runs in CI (site pytest gap pre-dates T185) | 100 | Follow-up task; out of T185 file scope |
+| P2 | catalog `knownKeys` | Holds only catalog keys + a few named ones, not the full reference key list | 100 | Forwarded to T186 (its W2 unknown-key rule needs the full list) |
+| P3 | catalog `why` text | `blockReadsOutsideWorkingDirectories` says "sibling worktrees (../wt-tNNN)" and `disableBypassPermissionsMode` says "not a gate" — kit-internal wording on a public page | 75 | Suggest plain wording |
+| P3 | guide | Verification Command `node --test tests/settings_tool/` fails on Node 26.7 (directory read as module) | 100 | Fixed on `main` in both T185 and T186 guides: quoted glob form |
+
+Visual check (Supervisor viewed `tool-1280.png` and `tool-768.png`): two columns at 1280, stacked at 768; output pane scrolls inside its own box (`max-height: 28rem; overflow: auto`, focusable). Light theme: N/A — the site is dark-only by design.
+
+Banned-API grep on `site/index.html` (`fetch(`, `XMLHttpRequest`, `sendBeacon`, `WebSocket`, `localStorage`, `sessionStorage`, `indexedDB`, `document.cookie`, `innerHTML`, `<form`): no matches.
 
 ---
 
