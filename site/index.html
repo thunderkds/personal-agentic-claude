@@ -795,7 +795,7 @@ var SettingsCore = (function () {
   }
 
   // selection: { key: value }. Returns the JSON text plus what was dropped and why.
-  // passthrough (T186): keys loaded from a pasted file that Build does not edit. They are emitted unchanged.
+  // passthrough: keys loaded from a pasted file that Build does not edit. They are emitted unchanged.
   function generate(catalog, selection, target, passthrough) {
     var root = passthrough ? clone(passthrough) : {}, removed = [], invalid = [], count = 0;
     for (var i = 0; i < catalog.settings.length; i++) {
@@ -816,7 +816,7 @@ var SettingsCore = (function () {
     return { json: JSON.stringify(root, null, 2), removed: removed, invalid: invalid, count: count, note: note };
   }
 
-  /* ---- Check mode (T186) ------------------------------------------------
+  /* ---- Check mode --------------------------------------------------------
      Pasted text is untrusted. These functions only read it; they never run it,
      and every string they hand back for display passes through maskText. */
   var HIDDEN = "[secret hidden]";
