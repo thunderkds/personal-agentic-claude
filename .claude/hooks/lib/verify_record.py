@@ -12,8 +12,9 @@ with the same base as T148's trace anchors (`CLAUDE_TRACE_ANCHOR_DIR`, else
 `~/.claude/harness-anchors`). `.claude/settings.json` denies agents write access there:
 `Edit(~/.claude/harness-anchors/**)` covers the Edit and Write tools, `Bash(*harness-anchors*)` any
 shell command that names the directory. A record anywhere else is never read. Like the anchors, this
-raises the bar, it is not a proof: the human operator can write there, and a Bash deny rule is
-pattern-based.
+raises the bar, it is not a proof: the human operator can write there, a Bash deny rule is
+pattern-based, and an agent that runs `stop_auto_verify.py` itself with a fake `claude` first on
+its PATH gets a record from the script, because no deny rule names that command.
 """
 import json
 import os
