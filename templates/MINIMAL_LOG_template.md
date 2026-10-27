@@ -26,7 +26,8 @@ report. Write it to its file before the run ends; the chat message is a copy, no
 `Mode: auto` is the line right under the heading, exactly as written: T182's hook reads it. Each
 decision says how it was made. A Debate, safer-option or taste decision ends with the flag. Write `DEBATED`
 only when ≥2 Advocate `Agent` calls ran for that question, naming each Advocate's option. A decision with
-no Advocates is labelled `RULE`, `FACT` or `SAFER OPTION`, never `DEBATED`:
+no Advocates is labelled `RULE`, `FACT` or `SAFER OPTION`, never `DEBATED`. A decision flagged `⚠ decided for you` is a choice, and is never labelled `FACT`. A
+safety action a rule requires (for example the backup before a delete) is `RULE` without the flag.:
 
 ## <ID> — <title> · minimal
 Mode: auto

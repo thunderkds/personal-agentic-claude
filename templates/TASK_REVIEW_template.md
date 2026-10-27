@@ -17,7 +17,8 @@ it. Write it to this file before the run ends; the chat message is a copy, not t
 block is the Supervisor's final chat message. It is not the `delivery-report` page and not
 Evidence. A taste decision (what the user wants) also ends with the flag. Write `DEBATED` only when ≥2
 Advocate `Agent` calls ran for that question, naming each Advocate's option. A decision with no Advocates is
-labelled `RULE`, `FACT` or `SAFER OPTION`, never `DEBATED`.
+labelled `RULE`, `FACT` or `SAFER OPTION`, never `DEBATED`. A decision flagged `⚠ decided for you` is a choice, and is never labelled `FACT`. A
+safety action a rule requires (for example the backup before a delete) is `RULE` without the flag.
 
 ## Auto decisions
 

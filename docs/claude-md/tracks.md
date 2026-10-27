@@ -164,6 +164,9 @@ The task's **Risk** label sets how every decision that would have been a questio
 | Medium | A Debate (`resolve-question`): the Advocates argue, the Supervisor decides by its rules | exactly 2, required |
 | High | A Debate (`resolve-question`): the Advocates argue, the Supervisor decides by its rules | exactly 3, required; the third argues the smallest safe thing |
 
+Each Advocate `Agent` call's `description` starts with `Advocate` (for example
+`Advocate 1: keep recurring.csv`), so the auto-mode check below can count them.
+
 Every decision, at every Risk level, has its log line in the final report. This supersedes T179's count
 ("2, or 3 for 3+ options or High risk") in auto mode. Outside auto mode, `resolve-question` is unchanged.
 
@@ -184,7 +187,8 @@ These are all the places where a track waits for the user today: `AGENTS.md`,
 `docs/claude-md/pipeline-stages.md` and the skills the stages run. In auto mode each one follows its rule.
 `⚠` in the last column means the report line ends with `⚠ decided for you — please review`. "Debate" in
 this table follows `### Debate size by Risk`: on a Risk Low task the Supervisor decides alone, and the line
-is logged `RULE`, `FACT` or `SAFER OPTION`, not `DEBATED`.
+is logged `RULE`, `FACT` or `SAFER OPTION`, not `DEBATED`. At Risk Medium or High, every decision flagged
+`⚠` is a Debate, whatever the last column says.
 
 | # | Stop today (where) | Auto rule | Logged as |
 |---|---|---|---|
@@ -218,7 +222,7 @@ The final report is the `## Auto decisions` section of `tasks/TASK_REVIEW_<ID>.m
 the Decision record itself (minimal track). It is written to its file before the run ends. If
 `tasks/TASK_REVIEW_<ID>.md` does not exist yet, create it from `templates/TASK_REVIEW_template.md`. The
 chat message is a copy, not the report. On the extended track, Stage 4 `code-review` still runs before
-the run ends, because it is not a user stop. Copy the report's shape from `templates/TASK_REVIEW_template.md` or
+the run ends, plus `security-review` at Risk Medium or High, because it is not a user stop. Copy the report's shape from `templates/TASK_REVIEW_template.md` or
 `templates/MINIMAL_LOG_template.md`:
 
 - `Mode: auto`, then one numbered line per decision: what was decided, then how — `RULE: …`,
@@ -228,6 +232,9 @@ the run ends, because it is not a user stop. Copy the report's shape from `templ
 - Write `DEBATED` only when ≥2 Advocate `Agent` calls ran for that question, naming each Advocate's
   option. A decision with no Advocates is labelled `RULE`, `FACT` or `SAFER OPTION`, never `DEBATED`: the
   Supervisor's own weighing of options is not a Debate.
+- A decision flagged `⚠ decided for you` is a choice, and is never labelled `FACT`. A safety action a rule
+  requires (for example the backup before a delete) is `RULE` without the flag.
+- At Risk Medium or High, every `⚠` line is `DEBATED` with exactly 2 or 3 Advocates named.
 - `Paused:` — a stop that stayed (below), and why. Only when one paused the task.
 - `Checks:` — the tests, the reviews, and the real run, labelled `auto-checked, not /verify`.
 - `Not done: merge (yours)`, plus the `/verify` state: `auto verify: running (T182)`, its result, or
@@ -236,6 +243,31 @@ the run ends, because it is not a user stop. Copy the report's shape from `templ
 The Supervisor's final chat message repeats the block. It is not the `delivery-report` HTML page, and it is
 not Evidence: the merge gate does not read it. A Debate also leaves its `DEBATE` line under the guide's
 `## Questions Log` (`resolve-question`); the report collects those lines.
+
+### Auto-mode check (Stop hook)
+
+`.claude/hooks/stop_auto_mode_check.py` runs when the Supervisor is about to stop. It checks each
+auto-mode task whose board row is In Progress or Ready for Review, and blocks the stop with a short reason
+when:
+
+1. the report has no `## Auto decisions` section whose first line is `Mode: auto` (extended), the Decision
+   record does not start with `Mode: auto` (minimal), or there is no report file at all;
+2. at Risk Medium or High, a `⚠` line is not `DEBATED` with exactly 2 or 3 Advocates named;
+3. the event trace holds fewer Advocate `Agent` calls (description starting `Advocate`) than 2 or 3 per
+   `DEBATED` line;
+4. on the extended track, the trace has no `code-review` Skill call, or no `security-review` Skill call at
+   Risk Medium or High.
+
+A task counts as auto mode when its report carries `## Auto decisions` or a `Mode: auto` line, when its
+Decision record's request carries `[auto]`, or when this session's request carries `[auto]` and the task's
+files changed after it. Risk comes from the guide's `**Risk Level**` (else the board row); a Decision record
+is Risk Low unless it says otherwise. The trace is `memory/event-trace/<ID>.jsonl` plus the last 6 hours of
+`memory/event-trace/_untagged.jsonl` (`CLAUDE_AUTO_CHECK_WINDOW_S`): Advocate prompts carry no task ID, so
+their calls land in `_untagged.jsonl` unless the active-task state file is set.
+
+It never loops: on the second fire (`stop_hook_active`) it allows the stop and appends
+`Paused: auto-mode check failed — <reasons>` to the report. Unreadable files fail open, with one line on
+stderr. It does not read or write Evidence: the merge gate is unchanged.
 
 ### Stops that stay
 

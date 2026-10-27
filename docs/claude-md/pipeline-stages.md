@@ -183,7 +183,7 @@ Skill({ skill: "run" })
 ---
 
 ## Stage 4: Review
-For every task that reaches "Ready for Review" (auto mode: Stage 4 still runs before the run ends, because it is not a user stop):
+For every task that reaches "Ready for Review" (auto mode: Stage 4 still runs before the run ends — `code-review`, plus `security-review` at Medium/High — because it is not a user stop):
 
 **Pull moment 3 (board mode `online`, FR-009).** Before moving the task to Ready for Review, run `python3 scripts/pull_moment.py review <ID>`. If it prints `<ID>'s guide changed while you were working — review against the new version?`, ask the user before reviewing (auto mode: review against the new version). If it prints `board unreachable — using cache (N unsynced)`, continue on the cache. In board mode `local` it prints nothing.
 
