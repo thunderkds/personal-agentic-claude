@@ -279,12 +279,13 @@
   #settings-tool h4 { margin: .8rem 0 .3rem; font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
   #settings-tool h4:first-child { margin-top: 0; }
   #settings-tool .st-findings { list-style: none; margin: 0; padding: 0; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
-  #settings-tool .st-findings li { display: grid; grid-template-columns: 4.6rem minmax(0, 13rem) minmax(0, 1fr); gap: .2rem .8rem; align-items: baseline; padding: .5rem .8rem; border-top: 1px solid var(--border); font-size: .85rem; }
+  #settings-tool .st-findings li { display: flex; flex-wrap: wrap; gap: .2rem .8rem; align-items: baseline; padding: .5rem .8rem; border-top: 1px solid var(--border); font-size: .85rem; }
   #settings-tool .st-findings li:first-child { border-top: none; }
+  #settings-tool .st-findings li > .tag { flex: none; min-width: 6.5rem; text-align: center; white-space: nowrap; }
   #settings-tool .st-findings .st-fixline { display: block; color: var(--muted); }
   #settings-tool .st-findings .st-btn { margin-top: .3rem; }
-  #settings-tool .st-path { font: inherit; font-size: .8rem; color: var(--cyan); background: none; border: none; padding: 0; cursor: pointer; text-align: left; overflow-wrap: anywhere; text-decoration: underline; }
-  #settings-tool .st-findings .st-msg { min-width: 0; overflow-wrap: anywhere; }
+  #settings-tool .st-path { flex: 1 1 9rem; max-width: 13rem; font: inherit; font-size: .8rem; color: var(--cyan); background: none; border: none; padding: 0; cursor: pointer; text-align: left; overflow-wrap: anywhere; text-decoration: underline; }
+  #settings-tool .st-findings .st-msg { flex: 999 1 16rem; min-width: 0; overflow-wrap: anywhere; }
   #settings-tool .st-map { border: 1px solid var(--border); border-radius: 8px; padding: .6rem .8rem; max-height: 36rem; overflow: auto; }
   #settings-tool .st-tree { list-style: none; margin: 0; padding: 0; }
   #settings-tool .st-node { padding: .15rem .3rem; border-radius: 4px; overflow-wrap: anywhere; font-size: .85rem; }
@@ -298,7 +299,6 @@
   #settings-tool .st-colhead { margin: 0 0 .3rem; font-weight: 700; font-size: .85rem; }
   #settings-tool .st-hit { outline: 2px solid var(--amber); outline-offset: 1px; }
   @media (max-width: 767px) {
-    #settings-tool .st-findings li { grid-template-columns: minmax(0, 1fr); }
     #settings-tool .st-right { position: static; }
     #settings-tool .st-copybar { position: sticky; bottom: 0; background: var(--bg); padding: .5rem 0; border-top: 1px solid var(--border); }
   }
@@ -1615,8 +1615,10 @@ var SettingsCore = (function () {
   }
   function runCheck() {
     var res = core.check(catalog, paste.value, checkTarget());
-    if (res.empty) { msgBox.textContent = "Paste a settings.json first."; $("st-results").hidden = true; return res; }
+    if (res.empty) { msgBox.textContent = "Paste a settings.json first."; $("st-results").hidden = true; showFormatted(""); return res; }
     msgBox.textContent = "";
+    // The formatted view always shows the text that was just checked, never an older paste.
+    if (!$("st-formatted-box").hidden) { showFormatted(core.format(paste.value, keep.checked).text); }
     if (res.tree) { renderMap(res.tree); } else { $("st-map").textContent = ""; mapNodes = []; }
     renderFindings(res.findings);
     $("st-results").hidden = false;
