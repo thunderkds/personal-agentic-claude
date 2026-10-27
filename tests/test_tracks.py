@@ -212,6 +212,34 @@ def test_ac8_backup_never_in_tmp():
     assert re.search(r"backup[^.]*inside the project or in a path the user named[^.]*never in `/tmp`",
                      body, re.I)
 
+
+# ── AC 8 re-run 1 fix — the doctrine must send the Supervisor into the steps ──────────────
+# Re-run 1, task 2: the record was off-template and the run ended asking "do you want me to
+# commit?". AGENTS.md (read every session) summarized the track but never said to follow
+# tracks.md's steps, copy the template, or commit without asking.
+def test_ac8r1_agents_md_says_follow_the_7_steps_in_tracks_md():
+    text = _norm("\n".join(_agents_tracks_section()))
+    assert re.search(r"follows? the 7 steps in `docs/claude-md/tracks\.md`", text), text
+    steps, _ = _flow_steps()
+    assert len(steps) == 7, "AGENTS.md promises 7 steps; tracks.md must have exactly 7"
+
+
+def test_ac8r1_agents_md_says_copy_the_record_template():
+    text = _norm("\n".join(_agents_tracks_section()))
+    assert "Copy the record from `templates/MINIMAL_LOG_template.md`" in text
+
+
+def test_ac8r1_agents_md_says_commit_without_asking_only_merge_waits():
+    text = _norm("\n".join(_agents_tracks_section()))
+    assert "Commit on the task branch without asking" in text
+    assert "only the merge waits for the user" in text
+
+
+def test_ac8r1_tracks_md_commit_is_part_of_the_step_not_a_stop():
+    steps, body = _flow_steps()
+    assert "Commit on the task branch without asking" in steps[6], steps[6]
+    assert re.search(r"[Aa]sking whether to commit is not a stop", body)
+
 # ── AC 2 — AGENTS.md ──────────────────────────────────────────────────────────────────────
 def _agents_tracks_section():
     lines = _read(AGENTS_MD).splitlines()
