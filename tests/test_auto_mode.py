@@ -294,7 +294,7 @@ D4_LINES = (
     MODE_MARKER,
     "— RULE: <the rule>",
     '— FACT: <path>:<line> "<quoted text>"',
-    f"— DEBATED: <option> (<who argued what>) {FLAG}",
+    f"— DEBATED: <option> (Advocate 1: <its option>; Advocate 2: <its option>) {FLAG}",
     f"— SAFER OPTION: <why> {FLAG}",
     "Paused:",
     "auto verify: running (T182)",
@@ -535,3 +535,48 @@ def test_ac5_terms_follow_the_t179_block():
     lines = _read(SPEC).splitlines()
     i = next(n for n, l in enumerate(lines) if l.startswith("| Safer option |"))
     assert lines[i + 1].startswith("| Auto mode |") and lines[i + 2].startswith("| Final report |")
+
+
+# ── AC 6 fix — `DEBATED` only when Advocates ran ─────────────────────────────────────────
+# AC 6 live check: task 4 (minimal) and task 5 (extended) wrote `DEBATED:` lines while the event
+# trace held no Advocate `Agent` call. Causes: the minimal track said "no sub-agent" with no
+# exception, and nothing tied the `DEBATED` label to Advocates that actually ran.
+ADVOCATE_RULE = re.compile(r"`DEBATED`[^.]*only when ≥2 Advocate `Agent` calls ran for that question")
+NO_ADVOCATE_RULE = re.compile(r"no Advocates is labelled `RULE`, `FACT` or `SAFER OPTION`, never `DEBATED`")
+
+
+def test_ac6fix_minimal_flow_allows_the_advocates_in_auto_mode():
+    flow = _norm(_section(_read(TRACKS_MD), "Minimal-track flow"))
+    assert re.search(r"[Nn]o task guide, no sub-agent, no Stage 4 skills", flow), "T178 pin"
+    assert re.search(r"[Ii]n auto mode[^.]*read-only `Explore` Advocates[^.]*one exception", flow), flow
+
+
+def test_ac6fix_minimal_auto_requires_advocates_for_the_unclear_request():
+    sub = _norm(_subsection(_auto(), "Minimal track in auto mode"))
+    assert re.search(r"Advocates[^.]*one exception to the track's no-sub-agent rule", sub), sub
+    assert re.search(r"required[^.]*unclear request|unclear request[^.]*required", sub), sub
+    assert "Advocates" in _row("minimal_unclear")[2]
+
+
+def test_ac6fix_final_report_ties_debated_to_advocates_that_ran():
+    sub = _norm(_subsection(_auto(), "Final report"))
+    assert ADVOCATE_RULE.search(sub), sub
+    assert re.search(r"naming each Advocate's option", sub), sub
+    assert NO_ADVOCATE_RULE.search(sub), sub
+    assert "`DEBATED: <who argued what>`" not in sub, "the old unconditioned shape must go"
+
+
+@pytest.mark.parametrize("template", [REVIEW_TEMPLATE, MINIMAL_TEMPLATE], ids=["review", "minimal"])
+def test_ac6fix_templates_tie_debated_to_advocates_that_ran(template):
+    text = _norm(_read(template))
+    assert ADVOCATE_RULE.search(text), template.name
+    assert NO_ADVOCATE_RULE.search(text), template.name
+    assert "(<who argued what>)" not in text, "the old unconditioned shape must go"
+
+
+def test_ac6fix_skill_debate_step_says_no_advocates_is_no_debate():
+    text = _read(SKILL)
+    m = re.search(r"^#### Debate \(auto mode only\)$(.*?)(?=^#### |^---$|\Z)", text, re.M | re.S)
+    body = _norm(m.group(1))
+    assert re.search(r"[Ff]ewer than 2 Advocate calls ran: not a Debate; do not log it as one", body), body
+    assert SKILL.stat().st_size <= 8192
