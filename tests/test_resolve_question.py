@@ -251,7 +251,9 @@ def test_t179_ac2_advocate_answer_shape_and_agents():
     assert "<path>:<line>" in tpl and "low|medium|high" in tpl
     body = _debate()
     assert 'subagent_type: "Explore"' in body
-    assert "Start 2 (3 for 3+ options or High risk" in body
+    # T180 D7 (user, 2026-10-27) supersedes T179's "2, or 3 for 3+ options or High risk" count:
+    # the Debate is auto-mode only, and its size now follows the task's Risk label.
+    assert "Low, none (decide, log why); Medium, 2; High, 3" in body
     assert "smallest safe thing" in body
     assert "High risk" in body
     assert "opinion only" in body

@@ -551,11 +551,16 @@ def test_ac6fix_minimal_flow_allows_the_advocates_in_auto_mode():
     assert re.search(r"[Ii]n auto mode[^.]*read-only `Explore` Advocates[^.]*one exception", flow), flow
 
 
-def test_ac6fix_minimal_auto_requires_advocates_for_the_unclear_request():
+def test_d7_minimal_track_decides_by_risk():
+    """D7 supersedes the AC 6 fix's "Advocates required on the minimal track": a minimal-track task
+    is Risk Low by the track rule, so the Supervisor decides and logs, with no Advocates required."""
     sub = _norm(_subsection(_auto(), "Minimal track in auto mode"))
+    assert re.search(r"Risk Low[^.]*decides[^.]*no Advocates are required", sub), sub
     assert re.search(r"Advocates[^.]*one exception to the track's no-sub-agent rule", sub), sub
-    assert re.search(r"required[^.]*unclear request|unclear request[^.]*required", sub), sub
-    assert "Advocates" in _row("minimal_unclear")[2]
+    assert "`### Debate size by Risk`" in sub
+    row = _row("minimal_unclear")
+    assert "Risk Low" in row[2] and "Debate size by Risk" in row[2] and "decides" in row[2]
+    assert "`RULE`" in row[3] and "⚠" in row[3]
 
 
 def test_ac6fix_final_report_ties_debated_to_advocates_that_ran():
@@ -579,4 +584,68 @@ def test_ac6fix_skill_debate_step_says_no_advocates_is_no_debate():
     m = re.search(r"^#### Debate \(auto mode only\)$(.*?)(?=^#### |^---$|\Z)", text, re.M | re.S)
     body = _norm(m.group(1))
     assert re.search(r"[Ff]ewer than 2 Advocate calls ran: not a Debate; do not log it as one", body), body
+    assert SKILL.stat().st_size <= 8192
+
+
+# ── D7 — Debate size by the task's Risk (user, 2026-10-27, after AC 6 re-run 1) ───────────
+def _d7_rows():
+    sub = _subsection(_auto(), "Debate size by Risk")
+    rows = [l for l in sub.splitlines() if l.startswith("|") and not re.match(r"^\|[\s|:-]+\|$", l)]
+    assert len(rows) == 4, "D7 is a table: a header row and Low / Medium / High"
+    return {r.strip("|").split("|")[0].strip(): [c.strip() for c in r.strip("|").split("|")]
+            for r in rows[1:]}
+
+
+def test_d7_table_risk_to_who_decides_and_advocates():
+    rows = _d7_rows()
+    assert list(rows) == ["Low", "Medium", "High"]
+    low, med, high = rows["Low"], rows["Medium"], rows["High"]
+    assert "Supervisor decides" in low[1] and all(t in low[1] for t in ("`RULE`", "`FACT`", "`SAFER OPTION`"))
+    assert "reason" in low[1] and low[2].startswith("none")
+    assert "Debate" in med[1] and med[2].startswith("exactly 2") and "required" in med[2]
+    assert "Debate" in high[1] and high[2].startswith("exactly 3") and "required" in high[2]
+    assert "smallest safe thing" in high[2]
+
+
+def test_d7_scope_supersedes_t179_count_only_in_auto_mode():
+    sub = _norm(_subsection(_auto(), "Debate size by Risk"))
+    assert "every decision that would have been a question to the user" in sub
+    assert re.search(r"supersedes[^.]*\(\"2, or 3 for 3\+ options or High risk\"\)[^.]*in auto mode", sub), sub
+    assert re.search(r"[Oo]utside auto mode, `resolve-question` is unchanged", sub)
+    assert re.search(r"[Ee]very decision, at every Risk level, has its log line in the final report", sub)
+
+
+def test_d7_stop_table_says_debate_follows_the_risk():
+    legend = _norm(_subsection(_auto(), "Every user stop and its auto rule"))
+    assert re.search(r"\"Debate\" in this table follows `### Debate size by Risk`", legend), legend
+    assert re.search(r"Risk Low[^.]*logged `RULE`, `FACT` or `SAFER OPTION`", legend), legend
+
+
+def test_d7_final_report_goes_in_its_file_before_the_run_ends():
+    sub = _norm(_subsection(_auto(), "Final report"))
+    assert re.search(r"written to its file before the run ends", sub), sub
+    assert re.search(r"does not exist[^.]*create it from `templates/TASK_REVIEW_template\.md`", sub), sub
+    assert "The chat message is a copy, not the report." in sub
+    assert re.search(r"Stage 4 `code-review` still runs[^.]*not a user stop", sub), sub
+
+
+def test_d7_pipeline_stage4_still_runs_in_auto_mode():
+    stage4 = _norm(_section(_read(PIPELINE_MD), "Stage 4: Review").split("1. **Code Review**")[0])
+    assert re.search(r"[Aa]uto mode[^.]*Stage 4 still runs[^.]*not a user stop", stage4), stage4
+
+
+@pytest.mark.parametrize("template", [REVIEW_TEMPLATE, MINIMAL_TEMPLATE], ids=["review", "minimal"])
+def test_d7_templates_say_the_file_is_the_report(template):
+    text = _norm(_read(template))
+    assert re.search(r"[Ww]rite it to (?:this|its) file before the run ends", text), template.name
+    assert "the chat message is a copy, not the report" in text, template.name
+
+
+def test_d7_skill_debate_size_follows_the_task_risk():
+    text = _read(SKILL)
+    body = _norm(re.search(r"^#### Debate \(auto mode only\)$(.*?)(?=^#### |^---$|\Z)",
+                           text, re.M | re.S).group(1))
+    assert re.search(r"By the task's Risk[^.]*Low, none \(decide, log why\); Medium, 2; High, 3", body), body
+    assert "smallest safe thing" in body
+    assert "3 for 3+ options" not in body, "D7 supersedes T179's count in auto mode"
     assert SKILL.stat().st_size <= 8192
