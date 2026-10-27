@@ -155,6 +155,63 @@ def test_ac1_board_mode_online_keeps_record_local():
     assert "board_sync.py" in body
 
 
+
+# ── AC 8 fix — a change to user data is an extended-track condition of its own ────────────
+# AC 8 task 5 ("store expenses as JSON instead of CSV … get rid of the old CSV stuff") ran on the
+# minimal track: no Gate-2 word, no "migrate", and the only row that caught it needed a Risk rating
+# first. The rule must name the data change itself, in AGENTS.md (read every session) and tracks.md.
+DATA_VERBS = ("delete", "move", "rename", "convert")
+
+
+def _names_a_user_data_change(text: str) -> bool:
+    low = text.lower()
+    return ("user data" in low and "storage format" in low
+            and all(v in low for v in DATA_VERBS))
+
+
+def test_ac8_tracks_table_has_a_user_data_row_of_its_own():
+    rows = [r for r in _rule_rows() if _names_a_user_data_change(r)]
+    assert rows, "no rule row names a delete/move/rename/convert of user data or its storage format"
+    row = rows[0]
+    assert "Risk" not in row, "the data-change row must not depend on a Risk rating"
+    assert [c.strip() for c in row.strip("|").split("|")][-1].lower().startswith("extended")
+
+
+def test_ac8_tracks_table_covers_a_conversion_without_the_word_migrate():
+    row = next(r for r in _rule_rows() if _names_a_user_data_change(r))
+    assert re.search(r"CSV to JSON", row), "the row needs the format-conversion example"
+    assert re.search(r"even (?:when|if) the request (?:does not say|never says) \*migrate\*", row)
+
+
+def test_ac8_agents_md_short_rule_names_the_user_data_change():
+    text = _norm("\n".join(_agents_tracks_section()))
+    m = re.search(r"any of: (.+?)\. Otherwise", text)
+    assert m, "the short rule has no 'any of: … . Otherwise' list"
+    items = [i.strip() for i in m.group(1).split(";")]
+    hits = [i for i in items if _names_a_user_data_change(i)]
+    assert hits, f"no condition in the short rule names a user-data change: {items}"
+    assert "Risk" not in hits[0] and "migrate" in hits[0], (
+        "the data-change condition must stand alone and say it holds without *migrate*")
+
+
+def test_ac8_minimal_track_excludes_a_user_data_change():
+    body = _norm(_section(_read(TRACKS_MD), "Track rule"))
+    assert re.search(r"Otherwise[^.]*no change to user data", body)
+
+
+def test_ac8_record_step_requires_every_template_field():
+    steps, _ = _flow_steps()
+    record = next(s for s in steps if "`tasks/MINIMAL_LOG.md`" in s and "Decision record" in s)
+    assert "every field of the template" in record
+    for field in ("Asked:", "Decisions:", "Checked:", "Files:", "Not done:"):
+        assert f"`{field}`" in record, f"step 6 does not name {field!r}"
+
+
+def test_ac8_backup_never_in_tmp():
+    _, body = _flow_steps()
+    assert re.search(r"backup[^.]*inside the project or in a path the user named[^.]*never in `/tmp`",
+                     body, re.I)
+
 # ── AC 2 — AGENTS.md ──────────────────────────────────────────────────────────────────────
 def _agents_tracks_section():
     lines = _read(AGENTS_MD).splitlines()
