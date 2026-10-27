@@ -445,8 +445,11 @@ def test_d9_an_uncited_fact_at_high_blocks(tmp_path):
 
 
 def test_d9_a_cited_fact_at_high_passes(tmp_path):
-    decisions = ['1. amounts are stored in cents — FACT: src/tally/store.py:12 "amount_cents = int(...)"']
-    project = _project(tmp_path, [EXT_ROW], review=_report(decisions), untagged=_trace(0))
+    # D10: a High report also needs one 3-Advocate Debate, so decision 2 supplies it; the test
+    # still isolates D9's point (a cited FACT is not a choice).
+    decisions = ['1. amounts are stored in cents — FACT: src/tally/store.py:12 "amount_cents = int(...)"',
+                 f"2. kept recurring.csv — DEBATED: keep it ({_advocates(3)}) {FLAG}"]
+    project = _project(tmp_path, [EXT_ROW], review=_report(decisions), untagged=_trace(3))
     _, out = _run(project)
     assert out == {}, out
 

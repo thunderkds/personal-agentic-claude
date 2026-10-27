@@ -164,6 +164,10 @@ The task's **Risk** label sets how every decision that would have been a questio
 | Medium | A Debate (`resolve-question`): the Advocates argue, the Supervisor decides by its rules | exactly 2, required |
 | High | A Debate (`resolve-question`): the Advocates argue, the Supervisor decides by its rules | exactly 3, required; the third argues the smallest safe thing |
 
+At Risk High, at least one decision is always debated by 3 Advocates: pick the decision with the biggest
+effect on the user's data or scope (for example, convert `recurring.csv` too, or leave it). Cited `RULE:`
+lines do not replace it; they stay valid for safety actions.
+
 Each Advocate `Agent` call's `description` starts with `Advocate` (for example
 `Advocate 1: keep recurring.csv`), so the auto-mode check below can count them.
 
@@ -267,7 +271,9 @@ with a short reason when:
 3. the event trace holds fewer Advocate `Agent` calls (description starting `Advocate`) than 2 or 3 per
    `DEBATED` line;
 4. on the extended track, the trace has no `code-review` Skill call, or no `security-review` Skill call at
-   Risk Medium or High.
+   Risk Medium or High;
+5. at Risk High, no `DEBATED` line names 3 Advocates, or the trace holds fewer than 3 Advocate `Agent`
+   calls: `Risk High, but no decision was DEBATED with 3 Advocates`.
 
 A board row counts as auto mode when its report carries `## Auto decisions` or a `Mode: auto` line, when its
 Decision record's request carries `[auto]`, or when this session's request carries `[auto]` and the task's

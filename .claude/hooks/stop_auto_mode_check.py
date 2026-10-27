@@ -13,6 +13,8 @@ auto-mode task whose board row is In Progress or Ready for Review, it blocks the
       2 / 3 per `DEBATED` line (2 at Risk Low);
   (4) on the extended track, the trace has no `code-review` Skill call, or no `security-review`
       Skill call at Risk Medium/High.
+  (5) at Risk High, no `DEBATED` line names 3 Advocates, or the trace holds fewer than 3 Advocate
+      `Agent` calls (D10): at least one High-risk decision is always debated.
 
 Which tasks (D9): board rows in In Progress or Ready for Review, plus — so a project with no
 `PROJECT_KANBAN.md` is still checked — every `tasks/TASK_REVIEW_*.md` carrying `## Auto decisions`
@@ -55,6 +57,7 @@ TAG = "[auto]"
 MARKER = "Mode: auto"
 PAUSE = "Paused: auto-mode check failed — "
 ADVOCATES_BY_RISK = {"Medium": 2, "High": 3}
+D10_REASON = "Risk High, but no decision was DEBATED with 3 Advocates"
 WINDOW_DEFAULT_S = 6 * 3600
 
 ROW_ID = re.compile(r"\*\*([A-Za-z]+-?\d+)\*\*")
@@ -323,10 +326,16 @@ def check_task(task_id, row, request_ts, dirs):
 
     records = trace_records(task_id)
     debated = [l for l in lines if "DEBATED:" in l]
+    have = sum(1 for r in records if r.get("tool_name") == "Agent"
+               and field(r.get("summary"), "description").startswith("Advocate"))
+    if risk == "High":
+        # D10: at Risk High at least one decision is always debated by 3 Advocates; cited RULE
+        # lines do not replace it ("This is force for the high risk", D7).
+        three = [l for l in debated if len(re.findall(r"\bAdvocate \d+:", l)) == 3]
+        if not three or have < 3:
+            reasons.append(D10_REASON)
     if debated:
         need = (need_per_line or 2) * len(debated)
-        have = sum(1 for r in records if r.get("tool_name") == "Agent"
-                   and field(r.get("summary"), "description").startswith("Advocate"))
         if have < need:
             reasons.append(f"{len(debated)} `DEBATED` line(s) need ≥{need} Advocate `Agent` calls "
                            f"(description starting `Advocate`); the trace has {have}")
