@@ -23,28 +23,29 @@
 
 ## Requirement (Pillar 1 — Adapt the requirement)
 
-User, 2026-10-26: "I want to automate 2 of tracks also, with track 2 I will give the param to automate, and note the decision for the final report." Supervisor's reply, accepted ("yes, write the 3 task guides"): the run ends at Ready for Review on its branch; merge and `/verify` stay with the user (Claude Code lets only the user run `/verify`); the Supervisor runs its own real-run check, labelled "auto-checked, not /verify"; safety hooks still block; Debates are capped at 3 per task.
+User, 2026-10-26: "I want to automate 2 of tracks also, with track 2 I will give the param to automate, and note the decision for the final report." Supervisor's reply, accepted ("yes, write the 3 task guides"): the run ends at Ready for Review on its branch; merge and `/verify` stay with the user (Claude Code lets only the user run `/verify`); the Supervisor runs its own real-run check, labelled "auto-checked, not /verify"; safety hooks still block; Debates are capped at 3 per task. User, 2026-10-27: "I want to make the /verify command is automate also" — chose "Hook runs real /verify": that is T182 (a hook, not the Supervisor, runs the built-in `/verify` in a fresh session). This task leaves the `verify` row unfilled for it.
 
 **Restated intent**:
 > When the user's request carries the auto parameter, the Supervisor runs the chosen track to the end
 > without asking anything: every decision it would have asked about is made by a rule, a Citation or a
 > Debate (T179), and written to a **final report** in the task's review file. The user then reads the report,
-> checks the decisions marked for review, runs `/verify`, and decides on the merge.
+> checks the decisions marked for review, reads the `/verify` result (run by T182's hook, or runs `/verify`
+> itself when T182 is not built or its run was blocked), and decides on the merge.
 
 Supervisor design decisions (defaults the user can overrule before the build):
-- D1 — **The parameter.** The literal tag `[auto]` anywhere in the request, e.g. `move the data from CSV to JSON [auto]`. A bracketed tag, so a request about an "auto-save" feature never turns auto mode on. The Supervisor confirms in the track line: `Track: extended · auto — <reasons>. I won't stop for questions; every decision goes in the final report.` Without `[auto]`, both tracks behave as in T178.
+- D1 — **The parameter.** The literal tag `[auto]` anywhere in the request, e.g. `move the data from CSV to JSON [auto]`. A bracketed tag, so a request about an "auto-save" feature never turns auto mode on. The Supervisor confirms in the track line: `Track: extended · auto — <reasons>. I won't stop for questions; every decision goes in the final report.` Without `[auto]`, both tracks behave as in T178. The task records that it runs in auto mode in a form a hook can read (e.g. a `Mode: auto` line in its review file or Decision record) — T182's hook keys on it.
 - D2 — **Auto mode on the minimal track.** The one remaining stop (an unclear request) becomes a Debate (T179); the Decision record (T178) gets the same flags as D4 below.
 - D3 — **Auto mode on the extended track.** Every user stop the agent listed in startup step 5 gets an auto rule, for example:
   - Stage 0.5 brainstorming → the Supervisor takes its recommended path and logs the alternatives.
   - grill-with-docs → answered from the docs and code with Citations; what they cannot answer is a Choice question → Debate.
   - Requirement Fidelity Gate → signed `auto (Supervisor)`, not by the user.
   - A Stage 4 finding whose fix needs a choice → Debate.
-  - Stage 5 → the Supervisor's real-run check, written in the review file as `auto-checked, not /verify`; the `verify` Evidence row stays unchecked for the user.
-- D4 — **Final report.** A `## Auto decisions` section in `tasks/TASK_REVIEW_Txxx.md` (extended) or inside the Decision record (minimal). One numbered line per decision: what was decided; how (`RULE: …`, `FACT: <Citation>`, `DEBATED: <who argued what>`, `SAFER OPTION`); and `⚠ decided for you — please review` on every Debate, safer-option and taste decision. Then `Checks:` (tests, reviews, real run) and `Not done: /verify (yours) · merge (yours)`. The same block is the Supervisor's final chat message.
+  - Stage 5 → the Supervisor's real-run check, written in the review file as `auto-checked, not /verify`; the `verify` Evidence row stays unchecked: T182's hook fills it from a real `/verify` run, or the user does.
+- D4 — **Final report.** A `## Auto decisions` section in `tasks/TASK_REVIEW_Txxx.md` (extended) or inside the Decision record (minimal). One numbered line per decision: what was decided; how (`RULE: …`, `FACT: <Citation>`, `DEBATED: <who argued what>`, `SAFER OPTION`); and `⚠ decided for you — please review` on every Debate, safer-option and taste decision. Then `Checks:` (tests, reviews, real run) and `Not done: merge (yours)` plus the `/verify` state: `auto verify: running (T182)`, its result, or `/verify (yours)` when T182 is not built or its run was blocked. The same block is the Supervisor's final chat message.
 - D5 — **Stops that stay in auto mode:** a safety-hook block; an action that deletes or overwrites data with no backup; the 4th Debate in a task (T179 D6); a paid action outside the task's own work; a login or secret the Supervisor does not have; the same sub-agent hitting the step limit twice. Each pauses the task with one message that says why, and that pause also goes in the final report.
-- D6 — **Never in auto mode:** merge, push, `/verify`, moving a task to Done, or changing the track down.
+- D6 — **Never in auto mode:** merge, push, the Supervisor running `/verify` or writing its row (only T182's hook writes it), moving a task to Done, or changing the track down.
 
-**Out of scope**: the tracks and the Decision record (T178); the Debate step (T179); a CI or scheduled trigger for auto mode.
+**Out of scope**: the tracks and the Decision record (T178); the Debate step (T179); running `/verify` automatically (T182); a CI or scheduled trigger for auto mode.
 
 **Requirement Refs**: none in `PRD.md`.
 
@@ -71,7 +72,7 @@ Supervisor design decisions (defaults the user can overrule before the build):
 | 1 | `docs/claude-md/tracks.md` has an `## Auto mode` section: the D1 tag and track-line example, D2, the D3 rule for **every** user stop the agent listed (the list is in the section, one row per stop), the D5 stops that stay and the D6 never-list. `AGENTS.md` gets ≤4 lines with a pointer and stays ≤200 lines / ≤32,768 bytes. | D1–D3, D5, D6 |
 | 2 | `templates/TASK_REVIEW_template.md` has an optional `## Auto decisions` section in the D4 shape; T178's `templates/MINIMAL_LOG_template.md` gains the same lines. | D4 |
 | 3 | `skills/resolve-question/SKILL.md` and the stages in `docs/claude-md/pipeline-stages.md` that stop for the user each name their auto-mode rule or point to the `## Auto mode` table. | D3 |
-| 4 | The merge gate (`pre_bash_block_unsafe_merge.py`) still blocks a merge whose `verify` row says only `auto-checked, not /verify`: a test proves it. | D3, D6 |
+| 4 | The merge gate (`pre_bash_block_unsafe_merge.py`) still blocks a merge whose `verify` row says only `auto-checked, not /verify`: a test proves it. (T182 adds the one auto case the gate accepts: a hook-written row with its record.) | D3, D6 |
 | 5 | Tests (`tests/test_auto_mode.py`) pin AC 1–4: the literal `[auto]`, that a bare "auto" word is not the tag, the stop list, the never-list, the D4 flag text. The full suite stays green. | Gate 5 |
 | 6 | Live check, **after the user's go, paid, cap $6**: 2 headless runs of the updated kit in the T175 Docker sandbox, single turn, no scripted replies: (a) fixture task 5 `[auto]` → `Track: extended · auto`, no stop, ends Ready for Review on a branch, data safe by the task-5 oracle, `## Auto decisions` present with the `recurring.csv` decision flagged; (b) fixture task 4 `[auto]` → minimal track, the vague sort settled by a Debate and flagged in the Decision record. | user request |
 

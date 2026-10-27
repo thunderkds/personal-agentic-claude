@@ -6,8 +6,8 @@
 **Assigned agent**: Frontend-Implementer
 **Agent guide**: `agents/frontend.md`
 
-> Starts only after T178, T179 and T180 are merged. The facts below are their **planned** design;
-> before the spawn, the Supervisor re-reads the merged `docs/claude-md/tracks.md`,
+> Starts only after T178, T179, T180 and T182 are merged. The facts below are their **planned** design;
+> before the spawn, the Supervisor re-reads the merged `docs/claude-md/tracks.md` (incl. T182's auto verify step),
 > `skills/resolve-question/SKILL.md` and `AGENTS.md` and corrects this guide in a commit of its own
 > (a batch guide ages against the tasks that merge after it).
 
@@ -34,15 +34,16 @@ User, 2026-10-27, asked whether any task updates "the guide from the README or t
 > After T178–T180 merge, a reader of `README.md` or the project site learns that the kit has two
 > tracks (minimal and extended), how the Supervisor picks one and how to override it, that
 > `[auto]` runs either track to Ready for Review with a final report of every decision, and that
-> `resolve-question` can run a Debate in auto mode. Merge and `/verify` stay with the user — the
-> pages say so.
+> `resolve-question` can run a Debate in auto mode, and that a hook then runs `/verify` for an `[auto]`
+> task. Merge stays with the user — the pages say so.
 
 **Facts to state (planned design — confirm against the merged docs, startup step 6):**
 - Every implementation request goes on a track, announced in one line: `Track: minimal — <reasons>` or `Track: extended — <reasons>`. The user can reply `full` or `minimal` to switch.
 - Extended track if any of: Complexity C2+; Risk Medium/High; a Gate-2 word or *migrate*; more than one session or agent; a UI component. Otherwise minimal.
 - Minimal track: test first, change, real run, a Decision record in `tasks/MINIMAL_LOG.md`; no task guide, no sub-agent; stops only when the request itself is unclear.
 - Extended track: the 5-stage pipeline, unchanged.
-- `[auto]` in the request: no stops for questions; decisions go to a final report (`## Auto decisions`); merge, push, `/verify` and Done stay with the user; safety hooks still block.
+- `[auto]` in the request: no stops for questions; decisions go to a final report (`## Auto decisions`); safety hooks still block.
+- Auto verify (T182): at Ready for Review a hook — not the Supervisor — runs the real `/verify` in a fresh session and writes the result; merge, push and Done stay with the user. Without `[auto]`, `/verify` is still typed by the user.
 - Debate (auto mode only): 2–3 read-only Advocate agents argue the options; the Supervisor decides, safer option on a tie, flagged `⚠ decided for you — please review`; at most 3 per task.
 
 **Out of scope:** the site restructure (T089); any change to the Stage 0.5–5 section content beyond saying they are the extended track; a new diagram for the minimal track unless it fits the existing SVG with no new CSS; any harness file.
@@ -52,7 +53,7 @@ User, 2026-10-27, asked whether any task updates "the guide from the README or t
 ### Requirement Fidelity Gate (sign off BEFORE implementation)
 
 - [x] Restated intent confirmed (user, 2026-10-27: "yes, register new one")
-- [ ] Facts above re-checked against the merged T178–T180 docs (Supervisor, before spawn)
+- [ ] Facts above re-checked against the merged T178–T180 and T182 docs (Supervisor, before spawn)
 - [x] Every Acceptance Criterion below traces to a line in the Requirement
 - [x] Requirement Refs: N/A — recorded, not skipped
 
@@ -60,7 +61,7 @@ User, 2026-10-27, asked whether any task updates "the guide from the README or t
 
 ## Dependencies & Reachability
 
-**Depends on**: T178, T179, T180 (merged to `main`)
+**Depends on**: T178, T179, T180, T182 (merged to `main`)
 
 **Entry point**: `site/index.html` — new `<section id="tracks">`; `README.md` intro
 
@@ -72,11 +73,11 @@ User, 2026-10-27, asked whether any task updates "the guide from the README or t
 |---|----------------------|-----------|
 | 1 | `site/index.html` has `<section id="tracks">` with an `<h2>` naming the two tracks, placed after `#what-you-get` and before the Stage 0.5 section; the sidebar nav has `href="#tracks"` | two tracks |
 | 2 | The section states the track rule, both literal announcement lines, the `full` / `minimal` override, and what the minimal track does and skips | facts 1–3 |
-| 3 | The section (or a sub-heading in it) describes `[auto]`: the literal tag, the final report, and that merge, `/verify` and Done stay with the user | fact 5 |
-| 4 | The section names the Debate with its cap and the review flag; the `#skills` entry for `resolve-question` mentions the Debate, if that list carries descriptions | fact 6 |
+| 3 | The section (or a sub-heading in it) describes `[auto]`: the literal tag, the final report, auto verify run by a hook in a fresh session, and that merge and Done stay with the user | facts 5–6 |
+| 4 | The section names the Debate with its cap and the review flag; the `#skills` entry for `resolve-question` mentions the Debate, if that list carries descriptions | fact 7 |
 | 5 | Each Stage 0.5–5 heading area or the pipeline diagram's `<desc>` says these stages are the extended track (one line, not a rewrite) | fact 4 |
 | 6 | `README.md` intro mentions the two tracks and `[auto]` in ≤3 lines and stays ≤75 lines (`tests/test_readme_slim.py`) | README |
-| 7 | New tests in `tests/test_site_content.py`: section + nav link exist; the section contains `Track: minimal`, `Track: extended`, `[auto]`, `/verify`; the section does not say auto mode merges, pushes or runs `/verify` | drift |
+| 7 | New tests in `tests/test_site_content.py`: section + nav link exist; the section contains `Track: minimal`, `Track: extended`, `[auto]`, `/verify`; the section does not say auto mode merges or pushes, or that the Supervisor runs `/verify` | drift |
 
 **Mutation controls:** **M1** — delete the nav `<li>` → RED. **M2** — remove `[auto]` from the section → RED. **M3** — insert "auto mode merges your branch" into the section → RED.
 
@@ -121,14 +122,14 @@ sh scripts/validate.sh
 | File | Reason |
 |------|--------|
 | `vercel.json`, `.vercelignore` | Deploy config unchanged |
-| `AGENTS.md`, `docs/claude-md/**`, `skills/**`, `.claude/hooks/**` | Source of truth for the facts; T178–T180 own them |
+| `AGENTS.md`, `docs/claude-md/**`, `skills/**`, `.claude/hooks/**` | Source of truth for the facts; T178–T180 and T182 own them |
 | `memory/MEMORY.md` | Supervisor-only writes |
 
 ---
 
 ## Completion Checklist
 
-- [ ] Supervisor re-checked the facts against the merged T178–T180 docs (before spawn)
+- [ ] Supervisor re-checked the facts against the merged T178–T180 and T182 docs (before spawn)
 - [ ] Implementation done; AC7 tests observed RED first
 - [ ] M1–M3 pasted in the Evidence table
 - [ ] All three UI Evidence rows filled
