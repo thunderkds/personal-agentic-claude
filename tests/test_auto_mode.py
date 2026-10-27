@@ -130,7 +130,8 @@ def test_ac1_marker_is_one_documented_literal_line():
 
 def test_ac1_d2_minimal_track_stop_becomes_a_debate_and_record_carries_flags():
     sub = _norm(_subsection(_auto(), "Minimal track in auto mode"))
-    assert re.search(r"unclear request[^.]*becomes a Debate", sub)
+    # D7: the stop is decided by the task's Risk (Low: no Debate), not always a Debate.
+    assert re.search(r"unclear request[^.]*is decided by `### Debate size by Risk`", sub), sub
     assert "Decision record" in sub and "`templates/MINIMAL_LOG_template.md`" in sub
     flow = _norm(_section(_read(TRACKS_MD), "Minimal-track flow"))
     assert re.search(r"[Ii]n auto mode[^.]*Debate", flow), "the one stop must point at auto mode"
