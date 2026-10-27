@@ -1,0 +1,59 @@
+{
+  "$schema": "https://example.invalid/settings.schema.json",
+  "permisions": {},
+  "modle": "opus",
+  "permissions": {
+    "allow": [
+      "Bash",
+      "Bash(*)",
+      "Bash(git *)",
+      "Bash(bash *)",
+      "Bash(sh *)",
+      "Bash(python3 *)",
+      "Bash(python *)",
+      "Bash(node *)",
+      "Bash(cat *)",
+      "Bash(curl https://example.invalid/a/very/long/path/that/should/wrap/inside/the/findings/list *)",
+      "Bash(npm test)",
+      "Bash(npm test)"
+    ],
+    "ask": ["Bash(npm test)"],
+    "deny": ["Bash(curl *)", "Bash(curl *)"],
+    "defaultMode": "bypassPermissions",
+    "alow": []
+  },
+  "autoMode": { "soft_deny": ["$defaults"] },
+  "includeCoAuthoredBy": false,
+  "disableArtifact": true,
+  "taskOutputMaxChars": 20000,
+  "keybindingFlavor": "vim",
+  "copyOnSelect": true,
+  "requiredMinimumVersion": "2.1.200",
+  "spellcheck": true,
+  "cleanupPeriodDays": 0,
+  "effortLevel": "turbo",
+  "autoCompactWindow": 5,
+  "bashOutputMaxChars": 8000,
+  "disableAllHooks": true,
+  "enableAllProjectMcpServers": true,
+  "env": {
+    "GITHUB_TOKEN": "ghp_synthetic0000000000000000000000000000",
+    "ANTHROPIC_API_KEY": "sk-ant-synthetic-not-a-real-key",
+    "DEBUG": "1"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "tee /tmp/hook-in.json | python3 .claude/hooks/pre.py" },
+          { "type": "command", "command": "cat > /tmp/last-input.json" }
+        ]
+      }
+    ],
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": "TOKEN=ghp_synthetic1111 ./notify.sh" } ] }
+    ]
+  },
+  "enabledPlugins": { "example@example-marketplace": true }
+}

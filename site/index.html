@@ -231,7 +231,6 @@
   #settings-tool .st-tab { font: inherit; color: var(--text); background: none; border: 1px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0; padding: .4rem .9rem; cursor: pointer; }
   #settings-tool .st-tab[aria-selected="true"] { background: var(--surface); border-color: var(--border); color: var(--cyan); font-weight: 700; }
   #settings-tool .st-tab:disabled { color: var(--muted); cursor: not-allowed; }
-  #settings-tool .st-soon { font-size: .75rem; }
   #settings-tool .st-target { border: 1px solid var(--border); border-radius: 8px; padding: .5rem .8rem; margin: 0 0 .8rem; display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; min-width: 0; }
   #settings-tool .st-target legend { color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; padding: 0 .3rem; }
   #settings-tool .st-target label { overflow-wrap: anywhere; }
@@ -272,6 +271,33 @@
   #settings-tool .st-status { color: var(--muted); font-size: .85rem; }
   #settings-tool input:focus-visible, #settings-tool select:focus-visible, #settings-tool textarea:focus-visible,
   #settings-tool .st-btn:focus-visible, #settings-tool .st-tab:focus-visible, #settings-tool .st-x:focus-visible, #settings-tool pre:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+  #settings-tool .st-paste { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-top: .3rem; }
+  #settings-tool .st-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: .6rem 0 .2rem; }
+  #settings-tool .st-keep { font-size: .85rem; color: var(--muted); }
+  #settings-tool .st-privacy { margin: .2rem 0 .6rem; color: var(--muted); font-size: .85rem; }
+  #settings-tool h3 { margin: 1.2rem 0 .5rem; font-size: .8rem; color: var(--purple); text-transform: uppercase; letter-spacing: .05em; }
+  #settings-tool h4 { margin: .8rem 0 .3rem; font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  #settings-tool h4:first-child { margin-top: 0; }
+  #settings-tool .st-findings { list-style: none; margin: 0; padding: 0; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+  #settings-tool .st-findings li { display: flex; flex-wrap: wrap; gap: .2rem .8rem; align-items: baseline; padding: .5rem .8rem; border-top: 1px solid var(--border); font-size: .85rem; }
+  #settings-tool .st-findings li:first-child { border-top: none; }
+  #settings-tool .st-findings li > .tag { flex: none; min-width: 6.5rem; text-align: center; white-space: nowrap; }
+  #settings-tool .st-findings .st-fixline { display: block; color: var(--muted); }
+  #settings-tool .st-findings .st-btn { margin-top: .3rem; }
+  #settings-tool .st-path { flex: 1 1 9rem; max-width: 13rem; font: inherit; font-size: .8rem; color: var(--cyan); background: none; border: none; padding: 0; cursor: pointer; text-align: left; overflow-wrap: anywhere; text-decoration: underline; }
+  #settings-tool .st-findings .st-msg { flex: 999 1 16rem; min-width: 0; overflow-wrap: anywhere; }
+  #settings-tool .st-map { border: 1px solid var(--border); border-radius: 8px; padding: .6rem .8rem; max-height: 36rem; overflow: auto; }
+  #settings-tool .st-tree { list-style: none; margin: 0; padding: 0; }
+  #settings-tool .st-node { padding: .15rem .3rem; border-radius: 4px; overflow-wrap: anywhere; font-size: .85rem; }
+  #settings-tool .st-node code, #settings-tool .st-col code { overflow-wrap: anywhere; }
+  #settings-tool .st-val { color: var(--muted); margin-left: .4rem; }
+  #settings-tool .st-sep { color: var(--muted); margin: 0 .3rem; }
+  #settings-tool .st-node .tag, #settings-tool .st-colhead .tag { margin-left: .3rem; }
+  #settings-tool .st-hint { margin: 0 0 .4rem; color: var(--muted); font-size: .8rem; }
+  #settings-tool .st-perms { display: grid; grid-template-columns: repeat(3, minmax(10rem, 1fr)); gap: .6rem; }
+  #settings-tool .st-col { min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: .4rem .5rem; }
+  #settings-tool .st-colhead { margin: 0 0 .3rem; font-weight: 700; font-size: .85rem; }
+  #settings-tool .st-hit { outline: 2px solid var(--amber); outline-offset: 1px; }
   @media (max-width: 767px) {
     #settings-tool .st-right { position: static; }
     #settings-tool .st-copybar { position: sticky; bottom: 0; background: var(--bg); padding: .5rem 0; border-top: 1px solid var(--border); }
@@ -574,14 +600,14 @@ Decided by: auto-approve (overwrite all)
 
 <section id="settings-tool">
 <h2>Settings tool</h2>
-<p class="lead">Pick the Claude Code settings you want, set each value, and copy a ready <code>settings.json</code>.
-  The kit installs no settings of its own. This tool builds yours. Everything stays in your browser.</p>
+<p class="lead">Pick the Claude Code settings you want and copy a ready <code>settings.json</code>, or paste yours to check it.
+  The kit installs no settings of its own. Everything stays in your browser.</p>
 <p class="st-nojs">This tool needs JavaScript. Without it, read the
   <a href="https://code.claude.com/docs/en/settings-reference" target="_blank" rel="noopener noreferrer">official settings reference</a>.</p>
 <div id="st-app" class="st-app">
   <div class="st-tabs" role="tablist" aria-label="Settings tool mode">
     <button type="button" role="tab" class="st-tab" aria-selected="true" aria-controls="st-build-panel" id="st-tab-build">Build</button>
-    <button type="button" role="tab" class="st-tab" aria-selected="false" disabled id="st-tab-check">Check <span class="st-soon">(coming soon)</span></button>
+    <button type="button" role="tab" class="st-tab" aria-selected="false" aria-controls="st-check-panel" id="st-tab-check" tabindex="-1">Check</button>
   </div>
   <div id="st-build-panel" role="tabpanel" aria-labelledby="st-tab-build">
     <fieldset class="st-target">
@@ -608,12 +634,41 @@ Decided by: auto-approve (overwrite all)
         <p class="st-file"><strong id="st-file"></strong></p>
         <pre class="install st-output" id="st-output" tabindex="0" aria-label="Generated settings JSON"></pre>
         <p class="st-note" id="st-note" role="status"></p>
+        <p class="st-note" id="st-kept" role="status"></p>
         <div class="st-copybar">
           <button type="button" class="st-btn st-primary" id="st-copy">Copy</button>
           <span id="st-status" class="st-status" role="status"></span>
           <span id="st-copied" class="st-status" role="status"></span>
         </div>
       </div>
+    </div>
+  </div>
+  <div id="st-check-panel" role="tabpanel" aria-labelledby="st-tab-check" hidden>
+    <fieldset class="st-target">
+      <legend>This is my</legend>
+      <label><input type="radio" name="st-check-target" value="user" checked> User <code>~/.claude/settings.json</code></label>
+      <label><input type="radio" name="st-check-target" value="project"> Project <code>.claude/settings.json</code></label>
+      <label><input type="radio" name="st-check-target" value="local"> Local <code>.claude/settings.local.json</code></label>
+    </fieldset>
+    <label class="st-label" for="st-paste">Paste your settings.json</label>
+    <textarea id="st-paste" class="st-paste" rows="10" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder='{ "permissions": { "deny": ["Read(./.env)"] } }'></textarea>
+    <div class="st-actions">
+      <button type="button" class="st-btn" id="st-format">Format</button>
+      <button type="button" class="st-btn st-primary" id="st-check">Check</button>
+      <button type="button" class="st-btn" id="st-edit">Edit in Build</button>
+      <label class="st-keep"><input type="checkbox" id="st-keep"> Keep secret values</label>
+    </div>
+    <p class="st-privacy">Runs in your browser only. Nothing is sent or saved.</p>
+    <p class="st-note" id="st-check-msg" role="status"></p>
+    <div id="st-results" hidden>
+      <h3 id="st-findings-head">Findings</h3>
+      <ol id="st-findings" class="st-findings" aria-labelledby="st-findings-head"></ol>
+      <h3>Map</h3>
+      <div id="st-map" class="st-map" tabindex="0" aria-label="Settings map"></div>
+    </div>
+    <div id="st-formatted-box" hidden>
+      <h3>Formatted</h3>
+      <pre class="install st-output" id="st-formatted" tabindex="0" aria-label="Formatted settings JSON"></pre>
     </div>
   </div>
 </div>
@@ -686,12 +741,14 @@ Decided by: auto-approve (overwrite all)
   {"key": "feedbackSurveyRate", "category": "Updates & privacy", "type": "number", "scopes": ["user", "project", "local"], "min": 0, "max": 1, "why": "How often the feedback survey shows. 0 to 1."},
   {"key": "env", "category": "Updates & privacy", "type": "object", "scopes": ["user", "project", "local"], "placeholder": "NAME=value", "why": "Environment variables for every session. Values are plain text: never put tokens here."}
  ],
- "knownKeys": ["permissions.deny", "permissions.ask", "permissions.allow", "permissions.defaultMode", "permissions.additionalDirectories", "permissions.disableBypassPermissionsMode", "permissions.blockReadsOutsideWorkingDirectories", "autoMode.soft_deny", "autoMode.hard_deny", "autoMode.classifyAllShell", "sandbox.enabled", "sandbox.failIfUnavailable", "sandbox.autoAllowBashIfSandboxed", "sandbox.allowUnsandboxedCommands", "sandbox.excludedCommands", "sandbox.filesystem.denyRead", "sandbox.filesystem.allowWrite", "sandbox.network.allowedDomains", "sandbox.network.strictAllowlist", "worktree.baseRef", "worktree.symlinkDirectories", "worktree.sparsePaths", "model", "effortLevel", "maxEffortLevel", "fallbackModel", "alwaysThinkingEnabled", "showThinkingSummaries", "fastMode", "promptCacheTtl", "subagentPromptCacheTtl", "language", "outputStyle", "autoMemoryEnabled", "autoMemoryDirectory", "autoCompactEnabled", "autoCompactWindow", "idleCompaction", "claudeMdExcludes", "bashOutputMaxChars", "skillListingBudgetFraction", "fileCheckpointingEnabled", "plansDirectory", "attribution.commit", "attribution.pr", "attribution.sessionUrl", "includeGitInstructions", "prUrlTemplate", "disableAllHooks", "enableAllProjectMcpServers", "enabledMcpjsonServers", "disabledMcpjsonServers", "allowedHttpHookUrls", "statusLine", "theme", "showTurnDuration", "preferredNotifChannel", "respectGitignore", "autoUpdatesChannel", "minimumVersion", "cleanupPeriodDays", "feedbackSurveyRate", "env", "hooks", "permissions", "autoMode", "sandbox", "worktree", "attribution", "requiredMinimumVersion", "includeCoAuthoredBy", "disableArtifact", "enableArtifact", "taskOutputMaxChars", "keybindingFlavor", "autoConnectIde", "autoInstallIdeExtension", "copyFullResponse", "copyOnSelect", "defaultToAgentsView", "diffTool", "externalEditorContext", "leftArrowOpensAgents", "prStatusFooterEnabled", "claudeInChromeDefaultEnabled"],
+ "knownKeys": ["permissions.deny", "permissions.ask", "permissions.allow", "permissions.defaultMode", "permissions.additionalDirectories", "permissions.disableBypassPermissionsMode", "permissions.blockReadsOutsideWorkingDirectories", "autoMode.soft_deny", "autoMode.hard_deny", "autoMode.classifyAllShell", "sandbox.enabled", "sandbox.failIfUnavailable", "sandbox.autoAllowBashIfSandboxed", "sandbox.allowUnsandboxedCommands", "sandbox.excludedCommands", "sandbox.filesystem.denyRead", "sandbox.filesystem.allowWrite", "sandbox.network.allowedDomains", "sandbox.network.strictAllowlist", "worktree.baseRef", "worktree.symlinkDirectories", "worktree.sparsePaths", "model", "effortLevel", "maxEffortLevel", "fallbackModel", "alwaysThinkingEnabled", "showThinkingSummaries", "fastMode", "promptCacheTtl", "subagentPromptCacheTtl", "language", "outputStyle", "autoMemoryEnabled", "autoMemoryDirectory", "autoCompactEnabled", "autoCompactWindow", "idleCompaction", "claudeMdExcludes", "bashOutputMaxChars", "skillListingBudgetFraction", "fileCheckpointingEnabled", "plansDirectory", "attribution.commit", "attribution.pr", "attribution.sessionUrl", "includeGitInstructions", "prUrlTemplate", "disableAllHooks", "enableAllProjectMcpServers", "enabledMcpjsonServers", "disabledMcpjsonServers", "allowedHttpHookUrls", "statusLine", "theme", "showTurnDuration", "preferredNotifChannel", "respectGitignore", "autoUpdatesChannel", "minimumVersion", "cleanupPeriodDays", "feedbackSurveyRate", "env", "hooks", "permissions", "autoMode", "sandbox", "worktree", "attribution", "requiredMinimumVersion", "includeCoAuthoredBy", "disableArtifact", "enableArtifact", "taskOutputMaxChars", "keybindingFlavor", "autoConnectIde", "autoInstallIdeExtension", "copyFullResponse", "copyOnSelect", "defaultToAgentsView", "diffTool", "externalEditorContext", "leftArrowOpensAgents", "prStatusFooterEnabled", "claudeInChromeDefaultEnabled", "advisorModel", "agent", "agentPushNotifEnabled", "allowAllClaudeAiMcps", "allowClaudeInChromeWithManagedMcp", "allowedChannelPlugins", "allowedMcpServers", "allowedProviders", "allowManagedHooksOnly", "allowManagedMcpServersOnly", "allowManagedPermissionRulesOnly", "apiKeyHelper", "askUserQuestionTimeout", "appendPlugins", "autoContinueAtUsageLimit", "autoScrollEnabled", "availableModels", "availableModelsMatch", "awaySummaryEnabled", "awsAuthRefresh", "awsCredentialExport", "axScreenReader", "bashEditDiffEnabled", "blockedMarketplaces", "browserExternalPageTools", "channelsEnabled", "claudeMd", "companyAnnouncements", "crossSessionInbound", "defaultShell", "deniedMcpServers", "deniedModels", "desktopSessionCleanupPeriodDays", "dialogExpiry", "disableAgentView", "disableAutoMode", "disableBrowserExternalNavigation", "disableBundledSkills", "disableClaudeAiConnectors", "disableCommandPluginSources", "disableDeepLinkRegistration", "disableDesktopLocalSessions", "disableMobileSimulatorTools", "disableRemoteControl", "disableSideloadFlags", "disableSkillShellExecution", "disableWorkflows", "editorMode", "emojiCompletionEnabled", "enabledPlugins", "enableWorkflows", "enforceAvailableModels", "extraKnownMarketplaces", "fastModePerSessionOptIn", "feedbackDrafts", "fileSuggestion", "footerLinksRegexes", "forceLoginGatewayUrl", "forceLoginMethod", "forceLoginOrgUUID", "forceRemoteSettingsRefresh", "gatewayInternalNetworks", "gcpAuthRefresh", "httpHookAllowedEnvVars", "inputNeededNotifEnabled", "isolatePeerMachines", "managedMcpServers", "managedSourcesBehavior", "maxProseWidth", "modelOverrides", "modelPicker", "modelPricing", "modelSettings", "otelHeadersHelper", "parentSettingsBehavior", "permissionExplainerEnabled", "pluginConfigs", "pluginSuggestionMarketplaces", "pluginTrustMessage", "policyHelper", "policyHelper.path", "policyHelper.refreshIntervalMs", "policyHelper.timeoutMs", "prefersReducedMotion", "prependPlugins", "processWrapper", "promptSuggestionEnabled", "remote.defaultEnvironmentId", "remoteControlAtStartup", "requiredMaximumVersion", "respondToBashCommands", "sandbox.allowAppleEvents", "sandbox.allowNestedUserNamespaces", "sandbox.bwrapPath", "sandbox.credentials", "sandbox.credentials.allowPlaintextInject", "sandbox.credentials.awsPairs", "sandbox.credentials.envVars", "sandbox.credentials.files", "sandbox.credentials.sigv4", "sandbox.enableWeakerNestedSandbox", "sandbox.enableWeakerNetworkIsolation", "sandbox.filesystem", "sandbox.filesystem.allowManagedReadPathsOnly", "sandbox.filesystem.allowRead", "sandbox.filesystem.denyWrite", "sandbox.filesystem.disabled", "sandbox.ignoreViolations", "sandbox.network", "sandbox.network.allowAllUnixSockets", "sandbox.network.allowLocalBinding", "sandbox.network.allowMachLookup", "sandbox.network.allowManagedDomainsOnly", "sandbox.network.allowUnixSockets", "sandbox.network.deniedDomains", "sandbox.network.httpProxyPort", "sandbox.network.socksProxyPort", "sandbox.network.tlsTerminate", "sandbox.ripgrep", "sandbox.socatPath", "showClearContextOnPlanAccept", "skillListingMaxDescChars", "skillOverrides", "skipAutoPermissionPrompt", "skipDangerousModePermissionPrompt", "skipWebFetchPreflight", "spellcheck", "spinnerTipsEnabled", "spinnerTipsOverride", "spinnerVerbs", "sshConfigs", "sshHostAllowlist", "sshHostCommands", "strictKnownMarketplaces", "strictPluginOnlyCustomization", "strictPluginOnlyCustomization.agents", "strictPluginOnlyCustomization.hooks", "strictPluginOnlyCustomization.mcp", "strictPluginOnlyCustomization.skills", "subagentStatusLine", "switchModelsOnFlag", "syncClaudeAiPlugins", "syncClaudeAiSkills", "syntaxHighlightingDisabled", "teammateDefaultModel", "teammateMode", "terminalProgressBarEnabled", "terminalTitleFromRename", "timeFormat", "timeZone", "tui", "ultracode", "useAutoModeDuringPlan", "verbose", "viewMode", "vimInsertModeRemaps", "voice", "voiceEnabled", "wheelScrollAccelerationEnabled", "workflowKeywordTriggerEnabled", "workflowSizeGuideline", "worktree.bgIsolation", "worktree.location", "wslInheritsWindowsSettings", "permissions.disableAutoMode", "autoMode.environment", "autoMode.allow"],
  "presets": [{"id": "safe-baseline", "label": "Safe baseline", "values": {"permissions.deny": "$suggest", "permissions.ask": "$suggest"}}, {"id": "solo-engineer", "label": "Solo engineer", "values": {"permissions.deny": "$suggest", "permissions.ask": "$suggest", "autoUpdatesChannel": "stable", "cleanupPeriodDays": 90}}, {"id": "team-project", "label": "Team project", "values": {"permissions.deny": "$suggest", "permissions.ask": "$suggest", "worktree.baseRef": "head", "worktree.symlinkDirectories": ["node_modules", ".venv"]}}, {"id": "empty", "label": "Empty", "values": {}}],
  "deprecated": {"includeCoAuthoredBy": "attribution", "disableArtifact": "enableArtifact"},
- "removed": ["taskOutputMaxChars", "keybindingFlavor"],
- "globalConfigOnly": ["autoConnectIde", "autoInstallIdeExtension", "copyFullResponse", "copyOnSelect", "defaultToAgentsView", "diffTool", "externalEditorContext", "leftArrowOpensAgents", "prStatusFooterEnabled", "claudeInChromeDefaultEnabled"],
- "managedOnly": ["requiredMinimumVersion"]
+ "removed": ["taskOutputMaxChars", "keybindingFlavor", "permissionExplainerEnabled", "teammateDefaultModel"],
+ "globalConfigOnly": ["autoConnectIde", "autoInstallIdeExtension", "copyFullResponse", "copyOnSelect", "defaultToAgentsView", "diffTool", "externalEditorContext", "leftArrowOpensAgents", "prStatusFooterEnabled", "claudeInChromeDefaultEnabled", "permissionExplainerEnabled", "teammateDefaultModel"],
+ "managedOnly": ["requiredMinimumVersion", "allowAllClaudeAiMcps", "allowClaudeInChromeWithManagedMcp", "allowedChannelPlugins", "allowedProviders", "allowManagedHooksOnly", "allowManagedMcpServersOnly", "allowManagedPermissionRulesOnly", "availableModelsMatch", "blockedMarketplaces", "browserExternalPageTools", "channelsEnabled", "claudeMd", "deniedModels", "disableBrowserExternalNavigation", "disableCommandPluginSources", "disableDesktopLocalSessions", "disableMobileSimulatorTools", "disableSideloadFlags", "forceRemoteSettingsRefresh", "gatewayInternalNetworks", "managedMcpServers", "managedSourcesBehavior", "modelPricing", "parentSettingsBehavior", "pluginSuggestionMarketplaces", "pluginTrustMessage", "policyHelper", "policyHelper.path", "policyHelper.refreshIntervalMs", "policyHelper.timeoutMs", "requiredMaximumVersion", "sandbox.bwrapPath", "sandbox.filesystem.allowManagedReadPathsOnly", "sandbox.network.allowManagedDomainsOnly", "sandbox.socatPath", "sshHostAllowlist", "strictKnownMarketplaces", "strictPluginOnlyCustomization", "strictPluginOnlyCustomization.agents", "strictPluginOnlyCustomization.hooks", "strictPluginOnlyCustomization.mcp", "strictPluginOnlyCustomization.skills", "wslInheritsWindowsSettings"],
+ "userOnly": ["askUserQuestionTimeout", "appendPlugins", "autoContinueAtUsageLimit", "autoMode", "autoMode.classifyAllShell", "axScreenReader", "bashEditDiffEnabled", "desktopSessionCleanupPeriodDays", "dialogExpiry", "feedbackDrafts", "footerLinksRegexes", "forceLoginGatewayUrl", "modelPicker", "pluginConfigs", "prependPlugins", "processWrapper", "sandbox.allowAppleEvents", "sandbox.allowNestedUserNamespaces", "sandbox.credentials.allowPlaintextInject", "sandbox.credentials.awsPairs", "sandbox.credentials.sigv4", "sandbox.filesystem.disabled", "sandbox.network.strictAllowlist", "sandbox.network.tlsTerminate", "sandbox.ripgrep", "skipAutoPermissionPrompt", "spellcheck", "sshConfigs", "sshHostCommands", "vimInsertModeRemaps", "worktree.location"],
+ "userOrLocalOnly": ["skipDangerousModePermissionPrompt", "syncClaudeAiPlugins", "syncClaudeAiSkills", "useAutoModeDuringPlan"]
 }
 </script>
 <script id="settings-tool-core">
@@ -793,8 +850,9 @@ var SettingsCore = (function () {
   }
 
   // selection: { key: value }. Returns the JSON text plus what was dropped and why.
-  function generate(catalog, selection, target) {
-    var root = {}, removed = [], invalid = [], count = 0;
+  // passthrough: keys loaded from a pasted file that Build does not edit. They are emitted unchanged.
+  function generate(catalog, selection, target, passthrough) {
+    var root = passthrough ? clone(passthrough) : {}, removed = [], invalid = [], count = 0;
     for (var i = 0; i < catalog.settings.length; i++) {
       var entry = catalog.settings[i];
       if (!Object.prototype.hasOwnProperty.call(selection, entry.key)) { continue; }
@@ -813,9 +871,375 @@ var SettingsCore = (function () {
     return { json: JSON.stringify(root, null, 2), removed: removed, invalid: invalid, count: count, note: note };
   }
 
+  /* ---- Check mode --------------------------------------------------------
+     Pasted text is untrusted. These functions only read it; they never run it,
+     and every string they hand back for display passes through maskText. */
+  var HIDDEN = "[secret hidden]";
+  var BROAD_ALLOW = ["Bash", "Bash(*)", "Bash(git *)", "Bash(bash *)", "Bash(sh *)", "Bash(python3 *)", "Bash(python *)", "Bash(node *)", "Bash(cat *)"];
+  var RULE_LISTS = ["deny", "ask", "allow"];   // precedence order: first match wins
+  var SEVERITY = { error: 0, warn: 1, tip: 2 };
+  var SECRET_START = /^(sk-|ghp_|gho_|github_pat_|xox|AKIA)/;
+  var SECRET_RUN = /[A-Za-z0-9+\/=_-]{32,}/;
+  // Inside free text (hook commands, rules): a known token prefix after a non-word character,
+  // or a 32+ run with a letter and a digit. "/" is left out of the run so file paths stay readable.
+  var TOKEN_IN_TEXT = /(^|[^A-Za-z0-9_])((?:sk-|ghp_|gho_|github_pat_|xox[a-z]-|AKIA)[A-Za-z0-9_\-]{3,})/g;
+  var RUN_IN_TEXT = /[A-Za-z0-9+=_-]{32,}/g;
+  var SUGGEST_LIMIT = 200;   // did-you-mean lookups per check; keeps a huge paste fast
+
+  function own(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
+  function isObj(v) { return v !== null && typeof v === "object" && !Array.isArray(v); }
+  // Own data property, even for a key named "__proto__": pasted keys never touch a prototype.
+  function setOwn(o, k, v) { Object.defineProperty(o, k, { value: v, enumerable: true, writable: true, configurable: true }); }
+  function clone(v) {
+    if (Array.isArray(v)) { return v.map(clone); }
+    if (isObj(v)) { var o = {}; Object.keys(v).forEach(function (k) { setOwn(o, k, clone(v[k])); }); return o; }
+    return v;
+  }
+  function getPath(root, key) {
+    var parts = key.split("."), node = root;
+    for (var i = 0; i < parts.length; i++) {
+      if (!isObj(node) || !own(node, parts[i])) { return undefined; }
+      node = node[parts[i]];
+    }
+    return node;
+  }
+  function deletePath(root, key) {
+    var parts = key.split("."), chain = [root], i;
+    for (i = 0; i < parts.length - 1; i++) { chain.push(chain[i][parts[i]]); }
+    delete chain[parts.length - 1][parts[parts.length - 1]];
+    for (i = parts.length - 2; i >= 0; i--) {     // drop parents this delete emptied
+      if (Object.keys(chain[i + 1]).length) { break; }
+      delete chain[i][parts[i]];
+    }
+  }
+
+  function looksSecret(v) { return typeof v === "string" && (SECRET_START.test(v.trim()) || SECRET_RUN.test(v)); }
+  function maskText(s, counter) {
+    var out = s.replace(TOKEN_IN_TEXT, function (m, pre) { if (counter) { counter.n++; } return pre + HIDDEN; });
+    return out.replace(RUN_IN_TEXT, function (m) {
+      if (!/[0-9]/.test(m) || !/[A-Za-z]/.test(m)) { return m; }
+      if (counter) { counter.n++; }
+      return HIDDEN;
+    });
+  }
+  // Deep copy with secrets hidden: a secret-looking env value is replaced whole (by envValue),
+  // and token-like parts of every other string are replaced by HIDDEN.
+  function maskDeep(v, path, envValue, counter) {
+    if (typeof v === "string") {
+      if (/^env\.[^.]+$/.test(path) && looksSecret(v)) { counter.n++; return envValue; }
+      return maskText(v, counter);
+    }
+    if (Array.isArray(v)) { return v.map(function (x, i) { return maskDeep(x, path + "[" + i + "]", envValue, counter); }); }
+    if (isObj(v)) {
+      var o = {};
+      Object.keys(v).forEach(function (k) { setOwn(o, k, maskDeep(v[k], path ? path + "." + k : k, envValue, counter)); });
+      return o;
+    }
+    return v;
+  }
+  function maskSecrets(v) { return maskDeep(v, "", HIDDEN, { n: 0 }); }
+
+  function finding(id, severity, path, problem, fix) {
+    return { id: id, severity: severity, path: path, problem: problem, fix: fix };
+  }
+  function short(s) { s = maskText(String(s)); return s.length > 80 ? s.slice(0, 77) + "..." : s; }
+  function preview(v) {
+    var s = typeof v === "string" ? v : JSON.stringify(v);
+    return s.length > 200 ? s.slice(0, 197) + "..." : s;
+  }
+
+  function lineCol(text, pos) {
+    var before = text.slice(0, pos), nl = before.lastIndexOf("\n");
+    return { line: before.split("\n").length, column: pos - nl };
+  }
+  // JSON.parse error messages differ between engines and may quote the text, so only
+  // the position is read out of them. The message itself is never shown.
+  function parseSettings(text) {
+    try { return { ok: true, value: JSON.parse(text) }; } catch (err) {
+      var msg = String(err && err.message), m, lc = null, pos = null;
+      if ((m = /position (\d+)/.exec(msg))) { pos = +m[1]; }
+      else if ((m = /line (\d+) column (\d+)/.exec(msg))) {
+        for (var i = 1, start = 0; i < +m[1]; i++) { start = text.indexOf("\n", start) + 1; }
+        pos = start + +m[2] - 1;
+      }
+      else if (text.charCodeAt(0) === 0xFEFF) { pos = 0; }
+      else if (/end of (JSON )?input|unexpected end/i.test(msg)) { pos = text.length; }
+      if (pos !== null) { lc = lineCol(text, pos); }
+      var where = lc ? "at line " + lc.line + ", column " + lc.column : "(line unknown)";
+      var problem = "Not valid JSON " + where + ".";
+      var fix = "Fix the text there. A missing comma, quote or bracket is the usual cause.";
+      if (text.charCodeAt(0) === 0xFEFF) {
+        problem = "The text starts with an invisible byte order mark (BOM), so it is not valid JSON.";
+        fix = "Save the file as UTF-8 without a BOM, or delete the first character.";
+      } else if (pos !== null && /^\/[\/*]/.test(text.substr(pos, 2))) {
+        problem = "Not valid JSON " + where + ". The text seems to hold comments, and settings.json cannot hold comments.";
+        fix = "Remove the // and /* */ comments.";
+      }
+      var f = finding("E1", "error", "", problem, fix);
+      if (lc) { f.line = lc.line; f.column = lc.column; }
+      return { ok: false, finding: f };
+    }
+  }
+
+  function editDistance(a, b) {
+    if (Math.abs(a.length - b.length) > 2) { return 3; }
+    var prev = [], cur, i, j;
+    for (j = 0; j <= b.length; j++) { prev[j] = j; }
+    for (i = 1; i <= a.length; i++) {
+      cur = [i];
+      for (j = 1; j <= b.length; j++) {
+        cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      }
+      prev = cur;
+    }
+    return prev[b.length];
+  }
+
+  function indexCatalog(catalog) {
+    // Prototype-free maps: a pasted key such as "__proto__" or "constructor" must not match anything built in.
+    var ix = { entry: Object.create(null), known: Object.create(null), parents: Object.create(null), container: Object.create(null) };
+    catalog.settings.forEach(function (e) {
+      ix.entry[e.key] = e;
+      var parts = e.key.split(".");
+      for (var i = 1; i < parts.length; i++) { ix.container[parts.slice(0, i).join(".")] = true; }
+    });
+    catalog.knownKeys.forEach(function (k) {
+      ix.known[k] = true;
+      var parts = k.split(".");
+      for (var i = 1; i < parts.length; i++) {
+        var p = parts.slice(0, i).join(".");
+        (ix.parents[p] = ix.parents[p] || []).push(k);
+      }
+    });
+    ix.top = catalog.knownKeys.filter(function (k) { return k.indexOf(".") < 0; })
+      .concat(Object.keys(ix.parents).filter(function (k) { return k.indexOf(".") < 0 && !ix.known[k]; }));
+    return ix;
+  }
+  function inList(list, k) { return (list || []).indexOf(k) >= 0; }
+
+  // E4, E5 (by key), W1, W2: walk the keys top-down; stop at the first finding for a key.
+  function checkKeys(catalog, ix, obj, prefix, target, out, budget) {
+    Object.keys(obj).forEach(function (k) {
+      var path = prefix ? prefix + "." + k : k, entry = ix.entry[path];
+      if (inList(catalog.removed, path)) {
+        out.push(finding("E4", "error", path, "This key was removed from Claude Code. It has no effect.", "Delete it."));
+      } else if (own(catalog.deprecated, path)) {
+        out.push(finding("W1", "warn", path, "This key is deprecated.", "Use " + catalog.deprecated[path] + " instead."));
+      } else if (inList(catalog.globalConfigOnly, path)) {
+        out.push(finding("E5", "error", path, "Claude Code ignores this key in a settings file.", "Move it to ~/.claude.json (the global config)."));
+      } else if (inList(catalog.managedOnly, path)) {
+        out.push(finding("E5", "error", path, "Only managed settings from your organization read this key.", "Delete it, or ask your admin to set it in managed settings."));
+      } else if (target !== "user" && (inList(catalog.userOnly, path) || (entry && entry.scopes.indexOf(target) < 0))) {
+        out.push(finding("E5", "error", path, "Ignored in a " + target + " file. Only the user file reads it.", "Move it to " + FILES.user + "."));
+      } else if (target === "project" && inList(catalog.userOrLocalOnly, path)) {
+        out.push(finding("E5", "error", path, "Ignored in a project file, so a repository cannot change it for you.", "Move it to " + FILES.local + " or " + FILES.user + "."));
+      } else if (!ix.known[path] && !ix.parents[path]) {
+        var siblings = prefix ? (ix.parents[prefix] || []).filter(function (s) { return s.split(".").length === path.split(".").length; }) : ix.top;
+        var best = null, bestD = 3;
+        if (budget.n-- > 0) {
+          siblings.forEach(function (s) { var d = editDistance(k, s.split(".").pop()); if (d < bestD) { bestD = d; best = s; } });
+        }
+        out.push(best
+          ? finding("W2", "warn", path, "Unknown key. Did you mean " + best + "?", "Rename it to " + best + ".")
+          : finding("W2", "warn", path, "Unknown key, kept as-is.", "Check the spelling against the settings reference, or delete it."));
+      } else if (ix.parents[path] && isObj(obj[k])) {
+        checkKeys(catalog, ix, obj[k], path, target, out, budget);
+      }
+    });
+  }
+
+  // E3, E5 (by value), W7, I2 for catalog keys that are present.
+  function checkValues(catalog, ix, data, target, out) {
+    Object.keys(ix.container).forEach(function (c) {
+      var v = getPath(data, c);
+      if (v !== undefined && !isObj(v) && !(c === "attribution" && v === false)) {
+        out.push(finding("E3", "error", c, "Must be an object, not " + (v === null ? "null" : Array.isArray(v) ? "a list" : typeof v) + ". The keys under it have no effect.", "Write it as { ... } with its keys inside, or delete it."));
+      }
+    });
+    catalog.settings.forEach(function (e) {
+      var v = getPath(data, e.key);
+      if (v === undefined) { return; }
+      var res;
+      if (e.asCommandObject) {
+        res = isObj(v) && v.type === "command" && typeof v.command === "string" && v.command !== ""
+          ? { ok: true } : { ok: false, error: "Must be {\"type\": \"command\", \"command\": \"...\"}." };
+      } else if (e.type === "string" && v === "") {
+        res = { ok: false, error: "Must not be empty." };
+      } else {
+        res = validateValue(e, v);
+      }
+      if (!res.ok) { out.push(finding("E3", "error", e.key, "Wrong value. " + res.error, "Change the value, or delete the key.")); return; }
+      if (e.scopes.indexOf(target) < 0) { return; }   // already E5 by key
+      if (!honoured(e, v, target)) {
+        out.push(finding("E5", "error", e.key, "The value " + JSON.stringify(v) + " is read from the user file only.", "Move it to " + FILES.user + ", or pick another value."));
+        return;
+      }
+      if ((e.lowersSafety && e.type === "bool" && v === true) || inList(e.lowersSafetyValues, v)) {
+        out.push(finding("W7", "warn", e.key, "This value lowers safety: " + e.why, "Delete it unless you need it on purpose."));
+      }
+      if (e.since) {
+        out.push(finding("I2", "tip", e.key, "Needs Claude Code " + e.since + " or later.", "Older versions ignore it. Check with claude --version."));
+      }
+    });
+  }
+
+  function ruleLists(data) {
+    var p = getPath(data, "permissions"), lists = {};
+    RULE_LISTS.forEach(function (n) {
+      var l = isObj(p) && Array.isArray(p[n]) ? p[n] : [];
+      lists[n] = l.map(function (r) { return typeof r === "string" ? r.trim() : null; });
+    });
+    return lists;
+  }
+
+  // W3, W4, I1 on the permission rule lists.
+  function checkRules(catalog, data, out) {
+    var lists = ruleLists(data);
+    RULE_LISTS.forEach(function (n) {
+      lists[n].forEach(function (r, i) {
+        if (r === null) { return; }
+        var path = "permissions." + n + "[" + i + "]";
+        if (n === "allow" && BROAD_ALLOW.indexOf(r) >= 0) {
+          out.push(finding("W3", "warn", path, "\"" + short(r) + "\" pre-approves nearly any command of that kind.", "Allow the exact commands you need, such as Bash(git status)."));
+        }
+        if (lists[n].indexOf(r) < i) {
+          out.push(finding("W4", "warn", path, "\"" + short(r) + "\" is already in this list.", "Delete the duplicate."));
+        } else if (n === "allow") {
+          var other = lists.deny.indexOf(r) >= 0 ? "deny" : lists.ask.indexOf(r) >= 0 ? "ask" : null;
+          if (other) {
+            out.push(finding("W4", "warn", path, "\"" + short(r) + "\" is also in " + other + ". Rules are checked deny → ask → allow and the first match wins, so this allow rule never applies.", "Delete it from allow, or from " + other + " if you meant to allow it."));
+          }
+        }
+      });
+    });
+    var deny = lists.deny.filter(function (r) { return r !== null; }).join("\n");
+    var missing = [];
+    if (deny.indexOf(".env") < 0) { missing.push(".env"); }
+    if (deny.indexOf(".ssh") < 0) { missing.push("~/.ssh"); }
+    if (missing.length) {
+      var entry = find(catalog, "permissions.deny");
+      var add = (entry.suggest || []).filter(function (s) { return lists.deny.indexOf(s) < 0; });
+      var f = finding("I1", "tip", "permissions.deny", "No deny rule blocks reading " + missing.join(" or ") + ".", "Add the suggested deny rules in Build.");
+      f.action = { label: "Add in Build", add: { "permissions.deny": add } };
+      out.push(f);
+    }
+  }
+
+  function eachHook(data, fn) {
+    var hooks = getPath(data, "hooks");
+    if (!isObj(hooks)) { return; }
+    Object.keys(hooks).forEach(function (ev) {
+      if (!Array.isArray(hooks[ev])) { return; }
+      hooks[ev].forEach(function (group, i) {
+        if (!isObj(group) || !Array.isArray(group.hooks)) { return; }
+        group.hooks.forEach(function (h, j) {
+          var cmd = isObj(h) && typeof h.command === "string" ? h.command : null;
+          fn("hooks." + ev + "[" + i + "].hooks[" + j + "].command", ev, typeof group.matcher === "string" && group.matcher ? group.matcher : "*", cmd, h);
+        });
+      });
+    });
+  }
+
+  // W5 on env values, W6 on hook commands.
+  function checkSecretsAndHooks(data, out) {
+    var env = getPath(data, "env");
+    if (isObj(env)) {
+      Object.keys(env).forEach(function (k) {
+        if (looksSecret(env[k])) {
+          out.push(finding("W5", "warn", "env." + k, "Looks like a secret (value hidden). Values in settings files are plain text.", "Delete it here. Use apiKeyHelper or set it in your shell instead."));
+        }
+      });
+    }
+    eachHook(data, function (path, ev, matcher, cmd) {
+      if (cmd !== null && /\btee\b[^|;&]*\s\/tmp\b|>>?\s*\/tmp\b/.test(cmd)) {
+        out.push(finding("W6", "warn", path, "This hook copies its input to /tmp, where other users on the machine can read it.", "Write to a private folder (for example under ~/.claude) or do not save the input."));
+      }
+    });
+  }
+
+  // Map data. Built from the masked copy, so it never holds a secret.
+  function buildTree(catalog, ix, data) {
+    var cats = {}, tree = { categories: [], permissions: null, hooks: [], other: [] };
+    function walk(obj, prefix) {
+      Object.keys(obj).forEach(function (k) {
+        var path = prefix ? prefix + "." + k : k, v = obj[k], m;
+        if (path === "hooks" && isObj(v)) { return; }
+        if ((m = /^permissions\.(deny|ask|allow)$/.exec(path)) && Array.isArray(v)) {
+          tree.permissions[m[1]] = v.map(function (r, i) { return { path: path + "[" + i + "]", rule: preview(r) }; });
+          return;
+        }
+        if (ix.entry[path]) {
+          var c = ix.entry[path].category;
+          (cats[c] = cats[c] || []).push({ path: path, value: preview(v) });
+          return;
+        }
+        if (ix.container[path] && isObj(v)) { walk(v, path); return; }
+        tree.other.push({ path: path, value: preview(v) });
+      });
+    }
+    if (isObj(data.permissions)) { tree.permissions = { deny: [], ask: [], allow: [] }; }
+    walk(data, "");
+    catalog.categories.forEach(function (c) { if (cats[c]) { tree.categories.push({ name: c, items: cats[c] }); } });
+    eachHook(data, function (path, ev, matcher, cmd, h) {
+      tree.hooks.push({ path: path, event: ev, matcher: matcher, command: cmd !== null ? preview(cmd) : "(" + (isObj(h) && typeof h.type === "string" ? h.type : "hook") + ")" });
+    });
+    return tree;
+  }
+
+  // text: pasted settings.json; target: "user" | "project" | "local".
+  function check(catalog, text, target) {
+    if (!String(text).trim()) { return { findings: [], tree: null, empty: true }; }
+    var parsed = parseSettings(text);
+    if (!parsed.ok) { return { findings: [parsed.finding], tree: null, empty: false }; }
+    var data = parsed.value;
+    if (!isObj(data)) {
+      return { findings: [finding("E2", "error", "", "The file must be one JSON object, written as { ... }.", "Wrap the settings in { } as key and value pairs.")], tree: null, empty: false };
+    }
+    var ix = indexCatalog(catalog), out = [];
+    checkKeys(catalog, ix, data, "", target, out, { n: SUGGEST_LIMIT });
+    checkValues(catalog, ix, data, target, out);
+    checkRules(catalog, data, out);
+    checkSecretsAndHooks(data, out);
+    var order = out.map(function (f, i) { return [SEVERITY[f.severity], i, f]; });
+    order.sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; });
+    return { findings: order.map(function (x) { return x[2]; }), tree: buildTree(catalog, ix, maskSecrets(data)), empty: false };
+  }
+
+  // Pretty-print, 2 spaces, the user's key order. Secrets hidden unless keepSecrets.
+  function format(text, keepSecrets) {
+    var parsed = parseSettings(text);
+    if (!parsed.ok) { return { ok: false, text: "", findings: [parsed.finding] }; }
+    return { ok: true, text: JSON.stringify(keepSecrets ? parsed.value : maskSecrets(parsed.value), null, 2), findings: [] };
+  }
+
+  // Split a parsed file into Build selection (catalog keys Build can edit) and passthrough
+  // (everything else, emitted unchanged), so a round trip loses nothing.
+  // Without keepSecrets: secret env values become "" and token-like text becomes HIDDEN; masked counts them.
+  function fromSettings(catalog, parsed, opts) {
+    var counter = { n: 0 };
+    var rest = opts && opts.keepSecrets ? clone(parsed) : maskDeep(parsed, "", "", counter);
+    var selection = {};
+    catalog.settings.forEach(function (e) {
+      var v = getPath(rest, e.key);
+      if (v === undefined) { return; }
+      if (e.asCommandObject) {
+        if (!isObj(v) || Object.keys(v).sort().join() !== "command,type" || v.type !== "command" || !validateValue(e, v.command).ok) { return; }
+        selection[e.key] = v.command;
+      } else {
+        if (!validateValue(e, v).ok) { return; }
+        if ((e.type === "stringList" && !v.length) || (e.type === "object" && !Object.keys(v).length)) { return; }
+        selection[e.key] = clone(v);
+      }
+      deletePath(rest, e.key);
+    });
+    return { selection: selection, passthrough: rest, masked: counter.n };
+  }
+
   return {
     FILES: FILES, loadCatalog: loadCatalog, find: find, initialValue: initialValue,
-    validateValue: validateValue, applyPreset: applyPreset, generate: generate
+    validateValue: validateValue, applyPreset: applyPreset, generate: generate,
+    check: check, format: format, fromSettings: fromSettings, maskSecrets: maskSecrets,
+    parseSettings: parseSettings, looksSecret: looksSecret
   };
 })();
 </script>
@@ -827,7 +1251,7 @@ var SettingsCore = (function () {
   if (!app) { return; }
   var catalog = core.loadCatalog(document.getElementById("settings-catalog").textContent);
   var REF = "https://code.claude.com/docs/en/settings-reference";
-  var state = { target: "user", selection: {}, filter: "", pending: null };
+  var state = { target: "user", selection: {}, filter: "", pending: null, passthrough: null, loadNote: "" };
   var rows = {};      // key -> { root, check, ctl, err, setControl }
   var details = {};   // category -> { root, summary, list }
 
@@ -928,6 +1352,7 @@ var SettingsCore = (function () {
     var tags = [];
     tags.push(el("span", { "class": "tag tag-inert", text: entry.scopes.length === 1 ? entry.scopes[0] + " file only" : "all files" }));
     if (entry.lowersSafety) { tags.push(el("span", { "class": "tag tag-block", text: "lowers safety" })); }
+    if (entry.lowersSafetyValues) { tags.push(el("span", { "class": "tag tag-block", text: entry.lowersSafetyValues.join(", ") + " lowers safety" })); }
     var link = el("a", {
       href: REF + "#:~:text=" + encodeURIComponent(entry.key), target: "_blank",
       rel: "noopener noreferrer", "aria-label": "Reference for " + entry.key, text: "ref"
@@ -972,12 +1397,14 @@ var SettingsCore = (function () {
 
   function refresh() {
     var counts = {}, shown = {};
+    var out = core.generate(catalog, state.selection, state.target, state.passthrough);
     Object.keys(rows).forEach(function (k) {
       var r = rows[k];
       refreshRow(r);
       var c = r.entry.category;
       if (!r.root.hidden) { shown[c] = (shown[c] || 0) + 1; }
-      if (r.check.checked && r.entry.scopes.indexOf(state.target) >= 0) { counts[c] = (counts[c] || 0) + 1; }
+      // "on" counts only keys that reach the output file (not ones removed for this target).
+      if (r.check.checked && r.entry.scopes.indexOf(state.target) >= 0 && out.removed.indexOf(k) < 0) { counts[c] = (counts[c] || 0) + 1; }
     });
     catalog.categories.forEach(function (c) {
       var d = details[c];
@@ -985,13 +1412,16 @@ var SettingsCore = (function () {
       d.summary.textContent = c + " (" + (counts[c] || 0) + " on)";
       if (state.filter && shown[c]) { d.root.open = true; }
     });
-    var out = core.generate(catalog, state.selection, state.target);
     $("st-output").textContent = out.json;
     $("st-file").textContent = core.FILES[state.target];
     $("st-note").textContent = out.note;
+    var kept = state.passthrough ? Object.keys(state.passthrough) : [];
+    $("st-kept").textContent = (kept.length
+      ? "Kept as-is from your pasted file: " + kept.join(", ") + ". Pick a preset to start over. " : "") + state.loadNote;
     var valid = true;
     try { JSON.parse(out.json); } catch (e) { valid = false; }
-    $("st-status").textContent = out.count + (out.count === 1 ? " key" : " keys") + " · " + (valid ? "valid" : "invalid");
+    $("st-status").textContent = out.count + (out.count === 1 ? " key" : " keys") +
+      (kept.length ? " + " + kept.length + " kept" : "") + " · " + (valid ? "valid" : "invalid");
   }
 
   function syncControls() {
@@ -1015,13 +1445,14 @@ var SettingsCore = (function () {
   var presetBox = $("st-presets"), confirmBox = $("st-confirm");
   function applyNow(id) {
     state.selection = core.applyPreset(catalog, id);
+    state.passthrough = null; state.loadNote = "";
     state.pending = null; confirmBox.hidden = true;
     syncControls(); refresh();
   }
   catalog.presets.forEach(function (p) {
     var b = el("button", { type: "button", "class": "st-btn", text: p.label });
     b.addEventListener("click", function () {
-      var n = Object.keys(state.selection).length;
+      var n = Object.keys(state.selection).length + (state.passthrough ? Object.keys(state.passthrough).length : 0);
       if (!n) { applyNow(p.id); return; }
       state.pending = p.id;
       $("st-confirm-text").textContent = "Replace your " + n + (n === 1 ? " pick" : " picks") + " with " + p.label + "?";
@@ -1036,6 +1467,10 @@ var SettingsCore = (function () {
   [].forEach.call(document.querySelectorAll('input[name="st-target"]'), function (r) {
     r.addEventListener("change", function () { if (r.checked) { state.target = r.value; refresh(); } });
   });
+  function setBuildTarget(t) {
+    state.target = t;
+    [].forEach.call(document.querySelectorAll('input[name="st-target"]'), function (r) { r.checked = r.value === t; });
+  }
   $("st-filter").addEventListener("input", function (e) { state.filter = e.target.value.trim().toLowerCase(); refresh(); });
 
   // Copy: clipboard when allowed, otherwise select the text so Ctrl+C works.
@@ -1052,6 +1487,186 @@ var SettingsCore = (function () {
       navigator.clipboard.writeText(out.textContent).then(function () { msg.textContent = "Copied."; }, fallback);
     } else { fallback(); }
   });
+
+  /* ---- mode tabs ----------------------------------------------------- */
+  var tabs = [[$("st-tab-build"), $("st-build-panel")], [$("st-tab-check"), $("st-check-panel")]];
+  function selectTab(i, focus) {
+    tabs.forEach(function (t, j) {
+      t[0].setAttribute("aria-selected", i === j ? "true" : "false");
+      t[0].tabIndex = i === j ? 0 : -1;
+      t[1].hidden = i !== j;
+    });
+    if (focus) { tabs[i][0].focus(); }
+  }
+  tabs.forEach(function (t, i) {
+    t[0].addEventListener("click", function () { selectTab(i, false); });
+    t[0].addEventListener("keydown", function (e) {
+      var next = { ArrowRight: (i + 1) % tabs.length, ArrowLeft: (i + tabs.length - 1) % tabs.length, Home: 0, End: tabs.length - 1 }[e.key];
+      if (next !== undefined) { e.preventDefault(); selectTab(next, true); }
+    });
+  });
+
+  /* ---- Check mode ---------------------------------------------------- */
+  // Pasted text is untrusted: every value reaches the page through textContent (el's "text"),
+  // and the map and findings are built from a copy with secrets hidden.
+  var SHOW_MAX = 300;   // rows drawn per list; a huge paste stays responsive
+  var SEV = { error: ["tag tag-block", "\u25CF", "error"], warn: ["tag tag-inert", "\u25B2", "warn"], tip: ["tag tag-advise", "\u25CB", "tip"] };
+  var paste = $("st-paste"), keep = $("st-keep"), msgBox = $("st-check-msg");
+  var mapNodes = [];   // [{ path, node }] for finding -> node navigation
+
+  function checkTarget() {
+    var r = document.querySelector('input[name="st-check-target"]:checked');
+    return r ? r.value : "user";
+  }
+  function plural(n, one, many) { return n + " " + (n === 1 ? one : many); }
+  function sevTag(sev, label) {
+    var s = SEV[sev];
+    return el("span", { "class": s[0] }, [el("span", { "aria-hidden": "true", text: s[1] + " " }), el("span", { text: label || s[2] })]);
+  }
+
+  // Best map node for a finding path: itself, else its nearest ancestor, else its first descendant.
+  function nodeFor(path) {
+    var best = null, bestLen = -1, child = null;
+    mapNodes.forEach(function (m) {
+      if (m.path === path) { best = m; bestLen = Infinity; return; }
+      if (path && (path.indexOf(m.path + ".") === 0 || path.indexOf(m.path + "[") === 0) && m.path.length > bestLen) { best = m; bestLen = m.path.length; }
+      if (!child && path && (m.path.indexOf(path + ".") === 0 || m.path.indexOf(path + "[") === 0)) { child = m; }
+    });
+    return best || child;
+  }
+  function goTo(path) {
+    var m = nodeFor(path);
+    if (!m) { return; }
+    [].forEach.call($("st-map").querySelectorAll(".st-hit"), function (n) { n.classList.remove("st-hit"); });
+    m.node.classList.add("st-hit");
+    m.node.scrollIntoView({ block: "nearest" });
+    m.node.focus({ preventScroll: true });
+  }
+
+  function addNode(list, path, kids) {
+    var li = el("li", { "class": "st-node", "data-path": path, tabindex: "-1" }, kids);
+    mapNodes.push({ path: path, node: li });
+    list.appendChild(li);
+    return li;
+  }
+  function capped(items, list, draw) {
+    items.slice(0, SHOW_MAX).forEach(draw);
+    if (items.length > SHOW_MAX) { list.appendChild(el("li", { "class": "st-hint", text: (items.length - SHOW_MAX) + " more not shown." })); }
+  }
+
+  function renderMap(tree) {
+    var map = $("st-map");
+    map.textContent = ""; mapNodes = [];
+    if (tree.permissions) {
+      var perms = el("div", { "class": "st-perms" });
+      map.appendChild(el("h4", { text: "Permissions" }));
+      map.appendChild(el("p", { "class": "st-hint", text: "Checked in this order: deny, then ask, then allow. The first match wins." }));
+      ["deny", "ask", "allow"].forEach(function (n) {
+        var rules = tree.permissions[n], ul = el("ul", { "class": "st-tree" });
+        var col = el("div", { "class": "st-col", "data-path": "permissions." + n, tabindex: "-1" },
+          [el("p", { "class": "st-colhead" }, [el("code", { text: n }), el("span", { text: " " + rules.length })]), ul]);
+        mapNodes.push({ path: "permissions." + n, node: col });
+        capped(rules, ul, function (r) { addNode(ul, r.path, [el("code", { text: r.rule })]); });
+        perms.appendChild(col);
+      });
+      map.appendChild(perms);
+    }
+    if (tree.hooks.length) {
+      var hl = el("ul", { "class": "st-tree" });
+      map.appendChild(el("h4", { text: "Hooks (read-only)" }));
+      capped(tree.hooks, hl, function (h) {
+        addNode(hl, h.path, [el("span", { text: h.event }), el("span", { "class": "st-sep", "aria-hidden": "true", text: "\u25B8" }),
+          el("span", { text: h.matcher }), el("span", { "class": "st-sep", "aria-hidden": "true", text: "\u25B8" }), el("code", { text: h.command })]);
+      });
+      map.appendChild(hl);
+    }
+    function group(title, items) {
+      var ul = el("ul", { "class": "st-tree" });
+      map.appendChild(el("h4", { text: title }));
+      capped(items, ul, function (it) { addNode(ul, it.path, [el("code", { text: it.path }), el("span", { "class": "st-val", text: it.value })]); });
+      map.appendChild(ul);
+    }
+    tree.categories.forEach(function (c) { group(c.name, c.items); });
+    if (tree.other.length) { group("Other keys (kept as-is)", tree.other); }
+    if (!map.firstChild) { map.appendChild(el("p", { "class": "st-hint", text: "The file is an empty object." })); }
+  }
+
+  function renderFindings(findings) {
+    var list = $("st-findings"), n = { error: 0, warn: 0, tip: 0 };
+    list.textContent = "";
+    findings.forEach(function (f) { n[f.severity]++; });
+    $("st-findings-head").textContent = "Findings (" + plural(n.error, "error", "errors") + " \u00B7 " +
+      plural(n.warn, "warning", "warnings") + " \u00B7 " + plural(n.tip, "tip", "tips") + ")";
+    if (!findings.length) { list.appendChild(el("li", { text: "No problems found." })); }
+    capped(findings, list, function (f) {
+      var where = el("button", { type: "button", "class": "st-path", text: f.path || "whole file", "aria-label": f.id + " at " + (f.path || "whole file") + ": show in map" });
+      where.addEventListener("click", function () { goTo(f.path); });
+      var msg = el("div", { "class": "st-msg" }, [el("span", { text: f.problem }), el("span", { "class": "st-fixline", text: "Fix: " + f.fix })]);
+      if (f.action) {
+        var b = el("button", { type: "button", "class": "st-btn", text: f.action.label });
+        b.addEventListener("click", function () { loadIntoBuild(f.action.add); });
+        msg.appendChild(b);
+      }
+      list.appendChild(el("li", {}, [sevTag(f.severity, f.severity + " " + f.id), where, msg]));
+      var m = nodeFor(f.path);
+      if (m) { m.node.appendChild(sevTag(f.severity, f.id)); }
+    });
+  }
+
+  function showFormatted(text) {
+    $("st-formatted").textContent = text;
+    $("st-formatted-box").hidden = !text;
+  }
+  function runCheck() {
+    var res = core.check(catalog, paste.value, checkTarget());
+    if (res.empty) { msgBox.textContent = "Paste a settings.json first."; $("st-results").hidden = true; showFormatted(""); return res; }
+    msgBox.textContent = "";
+    // The formatted view always shows the text that was just checked, never an older paste.
+    if (!$("st-formatted-box").hidden) { showFormatted(core.format(paste.value, keep.checked).text); }
+    if (res.tree) { renderMap(res.tree); } else { $("st-map").textContent = ""; mapNodes = []; }
+    renderFindings(res.findings);
+    $("st-results").hidden = false;
+    return res;
+  }
+  // A paste deep enough to overflow the stack must not break the page.
+  function safely(fn) {
+    return function () {
+      try { fn.apply(null, arguments); } catch (e) { msgBox.textContent = "This text is too large or too deeply nested to check here."; }
+    };
+  }
+
+  function loadIntoBuild(add) {
+    var res = runCheck();
+    if (res.empty) { return; }
+    var parsed = core.parseSettings(paste.value);
+    if (!parsed.ok || parsed.value === null || typeof parsed.value !== "object" || Array.isArray(parsed.value)) {
+      msgBox.textContent = "Fix the errors above first. Only a valid settings object can be loaded into Build.";
+      return;
+    }
+    var loaded = core.fromSettings(catalog, parsed.value, { keepSecrets: keep.checked });
+    state.selection = loaded.selection;
+    state.passthrough = Object.keys(loaded.passthrough).length ? loaded.passthrough : null;
+    state.loadNote = loaded.masked
+      ? plural(loaded.masked, "secret value was", "secret values were") + " removed. Set them in your shell or with apiKeyHelper, or tick \u201CKeep secret values\u201D in Check." : "";
+    Object.keys(add || {}).forEach(function (k) {
+      var cur = state.selection[k] || [];
+      state.selection[k] = cur.concat(add[k].filter(function (x) { return cur.indexOf(x) < 0; }));
+    });
+    state.pending = null; confirmBox.hidden = true;
+    setBuildTarget(checkTarget());
+    syncControls(); refresh();
+    selectTab(0, true);
+  }
+
+  $("st-check").addEventListener("click", safely(runCheck));
+  $("st-format").addEventListener("click", safely(function () {
+    var out = core.format(paste.value, keep.checked);
+    if (!paste.value.trim()) { showFormatted(""); msgBox.textContent = "Paste a settings.json first."; return; }
+    showFormatted(out.text);
+    if (!out.ok) { runCheck(); }
+  }));
+  $("st-edit").addEventListener("click", safely(function () { loadIntoBuild(null); }));
+  keep.addEventListener("change", function () { if (!$("st-formatted-box").hidden) { showFormatted(core.format(paste.value, keep.checked).text); } });
 
   refresh();
 })();
