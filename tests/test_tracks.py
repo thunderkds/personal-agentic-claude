@@ -222,14 +222,16 @@ def test_ac2_agents_md_size_caps():
 # ── AC 3 — the Decision record template ───────────────────────────────────────────────────
 def test_ac3_template_holds_every_d5_field_in_order():
     text = _read(TEMPLATE)
-    assert re.search(r"^## T\S+ — .+ · (?:minimal|<track>)", text, re.M) or \
-        re.search(r"^## <ID> — <title> · <track>$", text, re.M), "no ID/title/track heading"
+    assert re.search(r"^## <ID> — <title> · <track>$", text, re.M), "no ID/title/track heading"
+    record = text[text.find("## <ID>"):]
     at = 0
     for field in RECORD_FIELDS:
-        hit = text.find(f"**{field}**", at)
+        # D5: `Assumed:` is a prefix on a line inside `Decisions:`, not a field of its own.
+        needle = f"- {field}" if field == "Assumed:" else f"**{field}**"
+        hit = record.find(needle, at)
         assert hit != -1, f"field {field!r} missing or out of order"
         at = hit
-    not_done = text[text.find("**Not done:**"):]
+    not_done = record[record.find("**Not done:**"):]
     assert "merge" in not_done.lower(), "Not done: must always include the merge"
 
 

@@ -30,8 +30,33 @@ BASE_REF = "c573bbf"
 REPLACED_SPANS = [
     ("# Claude Project Supervisor Guidelines", "# AGENTS.md — Project Supervisor Guidelines"),
     ("CLAUDE.md's Writing Principles", "AGENTS.md's Writing Principles"),
+    # T178 (two tracks, `docs/claude-md/tracks.md`): Hard-Stop Gate 1 and the code-review
+    # Permanent Rule are scoped to the extended track. Pinned exactly by `tests/test_tracks.py`.
+    ("**No TASK_GUIDE = no work.** If the user",
+     "**No TASK_GUIDE = no work.** This gate applies to the extended track. If the user"),
+    ("implementation code directly.",
+     "implementation code directly. On the minimal track the Supervisor writes the code itself, "
+     "with no guide, and ends with a Decision record (`docs/claude-md/tracks.md`)."),
+    ("Stage 4 (code-review) is mandatory for every task.",
+     "Stage 4 (code-review) is mandatory for every extended-track task."),
 ]
 AC6_HEADING = re.compile(r"^## .*cannot enforce", re.IGNORECASE)
+# T178: the one later section allowed outside the opening block and the AC 6 section. Its
+# content is pinned by `tests/test_tracks.py` (<= 12 lines, the short rule, the pointer).
+ADDED_SECTIONS = ("## Tracks",)
+
+
+def _without_added_sections(lines: list[str]) -> list[str]:
+    out, skipping = [], False
+    for line in lines:
+        if line.strip() in ADDED_SECTIONS:
+            skipping = True
+            continue
+        if skipping and (line.startswith("## ") or line.strip() == "---"):
+            skipping = False
+        if not skipping:
+            out.append(line)
+    return out
 
 
 def _git_show(rel: str, ref: str) -> bytes:
@@ -71,7 +96,7 @@ def test_ac1_agents_md_carries_every_base_claude_md_line_in_order():
     assert all(n == 1 for n in used.values()), f"each allowed edit must hit one base line: {used}"
 
     lines = _text(AGENTS_MD).splitlines()
-    body = lines[: _ac6_start(lines)]
+    body = _without_added_sections(lines[: _ac6_start(lines)])
     # The AC 6 section is preceded by its own `---` separator; it is part of the addition.
     while body and body[-1].strip() in ("", "---"):
         body.pop()

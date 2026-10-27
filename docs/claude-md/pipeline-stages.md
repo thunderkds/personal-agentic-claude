@@ -2,6 +2,11 @@
 
 > Extracted from `AGENTS.md` — full detail for Stage 0.5 through Stage 5. See `AGENTS.md` for the pointer back to this file and the Mandatory Session Startup / Hard-Stop Gates, which remain inline there.
 
+These 5 stages are the **extended track** (`docs/claude-md/tracks.md`). The track rule sends big, risky or
+multi-session work here, and small low-risk work to the minimal track. Hard-Stop Gate 1 applies to the
+extended track only. Gates 2–6 still apply to it unchanged. Gate 5 (a new test with its pasted output) also
+applies to the minimal track, through the Decision record's `Checked:` field.
+
 Strictly follow this order. Never skip or reorder stages.
 
 ---
