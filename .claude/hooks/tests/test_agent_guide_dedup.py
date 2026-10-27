@@ -126,7 +126,8 @@ T069_BASELINE_REF = "8d6d56b"
 # REPOINTED AGAIN by T173 (`CLAUDE.md`@`a830bb8` -> `AGENTS.md`@`8080fdb`, T173's edit commit; D2 user-approved 2026-10-26): the doctrine moved from CLAUDE.md to AGENTS.md and CLAUDE.md is the one-line import `@AGENTS.md`. The pinned file is now AGENTS.md. Repointed, NOT deleted.
 # REPOINTED AGAIN by T178 (`8080fdb` -> `fbe55ab`, T178's edit commit; design D1-D6 user-approved 2026-10-27): AGENTS.md gains a `## Tracks` paragraph, and Hard-Stop Gate 1 and the code-review Permanent Rule are scoped to the extended track. Three post-heading blank lines were removed to stay at 196 lines. Nothing collapsed into the agent guides. Repointed, NOT deleted.
 # Repointed once more by T178's AC 8 fix (`fbe55ab` -> `f72b34d`): the `## Tracks` paragraph gains the user-data-change condition in place (no new line, still 196 lines). Repointed, NOT deleted.
-T070_BASELINE_REF = "f72b34d"  # T178 AC 8 fix (was fbe55ab; 8080fdb before, T173)
+# Repointed once more by T178's AC 8 re-run 1 fix (`f72b34d` -> `45c4ca7`): the `## Tracks` paragraph now says to follow tracks.md's 7 steps, copy the record template and commit without asking (same line, still 196 lines). Repointed, NOT deleted.
+T070_BASELINE_REF = "45c4ca7"  # T178 AC 8 re-run 1 fix (was f72b34d; fbe55ab, 8080fdb before)
 
 # T082's own edit commit (same commit as the repoint above). T082 adds a mandatory Base Rule bullet
 # to `general-agent-template.md` too (the same untrusted-content pointer) — a legitimate, required
