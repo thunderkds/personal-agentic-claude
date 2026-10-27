@@ -34,8 +34,33 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured by common-infrastructure at 2026-10-27T14:42:24Z on `7e73811` (before any T182
+implementation commit), command `python3 /tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-personal-agentic-claude/55ed681c-3b51-48e8-a01f-66698e543862/scratchpad/t182_demo.py /home/hungnguyenhuu/workspace/pets/wt-t182-auto-verify`
+(a temp git project with the kit's hooks and `settings.json`; T951 is `Mode: auto`, Ready for Review, `verify`
+row unfilled; `claude` on `PATH` is a stub that logs its argv and prints `**Verdict:** PASS`):
+
+```
+$ date -u  -> 2026-10-27T14:42:24Z
+kit: /home/hungnguyenhuu/workspace/pets/wt-t182-auto-verify @ 7e73811
+temp project head: 46e2d0f591c4; stub claude: /tmp/t182_demo_4pne2y_n/bin/claude
+
+== 1. Stop hooks fire for the [auto] task T951 at Ready for Review ==
+  stop_review_reminder.py: exit 0 in 0.02s
+  stop_auto_mode_check.py: exit 0 in 0.03s
+  stub claude calls: (none)
+  verify row: | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed] |
+  .claude/verify-runs/: (absent)
+
+== 2. hand-typed row, no D5 record, no test run in the trace ==
+  git merge feat/t951: BLOCK — • Tasks in Ready for Review missing Stage 5 verify evidence: T951 (evidence row present but no verified tool call in memory/event-trace/T951.jsonl)
+
+== 3. same hand-typed row, a test run in the trace ==
+  git merge feat/t951: ALLOW
+```
+
+Today no Stop hook starts a `/verify` run (the stub is never called, the row stays unfilled). A hand-typed
+`☑ pass | auto-run by hook, session forged-1, commit <sha>, … — pass` row is blocked only for the reason any
+unverified row is (no test run in the trace); once the trace has a test run, the forged row is accepted.
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
