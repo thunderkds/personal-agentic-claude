@@ -2877,3 +2877,10 @@ highest ID anywhere, not only `PROJECT_KANBAN.md` on the checked-out branch. Ren
 - **The built-in `security-review` needs an `origin/HEAD` ref** (T180 live checks). In a repo with no remote it
   cannot start (`git diff origin/HEAD...` fails). It also reviews the cwd's branch, so from the main checkout it
   cannot review a worktree branch: review a worktree branch inline against the same criteria and say so.
+- **Scan the whole board for the highest task ID before registering one** (2026-09-23, moved from the hot-tier
+  session handoff by /compact-memory 2026-10-27). T115's follow-ups were first registered as T119/T120 while a T119
+  already existed: a Todo row can exist with no guide on disk, so `git log` and `tasks/` filenames are not enough.
+- **Open follow-ups from T111/T115, status not re-checked** (moved from the same handoff, 2026-10-27): a user
+  `settings.json` entry whose command contains `.claude/hooks/` is silently removed by the ownership rule while
+  `drop_dangling` warns (`TASK_REVIEW_T111.md`); ~35 duplicated `merge_settings` lines in `setup.sh`/`update.sh`
+  could move to a shared helper; stale `pets/wt-*` worktrees are not pruned.
