@@ -383,7 +383,7 @@
 <h3>Auto mode</h3>
 <p>
   Put the exact tag <code>[auto]</code> in your request. The Supervisor runs either track up to the point where it waits for your review
-  and asks you nothing. It writes a final report that lists every decision and how it made each one.
+  and asks you no question. It pauses only for a few stops, such as a safety-hook block. It writes a final report that lists every decision and how it made each one.
   The task Risk sets how it decides:
 </p>
 <ul>
@@ -398,7 +398,7 @@
 </p>
 <p>
   A Stop hook checks the final report before the run may end. For an extended-track task that waits for your review,
-  a second Stop hook starts a fresh headless <code>/verify</code> session and writes the <code>verify</code> row.
+  <strong>auto verify</strong> works like this: a second Stop hook starts a fresh headless <code>/verify</code> session and writes the <code>verify</code> row.
   The Supervisor does not run <code>/verify</code>. Without <code>[auto]</code>, you type <code>/verify</code>.
   Safety hooks still block. <strong>Merge, push and Done stay with you.</strong>
 </p>
