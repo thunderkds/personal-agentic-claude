@@ -81,6 +81,9 @@ The supervisor repo (`per-agentic-claude`) is a general framework. A `MANIFEST` 
 | Fact question | A question the repo can answer with a Citation (where a rule lives, what a script does). `resolve-question` answers it from a Citation or from scanners (T170). |
 | Choice question | A question only the user can decide (scope, trade-off, preference). `resolve-question` sends it to the user at once, never to scanners (T170). **Not "intent"**: intent is the requirement restated at Stage 2 / the Requirement Fidelity Gate. |
 | Scanner | A read-only `Explore` agent that `resolve-question` starts to search one assigned area of the repo (code, docs/memory, or git history) for a Fact question. It returns an answer with Citations, or "not found" (T170). |
+| Debate | In auto mode, the `resolve-question` step that settles a Choice question (or a Fact question the Scanners could not settle): 2-3 Advocates each argue one option, the Supervisor decides by fixed rules, logs it and flags it for the user's review. At most 3 per task (T179). |
+| Advocate | A read-only `Explore` agent that a Debate starts to argue for one option with Citations and the option's risk. It cannot change files (T179). |
+| Safer option | The option the Supervisor picks in a Debate when no Citation makes one option necessary: it can be undone > it keeps all data > it is the smaller change > it matches the request's literal words (T179). |
 
 ---
 

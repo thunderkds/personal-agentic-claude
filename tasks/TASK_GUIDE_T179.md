@@ -46,7 +46,7 @@ Supervisor design decisions (defaults the user can overrule before the build):
 ### Requirement Fidelity Gate
 
 - [x] Restated intent confirmed (Supervisor, 2026-10-26; user: "yes, write the 3 task guides")
-- [ ] Domain terms: add **Debate**, **Advocate** and **Safer option** to the `PROJECT_SPEC.md` glossary (agent)
+- [x] Domain terms: add **Debate**, **Advocate** and **Safer option** to the `PROJECT_SPEC.md` glossary (agent)
 - [x] Every AC traces to the Requirement
 - [x] Refs covered (none)
 
