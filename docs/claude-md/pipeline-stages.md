@@ -90,7 +90,7 @@ After all items are confirmed:
 
 ## Stage 1.5: Sub-Agent Architecture (Dynamic Team Design)
 Using the locked Project Context Document:
-- Reference the **General Agent Template** (`agents/general-agent-template.md`).
+- Reference the **General Agent Template** (`templates/general-agent-template.md`).
 - Reference the files in the `agents/` folder.
 - Design the exact sub-agent team needed. Always include **Common-Infrastructure-Agent**, **Backend-Implementer**, **Frontend-Implementer**, and **QA-Automation-Agent** as the base team for greenfield projects — unconditional and never gated by any skill.
 - If, and only if, the requirement implies a role the base team doesn't cover (e.g. a mobile/data/ML-specific agent), invoke `Skill({ skill: "craft-agent" })` to draft the supplemental roster. This is optional and conditional — do not invoke it as a required step on every pass; skip it entirely when the base team already covers the requirement.

@@ -157,6 +157,12 @@
   .agent-card a { color: var(--cyan); }
   .agent-card h3 { margin: 0 0 .5rem; color: var(--green); font-size: 1rem; }
   .agent-card .subtype { color: var(--muted); font-size: .85rem; }
+  .agent-card .trigger { color: var(--text); font-size: .9rem; margin: .4rem 0 0; }
+  .swatch { display: inline-block; width: .7rem; height: .7rem; border-radius: 50%; margin: 0 .25rem 0 .5rem; vertical-align: middle; }
+  .swatch[data-color="orange"] { background: #ff8c42; }
+  .swatch[data-color="blue"]   { background: #4d8dff; }
+  .swatch[data-color="purple"] { background: var(--purple); }
+  .swatch[data-color="green"]  { background: var(--green); }
 
   pre.install {
     background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
@@ -534,37 +540,41 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <h2>Agent roles</h2>
 <p class="lead">
   Four roles are directly spawnable via the <code>Agent</code> tool, each scoped to a single
-  <code>TASK_GUIDE</code>. A fifth file, <code>general-agent-template</code>, is <strong>not a
-  spawnable role</strong> — the shared base template they all inherit.
+  <code>TASK_GUIDE</code>. Their shared base, <code>general-agent-template</code>, is <strong>not a
+  spawnable role</strong>; it lives in <code>templates/</code>.
 </p>
 
 <div class="agent-card">
   <div class="name">backend-developer</div>
-  <div class="subtype"><code>subagent_type: backend-developer</code></div>
+  <div class="subtype"><code>subagent_type: backend-developer</code><span class="swatch" data-color="blue"></span>blue</div>
+  <p class="trigger">Use when a TASK_GUIDE assigns server-side work — a new API endpoint, a service or business-logic change, or a data-access fix.</p>
   <p>Core backend engineering role — server-side APIs, services, business logic, and data-access layers, built test-first.</p>
 </div>
 
 <div class="agent-card">
   <div class="name">common-infrastructure</div>
-  <div class="subtype"><code>subagent_type: common-infrastructure</code></div>
+  <div class="subtype"><code>subagent_type: common-infrastructure</code><span class="swatch" data-color="orange"></span>orange</div>
+  <p class="trigger">Use when a task needs worktree setup, dependency installs, migrations or shared config.</p>
   <p>Environment and shared-config specialist — worktree setup, migrations, shared services; always runs first before implementers start.</p>
 </div>
 
 <div class="agent-card">
   <div class="name">frontend-developer</div>
-  <div class="subtype"><code>subagent_type: frontend-developer</code></div>
+  <div class="subtype"><code>subagent_type: frontend-developer</code><span class="swatch" data-color="purple"></span>purple</div>
+  <p class="trigger">Use when a TASK_GUIDE assigns client-side work — a new UI component, a client-state or interaction change, or an accessibility fix.</p>
   <p>Core frontend engineering role — UI components, client-side state, interactions, and accessibility, built test-first.</p>
 </div>
 
 <div class="agent-card">
   <div class="name">qa-expert</div>
-  <div class="subtype"><code>subagent_type: qa-expert</code></div>
+  <div class="subtype"><code>subagent_type: qa-expert</code><span class="swatch" data-color="green"></span>green</div>
+  <p class="trigger">Use when a task needs independent verification — checking a finished task's Acceptance Criteria with evidence, extending the smoke suite, or a regression check before merge.</p>
   <p>Quality and evaluation role — owns the smoke suite, regression safety, and independent verification of acceptance criteria.</p>
 </div>
 
 <div class="agent-card">
   <div class="name">general-agent-template</div>
-  <div class="subtype">not directly spawnable — shared base only</div>
+  <div class="subtype">not directly spawnable — shared base only, in <code>templates/</code></div>
   <p>Base template inherited by all four roles above. Contains the universal Base Rules, engineering principles, and output requirements that are not restated per role. It has no <code>subagent_type</code> of its own and is never spawned directly.</p>
 </div>
 </section>

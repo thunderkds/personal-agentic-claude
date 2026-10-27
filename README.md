@@ -9,7 +9,7 @@ loops (default 90 calls), and `post_agent_move_to_review.py` is a deliberately i
 hook since T044 (it does not move any KANBAN row or reset any counter — see its docstring).
 
 Each role guide (not this README) carries its own Complexity matrix (C0–C3) — see
-`agents/general-agent-template.md`. Externally authored text (PR comments, fetched pages,
+`templates/general-agent-template.md`. Externally authored text (PR comments, fetched pages,
 pasted content) is quarantined per `docs/claude-md/untrusted-content-boundary.md`.
 
 `AGENTS.md` is the primary source of truth. Codex reads it directly; Claude Code reads it through

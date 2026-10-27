@@ -30,6 +30,8 @@ BASE_REF = "c573bbf"
 REPLACED_SPANS = [
     ("# Claude Project Supervisor Guidelines", "# AGENTS.md — Project Supervisor Guidelines"),
     ("CLAUDE.md's Writing Principles", "AGENTS.md's Writing Principles"),
+    # T183: the base template moved out of agents/ (Claude Code registers every agents/*.md).
+    ("`agents/general-agent-template.md`", "`templates/general-agent-template.md`"),
 ]
 AC6_HEADING = re.compile(r"^## .*cannot enforce", re.IGNORECASE)
 

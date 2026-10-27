@@ -124,7 +124,8 @@ T069_BASELINE_REF = "8d6d56b"
 # REPOINTED once more by T169 scope extension (`19c139f` -> `9294eee`, then `9294eee` -> `09e552d` by D6, numeric caps dropped from the Writing Principles table): CLAUDE.md slimmed 218 -> 186 lines (General Agent Template, Mandatory Session Startup, opening list, Final Instruction). User-approved 2026-10-20.
 # REPOINTED AGAIN by T170 (`09e552d` -> `a830bb8`, T170's edit commit; user-approved 2026-10-20): CLAUDE.md gains `resolve-question` on the cross-cutting skill line. Still 186 lines. Repointed, NOT deleted.
 # REPOINTED AGAIN by T173 (`CLAUDE.md`@`a830bb8` -> `AGENTS.md`@`8080fdb`, T173's edit commit; D2 user-approved 2026-10-26): the doctrine moved from CLAUDE.md to AGENTS.md and CLAUDE.md is the one-line import `@AGENTS.md`. The pinned file is now AGENTS.md. Repointed, NOT deleted.
-T070_BASELINE_REF = "8080fdb"  # T173: the doctrine lives in AGENTS.md
+# REPOINTED AGAIN by T183 (`8080fdb` -> `05a23df`, T183's edit commit): AGENTS.md's General Agent Template line now names `templates/general-agent-template.md` (the template left agents/ so Claude Code stops registering it as an agent type). One path string; nothing collapsed. User-approved 2026-10-27. Repointed, NOT deleted.
+T070_BASELINE_REF = "05a23df"  # T183: template path repointed (was 8080fdb, T173)
 
 # T082's own edit commit (same commit as the repoint above). T082 adds a mandatory Base Rule bullet
 # to `general-agent-template.md` too (the same untrusted-content pointer) — a legitimate, required
@@ -141,7 +142,7 @@ T070_BASELINE_REF = "8080fdb"  # T173: the doctrine lives in AGENTS.md
 #          Only `c-infra` breaches. See `AC7_ROLE_BASELINE` below: pin the one, leave the three.
 T082_BASELINE_REF = "ebb2958"
 
-TEMPLATE = "agents/general-agent-template.md"
+TEMPLATE = "templates/general-agent-template.md"
 ROLE_GUIDES = {
     "c-infra": "agents/common-infrastructure.md",
     "backend": "agents/backend.md",
@@ -343,11 +344,12 @@ LADDER_PROBES = [
 
 def reachable_text(role: str) -> tuple[str, list[str]]:
     """Everything a role's context can contain: its auto-loaded guide, plus every
-    `agents/*.md` that guide instructs it to read."""
+    `agents/*.md` (or, since T183, `templates/general-agent-template.md`) that guide instructs it
+    to read."""
     rel = ROLE_GUIDES[role]
     guide = read(rel)
     files = [rel]
-    for ref in sorted(set(re.findall(r"agents/[a-z-]+\.md", guide))):
+    for ref in sorted(set(re.findall(r"(?:agents|templates)/[a-z-]+\.md", guide))):
         if ref != rel and (ROOT / ref).is_file():
             files.append(ref)
     return "\n".join(read(f) for f in files), files

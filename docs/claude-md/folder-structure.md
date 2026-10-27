@@ -5,7 +5,6 @@
 The project root **must** contain these folders:
 
 1. `agents/` folder containing:
-   - agents/general-agent-template.md
    - agents/common-infrastructure.md
    - agents/backend.md
    - agents/frontend.md
@@ -31,6 +30,7 @@ The project root **must** contain these folders:
    - templates/report_template.html
    - templates/thinking_report_template.html
    - templates/PACK_template.md
+   - templates/general-agent-template.md (shared base rules every role guide inherits; not a spawnable agent, so it stays out of `agents/`)
 
 5. `packs/` folder (in the central clone) containing optional domain packs:
    - packs/mobile/ — Flutter, React Native, Swift, Kotlin
