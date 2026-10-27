@@ -133,7 +133,8 @@ T069_BASELINE_REF = "8d6d56b"
 # Repointed once more by T180 D7 (`c034608` -> `d455cfb`): the `## Tracks` paragraph now says the final report is written to its file before the run ends (the chat message is a copy). Same line, still 196 lines. Repointed, NOT deleted.
 # Merged by the main <- plan/t178-t180-tracks merge (2026-10-27): AGENTS.md now holds both T183's template path and
 # T178/T180's `## Tracks` edits, so it matches neither `05a23df` nor `d455cfb`: repointed to the merge commit `9e0bb48`. Repointed, NOT deleted.
-T070_BASELINE_REF = "9e0bb48"  # main <- plan/t178-t180-tracks merge (was 05a23df on main, d455cfb on the plan branch)
+# REPOINTED AGAIN by the v2.2.0 release (`9e0bb48` -> `c8a9af9`, the release commit; user approved the version bump 2026-10-27): AGENTS.md line 2 `**Version:** 1.17` -> `1.18`. One label; nothing collapsed. Repointed, NOT deleted.
+T070_BASELINE_REF = "c8a9af9"  # v2.2.0 release (was 9e0bb48, the main <- plan/t178-t180-tracks merge)
 
 # T082's own edit commit (same commit as the repoint above). T082 adds a mandatory Base Rule bullet
 # to `general-agent-template.md` too (the same untrusted-content pointer) — a legitimate, required
