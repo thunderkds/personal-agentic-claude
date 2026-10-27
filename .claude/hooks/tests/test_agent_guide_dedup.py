@@ -125,7 +125,15 @@ T069_BASELINE_REF = "8d6d56b"
 # REPOINTED AGAIN by T170 (`09e552d` -> `a830bb8`, T170's edit commit; user-approved 2026-10-20): CLAUDE.md gains `resolve-question` on the cross-cutting skill line. Still 186 lines. Repointed, NOT deleted.
 # REPOINTED AGAIN by T173 (`CLAUDE.md`@`a830bb8` -> `AGENTS.md`@`8080fdb`, T173's edit commit; D2 user-approved 2026-10-26): the doctrine moved from CLAUDE.md to AGENTS.md and CLAUDE.md is the one-line import `@AGENTS.md`. The pinned file is now AGENTS.md. Repointed, NOT deleted.
 # REPOINTED AGAIN by T183 (`8080fdb` -> `05a23df`, T183's edit commit): AGENTS.md's General Agent Template line now names `templates/general-agent-template.md` (the template left agents/ so Claude Code stops registering it as an agent type). One path string; nothing collapsed. User-approved 2026-10-27. Repointed, NOT deleted.
-T070_BASELINE_REF = "05a23df"  # T183: template path repointed (was 8080fdb, T173)
+# REPOINTED AGAIN by T178 (`8080fdb` -> `fbe55ab`, T178's edit commit; design D1-D6 user-approved 2026-10-27): AGENTS.md gains a `## Tracks` paragraph, and Hard-Stop Gate 1 and the code-review Permanent Rule are scoped to the extended track. Three post-heading blank lines were removed to stay at 196 lines. Nothing collapsed into the agent guides. Repointed, NOT deleted.
+# Repointed once more by T178's AC 8 fix (`fbe55ab` -> `f72b34d`): the `## Tracks` paragraph gains the user-data-change condition in place (no new line, still 196 lines). Repointed, NOT deleted.
+# Repointed once more by T178's AC 8 re-run 1 fix (`f72b34d` -> `45c4ca7`): the `## Tracks` paragraph now says to follow tracks.md's 7 steps, copy the record template and commit without asking (same line, still 196 lines). Repointed, NOT deleted.
+# Repointed once more by T178's /verify fix (`45c4ca7` -> `10c9e44`): the `## Tracks` paragraph now says the track line is a statement, never a question, and the extended track goes on with the pipeline at once (same line, still 196 lines). Repointed, NOT deleted.
+# REPOINTED AGAIN by T180 (`10c9e44` -> `c034608`, T180's edit commit; design D1-D6 user-approved 2026-10-27): the `## Tracks` paragraph gains the auto-mode pointer (the `[auto]` tag, the track line, the `## Auto mode` table in tracks.md, the never-list) in place: no new line, still 196 lines. Nothing collapsed into the agent guides. Repointed, NOT deleted.
+# Repointed once more by T180 D7 (`c034608` -> `d455cfb`): the `## Tracks` paragraph now says the final report is written to its file before the run ends (the chat message is a copy). Same line, still 196 lines. Repointed, NOT deleted.
+# Merged by the main <- plan/t178-t180-tracks merge (2026-10-27): AGENTS.md now holds both T183's template path and
+# T178/T180's `## Tracks` edits, so it matches neither `05a23df` nor `d455cfb`; the next commit repoints to the merge commit.
+T070_BASELINE_REF = "d455cfb"  # placeholder until the merge commit exists (see the line above)
 
 # T082's own edit commit (same commit as the repoint above). T082 adds a mandatory Base Rule bullet
 # to `general-agent-template.md` too (the same untrusted-content pointer) — a legitimate, required

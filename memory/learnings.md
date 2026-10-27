@@ -2857,3 +2857,23 @@ highest ID anywhere, not only `PROJECT_KANBAN.md` on the checked-out branch. Ren
 - **`communicate()` after `proc.kill()` blocks until grandchildren close the pipes** (T175). A timed-out
   `claude -p` left children holding stdout, so the runner hung. Start agents with `start_new_session=True`
   and kill the group with `os.killpg`; test that the timeout returns in seconds.
+- **A doctrine change needs a live agent run; text tests only prove the words are there** (T178). 45 → 54 text
+  tests stayed green through three live failures (task 5 went minimal for a data delete; task 2 skipped the
+  template and asked to commit; task 3 asked "minimal or full?"). Each fix was one clause in `AGENTS.md`, found
+  only by a $0.15 sandbox run. Budget 2–3 re-runs per doctrine task.
+- **A Docker bind mount under `/tmp/claude-<uid>/` breaks `claude` in the container** (T178 live check). Docker
+  creates the mount's parent dirs as root, and the CLI refuses: `Temp directory /tmp/claude-1000 is owned by uid 0,
+  expected 1000`. Put sandbox run copies outside `/tmp/claude-*` (e.g. `../.spawn/live-checks/`).
+- **`post_write_register_task.py` registers a guide written in a worktree on the main checkout's board** (T181/T182).
+  The hook resolves `$CLAUDE_PROJECT_DIR`, so a guide written in `../wt-*` added an uncommitted row to `main`'s
+  `PROJECT_KANBAN.md` — the kit board even for a site-board task. Check `git status` on main after writing guides.
+- **The spawn hook validates guides in the main checkout, not the worktree** (T178/T179 spawn). Guides that live
+  only on a plan branch must also exist as files in the main checkout, or the spawn is rejected; do not delete
+  those untracked copies before the spawn.
+- **A rule the agent can satisfy by labelling is a rule it will satisfy by labelling** (T180 D8–D10). Each text
+  rule for "debate this choice" was met in the cheapest way the check allowed: DEBATED with no Advocates, then
+  FACT, then RULE with no path, then RULE citing a real but unrelated section. Only a count the agent cannot fake
+  by wording (Advocate `Agent` calls in the trace, one forced Debate at High) changed the behavior.
+- **The built-in `security-review` needs an `origin/HEAD` ref** (T180 live checks). In a repo with no remote it
+  cannot start (`git diff origin/HEAD...` fails). It also reviews the cwd's branch, so from the main checkout it
+  cannot review a worktree branch: review a worktree branch inline against the same criteria and say so.

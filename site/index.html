@@ -297,7 +297,7 @@
   <dt>Stages</dt>
   <dd>Phase 0 → 0.5 → 1 → 1.5 → 2 → 3 → 4 → 5</dd>
   <dt>Roster</dt>
-  <dd><a href="#agent-roles">4 spawnable roles</a> &middot; <a href="#skills">31 skills</a> &middot; <a href="#hooks">4 blocking hooks (of 9)</a></dd>
+  <dd><a href="#agent-roles">4 spawnable roles</a> &middot; <a href="#skills">31 skills</a> &middot; <a href="#hooks">5 blocking hooks (of 10)</a></dd>
 </dl>
 </div>
 </section>
@@ -660,6 +660,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <tr><td data-label="Event">PostToolUse</td><td data-label="Matcher"><code>Bash</code></td><td data-label="Script"><code>post_<wbr>bash_<wbr>memory_<wbr>update.py</code></td><td data-label="Behavior"><span class="tag tag-advise">advises</span> — prompts a diff-driven memory-update pass after git push/merge/pull</td></tr>
 <tr><td data-label="Event">PostToolUse</td><td data-label="Matcher"><code>.*</code></td><td data-label="Script"><code>post_tool_trace.py</code></td><td data-label="Behavior"><span class="tag tag-advise">advises</span> — appends every tool call to <code>memory/<wbr>event-<wbr>trace/<wbr>&lt;task&gt;.jsonl</code>; <code>scripts/<wbr>verify_<wbr>trace.py &lt;task&gt;</code> reports whether the trace still matches <details><summary>How an edit shows</summary><p>Each line is linked to the one before by a hash chain, with a copy of each line's hash kept outside the repo under <code>~/.claude/<wbr>harness-<wbr>anchors/</code>.</p></details></td></tr>
 <tr><td data-label="Event">Stop</td><td data-label="Matcher">—</td><td data-label="Script"><code>stop_<wbr>review_<wbr>reminder.py</code></td><td data-label="Behavior"><span class="tag tag-advise">advises</span> — reminds the Supervisor to run Stage 4 review for pending tasks</td></tr>
+<tr><td data-label="Event">Stop</td><td data-label="Matcher">—</td><td data-label="Script"><code>stop_<wbr>auto_<wbr>mode_<wbr>check.py</code></td><td data-label="Behavior"><span class="tag tag-block">blocks</span> the end of an <code>[auto]</code> run until its final report checks out — once; the second try stops <details><summary>What it checks</summary><ul><li>The report is in its file, marked <code>Mode: auto</code></li><li>Each Medium/High-risk choice was argued by 2 or 3 Advocates</li><li>Stage 4 review ran</li></ul></details></td></tr>
 </tbody>
 </table>
 </div>
