@@ -652,3 +652,52 @@ def test_d7_skill_debate_size_follows_the_task_risk():
     assert "smallest safe thing" in body
     assert "3 for 3+ options" not in body, "D7 supersedes T179's count in auto mode"
     assert SKILL.stat().st_size <= 8192
+
+
+# ── D8 — the label rule, Stage 4 in auto mode, and the auto-mode Stop hook ────────────────
+# /verify T180: a Risk High `[auto]` run logged the `recurring.csv` choice as `FACT … ⚠`, ran no
+# Advocate, and skipped Stage 4.
+FLAGGED_NOT_FACT = re.compile(r"flagged `⚠ decided for you` is a choice, and is never labelled `FACT`")
+SAFETY_IS_RULE = re.compile(r"safety action a rule requires[^.]*is `RULE` without the flag")
+
+
+def test_d8_final_report_label_rules():
+    sub = _norm(_subsection(_auto(), "Final report"))
+    assert FLAGGED_NOT_FACT.search(sub), sub
+    assert SAFETY_IS_RULE.search(sub), sub
+    assert re.search(r"At Risk Medium or High, every `⚠` line is `DEBATED` with exactly 2 or 3 "
+                     r"Advocates named", sub), sub
+    assert re.search(r"Stage 4 `code-review` still runs[^.]*plus `security-review` at Risk Medium or High",
+                     sub), sub
+
+
+@pytest.mark.parametrize("template", [REVIEW_TEMPLATE, MINIMAL_TEMPLATE], ids=["review", "minimal"])
+def test_d8_templates_carry_the_label_rules(template):
+    text = _norm(_read(template))
+    assert FLAGGED_NOT_FACT.search(text), template.name
+    assert SAFETY_IS_RULE.search(text), template.name
+
+
+def test_d8_stop_table_legend_every_flag_is_a_debate_at_medium_or_high():
+    legend = _norm(_subsection(_auto(), "Every user stop and its auto rule"))
+    assert re.search(r"At Risk Medium or High, every decision flagged `⚠` is a Debate", legend), legend
+
+
+def test_d8_advocate_spawn_description_starts_with_advocate():
+    assert re.search(r'description: "Advocate <n>: <option>"', _read(SKILL))
+    size = _norm(_subsection(_auto(), "Debate size by Risk"))
+    assert re.search(r"`description` starts with `Advocate`", size), size
+
+
+def test_d8_tracks_md_documents_the_stop_hook():
+    sub = _norm(_subsection(_auto(), "Auto-mode check (Stop hook)"))
+    assert "`.claude/hooks/stop_auto_mode_check.py`" in sub
+    for needle in ("`## Auto decisions`", "exactly 2 or 3 Advocates named", "description starting `Advocate`",
+                   "`code-review`", "`security-review`", "`stop_hook_active`",
+                   "`Paused: auto-mode check failed — <reasons>`", "`_untagged.jsonl`", "fail open"):
+        assert needle in sub, needle
+
+
+def test_d8_pipeline_stage4_names_both_reviews_in_auto_mode():
+    stage4 = _norm(_section(_read(PIPELINE_MD), "Stage 4: Review").split("1. **Code Review**")[0])
+    assert re.search(r"[Aa]uto mode[^.]*`code-review`, plus `security-review` at Medium/High", stage4), stage4
