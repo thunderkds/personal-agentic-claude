@@ -1227,7 +1227,28 @@ def test_settings_tool_section_nav_and_no_script_fallback():
     assert nav.index('href="#update-flow"') < nav.index('href="#settings-tool"') < nav.index('href="#install-variants"')
     assert 'class="st-nojs"' in section
     assert "https://code.claude.com/docs/en/settings-reference" in section
-    assert "disabled" in section and "coming soon" in section
+    # T186: the Check tab is live (it was disabled "coming soon" in T185).
+    tab = re.search(r'<button[^>]*id="st-tab-check"[^>]*>', section).group(0)
+    assert "disabled" not in tab and "coming soon" not in section
+    assert 'aria-controls="st-check-panel"' in tab and 'id="st-check-panel"' in section
+
+
+def test_settings_check_mode_controls_and_privacy_line():
+    """T186 AC1: paste area, target-file choice, the three buttons, the privacy line."""
+    section = _settings_section()
+    assert re.search(r'<textarea\b[^>]*id="st-paste"', section)
+    for value in ("user", "project", "local"):
+        assert f'name="st-check-target" value="{value}"' in section
+    for button, label in (("st-format", "Format"), ("st-check", "Check"), ("st-edit", "Edit in Build")):
+        assert re.search(rf'<button type="button"[^>]*id="{button}"[^>]*>{label}</button>', section), button
+    assert "Runs in your browser only. Nothing is sent or saved." in section
+
+
+def test_settings_tool_never_writes_html_from_text():
+    """T186: pasted text is untrusted; the tool renders with textContent only."""
+    source = _script_block("settings-tool-core") + _script_block("settings-tool-ui")
+    for banned in ("innerHTML", "outerHTML", "insertAdjacentHTML", "document.write", "eval(", "new Function"):
+        assert banned not in source, f"tool script contains {banned}"
 
 
 def test_settings_catalog_shape_and_version_stamp():

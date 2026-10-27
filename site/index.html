@@ -231,7 +231,6 @@
   #settings-tool .st-tab { font: inherit; color: var(--text); background: none; border: 1px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0; padding: .4rem .9rem; cursor: pointer; }
   #settings-tool .st-tab[aria-selected="true"] { background: var(--surface); border-color: var(--border); color: var(--cyan); font-weight: 700; }
   #settings-tool .st-tab:disabled { color: var(--muted); cursor: not-allowed; }
-  #settings-tool .st-soon { font-size: .75rem; }
   #settings-tool .st-target { border: 1px solid var(--border); border-radius: 8px; padding: .5rem .8rem; margin: 0 0 .8rem; display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; min-width: 0; }
   #settings-tool .st-target legend { color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; padding: 0 .3rem; }
   #settings-tool .st-target label { overflow-wrap: anywhere; }
@@ -272,7 +271,34 @@
   #settings-tool .st-status { color: var(--muted); font-size: .85rem; }
   #settings-tool input:focus-visible, #settings-tool select:focus-visible, #settings-tool textarea:focus-visible,
   #settings-tool .st-btn:focus-visible, #settings-tool .st-tab:focus-visible, #settings-tool .st-x:focus-visible, #settings-tool pre:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+  #settings-tool .st-paste { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-top: .3rem; }
+  #settings-tool .st-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: .6rem 0 .2rem; }
+  #settings-tool .st-keep { font-size: .85rem; color: var(--muted); }
+  #settings-tool .st-privacy { margin: .2rem 0 .6rem; color: var(--muted); font-size: .85rem; }
+  #settings-tool h3 { margin: 1.2rem 0 .5rem; font-size: .8rem; color: var(--purple); text-transform: uppercase; letter-spacing: .05em; }
+  #settings-tool h4 { margin: .8rem 0 .3rem; font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  #settings-tool h4:first-child { margin-top: 0; }
+  #settings-tool .st-findings { list-style: none; margin: 0; padding: 0; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+  #settings-tool .st-findings li { display: grid; grid-template-columns: 4.6rem minmax(0, 13rem) minmax(0, 1fr); gap: .2rem .8rem; align-items: baseline; padding: .5rem .8rem; border-top: 1px solid var(--border); font-size: .85rem; }
+  #settings-tool .st-findings li:first-child { border-top: none; }
+  #settings-tool .st-findings .st-fixline { display: block; color: var(--muted); }
+  #settings-tool .st-findings .st-btn { margin-top: .3rem; }
+  #settings-tool .st-path { font: inherit; font-size: .8rem; color: var(--cyan); background: none; border: none; padding: 0; cursor: pointer; text-align: left; overflow-wrap: anywhere; text-decoration: underline; }
+  #settings-tool .st-findings .st-msg { min-width: 0; overflow-wrap: anywhere; }
+  #settings-tool .st-map { border: 1px solid var(--border); border-radius: 8px; padding: .6rem .8rem; max-height: 36rem; overflow: auto; }
+  #settings-tool .st-tree { list-style: none; margin: 0; padding: 0; }
+  #settings-tool .st-node { padding: .15rem .3rem; border-radius: 4px; overflow-wrap: anywhere; font-size: .85rem; }
+  #settings-tool .st-node code, #settings-tool .st-col code { overflow-wrap: anywhere; }
+  #settings-tool .st-val { color: var(--muted); margin-left: .4rem; }
+  #settings-tool .st-sep { color: var(--muted); margin: 0 .3rem; }
+  #settings-tool .st-node .tag, #settings-tool .st-colhead .tag { margin-left: .3rem; }
+  #settings-tool .st-hint { margin: 0 0 .4rem; color: var(--muted); font-size: .8rem; }
+  #settings-tool .st-perms { display: grid; grid-template-columns: repeat(3, minmax(10rem, 1fr)); gap: .6rem; }
+  #settings-tool .st-col { min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: .4rem .5rem; }
+  #settings-tool .st-colhead { margin: 0 0 .3rem; font-weight: 700; font-size: .85rem; }
+  #settings-tool .st-hit { outline: 2px solid var(--amber); outline-offset: 1px; }
   @media (max-width: 767px) {
+    #settings-tool .st-findings li { grid-template-columns: minmax(0, 1fr); }
     #settings-tool .st-right { position: static; }
     #settings-tool .st-copybar { position: sticky; bottom: 0; background: var(--bg); padding: .5rem 0; border-top: 1px solid var(--border); }
   }
@@ -574,14 +600,14 @@ Decided by: auto-approve (overwrite all)
 
 <section id="settings-tool">
 <h2>Settings tool</h2>
-<p class="lead">Pick the Claude Code settings you want, set each value, and copy a ready <code>settings.json</code>.
-  The kit installs no settings of its own. This tool builds yours. Everything stays in your browser.</p>
+<p class="lead">Pick the Claude Code settings you want and copy a ready <code>settings.json</code>, or paste yours to check it.
+  The kit installs no settings of its own. Everything stays in your browser.</p>
 <p class="st-nojs">This tool needs JavaScript. Without it, read the
   <a href="https://code.claude.com/docs/en/settings-reference" target="_blank" rel="noopener noreferrer">official settings reference</a>.</p>
 <div id="st-app" class="st-app">
   <div class="st-tabs" role="tablist" aria-label="Settings tool mode">
     <button type="button" role="tab" class="st-tab" aria-selected="true" aria-controls="st-build-panel" id="st-tab-build">Build</button>
-    <button type="button" role="tab" class="st-tab" aria-selected="false" disabled id="st-tab-check">Check <span class="st-soon">(coming soon)</span></button>
+    <button type="button" role="tab" class="st-tab" aria-selected="false" aria-controls="st-check-panel" id="st-tab-check" tabindex="-1">Check</button>
   </div>
   <div id="st-build-panel" role="tabpanel" aria-labelledby="st-tab-build">
     <fieldset class="st-target">
@@ -608,12 +634,41 @@ Decided by: auto-approve (overwrite all)
         <p class="st-file"><strong id="st-file"></strong></p>
         <pre class="install st-output" id="st-output" tabindex="0" aria-label="Generated settings JSON"></pre>
         <p class="st-note" id="st-note" role="status"></p>
+        <p class="st-note" id="st-kept" role="status"></p>
         <div class="st-copybar">
           <button type="button" class="st-btn st-primary" id="st-copy">Copy</button>
           <span id="st-status" class="st-status" role="status"></span>
           <span id="st-copied" class="st-status" role="status"></span>
         </div>
       </div>
+    </div>
+  </div>
+  <div id="st-check-panel" role="tabpanel" aria-labelledby="st-tab-check" hidden>
+    <fieldset class="st-target">
+      <legend>This is my</legend>
+      <label><input type="radio" name="st-check-target" value="user" checked> User <code>~/.claude/settings.json</code></label>
+      <label><input type="radio" name="st-check-target" value="project"> Project <code>.claude/settings.json</code></label>
+      <label><input type="radio" name="st-check-target" value="local"> Local <code>.claude/settings.local.json</code></label>
+    </fieldset>
+    <label class="st-label" for="st-paste">Paste your settings.json</label>
+    <textarea id="st-paste" class="st-paste" rows="10" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder='{ "permissions": { "deny": ["Read(./.env)"] } }'></textarea>
+    <div class="st-actions">
+      <button type="button" class="st-btn" id="st-format">Format</button>
+      <button type="button" class="st-btn st-primary" id="st-check">Check</button>
+      <button type="button" class="st-btn" id="st-edit">Edit in Build</button>
+      <label class="st-keep"><input type="checkbox" id="st-keep"> Keep secret values</label>
+    </div>
+    <p class="st-privacy">Runs in your browser only. Nothing is sent or saved.</p>
+    <p class="st-note" id="st-check-msg" role="status"></p>
+    <div id="st-results" hidden>
+      <h3 id="st-findings-head">Findings</h3>
+      <ol id="st-findings" class="st-findings" aria-labelledby="st-findings-head"></ol>
+      <h3>Map</h3>
+      <div id="st-map" class="st-map" tabindex="0" aria-label="Settings map"></div>
+    </div>
+    <div id="st-formatted-box" hidden>
+      <h3>Formatted</h3>
+      <pre class="install st-output" id="st-formatted" tabindex="0" aria-label="Formatted settings JSON"></pre>
     </div>
   </div>
 </div>
@@ -1192,7 +1247,7 @@ var SettingsCore = (function () {
   if (!app) { return; }
   var catalog = core.loadCatalog(document.getElementById("settings-catalog").textContent);
   var REF = "https://code.claude.com/docs/en/settings-reference";
-  var state = { target: "user", selection: {}, filter: "", pending: null };
+  var state = { target: "user", selection: {}, filter: "", pending: null, passthrough: null, loadNote: "" };
   var rows = {};      // key -> { root, check, ctl, err, setControl }
   var details = {};   // category -> { root, summary, list }
 
@@ -1293,6 +1348,7 @@ var SettingsCore = (function () {
     var tags = [];
     tags.push(el("span", { "class": "tag tag-inert", text: entry.scopes.length === 1 ? entry.scopes[0] + " file only" : "all files" }));
     if (entry.lowersSafety) { tags.push(el("span", { "class": "tag tag-block", text: "lowers safety" })); }
+    if (entry.lowersSafetyValues) { tags.push(el("span", { "class": "tag tag-block", text: entry.lowersSafetyValues.join(", ") + " lowers safety" })); }
     var link = el("a", {
       href: REF + "#:~:text=" + encodeURIComponent(entry.key), target: "_blank",
       rel: "noopener noreferrer", "aria-label": "Reference for " + entry.key, text: "ref"
@@ -1337,12 +1393,14 @@ var SettingsCore = (function () {
 
   function refresh() {
     var counts = {}, shown = {};
+    var out = core.generate(catalog, state.selection, state.target, state.passthrough);
     Object.keys(rows).forEach(function (k) {
       var r = rows[k];
       refreshRow(r);
       var c = r.entry.category;
       if (!r.root.hidden) { shown[c] = (shown[c] || 0) + 1; }
-      if (r.check.checked && r.entry.scopes.indexOf(state.target) >= 0) { counts[c] = (counts[c] || 0) + 1; }
+      // "on" counts only keys that reach the output file (not ones removed for this target).
+      if (r.check.checked && r.entry.scopes.indexOf(state.target) >= 0 && out.removed.indexOf(k) < 0) { counts[c] = (counts[c] || 0) + 1; }
     });
     catalog.categories.forEach(function (c) {
       var d = details[c];
@@ -1350,13 +1408,16 @@ var SettingsCore = (function () {
       d.summary.textContent = c + " (" + (counts[c] || 0) + " on)";
       if (state.filter && shown[c]) { d.root.open = true; }
     });
-    var out = core.generate(catalog, state.selection, state.target);
     $("st-output").textContent = out.json;
     $("st-file").textContent = core.FILES[state.target];
     $("st-note").textContent = out.note;
+    var kept = state.passthrough ? Object.keys(state.passthrough) : [];
+    $("st-kept").textContent = (kept.length
+      ? "Kept as-is from your pasted file: " + kept.join(", ") + ". Pick a preset to start over. " : "") + state.loadNote;
     var valid = true;
     try { JSON.parse(out.json); } catch (e) { valid = false; }
-    $("st-status").textContent = out.count + (out.count === 1 ? " key" : " keys") + " · " + (valid ? "valid" : "invalid");
+    $("st-status").textContent = out.count + (out.count === 1 ? " key" : " keys") +
+      (kept.length ? " + " + kept.length + " kept" : "") + " · " + (valid ? "valid" : "invalid");
   }
 
   function syncControls() {
@@ -1380,13 +1441,14 @@ var SettingsCore = (function () {
   var presetBox = $("st-presets"), confirmBox = $("st-confirm");
   function applyNow(id) {
     state.selection = core.applyPreset(catalog, id);
+    state.passthrough = null; state.loadNote = "";
     state.pending = null; confirmBox.hidden = true;
     syncControls(); refresh();
   }
   catalog.presets.forEach(function (p) {
     var b = el("button", { type: "button", "class": "st-btn", text: p.label });
     b.addEventListener("click", function () {
-      var n = Object.keys(state.selection).length;
+      var n = Object.keys(state.selection).length + (state.passthrough ? Object.keys(state.passthrough).length : 0);
       if (!n) { applyNow(p.id); return; }
       state.pending = p.id;
       $("st-confirm-text").textContent = "Replace your " + n + (n === 1 ? " pick" : " picks") + " with " + p.label + "?";
@@ -1401,6 +1463,10 @@ var SettingsCore = (function () {
   [].forEach.call(document.querySelectorAll('input[name="st-target"]'), function (r) {
     r.addEventListener("change", function () { if (r.checked) { state.target = r.value; refresh(); } });
   });
+  function setBuildTarget(t) {
+    state.target = t;
+    [].forEach.call(document.querySelectorAll('input[name="st-target"]'), function (r) { r.checked = r.value === t; });
+  }
   $("st-filter").addEventListener("input", function (e) { state.filter = e.target.value.trim().toLowerCase(); refresh(); });
 
   // Copy: clipboard when allowed, otherwise select the text so Ctrl+C works.
@@ -1417,6 +1483,184 @@ var SettingsCore = (function () {
       navigator.clipboard.writeText(out.textContent).then(function () { msg.textContent = "Copied."; }, fallback);
     } else { fallback(); }
   });
+
+  /* ---- mode tabs ----------------------------------------------------- */
+  var tabs = [[$("st-tab-build"), $("st-build-panel")], [$("st-tab-check"), $("st-check-panel")]];
+  function selectTab(i, focus) {
+    tabs.forEach(function (t, j) {
+      t[0].setAttribute("aria-selected", i === j ? "true" : "false");
+      t[0].tabIndex = i === j ? 0 : -1;
+      t[1].hidden = i !== j;
+    });
+    if (focus) { tabs[i][0].focus(); }
+  }
+  tabs.forEach(function (t, i) {
+    t[0].addEventListener("click", function () { selectTab(i, false); });
+    t[0].addEventListener("keydown", function (e) {
+      var next = { ArrowRight: (i + 1) % tabs.length, ArrowLeft: (i + tabs.length - 1) % tabs.length, Home: 0, End: tabs.length - 1 }[e.key];
+      if (next !== undefined) { e.preventDefault(); selectTab(next, true); }
+    });
+  });
+
+  /* ---- Check mode ---------------------------------------------------- */
+  // Pasted text is untrusted: every value reaches the page through textContent (el's "text"),
+  // and the map and findings are built from a copy with secrets hidden.
+  var SHOW_MAX = 300;   // rows drawn per list; a huge paste stays responsive
+  var SEV = { error: ["tag tag-block", "\u25CF", "error"], warn: ["tag tag-inert", "\u25B2", "warn"], tip: ["tag tag-advise", "\u25CB", "tip"] };
+  var paste = $("st-paste"), keep = $("st-keep"), msgBox = $("st-check-msg");
+  var mapNodes = [];   // [{ path, node }] for finding -> node navigation
+
+  function checkTarget() {
+    var r = document.querySelector('input[name="st-check-target"]:checked');
+    return r ? r.value : "user";
+  }
+  function plural(n, one, many) { return n + " " + (n === 1 ? one : many); }
+  function sevTag(sev, label) {
+    var s = SEV[sev];
+    return el("span", { "class": s[0] }, [el("span", { "aria-hidden": "true", text: s[1] + " " }), el("span", { text: label || s[2] })]);
+  }
+
+  // Best map node for a finding path: itself, else its nearest ancestor, else its first descendant.
+  function nodeFor(path) {
+    var best = null, bestLen = -1, child = null;
+    mapNodes.forEach(function (m) {
+      if (m.path === path) { best = m; bestLen = Infinity; return; }
+      if (path && (path.indexOf(m.path + ".") === 0 || path.indexOf(m.path + "[") === 0) && m.path.length > bestLen) { best = m; bestLen = m.path.length; }
+      if (!child && path && (m.path.indexOf(path + ".") === 0 || m.path.indexOf(path + "[") === 0)) { child = m; }
+    });
+    return best || child;
+  }
+  function goTo(path) {
+    var m = nodeFor(path);
+    if (!m) { return; }
+    [].forEach.call($("st-map").querySelectorAll(".st-hit"), function (n) { n.classList.remove("st-hit"); });
+    m.node.classList.add("st-hit");
+    m.node.scrollIntoView({ block: "nearest" });
+    m.node.focus({ preventScroll: true });
+  }
+
+  function addNode(list, path, kids) {
+    var li = el("li", { "class": "st-node", "data-path": path, tabindex: "-1" }, kids);
+    mapNodes.push({ path: path, node: li });
+    list.appendChild(li);
+    return li;
+  }
+  function capped(items, list, draw) {
+    items.slice(0, SHOW_MAX).forEach(draw);
+    if (items.length > SHOW_MAX) { list.appendChild(el("li", { "class": "st-hint", text: (items.length - SHOW_MAX) + " more not shown." })); }
+  }
+
+  function renderMap(tree) {
+    var map = $("st-map");
+    map.textContent = ""; mapNodes = [];
+    if (tree.permissions) {
+      var perms = el("div", { "class": "st-perms" });
+      map.appendChild(el("h4", { text: "Permissions" }));
+      map.appendChild(el("p", { "class": "st-hint", text: "Checked in this order: deny, then ask, then allow. The first match wins." }));
+      ["deny", "ask", "allow"].forEach(function (n) {
+        var rules = tree.permissions[n], ul = el("ul", { "class": "st-tree" });
+        var col = el("div", { "class": "st-col", "data-path": "permissions." + n, tabindex: "-1" },
+          [el("p", { "class": "st-colhead" }, [el("code", { text: n }), el("span", { text: " " + rules.length })]), ul]);
+        mapNodes.push({ path: "permissions." + n, node: col });
+        capped(rules, ul, function (r) { addNode(ul, r.path, [el("code", { text: r.rule })]); });
+        perms.appendChild(col);
+      });
+      map.appendChild(perms);
+    }
+    if (tree.hooks.length) {
+      var hl = el("ul", { "class": "st-tree" });
+      map.appendChild(el("h4", { text: "Hooks (read-only)" }));
+      capped(tree.hooks, hl, function (h) {
+        addNode(hl, h.path, [el("span", { text: h.event }), el("span", { "class": "st-sep", "aria-hidden": "true", text: "\u25B8" }),
+          el("span", { text: h.matcher }), el("span", { "class": "st-sep", "aria-hidden": "true", text: "\u25B8" }), el("code", { text: h.command })]);
+      });
+      map.appendChild(hl);
+    }
+    function group(title, items) {
+      var ul = el("ul", { "class": "st-tree" });
+      map.appendChild(el("h4", { text: title }));
+      capped(items, ul, function (it) { addNode(ul, it.path, [el("code", { text: it.path }), el("span", { "class": "st-val", text: it.value })]); });
+      map.appendChild(ul);
+    }
+    tree.categories.forEach(function (c) { group(c.name, c.items); });
+    if (tree.other.length) { group("Other keys (kept as-is)", tree.other); }
+    if (!map.firstChild) { map.appendChild(el("p", { "class": "st-hint", text: "The file is an empty object." })); }
+  }
+
+  function renderFindings(findings) {
+    var list = $("st-findings"), n = { error: 0, warn: 0, tip: 0 };
+    list.textContent = "";
+    findings.forEach(function (f) { n[f.severity]++; });
+    $("st-findings-head").textContent = "Findings (" + plural(n.error, "error", "errors") + " \u00B7 " +
+      plural(n.warn, "warning", "warnings") + " \u00B7 " + plural(n.tip, "tip", "tips") + ")";
+    if (!findings.length) { list.appendChild(el("li", { text: "No problems found." })); }
+    capped(findings, list, function (f) {
+      var where = el("button", { type: "button", "class": "st-path", text: f.path || "whole file", "aria-label": f.id + " at " + (f.path || "whole file") + ": show in map" });
+      where.addEventListener("click", function () { goTo(f.path); });
+      var msg = el("div", { "class": "st-msg" }, [el("span", { text: f.problem }), el("span", { "class": "st-fixline", text: "Fix: " + f.fix })]);
+      if (f.action) {
+        var b = el("button", { type: "button", "class": "st-btn", text: f.action.label });
+        b.addEventListener("click", function () { loadIntoBuild(f.action.add); });
+        msg.appendChild(b);
+      }
+      list.appendChild(el("li", {}, [sevTag(f.severity, f.severity + " " + f.id), where, msg]));
+      var m = nodeFor(f.path);
+      if (m) { m.node.appendChild(sevTag(f.severity, f.id)); }
+    });
+  }
+
+  function showFormatted(text) {
+    $("st-formatted").textContent = text;
+    $("st-formatted-box").hidden = !text;
+  }
+  function runCheck() {
+    var res = core.check(catalog, paste.value, checkTarget());
+    if (res.empty) { msgBox.textContent = "Paste a settings.json first."; $("st-results").hidden = true; return res; }
+    msgBox.textContent = "";
+    if (res.tree) { renderMap(res.tree); } else { $("st-map").textContent = ""; mapNodes = []; }
+    renderFindings(res.findings);
+    $("st-results").hidden = false;
+    return res;
+  }
+  // A paste deep enough to overflow the stack must not break the page.
+  function safely(fn) {
+    return function () {
+      try { fn.apply(null, arguments); } catch (e) { msgBox.textContent = "This text is too large or too deeply nested to check here."; }
+    };
+  }
+
+  function loadIntoBuild(add) {
+    var res = runCheck();
+    if (res.empty) { return; }
+    var parsed = core.parseSettings(paste.value);
+    if (!parsed.ok || parsed.value === null || typeof parsed.value !== "object" || Array.isArray(parsed.value)) {
+      msgBox.textContent = "Fix the errors above first. Only a valid settings object can be loaded into Build.";
+      return;
+    }
+    var loaded = core.fromSettings(catalog, parsed.value, { keepSecrets: keep.checked });
+    state.selection = loaded.selection;
+    state.passthrough = Object.keys(loaded.passthrough).length ? loaded.passthrough : null;
+    state.loadNote = loaded.masked
+      ? plural(loaded.masked, "secret value was", "secret values were") + " removed. Set them in your shell or with apiKeyHelper, or tick \u201CKeep secret values\u201D in Check." : "";
+    Object.keys(add || {}).forEach(function (k) {
+      var cur = state.selection[k] || [];
+      state.selection[k] = cur.concat(add[k].filter(function (x) { return cur.indexOf(x) < 0; }));
+    });
+    state.pending = null; confirmBox.hidden = true;
+    setBuildTarget(checkTarget());
+    syncControls(); refresh();
+    selectTab(0, true);
+  }
+
+  $("st-check").addEventListener("click", safely(runCheck));
+  $("st-format").addEventListener("click", safely(function () {
+    var out = core.format(paste.value, keep.checked);
+    if (!paste.value.trim()) { showFormatted(""); msgBox.textContent = "Paste a settings.json first."; return; }
+    showFormatted(out.text);
+    if (!out.ok) { runCheck(); }
+  }));
+  $("st-edit").addEventListener("click", safely(function () { loadIntoBuild(null); }));
+  keep.addEventListener("change", function () { if (!$("st-formatted-box").hidden) { showFormatted(core.format(paste.value, keep.checked).text); } });
 
   refresh();
 })();
