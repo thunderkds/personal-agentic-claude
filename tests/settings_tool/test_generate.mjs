@@ -20,6 +20,8 @@ function block(id) {
 const ctx = vm.createContext({});
 vm.runInContext(block("settings-tool-core"), ctx);
 const core = ctx.SettingsCore;
+// Values built inside node:vm come from another realm; deepEqual needs same-realm objects.
+const plain = (x) => JSON.parse(JSON.stringify(x));
 const catalog = core.loadCatalog(block("settings-catalog"));
 
 test("core exposes the pure functions", () => {
@@ -50,7 +52,7 @@ test("Team project preset on Project target gives the exact JSON", () => {
   };
   assert.deepEqual(JSON.parse(out.json), expected);
   assert.equal(out.json, JSON.stringify(expected, null, 2));
-  assert.deepEqual(out.removed, []);
+  assert.deepEqual(plain(out.removed), []);
 });
 
 test("preset key sets are exact and never select a lowersSafety key", () => {
@@ -84,11 +86,11 @@ test("empty list is omitted", () => {
 
 test("autoMode.soft_deny removed on Project target with a one-line note", () => {
   const out = core.generate(catalog, { "autoMode.soft_deny": ["$defaults"] }, "project");
-  assert.deepEqual(out.removed, ["autoMode.soft_deny"]);
+  assert.deepEqual(plain(out.removed), ["autoMode.soft_deny"]);
   assert.equal(out.note, "1 key removed: not read from .claude/settings.json");
   assert.equal(out.json, "{}");
   const user = core.generate(catalog, { "autoMode.soft_deny": ["$defaults"] }, "user");
-  assert.deepEqual(user.removed, []);
+  assert.deepEqual(plain(user.removed), []);
   assert.equal(user.note, "");
 });
 
@@ -123,7 +125,7 @@ test("number validation: out-of-range values are flagged and never emitted", () 
   assert.equal(core.validateValue(entry("cleanupPeriodDays"), NaN).ok, false);
   const out = core.generate(catalog, { cleanupPeriodDays: 0, autoUpdatesChannel: "stable" }, "user");
   assert.deepEqual(JSON.parse(out.json), { autoUpdatesChannel: "stable" });
-  assert.deepEqual(out.invalid, ["cleanupPeriodDays"]);
+  assert.deepEqual(plain(out.invalid), ["cleanupPeriodDays"]);
 });
 
 test("enum, bool and string validation", () => {
