@@ -33,8 +33,19 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (verbatim prior content of `skills/resolve-question/SKILL.md` at 8386b17, 2026-10-27; non-executable change, so a quoted excerpt; the file has 122 lines and no `Debate` step):
+
+```
+description: "Resolve a question before anyone guesses. Invoke when the Supervisor is confused about a repo fact, or when a sub-agent report shows `Status: blocked` with a `Question:` line. Sorts the question, answers it from a Citation or from 2-3 independent read-only Scanners, sends what they cannot settle to the user, and logs every answer. Args: task=<TASK_ID|none> risk=<Low|Medium|High>"
+...
+#### 1. Sort the question
+... A Choice question goes to the user at once and never to Scanners: send it in the step 4
+HITL shape, then log the answer (step 5). ...
+#### 4. Judge
+... Any other outcome goes to the user (HITL) in this shape:
+```
+
+`grep -n Debate skills/resolve-question/SKILL.md` prints nothing; PROJECT_SPEC.md glossary has Citation, Fact question, Choice question, Scanner and no Debate/Advocate/Safer option.
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
