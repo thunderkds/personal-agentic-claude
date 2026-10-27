@@ -33,8 +33,25 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured 2026-10-27T15:14:26Z, worktree `feat/t186-settings-tool-check` at b949bb8, before any implementation commit; node v26.7.0):
+
+```
+$ node --test "tests/settings_tool/*.mjs"
+...
+✔ statusLine is emitted as a command object (0.101738ms)
+✔ output always round-trips through JSON.parse with 2-space indent (0.453555ms)
+✔ unknown selection keys are ignored (0.06674ms)
+✔ tool script source holds no network or storage API (spec rule 1) (0.25171ms)
+ℹ tests 16
+ℹ pass 16
+ℹ fail 0
+$ python3 -m pytest tests/test_site_content.py -q
+68 passed in 0.18s
+$ grep -n -i "coming soon" site/index.html
+584:    <button type="button" role="tab" class="st-tab" aria-selected="false" disabled id="st-tab-check">Check <span class="st-soon">(coming soon)</span></button>
+```
+
+Note: the Check tab is disabled "(coming soon)"; no `check`, `format`, `fromSettings` or `maskSecrets` function exists, and there is no `tests/settings_tool/test_check.mjs`.
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
