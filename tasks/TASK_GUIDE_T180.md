@@ -167,3 +167,4 @@ python3 -m pytest -q tests/test_auto_mode.py tests/test_tracks.py tests/test_res
 - 2026-10-27 USER /verify T180 FAIL (High risk: no 3-Advocate Debate, Stage 4 skipped) → option 2: text fix + auto-mode Stop hook → D8.
 - 2026-10-27 USER D8 live check (hook silent with no board; choices labelled RULE) → option A → D9.
 - 2026-10-27 USER D9 live check (High finished with no Debate: every line cited a loosely related RULE) → option 2 → D10.
+- 2026-10-27 USER accepted: in auto mode the Supervisor may add a temporary `refs/remotes/origin/HEAD` so `security-review` can start in a repo with no remote, if it removes the ref after and logs it in the report (seen in the D10 High run). Goes to the follow-up task with the stale `Paused:` line and the no-remote limit.
