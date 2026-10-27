@@ -36,8 +36,8 @@ is sent to the user (auto mode: to the Debate step).
 #### 2. Citation check
 
 If you can give a Citation (a `file:line` and its quoted text, opened this session) that answers
-the question, answer with it, skip the Scanners and go to step 5. A memory of a file
-is not a Citation; open it first.
+the question, answer with it, skip the Scanners and go to step 5. A remembered file
+is not a Citation; open it.
 
 Done when: you have a Citation opened this session, or go to step 3.
 
@@ -46,7 +46,7 @@ Done when: you have a Citation opened this session, or go to step 3.
 Start 2 Scanners in one turn (3 for a Medium/High risk task) with `Agent({ subagent_type:
 "Explore", prompt: <template> })`, one starting area each. A Scanner searches its starting area
 first and may follow a lead anywhere in the repo, so 2 Scanners can still cite a fact that lives
-in one place. Identical prompts make correlated mistakes, so the starting areas differ:
+in one place. Identical prompts err together, so the starting areas differ:
 
 - (a) code — `scripts/`, `.claude/hooks/`, `skills/*/scripts/`, tests
 - (b) docs — root `*.md` (`CLAUDE.md`, `AGENTS.md`, `PROJECT_SPEC.md`, `PROJECT_KANBAN.md`, `PRD*.md`,
@@ -109,7 +109,7 @@ Log every answer (Citation, Scanners or user).
 - **Board mode `local`**: `Skill({ skill: "thinking-report", args: "session=resolution
   task=<ID|none> branch=<branch>" })`, saved to `reports/question_<task-or-none>_<YYYYMMDDTHHMMSS>.html`.
 
-Then append one line to the task guide under `## Questions Log` (add the heading on first use):
+Then append one line under the guide's `## Questions Log` (add the heading on first use):
 `- <YYYY-MM-DD> <question> → <answer> (<Linear comment or reports/question_….html>)`. Online, the
 guide is Board cache: after the edit, run
 `python3 scripts/board_sync.py update --guide <ID>`. A question with no task has no guide and no
@@ -127,8 +127,9 @@ whose fix needs a choice.
 Count the `DEBATE` lines under the guide's `## Questions Log`; `task=none` or no guide: per session.
 A question is never debated twice. If every option deletes or overwrites data, pause and ask.
 
-**Advocates.** Start 2 (3 for 3+ options or High risk; the third argues "do the smallest safe thing"),
-each `Agent({ subagent_type: "Explore", prompt: <template> })`, no task ID or guide path.
+**Advocates.** By the task's Risk: Low, none (decide, log why); Medium, 2; High, 3 (the third argues
+"do the smallest safe thing"). Each `Agent({ subagent_type: "Explore", prompt: <template> })`, no task ID
+or guide path.
 Fewer than 2 Advocate calls ran: not a Debate; do not log it as one.
 
 Advocate prompt template (these 3 slots only):

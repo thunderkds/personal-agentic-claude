@@ -13,7 +13,8 @@
 <!-- Optional: the final report, only for a task run in auto mode (the user's `[auto]` tag,
 `docs/claude-md/tracks.md` `## Auto mode`). To use it, copy the block below out of this comment, to this
 place, and replace every <...>. Keep `Mode: auto` as its first line, exactly as written: T182's hook reads
-it. The same block is the Supervisor's final chat message. It is not the `delivery-report` page and not
+it. Write it to this file before the run ends; the chat message is a copy, not the report. The same
+block is the Supervisor's final chat message. It is not the `delivery-report` page and not
 Evidence. A taste decision (what the user wants) also ends with the flag. Write `DEBATED` only when ≥2
 Advocate `Agent` calls ran for that question, naming each Advocate's option. A decision with no Advocates is
 labelled `RULE`, `FACT` or `SAFER OPTION`, never `DEBATED`.

@@ -22,7 +22,8 @@
 so: `- Track minimal — track set by the user; <the risk, in one line>`.
 
 In auto mode (the user's `[auto]` tag, `docs/claude-md/tracks.md` `## Auto mode`) the record is the final
-report. `Mode: auto` is the line right under the heading, exactly as written: T182's hook reads it. Each
+report. Write it to its file before the run ends; the chat message is a copy, not the report.
+`Mode: auto` is the line right under the heading, exactly as written: T182's hook reads it. Each
 decision says how it was made. A Debate, safer-option or taste decision ends with the flag. Write `DEBATED`
 only when ≥2 Advocate `Agent` calls ran for that question, naming each Advocate's option. A decision with
 no Advocates is labelled `RULE`, `FACT` or `SAFER OPTION`, never `DEBATED`:

@@ -154,11 +154,26 @@ alone on its line, outside any HTML comment. On the extended track it is the fir
 Decision record's heading. T182's hook keys on this line. Both templates hold the line inside an HTML
 comment, so a copied template is not marked.
 
+### Debate size by Risk
+
+The task's **Risk** label sets how every decision that would have been a question to the user is made:
+
+| Risk | Who decides | Advocates |
+|---|---|---|
+| Low | The Supervisor decides alone and logs `RULE`, `FACT` or `SAFER OPTION` with the reason | none: no Debate |
+| Medium | A Debate (`resolve-question`): the Advocates argue, the Supervisor decides by its rules | exactly 2, required |
+| High | A Debate (`resolve-question`): the Advocates argue, the Supervisor decides by its rules | exactly 3, required; the third argues the smallest safe thing |
+
+Every decision, at every Risk level, has its log line in the final report. This supersedes T179's count
+("2, or 3 for 3+ options or High risk") in auto mode. Outside auto mode, `resolve-question` is unchanged.
+
 ### Minimal track in auto mode
 
-The one stop of the minimal track (an unclear request) becomes a Debate. Its read-only `Explore` Advocates
-are the one exception to the track's no-sub-agent rule, and they are required for the unclear request: the
-Supervisor starts them (`resolve-question`), never argues both sides itself. The Decision record carries the
+The one stop of the minimal track (an unclear request) is decided by `### Debate size by Risk`. A
+minimal-track task is Risk Low by the track rule, so the Supervisor decides and logs the reason: no
+Advocates are required. When the user set the minimal track for a Medium or High risk task, the table's
+Advocates are required, and they are the one exception to the track's no-sub-agent rule; the Supervisor
+starts them (`resolve-question`) and never argues both sides itself. The Decision record carries the
 final report: the `Mode: auto` line, each decision with how it was made, and the flag
 (`templates/MINIMAL_LOG_template.md`). A minimal-track task has no guide, so it counts its Debates per
 session.
@@ -167,7 +182,9 @@ session.
 
 These are all the places where a track waits for the user today: `AGENTS.md`,
 `docs/claude-md/pipeline-stages.md` and the skills the stages run. In auto mode each one follows its rule.
-`⚠` in the last column means the report line ends with `⚠ decided for you — please review`.
+`⚠` in the last column means the report line ends with `⚠ decided for you — please review`. "Debate" in
+this table follows `### Debate size by Risk`: on a Risk Low task the Supervisor decides alone, and the line
+is logged `RULE`, `FACT` or `SAFER OPTION`, not `DEBATED`.
 
 | # | Stop today (where) | Auto rule | Logged as |
 |---|---|---|---|
@@ -191,14 +208,17 @@ These are all the places where a track waits for the user today: `AGENTS.md`,
 | 18 | Stage 5 item 1: `/verify` (only the user can run it) | The Supervisor's own real-run check, written under `Checks:` as `auto-checked, not /verify`. The `verify` Evidence row stays unchecked: T182's hook fills it from a real `/verify` run, or the user does. | `Checks:` |
 | 19 | Stage 5 items 3–6: memory update, merge, Done, `ship` | Never in auto mode. The task ends at Ready for Review on its branch. | `Not done:` |
 | 20 | `AGENTS.md` self-monitoring: "want me to compact before continuing?" | Do not ask. Near the session's context or usage limit, stop at a clean point (see Edge cases). | `Paused:` |
-| 21 | Minimal track: an unclear request (its one stop) | Debate: start the read-only Advocates (`resolve-question`). | `DEBATED` ⚠ |
+| 21 | Minimal track: an unclear request (its one stop) | By `### Debate size by Risk`. At Risk Low (the minimal track's own level) the Supervisor decides the reading and logs why. | `RULE` / `SAFER OPTION` ⚠ |
 
 The skills these rows name keep their own stop text. In auto mode this table wins over it.
 
 ### Final report
 
 The final report is the `## Auto decisions` section of `tasks/TASK_REVIEW_<ID>.md` (extended track), or
-the Decision record itself (minimal track). Copy its shape from `templates/TASK_REVIEW_template.md` or
+the Decision record itself (minimal track). It is written to its file before the run ends. If
+`tasks/TASK_REVIEW_<ID>.md` does not exist yet, create it from `templates/TASK_REVIEW_template.md`. The
+chat message is a copy, not the report. On the extended track, Stage 4 `code-review` still runs before
+the run ends, because it is not a user stop. Copy the report's shape from `templates/TASK_REVIEW_template.md` or
 `templates/MINIMAL_LOG_template.md`:
 
 - `Mode: auto`, then one numbered line per decision: what was decided, then how — `RULE: …`,
@@ -213,7 +233,7 @@ the Decision record itself (minimal track). Copy its shape from `templates/TASK_
 - `Not done: merge (yours)`, plus the `/verify` state: `auto verify: running (T182)`, its result, or
   `/verify (yours)` when T182 is not built or its run was blocked.
 
-The same block is the Supervisor's final chat message. It is not the `delivery-report` HTML page, and it is
+The Supervisor's final chat message repeats the block. It is not the `delivery-report` HTML page, and it is
 not Evidence: the merge gate does not read it. A Debate also leaves its `DEBATE` line under the guide's
 `## Questions Log` (`resolve-question`); the report collects those lines.
 
