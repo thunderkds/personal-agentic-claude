@@ -474,3 +474,53 @@ def test_d9_second_fire_with_no_board_does_not_loop(tmp_path):
     assert result.returncode == 0 and second == {}
     text = (project / "tasks" / "TASK_REVIEW_T951.md").read_text(encoding="utf-8")
     assert text.count("Paused: auto-mode check failed") == 1
+
+
+# ── D10 — at Risk High at least one decision is DEBATED with 3 Advocates ──────────────────
+# D9 live check (High, task 5): every line cited a real but loosely related RULE, no line had ⚠,
+# no Advocate ran, and the D9 checks passed. D7: "This is force for the high risk."
+D10_REASON = "Risk High, but no decision was DEBATED with 3 Advocates"
+D9_HIGH_SHAPE = [
+    "1. JSON file at data/expenses.json — RULE: `docs/claude-md/tracks.md` `### Track rule`",
+    "2. backed up the CSV before the delete — RULE: `docs/claude-md/tracks.md` `### Stops that stay`",
+    "3. Left recurring.csv as it is — RULE: AGENTS.md § Karpathy Engineering Principles (Surgical Changes)",
+    "4. kept amounts as text — RULE: docs/claude-md/tracks.md:120",
+]
+
+
+def test_d10_high_with_only_cited_rules_and_no_debate_blocks(tmp_path):
+    project = _project(tmp_path, [EXT_ROW], review=_report(D9_HIGH_SHAPE), untagged=_trace(0))
+    _, out = _run(project)
+    assert _blocked(out) and D10_REASON in out["reason"], out
+
+
+def test_d10_the_same_report_at_medium_is_not_blocked_by_this_rule(tmp_path):
+    project = _project(tmp_path, [EXT_ROW.replace("High", "Medium")], risk="Medium",
+                       review=_report(D9_HIGH_SHAPE), untagged=_trace(0))
+    _, out = _run(project)
+    assert out == {}, out
+
+
+def test_d10_high_with_one_three_advocate_debate_passes(tmp_path):
+    decisions = D9_HIGH_SHAPE[:2] + [
+        f"3. Left recurring.csv as it is — DEBATED: leave it ({_advocates(3)}) {FLAG}"]
+    project = _project(tmp_path, [EXT_ROW], review=_report(decisions), untagged=_trace(3))
+    _, out = _run(project)
+    assert out == {}, out
+
+
+def test_d10_high_with_a_debate_but_only_two_advocate_calls_blocks(tmp_path):
+    decisions = D9_HIGH_SHAPE[:2] + [
+        f"3. Left recurring.csv as it is — DEBATED: leave it ({_advocates(3)}) {FLAG}"]
+    project = _project(tmp_path, [EXT_ROW], review=_report(decisions), untagged=_trace(2))
+    _, out = _run(project)
+    assert _blocked(out) and D10_REASON in out["reason"], out
+
+
+def test_d10_second_fire_records_the_pause_and_does_not_loop(tmp_path):
+    project = _project(tmp_path, [EXT_ROW], review=_report(D9_HIGH_SHAPE), untagged=_trace(0))
+    assert _blocked(_run(project)[1])
+    result, second = _run(project, active=True)
+    assert result.returncode == 0 and second == {}
+    text = (project / "tasks" / "TASK_REVIEW_T951.md").read_text(encoding="utf-8")
+    assert text.count(f"Paused: auto-mode check failed — {D10_REASON}") == 1, text

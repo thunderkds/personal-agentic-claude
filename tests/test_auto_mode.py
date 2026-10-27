@@ -735,3 +735,13 @@ def test_d9_templates_carry_the_cited_label_rule_with_examples(template):
     assert FACT_CITATION_TEXT.search(text), template.name
     assert re.search(r"Good: `[^`]*RULE: `docs/claude-md/tracks\.md` `### ", text), template.name
     assert re.search(r"Bad: `[^`]*RULE: Surgical Changes`", text), template.name
+
+
+# ── D10 — High risk always debates ────────────────────────────────────────────────────────
+def test_d10_tracks_md_says_high_risk_always_debates_one_decision():
+    text = _norm(_subsection(_auto(), "Debate size by Risk"))
+    assert re.search(r"At Risk High, at least one decision is always debated by 3 Advocates", text), text
+    assert re.search(r"biggest effect on the user's data or scope", text), text
+    assert re.search(r"[Cc]ited `RULE:` lines do not replace it", text), text
+    hook = _norm(_subsection(_auto(), "Auto-mode check (Stop hook)"))
+    assert "`Risk High, but no decision was DEBATED with 3 Advocates`" in hook, hook
