@@ -33,8 +33,16 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured 2026-10-27T14:47:45Z, worktree wt-t185, before any implementation commit):
+```
+$ python3 -m pytest tests/test_site_content.py -q
+...............................................................          [100%]
+63 passed in 0.14s
+$ grep -c 'settings-tool' site/index.html
+0
+$ ls tests/settings_tool
+ls: cannot access 'tests/settings_tool': No such file or directory
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
