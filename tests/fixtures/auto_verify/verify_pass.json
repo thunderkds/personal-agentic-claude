@@ -1,0 +1,13 @@
+{
+ "type": "result",
+ "subtype": "success",
+ "is_error": false,
+ "session_id": "bb6500c2-6ee9-4ce9-bc0e-ea2f246f2fd4",
+ "total_cost_usd": 0.2565151,
+ "num_turns": 7,
+ "duration_ms": 49612,
+ "permission_denials": [],
+ "terminal_reason": "completed",
+ "stop_reason": "end_turn",
+ "result": "## Verification: T180 auto-mode Stop hook (D8–D10) in `stop_auto_mode_check.py`\n\n**Verdict:** PASS\n\n**Claim:** In auto mode, a `Stop` hook blocks the run from ending when the final report is weak. At High risk it requires a `DEBATED` decision with 3 Advocates, at least 3 Advocate `Agent` calls in the trace, and both reviews. A `RULE:` line that cites no rule is treated as a choice. On the second fire it allows the stop and appends a `Paused:` line. Medium and Low risk are unchanged.\n\n\n[... trimmed by T182: the skill's Method, Steps and Findings ...]\n"
+}
