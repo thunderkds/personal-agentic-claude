@@ -80,8 +80,9 @@ Stage 4 skills.
 7. **Board.** Add one board row under Ready for Review in `PROJECT_KANBAN.md`, marked `| Track: minimal | Record: tasks/MINIMAL_LOG.md` at its end. Commit on the task branch without asking: the commit is part of this step.
 
 **The only stop.** When the request itself is unclear (it has more than one reasonable reading), ask one
-clear question and stop. Asking is cheaper than undoing a wrong guess. A question about a fact in the code
-is not a stop: read the code and go on. Asking whether to commit is not a stop either: step 7 commits.
+clear question and stop. Asking is cheaper than undoing a wrong guess. In auto mode, a Debate settles it
+instead (`## Auto mode`). A question about a fact in the code is not a stop: read the code and go on.
+Asking whether to commit is not a stop either: step 7 commits.
 
 **Backups.** A backup must sit inside the project or in a path the user named, never in `/tmp`: a temp
 directory can be gone by the time the user needs it.
@@ -127,3 +128,116 @@ any merge: the user runs `/verify`, then the Supervisor moves the row to Done an
 In board mode `online` the record still goes to `tasks/MINIMAL_LOG.md`. The board row goes through
 `scripts/board_sync.py` as today. If the board's render drops the `Track: minimal` marker, the stop reminder
 lists the row for Stage 4. That is a wrong reminder, not a weaker gate.
+
+---
+
+## Auto mode
+
+The user turns auto mode on with the literal tag `[auto]` anywhere in the request, for example
+`move the data from CSV to JSON [auto]`. Only the bracketed tag counts, exactly as written: a bare word
+*auto* (for example "add auto-save") or `[Auto]` is not the tag, and the task runs in normal mode. Without
+the tag, both tracks behave as the sections above say.
+
+In auto mode the Supervisor picks the track by the same rule and runs it to the end without asking the user
+anything. Each decision it would have asked about is made by a rule, a Citation or a Debate
+(`skills/resolve-question/SKILL.md`), and goes in the **final report**. The track line says so:
+
+```
+Track: extended · auto — <reasons>. I won't stop for questions; every decision goes in the final report.
+Track: minimal · auto — <reasons>. I won't stop for questions; every decision goes in the final report.
+```
+
+**Marker.** The task records auto mode in one line that a hook can read: `Mode: auto`, exactly as written,
+alone on its line, outside any HTML comment. On the extended track it is the first line under
+`## Auto decisions` in `tasks/TASK_REVIEW_<ID>.md`. On the minimal track it is the line right under the
+Decision record's heading. T182's hook keys on this line. Both templates hold the line inside an HTML
+comment, so a copied template is not marked.
+
+### Minimal track in auto mode
+
+The one stop of the minimal track (an unclear request) becomes a Debate. The Decision record carries the
+final report: the `Mode: auto` line, each decision with how it was made, and the flag
+(`templates/MINIMAL_LOG_template.md`). A minimal-track task has no guide, so it counts its Debates per
+session.
+
+### Every user stop and its auto rule
+
+These are all the places where a track waits for the user today: `AGENTS.md`,
+`docs/claude-md/pipeline-stages.md` and the skills the stages run. In auto mode each one follows its rule.
+`⚠` in the last column means the report line ends with `⚠ decided for you — please review`.
+
+| # | Stop today (where) | Auto rule | Logged as |
+|---|---|---|---|
+| 1 | Phase 0 questions and the `PRD.md` confirmation, new project only (`docs/claude-md/phase0-project-initiation.md`) | Answer each question from the request and the repo, with Citations. A question they cannot answer is a Choice question: Debate. | `FACT` / `DEBATED` ⚠ |
+| 2 | Stage 0.5a `grill-with-docs`: "Resolve all flagged items with the user" | Answer from the docs and code with Citations. What they cannot answer is a Choice question: Debate. | `FACT` / `DEBATED` ⚠ |
+| 3 | `grill-with-docs`: an ADR-eligible decision ("ask the user whether to escalate") | Write the DDR; do not escalate to an ADR (the smaller change). | `SAFER OPTION` ⚠ |
+| 4 | Stage 0.5b `brainstorming`: the user approves one direction | Take the recommended direction and list the alternatives in the report. | `RULE` ⚠ (taste) |
+| 5 | Stage 1 item 1: one-time setup (`fewer-permission-prompts`, `update-config`) | Skip both: they change the user's permission settings and hooks. Name them under `Not done:`. | `RULE` |
+| 6 | Stage 1 item 2 and `AGENTS.md` `## Multi-CLI Configuration`: the user lists the CLIs and their models | Read the `## CLI Model Table` in `PROJECT_SPEC.md`. No row or an empty cell: row 14. | `FACT` |
+| 7 | Stage 1 item 3: a missing agent guide ("ask the user to save it") | The Supervisor writes it from `templates/` on the task branch. | `RULE` |
+| 8 | Stage 1 item 4: "run `git status` … and paste the output" | The Supervisor runs it itself. | `RULE` |
+| 9 | Stage 1 item 6: the user must save or confirm `PROJECT_SPEC.md` | The Supervisor checks the file, or writes it from `templates/PROJECT_SPEC_template.md`. | `RULE` |
+| 10 | Stage 1 item 8: "Are they correct?" (the domain models) | Record the models the scan found, with their paths. | `FACT` ⚠ (taste) |
+| 11 | Stage 1.5: "Approve or request any modifications?" (the sub-agent team) | The base team; `craft-agent` only for a role the base team does not cover. | `RULE` |
+| 12 | Stage 2: the user approves the task breakdown and confirms `tasks/` | The Supervisor's own breakdown, labelled by the Complexity matrices. It lists `tasks/` itself. | `RULE` |
+| 13 | Stage 2/3: the Requirement Fidelity Gate ("Restated intent confirmed") | Signed `auto (Supervisor)`, not by the user. | `RULE` |
+| 14 | Stage 3 `craft-spawn-prompt` returns STOP-and-ask: no CLI named, no `## CLI Model Table` row, or an empty cell | Spawn on the CLI that runs this session, with the model this session runs as. Never invent another CLI's model name. | `SAFER OPTION` ⚠ |
+| 15 | Stage 3: a sub-agent reports `Status: blocked` with a `Question:`, or asks to approve its `tdd` plan | `resolve-question`: a Fact question by Citation or Scanners, a Choice question by Debate. The Supervisor approves a `tdd` plan that matches the guide. | `FACT` / `DEBATED` ⚠ / `RULE` |
+| 16 | Stage 4 pull moment 3 (board mode `online`): "review against the new version?" | Review against the new version. | `RULE` |
+| 17 | Stage 4 item 7: a finding whose fix needs a choice | Debate. | `DEBATED` ⚠ |
+| 18 | Stage 5 item 1: `/verify` (only the user can run it) | The Supervisor's own real-run check, written under `Checks:` as `auto-checked, not /verify`. The `verify` Evidence row stays unchecked: T182's hook fills it from a real `/verify` run, or the user does. | `Checks:` |
+| 19 | Stage 5 items 3–6: memory update, merge, Done, `ship` | Never in auto mode. The task ends at Ready for Review on its branch. | `Not done:` |
+| 20 | `AGENTS.md` self-monitoring: "want me to compact before continuing?" | Do not ask. Near the session's context or usage limit, stop at a clean point (see Edge cases). | `Paused:` |
+| 21 | Minimal track: an unclear request (its one stop) | Debate. | `DEBATED` ⚠ |
+
+The skills these rows name keep their own stop text. In auto mode this table wins over it.
+
+### Final report
+
+The final report is the `## Auto decisions` section of `tasks/TASK_REVIEW_<ID>.md` (extended track), or
+the Decision record itself (minimal track). Copy its shape from `templates/TASK_REVIEW_template.md` or
+`templates/MINIMAL_LOG_template.md`:
+
+- `Mode: auto`, then one numbered line per decision: what was decided, then how — `RULE: …`,
+  `FACT: <Citation>`, `DEBATED: <who argued what>` or `SAFER OPTION: …`. Every Debate, safer-option and
+  taste decision ends with `⚠ decided for you — please review`.
+- `Paused:` — a stop that stayed (below), and why. Only when one paused the task.
+- `Checks:` — the tests, the reviews, and the real run, labelled `auto-checked, not /verify`.
+- `Not done: merge (yours)`, plus the `/verify` state: `auto verify: running (T182)`, its result, or
+  `/verify (yours)` when T182 is not built or its run was blocked.
+
+The same block is the Supervisor's final chat message. It is not the `delivery-report` HTML page, and it is
+not Evidence: the merge gate does not read it. A Debate also leaves its `DEBATE` line under the guide's
+`## Questions Log` (`resolve-question`); the report collects those lines.
+
+### Stops that stay
+
+Even in auto mode, the Supervisor pauses the task, with one message that says why, for:
+
+- a safety-hook block;
+- an action that deletes or overwrites data with no backup;
+- the 4th Debate in a task (the `resolve-question` cap);
+- a paid action outside the task's own work;
+- a login or secret the Supervisor does not have;
+- the same sub-agent hitting the step limit twice.
+
+The pause also goes in the final report, on its `Paused:` line.
+
+### Never in auto mode
+
+- merge or push;
+- the Supervisor running `/verify` or writing its `verify` Evidence row (only T182's hook writes it). The
+  merge gate cannot tell who wrote the row, so this rule is doctrine: the Supervisor's own check goes under
+  `Checks:`, never in the `verify` row;
+- moving a task to Done;
+- moving a task down a track.
+
+### Edge cases
+
+- `[auto]` with "ask me before X" in the same request: the explicit ask wins for X. Everything else is
+  auto.
+- A minimal-track task that moves up mid-task stays in auto mode on the extended
+  track, and the report says when it moved.
+- A sub-agent reports `Status: blocked` with a Choice question: a Debate settles it, not the user.
+- The session nears its usage limit: stop at a clean point, write the final report so far, and say what is left.
+- Two `[auto]` tasks in one session: each task has its own report and its own Debate count.

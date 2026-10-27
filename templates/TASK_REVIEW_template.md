@@ -10,6 +10,25 @@
 
 ---
 
+<!-- Optional: the final report, only for a task run in auto mode (the user's `[auto]` tag,
+`docs/claude-md/tracks.md` `## Auto mode`). To use it, copy the block below out of this comment, to this
+place, and replace every <...>. Keep `Mode: auto` as its first line, exactly as written: T182's hook reads
+it. The same block is the Supervisor's final chat message. It is not the `delivery-report` page and not
+Evidence. A taste decision (what the user wants) also ends with the flag.
+
+## Auto decisions
+
+Mode: auto
+1. <what was decided> — RULE: <the rule>
+2. <what was decided> — FACT: <path>:<line> "<quoted text>"
+3. <what was decided> — DEBATED: <option> (<who argued what>) ⚠ decided for you — please review
+4. <what was decided> — SAFER OPTION: <why> ⚠ decided for you — please review
+Paused: <only when a stop that stays paused the task: which one, and why>
+Checks: tests `<command>` — <result>; reviews <skill — result>; real run `<command>` — printed `<what it printed>` (auto-checked, not /verify)
+Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | /verify (yours)>
+
+-->
+
 ## Evidence
 
 | Check | Result | Notes / output snippet |

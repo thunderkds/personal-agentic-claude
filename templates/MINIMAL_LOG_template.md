@@ -20,4 +20,24 @@
 
 <track> is `minimal`. When the user set the track against the rule, the first `Decisions:` line says
 so: `- Track minimal — track set by the user; <the risk, in one line>`.
+
+In auto mode (the user's `[auto]` tag, `docs/claude-md/tracks.md` `## Auto mode`) the record is the final
+report. `Mode: auto` is the line right under the heading, exactly as written: T182's hook reads it. Each
+decision says how it was made. A Debate, safer-option or taste decision ends with the flag:
+
+## <ID> — <title> · minimal
+Mode: auto
+**Asked:** "<the request, verbatim, with its [auto] tag>"
+**Decisions:**
+1. <what was decided> — RULE: <the rule>
+2. <what was decided> — FACT: <path>:<line> "<quoted text>"
+3. <what was decided> — DEBATED: <option> (<who argued what>) ⚠ decided for you — please review
+4. <what was decided> — SAFER OPTION: <why> ⚠ decided for you — please review
+Paused: <only when a stop that stays paused the task: which one, and why>
+**Checked:**
+- New test `<test name>` — <failed before the change, passes after>
+- Suite: `<command>` — <its result line>
+- Real run: `<command>` — printed `<what it printed>` (auto-checked, not /verify)
+**Files:** `<path>`, `<path>`
+**Not done:** merge (yours); <auto verify: running (T182) | auto verify: <result> | /verify (yours)>
 -->
