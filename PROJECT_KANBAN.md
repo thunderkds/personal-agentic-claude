@@ -82,7 +82,6 @@
 
 
 ### In Progress
-- [ ] **T180** — Auto mode: with `[auto]` in the request, either track runs to Ready for Review without stopping and ends with a final report of every decision; merge and safety hooks stay with the user; the `verify` row is left for T182's hook | common-infrastructure | C3 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T180.md` | Depends on: T178, T179 | Registered 2026-10-26; user: "I want to automate 2 of tracks also, with track 2 I will give the param to automate, and note the decision for the final report". Branch `plan/t178-t180-tracks` in `../wt-t178`. Started 2026-10-27 after T178+T179 merged into the plan branch (user: "continue your work"); branch `feat/t180-auto-mode` in `../wt-t180-auto`.
 
 
 
@@ -91,6 +90,7 @@
 
 
 ### Ready for Review
+- [ ] **T180** — Auto mode: with `[auto]` in the request, either track runs to Ready for Review without stopping and ends with a final report of every decision; merge and safety hooks stay with the user; the `verify` row is left for T182's hook | common-infrastructure | C3 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T180.md` | Depends on: T178, T179 | Registered 2026-10-26; user: "I want to automate 2 of tracks also, with track 2 I will give the param to automate, and note the decision for the final report". Branch `plan/t178-t180-tracks` in `../wt-t178`. Started 2026-10-27 after T178+T179 merged into the plan branch (user: "continue your work"); branch `feat/t180-auto-mode` in `../wt-t180-auto`. Ready for Review 2026-10-27 (branch head `c38990e`): 81 new tests, suite `1593 passed, 25 subtests passed`, `validate.sh: PASS`; merge gate unchanged; code-review 0 P0/P1 (P2: data-delete pause vs AC 6(a)); security-review no findings. Waiting: user go for AC 6 ($6), `/verify`.
 
 
 ### Done
