@@ -8,7 +8,6 @@
 ## Board
 
 ### Todo
-- [ ] **T180** — Auto mode: with `[auto]` in the request, either track runs to Ready for Review without stopping and ends with a final report of every decision; merge and safety hooks stay with the user; the `verify` row is left for T182's hook | common-infrastructure | C3 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T180.md` | Depends on: T178, T179 | Registered 2026-10-26; user: "I want to automate 2 of tracks also, with track 2 I will give the param to automate, and note the decision for the final report". Branch `plan/t178-t180-tracks` in `../wt-t178`.
 - [ ] **T182** — Auto verify: for an `[auto]` task at Ready for Review, a `Stop` hook (not the Supervisor) runs the real `/verify` in a fresh headless session and writes the `verify` row; the merge gate accepts it only with a run record the agent cannot write; merge stays with the user | common-infrastructure | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T182.md` | Depends on: T180 | Registered 2026-10-27; user: "I want to make the /verify command is automate also", chose "Hook runs real /verify" over "my own check counts" and "keep manual, one command". `/verify` is a built-in the model cannot run (disable-model-invocation), so AC 1 is a paid spike ($1) proving `claude -p "/verify Txxx"` runs headless — stop and report if not, never a hand-written copy. Branch `plan/t178-t180-tracks` in `../wt-t178`.
 - [ ] **T176** — Kit-arms experiment part 2: run 36 cells under the $60 cap, report against the frozen rule | common-infrastructure | C1 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T176.md` | Depends on: T175 (in main + user read RULE.md) | Registered 2026-10-26 with T175.
 - [ ] **T162** — Online mode stops tracking `PROJECT_KANBAN.md` in git (the board copy is rewritten on every pull); local mode keeps tracking it | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T162.md` | Depends on: T155 | Registered 2026-10-19: user approved ("yes") the T155 agent's recommendation. /verify of T158 showed an online pull drops all 161 local `Txxx` rows from the board copy, so a tracked copy makes a diff on every pull moment. Must keep the merge gate and hooks reading a present file (pull runs before they read).
@@ -83,6 +82,7 @@
 
 
 ### In Progress
+- [ ] **T180** — Auto mode: with `[auto]` in the request, either track runs to Ready for Review without stopping and ends with a final report of every decision; merge and safety hooks stay with the user; the `verify` row is left for T182's hook | common-infrastructure | C3 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T180.md` | Depends on: T178, T179 | Registered 2026-10-26; user: "I want to automate 2 of tracks also, with track 2 I will give the param to automate, and note the decision for the final report". Branch `plan/t178-t180-tracks` in `../wt-t178`. Started 2026-10-27 after T178+T179 merged into the plan branch (user: "continue your work"); branch `feat/t180-auto-mode` in `../wt-t180-auto`.
 
 
 
