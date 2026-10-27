@@ -48,7 +48,7 @@ Therefore the site's roster content is **asserted against the source of truth by
 
 | Site content | Source of truth |
 |---|---|
-| Agent list | `name:` frontmatter in `.claude/agents/*.md` (excluding `general-agent-template`) |
+| Agent list | `name:` frontmatter in `.claude/agents/*.md` (every file is a spawnable role; the base template lives in `templates/`) |
 | Skill list | directory names under `.claude/skills/` |
 | Hook list | `.claude/settings.json` `hooks` wiring |
 | Step-limit default | `STEP_LIMIT` literal in `.claude/hooks/pre_agent_step_limit.py` |

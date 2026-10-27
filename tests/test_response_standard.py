@@ -1,6 +1,7 @@
 """Structural assertions for the shared Response Standard.
 
-T100 (guidance-only) put six reply rules into `agents/general-agent-template.md`
+T100 (guidance-only) put six reply rules into the base template (`templates/general-agent-template.md`
+since T183)
 and asserted two structural properties: the rules are defined once in that
 shared template, and their text is not copy-pasted into the four role guides.
 
@@ -23,7 +24,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-TEMPLATE = ROOT / "agents" / "general-agent-template.md"
+TEMPLATE = ROOT / "templates" / "general-agent-template.md"
 # REPOINTED by T173: the doctrine moved to AGENTS.md; CLAUDE.md is the one-line import
 # `@AGENTS.md`, so the Supervisor channel these tests pin is now AGENTS.md.
 CLAUDE_MD = ROOT / "AGENTS.md"

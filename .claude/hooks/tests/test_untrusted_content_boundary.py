@@ -21,7 +21,7 @@ REFERENCE_PATH = os.path.join(REPO_ROOT, "docs", "claude-md", "untrusted-content
 ENTRY_POINT_STRING = "untrusted-content-boundary"
 
 WIRING_FILES = {
-    "general-agent-template": os.path.join(REPO_ROOT, "agents", "general-agent-template.md"),
+    "general-agent-template": os.path.join(REPO_ROOT, "templates", "general-agent-template.md"),
     "AGENTS.md": os.path.join(REPO_ROOT, "AGENTS.md"),  # T173: was CLAUDE.md, now the import @AGENTS.md
     "resolve-pr-feedback": os.path.join(REPO_ROOT, "skills", "resolve-pr-feedback", "SKILL.md"),
     "brainstorming": os.path.join(REPO_ROOT, "skills", "brainstorming", "SKILL.md"),

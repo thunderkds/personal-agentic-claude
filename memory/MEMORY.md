@@ -18,30 +18,6 @@
 
 ## Index
 
-### ⚠️ Session handoff — read first (written 2026-09-23)
-
-- **T115 is Done, merged and pushed to `main` (2026-09-23, `306c2cc`).** The installer takes no
-  options: any argument exits 1 before anything is cloned or written, and CLIs + project type are
-  numbered menus. **Next: T116** (packs ship dormant, the broken install-time pack installer is
-  removed), then **T117** (`select-packs`). **T119 / T120 / T121 are small and unblocked — take any
-  of them anytime.**
-- **ID collision corrected 2026-09-23, do not re-introduce it.** T115's two Stage 5 follow-ups were
-  first registered as T119/T120 while a **T119 already existed** ("an aborted install says what it
-  actually did"). The `^D` follow-up is now **T121**; T120 is unambiguous. **Scan the whole board
-  for the highest ID before registering a row — `git log` and the guide filenames in `tasks/` are
-  not enough**, because a Todo row can exist with no guide on disk, which is exactly what hid T119.
-- **The T110/T111 branch divergence is RESOLVED — do not act on older handoffs that say otherwise.**
-  Verified 2026-09-18: `feat/easy-kit-one-command` is a strict **ancestor** of `main`. It was
-  **re-asserted in error on 2026-09-18** by a Supervisor editing this block without re-checking it.
-- **Follow-ups recorded, none blocking**: (1) **T119** — T112's abort says "nothing was replaced"
-  while MANIFEST-earlier paths already were. (2) `TASK_REVIEW_T111.md` — a user entry whose command
-  contains `.claude/hooks/` is silently removed by the ownership rule, while `drop_dangling` warns.
-  (3) fold the ~35 duplicated `merge_settings` lines out of `setup.sh`/`update.sh` into a shared
-  helper — unblocked. (4) ~35 stale worktrees under `pets/wt-*` are un-pruned.
-
-- [T114: one command — menu, plan, confirm; Reinstall runs the removal pass](decisions.md) — prompts read /dev/tty before any write; any lock rewrite must run carry_over first
-- [T113: update removes unedited dropped files; MANIFEST `!` exclusions](decisions.md) — edited ones kept + named
-
 <!-- Format: - [Title](cold-file.md#section) — one-line summary.
      Target ≤150 chars/entry: an ASPIRATION, not a gate, and many entries exceed it.
      No count is written here on purpose — a figure in this header froze twice and went
@@ -49,6 +25,12 @@
      run; read them there. The enforced gate is the whole-file character budget above. -->
 
 ### Decisions
+- [T182: auto verify — Stop hook runs real `/verify` headless for `[auto]` tasks](decisions.md) — gate trusts the row only with the anchor-dir run record; $2 cap per commit
+- [T180: auto mode — `[auto]` runs either track to Ready for Review; Debate size by Risk; auto-mode Stop hook](decisions.md) — Low decides, Medium 2 / High 3 Advocates, High always debates once; hook reads report + trace; merge/verify stay the user's
+- [T179: Debate — 2–3 read-only Advocates argue a choice in auto mode](decisions.md) — safer option first, flagged `⚠ decided for you`, max 3 per task
+- [T178: two tracks — minimal (Supervisor codes, Decision record) vs extended (pipeline)](decisions.md) — track line is a statement; user-data changes are always extended
+- [T114: one command — menu, plan, confirm; Reinstall runs the removal pass](decisions.md) — prompts read /dev/tty before any write; any lock rewrite must run carry_over first
+- [T113: update removes unedited dropped files; MANIFEST `!` exclusions](decisions.md) — edited ones kept + named
 - [A batch guide ages against the tasks that merge after it, and the stalest part is its interactions](learnings.md) — Re-read the call sites, not the guide, and commit the correction before the spawn
 - [A handoff warning is a measurement, and editing the block around it does not refresh it](learnings.md) — re-run the check before re-asserting, don't re-read the sentence
 - [T112: install is backup-then-overwrite; `harness_backup_path` is public for T114](decisions.md) — differing dest → `<path>.bak[.N]`; identical content left alone; an existing backup is never overwritten; a failed mv aborts without replacing
@@ -153,6 +135,9 @@
 - [T150: spawns are background `Agent()` by default; `wake` flags dirty In Progress worktrees](decisions.md) — CLI pane only on request / non-Claude CLI; sandbox profile unused until nested-userns passes
 
 ### Patterns & Gotchas
+- [Task IDs: scan the whole board for the highest ID before registering](learnings.md) — `git log` and `tasks/` filenames miss Todo rows with no guide (T119 collision, 2026-09-23)
+- [Open T111/T115 follow-ups](learnings.md) — `.claude/hooks/` user entry silently dropped by the ownership rule; ~35 duplicated `merge_settings` lines in setup/update; un-pruned `pets/wt-*` worktrees
+- [A rule the agent can meet by labelling, it meets by labelling](learnings.md) — T180: only trace counts (Advocate calls, forced High Debate) changed behavior; `security-review` needs `origin/HEAD`
 - [A short SHA is hex — lock pair regex would read `kit_commit` as a file](learnings.md) — scope lock readers to the `"files"` block (T137)
 - [Writing a TASK_GUIDE auto-adds a Todo row](learnings.md) — `post_write_register_task.py`; move that row to In Progress at spawn, never add a second
 - [v1-site release lessons: evidence, publishing, planning](learnings.md) — a green mutation control means "my mutation didn't land" before "vacuous test", and for "doc D matches source S" the control changes **S**
@@ -334,5 +319,5 @@
 - [Report / Report Slot / Scoring Dimension / Report Session](glossary.md) — canonical terms for the html-report skill and Stage 4 reporting system
 - [Thinking Report / Trade-Off Matrix / Thinking Session](glossary.md) — canonical terms for the thinking-report skill and Stage 0.5–2 decision system
 - [Pack / Core framework / Pack agent](glossary.md) — canonical terms for the optional pack system
-- [T095: merge gate reads worktree evidence; heredoc bodies are data] — main checkout first, then live worktrees; `lib/shell_data.py` strips heredocs before push-matching. → decisions.md, learnings.md
+- [T095: merge gate reads worktree evidence; heredoc bodies are data] — main checkout first, then live worktrees; `.claude/hooks/lib/shell_data.py` strips heredocs before push-matching. → decisions.md, learnings.md
 - [T099: quoted spans are sometimes code] — naive quoted-span stripping would ALLOW `bash -c "git push"`. Needs wrapper-awareness. → tasks/TASK_GUIDE_T099.md

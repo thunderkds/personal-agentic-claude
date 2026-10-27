@@ -35,7 +35,7 @@ CANON_LINKS = {"skills": "../skills", "agents": "../agents"}
 
 # A file that must be reachable *through* each link — proves the link resolves onto real content
 # rather than merely existing.
-PROBE = {"skills": "wake/SKILL.md", "agents": "general-agent-template.md"}
+PROBE = {"skills": "wake/SKILL.md", "agents": "backend.md"}
 
 
 @pytest.mark.parametrize("name", sorted(CANON_LINKS))

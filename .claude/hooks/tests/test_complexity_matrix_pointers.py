@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """T070 — the surviving Complexity-matrix pointers must name the channel that carries it.
 
-T066 moved the C0–C3 Complexity matrix out of `agents/general-agent-template.md` and into
-each role guide, which is the channel the harness auto-loads as an agent's system prompt. Three
+T066 moved the C0–C3 Complexity matrix out of the general agent template
+(`templates/general-agent-template.md` since T183) and into each role guide, which is the channel the harness auto-loads as an agent's system prompt. Three
 shipping files kept pointing at the file the matrix left:
 
   * `CLAUDE.md`                        — Supervisor-facing (General Agent Template base rules)
@@ -68,7 +68,7 @@ RETIRED_CLAUSE = "Complexity matrix in `.claude/agents/general-agent-template.md
 # Must-not-touch AND genuinely frozen: a completed-work review record that no future stage writes
 # to, so bytes are the strongest available assertion.
 #
-# `README.md` and `agents/general-agent-template.md` were byte-pinned here too until the
+# `README.md` and the general agent template were byte-pinned here too until the
 # Stage 4 review (P2) removed them. They are on T070's must-not-touch list, but they are *living*
 # files — the template was rewritten by T041, T051, T065, T066 and T069, and the README by T065 and
 # `304e6e6` — so a standing byte-pin would go RED on the next legitimate edit and force the repoint
@@ -85,7 +85,7 @@ FROZEN_PATHS = [
 # went rather than pointing stalely at the file it left.
 ALREADY_CORRECT_FILES = [
     "README.md",
-    "agents/general-agent-template.md",
+    "templates/general-agent-template.md",  # T183: moved out of agents/
 ]
 
 # Where the old wording is the historical record and must survive verbatim.
