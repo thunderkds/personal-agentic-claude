@@ -280,6 +280,8 @@ def test_ac1_agents_md_pointer_sits_in_the_tracks_paragraph():
     assert f"`Track: <track> · auto — <reasons>. {TRACK_LINE_TAIL}`" in para
     assert re.search(r"bare word \*auto\* is not the tag", para)
     assert re.search(r"never merges, pushes, moves a task to Done or runs `/verify`", para)
+    # D7 / AC 6 re-run 1 (task 5 wrote its report only in chat): the file is the report.
+    assert "final report, written to its file before the run ends (the chat message is a copy)" in para
 
 
 def test_ac1_agents_md_gains_no_line_and_stays_under_the_byte_cap():
