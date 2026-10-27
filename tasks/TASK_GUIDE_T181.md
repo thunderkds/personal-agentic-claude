@@ -37,14 +37,14 @@ User, 2026-10-27, asked whether any task updates "the guide from the README or t
 > `resolve-question` can run a Debate in auto mode, and that a hook then runs `/verify` for an `[auto]`
 > task. Merge stays with the user — the pages say so.
 
-**Facts to state (planned design — confirm against the merged docs, startup step 6):**
-- Every implementation request goes on a track, announced in one line: `Track: minimal — <reasons>` or `Track: extended — <reasons>`. The user can reply `full` or `minimal` to switch.
-- Extended track if any of: Complexity C2+; Risk Medium/High; a Gate-2 word or *migrate*; more than one session or agent; a UI component. Otherwise minimal.
-- Minimal track: test first, change, real run, a Decision record in `tasks/MINIMAL_LOG.md`; no task guide, no sub-agent; stops only when the request itself is unclear.
+**Facts to state (re-checked by the Supervisor against merged `main` at `453b2d5`, 2026-10-27):**
+- Every implementation request goes on a track, announced in one line: `Track: minimal — <reasons>` or `Track: extended — <reasons>`; with `[auto]`: `Track: minimal · auto — …` / `Track: extended · auto — …`. The line is a statement, never a question. The user can reply `full` or `minimal` at any time to switch (`docs/claude-md/tracks.md` `## Switching track`).
+- Extended track if any of: Complexity C2+; Risk Medium/High; a Gate-2 word or *migrate*; a change that deletes, moves, renames or converts user data or its storage format (e.g. CSV to JSON); more than one session or agent; a UI component. Otherwise minimal (`## Track rule`).
+- Minimal track: test first, change, real run, a Decision record in `tasks/MINIMAL_LOG.md`, a board row marked `| Track: minimal`, commit without asking; no task guide, no sub-agent (`## Minimal-track flow`, 7 steps).
 - Extended track: the 5-stage pipeline, unchanged.
-- `[auto]` in the request: no stops for questions; decisions go to a final report (`## Auto decisions`); safety hooks still block.
-- Auto verify (T182): at Ready for Review a hook — not the Supervisor — runs the real `/verify` in a fresh session and writes the result; merge, push and Done stay with the user. Without `[auto]`, `/verify` is still typed by the user.
-- Debate (auto mode only): 2–3 read-only Advocate agents argue the options; the Supervisor decides, safer option on a tie, flagged `⚠ decided for you — please review`; at most 3 per task.
+- `[auto]` in the request (only that exact tag): no stops for questions; every decision goes to a final report (`## Auto decisions`, marker line `Mode: auto`); how each decision is made follows the task's Risk — Low: the Supervisor decides and logs; Medium: a Debate with 2 Advocates; High: 3 Advocates, and at least one decision is always debated. A Stop hook checks the report before the run may end. Safety hooks still block; merge, push and Done stay with the user (`## Auto mode`).
+- Auto verify (T182, merged): for an extended-track `[auto]` task at Ready for Review, a Stop hook — not the Supervisor — starts one fresh headless `claude -p "/verify <ID>"` run per commit (budget $2 by default), and the hook writes the `verify` row; the merge gate accepts that row only with its run record. Merge stays with the user. Without `[auto]`, `/verify` is still typed by the user (`### Auto verify (Stop hook)`).
+- Debate (auto mode only, `resolve-question`): read-only Advocate agents argue the options (count by Risk, above); the Supervisor decides, safer option on a tie, flagged `⚠ decided for you — please review`; at most 3 Debates per task, the 4th question goes to the user.
 
 **Out of scope:** the site restructure (T089); any change to the Stage 0.5–5 section content beyond saying they are the extended track; a new diagram for the minimal track unless it fits the existing SVG with no new CSS; any harness file.
 
@@ -53,7 +53,7 @@ User, 2026-10-27, asked whether any task updates "the guide from the README or t
 ### Requirement Fidelity Gate (sign off BEFORE implementation)
 
 - [x] Restated intent confirmed (user, 2026-10-27: "yes, register new one")
-- [ ] Facts above re-checked against the merged T178–T180 and T182 docs (Supervisor, before spawn)
+- [x] Facts above re-checked against the merged T178–T180 and T182 docs (Supervisor, 2026-10-27, `main` at `453b2d5`)
 - [x] Every Acceptance Criterion below traces to a line in the Requirement
 - [x] Requirement Refs: N/A — recorded, not skipped
 
@@ -129,7 +129,7 @@ sh scripts/validate.sh
 
 ## Completion Checklist
 
-- [ ] Supervisor re-checked the facts against the merged T178–T180 and T182 docs (before spawn)
+- [x] Supervisor re-checked the facts against the merged T178–T180 and T182 docs (before spawn)
 - [ ] Implementation done; AC7 tests observed RED first
 - [ ] M1–M3 pasted in the Evidence table
 - [ ] All three UI Evidence rows filled
