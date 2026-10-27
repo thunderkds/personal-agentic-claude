@@ -701,3 +701,37 @@ def test_d8_tracks_md_documents_the_stop_hook():
 def test_d8_pipeline_stage4_names_both_reviews_in_auto_mode():
     stage4 = _norm(_section(_read(PIPELINE_MD), "Stage 4: Review").split("1. **Code Review**")[0])
     assert re.search(r"[Aa]uto mode[^.]*`code-review`, plus `security-review` at Medium/High", stage4), stage4
+
+
+# ── D9 — cited labels at Risk Medium/High; the hook finds auto tasks from files ───────────
+CITED_RULE_TEXT = re.compile(r"At Risk Medium or High, a `RULE:` counts only when it names a written rule")
+FACT_CITATION_TEXT = re.compile(r"`FACT:` needs a Citation \(`path:line \"quoted text\"`\)")
+
+
+def test_d9_final_report_states_the_cited_label_rule_with_examples():
+    sub = _norm(_subsection(_auto(), "Final report"))
+    assert CITED_RULE_TEXT.search(sub), sub
+    assert "`path:line`" in sub and "`path § <heading>`" in sub
+    assert "`docs/claude-md/tracks.md` `### <section>`" in sub
+    assert FACT_CITATION_TEXT.search(sub), sub
+    assert re.search(r"Good: `[^`]*RULE: `docs/claude-md/tracks\.md` `### ", sub), sub
+    assert re.search(r"Bad: `[^`]*RULE: Surgical Changes`", sub), sub
+    assert re.search(r"Low risk is unchanged", sub)
+
+
+def test_d9_stop_hook_section_documents_discovery_and_cited_labels():
+    sub = _norm(_subsection(_auto(), "Auto-mode check (Stop hook)"))
+    assert "`tasks/TASK_REVIEW_*.md`" in sub and "newest" in sub and "`tasks/MINIMAL_LOG.md`" in sub
+    assert re.search(r"no `PROJECT_KANBAN\.md`[^.]*still checked", sub), sub
+    assert re.search(r"row is in Done", sub) and "`☑ pass`" in sub
+    assert re.search(r"uncited `RULE:` or `FACT:`[^.]*counts as a choice", sub), sub
+    assert re.search(r"decision number and its label", sub), sub
+
+
+@pytest.mark.parametrize("template", [REVIEW_TEMPLATE, MINIMAL_TEMPLATE], ids=["review", "minimal"])
+def test_d9_templates_carry_the_cited_label_rule_with_examples(template):
+    text = _norm(_read(template))
+    assert CITED_RULE_TEXT.search(text), template.name
+    assert FACT_CITATION_TEXT.search(text), template.name
+    assert re.search(r"Good: `[^`]*RULE: `docs/claude-md/tracks\.md` `### ", text), template.name
+    assert re.search(r"Bad: `[^`]*RULE: Surgical Changes`", text), template.name

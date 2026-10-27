@@ -51,7 +51,7 @@ def _report(decisions, marker="Mode: auto", heading="## Auto decisions"):
 
 def _good_decisions(n):
     return [f"1. kept recurring.csv — DEBATED: keep it ({_advocates(n)}) {FLAG}",
-            "2. backed up data/expenses.csv before the delete — RULE: tracks.md Backups"]
+            "2. backed up data/expenses.csv before the delete — RULE: `docs/claude-md/tracks.md` `### Backups`"]
 
 
 def _now(offset_s=0):
@@ -77,7 +77,7 @@ def _trace(n_advocates, skills=("code-review", "security-review"), offset_s=0):
 
 
 def _project(tmp_path, rows, risk="High", review=None, guide=True, minimal_log=None,
-             untagged=(), tagged=(), transcript=None):
+             untagged=(), tagged=(), transcript=None, board=True, done_rows=()):
     project = tmp_path / "proj"
     (project / ".claude").mkdir(parents=True)
     shutil.copytree(HOOKS, project / ".claude" / "hooks",
@@ -85,9 +85,11 @@ def _project(tmp_path, rows, risk="High", review=None, guide=True, minimal_log=N
     tasks = project / "tasks"
     tasks.mkdir()
     review_rows = "".join(f"{r}\n" for r in rows)
-    (project / "PROJECT_KANBAN.md").write_text(
-        "# Kanban\n\n### Todo\n\n### In Progress\n\n"
-        f"### Ready for Review\n{review_rows}\n### Done\n", encoding="utf-8")
+    done = "".join(f"{r}\n" for r in done_rows)
+    if board:
+        (project / "PROJECT_KANBAN.md").write_text(
+            "# Kanban\n\n### Todo\n\n### In Progress\n\n"
+            f"### Ready for Review\n{review_rows}\n### Done\n{done}", encoding="utf-8")
     if guide:
         (tasks / "TASK_GUIDE_T951.md").write_text(
             f"# TASK_GUIDE — T951: Move the data\n**Complexity Level**: C3\n**Risk Level**: {risk}\n",
@@ -342,3 +344,130 @@ def test_merge_gate_is_untouched():
     diff = subprocess.run(["git", "-C", str(ROOT), "diff", "--quiet", BASE_REF, "--",
                            ".claude/hooks/pre_bash_block_unsafe_merge.py"])
     assert diff.returncode == 0
+
+
+# ── D9 (a) — discovery from files; finished tasks skipped ─────────────────────────────────
+# D8 live check: the copies had no PROJECT_KANBAN.md, so a board-only hook never fired.
+UNCITED_RULE = "1. kept recurring.csv untouched — RULE: Surgical Changes"
+
+
+def test_d9_no_board_a_marked_review_file_is_still_checked(tmp_path):
+    project = _project(tmp_path, [], risk="Medium", board=False, review=_report([UNCITED_RULE]),
+                       untagged=_trace(0))
+    _, out = _run(project)
+    assert _blocked(out) and "T951" in out["reason"], out
+
+
+def test_d9_no_board_a_correct_report_passes(tmp_path):
+    project = _project(tmp_path, [], risk="Medium", board=False, review=_report(_good_decisions(2)),
+                       untagged=_trace(2))
+    _, out = _run(project)
+    assert out == {}, out
+
+
+def test_d9_a_done_row_is_ignored(tmp_path):
+    project = _project(tmp_path, [], risk="Medium", review=_report([UNCITED_RULE]),
+                       done_rows=[EXT_ROW.replace("[ ]", "[x]")], untagged=_trace(0))
+    _, out = _run(project)
+    assert out == {}, out
+
+
+def test_d9_a_review_with_a_passing_verify_row_is_ignored(tmp_path):
+    review = _report([UNCITED_RULE]).replace("| verify | ☐ pass / ☐ fail / ☐ N/A | |",
+                                             "| verify | ☑ pass | user ran /verify T951 — pass |")
+    project = _project(tmp_path, [], risk="Medium", board=False, review=review, untagged=_trace(0))
+    _, out = _run(project)
+    assert out == {}, out
+
+
+def test_d9_risk_comes_from_the_review_file_when_there_is_no_guide(tmp_path):
+    review = _report([UNCITED_RULE]).replace("# TASK_REVIEW — T951: Move the data\n",
+                                             "# TASK_REVIEW — T951: Move the data\n**Risk Level**: High\n")
+    project = _project(tmp_path, [], guide=False, board=False, review=review, untagged=_trace(0))
+    _, out = _run(project)
+    assert _blocked(out) and "Risk High" in out["reason"], out
+
+
+def _log(*records):
+    return "# Minimal-track Decision records\n\n" + "\n".join(records)
+
+
+def _record(tid, risk_line, decision):
+    return (f"## {tid} — Sort the names · minimal\nMode: auto\n{risk_line}**Asked:** \"sort [auto]\"\n"
+            f"**Decisions:**\n{decision}\n**Not done:** merge (yours)\n")
+
+
+def test_d9_no_board_the_newest_minimal_record_is_checked(tmp_path):
+    log = _log(_record("T952", "Risk: Medium (track set by the user)\n", UNCITED_RULE))
+    project = _project(tmp_path, [], guide=False, board=False, minimal_log=log)
+    _, out = _run(project)
+    assert _blocked(out) and "T952" in out["reason"], out
+
+
+def test_d9_only_the_newest_minimal_record_is_checked(tmp_path):
+    log = _log(_record("T953", "", "1. sort A–Z — SAFER OPTION: literal " + FLAG),
+               _record("T952", "Risk: Medium\n", UNCITED_RULE))
+    project = _project(tmp_path, [], guide=False, board=False, minimal_log=log)
+    _, out = _run(project)
+    assert out == {}, out
+
+
+# ── D9 (b) — at Risk Medium/High a label must cite a written rule or a Citation ───────────
+def test_d9_an_uncited_rule_at_medium_blocks_with_its_number_and_label(tmp_path):
+    project = _project(tmp_path, [EXT_ROW.replace("High", "Medium")], risk="Medium",
+                       review=_report([UNCITED_RULE]), untagged=_trace(0))
+    _, out = _run(project)
+    assert _blocked(out), out
+    assert "decision 1 (`RULE`)" in out["reason"] and "cites no written rule" in out["reason"], out
+
+
+@pytest.mark.parametrize("cite", [
+    "`docs/claude-md/tracks.md` `### Backups`",
+    "docs/claude-md/tracks.md:86",
+    "`AGENTS.md` § Karpathy Engineering Principles",
+])
+def test_d9_a_cited_rule_passes(tmp_path, cite):
+    decisions = [f"1. backed up data/expenses.csv before the delete — RULE: {cite}"]
+    project = _project(tmp_path, [EXT_ROW.replace("High", "Medium")], risk="Medium",
+                       review=_report(decisions), untagged=_trace(0))
+    _, out = _run(project)
+    assert out == {}, out
+
+
+def test_d9_an_uncited_fact_at_high_blocks(tmp_path):
+    decisions = ["1. amounts are stored in cents — FACT: the code stores cents"]
+    project = _project(tmp_path, [EXT_ROW], review=_report(decisions), untagged=_trace(0))
+    _, out = _run(project)
+    assert _blocked(out) and "decision 1 (`FACT`)" in out["reason"] and "no Citation" in out["reason"]
+
+
+def test_d9_a_cited_fact_at_high_passes(tmp_path):
+    decisions = ['1. amounts are stored in cents — FACT: src/tally/store.py:12 "amount_cents = int(...)"']
+    project = _project(tmp_path, [EXT_ROW], review=_report(decisions), untagged=_trace(0))
+    _, out = _run(project)
+    assert out == {}, out
+
+
+def test_d9_a_debated_line_with_the_wrong_count_names_its_number(tmp_path):
+    project = _project(tmp_path, [EXT_ROW], review=_report(_good_decisions(2)), untagged=_trace(3))
+    _, out = _run(project)
+    assert _blocked(out) and "decision 1 (`DEBATED`)" in out["reason"], out
+
+
+def test_d9_low_risk_is_unchanged(tmp_path):
+    decisions = [UNCITED_RULE, "2. amounts in cents — FACT: the code stores cents"]
+    project = _project(tmp_path, [EXT_ROW.replace("High", "Low")], risk="Low",
+                       review=_report(decisions), untagged=_trace(0, skills=("code-review",)))
+    _, out = _run(project)
+    assert out == {}, out
+
+
+def test_d9_second_fire_with_no_board_does_not_loop(tmp_path):
+    project = _project(tmp_path, [], risk="Medium", board=False, review=_report([UNCITED_RULE]),
+                       untagged=_trace(0))
+    _, first = _run(project)
+    assert _blocked(first)
+    result, second = _run(project, active=True)
+    assert result.returncode == 0 and second == {}
+    text = (project / "tasks" / "TASK_REVIEW_T951.md").read_text(encoding="utf-8")
+    assert text.count("Paused: auto-mode check failed") == 1
