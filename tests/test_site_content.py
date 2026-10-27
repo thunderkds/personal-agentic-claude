@@ -99,8 +99,9 @@ def test_every_skill_dir_appears_on_page():
 def test_every_spawnable_agent_appears_with_subagent_type():
     text = _page_text()
     agents = _agent_names()
-    assert "general-agent-template" in agents  # sanity: fixture is real
-    spawnable = {n: f for n, f in agents.items() if n != "general-agent-template"}
+    # T183: the base template lives in templates/, so every agents/*.md is a spawnable role.
+    assert "general-agent-template" not in agents, "the base template is back in agents/"
+    spawnable = agents
     assert len(spawnable) == 4, f"expected 4 spawnable agents, found {sorted(spawnable)}"
     missing = [name for name in spawnable if not _word_present(text, name)]
     assert not missing, f"spawnable agent(s) missing from page: {missing}"
@@ -957,7 +958,7 @@ def test_quick_reference_counts_match_source():
     """AC5: skill, spawnable-role and blocking-hook counts, each derived here."""
     text = _quick_reference_text()
     skills = len(_skill_dirs())
-    roles = len([n for n in _agent_names() if n != "general-agent-template"])
+    roles = len(_agent_names())  # T183: agents/ holds only spawnable roles
     blocking = _blocking_hook_count()
     hooks = len(_hook_scripts())
     assert blocking, "no hook row carries tag-block — fixture broken"

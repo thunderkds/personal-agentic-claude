@@ -141,7 +141,7 @@ T070_BASELINE_REF = "8080fdb"  # T173: the doctrine lives in AGENTS.md
 #          Only `c-infra` breaches. See `AC7_ROLE_BASELINE` below: pin the one, leave the three.
 T082_BASELINE_REF = "ebb2958"
 
-TEMPLATE = "agents/general-agent-template.md"
+TEMPLATE = "templates/general-agent-template.md"
 ROLE_GUIDES = {
     "c-infra": "agents/common-infrastructure.md",
     "backend": "agents/backend.md",
@@ -343,11 +343,12 @@ LADDER_PROBES = [
 
 def reachable_text(role: str) -> tuple[str, list[str]]:
     """Everything a role's context can contain: its auto-loaded guide, plus every
-    `agents/*.md` that guide instructs it to read."""
+    `agents/*.md` (or, since T183, `templates/general-agent-template.md`) that guide instructs it
+    to read."""
     rel = ROLE_GUIDES[role]
     guide = read(rel)
     files = [rel]
-    for ref in sorted(set(re.findall(r"agents/[a-z-]+\.md", guide))):
+    for ref in sorted(set(re.findall(r"(?:agents|templates)/[a-z-]+\.md", guide))):
         if ref != rel and (ROOT / ref).is_file():
             files.append(ref)
     return "\n".join(read(f) for f in files), files

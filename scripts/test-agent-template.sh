@@ -1,6 +1,6 @@
 #!/bin/sh
 # test-agent-template.sh — content assertions + negative controls for
-# agents/general-agent-template.md (T041).
+# templates/general-agent-template.md (T041).
 #
 # Validates (AC numbers from tasks/TASK_GUIDE_T041.md):
 #   AC1 — all four Karpathy principle names + a one-line operational command each, inline in
@@ -26,7 +26,7 @@
 set -eu
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-TEMPLATE="$ROOT/agents/general-agent-template.md"
+TEMPLATE="$ROOT/templates/general-agent-template.md"
 ROLE_GUIDES="agents/common-infrastructure.md agents/backend.md agents/frontend.md agents/qa.md"
 BASELINE_LINES=87
 BUDGET_LINES=132

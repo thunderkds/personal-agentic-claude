@@ -132,7 +132,7 @@ def test_base_team_colors():
 def test_template_lives_outside_agents_dir():
     """The base template is not a spawnable agent type, so it must not sit in agents/."""
     assert not (AGENTS_DIR / "general-agent-template.md").exists(), (
-        "agents/general-agent-template.md exists — Claude Code would register it as an agent type; "
+        "general-agent-template.md is in agents/ — Claude Code would register it as an agent type; "
         "it belongs at templates/general-agent-template.md"
     )
     assert TEMPLATE.is_file(), "templates/general-agent-template.md is missing"

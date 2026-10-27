@@ -65,7 +65,7 @@ SHIPPING_FILES = [
     "skills/bugfix/SKILL.md",
     "skills/wake/SKILL.md",
     "skills/learn/SKILL.md",
-    "agents/general-agent-template.md",
+    "templates/general-agent-template.md",
     "agents/common-infrastructure.md",
     "agents/backend.md",
     "agents/frontend.md",
@@ -200,7 +200,7 @@ def test_ac5_and_ac6_the_contract_now_states_the_path_channel():
     )
     assert "**memory slice**" in stages and "in full only if" in stages
 
-    template = _read("agents/general-agent-template.md")
+    template = _read("templates/general-agent-template.md")
     assert "read `memory/MEMORY.md` yourself" in template
 
 

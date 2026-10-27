@@ -27,7 +27,7 @@ def test_wake_mandate_kept():
 
 def test_agent_template_pointer_and_base_rules_kept():
     n = _norm(TEXT)
-    assert "agents/general-agent-template.md" in n
+    assert "templates/general-agent-template.md" in n
     assert "docs/claude-md/untrusted-content-boundary.md" in n
     assert "Complexity Level (C0–C3)" in n
     assert "Risk Level" in n

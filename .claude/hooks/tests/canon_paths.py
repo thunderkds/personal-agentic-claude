@@ -27,6 +27,10 @@ import subprocess
 # Current path -> the path the same file had before T096.
 _PRE_MOVE_PREFIX = {"skills/": ".claude/skills/", "agents/": ".claude/agents/"}
 
+# T183 moved the base template out of agents/ (Claude Code registers every agents/*.md as an
+# agent type). Current path -> its path before T183; T096's prefix map then applies to that.
+_T183_RENAMES = {"templates/general-agent-template.md": "agents/general-agent-template.md"}
+
 
 def pre_move_path(rel: str) -> str | None:
     """`rel` as it was named before T096, or None if T096 did not move it."""
@@ -39,9 +43,12 @@ def pre_move_path(rel: str) -> str | None:
 def read_at(root, rel: str, ref: str) -> bytes:
     """Bytes of `rel` at `ref`, transparently handling the T096 rename."""
     candidates = [rel]
-    older = pre_move_path(rel)
-    if older is not None:
-        candidates.append(older)
+    if rel in _T183_RENAMES:
+        candidates.append(_T183_RENAMES[rel])
+    for name in list(candidates):
+        older = pre_move_path(name)
+        if older is not None:
+            candidates.append(older)
 
     last = None
     for candidate in candidates:
