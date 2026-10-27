@@ -74,11 +74,11 @@ Stage 4 skills.
 4. **Change.** Make the smallest change that passes the test. Touch only the code the task needs.
 5. **Run it for real.** Run the full test suite. Then run the program the way a user would, and note the command and what it printed.
 6. **Record.** Append the Decision record to `tasks/MINIMAL_LOG.md`, newest first, with every field of the template: the `## <ID> — <title> · <track>` heading, `Asked:`, `Decisions:`, `Checked:`, `Files:`, `Not done:`. If the file does not exist, create it from `templates/MINIMAL_LOG_template.md`. The same block is the Supervisor's final chat message.
-7. **Board.** Add one board row under Ready for Review in `PROJECT_KANBAN.md`, marked `| Track: minimal | Record: tasks/MINIMAL_LOG.md` at its end. Commit on the task branch.
+7. **Board.** Add one board row under Ready for Review in `PROJECT_KANBAN.md`, marked `| Track: minimal | Record: tasks/MINIMAL_LOG.md` at its end. Commit on the task branch without asking: the commit is part of this step.
 
 **The only stop.** When the request itself is unclear (it has more than one reasonable reading), ask one
 clear question and stop. Asking is cheaper than undoing a wrong guess. A question about a fact in the code
-is not a stop: read the code and go on.
+is not a stop: read the code and go on. Asking whether to commit is not a stop either: step 7 commits.
 
 **Backups.** A backup must sit inside the project or in a path the user named, never in `/tmp`: a temp
 directory can be gone by the time the user needs it.
