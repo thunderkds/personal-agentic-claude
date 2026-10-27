@@ -235,6 +235,12 @@ the run ends, plus `security-review` at Risk Medium or High, because it is not a
 - A decision flagged `⚠ decided for you` is a choice, and is never labelled `FACT`. A safety action a rule
   requires (for example the backup before a delete) is `RULE` without the flag.
 - At Risk Medium or High, every `⚠` line is `DEBATED` with exactly 2 or 3 Advocates named.
+- At Risk Medium or High, a `RULE:` counts only when it names a written rule: a repo path with a line or a
+  section — `path:line`, `path § <heading>`, or `docs/claude-md/tracks.md` `### <section>`. `FACT:` needs a
+  Citation (`path:line "quoted text"`) under the same rule. A `RULE:` or `FACT:` without one counts as a
+  choice, so it is `DEBATED` with 2 or 3 Advocates. Good: `2. backed up the CSV before the delete — RULE:
+  `docs/claude-md/tracks.md` `### Stops that stay``. Bad: `1. kept recurring.csv untouched — RULE: Surgical Changes`
+  (it names no written rule, so it is a choice). Low risk is unchanged.
 - `Paused:` — a stop that stayed (below), and why. Only when one paused the task.
 - `Checks:` — the tests, the reviews, and the real run, labelled `auto-checked, not /verify`.
 - `Not done: merge (yours)`, plus the `/verify` state: `auto verify: running (T182)`, its result, or
@@ -246,22 +252,27 @@ not Evidence: the merge gate does not read it. A Debate also leaves its `DEBATE`
 
 ### Auto-mode check (Stop hook)
 
-`.claude/hooks/stop_auto_mode_check.py` runs when the Supervisor is about to stop. It checks each
-auto-mode task whose board row is In Progress or Ready for Review, and blocks the stop with a short reason
-when:
+`.claude/hooks/stop_auto_mode_check.py` runs when the Supervisor is about to stop. It finds auto-mode tasks
+from the board's In Progress and Ready for Review rows, and also from their files: every
+`tasks/TASK_REVIEW_*.md` with `## Auto decisions` or a `Mode: auto` line, and the newest `tasks/MINIMAL_LOG.md`
+record with `Mode: auto`. A project with no `PROJECT_KANBAN.md` is still checked. It skips a finished task: one
+whose row is in Done, or whose review file has `☑ pass` in its `verify` row's Result cell. It blocks the stop
+with a short reason when:
 
 1. the report has no `## Auto decisions` section whose first line is `Mode: auto` (extended), the Decision
    record does not start with `Mode: auto` (minimal), or there is no report file at all;
-2. at Risk Medium or High, a `⚠` line is not `DEBATED` with exactly 2 or 3 Advocates named;
+2. at Risk Medium or High, a choice is not `DEBATED` with exactly 2 or 3 Advocates named. A choice is a `⚠`
+   line, a `SAFER OPTION`, or an uncited `RULE:` or `FACT:`: an uncited `RULE:` or `FACT:` counts as a choice.
+   The reason gives the decision number and its label, for example decision 1 (`RULE`);
 3. the event trace holds fewer Advocate `Agent` calls (description starting `Advocate`) than 2 or 3 per
    `DEBATED` line;
 4. on the extended track, the trace has no `code-review` Skill call, or no `security-review` Skill call at
    Risk Medium or High.
 
-A task counts as auto mode when its report carries `## Auto decisions` or a `Mode: auto` line, when its
+A board row counts as auto mode when its report carries `## Auto decisions` or a `Mode: auto` line, when its
 Decision record's request carries `[auto]`, or when this session's request carries `[auto]` and the task's
-files changed after it. Risk comes from the guide's `**Risk Level**` (else the board row); a Decision record
-is Risk Low unless it says otherwise. The trace is `memory/event-trace/<ID>.jsonl` plus the last 6 hours of
+files changed after it. Risk comes from the guide's `**Risk Level**`, else the review file, else the board
+row, else Low; a Decision record is Risk Low unless it says otherwise. The trace is `memory/event-trace/<ID>.jsonl` plus the last 6 hours of
 `memory/event-trace/_untagged.jsonl` (`CLAUDE_AUTO_CHECK_WINDOW_S`): Advocate prompts carry no task ID, so
 their calls land in `_untagged.jsonl` unless the active-task state file is set.
 

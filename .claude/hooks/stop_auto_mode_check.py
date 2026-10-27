@@ -14,9 +14,20 @@ auto-mode task whose board row is In Progress or Ready for Review, it blocks the
   (4) on the extended track, the trace has no `code-review` Skill call, or no `security-review`
       Skill call at Risk Medium/High.
 
-A task is an auto-mode task when its report carries the `## Auto decisions` heading or a
-`Mode: auto` line, its Decision record's request carries `[auto]`, or the session's request
-carries `[auto]` (outside code spans) and the task's files changed after that request.
+Which tasks (D9): board rows in In Progress or Ready for Review, plus — so a project with no
+`PROJECT_KANBAN.md` is still checked — every `tasks/TASK_REVIEW_*.md` carrying `## Auto decisions`
+or a `Mode: auto` line, and the newest `tasks/MINIMAL_LOG.md` record carrying `Mode: auto` or
+`[auto]`. Skipped as finished: a task whose row is in Done, and a review file whose `verify` row
+has `☑ pass` in its Result cell. A board row counts as auto mode when its report is marked as
+above, or the session's request carries `[auto]` (outside code spans) and the task's files
+changed after it.
+
+Labels (D9): at Risk Medium/High a decision line is a choice — so it must be `DEBATED` with
+exactly 2 / 3 Advocates named — when it is flagged `⚠`, is a `SAFER OPTION`, is a `RULE:` that
+cites no written rule (`path:line`, `path § <heading>`, `path` `### <section>`), or is a `FACT:`
+with no Citation (`path:line "quoted text"`). The block reason names the decision number and
+its label. Risk comes from the guide's `**Risk Level**`, else the review file, else the board
+row, else Low; a Decision record is Low unless it says otherwise.
 
 Never loops: on the second fire (`stop_hook_active`) it allows the stop and appends
 `Paused: auto-mode check failed — <reasons>` to the report. Fails open: an unreadable file skips
@@ -27,6 +38,7 @@ records from the last CLAUDE_AUTO_CHECK_WINDOW_S seconds (default 6h). Advocate 
 prompts carry no task ID, so their calls land in `_untagged.jsonl` unless the active-task state
 file is set.
 """
+import glob
 import json
 import os
 import re
@@ -50,6 +62,12 @@ MINIMAL_MARKER = re.compile(r"\|\s*Track: minimal\b")
 COMMENT = re.compile(r"<!--.*?-->", re.S)
 CODE = re.compile(r"```.*?```|`[^`\n]*`", re.S)
 RISK = re.compile(r"\bRisk(?: Level)?\**:\**\s*(Low|Med(?:ium)?|High)\b")
+LABEL = re.compile(r"\b(DEBATED|SAFER OPTION|RULE|FACT):")
+# D9: at Risk Medium/High a RULE must name a written rule, a FACT must carry a Citation.
+PATH = r"[\w./-]*[\w-]+\.[A-Za-z0-9]+"
+CITED_RULE = re.compile(rf"{PATH}(?::\d+|`?\s*§\s*\S|`?\s+`?###\s+\S)")
+CITATION = re.compile(rf"{PATH}:\d+\s+\"[^\"]+\"")
+VERIFY_PASSED = re.compile(r"^\|\s*verify\s*\|[^|\n]*☑\s*pass", re.M | re.I)
 
 
 class Unreadable(Exception):
@@ -111,15 +129,46 @@ def find(name, dirs):
     return os.path.join(dirs[0], name)
 
 
-def board_rows(kanban):
+def board_rows(kanban, titles=("In Progress", "Ready for Review")):
     rows = []
-    for title in ("In Progress", "Ready for Review"):
+    for title in titles:
         m = re.search(rf"^### {re.escape(title)}\n(.*?)(?=^###|\Z)", kanban, re.S | re.M)
         for line in (m.group(1).splitlines() if m else []):
             hit = ROW_ID.search(line)
             if line.strip().startswith("- ") and hit:
                 rows.append((hit.group(1), line))
     return rows
+
+
+def file_tasks(dirs, skip):
+    """D9: auto-mode tasks found from their files, so a project with no board is still checked.
+    Every `TASK_REVIEW_*.md` carrying `## Auto decisions` or a `Mode: auto` line, and the newest
+    `MINIMAL_LOG.md` record when it carries `Mode: auto` or `[auto]`. `skip` holds IDs already
+    found on the board (In Progress, Ready for Review or Done)."""
+    found = {}
+    for d in dirs:
+        for path in sorted(glob.glob(os.path.join(d, "TASK_REVIEW_*.md"))):
+            task_id = os.path.basename(path)[len("TASK_REVIEW_"):-len(".md")]
+            if task_id in skip or task_id in found or not re.fullmatch(r"[A-Za-z]+-?\d+", task_id):
+                continue
+            try:
+                clean = COMMENT.sub("", read(path) or "")
+            except Unreadable as exc:
+                warn(f"{exc} — auto-mode check skipped for {task_id}")
+                continue
+            if section(clean, "## Auto decisions") or MARKER in clean.splitlines():
+                found[task_id] = ("", False)
+    try:
+        log = COMMENT.sub("", read(find("MINIMAL_LOG.md", dirs)) or "")
+    except Unreadable as exc:
+        warn(f"{exc} — auto-mode check skipped for the newest Decision record")
+        log = ""
+    newest = re.search(r"^## ([A-Za-z]+-?\d+) — [^\n]*\n(.*?)(?=^## |\Z)", log, re.S | re.M)
+    if newest and newest.group(1) not in skip and newest.group(1) not in found:
+        body = newest.group(2)
+        if MARKER in body.splitlines() or TAG in body:
+            found[newest.group(1)] = ("", True)
+    return found
 
 
 def auto_request_time(transcript_path):
@@ -194,6 +243,28 @@ def field(summary, key):
         return m.group(1) if m else ""
 
 
+def choice_reason(line, need):
+    """Why a report line at Risk Medium/High is an unsettled choice, or None (D8, D9)."""
+    if not re.match(r"\d+\.\s", line) and "⚠" not in line:
+        return None
+    label = LABEL.search(line)
+    kind = label.group(1) if label else None
+    after = line[label.end():] if label else line
+    if kind == "DEBATED":
+        named = len(re.findall(r"\bAdvocate \d+:", line))
+        return None if named == need else f"it names {named} Advocates, not exactly {need}"
+    if "⚠" in line:
+        return "it is flagged ⚠"
+    if kind == "SAFER OPTION":
+        return "a safer-option pick is a choice"
+    if kind == "RULE" and not CITED_RULE.search(after):
+        return ("its RULE cites no written rule (`path:line`, `path § <heading>` or "
+                "`docs/claude-md/tracks.md` `### <section>`)")
+    if kind == "FACT" and not CITATION.search(after):
+        return 'its FACT has no Citation (`path:line "quoted text"`)'
+    return None
+
+
 def check_task(task_id, row, request_ts, dirs):
     """The reasons this task's report fails, or [] (also [] when the task is not auto mode)."""
     minimal = bool(MINIMAL_MARKER.search(row))
@@ -209,6 +280,8 @@ def check_task(task_id, row, request_ts, dirs):
     else:
         report_path = find(f"TASK_REVIEW_{task_id}.md", dirs)
         text = read(report_path)
+        if text and VERIFY_PASSED.search(text):
+            return []  # D9: a verified task is finished, not an open auto-mode run
         clean = COMMENT.sub("", text or "")
         block = section(clean, "## Auto decisions")
         body = block[2] if block else ""
@@ -217,7 +290,9 @@ def check_task(task_id, row, request_ts, dirs):
         guide = read(guide_path) or ""
         touched = [p for p in (report_path, guide_path) if os.path.exists(p)]
         hit = re.search(r"\*\*Risk Level\*\*:\s*(Low|Med(?:ium)?|High)\b", guide)
-        risk_text, strict = (hit.group(0) if hit else row), bool(block) and first_line(body) == MARKER
+        review_risk = RISK.search(clean)
+        risk_text = hit.group(0) if hit else (review_risk.group(0) if review_risk else row)
+        strict = bool(block) and first_line(body) == MARKER
         missing = (f"no tasks/TASK_REVIEW_{task_id}.md with `## Auto decisions` starting `{MARKER}`"
                    if text is None else
                    f"tasks/TASK_REVIEW_{task_id}.md has no `## Auto decisions` section starting "
@@ -237,14 +312,14 @@ def check_task(task_id, row, request_ts, dirs):
 
     if need_per_line:
         for line in lines:
-            if "⚠" not in line:
-                continue
-            named = len(re.findall(r"\bAdvocate \d+:", line))
-            if "DEBATED:" not in line or named != need_per_line:
-                label = re.match(r"(\d+)\.", line)
-                which = f"decision {label.group(1)}" if label else f"`{line[:40]}`"
-                reasons.append(f"Risk {risk}: {which} is flagged ⚠ but is not `DEBATED` with "
-                               f"exactly {need_per_line} Advocates named")
+            why = choice_reason(line, need_per_line)
+            if why:
+                number = re.match(r"(\d+)\.", line)
+                label = LABEL.search(line)
+                which = f"decision {number.group(1)}" if number else f"`{line[:40]}`"
+                reasons.append(f"Risk {risk}: {which} (`{label.group(1) if label else '⚠'}`) is a "
+                               f"choice — {why} — so it must be `DEBATED` with exactly "
+                               f"{need_per_line} Advocates named")
 
     records = trace_records(task_id)
     debated = [l for l in lines if "DEBATED:" in l]
@@ -298,15 +373,20 @@ def main():
     try:
         kanban = read(KANBAN)
     except Unreadable as exc:
-        warn(f"{exc} — auto-mode check skipped")
-        sys.exit(0)
-    if not kanban:
-        sys.exit(0)
+        warn(f"{exc} — board rows skipped; tasks are still found from their files")
+        kanban = None
+    kanban = kanban or ""  # D9: no board is fine; tasks are also found from their files
 
     dirs = [TASKS_DIR] + worktree_tasks_dirs()
     request_ts = auto_request_time(event.get("transcript_path"))
+    open_rows = board_rows(kanban)
+    done = {task_id for task_id, _ in board_rows(kanban, ("Done",))}
+    tasks = [(task_id, row) for task_id, row in open_rows]
+    skip = done | {task_id for task_id, _ in open_rows}
+    for task_id, (_, minimal) in file_tasks(dirs, skip).items():
+        tasks.append((task_id, "| Track: minimal" if minimal else ""))
     failures = {}
-    for task_id, row in board_rows(kanban):
+    for task_id, row in tasks:
         try:
             for report_path, minimal, reason in check_task(task_id, row, request_ts, dirs):
                 failures.setdefault(task_id, (report_path, minimal, []))[2].append(reason)

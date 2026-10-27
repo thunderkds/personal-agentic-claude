@@ -27,7 +27,11 @@ report. Write it to its file before the run ends; the chat message is a copy, no
 decision says how it was made. A Debate, safer-option or taste decision ends with the flag. Write `DEBATED`
 only when ≥2 Advocate `Agent` calls ran for that question, naming each Advocate's option. A decision with
 no Advocates is labelled `RULE`, `FACT` or `SAFER OPTION`, never `DEBATED`. A decision flagged `⚠ decided for you` is a choice, and is never labelled `FACT`. A
-safety action a rule requires (for example the backup before a delete) is `RULE` without the flag.:
+safety action a rule requires (for example the backup before a delete) is `RULE` without the flag.
+At Risk Medium or High, a `RULE:` counts only when it names a written rule (`path:line`,
+`path § <heading>`, or `docs/claude-md/tracks.md` `### <section>`), and a `FACT:` needs a Citation
+(`path:line "quoted text"`); without one it is a choice and must be `DEBATED`. Good: `2. backed up the CSV
+— RULE: `docs/claude-md/tracks.md` `### Stops that stay``. Bad: `1. kept recurring.csv — RULE: Surgical Changes`. The record:
 
 ## <ID> — <title> · minimal
 Mode: auto

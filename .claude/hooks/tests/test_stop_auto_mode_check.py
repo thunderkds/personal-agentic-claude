@@ -167,10 +167,11 @@ def test_a_non_auto_task_is_ignored(tmp_path):
     assert out == {}, out
 
 
-def test_a_marked_task_not_on_the_board_is_ignored(tmp_path):
+def test_a_marked_task_not_on_the_board_is_checked_from_its_file(tmp_path):
+    """D9 supersedes D8's board-only discovery: a marked review file with no board row is checked."""
     project = _project(tmp_path, [PLAIN_ROW], review=_report(["1. x — FACT: a.py:1 \"y\" " + FLAG]))
     _, out = _run(project)
-    assert out == {}, out
+    assert _blocked(out) and "T951" in out["reason"] and "T953" not in out["reason"], out
 
 
 # ── check (1): the report file ────────────────────────────────────────────────────────────
@@ -301,7 +302,9 @@ def test_an_unreadable_report_fails_open_with_one_stderr_line(tmp_path):
 
 
 def test_bad_stdin_and_no_board_fail_open(tmp_path):
-    project = _project(tmp_path, [EXT_ROW], review=_report(["1. x — FACT: a:1 \"b\" " + FLAG]))
+    """No board and no marked file: nothing to check (D9 still looks at the files)."""
+    plain = _report(["1. x — FACT: a:1 \"b\" " + FLAG]).replace("## Auto decisions\n\nMode: auto\n", "")
+    project = _project(tmp_path, [EXT_ROW], review=plain)
     (project / "PROJECT_KANBAN.md").unlink()
     result, out = _run(project)
     assert result.returncode == 0 and out == {}
