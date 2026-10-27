@@ -321,6 +321,8 @@ test("own __proto__ key is kept as data and pollutes nothing", () => {
   assert.equal(vm.runInContext("({}).polluted", ctx), undefined);
   assert.ok(Object.prototype.hasOwnProperty.call(back, "__proto__"));
   assert.ok(core.format(text).text.includes('"__proto__"'));
+  const builtins = run({ constructor: 1, toString: 2, hasOwnProperty: 3, permissions: { deny: SAFE_DENY, valueOf: 4 } });
+  assert.deepEqual(only(builtins, "W2").map((f) => f.path), ["constructor", "toString", "hasOwnProperty", "permissions.valueOf"]);
 });
 
 // ---- real-world shape and robustness ----------------------------------

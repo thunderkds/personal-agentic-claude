@@ -686,12 +686,14 @@ Decided by: auto-approve (overwrite all)
   {"key": "feedbackSurveyRate", "category": "Updates & privacy", "type": "number", "scopes": ["user", "project", "local"], "min": 0, "max": 1, "why": "How often the feedback survey shows. 0 to 1."},
   {"key": "env", "category": "Updates & privacy", "type": "object", "scopes": ["user", "project", "local"], "placeholder": "NAME=value", "why": "Environment variables for every session. Values are plain text: never put tokens here."}
  ],
- "knownKeys": ["permissions.deny", "permissions.ask", "permissions.allow", "permissions.defaultMode", "permissions.additionalDirectories", "permissions.disableBypassPermissionsMode", "permissions.blockReadsOutsideWorkingDirectories", "autoMode.soft_deny", "autoMode.hard_deny", "autoMode.classifyAllShell", "sandbox.enabled", "sandbox.failIfUnavailable", "sandbox.autoAllowBashIfSandboxed", "sandbox.allowUnsandboxedCommands", "sandbox.excludedCommands", "sandbox.filesystem.denyRead", "sandbox.filesystem.allowWrite", "sandbox.network.allowedDomains", "sandbox.network.strictAllowlist", "worktree.baseRef", "worktree.symlinkDirectories", "worktree.sparsePaths", "model", "effortLevel", "maxEffortLevel", "fallbackModel", "alwaysThinkingEnabled", "showThinkingSummaries", "fastMode", "promptCacheTtl", "subagentPromptCacheTtl", "language", "outputStyle", "autoMemoryEnabled", "autoMemoryDirectory", "autoCompactEnabled", "autoCompactWindow", "idleCompaction", "claudeMdExcludes", "bashOutputMaxChars", "skillListingBudgetFraction", "fileCheckpointingEnabled", "plansDirectory", "attribution.commit", "attribution.pr", "attribution.sessionUrl", "includeGitInstructions", "prUrlTemplate", "disableAllHooks", "enableAllProjectMcpServers", "enabledMcpjsonServers", "disabledMcpjsonServers", "allowedHttpHookUrls", "statusLine", "theme", "showTurnDuration", "preferredNotifChannel", "respectGitignore", "autoUpdatesChannel", "minimumVersion", "cleanupPeriodDays", "feedbackSurveyRate", "env", "hooks", "permissions", "autoMode", "sandbox", "worktree", "attribution", "requiredMinimumVersion", "includeCoAuthoredBy", "disableArtifact", "enableArtifact", "taskOutputMaxChars", "keybindingFlavor", "autoConnectIde", "autoInstallIdeExtension", "copyFullResponse", "copyOnSelect", "defaultToAgentsView", "diffTool", "externalEditorContext", "leftArrowOpensAgents", "prStatusFooterEnabled", "claudeInChromeDefaultEnabled"],
+ "knownKeys": ["permissions.deny", "permissions.ask", "permissions.allow", "permissions.defaultMode", "permissions.additionalDirectories", "permissions.disableBypassPermissionsMode", "permissions.blockReadsOutsideWorkingDirectories", "autoMode.soft_deny", "autoMode.hard_deny", "autoMode.classifyAllShell", "sandbox.enabled", "sandbox.failIfUnavailable", "sandbox.autoAllowBashIfSandboxed", "sandbox.allowUnsandboxedCommands", "sandbox.excludedCommands", "sandbox.filesystem.denyRead", "sandbox.filesystem.allowWrite", "sandbox.network.allowedDomains", "sandbox.network.strictAllowlist", "worktree.baseRef", "worktree.symlinkDirectories", "worktree.sparsePaths", "model", "effortLevel", "maxEffortLevel", "fallbackModel", "alwaysThinkingEnabled", "showThinkingSummaries", "fastMode", "promptCacheTtl", "subagentPromptCacheTtl", "language", "outputStyle", "autoMemoryEnabled", "autoMemoryDirectory", "autoCompactEnabled", "autoCompactWindow", "idleCompaction", "claudeMdExcludes", "bashOutputMaxChars", "skillListingBudgetFraction", "fileCheckpointingEnabled", "plansDirectory", "attribution.commit", "attribution.pr", "attribution.sessionUrl", "includeGitInstructions", "prUrlTemplate", "disableAllHooks", "enableAllProjectMcpServers", "enabledMcpjsonServers", "disabledMcpjsonServers", "allowedHttpHookUrls", "statusLine", "theme", "showTurnDuration", "preferredNotifChannel", "respectGitignore", "autoUpdatesChannel", "minimumVersion", "cleanupPeriodDays", "feedbackSurveyRate", "env", "hooks", "permissions", "autoMode", "sandbox", "worktree", "attribution", "requiredMinimumVersion", "includeCoAuthoredBy", "disableArtifact", "enableArtifact", "taskOutputMaxChars", "keybindingFlavor", "autoConnectIde", "autoInstallIdeExtension", "copyFullResponse", "copyOnSelect", "defaultToAgentsView", "diffTool", "externalEditorContext", "leftArrowOpensAgents", "prStatusFooterEnabled", "claudeInChromeDefaultEnabled", "advisorModel", "agent", "agentPushNotifEnabled", "allowAllClaudeAiMcps", "allowClaudeInChromeWithManagedMcp", "allowedChannelPlugins", "allowedMcpServers", "allowedProviders", "allowManagedHooksOnly", "allowManagedMcpServersOnly", "allowManagedPermissionRulesOnly", "apiKeyHelper", "askUserQuestionTimeout", "appendPlugins", "autoContinueAtUsageLimit", "autoScrollEnabled", "availableModels", "availableModelsMatch", "awaySummaryEnabled", "awsAuthRefresh", "awsCredentialExport", "axScreenReader", "bashEditDiffEnabled", "blockedMarketplaces", "browserExternalPageTools", "channelsEnabled", "claudeMd", "companyAnnouncements", "crossSessionInbound", "defaultShell", "deniedMcpServers", "deniedModels", "desktopSessionCleanupPeriodDays", "dialogExpiry", "disableAgentView", "disableAutoMode", "disableBrowserExternalNavigation", "disableBundledSkills", "disableClaudeAiConnectors", "disableCommandPluginSources", "disableDeepLinkRegistration", "disableDesktopLocalSessions", "disableMobileSimulatorTools", "disableRemoteControl", "disableSideloadFlags", "disableSkillShellExecution", "disableWorkflows", "editorMode", "emojiCompletionEnabled", "enabledPlugins", "enableWorkflows", "enforceAvailableModels", "extraKnownMarketplaces", "fastModePerSessionOptIn", "feedbackDrafts", "fileSuggestion", "footerLinksRegexes", "forceLoginGatewayUrl", "forceLoginMethod", "forceLoginOrgUUID", "forceRemoteSettingsRefresh", "gatewayInternalNetworks", "gcpAuthRefresh", "httpHookAllowedEnvVars", "inputNeededNotifEnabled", "isolatePeerMachines", "managedMcpServers", "managedSourcesBehavior", "maxProseWidth", "modelOverrides", "modelPicker", "modelPricing", "modelSettings", "otelHeadersHelper", "parentSettingsBehavior", "permissionExplainerEnabled", "pluginConfigs", "pluginSuggestionMarketplaces", "pluginTrustMessage", "policyHelper", "policyHelper.path", "policyHelper.refreshIntervalMs", "policyHelper.timeoutMs", "prefersReducedMotion", "prependPlugins", "processWrapper", "promptSuggestionEnabled", "remote.defaultEnvironmentId", "remoteControlAtStartup", "requiredMaximumVersion", "respondToBashCommands", "sandbox.allowAppleEvents", "sandbox.allowNestedUserNamespaces", "sandbox.bwrapPath", "sandbox.credentials", "sandbox.credentials.allowPlaintextInject", "sandbox.credentials.awsPairs", "sandbox.credentials.envVars", "sandbox.credentials.files", "sandbox.credentials.sigv4", "sandbox.enableWeakerNestedSandbox", "sandbox.enableWeakerNetworkIsolation", "sandbox.filesystem", "sandbox.filesystem.allowManagedReadPathsOnly", "sandbox.filesystem.allowRead", "sandbox.filesystem.denyWrite", "sandbox.filesystem.disabled", "sandbox.ignoreViolations", "sandbox.network", "sandbox.network.allowAllUnixSockets", "sandbox.network.allowLocalBinding", "sandbox.network.allowMachLookup", "sandbox.network.allowManagedDomainsOnly", "sandbox.network.allowUnixSockets", "sandbox.network.deniedDomains", "sandbox.network.httpProxyPort", "sandbox.network.socksProxyPort", "sandbox.network.tlsTerminate", "sandbox.ripgrep", "sandbox.socatPath", "showClearContextOnPlanAccept", "skillListingMaxDescChars", "skillOverrides", "skipAutoPermissionPrompt", "skipDangerousModePermissionPrompt", "skipWebFetchPreflight", "spellcheck", "spinnerTipsEnabled", "spinnerTipsOverride", "spinnerVerbs", "sshConfigs", "sshHostAllowlist", "sshHostCommands", "strictKnownMarketplaces", "strictPluginOnlyCustomization", "strictPluginOnlyCustomization.agents", "strictPluginOnlyCustomization.hooks", "strictPluginOnlyCustomization.mcp", "strictPluginOnlyCustomization.skills", "subagentStatusLine", "switchModelsOnFlag", "syncClaudeAiPlugins", "syncClaudeAiSkills", "syntaxHighlightingDisabled", "teammateDefaultModel", "teammateMode", "terminalProgressBarEnabled", "terminalTitleFromRename", "timeFormat", "timeZone", "tui", "ultracode", "useAutoModeDuringPlan", "verbose", "viewMode", "vimInsertModeRemaps", "voice", "voiceEnabled", "wheelScrollAccelerationEnabled", "workflowKeywordTriggerEnabled", "workflowSizeGuideline", "worktree.bgIsolation", "worktree.location", "wslInheritsWindowsSettings", "permissions.disableAutoMode", "autoMode.environment", "autoMode.allow"],
  "presets": [{"id": "safe-baseline", "label": "Safe baseline", "values": {"permissions.deny": "$suggest", "permissions.ask": "$suggest"}}, {"id": "solo-engineer", "label": "Solo engineer", "values": {"permissions.deny": "$suggest", "permissions.ask": "$suggest", "autoUpdatesChannel": "stable", "cleanupPeriodDays": 90}}, {"id": "team-project", "label": "Team project", "values": {"permissions.deny": "$suggest", "permissions.ask": "$suggest", "worktree.baseRef": "head", "worktree.symlinkDirectories": ["node_modules", ".venv"]}}, {"id": "empty", "label": "Empty", "values": {}}],
  "deprecated": {"includeCoAuthoredBy": "attribution", "disableArtifact": "enableArtifact"},
- "removed": ["taskOutputMaxChars", "keybindingFlavor"],
- "globalConfigOnly": ["autoConnectIde", "autoInstallIdeExtension", "copyFullResponse", "copyOnSelect", "defaultToAgentsView", "diffTool", "externalEditorContext", "leftArrowOpensAgents", "prStatusFooterEnabled", "claudeInChromeDefaultEnabled"],
- "managedOnly": ["requiredMinimumVersion"]
+ "removed": ["taskOutputMaxChars", "keybindingFlavor", "permissionExplainerEnabled", "teammateDefaultModel"],
+ "globalConfigOnly": ["autoConnectIde", "autoInstallIdeExtension", "copyFullResponse", "copyOnSelect", "defaultToAgentsView", "diffTool", "externalEditorContext", "leftArrowOpensAgents", "prStatusFooterEnabled", "claudeInChromeDefaultEnabled", "permissionExplainerEnabled", "teammateDefaultModel"],
+ "managedOnly": ["requiredMinimumVersion", "allowAllClaudeAiMcps", "allowClaudeInChromeWithManagedMcp", "allowedChannelPlugins", "allowedProviders", "allowManagedHooksOnly", "allowManagedMcpServersOnly", "allowManagedPermissionRulesOnly", "availableModelsMatch", "blockedMarketplaces", "browserExternalPageTools", "channelsEnabled", "claudeMd", "deniedModels", "disableBrowserExternalNavigation", "disableCommandPluginSources", "disableDesktopLocalSessions", "disableMobileSimulatorTools", "disableSideloadFlags", "forceRemoteSettingsRefresh", "gatewayInternalNetworks", "managedMcpServers", "managedSourcesBehavior", "modelPricing", "parentSettingsBehavior", "pluginSuggestionMarketplaces", "pluginTrustMessage", "policyHelper", "policyHelper.path", "policyHelper.refreshIntervalMs", "policyHelper.timeoutMs", "requiredMaximumVersion", "sandbox.bwrapPath", "sandbox.filesystem.allowManagedReadPathsOnly", "sandbox.network.allowManagedDomainsOnly", "sandbox.socatPath", "sshHostAllowlist", "strictKnownMarketplaces", "strictPluginOnlyCustomization", "strictPluginOnlyCustomization.agents", "strictPluginOnlyCustomization.hooks", "strictPluginOnlyCustomization.mcp", "strictPluginOnlyCustomization.skills", "wslInheritsWindowsSettings"],
+ "userOnly": ["askUserQuestionTimeout", "appendPlugins", "autoContinueAtUsageLimit", "autoMode", "autoMode.classifyAllShell", "axScreenReader", "bashEditDiffEnabled", "desktopSessionCleanupPeriodDays", "dialogExpiry", "feedbackDrafts", "footerLinksRegexes", "forceLoginGatewayUrl", "modelPicker", "pluginConfigs", "prependPlugins", "processWrapper", "sandbox.allowAppleEvents", "sandbox.allowNestedUserNamespaces", "sandbox.credentials.allowPlaintextInject", "sandbox.credentials.awsPairs", "sandbox.credentials.sigv4", "sandbox.filesystem.disabled", "sandbox.network.strictAllowlist", "sandbox.network.tlsTerminate", "sandbox.ripgrep", "skipAutoPermissionPrompt", "spellcheck", "sshConfigs", "sshHostCommands", "vimInsertModeRemaps", "worktree.location"],
+ "userOrLocalOnly": ["skipDangerousModePermissionPrompt", "syncClaudeAiPlugins", "syncClaudeAiSkills", "useAutoModeDuringPlan"]
 }
 </script>
 <script id="settings-tool-core">
@@ -793,8 +795,9 @@ var SettingsCore = (function () {
   }
 
   // selection: { key: value }. Returns the JSON text plus what was dropped and why.
-  function generate(catalog, selection, target) {
-    var root = {}, removed = [], invalid = [], count = 0;
+  // passthrough (T186): keys loaded from a pasted file that Build does not edit. They are emitted unchanged.
+  function generate(catalog, selection, target, passthrough) {
+    var root = passthrough ? clone(passthrough) : {}, removed = [], invalid = [], count = 0;
     for (var i = 0; i < catalog.settings.length; i++) {
       var entry = catalog.settings[i];
       if (!Object.prototype.hasOwnProperty.call(selection, entry.key)) { continue; }
@@ -813,9 +816,371 @@ var SettingsCore = (function () {
     return { json: JSON.stringify(root, null, 2), removed: removed, invalid: invalid, count: count, note: note };
   }
 
+  /* ---- Check mode (T186) ------------------------------------------------
+     Pasted text is untrusted. These functions only read it; they never run it,
+     and every string they hand back for display passes through maskText. */
+  var HIDDEN = "[secret hidden]";
+  var BROAD_ALLOW = ["Bash", "Bash(*)", "Bash(git *)", "Bash(bash *)", "Bash(sh *)", "Bash(python3 *)", "Bash(python *)", "Bash(node *)", "Bash(cat *)"];
+  var RULE_LISTS = ["deny", "ask", "allow"];   // precedence order: first match wins
+  var SEVERITY = { error: 0, warn: 1, tip: 2 };
+  var SECRET_START = /^(sk-|ghp_|gho_|github_pat_|xox|AKIA)/;
+  var SECRET_RUN = /[A-Za-z0-9+\/=_-]{32,}/;
+  // Inside free text (hook commands, rules): a known token prefix after a non-word character,
+  // or a 32+ run with a letter and a digit. "/" is left out of the run so file paths stay readable.
+  var TOKEN_IN_TEXT = /(^|[^A-Za-z0-9_])((?:sk-|ghp_|gho_|github_pat_|xox[a-z]-|AKIA)[A-Za-z0-9_\-]{3,})/g;
+  var RUN_IN_TEXT = /[A-Za-z0-9+=_-]{32,}/g;
+  var SUGGEST_LIMIT = 200;   // did-you-mean lookups per check; keeps a huge paste fast
+
+  function own(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
+  function isObj(v) { return v !== null && typeof v === "object" && !Array.isArray(v); }
+  // Own data property, even for a key named "__proto__": pasted keys never touch a prototype.
+  function setOwn(o, k, v) { Object.defineProperty(o, k, { value: v, enumerable: true, writable: true, configurable: true }); }
+  function clone(v) {
+    if (Array.isArray(v)) { return v.map(clone); }
+    if (isObj(v)) { var o = {}; Object.keys(v).forEach(function (k) { setOwn(o, k, clone(v[k])); }); return o; }
+    return v;
+  }
+  function getPath(root, key) {
+    var parts = key.split("."), node = root;
+    for (var i = 0; i < parts.length; i++) {
+      if (!isObj(node) || !own(node, parts[i])) { return undefined; }
+      node = node[parts[i]];
+    }
+    return node;
+  }
+  function deletePath(root, key) {
+    var parts = key.split("."), chain = [root], i;
+    for (i = 0; i < parts.length - 1; i++) { chain.push(chain[i][parts[i]]); }
+    delete chain[parts.length - 1][parts[parts.length - 1]];
+    for (i = parts.length - 2; i >= 0; i--) {     // drop parents this delete emptied
+      if (Object.keys(chain[i + 1]).length) { break; }
+      delete chain[i][parts[i]];
+    }
+  }
+
+  function looksSecret(v) { return typeof v === "string" && (SECRET_START.test(v.trim()) || SECRET_RUN.test(v)); }
+  function maskText(s, counter) {
+    var out = s.replace(TOKEN_IN_TEXT, function (m, pre) { if (counter) { counter.n++; } return pre + HIDDEN; });
+    return out.replace(RUN_IN_TEXT, function (m) {
+      if (!/[0-9]/.test(m) || !/[A-Za-z]/.test(m)) { return m; }
+      if (counter) { counter.n++; }
+      return HIDDEN;
+    });
+  }
+  // Deep copy with secrets hidden: a secret-looking env value is replaced whole (by envValue),
+  // and token-like parts of every other string are replaced by HIDDEN.
+  function maskDeep(v, path, envValue, counter) {
+    if (typeof v === "string") {
+      if (/^env\.[^.]+$/.test(path) && looksSecret(v)) { counter.n++; return envValue; }
+      return maskText(v, counter);
+    }
+    if (Array.isArray(v)) { return v.map(function (x, i) { return maskDeep(x, path + "[" + i + "]", envValue, counter); }); }
+    if (isObj(v)) {
+      var o = {};
+      Object.keys(v).forEach(function (k) { setOwn(o, k, maskDeep(v[k], path ? path + "." + k : k, envValue, counter)); });
+      return o;
+    }
+    return v;
+  }
+  function maskSecrets(v) { return maskDeep(v, "", HIDDEN, { n: 0 }); }
+
+  function finding(id, severity, path, problem, fix) {
+    return { id: id, severity: severity, path: path, problem: problem, fix: fix };
+  }
+  function short(s) { s = maskText(String(s)); return s.length > 80 ? s.slice(0, 77) + "..." : s; }
+  function preview(v) {
+    var s = typeof v === "string" ? v : JSON.stringify(v);
+    return s.length > 200 ? s.slice(0, 197) + "..." : s;
+  }
+
+  function lineCol(text, pos) {
+    var before = text.slice(0, pos), nl = before.lastIndexOf("\n");
+    return { line: before.split("\n").length, column: pos - nl };
+  }
+  // JSON.parse error messages differ between engines and may quote the text, so only
+  // the position is read out of them. The message itself is never shown.
+  function parseSettings(text) {
+    try { return { ok: true, value: JSON.parse(text) }; } catch (err) {
+      var msg = String(err && err.message), m, lc = null;
+      if ((m = /line (\d+) column (\d+)/.exec(msg))) { lc = { line: +m[1], column: +m[2] }; }
+      else if ((m = /position (\d+)/.exec(msg))) { lc = lineCol(text, +m[1]); }
+      else if (text.charCodeAt(0) === 0xFEFF) { lc = { line: 1, column: 1 }; }
+      else if (/end of (JSON )?input|unexpected end/i.test(msg)) { lc = lineCol(text, text.length); }
+      var where = lc ? "at line " + lc.line + ", column " + lc.column : "(line unknown)";
+      var problem = "Not valid JSON " + where + ".";
+      var fix = "Fix the text there. A missing comma, quote or bracket is the usual cause.";
+      if (text.charCodeAt(0) === 0xFEFF) {
+        problem = "The text starts with an invisible byte order mark (BOM), so it is not valid JSON.";
+        fix = "Save the file as UTF-8 without a BOM, or delete the first character.";
+      } else if (/(^|[\s,{\[])\/\/|\/\*/.test(text)) {
+        problem = "Not valid JSON " + where + ". The text seems to hold comments, and settings.json cannot hold comments.";
+        fix = "Remove the // and /* */ comments.";
+      }
+      var f = finding("E1", "error", "", problem, fix);
+      if (lc) { f.line = lc.line; f.column = lc.column; }
+      return { ok: false, finding: f };
+    }
+  }
+
+  function editDistance(a, b) {
+    if (Math.abs(a.length - b.length) > 2) { return 3; }
+    var prev = [], cur, i, j;
+    for (j = 0; j <= b.length; j++) { prev[j] = j; }
+    for (i = 1; i <= a.length; i++) {
+      cur = [i];
+      for (j = 1; j <= b.length; j++) {
+        cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      }
+      prev = cur;
+    }
+    return prev[b.length];
+  }
+
+  function indexCatalog(catalog) {
+    // Prototype-free maps: a pasted key such as "__proto__" or "constructor" must not match anything built in.
+    var ix = { entry: Object.create(null), known: Object.create(null), parents: Object.create(null), container: Object.create(null) };
+    catalog.settings.forEach(function (e) {
+      ix.entry[e.key] = e;
+      var parts = e.key.split(".");
+      for (var i = 1; i < parts.length; i++) { ix.container[parts.slice(0, i).join(".")] = true; }
+    });
+    catalog.knownKeys.forEach(function (k) {
+      ix.known[k] = true;
+      var parts = k.split(".");
+      for (var i = 1; i < parts.length; i++) {
+        var p = parts.slice(0, i).join(".");
+        (ix.parents[p] = ix.parents[p] || []).push(k);
+      }
+    });
+    ix.top = catalog.knownKeys.filter(function (k) { return k.indexOf(".") < 0; })
+      .concat(Object.keys(ix.parents).filter(function (k) { return k.indexOf(".") < 0 && !ix.known[k]; }));
+    return ix;
+  }
+  function inList(list, k) { return (list || []).indexOf(k) >= 0; }
+
+  // E4, E5 (by key), W1, W2: walk the keys top-down; stop at the first finding for a key.
+  function checkKeys(catalog, ix, obj, prefix, target, out, budget) {
+    Object.keys(obj).forEach(function (k) {
+      var path = prefix ? prefix + "." + k : k, entry = ix.entry[path];
+      if (inList(catalog.removed, path)) {
+        out.push(finding("E4", "error", path, "This key was removed from Claude Code. It has no effect.", "Delete it."));
+      } else if (own(catalog.deprecated, path)) {
+        out.push(finding("W1", "warn", path, "This key is deprecated.", "Use " + catalog.deprecated[path] + " instead."));
+      } else if (inList(catalog.globalConfigOnly, path)) {
+        out.push(finding("E5", "error", path, "Claude Code ignores this key in a settings file.", "Move it to ~/.claude.json (the global config)."));
+      } else if (inList(catalog.managedOnly, path)) {
+        out.push(finding("E5", "error", path, "Only managed settings from your organization read this key.", "Delete it, or ask your admin to set it in managed settings."));
+      } else if (target !== "user" && (inList(catalog.userOnly, path) || (entry && entry.scopes.indexOf(target) < 0))) {
+        out.push(finding("E5", "error", path, "Ignored in a " + target + " file. Only the user file reads it.", "Move it to " + FILES.user + "."));
+      } else if (target === "project" && inList(catalog.userOrLocalOnly, path)) {
+        out.push(finding("E5", "error", path, "Ignored in a project file, so a repository cannot change it for you.", "Move it to " + FILES.local + " or " + FILES.user + "."));
+      } else if (!ix.known[path] && !ix.parents[path]) {
+        var siblings = prefix ? (ix.parents[prefix] || []).filter(function (s) { return s.split(".").length === path.split(".").length; }) : ix.top;
+        var best = null, bestD = 3;
+        if (budget.n-- > 0) {
+          siblings.forEach(function (s) { var d = editDistance(k, s.split(".").pop()); if (d < bestD) { bestD = d; best = s; } });
+        }
+        out.push(best
+          ? finding("W2", "warn", path, "Unknown key. Did you mean " + best + "?", "Rename it to " + best + ".")
+          : finding("W2", "warn", path, "Unknown key, kept as-is.", "Check the spelling against the settings reference, or delete it."));
+      } else if (ix.parents[path] && isObj(obj[k])) {
+        checkKeys(catalog, ix, obj[k], path, target, out, budget);
+      }
+    });
+  }
+
+  // E3, E5 (by value), W7, I2 for catalog keys that are present.
+  function checkValues(catalog, ix, data, target, out) {
+    Object.keys(ix.container).forEach(function (c) {
+      var v = getPath(data, c);
+      if (v !== undefined && !isObj(v) && !(c === "attribution" && v === false)) {
+        out.push(finding("E3", "error", c, "Must be an object, not " + (v === null ? "null" : Array.isArray(v) ? "a list" : typeof v) + ". The keys under it have no effect.", "Write it as { ... } with its keys inside, or delete it."));
+      }
+    });
+    catalog.settings.forEach(function (e) {
+      var v = getPath(data, e.key);
+      if (v === undefined) { return; }
+      var res;
+      if (e.asCommandObject) {
+        res = isObj(v) && v.type === "command" && typeof v.command === "string" && v.command !== ""
+          ? { ok: true } : { ok: false, error: "Must be {\"type\": \"command\", \"command\": \"...\"}." };
+      } else if (e.type === "string" && v === "") {
+        res = { ok: false, error: "Must not be empty." };
+      } else {
+        res = validateValue(e, v);
+      }
+      if (!res.ok) { out.push(finding("E3", "error", e.key, "Wrong value. " + res.error, "Change the value, or delete the key.")); return; }
+      if (e.scopes.indexOf(target) < 0) { return; }   // already E5 by key
+      if (!honoured(e, v, target)) {
+        out.push(finding("E5", "error", e.key, "The value " + JSON.stringify(v) + " is read from the user file only.", "Move it to " + FILES.user + ", or pick another value."));
+        return;
+      }
+      if ((e.lowersSafety && e.type === "bool" && v === true) || inList(e.lowersSafetyValues, v)) {
+        out.push(finding("W7", "warn", e.key, "This value lowers safety: " + e.why, "Delete it unless you need it on purpose."));
+      }
+      if (e.since) {
+        out.push(finding("I2", "tip", e.key, "Needs Claude Code " + e.since + " or later.", "Older versions ignore it. Check with claude --version."));
+      }
+    });
+  }
+
+  function ruleLists(data) {
+    var p = getPath(data, "permissions"), lists = {};
+    RULE_LISTS.forEach(function (n) {
+      var l = isObj(p) && Array.isArray(p[n]) ? p[n] : [];
+      lists[n] = l.map(function (r) { return typeof r === "string" ? r.trim() : null; });
+    });
+    return lists;
+  }
+
+  // W3, W4, I1 on the permission rule lists.
+  function checkRules(catalog, data, out) {
+    var lists = ruleLists(data);
+    RULE_LISTS.forEach(function (n) {
+      lists[n].forEach(function (r, i) {
+        if (r === null) { return; }
+        var path = "permissions." + n + "[" + i + "]";
+        if (n === "allow" && BROAD_ALLOW.indexOf(r) >= 0) {
+          out.push(finding("W3", "warn", path, "\"" + short(r) + "\" pre-approves nearly any command of that kind.", "Allow the exact commands you need, such as Bash(git status)."));
+        }
+        if (lists[n].indexOf(r) < i) {
+          out.push(finding("W4", "warn", path, "\"" + short(r) + "\" is already in this list.", "Delete the duplicate."));
+        } else if (n === "allow") {
+          var other = lists.deny.indexOf(r) >= 0 ? "deny" : lists.ask.indexOf(r) >= 0 ? "ask" : null;
+          if (other) {
+            out.push(finding("W4", "warn", path, "\"" + short(r) + "\" is also in " + other + ". Rules are checked deny → ask → allow and the first match wins, so this allow rule never applies.", "Delete it from allow, or from " + other + " if you meant to allow it."));
+          }
+        }
+      });
+    });
+    var deny = lists.deny.filter(function (r) { return r !== null; }).join("\n");
+    var missing = [];
+    if (deny.indexOf(".env") < 0) { missing.push(".env"); }
+    if (deny.indexOf(".ssh") < 0) { missing.push("~/.ssh"); }
+    if (missing.length) {
+      var entry = find(catalog, "permissions.deny");
+      var add = (entry.suggest || []).filter(function (s) { return lists.deny.indexOf(s) < 0; });
+      var f = finding("I1", "tip", "permissions.deny", "No deny rule blocks reading " + missing.join(" or ") + ".", "Add the suggested deny rules in Build.");
+      f.action = { label: "Add in Build", add: { "permissions.deny": add } };
+      out.push(f);
+    }
+  }
+
+  function eachHook(data, fn) {
+    var hooks = getPath(data, "hooks");
+    if (!isObj(hooks)) { return; }
+    Object.keys(hooks).forEach(function (ev) {
+      if (!Array.isArray(hooks[ev])) { return; }
+      hooks[ev].forEach(function (group, i) {
+        if (!isObj(group) || !Array.isArray(group.hooks)) { return; }
+        group.hooks.forEach(function (h, j) {
+          var cmd = isObj(h) && typeof h.command === "string" ? h.command : null;
+          fn("hooks." + ev + "[" + i + "].hooks[" + j + "].command", ev, typeof group.matcher === "string" && group.matcher ? group.matcher : "*", cmd, h);
+        });
+      });
+    });
+  }
+
+  // W5 on env values, W6 on hook commands.
+  function checkSecretsAndHooks(data, out) {
+    var env = getPath(data, "env");
+    if (isObj(env)) {
+      Object.keys(env).forEach(function (k) {
+        if (looksSecret(env[k])) {
+          out.push(finding("W5", "warn", "env." + k, "Looks like a secret (value hidden). Values in settings files are plain text.", "Delete it here. Use apiKeyHelper or set it in your shell instead."));
+        }
+      });
+    }
+    eachHook(data, function (path, ev, matcher, cmd) {
+      if (cmd !== null && /\btee\b[^|;&]*\s\/tmp\b|>>?\s*\/tmp\b/.test(cmd)) {
+        out.push(finding("W6", "warn", path, "This hook copies its input to /tmp, where other users on the machine can read it.", "Write to a private folder (for example under ~/.claude) or do not save the input."));
+      }
+    });
+  }
+
+  // Map data. Built from the masked copy, so it never holds a secret.
+  function buildTree(catalog, ix, data) {
+    var cats = {}, tree = { categories: [], permissions: null, hooks: [], other: [] };
+    function walk(obj, prefix) {
+      Object.keys(obj).forEach(function (k) {
+        var path = prefix ? prefix + "." + k : k, v = obj[k], m;
+        if (path === "hooks" && isObj(v)) { return; }
+        if ((m = /^permissions\.(deny|ask|allow)$/.exec(path)) && Array.isArray(v)) {
+          tree.permissions[m[1]] = v.map(function (r, i) { return { path: path + "[" + i + "]", rule: preview(r) }; });
+          return;
+        }
+        if (ix.entry[path]) {
+          var c = ix.entry[path].category;
+          (cats[c] = cats[c] || []).push({ path: path, value: preview(v) });
+          return;
+        }
+        if (ix.container[path] && isObj(v)) { walk(v, path); return; }
+        tree.other.push({ path: path, value: preview(v) });
+      });
+    }
+    if (isObj(data.permissions)) { tree.permissions = { deny: [], ask: [], allow: [] }; }
+    walk(data, "");
+    catalog.categories.forEach(function (c) { if (cats[c]) { tree.categories.push({ name: c, items: cats[c] }); } });
+    eachHook(data, function (path, ev, matcher, cmd, h) {
+      tree.hooks.push({ path: path, event: ev, matcher: matcher, command: cmd !== null ? preview(cmd) : "(" + (isObj(h) && typeof h.type === "string" ? h.type : "hook") + ")" });
+    });
+    return tree;
+  }
+
+  // text: pasted settings.json; target: "user" | "project" | "local".
+  function check(catalog, text, target) {
+    if (!String(text).trim()) { return { findings: [], tree: null, empty: true }; }
+    var parsed = parseSettings(text);
+    if (!parsed.ok) { return { findings: [parsed.finding], tree: null, empty: false }; }
+    var data = parsed.value;
+    if (!isObj(data)) {
+      return { findings: [finding("E2", "error", "", "The file must be one JSON object, written as { ... }.", "Wrap the settings in { } as key and value pairs.")], tree: null, empty: false };
+    }
+    var ix = indexCatalog(catalog), out = [];
+    checkKeys(catalog, ix, data, "", target, out, { n: SUGGEST_LIMIT });
+    checkValues(catalog, ix, data, target, out);
+    checkRules(catalog, data, out);
+    checkSecretsAndHooks(data, out);
+    var order = out.map(function (f, i) { return [SEVERITY[f.severity], i, f]; });
+    order.sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; });
+    return { findings: order.map(function (x) { return x[2]; }), tree: buildTree(catalog, ix, maskSecrets(data)), empty: false };
+  }
+
+  // Pretty-print, 2 spaces, the user's key order. Secrets hidden unless keepSecrets.
+  function format(text, keepSecrets) {
+    var parsed = parseSettings(text);
+    if (!parsed.ok) { return { ok: false, text: "", findings: [parsed.finding] }; }
+    return { ok: true, text: JSON.stringify(keepSecrets ? parsed.value : maskSecrets(parsed.value), null, 2), findings: [] };
+  }
+
+  // Split a parsed file into Build selection (catalog keys Build can edit) and passthrough
+  // (everything else, emitted unchanged), so a round trip loses nothing.
+  // Without keepSecrets: secret env values become "" and token-like text becomes HIDDEN; masked counts them.
+  function fromSettings(catalog, parsed, opts) {
+    var counter = { n: 0 };
+    var rest = opts && opts.keepSecrets ? clone(parsed) : maskDeep(parsed, "", "", counter);
+    var selection = {};
+    catalog.settings.forEach(function (e) {
+      var v = getPath(rest, e.key);
+      if (v === undefined) { return; }
+      if (e.asCommandObject) {
+        if (!isObj(v) || Object.keys(v).sort().join() !== "command,type" || v.type !== "command" || !validateValue(e, v.command).ok) { return; }
+        selection[e.key] = v.command;
+      } else {
+        if (!validateValue(e, v).ok) { return; }
+        if ((e.type === "stringList" && !v.length) || (e.type === "object" && !Object.keys(v).length)) { return; }
+        selection[e.key] = clone(v);
+      }
+      deletePath(rest, e.key);
+    });
+    return { selection: selection, passthrough: rest, masked: counter.n };
+  }
+
   return {
     FILES: FILES, loadCatalog: loadCatalog, find: find, initialValue: initialValue,
-    validateValue: validateValue, applyPreset: applyPreset, generate: generate
+    validateValue: validateValue, applyPreset: applyPreset, generate: generate,
+    check: check, format: format, fromSettings: fromSettings, maskSecrets: maskSecrets,
+    parseSettings: parseSettings, looksSecret: looksSecret
   };
 })();
 </script>
