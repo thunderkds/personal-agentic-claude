@@ -2857,3 +2857,8 @@ highest ID anywhere, not only `PROJECT_KANBAN.md` on the checked-out branch. Ren
 - **`communicate()` after `proc.kill()` blocks until grandchildren close the pipes** (T175). A timed-out
   `claude -p` left children holding stdout, so the runner hung. Start agents with `start_new_session=True`
   and kill the group with `os.killpg`; test that the timeout returns in seconds.
+- **`node --test <dir>/` fails on Node 26** (T185). A directory argument is read as a module path
+  ("Cannot find module …/tests/settings_tool"). Use a quoted glob: `node --test "tests/settings_tool/*.mjs"`.
+- **Pure core in its own inline `<script id>` block makes a no-build page testable** (T185). Node tests read
+  `site/index.html`, extract the `settings-tool-core` block and run it in `node:vm`; a test asserts the block
+  never names `document`. One file, no bundler, no package.json.

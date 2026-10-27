@@ -2461,3 +2461,10 @@ The log refuses a symlink/non-file path, writes via `mktemp` in `.claude/` + `mv
 **Why**: per-file prompts do not scale to many edited files, and outcomes were printed to the screen only, so nobody could later see what an update did.
 **Open**: "N kit files you never edited — refreshed" also counts byte-identical files.
 **Files**: setup.sh, lib/harness-update.sh, tests/test_update_auto_approve.sh, tests/test_one_command_menu.sh, .github/workflows/ci.yml, site/index.html, README.md
+
+## T184 closed / T185 merged: the kit installs no settings defaults; the site gets a Settings tool instead (2026-10-27)
+**Date**: 2026-10-27 · **Source**: user ("the config should go by the taste, we no need to update as initial"; "design a section that user can click on the settings and we can generate the settings for users … paste their current settings and we check")
+**Decision**: The kit's `.claude/settings.json` stays hooks + harness-anchor denies only — no taste-dependent keys (T184 closed, will not do; its evaluation table of ~250 reference keys is the catalog's content source). The public site (`site/index.html` `#settings-tool`) gets a client-side Settings tool: **Build** (T185, merged 3c84dc3) — inline catalog `#settings-catalog` (63 keys, 9 categories, stamped CLI 2.1.311), presets, target file user/project/local that hides keys the file ignores; **Check** (T186) — paste, format, validate, map. `PROJECT_SPEC_SITE.md` § "Settings tool" lifts the no-forms non-goal for this one tool with five hard rules (no network/storage, no submitting form, inline only, `node --test` with no package.json, no-JS fallback).
+**Why**: settings are personal taste; a shared kit file that installs them overrides user choice. A builder + checker serves the same need without imposing defaults.
+**Open**: site tests (`tests/test_site_content.py`, `tests/settings_tool/*.mjs`) are not run by `.github/workflows/ci.yml`; `knownKeys` holds catalog keys only (T186 extends).
+**Files**: site/index.html, tests/settings_tool/test_generate.mjs, tests/test_site_content.py, PROJECT_SPEC_SITE.md, tasks/TASK_GUIDE_T184.md, tasks/TASK_GUIDE_T185.md, tasks/TASK_GUIDE_T186.md

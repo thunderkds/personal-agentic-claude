@@ -151,6 +151,7 @@
 - [T146/T147: sensitive-path ask hook; sub-agent sandbox is CLI-only (b)](decisions.md) — predicted path ⇒ no decision (never `allow`); `Agent()` spawns not sandboxed; T147 /verify FAIL on Ubuntu userns
 - [T144/T145/T148/T149 merged: lane check, decisions.md slice, anchored trace, prod approval](decisions.md) — lane_check needs `base...HEAD`; trace anchors in `~/.claude/harness-anchors` behind deny-only rules; merge-settings unions kit deny
 - [T150: spawns are background `Agent()` by default; `wake` flags dirty In Progress worktrees](decisions.md) — CLI pane only on request / non-Claude CLI; sandbox profile unused until nested-userns passes
+- [T184 closed / T185 merged: kit installs no settings; site Settings tool (Build/Check)](decisions.md) — taste stays with the user; inline catalog stamped CLI 2.1.311; five hard rules in `PROJECT_SPEC_SITE.md`
 
 ### Patterns & Gotchas
 - [A short SHA is hex — lock pair regex would read `kit_commit` as a file](learnings.md) — scope lock readers to the `"files"` block (T137)
@@ -272,6 +273,7 @@
 - [A board-pulled guide is gate input](learnings.md) — T154: forged Evidence vacated; sensitive-path ask → T157
 - [Injected input hid a dead /dev/tty](learnings.md) — T155: test on a real pty
 - [Parallel tasks merge together; 401 ≠ permanent](learnings.md) — T156/T157: gate serialises merges
+- [`node --test <dir>/` fails on Node 26; inline core block + `node:vm`](learnings.md) — T185: use a quoted glob; test a no-build page by extracting its pure script block
 
 ### Learning Records
 <!-- One-liner per active LR: - [LR-NNNN slug](memory/learning-records/LR-NNNN-slug.md) — summary -->
