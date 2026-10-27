@@ -132,8 +132,8 @@ T069_BASELINE_REF = "8d6d56b"
 # REPOINTED AGAIN by T180 (`10c9e44` -> `c034608`, T180's edit commit; design D1-D6 user-approved 2026-10-27): the `## Tracks` paragraph gains the auto-mode pointer (the `[auto]` tag, the track line, the `## Auto mode` table in tracks.md, the never-list) in place: no new line, still 196 lines. Nothing collapsed into the agent guides. Repointed, NOT deleted.
 # Repointed once more by T180 D7 (`c034608` -> `d455cfb`): the `## Tracks` paragraph now says the final report is written to its file before the run ends (the chat message is a copy). Same line, still 196 lines. Repointed, NOT deleted.
 # Merged by the main <- plan/t178-t180-tracks merge (2026-10-27): AGENTS.md now holds both T183's template path and
-# T178/T180's `## Tracks` edits, so it matches neither `05a23df` nor `d455cfb`; the next commit repoints to the merge commit.
-T070_BASELINE_REF = "d455cfb"  # placeholder until the merge commit exists (see the line above)
+# T178/T180's `## Tracks` edits, so it matches neither `05a23df` nor `d455cfb`: repointed to the merge commit `9e0bb48`. Repointed, NOT deleted.
+T070_BASELINE_REF = "9e0bb48"  # main <- plan/t178-t180-tracks merge (was 05a23df on main, d455cfb on the plan branch)
 
 # T082's own edit commit (same commit as the repoint above). T082 adds a mandatory Base Rule bullet
 # to `general-agent-template.md` too (the same untrusted-content pointer) — a legitimate, required
