@@ -118,6 +118,76 @@ def test_base_template_marked_not_spawnable():
     )
 
 
+# ---- T183 AC 8: role cards show the agent's frontmatter colour and trigger ----
+
+def _agent_frontmatter(fname):
+    """{key: unquoted value} for one agents/*.md frontmatter block."""
+    with open(os.path.join(AGENTS_DIR, fname), encoding="utf-8") as f:
+        block = f.read().split("\n---\n", 1)[0]
+    keys = {}
+    for line in block.splitlines():
+        m = re.match(r"^([a-z]+):\s*(.*)$", line)
+        if m:
+            value = m.group(2).strip()
+            if len(value) >= 2 and value[0] == value[-1] == '"':
+                value = value[1:-1]
+            keys[m.group(1)] = value
+    return keys
+
+
+def _trigger(description):
+    """The "Use when ..." trigger: the description's first sentence."""
+    return re.split(r"(?<=\.)\s", description, maxsplit=1)[0]
+
+
+def _agent_card(name):
+    """The <div class="agent-card"> block whose .name is `name`, or None."""
+    m = re.search(r'<section id="agent-roles">(.*?)</section>', _page_text(), re.DOTALL)
+    assert m, 'page has no <section id="agent-roles">'
+    for card in re.findall(r'<div class="agent-card">(.*?)\n</div>', m.group(1), re.DOTALL):
+        if re.search(rf'<div class="name">{re.escape(name)}</div>', card):
+            return card
+    return None
+
+
+def test_role_cards_show_frontmatter_colour_and_trigger():
+    import html as _h
+    agents = _agent_names()
+    assert len(agents) == 4, f"expected 4 role agents, found {sorted(agents)}"
+    for name, fname in sorted(agents.items()):
+        fm = _agent_frontmatter(fname)
+        card = _agent_card(name)
+        assert card, f"no agent card for {name}"
+        swatch = re.search(r'<span class="swatch" data-color="([a-z]+)"></span>\s*([a-z]+)', card)
+        assert swatch, f"{name} card has no colour swatch + label"
+        assert swatch.groups() == (fm["color"], fm["color"]), (
+            f"{name} card colour {swatch.groups()} drifted from {fname} color: {fm['color']}"
+        )
+        trig = re.search(r'<p class="trigger">(.*?)</p>', card, re.DOTALL)
+        assert trig, f"{name} card has no trigger line"
+        shown = " ".join(_h.unescape(re.sub(r"<[^>]+>", "", trig.group(1))).split())
+        assert shown == _trigger(fm["description"]), (
+            f"{name} card trigger drifted from {fname}:\n  page: {shown!r}\n  file: "
+            f"{_trigger(fm['description'])!r}"
+        )
+        assert shown.startswith("Use when"), f"{name} trigger does not start with 'Use when'"
+
+
+def test_every_swatch_colour_has_a_css_rule():
+    css = re.search(r"<style>(.*?)</style>", _page_text(), re.DOTALL).group(1)
+    used = set(re.findall(r'<span class="swatch" data-color="([a-z]+)">', _page_text()))
+    assert used, "no swatches on the page"
+    missing = [c for c in sorted(used) if f'.swatch[data-color="{c}"]' not in css]
+    assert not missing, f"swatch colour(s) with no CSS rule: {missing}"
+
+
+def test_template_card_has_no_colour():
+    card = _agent_card("general-agent-template")
+    assert card, "general-agent-template card is missing"
+    assert "swatch" not in card and "trigger" not in card, "the template is not an agent: no colour"
+    assert "not directly spawnable" in card
+
+
 def test_every_wired_hook_appears_in_hook_table():
     text = _page_text()
     hooks = _hook_scripts()
