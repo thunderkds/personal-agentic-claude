@@ -245,7 +245,7 @@ def test_ac6_the_pinned_simplicity_row_still_matches_every_role_guide(role):
 # `agents/`. REPOINTED by T096 (`b69410c` -> `8f8cc47`) rather than deleted — the pin still answers
 # "has anything since edited this script?", just dated from the relocation instead of from T071.
 # REPOINTED by T183 (`8f8cc47` -> `05a23df`, T183's edit commit) for the same reason: the script's
-# TEMPLATE path follows the template from agents/ to templates/. Only that path string changed.
+# TEMPLATE path follows the template from agents/ to templates/. Only that path string changed. User-approved 2026-10-27.
 AGENT_TEMPLATE_SCRIPT_REF = "05a23df"
 
 

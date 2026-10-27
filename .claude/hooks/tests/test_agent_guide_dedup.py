@@ -124,7 +124,7 @@ T069_BASELINE_REF = "8d6d56b"
 # REPOINTED once more by T169 scope extension (`19c139f` -> `9294eee`, then `9294eee` -> `09e552d` by D6, numeric caps dropped from the Writing Principles table): CLAUDE.md slimmed 218 -> 186 lines (General Agent Template, Mandatory Session Startup, opening list, Final Instruction). User-approved 2026-10-20.
 # REPOINTED AGAIN by T170 (`09e552d` -> `a830bb8`, T170's edit commit; user-approved 2026-10-20): CLAUDE.md gains `resolve-question` on the cross-cutting skill line. Still 186 lines. Repointed, NOT deleted.
 # REPOINTED AGAIN by T173 (`CLAUDE.md`@`a830bb8` -> `AGENTS.md`@`8080fdb`, T173's edit commit; D2 user-approved 2026-10-26): the doctrine moved from CLAUDE.md to AGENTS.md and CLAUDE.md is the one-line import `@AGENTS.md`. The pinned file is now AGENTS.md. Repointed, NOT deleted.
-# REPOINTED AGAIN by T183 (`8080fdb` -> `05a23df`, T183's edit commit): AGENTS.md's General Agent Template line now names `templates/general-agent-template.md` (the template left agents/ so Claude Code stops registering it as an agent type). One path string; nothing collapsed. Repointed, NOT deleted.
+# REPOINTED AGAIN by T183 (`8080fdb` -> `05a23df`, T183's edit commit): AGENTS.md's General Agent Template line now names `templates/general-agent-template.md` (the template left agents/ so Claude Code stops registering it as an agent type). One path string; nothing collapsed. User-approved 2026-10-27. Repointed, NOT deleted.
 T070_BASELINE_REF = "05a23df"  # T183: template path repointed (was 8080fdb, T173)
 
 # T082's own edit commit (same commit as the repoint above). T082 adds a mandatory Base Rule bullet
