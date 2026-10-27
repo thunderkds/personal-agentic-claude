@@ -14,15 +14,15 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_auto_mode.py` (new, 81 tests, AC 1–5). RED at `f02d872` with the implementation stashed, 2026-10-27T05:25:12Z: `63 failed, 18 passed in 0.92s` (the 18: the `[auto]` tag helper, the cap/size pins, `a_copied_template_is_not_marked`, the sections-still-resolve pin, and the 6 AC 4 gate pins, which hold because the gate already blocks). Green at `88f71f3`, 2026-10-27T06:32:16Z: `python3 -m pytest -q tests/test_auto_mode.py` → `81 passed`. |
+| Verification command run | ☑ pass | 2026-10-27T06:32:16Z at `88f71f3`: `python3 -m pytest -q tests/test_auto_mode.py tests/test_tracks.py tests/test_resolve_question.py tests/test_agents_md_primary.py` → `177 passed in 1.31s`; `&& python3 -m pytest -q tests` → `722 passed in 12.25s`. |
+| Negative cases hold | ☑ pass | `pytest -v tests/test_auto_mode.py -k ac4` → `6 passed`: the merge gate (unchanged vs `e50fe56`, `test_ac4_merge_gate_file_is_unchanged`) blocks a `verify` row that says only `auto-checked, not /verify` with Result `☐ pass / ☐ fail / ☐ N/A`, `☑ N/A` or `auto` (reason `T951 (no evidence row)`, real `pytest` record in the trace); it ignores a passing auto check written in `## Auto decisions` `Checks:`; control: the same project with `☑ pass \| user ran /verify T951 — pass` passes (rc 0, no block). Tag: `add auto-save to the editor`, `run this in auto mode`, `auto`, `[Auto]`, `(auto)` are not auto mode. Marker: a copied template is not marked; `mode: auto`, `Mode: auto.`, a `Mode: auto` not first, and `Mode: auto` inside `Asked:` are not markers. Known limit (not tested, for T182): the gate's `VERIFY_ROW_PATTERN` accepts any `verify` row whose Notes contain "pass", whoever wrote it (`☑ N/A \| auto-checked, not /verify — real run pass` matches), so "the Supervisor never writes the `verify` row" is doctrine only. |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| Full smoke suite still green (no regression) | ☑ pass | 2026-10-27T06:32:16Z at `88f71f3`: `python3 -m pytest -q tests` → `722 passed in 12.25s`; `python3 -m pytest -q .claude/hooks/tests` → `871 passed, 25 subtests passed in 17.29s` (includes `test_agent_guide_dedup.py` with the AGENTS.md baseline repointed `10c9e44` → `c034608`, `test_vital_slice.py` AGENTS.md ≤196, and `test_tracks.py::test_ac2_gates_2_to_6_are_unchanged`); `sh scripts/validate.sh` → `validate.sh: PASS`, rc=0. AGENTS.md 196 lines / 20,145 bytes; `skills/resolve-question/SKILL.md` 8160 of 8192 bytes. |
+| **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | no UI component (doctrine, docs, templates and tests only) |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ N/A | no UI component |
+| **UI: Responsiveness at target viewports** | ☐ N/A | no UI component |
 
 ---
 
@@ -170,9 +170,15 @@ insertion, the line the new text follows:
 …
 ```
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**: New content at `c034608` (excerpts):
+- `docs/claude-md/tracks.md` gains `## Auto mode`: the literal `[auto]` tag ("Only the bracketed tag counts, exactly as written: a bare word *auto* (for example "add auto-save") or `[Auto]` is not the tag"), the two track lines `Track: extended · auto — <reasons>. I won't stop for questions; every decision goes in the final report.` / `Track: minimal · auto — …`, the **Marker** `Mode: auto` (T182's hook keys on it), `### Minimal track in auto mode`, `### Every user stop and its auto rule` (21 rows, one per stop), `### Final report`, `### Stops that stay` (the 6 D5 stops), `### Never in auto mode`, `### Edge cases`. The minimal-track "only stop" adds: "In auto mode, a Debate settles it instead (`## Auto mode`)."
+- `AGENTS.md:142` (same line) ends: "… With the literal tag `[auto]` in the request (a bare word *auto* is not the tag), run either track in **auto mode** by the `## Auto mode` table in `docs/claude-md/tracks.md`: say `Track: <track> · auto — <reasons>. I won't stop for questions; every decision goes in the final report.`, ask the user nothing, pause only for the stops that section keeps, and end with its final report; the Supervisor never merges, pushes, moves a task to Done or runs `/verify`."
+- `docs/claude-md/pipeline-stages.md`: the head points at the table; each stop carries "Auto mode: …" (e.g. Stage 5 item 1: "Auto mode: the Supervisor runs its own real-run check instead, and writes it under the final report's `Checks:` as `auto-checked, not /verify`. It never runs `/verify` or fills the `verify` row: T182's hook does, or the user.").
+- `skills/resolve-question/SKILL.md`: "**Auto mode** = the request carries `[auto]` (`docs/claude-md/tracks.md`)."; step 1 routing line before "Done when: … sent to the user (auto mode: to the Debate step)."; Cap: "Count the `DEBATE` lines under the guide's `## Questions Log`; `task=none` or no guide: per session."
+- `templates/TASK_REVIEW_template.md`: a commented `## Auto decisions` shape (`Mode: auto`, `RULE:` / `FACT:` / `DEBATED:` / `SAFER OPTION:` lines with `⚠ decided for you — please review`, `Paused:`, `Checks: … (auto-checked, not /verify)`, `Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | /verify (yours)>`) before `## Evidence`; `templates/MINIMAL_LOG_template.md` gains the same lines in an auto-mode record shape.
+- `PROJECT_SPEC.md` glossary: `Auto mode`, `Final report` rows after `Safer option`.
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+**DELTA**: A user can add `[auto]` to a request, and the doctrine then tells the Supervisor to run either track without a question, deciding each of the 21 listed stops by a written rule, a Citation or a Debate, and ending at Ready for Review with a `Mode: auto` final report; the merge gate still blocks the merge (live behaviour: AC 6, not yet run).
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
