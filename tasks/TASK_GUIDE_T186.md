@@ -131,7 +131,7 @@ Group keys by catalog category (unknown keys under "Other keys (kept as-is)"). P
 ### Verification Command (exact, runnable)
 
 ```bash
-node --test tests/settings_tool/ && python3 -m pytest tests/test_site_content.py -q
+node --test "tests/settings_tool/*.mjs" && python3 -m pytest tests/test_site_content.py -q
 ```
 
 ---
@@ -167,6 +167,8 @@ node --test tests/settings_tool/ && python3 -m pytest tests/test_site_content.py
 **Pattern reference**: T185's `settings-tool-core` block and `tests/settings_tool/test_generate.mjs` — add `check`, `format`, `fromSettings`, `maskSecrets` to the same core block, tests beside it (`tests/settings_tool/test_check.mjs`).
 
 Parse with `JSON.parse` inside try/catch; derive line/column from the error position (engines differ — compute from the `position N` in the message, fallback "line unknown"). Render all pasted values with `textContent`, never `innerHTML` (pasted text is untrusted).
+
+**From T185 review (2026-10-27)**: T185's catalog `knownKeys` holds only catalog keys plus a few named ones. Before W2 can work, extend `knownKeys` to the full key index of https://code.claude.com/docs/en/settings-reference (CLI 2.1.311), including `managedOnly` keys — otherwise every valid key outside the catalog is reported as unknown. Also add the "lowers safety" marker for the `bypassPermissions` value of `permissions.defaultMode` (T185 P2) since W7 uses it.
 
 **Vital slice**: `check()` with E1, E3, E5, W3, W5 + findings list + Format.
 **Cut list**:

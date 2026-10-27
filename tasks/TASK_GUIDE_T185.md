@@ -133,7 +133,7 @@ Presets:
 ### Verification Command (exact, runnable)
 
 ```bash
-node --test tests/settings_tool/ && python3 -m pytest tests/test_site_content.py -q
+node --test "tests/settings_tool/*.mjs" && python3 -m pytest tests/test_site_content.py -q
 ```
 
 ---
