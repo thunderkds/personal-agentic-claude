@@ -240,6 +240,45 @@ def test_ac8r1_tracks_md_commit_is_part_of_the_step_not_a_stop():
     assert "Commit on the task branch without asking" in steps[6], steps[6]
     assert re.search(r"[Aa]sking whether to commit is not a stop", body)
 
+
+# ── /verify fix — the announcement is a statement, never a question ───────────────────────
+# /verify, task 3 ("Small cleanup … pure refactor"): it announced `Track: extended`, then asked
+# "Do you want the minimal track (reply `minimal`) or the full pipeline (reply `full`)?" and
+# stopped. AGENTS.md's "The user can switch with `full` or `minimal`" read as "offer the switch".
+def _agents_tracks_text():
+    return _norm("\n".join(_agents_tracks_section()))
+
+
+def test_verify_agents_md_says_the_track_line_is_a_statement():
+    assert "The track line is a statement, never a question" in _agents_tracks_text()
+
+
+def test_verify_agents_md_forbids_asking_or_offering_a_lower_track():
+    text = _agents_tracks_text()
+    assert re.search(r"[Nn]ever ask which track", text)
+    assert re.search(r"never offer or recommend a lower (?:one|track)", text)
+
+
+def test_verify_agents_md_goes_on_with_the_pipeline_on_extended():
+    text = _agents_tracks_text()
+    assert re.search(r"[Oo]n the extended track[^.]*goes on with the pipeline at once[^.]*"
+                     r"Phase 0 / Stage 0\.5", text), text
+
+
+def test_verify_agents_md_keeps_the_users_own_switch():
+    text = _agents_tracks_text()
+    assert re.search(r"user may reply `full` or `minimal` on their own", text)
+    assert "The user can switch with `full` or `minimal`" not in text
+
+
+def test_verify_tracks_md_announcement_and_switch_state_the_rule():
+    doc = _read(TRACKS_MD)
+    for heading in ("Announcement", "Switching track"):
+        body = _norm(_section(doc, heading))
+        assert re.search(r"never ask which track, never recommend a lower one", body), heading
+    switch = _norm(_section(doc, "Switching track"))
+    assert "the user's `minimal` is their own choice" in switch
+
 # ── AC 2 — AGENTS.md ──────────────────────────────────────────────────────────────────────
 def _agents_tracks_section():
     lines = _read(AGENTS_MD).splitlines()
