@@ -14,6 +14,7 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
+| AC 1 spike (paid, cap $1, user go 2026-10-27: "182 and 181") | ☑ pass | Supervisor 2026-10-27T14:34:46Z–14:35:39Z, cwd `../wt-t180-auto` (branch `feat/t180-auto-mode`, clean), command: `timeout 900 claude -p "/verify T180" --max-budget-usd 1 --model sonnet --output-format json` (user's normal settings, no `--dangerously-skip-permissions`). Result JSON: `subtype: success`, `is_error: false`, `total_cost_usd: 0.2565`, `num_turns: 7`, `duration_ms: 49612`, `session_id: bb6500c2-6ee9-4ce9-bc0e-ea2f246f2fd4`, `permission_denials: []`. The built-in skill ran: the result is the skill's own report shape, `## Verification: T180 auto-mode Stop hook (D8–D10) …` / `**Verdict:** PASS` / `**Method:** … There is no verifier-* or run-* skill …` / 9 Steps (4 🔍 probes, temp projects via `mktemp`) / Findings. The worktree stayed clean (`git status --short` empty). Raw output kept in `.spawn/t182-spike/run1.json`. Notes for the build: the verdict is the line `**Verdict:** PASS|FAIL|BLOCKED|SKIP` in `result`; a run with no diff vs the base still ran (it measured the branch against `main`). D1 holds: no hand-written equivalent is needed. |
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
 | Verification command run | ☐ pass / ☐ fail | [paste actual output] |
 | Negative cases hold | ☐ pass / ☐ fail | |
