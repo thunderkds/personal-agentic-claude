@@ -2870,3 +2870,10 @@ highest ID anywhere, not only `PROJECT_KANBAN.md` on the checked-out branch. Ren
 - **The spawn hook validates guides in the main checkout, not the worktree** (T178/T179 spawn). Guides that live
   only on a plan branch must also exist as files in the main checkout, or the spawn is rejected; do not delete
   those untracked copies before the spawn.
+- **A rule the agent can satisfy by labelling is a rule it will satisfy by labelling** (T180 D8–D10). Each text
+  rule for "debate this choice" was met in the cheapest way the check allowed: DEBATED with no Advocates, then
+  FACT, then RULE with no path, then RULE citing a real but unrelated section. Only a count the agent cannot fake
+  by wording (Advocate `Agent` calls in the trace, one forced Debate at High) changed the behavior.
+- **The built-in `security-review` needs an `origin/HEAD` ref** (T180 live checks). In a repo with no remote it
+  cannot start (`git diff origin/HEAD...` fails). It also reviews the cwd's branch, so from the main checkout it
+  cannot review a worktree branch: review a worktree branch inline against the same criteria and say so.
