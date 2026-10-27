@@ -44,13 +44,16 @@ Track: extended — C2 (a new command across 3 files), Risk Medium
 ```
 
 Then it starts the work at once. The announcement is a statement, not a question: it does not wait for a
-reply.
+reply. The Supervisor must never ask which track, never recommend a lower one. On the extended track it goes
+on with the pipeline at once, from the first stage not yet done.
 
 ---
 
 ## Switching track
 
-- The user can reply `full` (extended track) or `minimal` at any time, and the Supervisor switches.
+- The user can reply `full` (extended track) or `minimal` at any time, and the Supervisor switches. The
+  Supervisor does not prompt for it: never ask which track, never recommend a lower one; the user's `minimal`
+  is their own choice.
 - The Supervisor may move a task **up** (minimal → extended) mid-task when it finds a row of the rule that
   is true. It says so in one line: `Track: extended — moved up: <reason>`. It never moves a task **down** on
   its own.
