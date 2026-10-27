@@ -14,15 +14,15 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | pass | tests/settings_tool/test_generate.mjs (16 tests: presets, target filtering, validation, nesting, no-network); tests/test_site_content.py (+5 T185 tests). node: ℹ tests 16 ℹ pass 16 ℹ fail 0 ; pytest: 68 passed in 0.12s |
+| Verification command run | pass | `node --test "tests/settings_tool/*.mjs" && python3 -m pytest tests/test_site_content.py -q` -> ℹ tests 16 ℹ pass 16 ℹ fail 0 / 68 passed in 0.12s. The guide form `node --test tests/settings_tool/` fails on Node 26.7 (directory arg is read as a module path), so the glob form is used |
+| Negative cases hold | pass | Mutation: catalog entry `model` with `why` removed -> pytest test_settings_catalog_shape_and_version_stamp FAILED and node 'catalog ... required shape' FAILED (pass 15 / fail 1); restored -> 16/16 and 68 passed. Out-of-range numbers omitted, user-only keys removed on project/local |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
 | Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **UI: Visual regression (diff or verdict pasted)** | pass (self-assessed) | Headless Chrome via CDP, Team project preset + Project target: 1280px shows catalog left, output right (4 keys · valid); 375px stacks. Screenshots in scratchpad (tool-375/768/1280.png), Supervisor to confirm visually |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | pass | test_settings_tool_css_adds_no_color_literals (no #hex/rgb/hsl in the scoped CSS); reuses .tag, .chip, pre.install, details, code styles |
+| **UI: Responsiveness at target viewports** | pass for the tool; page-level finding | CDP at 375/768/1280: columns 343px / 440px (stacked) / 2x454px. documentElement.scrollWidth is 375 / 851 / 1265 at 375/768/1280. The 851px at 768 is the existing hooks table (TABLE right edge 851), same value on the pre-change page, not from #settings-tool. Light theme: the page has dark tokens only, so no light capture exists |
 
 ---
 
@@ -44,9 +44,9 @@ $ ls tests/settings_tool
 ls: cannot access 'tests/settings_tool': No such file or directory
 ```
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**: `grep -c settings-tool site/index.html` -> 57; pytest 68 passed in 0.12s; node ℹ tests 16 ℹ pass 16 ℹ fail 0 
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+**DELTA**: A developer can pick Claude Code settings on the site, choose the target file, and copy valid formatted JSON.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
