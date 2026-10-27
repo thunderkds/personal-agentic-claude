@@ -33,8 +33,88 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**:
+
+Captured 2026-10-27T11:05:43Z (UTC) on branch `feat/t183-subagent-frontmatter` at 31450d4, before any implementation commit, by common-infrastructure.
+
+```text
+$ date -u; ls agents/
+2026-10-27T11:05:43Z
+backend.md
+common-infrastructure.md
+frontend.md
+general-agent-template.md
+qa.md
+
+$ python3 -m pytest tests/test_agent_frontmatter.py -q
+FAILED tests/test_agent_frontmatter.py::test_required_keys_present[agents/backend.md]
+FAILED tests/test_agent_frontmatter.py::test_required_keys_present[agents/common-infrastructure.md]
+FAILED tests/test_agent_frontmatter.py::test_required_keys_present[agents/frontend.md]
+FAILED tests/test_agent_frontmatter.py::test_required_keys_present[agents/general-agent-template.md]
+FAILED tests/test_agent_frontmatter.py::test_required_keys_present[agents/qa.md]
+FAILED tests/test_agent_frontmatter.py::test_required_keys_present[packs/ai-agent/agents/ai-engineer.md]
+FAILED tests/test_agent_frontmatter.py::test_required_keys_present[packs/api/agents/api-designer.md]
+FAILED tests/test_agent_frontmatter.py::test_required_keys_present[packs/data/agents/data-engineer.md]
+FAILED tests/test_agent_frontmatter.py::test_required_keys_present[packs/devops/agents/devops-engineer.md]
+FAILED tests/test_agent_frontmatter.py::test_required_keys_present[packs/mobile/agents/mobile-developer.md]
+FAILED tests/test_agent_frontmatter.py::test_description_is_single_line_trigger[agents/backend.md]
+FAILED tests/test_agent_frontmatter.py::test_description_is_single_line_trigger[agents/common-infrastructure.md]
+FAILED tests/test_agent_frontmatter.py::test_description_is_single_line_trigger[agents/frontend.md]
+FAILED tests/test_agent_frontmatter.py::test_description_is_single_line_trigger[agents/general-agent-template.md]
+FAILED tests/test_agent_frontmatter.py::test_description_is_single_line_trigger[agents/qa.md]
+FAILED tests/test_agent_frontmatter.py::test_description_is_single_line_trigger[packs/ai-agent/agents/ai-engineer.md]
+FAILED tests/test_agent_frontmatter.py::test_description_is_single_line_trigger[packs/api/agents/api-designer.md]
+FAILED tests/test_agent_frontmatter.py::test_description_is_single_line_trigger[packs/data/agents/data-engineer.md]
+FAILED tests/test_agent_frontmatter.py::test_description_is_single_line_trigger[packs/devops/agents/devops-engineer.md]
+FAILED tests/test_agent_frontmatter.py::test_description_is_single_line_trigger[packs/mobile/agents/mobile-developer.md]
+FAILED tests/test_agent_frontmatter.py::test_color_in_allowed_set[agents/backend.md]
+FAILED tests/test_agent_frontmatter.py::test_color_in_allowed_set[agents/common-infrastructure.md]
+FAILED tests/test_agent_frontmatter.py::test_color_in_allowed_set[agents/frontend.md]
+FAILED tests/test_agent_frontmatter.py::test_color_in_allowed_set[agents/general-agent-template.md]
+FAILED tests/test_agent_frontmatter.py::test_color_in_allowed_set[agents/qa.md]
+FAILED tests/test_agent_frontmatter.py::test_color_in_allowed_set[packs/ai-agent/agents/ai-engineer.md]
+FAILED tests/test_agent_frontmatter.py::test_color_in_allowed_set[packs/api/agents/api-designer.md]
+FAILED tests/test_agent_frontmatter.py::test_color_in_allowed_set[packs/data/agents/data-engineer.md]
+FAILED tests/test_agent_frontmatter.py::test_color_in_allowed_set[packs/devops/agents/devops-engineer.md]
+FAILED tests/test_agent_frontmatter.py::test_color_in_allowed_set[packs/mobile/agents/mobile-developer.md]
+FAILED tests/test_agent_frontmatter.py::test_base_team_colors - AssertionErro...
+FAILED tests/test_agent_frontmatter.py::test_template_lives_outside_agents_dir
+32 failed, 2 passed in 0.11s
+```
+
+Frontmatter of the 4 base agents (verbatim, before the change) — no `color:`, descriptions say what the role *is*, not when to delegate:
+
+```text
+== agents/common-infrastructure.md
+---
+name: common-infrastructure
+description: Environment and shared-config specialist. Handles worktree setup, migrations, shared services, and anything that cuts across backend and frontend. Always runs first before implementers start.
+tools: Read, Write, Edit, Bash, Glob, Grep
+model: sonnet
+---
+== agents/backend.md
+---
+name: backend-developer
+description: "The project's core backend engineering role — server-side APIs, services, business logic, and data-access layers. Builds production-ready code in the project's stack, scoped to a single TASK_GUIDE and built test-first, while actively guarding against over-engineering (Simplicity First)."
+tools: Read, Write, Edit, Bash, Glob, Grep
+model: sonnet
+---
+== agents/frontend.md
+---
+name: frontend-developer
+description: "The project's core frontend engineering role — UI components, client-side state, interactions, and accessibility. Builds performant, accessible interfaces in the project's framework, scoped to a single TASK_GUIDE and built test-first, while guarding against over-engineering (Simplicity First)."
+tools: Read, Write, Edit, Bash, Glob, Grep
+model: sonnet
+---
+== agents/qa.md
+---
+name: qa-expert
+description: "The project's quality and evaluation role — owns the smoke suite, regression safety, and independent verification of acceptance criteria. Acts as the Pillar 3 oracle: confirms a task actually works, with evidence, in a context separate from whoever implemented it."
+tools: Read, Write, Edit, Grep, Glob, Bash
+model: sonnet
+---
+```
+
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
