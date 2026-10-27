@@ -93,6 +93,15 @@
             "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stop_review_reminder.py"
           }
         ]
+      },
+      {
+        "description": "Auto mode (T180 D8): block the stop until the final report holds up — report file, Advocates per Risk, Stage 4",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stop_auto_mode_check.py"
+          }
+        ]
       }
     ]
   },

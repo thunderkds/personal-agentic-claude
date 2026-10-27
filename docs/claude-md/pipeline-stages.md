@@ -5,7 +5,9 @@
 These 5 stages are the **extended track** (`docs/claude-md/tracks.md`). The track rule sends big, risky or
 multi-session work here, and small low-risk work to the minimal track. Hard-Stop Gate 1 applies to the
 extended track only. Gates 2–6 still apply to it unchanged. Gate 5 (a new test with its pasted output) also
-applies to the minimal track, through the Decision record's `Checked:` field.
+applies to the minimal track, through the Decision record's `Checked:` field. In **auto mode** (the user's
+`[auto]` tag) the Supervisor asks the user nothing: each stop below names its auto rule, and the
+`## Auto mode` table in `docs/claude-md/tracks.md` lists them all.
 
 Strictly follow this order. Never skip or reorder stages.
 
@@ -21,7 +23,7 @@ Confirm `PRD.md` exists. Then invoke `grill-with-docs` in requirement mode:
 Skill({ skill: "grill-with-docs", args: "mode=requirement" })
 ```
 
-The skill validates `PRD.md` against the Phase 0 answers: FR traceability, NFR completeness, scope clarity, and ambiguity. Resolve all flagged items with the user. Do NOT proceed to brainstorming until the skill reports **PRD gate: PASS**.
+The skill validates `PRD.md` against the Phase 0 answers: FR traceability, NFR completeness, scope clarity, and ambiguity. Resolve all flagged items with the user. Do NOT proceed to brainstorming until the skill reports **PRD gate: PASS**. Auto mode: answer them from the docs and code with Citations; a Choice question goes to a Debate.
 
 ### Step 0.5b — Creative Brainstorming
 
@@ -31,9 +33,9 @@ Skill({ skill: "brainstorming" })
 ```
 
 1. **Divergent Exploration**: The skill analyzes the Phase 0 Context and `PRD.md`, then generates a `BRAINSTORMING_LOG.md` using the template at `templates/BRAINSTORMING_LOG_template.md`.
-2. **User Review**: The user must approve one of the brainstormed directions before proceeding.
+2. **User Review**: The user must approve one of the brainstormed directions before proceeding. Auto mode: the Supervisor takes the recommended direction and logs the alternatives (flagged).
 
-Only after the user selects a direction, invoke:
+Only after the user selects a direction (auto mode: the recommended one), invoke:
 ```
 Skill({ skill: "thinking-report", args: "session=brainstorming task=— branch=<branch>" })
 ```
@@ -43,7 +45,7 @@ Save the emitted HTML to `reports/thinking-report_<branch>_<YYYYMMDDTHHMMSS>.htm
 ---
 
 ## Stage 1: Environment & Provider Setup
-Guide the user through this checklist step by step.
+Guide the user through this checklist step by step. Auto mode: the Supervisor does each item itself, by rows 5–10 of the `## Auto mode` table in `docs/claude-md/tracks.md`.
 
 **Checklist**
 1. **One-Time Setup (first use only)**
@@ -51,22 +53,28 @@ Guide the user through this checklist step by step.
    - `Skill({ skill: "fewer-permission-prompts" })` — scans transcripts and whitelists common read/bash operations
    - `Skill({ skill: "update-config" })` — configure any automated hooks (e.g. "always run brainstorming before /plan")
 
+   Auto mode: skip both (they change the user's permission settings and hooks) and name them under `Not done:`.
+
 2. **Multi-CLI Authentication**
    Please list every agentic CLI you have authenticated, the exact command to run it, and which
    model it should spawn at each Complexity level (C0–C3). Record this as the `## CLI Model Table`
    in `PROJECT_SPEC.md` (from `templates/PROJECT_SPEC_template.md`): one row per CLI, one column
    per level. Example: "Claude: claude — C0 haiku, C1 sonnet, C2 sonnet/opus, C3 opus | Codex: codex
    — [ask the user; never guess a Codex/Gemini model name]". A CLI with no row, or an empty cell for
-   a level, means `craft-spawn-prompt` will STOP and ask rather than pick a model for it.
+   a level, means `craft-spawn-prompt` will STOP and ask rather than pick a model for it. In auto mode
+   the Supervisor reads the table instead of asking; with no row or an empty cell it spawns on the CLI that
+   runs this session, with the model this session runs as, logged `SAFER OPTION` with the review flag, and
+   never invents another CLI's model name.
 
    *(Optional)* For non-trivial codebases, a structural code-graph approach — building a dependency graph of the code — can auto-compute hub/centrality (→ Risk, Stage 2) and a change's code-dependency blast radius (→ review scope, Stage 4). It's optional: if absent, those signals stay manual judgment. See the same note in `CLAUDE_LEGACY.md`.
 
 3. **Agent Guide Folder Verification**
    Confirm that the folder `agents/` exists in the project root and contains all required files.
    If any file is missing, output the template for it from `templates/` and ask the user to save it.
+   Auto mode: the Supervisor writes it from the template on the task branch.
 
 4. **Git Repository Verification**
-   Please run `git status` in your terminal and paste the output here.
+   Please run `git status` in your terminal and paste the output here. Auto mode: the Supervisor runs it itself.
 
 5. **`PRD.md` File**
    - Confirm `PRD.md` exists in the project root (generated at end of Phase 0 Step 2).
@@ -75,6 +83,7 @@ Guide the user through this checklist step by step.
 6. **Master `PROJECT_SPEC.md` File**
    - If the file does not exist yet, use `templates/PROJECT_SPEC_template.md` and fill in the Project Context Document.
    - Ask the user to save it as `PROJECT_SPEC.md` in the project root, or confirm it already exists.
+   - Auto mode: the Supervisor checks the file, or writes it from the template.
 
 7. **Codebase Map**
    If the project has existing code (not a blank scaffold), run:
@@ -86,7 +95,7 @@ Guide the user through this checklist step by step.
    Re-run via `/map-codebase` after any major refactor.
 
 8. **Core Domain Models**
-   Scan the codebase for domain model and interface files (`Glob` for `models/`, `entities/`, `types/`, `schemas/`, `interfaces/`). Present the findings: "These look like core domain models: [list]. Are they correct? Any missing or excluded?" Record the confirmed models in `memory/glossary.md` under the `## Domain Models` section.
+   Scan the codebase for domain model and interface files (`Glob` for `models/`, `entities/`, `types/`, `schemas/`, `interfaces/`). Present the findings: "These look like core domain models: [list]. Are they correct? Any missing or excluded?" Record the confirmed models in `memory/glossary.md` under the `## Domain Models` section. Auto mode: record the models the scan found, with their paths (flagged).
 
 After all items are confirmed:
 > "Stage 1: Environment & Provider Setup completed successfully. Moving to Stage 1.5: Sub-Agent Architecture."
@@ -109,8 +118,9 @@ Using the locked Project Context Document:
 
 Output in a clear Markdown table, then ask:
 "Here is the proposed sub-agent team (with exact CLI commands and references to agents/ folder). Approve or request any modifications?"
+Auto mode: no question; the base team (plus `craft-agent` only for an uncovered role) is locked and logged.
 
-Only after explicit user approval, announce:
+Only after explicit user approval (auto mode: at once), announce:
 > "Sub-agent architecture locked. Moving to Stage 2: Intent Transformation (Planning)."
 
 ---
@@ -131,14 +141,14 @@ Use two files:
 - `PROJECT_SPEC.md` → Full context + detailed task descriptions
 - `PROJECT_KANBAN.md` → Compact dynamic board (status updates go here)
 
-**After user approves the task breakdown:**
+**After user approves the task breakdown:** (auto mode: the Supervisor's own breakdown, with no approval step)
 - Generate **all** TASK_GUIDE_Txxx.md files (one for every task) using `templates/TASK_GUIDE_template.md`.
 - Save every file into the `tasks/` folder (e.g. `tasks/TASK_GUIDE_T001.md`).
 - **Board mode `online`** (`.claude/board.json` exists): draft each guide to a scratch file and run `python3 scripts/board_sync.py create --guide <draft.md>` per task instead — the board assigns the ID, the guide becomes the issue description, and `tasks/TASK_GUIDE_<ID>.md` is written as its cache; later edits go back with `board_sync.py update --guide <ID>`.
 - In each TASK_GUIDE file, explicitly instruct the sub-agent to read the relevant guide from `agents/`.
 - Fill each guide's `## Dependencies & Reachability` section: `Depends on:` names another Task ID this one needs as a precondition (or `None`); `Entry point:` names the literal, grep-able identifier (route, button label, function/consumer name) that reaches this task's output, or `Standalone — N/A` with a one-line reason. This is **advisory, not a Hard-Stop Gate** — `Depends on` is checked (non-blocking warning) by `pre_agent_validate_guide.py` at spawn time; `Entry point` is checked (non-blocking finding) by `code-review` Phase 0.5. It is distinct from `PROJECT_KANBAN.md`'s `## Blocked` table, which remains a manual escape hatch for non-task blockers (external people/APIs/decisions) that can't be checked automatically.
 
-Ask the user to confirm the tasks/ folder has been populated.
+Ask the user to confirm the tasks/ folder has been populated. Auto mode: the Supervisor lists `tasks/` itself.
 
 After confirmation, invoke:
 ```
@@ -157,10 +167,10 @@ Save the emitted HTML to `reports/thinking-report_<branch>_<YYYYMMDDTHHMMSS>.htm
 
 For every task moved to In Progress:
 - Common-Infrastructure-Agent creates the git worktree.
-- **Pillar 1 gate (before any code):** the spawned agent must confirm the **Requirement Fidelity Gate** in its `TASK_GUIDE_Txxx.md` is checked — restated intent matches the request, terms align with the glossary, and every Acceptance Criterion traces to the requirement. If not, the agent STOPs and asks the Supervisor instead of guessing.
+- **Pillar 1 gate (before any code):** the spawned agent must confirm the **Requirement Fidelity Gate** in its `TASK_GUIDE_Txxx.md` is checked — restated intent matches the request, terms align with the glossary, and every Acceptance Criterion traces to the requirement. If not, the agent STOPs and asks the Supervisor instead of guessing. Auto mode: the Supervisor signs the gate `auto (Supervisor)`, and settles a sub-agent's `Status: blocked` question through `resolve-question` (a Choice question goes to a Debate).
 - **Pillar 2 (implementation):** build the slice test-first (`tdd`), touching only the predicted files. If the slice adds or changes a **DB schema/migration**, run `Skill({ skill: "migration-safety" })` and pass its go/no-go gate **before** the implementation gate goes green.
 - The TASK_GUIDE_Txxx.md already exists in tasks/ — no need to regenerate it.
-- Invoke `Skill({ skill: "craft-spawn-prompt" })` with the task's guide path and the CLI that will run it — it assembles the spawn prompt, pre-flight-checks it against the spawn hook, and recommends the model by looking the task's **Complexity** up in `PROJECT_SPEC.md`'s `## CLI Model Table` for that CLI (no row/empty cell → it stops and asks, never a Claude-name fallback). Then issue the `Agent()` call in that worktree using its output.
+- Invoke `Skill({ skill: "craft-spawn-prompt" })` with the task's guide path and the CLI that will run it — it assembles the spawn prompt, pre-flight-checks it against the spawn hook, and recommends the model by looking the task's **Complexity** up in `PROJECT_SPEC.md`'s `## CLI Model Table` for that CLI (no row/empty cell → it stops and asks, never a Claude-name fallback). Auto mode: on that stop, spawn on the CLI that runs this session, with the model this session runs as (`SAFER OPTION`, flagged). Then issue the `Agent()` call in that worktree using its output.
 - **Spawn mode**: every spawn is a background `Agent()` call (`run_in_background`) — the final report and the commits are what the Supervisor reads. Use a CLI pane instead only when the user asks to watch the agent work, or the task runs on a non-Claude CLI. Do not use the T147 sandboxed profile until a nested-userns check passes. A background agent dies with the Supervisor session, so `wake` reports any In Progress task whose worktree has uncommitted changes.
 - The sub-agent must read both its TASK_GUIDE_Txxx.md (from tasks/) and the relevant agent guide from agents/.
 - **Memory injection**: Paste the task's **memory slice** in every sub-agent spawn prompt, after the task pointer — the output of `python3 skills/craft-spawn-prompt/scripts/memory_slice.py <guide>`, verbatim: the `memory/MEMORY.md` index lines that name the guide's files, its `Depends on` tasks or its ID (T125), plus any `memory/decisions.md` entry whose `**Files**:` line names the guide's files (T145), listed under `### From decisions.md` and dropped first when the cap bites. Then the fallback: *"Read `memory/MEMORY.md` in full only if your work reaches a file, hook, skill or decision the slice does not cover."* Do **not** paste the whole hot-tier index (≤50,000 characters); nothing loads it for the agent, so the full file is read only when the slice falls short.
@@ -173,9 +183,9 @@ Skill({ skill: "run" })
 ---
 
 ## Stage 4: Review
-For every task that reaches "Ready for Review":
+For every task that reaches "Ready for Review" (auto mode: Stage 4 still runs before the run ends — `code-review`, plus `security-review` at Medium/High — because it is not a user stop):
 
-**Pull moment 3 (board mode `online`, FR-009).** Before moving the task to Ready for Review, run `python3 scripts/pull_moment.py review <ID>`. If it prints `<ID>'s guide changed while you were working — review against the new version?`, ask the user before reviewing. If it prints `board unreachable — using cache (N unsynced)`, continue on the cache. In board mode `local` it prints nothing.
+**Pull moment 3 (board mode `online`, FR-009).** Before moving the task to Ready for Review, run `python3 scripts/pull_moment.py review <ID>`. If it prints `<ID>'s guide changed while you were working — review against the new version?`, ask the user before reviewing (auto mode: review against the new version). If it prints `board unreachable — using cache (N unsynced)`, continue on the cache. In board mode `local` it prints nothing.
 
 1. **Code Review** (always):
    ```
@@ -211,7 +221,7 @@ For every task that reaches "Ready for Review":
    `reports/<skill-name>_<branch>_<YYYYMMDDTHHMMSS>.html`
    One report per skill per invocation (e.g. `reports/code-review_main_20260618T143022.html`).
 
-7. Address all findings before moving to Stage 5. Update PROJECT_KANBAN.md status.
+7. Address all findings before moving to Stage 5. Update PROJECT_KANBAN.md status. Auto mode: a finding whose fix needs a choice goes to a Debate.
 
 ---
 
@@ -223,6 +233,7 @@ After all Stage 4 reviews pass:
    Skill({ skill: "verify" })
    ```
    Record the observed result in the task guide's **Evidence** table (`verify` row). Do not merge while any evidence row reads fail or is blank.
+   Auto mode: the Supervisor runs its own real-run check instead, and writes it under the final report's `Checks:` as `auto-checked, not /verify`. It never runs `/verify` or fills the `verify` row: T182's hook does, or the user.
 
 2. **Confirm smoke tests pass** (coordinate with QA-Automation-Agent).
 
@@ -235,13 +246,13 @@ After all Stage 4 reviews pass:
    - Append any new decisions or learnings from this session to the appropriate cold file
    - Summarize new/changed entries as one-liners in `memory/MEMORY.md` (keep hot tier ≤50,000 characters)
 
-5. Merge the worktree and close the task on PROJECT_KANBAN.md.
+5. Merge the worktree and close the task on PROJECT_KANBAN.md. Never in auto mode: the task stops at Ready for Review, and the merge waits for the user.
 
 6. **Post-merge release planning** (once all tasks for the milestone are integrated):
    ```
    Skill({ skill: "ship" })
    ```
-   Turns the merged tasks/commits into a runnable deployment plan, a rollback plan, and user-facing release notes, then appends a runbook entry. `ship` **plans and de-risks** the release — it never auto-deploys; the operator executes the plan. A GO also needs the human's approval of the exact `<version> @ <commit>`, recorded in the runbook's Release Log, and the smoke test with its pass condition is written before the deploy step (T149).
+   Turns the merged tasks/commits into a runnable deployment plan, a rollback plan, and user-facing release notes, then appends a runbook entry. Not in auto mode: `ship` runs after the merge. `ship` **plans and de-risks** the release — it never auto-deploys; the operator executes the plan. A GO also needs the human's approval of the exact `<version> @ <commit>`, recorded in the runbook's Release Log, and the smoke test with its pass condition is written before the deploy step (T149).
 
 Only after all tasks are integrated, announce:
 > "Stage 5: Integration complete. All tasks merged. Project milestone delivered."
