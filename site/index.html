@@ -956,18 +956,22 @@ var SettingsCore = (function () {
   // the position is read out of them. The message itself is never shown.
   function parseSettings(text) {
     try { return { ok: true, value: JSON.parse(text) }; } catch (err) {
-      var msg = String(err && err.message), m, lc = null;
-      if ((m = /line (\d+) column (\d+)/.exec(msg))) { lc = { line: +m[1], column: +m[2] }; }
-      else if ((m = /position (\d+)/.exec(msg))) { lc = lineCol(text, +m[1]); }
-      else if (text.charCodeAt(0) === 0xFEFF) { lc = { line: 1, column: 1 }; }
-      else if (/end of (JSON )?input|unexpected end/i.test(msg)) { lc = lineCol(text, text.length); }
+      var msg = String(err && err.message), m, lc = null, pos = null;
+      if ((m = /position (\d+)/.exec(msg))) { pos = +m[1]; }
+      else if ((m = /line (\d+) column (\d+)/.exec(msg))) {
+        for (var i = 1, start = 0; i < +m[1]; i++) { start = text.indexOf("\n", start) + 1; }
+        pos = start + +m[2] - 1;
+      }
+      else if (text.charCodeAt(0) === 0xFEFF) { pos = 0; }
+      else if (/end of (JSON )?input|unexpected end/i.test(msg)) { pos = text.length; }
+      if (pos !== null) { lc = lineCol(text, pos); }
       var where = lc ? "at line " + lc.line + ", column " + lc.column : "(line unknown)";
       var problem = "Not valid JSON " + where + ".";
       var fix = "Fix the text there. A missing comma, quote or bracket is the usual cause.";
       if (text.charCodeAt(0) === 0xFEFF) {
         problem = "The text starts with an invisible byte order mark (BOM), so it is not valid JSON.";
         fix = "Save the file as UTF-8 without a BOM, or delete the first character.";
-      } else if (/(^|[\s,{\[])\/\/|\/\*/.test(text)) {
+      } else if (pos !== null && /^\/[\/*]/.test(text.substr(pos, 2))) {
         problem = "Not valid JSON " + where + ". The text seems to hold comments, and settings.json cannot hold comments.";
         fix = "Remove the // and /* */ comments.";
       }

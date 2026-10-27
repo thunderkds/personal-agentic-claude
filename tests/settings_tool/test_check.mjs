@@ -76,6 +76,8 @@ test("E1: comments (JSONC) and a BOM are named as the cause", () => {
   assert.match(run('{\n // note\n "model": "opus"\n}').findings[0].problem, /comment/i);
   assert.match(run('{ /* x */ }').findings[0].problem, /comment/i);
   assert.match(run("﻿{}").findings[0].problem, /byte order mark/i);
+  // A "/**" glob inside a rule is not a comment: an unrelated syntax error is not blamed on comments.
+  assert.doesNotMatch(run('{"permissions": {"deny": ["Read(./src/**)"]},}').findings[0].problem, /comment/i);
 });
 
 test("E1: the message never echoes the pasted text", () => {
