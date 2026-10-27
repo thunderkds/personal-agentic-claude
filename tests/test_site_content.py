@@ -1266,3 +1266,53 @@ def test_phone_layout_stacks_each_row_as_a_card_with_labelled_cells():
         raise AssertionError("rows and cells are not made display: block on phones")
     before = _css_rule(m, "td::before")
     assert before and "content: attr(data-label)" in before, before
+
+
+# ---------------------------------------------------------------------------
+# T181 — the two tracks, `[auto]` and the Debate are on the page
+# ---------------------------------------------------------------------------
+
+def _tracks_section():
+    match = re.search(
+        r'<section id="tracks">(.*?)</section>', _page_text(), re.DOTALL
+    )
+    assert match, 'site/index.html has no <section id="tracks">'
+    return match.group(1)
+
+
+def test_tracks_section_sits_after_what_you_get_and_before_install():
+    text = _page_text()
+    assert text.index('id="what-you-get"') < text.index('id="tracks"') < text.index('id="install"')
+
+
+def test_tracks_section_has_h2_naming_both_tracks():
+    h2 = re.search(r"<h2>(.*?)</h2>", _tracks_section(), re.DOTALL)
+    assert h2, "tracks section has no <h2>"
+    assert "minimal" in h2.group(1).lower() and "extended" in h2.group(1).lower()
+
+
+def test_tracks_nav_link_exists():
+    assert 'href="#tracks"' in _raw_page_text()
+
+
+def test_tracks_section_states_announcement_lines_and_override():
+    sec = _tracks_section()
+    for needle in ("Track: minimal", "Track: extended", "[auto]", "/verify",
+                   "<code>full</code>", "<code>minimal</code>",
+                   "MINIMAL_LOG.md", "Debate", "Advocate", "decided for you"):
+        assert needle in sec, f"tracks section lacks {needle!r}"
+
+
+def test_tracks_section_does_not_say_auto_merges_pushes_or_supervisor_runs_verify():
+    sec = re.sub(r"<[^>]+>", " ", _tracks_section())
+    sec = " ".join(sec.split()).lower()
+    assert "merge" in sec and "user" in sec
+    for bad in ("auto mode merges", "auto mode pushes", "merges your branch",
+                "pushes your branch", "supervisor runs /verify",
+                "supervisor runs `/verify`"):
+        assert bad not in sec, f"tracks section says {bad!r}"
+
+
+def test_pipeline_diagram_desc_says_stages_are_the_extended_track():
+    desc = re.search(r'<desc id="pipeline-diagram-desc">(.*?)</desc>', _page_text(), re.DOTALL)
+    assert desc and "extended track" in desc.group(1)
