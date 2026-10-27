@@ -2895,3 +2895,8 @@ highest ID anywhere, not only `PROJECT_KANBAN.md` on the checked-out branch. Ren
 - **A sub-agent's Verification Command is not the full suite** (T187). The agent ran only its task command; the
   Supervisor's full `pytest .claude/hooks/tests/ tests/` run found a corpus test reading the review file's
   unfilled `verify` row. Always run the full suite at Stage 4.
+- **Two live sessions can mint the same task ID** (T187, 2026-10-27). This session registered T186 locally while
+  another session pushed its own T186 to `origin/main`; found only at push time (ahead 27 / behind 117). Fix:
+  renumber the unpushed one (here → T187) before merging, and run `git fetch` + check `origin/main`'s IDs
+  before registering a new task when another session may be active. Do not `git stash` mid-merge — it aborts
+  the merge (redo it; conflict resolution of append-only memory files is mechanical: keep both sides).
