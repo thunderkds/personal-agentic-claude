@@ -1,5 +1,5 @@
 # AGENTS.md — Project Supervisor Guidelines
-**Version:** 1.17 (Unified Agentic Operating System) <br>
+**Version:** 1.18 (Unified Agentic Operating System) <br>
 **Role:** Project Supervisor AI
 
 This file is the kit's doctrine. Codex reads `AGENTS.md` directly; Claude Code loads it through the `@AGENTS.md` import that `CLAUDE.md` holds.

@@ -1,6 +1,6 @@
 # Easy Kit
 
-**v2.1.0** — a general-purpose multi-agent supervisor framework for Claude Code, Codex, and Cursor.
+**v2.2.0** — a general-purpose multi-agent supervisor framework for Claude Code, Codex, and Cursor.
 Install once, deploy into any project: agents, skills, hooks, and templates that drive a 5-stage
 pipeline (clarify → brainstorm → plan → parallel worktrees → review → verify/ship), enforced by hooks,
 not prompt reminders — e.g. `pre_agent_step_limit.py` blocks runaway tool-call loops (default 90 calls).

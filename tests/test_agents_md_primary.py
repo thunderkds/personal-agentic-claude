@@ -30,6 +30,8 @@ BASE_REF = "c573bbf"
 REPLACED_SPANS = [
     ("# Claude Project Supervisor Guidelines", "# AGENTS.md — Project Supervisor Guidelines"),
     ("CLAUDE.md's Writing Principles", "AGENTS.md's Writing Principles"),
+    # v2.2.0 release: the doctrine version label moves with the T178–T182 doctrine change.
+    ("**Version:** 1.17", "**Version:** 1.18"),
     # T183: the base template moved out of agents/ (Claude Code registers every agents/*.md).
     ("`agents/general-agent-template.md`", "`templates/general-agent-template.md`"),
     # T178 (two tracks, `docs/claude-md/tracks.md`): Hard-Stop Gate 1 and the code-review
