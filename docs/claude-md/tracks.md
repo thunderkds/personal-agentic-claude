@@ -25,11 +25,12 @@ If **any** row is true, the task goes on the extended track.
 | Complexity C2 or above: 3+ files, a design choice, or a new component | extended |
 | Risk Medium or High. A request that touches a risky file counts here even when it looks small: a migration, auth or secrets, a delete of user data | extended |
 | The request has a Gate-2 word (*refactor*, *restructure*, *migrate to pattern*, *clean architecture*, *QA suite*, *test coverage*) or the word *migrate* | extended |
+| The change deletes, moves, renames or converts user data or its storage format (for example CSV to JSON, or "get rid of the old file"), even when the request does not say *migrate*. This row needs no rating first: the data change alone decides | extended |
 | The work clearly spans more than one session, or more than one agent | extended |
 | A UI component: the Gate 6 design Evidence rows do not fit a Decision record | extended |
 
-Otherwise the task goes on the **minimal** track: C0 or C1, Risk Low, no Gate-2 word, one session, one
-agent, no UI.
+Otherwise the task goes on the **minimal** track: C0 or C1, Risk Low, no Gate-2 word, no change to user data,
+one session, one agent, no UI.
 
 ---
 
@@ -72,12 +73,15 @@ Stage 4 skills.
 3. **Test first.** Write a new test that fails for the right reason, and run it to see it fail. Gate 5 holds on this track too: a new test, and its passing output in the record's `Checked:` field.
 4. **Change.** Make the smallest change that passes the test. Touch only the code the task needs.
 5. **Run it for real.** Run the full test suite. Then run the program the way a user would, and note the command and what it printed.
-6. **Record.** Append the Decision record to `tasks/MINIMAL_LOG.md`, newest first. If the file does not exist, create it from `templates/MINIMAL_LOG_template.md`. The same block is the Supervisor's final chat message.
+6. **Record.** Append the Decision record to `tasks/MINIMAL_LOG.md`, newest first, with every field of the template: the `## <ID> — <title> · <track>` heading, `Asked:`, `Decisions:`, `Checked:`, `Files:`, `Not done:`. If the file does not exist, create it from `templates/MINIMAL_LOG_template.md`. The same block is the Supervisor's final chat message.
 7. **Board.** Add one board row under Ready for Review in `PROJECT_KANBAN.md`, marked `| Track: minimal | Record: tasks/MINIMAL_LOG.md` at its end. Commit on the task branch.
 
 **The only stop.** When the request itself is unclear (it has more than one reasonable reading), ask one
 clear question and stop. Asking is cheaper than undoing a wrong guess. A question about a fact in the code
 is not a stop: read the code and go on.
+
+**Backups.** A backup must sit inside the project or in a path the user named, never in `/tmp`: a temp
+directory can be gone by the time the user needs it.
 
 **Merge is never automatic.** The row stays in Ready for Review, so the merge gate blocks every push and
 merge while it is there. The branch merges only when the user asks. Stage 5 verify is still mandatory before
@@ -95,7 +99,7 @@ any merge: the user runs `/verify`, then the Supervisor moves the row to Done an
 | 3. KANBAN current | Applies: step 7 adds the row; the merge moves it to Done. |
 | 4. One project per KANBAN | Applies unchanged. |
 | 5. No tests = not done | Applies, through the record's `Checked:` field (step 3 and step 5). |
-| 6. UI evidence | A UI component puts the task on the extended track (rule row 5). |
+| 6. UI evidence | A UI component puts the task on the extended track (rule row 6). |
 
 ---
 
