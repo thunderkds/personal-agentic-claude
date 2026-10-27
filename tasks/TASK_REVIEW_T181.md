@@ -33,8 +33,35 @@
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (docs change: verbatim prior content, captured 2026-10-27 before any change; `README.md` is 75 lines):
+
+`README.md` lines 1-9:
+
+```markdown
+# Easy Kit
+
+**v2.1.0** — a general-purpose multi-agent supervisor framework for Claude Code, Codex, and Cursor.
+Install once, deploy into any project: agent definitions, skills, hooks, and templates that drive a
+5-stage agentic pipeline
+(clarify → brainstorm → plan → parallel execution in worktrees → review → verify/ship), enforced by
+pipeline hooks rather than prompt reminders — e.g. `pre_agent_step_limit.py` blocks runaway tool-call
+loops (default 90 calls), and `post_agent_move_to_review.py` is a deliberately inert reminder-only
+hook since T044 (it does not move any KANBAN row or reset any counter — see its docstring).
+```
+
+`site/index.html` lines 356-364 (end of `#what-you-get` and the start of the next section; there is no `#tracks` and no `href="#tracks"` in the file):
+
+```html
+    <rect x="10" y="506" width="300" height="50" rx="8"/>
+    <text class="node-title" x="160" y="527" text-anchor="middle">Stage 5 · Integrate</text>
+    <text class="node-out" x="160" y="545" text-anchor="middle">verify, merge, release plan</text>
+  </g>
+</svg>
+</section>
+
+<section id="install">
+<h2>Install</h2>
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
