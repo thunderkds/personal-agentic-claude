@@ -23,7 +23,9 @@ so: `- Track minimal — track set by the user; <the risk, in one line>`.
 
 In auto mode (the user's `[auto]` tag, `docs/claude-md/tracks.md` `## Auto mode`) the record is the final
 report. `Mode: auto` is the line right under the heading, exactly as written: T182's hook reads it. Each
-decision says how it was made. A Debate, safer-option or taste decision ends with the flag:
+decision says how it was made. A Debate, safer-option or taste decision ends with the flag. Write `DEBATED`
+only when ≥2 Advocate `Agent` calls ran for that question, naming each Advocate's option. A decision with
+no Advocates is labelled `RULE`, `FACT` or `SAFER OPTION`, never `DEBATED`:
 
 ## <ID> — <title> · minimal
 Mode: auto
@@ -31,7 +33,7 @@ Mode: auto
 **Decisions:**
 1. <what was decided> — RULE: <the rule>
 2. <what was decided> — FACT: <path>:<line> "<quoted text>"
-3. <what was decided> — DEBATED: <option> (<who argued what>) ⚠ decided for you — please review
+3. <what was decided> — DEBATED: <option> (Advocate 1: <its option>; Advocate 2: <its option>) ⚠ decided for you — please review
 4. <what was decided> — SAFER OPTION: <why> ⚠ decided for you — please review
 Paused: <only when a stop that stays paused the task: which one, and why>
 **Checked:**

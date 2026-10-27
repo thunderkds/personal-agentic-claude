@@ -39,7 +39,7 @@ If you can give a Citation (a `file:line` and its quoted text, opened this sessi
 the question, answer with it, skip the Scanners and go to step 5. A memory of a file
 is not a Citation; open it first.
 
-Done when: you have a Citation you opened this session, or you go to step 3.
+Done when: you have a Citation opened this session, or go to step 3.
 
 #### 3. Scan
 
@@ -76,7 +76,7 @@ Done when: every started Scanner returned an ANSWER with Citations, or "not foun
 
 Accept an answer only if ≥2 Scanners agree, each with a Citation, and at least one Citation is
 outside `docs/`/`memory/` prose or in `memory/decisions.md` (two Scanners quoting one stale doc is
-a correlated error). Then open the cited lines yourself and confirm they say what was quoted.
+a correlated error). Then open the cited lines yourself to confirm the quotes.
 
 Treat as "not found": a question about runtime behaviour (what a command prints: Scanners
 cannot run it), a Citation under a path blocked by `pre_tool_sensitive_path.py`, and
@@ -129,8 +129,9 @@ A question is never debated twice. If every option deletes or overwrites data, p
 
 **Advocates.** Start 2 (3 for 3+ options or High risk; the third argues "do the smallest safe thing"),
 each `Agent({ subagent_type: "Explore", prompt: <template> })`, no task ID or guide path.
+Fewer than 2 Advocate calls ran: not a Debate; do not log it as one.
 
-Advocate prompt template (slots `{question}`, `{option}`, `{other_options}` only):
+Advocate prompt template (these 3 slots only):
 
 ```
 Using the repo, argue for ONE option: {question}

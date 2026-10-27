@@ -69,7 +69,8 @@ on with the pipeline at once, from the first stage not yet done.
 ## Minimal-track flow
 
 The Supervisor runs these steps itself, in one context, straight through. No task guide, no sub-agent, no
-Stage 4 skills.
+Stage 4 skills. In auto mode, the Debate's read-only `Explore` Advocates are the one exception
+(`## Auto mode`).
 
 1. **Register.** Take the next task ID and set the active-task state (`.claude/hooks/.state/active_task`, at the literal absolute path of the main checkout), so the trace hook attributes every call to the task.
 2. **Branch.** Work on a new branch for the task, never on `main`.
@@ -155,7 +156,9 @@ comment, so a copied template is not marked.
 
 ### Minimal track in auto mode
 
-The one stop of the minimal track (an unclear request) becomes a Debate. The Decision record carries the
+The one stop of the minimal track (an unclear request) becomes a Debate. Its read-only `Explore` Advocates
+are the one exception to the track's no-sub-agent rule, and they are required for the unclear request: the
+Supervisor starts them (`resolve-question`), never argues both sides itself. The Decision record carries the
 final report: the `Mode: auto` line, each decision with how it was made, and the flag
 (`templates/MINIMAL_LOG_template.md`). A minimal-track task has no guide, so it counts its Debates per
 session.
@@ -188,7 +191,7 @@ These are all the places where a track waits for the user today: `AGENTS.md`,
 | 18 | Stage 5 item 1: `/verify` (only the user can run it) | The Supervisor's own real-run check, written under `Checks:` as `auto-checked, not /verify`. The `verify` Evidence row stays unchecked: T182's hook fills it from a real `/verify` run, or the user does. | `Checks:` |
 | 19 | Stage 5 items 3–6: memory update, merge, Done, `ship` | Never in auto mode. The task ends at Ready for Review on its branch. | `Not done:` |
 | 20 | `AGENTS.md` self-monitoring: "want me to compact before continuing?" | Do not ask. Near the session's context or usage limit, stop at a clean point (see Edge cases). | `Paused:` |
-| 21 | Minimal track: an unclear request (its one stop) | Debate. | `DEBATED` ⚠ |
+| 21 | Minimal track: an unclear request (its one stop) | Debate: start the read-only Advocates (`resolve-question`). | `DEBATED` ⚠ |
 
 The skills these rows name keep their own stop text. In auto mode this table wins over it.
 
@@ -199,8 +202,12 @@ the Decision record itself (minimal track). Copy its shape from `templates/TASK_
 `templates/MINIMAL_LOG_template.md`:
 
 - `Mode: auto`, then one numbered line per decision: what was decided, then how — `RULE: …`,
-  `FACT: <Citation>`, `DEBATED: <who argued what>` or `SAFER OPTION: …`. Every Debate, safer-option and
-  taste decision ends with `⚠ decided for you — please review`.
+  `FACT: <Citation>`, `DEBATED: <option> (Advocate 1: <its option>; Advocate 2: <its option>)` or
+  `SAFER OPTION: …`. Every Debate, safer-option and taste decision ends with
+  `⚠ decided for you — please review`.
+- Write `DEBATED` only when ≥2 Advocate `Agent` calls ran for that question, naming each Advocate's
+  option. A decision with no Advocates is labelled `RULE`, `FACT` or `SAFER OPTION`, never `DEBATED`: the
+  Supervisor's own weighing of options is not a Debate.
 - `Paused:` — a stop that stayed (below), and why. Only when one paused the task.
 - `Checks:` — the tests, the reviews, and the real run, labelled `auto-checked, not /verify`.
 - `Not done: merge (yours)`, plus the `/verify` state: `auto verify: running (T182)`, its result, or
