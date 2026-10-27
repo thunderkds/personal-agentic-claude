@@ -14,15 +14,15 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_site_content.py` (6 new T181 tests) and `tests/test_readme_slim.py` (1 new). RED first (commit 59358cc): `6 failed, 66 passed` (site), `1 failed, 4 passed` (README). After the change: `77 passed` for the two files. |
+| Verification command run | ☑ pass | `pytest tests/test_site_content.py tests/test_readme_slim.py -q` -> `77 passed in 0.10s`; `pytest .claude/hooks/tests tests -q` -> `1756 passed, 25 subtests passed in 56.87s`; `sh scripts/validate.sh` -> `validate.sh: PASS`. |
+| Negative cases hold | ☑ pass | M1 (delete nav `<li>`): `2 failed, 70 passed` (test_tracks_nav_link_exists, test_every_section_has_a_nav_link). M2 (`[auto]` -> `[x]` in section): `1 failed, 71 passed` (test_tracks_section_states_announcement_lines_and_override). M3 (insert "auto mode merges your branch"): `1 failed, 71 passed` (test_tracks_section_does_not_say_auto_merges...). Page restored after each; `git status` clean. |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| Full smoke suite still green (no regression) | ☑ pass | `1756 passed, 25 subtests passed` |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ pass | Headless Chrome 375px iframe render ran; layout intact, no overflow (see responsiveness). Section reuses existing markup only; no pixel-diff baseline exists in the repo. Verdict: no new CSS, so no regression expected; only structural check done. |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ pass | `git diff 453b2d5 -- site/index.html`: no added `<style>`, `<script>`, `<img>`, `<link>`, font or class except existing `<p class="lead">`; only `<h2>`, `<h3>`, `<p>`, `<ul>`, `<li>`, `<code>`, `<strong>`, `<em>`. `test_no_external_assets` and the other drift tests pass. |
+| **UI: Responsiveness at target viewports** | ☑ pass | Method: `google-chrome --headless=new` rendering `site/index.html` in an `<iframe width=375>` (headless Chrome cannot go below ~485px window width), page script posts metrics. Result: `DOC=360 CLIENT=360 OVERFLOWING_ELEMENTS=0 SEC=328/328` -> no horizontal scroll, no code/li/p overflow in `#tracks`. Direct 1280px window: `SECOVER=0`. |
 
 ---
 
@@ -63,9 +63,9 @@ hook since T044 (it does not move any KANBAN row or reset any counter — see it
 <h2>Install</h2>
 ```
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**: `site/index.html` has `<section id="tracks">` (h2 "Minimal and extended tracks", h3 "Auto mode") between `#what-you-get` and `#install`, nav `<li>` `href="#tracks"`, and the diagram `<desc>` says "These stages are the extended track." `README.md` lines 7-8 now read: "Two tracks: small work runs the **minimal track** ... Reply `full` or `minimal` to override." / "Add `[auto]` and either track runs to Ready for Review with a final report of every decision. Merge stays with you." (75 lines).
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+**DELTA**: A reader of the README or the site now learns the two tracks, the override, `[auto]`, the Debate and the auto-verify hook, and that merge stays with the user.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
