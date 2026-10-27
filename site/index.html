@@ -241,6 +241,7 @@
     <ul>
       <li><a href="#quick-reference">Quick reference</a></li>
       <li><a href="#what-you-get">What you get</a></li>
+      <li><a href="#tracks">Minimal and extended tracks</a></li>
     </ul>
     <p class="nav-group-title">Getting started</p>
     <ul>
@@ -309,7 +310,7 @@
 </p>
 <svg id="pipeline-diagram" class="pipeline" role="img" viewBox="0 0 320 558" xmlns="http://www.w3.org/2000/svg" aria-labelledby="pipeline-diagram-title pipeline-diagram-desc">
   <title id="pipeline-diagram-title">The Easy Kit pipeline</title>
-  <desc id="pipeline-diagram-desc">Eight steps in order, top to bottom: Phase 0 initiation, Stage 0.5 grilling and brainstorming, Stage 1 environment setup, Stage 1.5 sub-agent team, Stage 2 planning, Stage 3 parallel execution, Stage 4 review, Stage 5 integration. Each step hands its output to the next.</desc>
+  <desc id="pipeline-diagram-desc">Eight steps in order, top to bottom: Phase 0 initiation, Stage 0.5 grilling and brainstorming, Stage 1 environment setup, Stage 1.5 sub-agent team, Stage 2 planning, Stage 3 parallel execution, Stage 4 review, Stage 5 integration. These stages are the extended track. Each step hands its output to the next.</desc>
   <g class="node" data-stage="0">
     <rect x="10" y="2" width="300" height="50" rx="8"/>
     <text class="node-title" x="160" y="23" text-anchor="middle">Phase 0 · Initiation</text>
@@ -358,6 +359,49 @@
     <text class="node-out" x="160" y="545" text-anchor="middle">verify, merge, release plan</text>
   </g>
 </svg>
+</section>
+
+<section id="tracks">
+<h2>Minimal and extended tracks</h2>
+<p class="lead">
+  Small work runs on the minimal track. Big or risky work runs the full pipeline above, which is the
+  extended track. The Supervisor picks the track and says it in one line before it starts.
+</p>
+<ul>
+  <li><strong>The line</strong> is a statement, not a question: <code>Track: minimal — C0, Risk Low, one file</code>
+    or <code>Track: extended — C2, Risk Medium</code>.</li>
+  <li><strong>Extended track</strong> if any of these is true: Complexity C2 or above; Risk Medium or High;
+    a word such as <em>refactor</em> or <em>migrate</em>; a change that deletes, moves, renames or converts
+    user data (for example CSV to JSON); more than one session or agent; a UI component.</li>
+  <li><strong>Minimal track</strong> otherwise. The Supervisor writes the code itself: test first, change,
+    real run. It saves a Decision record in <code>tasks/MINIMAL_LOG.md</code> and adds a board row marked
+    <code>Track: minimal</code>. It commits on a new branch without asking. It writes no task guide and
+    starts no sub-agent.</li>
+  <li><strong>Your override:</strong> reply <code>full</code> or <code>minimal</code> at any time and the
+    Supervisor switches. It may move a task up to extended on its own. It never moves a task down.</li>
+</ul>
+<h3>Auto mode</h3>
+<p>
+  Put the exact tag <code>[auto]</code> in your request. The Supervisor runs either track up to the point where it waits for your review
+  and asks you nothing. It writes a final report that lists every decision and how it made each one.
+  The task Risk sets how it decides:
+</p>
+<ul>
+  <li><strong>Low:</strong> the Supervisor decides and logs the reason.</li>
+  <li><strong>Medium:</strong> a Debate with 2 Advocates.</li>
+  <li><strong>High:</strong> a Debate with 3 Advocates, and at least one decision is always debated.</li>
+</ul>
+<p>
+  In a Debate, read-only Advocate agents argue the options. <code>resolve-question</code> runs it in auto mode
+  only. The Supervisor decides and takes the safer option on a tie. It marks the line
+  <code>⚠ decided for you — please review</code>. A task has at most 3 Debates. The 4th question goes to you.
+</p>
+<p>
+  A Stop hook checks the final report before the run may end. For an extended-track task that waits for your review,
+  a second Stop hook starts a fresh headless <code>/verify</code> session and writes the <code>verify</code> row.
+  The Supervisor does not run <code>/verify</code>. Without <code>[auto]</code>, you type <code>/verify</code>.
+  Safety hooks still block. <strong>Merge, push and Done stay with you.</strong>
+</p>
 </section>
 
 <section id="install">

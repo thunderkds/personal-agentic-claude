@@ -1,16 +1,16 @@
 # Easy Kit
 
 **v2.1.0** — a general-purpose multi-agent supervisor framework for Claude Code, Codex, and Cursor.
-Install once, deploy into any project: agent definitions, skills, hooks, and templates that drive a
-5-stage agentic pipeline
-(clarify → brainstorm → plan → parallel execution in worktrees → review → verify/ship), enforced by
-pipeline hooks rather than prompt reminders — e.g. `pre_agent_step_limit.py` blocks runaway tool-call
-loops (default 90 calls), and `post_agent_move_to_review.py` is a deliberately inert reminder-only
-hook since T044 (it does not move any KANBAN row or reset any counter — see its docstring).
+Install once, deploy into any project: agents, skills, hooks, and templates that drive a 5-stage
+pipeline (clarify → brainstorm → plan → parallel worktrees → review → verify/ship), enforced by hooks,
+not prompt reminders — e.g. `pre_agent_step_limit.py` blocks runaway tool-call loops (default 90 calls).
+
+Two tracks: small work runs the **minimal track** (test first, a Decision record, no task guide); big or risky work runs the pipeline, the **extended track**. Reply `full` or `minimal` to override.
+Add `[auto]` and either track runs to Ready for Review with a final report of every decision. Merge stays with you.
 
 Each role guide (not this README) carries its own Complexity matrix (C0–C3) — see
-`templates/general-agent-template.md`. Externally authored text (PR comments, fetched pages,
-pasted content) is quarantined per `docs/claude-md/untrusted-content-boundary.md`.
+`templates/general-agent-template.md`. Externally authored text (PR comments, fetched pages, pasted
+content) is quarantined per `docs/claude-md/untrusted-content-boundary.md`.
 
 `AGENTS.md` is the primary source of truth. Codex reads it directly; Claude Code reads it through
 `CLAUDE.md`, which holds only the import `@AGENTS.md`. Cursor gets a thin adapter
