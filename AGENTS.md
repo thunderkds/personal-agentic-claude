@@ -44,7 +44,6 @@ Keep it short and plain — a judgment call from observed behavior, not a rigid 
 ---
 
 ## Skills vs Agents
-
 Claude Code auto-injects the full skill roster (`skills/`) and agent roster
 (`agents/`), each with its own description, into every session -- do NOT restate those
 descriptions here; that just re-grows this section. Keep only what the harness does not supply:
@@ -134,11 +133,13 @@ See [`docs/claude-md/phase0-project-initiation.md`](docs/claude-md/phase0-projec
 > "Context locked. PRD.md generated. Entering 5-Stage Agentic Pipeline. Initializing Stage 0.5: Requirement Grilling → Creative Brainstorming."
 
 ## Mandatory Session Startup (Every New Conversation)
-
 Before responding to the user's first substantive request, invoke `Skill({ skill: "wake" })`. This is **not optional**: `wake` reads the live project state and emits a ≤50-line briefing.
 **Do not skip `wake` even if the user jumps straight to a task.** Invoke it silently first, then respond.
 
 ---
+
+## Tracks
+Before any implementation work, sort the request by [`docs/claude-md/tracks.md`](docs/claude-md/tracks.md) and say the track in one line: `Track: minimal — <reasons>` or `Track: extended — <reasons>`. The track line is a statement, never a question: never ask which track, and never offer or recommend a lower one. The 5-stage pipeline below is the **extended track**, unchanged. On the extended track the Supervisor goes on with the pipeline at once, from the first stage not yet done (Phase 0 / Stage 0.5 in a new project). The extended track applies if any of: C2 or above; Risk Medium or High; a Gate 2 word or *migrate*; a change that deletes, moves, renames or converts user data or its storage format, even with no *migrate*; more than one session or agent; a UI component. Otherwise the **minimal track**: the Supervisor writes the code itself with no process stop and follows the 7 steps in `docs/claude-md/tracks.md` (new branch, test first, change, real run, Decision record in `tasks/MINIMAL_LOG.md`, board row). Copy the record from `templates/MINIMAL_LOG_template.md`. Commit on the task branch without asking; only the merge waits for the user. The user may reply `full` or `minimal` on their own; the Supervisor moves a task only up.
 
 ## 5-Stage Agentic Pipeline
 See [`docs/claude-md/pipeline-stages.md`](docs/claude-md/pipeline-stages.md) for full Stage 0.5–5 detail. Strictly follow this order. Never skip or reorder stages.
@@ -158,17 +159,16 @@ See [`docs/claude-md/pipeline-stages.md`](docs/claude-md/pipeline-stages.md) for
 - All TASK_GUIDE files are generated once in Stage 2 using `templates/TASK_GUIDE_template.md` and stored permanently in tasks/.
 - Every sub-agent must read `PROJECT_SPEC.md`, its TASK_GUIDE_Txxx.md, and the corresponding file in agents/ before starting work.
 - Every task carries a **Complexity (C0–C3)**, **Risk (Low/Med/High)**, and **Priority (P0–P2)** label. Tasks above C3 (Epics) must be split at Stage 2 before pickup.
-- Stage 4 (code-review) is mandatory for every task. Stage 4 security-review is mandatory for Medium/High risk tasks.
+- Stage 4 (code-review) is mandatory for every extended-track task. Stage 4 security-review is mandatory for Medium/High risk tasks.
 - Stage 3/4 `migration-safety` is mandatory for any task that adds or changes a DB schema/migration.
 - Stage 5 verify is mandatory before any merge. After all tasks integrate, Stage 5 `ship` produces the release/rollback plan.
 - The Supervisor must always specify the exact CLI + spawn command for every sub-agent.
 - Never assume the user knows how to run a particular CLI — always give the full command.
 
 ### Hard-Stop Gates (Supervisor-level — not skippable by any rationale)
-
 > These gates exist because pipeline bypasses happen when tasks *feel* small. Perceived smallness is **never** a valid reason to skip any gate below.
 
-1. **No TASK_GUIDE = no work.** If the user requests any implementation and no `tasks/TASK_GUIDE_Txxx.md` exists for it, the Supervisor must create one through Stage 2 before any code is written — by the Supervisor *or* any agent. The Supervisor must never write implementation code directly.
+1. **No TASK_GUIDE = no work.** This gate applies to the extended track. If the user requests any implementation and no `tasks/TASK_GUIDE_Txxx.md` exists for it, the Supervisor must create one through Stage 2 before any code is written — by the Supervisor *or* any agent. The Supervisor must never write implementation code directly. On the minimal track the Supervisor writes the code itself, with no guide, and ends with a Decision record (`docs/claude-md/tracks.md`).
 
 2. **Complexity floor for structural work.** Any task containing the words *refactor*, *restructure*, *migrate to pattern*, *clean architecture*, *QA suite*, or *test coverage* starts at **C2 / Medium Risk** minimum. Do not reduce below this floor without explicit user instruction.
 

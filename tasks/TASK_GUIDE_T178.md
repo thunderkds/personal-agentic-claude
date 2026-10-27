@@ -47,7 +47,7 @@ Supervisor design decisions (defaults the user can overrule before the build):
 ### Requirement Fidelity Gate
 
 - [x] Restated intent confirmed (Supervisor, 2026-10-26, from the user's two messages above)
-- [ ] Domain terms: add **Minimal track**, **Extended track**, **Decision record** to the `PROJECT_SPEC.md` glossary (agent)
+- [x] Domain terms: add **Minimal track**, **Extended track**, **Decision record** to the `PROJECT_SPEC.md` glossary (agent; done in AC 5, block after the `Lane` row)
 - [x] Every AC traces to the Requirement
 - [x] Refs covered (none)
 
