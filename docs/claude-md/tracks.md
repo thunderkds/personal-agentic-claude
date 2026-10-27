@@ -286,6 +286,36 @@ It never loops: on the second fire (`stop_hook_active`) it allows the stop and a
 `Paused: auto-mode check failed — <reasons>` to the report. Unreadable files fail open, with one line on
 stderr. It does not read or write Evidence: the merge gate is unchanged.
 
+### Auto verify (Stop hook)
+
+`.claude/hooks/stop_auto_verify.py` runs the real `/verify` for an auto-mode task, so the Supervisor never
+runs it. It fires when the Supervisor stops. It acts on a task only when all of these hold:
+
+1. The task's row is in `### Ready for Review` on `PROJECT_KANBAN.md`.
+2. Its `tasks/TASK_REVIEW_<ID>.md` has the `Mode: auto` line.
+3. Its `verify` row is empty, or holds an earlier auto run for other code.
+
+The hook then starts one new headless session in the task's checkout (the main checkout or its worktree):
+`claude -p "/verify <ID>" --max-budget-usd 2 --output-format json`. The session uses your normal permission
+settings, never `--dangerously-skip-permissions`. The hook returns at once: the run is detached in its own
+session (`setsid`). `CLAUDE_AUTO_VERIFY_BUDGET_USD` changes the budget, and `CLAUDE_AUTO_VERIFY_TIMEOUT_S`
+the time limit (default 1800). The run writes its output to `.claude/verify-runs/<ID>-<commit>.log`
+(gitignored). One task and commit run once: to run again on the same commit, delete that log. A commit that
+changes only the task's review file counts as the same code.
+
+When the run ends, the hook, never the Supervisor, writes two things:
+
+- A run record, in the directory that `.claude/settings.json` denies agents write access to (the trace
+  anchors' directory, `~/.claude/harness-anchors/`).
+- The `verify` row: `☑ pass`, `☑ fail` or `☐ blocked`, with the Notes
+  `auto-run by hook, session <id>, commit <sha>, log .claude/verify-runs/<file> — <pass|fail|blocked>`.
+
+Only the `**Verdict:** PASS` or `FAIL` line of the skill's result sets the row. Each of these is `blocked`: a
+SKIP or BLOCKED verdict, no verdict line, a budget stop, a timeout, or no `claude` on the PATH. A blocked
+row never contains the word "pass". The hook never overwrites a row you filled. The merge gate accepts an
+`auto-run by hook` row only when its run record exists for that task and the head commit, and says pass.
+The merge stays yours. Without `[auto]`, nothing changes: `/verify` stays yours.
+
 ### Stops that stay
 
 Even in auto mode, the Supervisor pauses the task, with one message that says why, for:
@@ -304,7 +334,8 @@ The pause also goes in the final report, on its `Paused:` line.
 - merge or push;
 - the Supervisor running `/verify` or writing its `verify` Evidence row (only T182's hook writes it). The
   merge gate cannot tell who wrote the row, so this rule is doctrine: the Supervisor's own check goes under
-  `Checks:`, never in the `verify` row;
+  `Checks:`, never in the `verify` row. The one exception the gate can check is an `auto-run by hook` row:
+  it needs the hook's run record (`### Auto verify (Stop hook)`);
 - moving a task to Done;
 - moving a task down a track.
 

@@ -44,6 +44,8 @@ try:
     from board.config import load_config, task_id_pattern  # noqa: E402
     from board.moments import (  # noqa: E402
         board_mode, my_blocking_tasks, my_review_tasks, pull_cache)
+    from verify_record import (  # noqa: E402
+        AUTO_CHECKED_TAG, AUTO_ROW_TAG, auto_row_confirmed)
 except Exception as exc:  # pragma: no cover - exercised via subprocess test
     print(json.dumps({
         "decision": "block",
@@ -52,8 +54,8 @@ except Exception as exc:  # pragma: no cover - exercised via subprocess test
             f"({type(exc).__name__}: {exc}) — cannot confirm Stage 5 verify "
             "evidence for any task, so this push/merge is blocked. Restore "
             ".claude/hooks/lib/guide_sections.py, "
-            ".claude/hooks/lib/shell_data.py, .claude/hooks/lib/board/config.py "
-            "and .claude/hooks/lib/board/moments.py."
+            ".claude/hooks/lib/shell_data.py, .claude/hooks/lib/board/config.py, "
+            ".claude/hooks/lib/board/moments.py and .claude/hooks/lib/verify_record.py."
         ),
     }))
     sys.exit(0)
@@ -341,8 +343,19 @@ def has_filled_verify_row(task_id, tasks_dir=None):
         if not section:
             continue
         for match in VERIFY_ROW_PATTERN.finditer(section):
-            if not UNCHECKED_PASS_PATTERN.search(match.group("result")):
-                return True
+            if UNCHECKED_PASS_PATTERN.search(match.group("result")):
+                continue
+            notes = match.group("notes").lower()
+            # T182: the Supervisor's own real-run check (T180) is never `/verify`, and an
+            # `auto-run by hook` row counts only with its run record (D5) for this task and the
+            # head commit of the checkout this row was read from.
+            if AUTO_CHECKED_TAG in notes:
+                continue
+            if AUTO_ROW_TAG in notes and not auto_row_confirmed(
+                    ROOT, os.path.dirname(os.path.abspath(directory)), task_id,
+                    match.group("notes")):
+                continue
+            return True
     return False
 
 

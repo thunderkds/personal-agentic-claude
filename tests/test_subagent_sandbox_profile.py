@@ -157,6 +157,12 @@ def test_sc5_supervisor_settings_have_no_permissions_or_sandbox():
                     'holds up — report file, Advocates per Risk, Stage 4"',
                     '"command": "python3 \\"$CLAUDE_PROJECT_DIR\\"/.claude/hooks/'
                     'stop_auto_mode_check.py"'}
+        # T182: one more Stop hook entry (auto verify), likewise named line by line.
+        allowed |= {'"description": "Auto verify (T182): for a Mode: auto task at Ready for Review, '
+                    'start one detached headless /verify run per head commit; the run writes the '
+                    'verify row and its record"',
+                    '"command": "python3 \\"$CLAUDE_PROJECT_DIR\\"/.claude/hooks/'
+                    'stop_auto_verify.py"'}
         assert set(changed) <= allowed, set(changed) - allowed
 
 

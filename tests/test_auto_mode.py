@@ -509,10 +509,19 @@ def test_ac4_control_a_real_verify_row_passes(tmp_path):
     assert result.returncode == 0 and out == {}, out
 
 
+def _gate_changed_only_by_t182(root, base_ref, gate):
+    """T182 is the one task allowed to change the merge gate (its D5 run-record guard): every
+    commit since `base_ref` that touches it names T182, and nothing uncommitted is pending."""
+    log = subprocess.run(["git", "-C", str(root), "log", "--no-merges", "--format=%s",
+                          f"{base_ref}..HEAD", "--", gate], capture_output=True, text=True)
+    pending = subprocess.run(["git", "-C", str(root), "diff", "--quiet", "HEAD", "--", gate])
+    subjects = log.stdout.splitlines()
+    return log.returncode == 0 and pending.returncode == 0 and all("T182" in s for s in subjects)
+
+
 def test_ac4_merge_gate_file_is_unchanged():
-    diff = subprocess.run(["git", "-C", str(ROOT), "diff", "--quiet", BASE_REF, "--",
-                           str(MERGE_GATE.relative_to(ROOT))])
-    assert diff.returncode == 0, "pre_bash_block_unsafe_merge.py is a Must-NOT-touch file"
+    assert _gate_changed_only_by_t182(ROOT, BASE_REF, str(MERGE_GATE.relative_to(ROOT))), (
+        "pre_bash_block_unsafe_merge.py is a Must-NOT-touch file (T182 alone may change it)")
 
 
 # ── AC 5 — glossary ───────────────────────────────────────────────────────────────────────

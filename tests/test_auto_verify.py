@@ -106,6 +106,7 @@ def _project(tmp_path, review=None, rows=(RFR_ROW,), worktree=False, extra_revie
     if worktree:
         checkout = tmp_path / "wt-t951"
         _git(project, "worktree", "add", "-q", "-b", "feat/t951", str(checkout))
+        (checkout / "tasks").mkdir(exist_ok=True)  # git does not carry the main checkout's empty tasks/
         (checkout / "tasks" / f"TASK_REVIEW_{TASK}.md").write_text(
             _review() if review is None else review, encoding="utf-8")
         _git(checkout, "add", "-A")
@@ -610,11 +611,12 @@ def test_ac6_tracks_md_names_the_auto_verify_step():
     m = re.search(r"^### Auto verify[^\n]*\n(.*?)(?=^##+ |\Z)", section, re.M | re.S)
     assert m, "no `### Auto verify` subsection in `## Auto mode`"
     body = re.sub(r"\s+", " ", m.group(1))
-    for needle in ("`.claude/hooks/stop_auto_verify.py`", "`/verify", "`--max-budget-usd 2`",
+    for needle in ("`.claude/hooks/stop_auto_verify.py`", "`/verify", "--max-budget-usd 2",
                    "`.claude/verify-runs/", "`auto-run by hook", "record", "never the Supervisor",
                    "merge"):
         assert needle in body, needle
-    assert "The merge gate cannot tell who wrote the row" not in section
+    never = re.sub(r"\s+", " ", section.split("### Never in auto mode", 1)[1])
+    assert "The one exception the gate can check is an `auto-run by hook` row" in never
 
 
 def test_ac6_agents_md_stays_within_its_line_cap():
