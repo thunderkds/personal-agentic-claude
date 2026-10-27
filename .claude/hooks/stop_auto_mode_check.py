@@ -373,6 +373,10 @@ def record_pause(report_path, minimal, task_id, reasons):
 
 
 def main():
+    # T182: the headless `/verify` session's own stop is not an auto-mode run; blocking it would
+    # tell that session to fix the final report.
+    if os.environ.get("CLAUDE_AUTO_VERIFY_RUN"):
+        sys.exit(0)
     try:
         event = json.load(sys.stdin)
     except Exception:

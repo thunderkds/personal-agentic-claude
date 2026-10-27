@@ -343,10 +343,18 @@ def test_the_installer_merge_adds_the_stop_entry(tmp_path):
     assert any(c.endswith("stop_auto_mode_check.py") for c in commands), commands
 
 
+def _gate_changed_only_by_t182(root, base_ref, gate):
+    """T182 is the one task allowed to change the merge gate (its D5 run-record guard): every
+    commit since `base_ref` that touches it names T182, and nothing uncommitted is pending."""
+    log = subprocess.run(["git", "-C", str(root), "log", "--no-merges", "--format=%s",
+                          f"{base_ref}..HEAD", "--", gate], capture_output=True, text=True)
+    pending = subprocess.run(["git", "-C", str(root), "diff", "--quiet", "HEAD", "--", gate])
+    subjects = log.stdout.splitlines()
+    return log.returncode == 0 and pending.returncode == 0 and all("T182" in s for s in subjects)
+
+
 def test_merge_gate_is_untouched():
-    diff = subprocess.run(["git", "-C", str(ROOT), "diff", "--quiet", BASE_REF, "--",
-                           ".claude/hooks/pre_bash_block_unsafe_merge.py"])
-    assert diff.returncode == 0
+    assert _gate_changed_only_by_t182(ROOT, BASE_REF, ".claude/hooks/pre_bash_block_unsafe_merge.py")
 
 
 # ── D9 (a) — discovery from files; finished tasks skipped ─────────────────────────────────
