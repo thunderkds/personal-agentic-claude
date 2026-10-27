@@ -128,7 +128,8 @@ T069_BASELINE_REF = "8d6d56b"
 # Repointed once more by T178's AC 8 fix (`fbe55ab` -> `f72b34d`): the `## Tracks` paragraph gains the user-data-change condition in place (no new line, still 196 lines). Repointed, NOT deleted.
 # Repointed once more by T178's AC 8 re-run 1 fix (`f72b34d` -> `45c4ca7`): the `## Tracks` paragraph now says to follow tracks.md's 7 steps, copy the record template and commit without asking (same line, still 196 lines). Repointed, NOT deleted.
 # Repointed once more by T178's /verify fix (`45c4ca7` -> `10c9e44`): the `## Tracks` paragraph now says the track line is a statement, never a question, and the extended track goes on with the pipeline at once (same line, still 196 lines). Repointed, NOT deleted.
-T070_BASELINE_REF = "10c9e44"  # T178 /verify fix (was 45c4ca7; f72b34d, fbe55ab, 8080fdb before)
+# REPOINTED AGAIN by T180 (`10c9e44` -> `c034608`, T180's edit commit; design D1-D6 user-approved 2026-10-27): the `## Tracks` paragraph gains the auto-mode pointer (the `[auto]` tag, the track line, the `## Auto mode` table in tracks.md, the never-list) in place: no new line, still 196 lines. Nothing collapsed into the agent guides. Repointed, NOT deleted.
+T070_BASELINE_REF = "c034608"  # T180 auto mode (was 10c9e44; 45c4ca7, f72b34d, fbe55ab, 8080fdb before)
 
 # T082's own edit commit (same commit as the repoint above). T082 adds a mandatory Base Rule bullet
 # to `general-agent-template.md` too (the same untrusted-content pointer) — a legitimate, required
