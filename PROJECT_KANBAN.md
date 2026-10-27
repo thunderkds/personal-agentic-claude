@@ -82,7 +82,6 @@
 
 
 ### In Progress
-- [ ] **T182** — Auto verify: for an `[auto]` task at Ready for Review, a `Stop` hook (not the Supervisor) runs the real `/verify` in a fresh headless session and writes the `verify` row; the merge gate accepts it only with a run record the agent cannot write; merge stays with the user | common-infrastructure | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T182.md` | Depends on: T180 | Registered 2026-10-27; user: "I want to make the /verify command is automate also", chose "Hook runs real /verify" over "my own check counts" and "keep manual, one command". `/verify` is a built-in the model cannot run (disable-model-invocation), so AC 1 is a paid spike ($1) proving `claude -p "/verify Txxx"` runs headless — stop and report if not, never a hand-written copy. Branch `plan/t178-t180-tracks` in `../wt-t178`. | 2026-10-27: built (`42859ce`), AC 1 spike pass, Stage 4 0 P0/P1; AC 8 live check waits for the user's go
 
 
 
@@ -91,6 +90,7 @@
 
 
 ### Ready for Review
+- [ ] **T182** — Auto verify: for an `[auto]` task at Ready for Review, a `Stop` hook (not the Supervisor) runs the real `/verify` in a fresh headless session and writes the `verify` row; the merge gate accepts it only with a run record the agent cannot write; merge stays with the user | common-infrastructure | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T182.md` | Depends on: T180 | Registered 2026-10-27; user: "I want to make the /verify command is automate also", chose "Hook runs real /verify" over "my own check counts" and "keep manual, one command". `/verify` is a built-in the model cannot run (disable-model-invocation), so AC 1 is a paid spike ($1) proving `claude -p "/verify Txxx"` runs headless — stop and report if not, never a hand-written copy. Branch `plan/t178-t180-tracks` in `../wt-t178`. | 2026-10-27: built (`42859ce`), AC 1 spike pass, Stage 4 0 P0/P1; AC 8 live check pass ($0.35); waits for `/verify T182`
 
 
 ### Done
