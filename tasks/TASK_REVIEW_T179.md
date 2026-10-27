@@ -14,15 +14,15 @@
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | pass | `tests/test_resolve_question.py` (+10 `test_t179_*` tests; 9 failed RED before the SKILL.md edit, then 31 passed). Pins AC 1-6 incl. non-auto Choice path text and the 8192-byte Codex skill cap. |
+| Verification command run | pass | `python3 -m pytest -q tests/test_resolve_question.py` -> `31 passed in 0.74s`; `python3 -m pytest -q tests` -> `587 passed in 105.51s (0:01:45)` (2026-10-27) |
+| Negative cases hold | pass | Advocate template has no `T[0-9]{3}`/`TASK_GUIDE`/`tasks/`/`{task` slot (test); step 1 still says a Choice question goes to the user at once; RED run before edit: `9 failed, 21 passed` |
+| verify | ☐ N/A (user-only; Supervisor asks the user to run) | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| Full smoke suite still green (no regression) | pass | `tests`: 587 passed; `.claude/hooks/tests`: 871 passed, 25 subtests passed. A first run failed `tests/test_site_content.py::test_providers_section_names_codex_skill_cap_and_skipped_skills` because the skill grew to 9672 bytes (> Codex 8192 cap); fixed by trimming the new text to 8189 bytes. |
+| **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | no UI component [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ N/A | no UI component [method used + output] |
+| **UI: Responsiveness at target viewports** | ☐ N/A | no UI component [viewports tested, any overflow findings] |
 
 ---
 
