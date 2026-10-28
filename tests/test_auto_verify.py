@@ -20,6 +20,7 @@ no other `claude` is reachable. The real binary is never run.
 
 Run with: python3 -m pytest tests/test_auto_verify.py -v
 """
+import ast
 import fnmatch
 import json
 import os
@@ -691,6 +692,8 @@ def test_ac6_settings_wires_the_hook_on_stop():
 SESSION_ID = "bb6500c2-6ee9-4ce9-bc0e-ea2f246f2fd4"
 RESULT_CELL = {"pass": "☑ pass", "fail": "☑ fail", "blocked": "☐ blocked"}
 VERDICT_OUTPUT = {"pass": None, "fail": _verdict_output("**Verdict:** FAIL"), "blocked": "not json"}
+# a run whose output is not JSON reports no session id
+RUN_SESSION = {"pass": SESSION_ID, "fail": SESSION_ID, "blocked": "none"}
 
 
 def _auto_mode():
@@ -797,13 +800,26 @@ def test_ac1_two_records_for_one_task_the_newest_wins(tmp_path):
     assert "the re-run" in task.body and "the first run" not in task.body
 
 
+def _code(path):
+    """A hook's source with its docstrings and comments removed — what actually runs, so a
+    docstring that *describes* the reader is not mistaken for a second copy of it."""
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    for node in ast.walk(tree):
+        body = getattr(node, "body", None)
+        if isinstance(body, list) and body and isinstance(body[0], ast.Expr) \
+                and isinstance(getattr(body[0], "value", None), ast.Constant) \
+                and isinstance(body[0].value.value, str):
+            body.pop(0)
+    return ast.unparse(tree)
+
+
 def test_ac1_neither_stop_hook_holds_a_second_copy_of_the_reader():
     for name in (HOOK, "stop_auto_mode_check.py"):
-        source = (HOOKS / name).read_text(encoding="utf-8")
-        assert "import auto_mode" in source, f"{name} does not use the shared reader"
+        code = _code(HOOKS / name)
+        assert "import auto_mode" in code, f"{name} does not use the shared reader"
         for duplicate in (r"\*\*([A-Za-z]+-?\d+)\*\*", "<!--.*?-->", r"Track:\s*minimal",
-                          "Track: minimal", '"worktree", "list"'):
-            assert duplicate not in source, f"{name} still holds its own `{duplicate}`"
+                          "Track: minimal", '"worktree", "list"', "### Ready for Review"):
+            assert duplicate not in code, f"{name} still holds its own `{duplicate}`"
 
 
 # ── AC 2 — the minimal-track run ──────────────────────────────────────────────────────────
@@ -1069,8 +1085,8 @@ def test_ac7_the_extended_report_slot_names_the_result(tmp_path, verdict):
     head = _git(project, "rev-parse", "HEAD")
     slot = _wait_slot(checkout)
     assert slot.startswith("Not done: merge (yours); "), slot
-    assert f"auto verify: {RESULT_CELL[verdict]} (session {SESSION_ID}, commit {head}, " \
-           f"log .claude/verify-runs/{TASK}-{head[:12]}.log)" in slot, slot
+    assert f"auto verify: {RESULT_CELL[verdict]} (session {RUN_SESSION[verdict]}, " \
+           f"commit {head}, log .claude/verify-runs/{TASK}-{head[:12]}.log)" in slot, slot
     assert "running (T182)" not in slot
 
 
@@ -1083,8 +1099,8 @@ def test_ac7_the_minimal_record_slot_names_the_result(tmp_path, verdict):
     head = _git(project, "rev-parse", "HEAD")
     slot = _wait_slot(checkout, MIN_TASK)
     assert slot.startswith("**Not done:** merge (yours); "), slot
-    assert f"auto verify: {RESULT_CELL[verdict]} (session {SESSION_ID}, commit {head}, " \
-           f"log .claude/verify-runs/{MIN_TASK}-{head[:12]}.log)" in slot, slot
+    assert f"auto verify: {RESULT_CELL[verdict]} (session {RUN_SESSION[verdict]}, " \
+           f"commit {head}, log .claude/verify-runs/{MIN_TASK}-{head[:12]}.log)" in slot, slot
     assert "running (T182)" not in slot
 
 
