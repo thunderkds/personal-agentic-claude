@@ -541,6 +541,54 @@ def test_both_verdicts_in_one_result_cell_read_as_fail():
 
 
 # ---------------------------------------------------------------------------
+# The verdict spelling, and where the widening stops (Stage 4 P2)
+#
+# `fail\b` did not match `☑ failed`, so the `-ed` form was a silent allow — the
+# worst failure mode this feature has, because nothing said why the gate stayed
+# quiet. Both patterns now take `(?:ed)?`, symmetrically, and no further.
+# ---------------------------------------------------------------------------
+
+def test_a_checked_failed_blocks_like_a_checked_fail():
+    reason, _ = gate(review_with(row(COMPANION, "☑ failed", "overall 62 (< 80)")))
+    assert reason is not None, "`☑ failed` is a plausible human spelling and must block"
+    assert "Companion score" in reason
+
+
+@pytest.mark.parametrize("ui_row", UI_ROWS, ids=["visual", "design-system", "responsive"])
+def test_a_checked_failed_blocks_in_a_ui_row_too(ui_row):
+    assert gate(review_with(row(ui_row, "☑ failed", "overflow at 375 px")))[0] is not None
+
+
+def test_a_checked_passed_is_still_read_as_a_pass_by_the_report_check():
+    """The symmetry half: widening only the fail side would make `☑ passed`
+    stop counting as a pass, so FR-005 would skip its report check on it."""
+    reason, stderr = gate(review_with(
+        row(COMPANION, "☑ passed", "overall 86, change_risk pass — looked fine")))
+    assert reason is None, reason
+    lines = [l for l in stderr.splitlines() if l.strip()]
+    assert len(lines) == 1 and "cite no verifier report path" in lines[0], lines
+
+
+@pytest.mark.parametrize("result", ["☑ failing", "☑ failure", "☑ failures", "☑ fails"],
+                         ids=["failing", "failure", "failures", "fails"])
+def test_the_widening_stops_at_the_ed_form(result):
+    """Where the boundary is, asserted rather than assumed: `\b` after the
+    optional `ed` is what keeps every prose variant out of the Result cell."""
+    assert merge_gate.CHECKED_FAIL_PATTERN.search(result) is None, result
+    assert gate(review_with(row(COMPANION, result, "overall 62")))[0] is None
+
+
+def test_the_unchecked_template_guidance_is_still_not_a_verdict():
+    """`UNCHECKED_PASS_PATTERN` and the `☐` box must be untouched by the
+    widening — the template's own `☐ pass / ☐ fail / ☐ N/A` is guidance."""
+    placeholder = "☐ pass / ☐ fail / ☐ N/A"
+    assert merge_gate.CHECKED_FAIL_PATTERN.search(placeholder) is None
+    assert merge_gate.CHECKED_PASS_PATTERN.search(placeholder) is None
+    assert merge_gate.UNCHECKED_PASS_PATTERN.search(placeholder) is not None
+    assert gate(review_with(row(COMPANION, placeholder, "[not filled in yet]")))[0] is None
+
+
+# ---------------------------------------------------------------------------
 # AC 7 — only a Ready-for-Review task is checked
 # ---------------------------------------------------------------------------
 

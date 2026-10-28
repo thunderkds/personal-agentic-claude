@@ -419,8 +419,19 @@ COMPANION_ROW_PATTERNS = tuple(
 # the same idea in the other direction: `☐ fail` is the template's guidance text,
 # not an answer, so it must never match. Optional `**` because a reviewer may
 # bold the verdict.
-CHECKED_FAIL_PATTERN = re.compile(r"☑\s*\**\s*fail\b", re.IGNORECASE)
-CHECKED_PASS_PATTERN = re.compile(r"☑\s*\**\s*pass\b", re.IGNORECASE)
+#
+# `(?:ed)?` is deliberate and the two patterns must stay symmetric. `fail\b`
+# alone did not match `☑ failed` — `\b` cannot sit between `l` and `e` — so a
+# reviewer who wrote the `-ed` form of the one word that makes this gate fire
+# got a **silent allow** (Stage 4 P2). The template prescribes `fail`, but on the
+# blocking side the safe direction is to catch more, not less. Widening only the
+# fail side would trade that gap for another: `☑ passed` would stop being read
+# as a pass, so `companion_report_advisories` would skip the FR-005 report check
+# on it. Bounded there on purpose: `failing`, `failure` and every prose variant
+# belong in the Notes cell, and `\b` after the optional `ed` is what keeps them
+# out.
+CHECKED_FAIL_PATTERN = re.compile(r"☑\s*\**\s*fail(?:ed)?\b", re.IGNORECASE)
+CHECKED_PASS_PATTERN = re.compile(r"☑\s*\**\s*pass(?:ed)?\b", re.IGNORECASE)
 
 # The verifier report a `pass` row cites, read after a literal `report:` label.
 #
