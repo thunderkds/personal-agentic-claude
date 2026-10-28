@@ -12,6 +12,7 @@ complete before code ships.
 import json
 import os
 import re
+import shlex
 import subprocess
 import sys
 
@@ -590,6 +591,211 @@ def companion_report_advisories(task_id, tasks_dir=None):
     return []
 
 
+# --- Which task a `git push` touches (T197) ---------------------------------
+#
+# Until T197 `main()` checked the whole board on every trigger, so one task parked
+# in Ready for Review by another live session refused every other session's push.
+# Now a `git push` of one task's branch is judged by that task alone (D3), and
+# `pushed_task_ids` is the only thing that decides "one task's branch".
+#
+# **This loosens a fail-closed gate, so the resolver is built the other way
+# round: it says which task only when it can prove it, and returns None on every
+# doubt.** None leaves `main()` exactly as it was — the whole board (D2). It
+# reads the branch from the command, never from the board (D1):
+#   * the source ref the command names (`src:dst` → `src`), or for `HEAD` or no
+#     refspec, the current branch of the directory the push runs in — the event's
+#     `cwd`, moved by a leading `cd <dir> &&` or `git -C <dir>`;
+#   * that name must hold exactly one whole task ID (`feat/t9000-x` is T9000, never
+#     T900; `plan/t190-t194` is two IDs, so None), and `main()` then also requires
+#     the ID to be on the board.
+# Everything else is None, by allowlist, never by denylist: an unknown option
+# (`--all`, `--mirror`, `--tags`, `-o`), a tag, a deletion, a destination that is
+# not the same task (`HEAD:main`, `release/*`), `git merge`/`rebase` anywhere in the
+# command (D4), any segment that is not `cd`, a read-only `git` subcommand or a
+# pipe reader of the push's output, `$`/backticks/subshells/unknown redirections,
+# a `cd` whose effect is not certain (`||`, `;`, a pipe, `~`), a detached HEAD, a
+# git that fails or takes over 5 s, and push config that can move the destination
+# (`remote.*.push`, `remote.*.mirror`, a `push.default` other than simple/current).
+#
+# Tokenized with stdlib `shlex` — a tokenizer, not a shell parser — with
+# **comments switched off**: shlex reads `#` mid-word as a comment and would drop
+# a following line, so `... feat/t900-x #x` + newline + a push of main would read
+# as one scoped push. Seeing more text than bash runs can only make this global.
+#
+# Stated trust boundary: the scoping trusts the branch name. A branch that lies
+# about its task (T901's work on `feat/t900-x`) is checked against T900, and the
+# push still needs T900's own evidence; it no longer needs T901's.
+PUSH_SEPARATORS = frozenset({";", "&&", "||", "|", "&"})
+SHELL_PUNCTUATION = frozenset("();<>|&")
+
+# The two redirections agents append to a push. Removed before tokenizing; any
+# other `<`/`>` survives as a token and makes the command unresolved.
+OUTPUT_REDIRECT_PATTERN = re.compile(r"(?<!\S)(?:[12]?>&[12]|(?:[12]|&)?>>?\s*/dev/null)(?!\S)")
+
+SAFE_REF_PATTERN = re.compile(r"[A-Za-z0-9._/-]+")
+SAFE_PATH_PATTERN = re.compile(r"[A-Za-z0-9._/+-]+")  # no `~`, `$` or glob: no expansion
+GLOBAL_REF_ROOTS = frozenset({"release", "integration"})
+
+# Subcommands that cannot change which branch is checked out or merge anything. Never
+# add `merge` or `rebase` here: their absence is how D4 keeps a merge on the whole board.
+SAFE_GIT_SUBCOMMANDS = frozenset({"add", "commit", "status", "log", "diff", "show", "fetch"})
+PIPE_READERS = frozenset({"tail", "head", "cat", "grep", "wc"})
+SCOPED_PUSH_FLAGS = frozenset({
+    "-u", "--set-upstream", "-f", "--force", "--force-with-lease", "--force-if-includes",
+    "-n", "--dry-run", "-v", "--verbose", "-q", "--quiet", "--no-verify", "--progress",
+})
+SAFE_PUSH_DEFAULTS = frozenset({"simple", "current"})
+PUSH_CONFIG_KEYS = r"^(push\.default|remote\..*\.(push|mirror))$"
+
+
+def _git(directory, *args):
+    """`git -C <directory> <args>` with the 5-second timeout, or None on any failure."""
+    try:
+        return subprocess.run(["git", "-C", directory, *args], capture_output=True,
+                              text=True, timeout=GIT_WORKTREE_TIMEOUT_S)
+    except Exception:
+        return None
+
+
+def _current_branch(directory):
+    """The branch checked out in `directory`; None when detached, not a repo, or git failed."""
+    done = _git(directory, "rev-parse", "--abbrev-ref", "HEAD")
+    if done is None or done.returncode != 0:
+        return None
+    name = done.stdout.strip()
+    return name if name and name != "HEAD" else None
+
+
+def _push_config_is_plain(directory):
+    """True only when no config in `directory` can send a push somewhere its refspec
+    does not say: no `remote.*.push`, no `remote.*.mirror`, `push.default` simple/current."""
+    done = _git(directory, "config", "--get-regexp", PUSH_CONFIG_KEYS)
+    if done is None:
+        return False
+    if done.returncode == 1 and not done.stdout.strip():
+        return True  # none of the keys is set
+    if done.returncode != 0:
+        return False
+    for line in done.stdout.splitlines():
+        key, _, value = line.partition(" ")
+        if key.lower() != "push.default" or value.strip().lower() not in SAFE_PUSH_DEFAULTS:
+            return False
+    return True
+
+
+def _ref_task_id(name, id_regex):
+    """The one task ID a branch name holds, upper-cased, or None."""
+    if name.startswith("refs/heads/"):
+        name = name[len("refs/heads/"):]
+    if (not SAFE_REF_PATTERN.fullmatch(name) or name.startswith("refs/")
+            or name.split("/")[0].lower() in GLOBAL_REF_ROOTS):
+        return None
+    ids = {match.group(0).upper() for match in id_regex.finditer(name)}
+    return ids.pop() if len(ids) == 1 else None
+
+
+def _push_task_id(args, directory, id_regex):
+    """The one task a single `git push <args>` run in `directory` pushes, or None."""
+    if directory is None:
+        return None
+    positionals = []
+    for arg in args:
+        if arg.startswith("-"):
+            if arg in SCOPED_PUSH_FLAGS or arg.startswith("--force-with-lease="):
+                continue
+            return None
+        positionals.append(arg)
+    branch = _current_branch(directory)
+    if branch is None or not _push_config_is_plain(directory):
+        return None
+    ids = set()
+    for spec in positionals[1:] or ["HEAD"]:  # positionals[0] is the remote
+        src, colon, dst = (spec[1:] if spec.startswith("+") else spec).partition(":")
+        # Only the source may be `HEAD` (the current branch); an empty source is a delete.
+        names = [branch if src == "HEAD" else src] + ([dst] if colon else [])
+        for name in names:
+            task_id = _ref_task_id(name, id_regex)
+            if task_id is None:
+                return None
+            ids.add(task_id)
+    return ids.pop() if len(ids) == 1 else None
+
+
+def _command_segments(command):
+    """`[(tokens, separator before, separator after)]` for each simple command, or None
+    when the text holds anything this resolver does not read."""
+    text = OUTPUT_REDIRECT_PATTERN.sub(" ", strip_heredoc_bodies(command)).replace("\n", " ; ")
+    lexer = shlex.shlex(text, posix=True, punctuation_chars=True)
+    lexer.whitespace_split = True
+    lexer.commenters = ""
+    try:
+        tokens = list(lexer)
+    except ValueError:
+        return None
+    segments, current, before = [], [], None
+    for token in tokens:
+        if token in PUSH_SEPARATORS:
+            segments.append((current, before, token))
+            current, before = [], token
+        elif set(token) <= SHELL_PUNCTUATION or "$" in token or "`" in token:
+            return None
+        else:
+            current.append(token)
+    segments.append((current, before, None))
+    return [segment for segment in segments if segment[0]]
+
+
+def _resolve_pushed_task(command, cwd, id_pattern):
+    if not isinstance(command, str) or not isinstance(cwd, str) or not os.path.isabs(cwd):
+        return None
+    segments = _command_segments(command)
+    if not segments:
+        return None
+    id_regex = re.compile(id_pattern or task_id_pattern(ROOT, bounded=True), re.IGNORECASE)
+    directory, found, pushes = cwd, set(), 0
+    for tokens, before, after in segments:
+        head, args = tokens[0], tokens[1:]
+        if head == "cd":
+            # Only `cd <dir> &&` certainly runs the next command in <dir>.
+            certain = (len(args) == 1 and before in (None, ";", "&&") and after == "&&"
+                       and directory is not None and SAFE_PATH_PATTERN.fullmatch(args[0]))
+            directory = os.path.normpath(os.path.join(directory, args[0])) if certain else None
+            continue
+        if before == "|" and head in PIPE_READERS:
+            continue  # reads the push's output in a subshell; cannot move the push
+        if head != "git":
+            return None
+        where = directory
+        while args[:1] == ["-C"]:
+            if len(args) < 2 or where is None or not SAFE_PATH_PATTERN.fullmatch(args[1]):
+                return None
+            where, args = os.path.normpath(os.path.join(where, args[1])), args[2:]
+        if not args:
+            return None
+        if args[0] == "push":
+            task_id = _push_task_id(args[1:], where, id_regex)
+            if task_id is None:
+                return None
+            found.add(task_id)
+            pushes += 1
+        elif args[0] not in SAFE_GIT_SUBCOMMANDS:
+            return None
+    return found.pop() if pushes and len(found) == 1 else None
+
+
+def pushed_task_ids(command, cwd, id_pattern=None):
+    """The one task ID (upper-cased) that every `git push` in `command` pushes, or None.
+
+    None means "unresolved — check the whole board" and is the answer to every doubt;
+    see the T197 comment above. `cwd` is the event's own `cwd`. `id_pattern` is a
+    bounded regex source, defaulting to the board's (`task_id_pattern`). Never raises.
+    """
+    try:
+        return _resolve_pushed_task(command, cwd, id_pattern)
+    except Exception:
+        return None
+
+
 # --- What to actually do about an unattributed Bash call (T095 defect B) ----
 #
 # This gate used to end its block with "a Bash command is attributed to a task
@@ -722,6 +928,16 @@ def main():
         notes.extend(filter_notes)
         for note in filter_notes:
             print(f"[hook:pre_bash] {note}", file=sys.stderr)
+
+    # T197: a push of one task's branch is judged by that task alone, on top of the
+    # online filters above, never instead of them. An unresolved push, and an ID that
+    # is not on the board, keep the whole board (D2).
+    scoped = pushed_task_ids(command, event.get("cwd"))
+    board_ids = {m.upper() for m in re.findall(
+        rf"^\s*- .*?\*\*({id_pattern})\*\*", kanban, re.MULTILINE)}
+    if scoped is not None and scoped in board_ids:
+        in_progress = [tid for tid in in_progress if tid.upper() == scoped]
+        ready_review = [tid for tid in ready_review if tid.upper() == scoped]
 
     blockers = []
 

@@ -395,20 +395,32 @@ def test_edge_cd_into_main_from_a_task_worktree_is_global(gate):
 
 
 @pytest.mark.parametrize("command", [
-    "cd {main} || {push} origin HEAD",
-    "cd {main}; {push} origin HEAD",
-    "cd {main} | {push} origin HEAD",
+    "cd {wt} || {push} origin HEAD",
+    "cd {wt}; {push} origin HEAD",
+    "cd {wt} | {push} origin HEAD",
+    "cd {wt} & {push} origin HEAD",
+    "true || cd {wt} && {push} origin HEAD",
     "cd ~/x && {push} origin HEAD",
     "cd && {push} origin HEAD",
-    "pushd {main} && {push} origin HEAD",
-], ids=["or", "semicolon", "pipe", "tilde", "bare-cd", "pushd"])
+    "cd {wt} extra && {push} origin HEAD",
+    "pushd {wt} && {push} origin HEAD",
+], ids=["or", "semicolon", "pipe", "background", "after-or", "tilde", "bare-cd", "two-args",
+        "pushd"])
 def test_edge_a_directory_change_the_parser_cannot_prove_is_global(gate, command):
+    """The session sits in the main checkout on `main`; the `cd` names the T900 worktree.
+    In each of these bash may run the push in the main checkout, so it must not scope."""
     fx = gate()
     main_checkout = fx.repo("main-checkout", "main")
     wt = fx.repo("wt-t900", "feat/t900-x")
-    command = command.format(main=main_checkout, push=PUSH)
-    assert merge_gate.pushed_task_ids(command, wt) is None
-    blocks_on_t901_only_as_global(command, wt)
+    command = command.format(wt=wt, push=PUSH)
+    assert merge_gate.pushed_task_ids(command, main_checkout) is None
+    blocks_on_t901_only_as_global(command, main_checkout)
+
+
+def test_d4_merge_rebase_and_branch_moves_are_never_read_only_subcommands():
+    """D4 is enforced by the allowlist: a `git merge`/`rebase` segment is unresolved."""
+    for sub in ("merge", "rebase", "pull", "checkout", "switch", "reset", "worktree", "branch"):
+        assert sub not in merge_gate.SAFE_GIT_SUBCOMMANDS, sub
 
 
 @pytest.mark.parametrize("refspec", [
@@ -466,13 +478,25 @@ def test_edge_a_chain_that_pushes_one_task_stays_scoped(gate, command):
     "{push} origin feat/t900-x && {push} origin feat/t901-x",
     "{push} origin feat/t900-x | sh",
     "python3 -m pytest -q && {push} origin feat/t900-x",
-], ids=["checkout", "switch", "two-tasks", "pipe-to-shell", "unknown-command"])
+    'git commit -m "x $(git checkout main)" && {push} origin HEAD',
+    'git commit -m "x `git checkout main`" && {push} origin HEAD',
+], ids=["checkout", "switch", "two-tasks", "pipe-to-shell", "unknown-command",
+        "substitution-in-quotes", "backtick-in-quotes"])
 def test_edge_a_chain_with_any_unresolved_part_is_global(gate, command):
     fx = gate()
     cwd = fx.repo("wt-t900", "feat/t900-x")
     command = command.format(push=PUSH)
     assert merge_gate.pushed_task_ids(command, cwd) is None
     blocks_on_t901_only_as_global(command, cwd)
+
+
+@pytest.mark.parametrize("branch", ["release/t900-hotfix", "integration/t900", "Release/T900"])
+def test_edge_release_and_integration_branches_stay_global_even_with_one_id(gate, branch):
+    fx = gate()
+    cwd = fx.repo("wt", branch)
+    for command in (f"{PUSH} origin {branch}", f"{PUSH} origin HEAD"):
+        assert merge_gate.pushed_task_ids(command, cwd) is None
+        blocks_on_t901_only_as_global(command, cwd)
 
 
 def test_edge_id_not_on_the_board_is_global(gate):
