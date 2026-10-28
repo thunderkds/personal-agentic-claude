@@ -2905,3 +2905,7 @@ highest ID anywhere, not only `PROJECT_KANBAN.md` on the checked-out branch. Ren
   and the push. The fast-forward failed; the release branch merged `github/main` (one test-file conflict, both blocks
   kept), re-ran every check, and the user approved the new commit `45b6957`. Fetch and check `HEAD..github/main` is
   empty right before tagging.
+
+
+### easy-memory `switch off` does not remove the MCP tools, so an on/off comparison can be contaminated
+`switch off` (or `auto` on an off day) only stops the prompt hook injecting the index. `memory_search`/`memory_read` stay callable, and an agent told to "check earlier notes" uses them anyway (seen 2026-10-28: the off run called `memory_search`). Do not tell agents to check memory in a prompt you want to measure as "off"; read `easy_memory.py report` for the on/off comparison, not a single paired run. Related: T195.
