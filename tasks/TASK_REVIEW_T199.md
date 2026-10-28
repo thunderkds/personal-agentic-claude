@@ -53,6 +53,17 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 ---
 
+### Addendum Evidence (Supervisor, 2026-10-28, scope addendum AC 11 to 14)
+
+| Check | Result | Notes |
+|-------|--------|-------|
+| AC 11: no sideways scroll at 768, 800, 899 px | pass | Supervisor re-measured in headless Chrome over HTTP: client widths 768, 800, 899 give `scrollWidth` equal to `clientWidth` (also 485 px) |
+| AC 12: `nowrap` kept at 900 px and wider | pass | computed `white-space` is `nowrap` at client widths 899, 1000 and 1280, `normal` at 768 and 800 |
+| AC 13: new test and mutation M5 | pass | `test_hooks_first_two_columns_only_refuse_to_wrap_from_900px`; agent run: M5 (900px back to 768px) RED `assert 768 >= 900`, revert green |
+| AC 14: existing tests intact | pass | `python3 -m pytest tests -q -x` passed in the worktree; the T167 test still passes |
+| Deviation | accepted | The guide blamed `nowrap` alone. The agent measured the real cause: the table's minimum width was 554 px (unbreakable `Edit\|Write\|Bash` plus cell padding), so it also added `<wbr>` after each `\|` and tighter cell padding at 768 to 899 px. No `overflow-x`, no `min-width` (T167 rule kept) |
+| /verify of the addendum | pending | The user's `/verify T199` covered the card. The addendum is verified by Supervisor measurement only; run `/verify T199` again before this branch merges into `main` |
+
 ## Demonstration
 
 > Anchors what this task delivered to an observable before/after pair. BEFORE has no `N/A` path:
