@@ -115,9 +115,10 @@ any merge: the user runs `/verify`, then the Supervisor moves the row to Done an
 - `pre_bash_block_unsafe_merge.py` — blocks every merge, and every push of the task's own branch, while the
   row is In Progress or Ready for Review. A Decision record is not Evidence, so the row reads
   `(no evidence row)`. The `Track: minimal` marker exempts nothing. Since T197 a push of a branch that names
-  exactly one task on the board is judged by that task alone: another session's open task does not block
-  it. A merge, and every push the hook cannot tie to one task (`main`, `release/*`, `--all`, a tag, two IDs
-  in the branch name, an unclear `cd`), checks the whole board.
+  exactly one task in In Progress or Ready for Review is judged by that task alone: another session's open
+  task does not block it. A merge, a push of a branch named after a Todo, Done or absent task, and every
+  push the hook cannot tie to one task (`main`, `release/*`, `--all`, a tag, two IDs in the branch name, an
+  unclear `cd`, a `&`, an option it does not know), check the whole board.
 - `pre_agent_step_limit.py` — counts the task's calls by the active-task state from step 1, with the same
   limit as any task. A call with no task stays uncounted.
 - `post_write_register_task.py` — fires only on a `TASK_GUIDE_*.md` write, so a write to

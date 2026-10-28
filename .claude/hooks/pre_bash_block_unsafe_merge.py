@@ -607,26 +607,38 @@ def companion_report_advisories(task_id, tasks_dir=None):
 #     `cwd`, moved by a leading `cd <dir> &&` or `git -C <dir>`;
 #   * that name must hold exactly one whole task ID (`feat/t9000-x` is T9000, never
 #     T900; `plan/t190-t194` is two IDs, so None), and `main()` then also requires
-#     the ID to be on the board.
+#     that task to be one it checks: a row in In Progress or Ready for Review that the
+#     online filters kept. Any other task keeps the whole board.
 # Everything else is None, by allowlist, never by denylist: an unknown option
-# (`--all`, `--mirror`, `--tags`, `-o`), a tag, a deletion, a destination that is
-# not the same task (`HEAD:main`, `release/*`), `git merge`/`rebase` anywhere in the
-# command (D4), any segment that is not `cd`, a read-only `git` subcommand or a
-# pipe reader of the push's output, `$`/backticks/subshells/unknown redirections,
-# a `cd` whose effect is not certain (`||`, `;`, a pipe, `~`), a detached HEAD, a
-# git that fails or takes over 5 s, and push config that can move the destination
-# (`remote.*.push`, `remote.*.mirror`, a `push.default` other than simple/current).
+# (`--all`, `--mirror`, `--tags`, `-o`), a remote that is not a plain name (bash
+# expands `{origin,--all}` to `origin --all`), a tag, a deletion, a destination that
+# is not the same task (`HEAD:main`, `release/*`), `git merge`/`rebase` anywhere in
+# the command (D4), any segment that is not `cd`, a read-only `git` subcommand with
+# only its allowlisted options, or a pipe reader of the push's output, a `&` anywhere
+# (a backgrounded `cd` does not move the push), `$`/backticks/subshells/unknown
+# redirections, a `{` or `}` anywhere (brace expansion can turn a word into an
+# option), a glob in a path argument, a `cd` whose effect is not certain (`||`, `;`,
+# a pipe, `~`), a detached HEAD, a git that fails or takes over 5 s, and push config
+# that can move the destination (`remote.*.push`, `remote.*.mirror`, a
+# `push.default` other than simple/current).
 #
 # Tokenized with stdlib `shlex` — a tokenizer, not a shell parser — with
 # **comments switched off**: shlex reads `#` mid-word as a comment and would drop
 # a following line, so `... feat/t900-x #x` + newline + a push of main would read
 # as one scoped push. Seeing more text than bash runs can only make this global.
 #
-# Stated trust boundary: the scoping trusts the branch name. A branch that lies
-# about its task (T901's work on `feat/t900-x`) is checked against T900, and the
-# push still needs T900's own evidence; it no longer needs T901's.
-PUSH_SEPARATORS = frozenset({";", "&&", "||", "|", "&"})
+# Stated trust boundaries, both residual:
+#   * The scoping trusts the branch name. T901's work pushed on `feat/t900-x` is
+#     checked against T900 when T900 is itself in In Progress or Ready for Review,
+#     so it needs T900's evidence and no longer T901's. When T900 is in neither, the
+#     push checks the whole board, T901 included.
+#   * `git commit` can run the repo's own hooks, which run code no name check sees
+#     (they could switch the branch before the push reads `HEAD`).
+PUSH_SEPARATORS = frozenset({";", "&&", "||", "|"})  # `&` is not here: it is a None
 SHELL_PUNCTUATION = frozenset("();<>|&")
+EXPANSION_CHARS = frozenset("{}$`")  # brace, parameter and command expansion
+GLOB_CHARS = frozenset("*?[")
+REMOTE_NAME_PATTERN = re.compile(r"[A-Za-z0-9._-]+")
 
 # The two redirections agents append to a push. Removed before tokenizing; any
 # other `<`/`>` survives as a token and makes the command unresolved.
@@ -636,9 +648,23 @@ SAFE_REF_PATTERN = re.compile(r"[A-Za-z0-9._/-]+")
 SAFE_PATH_PATTERN = re.compile(r"[A-Za-z0-9._/+-]+")  # no `~`, `$` or glob: no expansion
 GLOBAL_REF_ROOTS = frozenset({"release", "integration"})
 
-# Subcommands that cannot change which branch is checked out or merge anything. Never
-# add `merge` or `rebase` here: their absence is how D4 keeps a merge on the whole board.
-SAFE_GIT_SUBCOMMANDS = frozenset({"add", "commit", "status", "log", "diff", "show", "fetch"})
+# Subcommands that cannot change which branch is checked out or merge anything, each
+# with the only options it may carry. Never add `merge` or `rebase`: their absence is
+# how D4 keeps a merge on the whole board. `fetch` is out: `--upload-pack` runs a
+# command. Any other `-` token is None, so `--output=<path>` cannot rewrite `.git/HEAD`.
+SAFE_GIT_OPTIONS = {
+    "add": frozenset({"-A", "-a", "--all", "-u"}),
+    "commit": frozenset({"-m", "-a", "-am", "--amend", "--no-edit", "-q", "-s", "--signoff",
+                         "--no-verify"}),
+    "status": frozenset({"-s", "--short", "-b", "--branch", "--porcelain"}),
+    "log": frozenset({"--oneline", "-n", "--stat", "--graph"}),
+    "diff": frozenset({"--stat", "--name-only", "--name-status", "--cached", "--staged",
+                       "--shortstat"}),
+    "show": frozenset({"--stat", "--name-only", "--oneline", "-s"}),
+}
+SAFE_GIT_SUBCOMMANDS = frozenset(SAFE_GIT_OPTIONS)
+MESSAGE_OPTIONS = frozenset({"-m", "-am"})  # `git commit`: the next token is the message
+LOG_COUNT_PATTERN = re.compile(r"-\d+")
 PIPE_READERS = frozenset({"tail", "head", "cat", "grep", "wc"})
 SCOPED_PUSH_FLAGS = frozenset({
     "-u", "--set-upstream", "-f", "--force", "--force-with-lease", "--force-if-includes",
@@ -705,6 +731,8 @@ def _push_task_id(args, directory, id_regex):
                 continue
             return None
         positionals.append(arg)
+    if positionals and not REMOTE_NAME_PATTERN.fullmatch(positionals[0]):
+        return None  # a URL, a path, or a word bash expands (`{origin,--all}`)
     branch = _current_branch(directory)
     if branch is None or not _push_config_is_plain(directory):
         return None
@@ -719,6 +747,27 @@ def _push_task_id(args, directory, id_regex):
                 return None
             ids.add(task_id)
     return ids.pop() if len(ids) == 1 else None
+
+
+def _read_only_git_args_ok(subcommand, args):
+    """True only when every option is on `subcommand`'s allowlist and no path argument
+    carries a glob (a file named `--output=.git/HEAD` would expand into an option).
+    A commit message is the token after `-m`/`-am`; it may hold a glob, never a `-`."""
+    allowed = SAFE_GIT_OPTIONS[subcommand]
+    index = 0
+    while index < len(args):
+        arg = args[index]
+        if arg.startswith("-"):
+            if arg not in allowed and not (subcommand == "log" and LOG_COUNT_PATTERN.fullmatch(arg)):
+                return False
+            if subcommand == "commit" and arg in MESSAGE_OPTIONS:
+                index += 1
+                if index >= len(args) or args[index].startswith("-"):
+                    return False
+        elif GLOB_CHARS & set(arg):
+            return False
+        index += 1
+    return True
 
 
 def _command_segments(command):
@@ -737,8 +786,8 @@ def _command_segments(command):
         if token in PUSH_SEPARATORS:
             segments.append((current, before, token))
             current, before = [], token
-        elif set(token) <= SHELL_PUNCTUATION or "$" in token or "`" in token:
-            return None
+        elif set(token) <= SHELL_PUNCTUATION or EXPANSION_CHARS & set(token):
+            return None  # `&` lands here too: a background job never moves the push
         else:
             current.append(token)
     segments.append((current, before, None))
@@ -778,7 +827,7 @@ def _resolve_pushed_task(command, cwd, id_pattern):
                 return None
             found.add(task_id)
             pushes += 1
-        elif args[0] not in SAFE_GIT_SUBCOMMANDS:
+        elif args[0] not in SAFE_GIT_SUBCOMMANDS or not _read_only_git_args_ok(args[0], args[1:]):
             return None
     return found.pop() if pushes and len(found) == 1 else None
 
@@ -930,12 +979,14 @@ def main():
             print(f"[hook:pre_bash] {note}", file=sys.stderr)
 
     # T197: a push of one task's branch is judged by that task alone, on top of the
-    # online filters above, never instead of them. An unresolved push, and an ID that
-    # is not on the board, keep the whole board (D2).
+    # online filters above, never instead of them. It narrows only when that task is
+    # one the gate checks — its row is in In Progress or Ready for Review, and online
+    # the filters kept it. Narrowing to any other task (Todo, Done, outside the two
+    # lanes, a teammate's row) would empty both lists, so a branch named after it
+    # would meet no check at all (Stage 4 finding 4; D3 as revised). An unresolved
+    # push, and every such task, keep the whole board (D2).
     scoped = pushed_task_ids(command, event.get("cwd"))
-    board_ids = {m.upper() for m in re.findall(
-        rf"^\s*- .*?\*\*({id_pattern})\*\*", kanban, re.MULTILINE)}
-    if scoped is not None and scoped in board_ids:
+    if scoped is not None and scoped in {tid.upper() for tid in [*in_progress, *ready_review]}:
         in_progress = [tid for tid in in_progress if tid.upper() == scoped]
         ready_review = [tid for tid in ready_review if tid.upper() == scoped]
 

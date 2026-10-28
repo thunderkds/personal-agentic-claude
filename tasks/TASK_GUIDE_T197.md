@@ -85,7 +85,7 @@ Design decisions are made here by the Supervisor. The agent does not reopen them
 
 **D2. Unresolved means global.** Every failure of D1 (no branch, detached HEAD, git absent, timeout, unparsable command, `main`, `release/*`, `--all`, `--mirror`, a tag, a task ID that is not on the board) keeps today's check over the whole board. Fail closed, as the rest of this file does.
 
-**D3. A scoped push checks only the pushed task**, in both sections: if it is In Progress it blocks; if it is Ready for Review it needs the verify evidence and the T190 companion-row rules. Other tasks in either section are ignored. A scoped push of a task that is Todo, Done or absent from the board is allowed by the board check, since the branch is not a pending review.
+**D3. A scoped push checks only the pushed task**, in both sections: if it is In Progress it blocks; if it is Ready for Review it needs the verify evidence and the T190 companion-row rules. Other tasks in either section are ignored. The push narrows only when the pushed task is one the gate checks: its row is in `### In Progress` or `### Ready for Review` (and, in board mode `online`, the filters kept it). A push of a task that is Todo, Done, outside those two lanes, or absent from the board narrows nothing: the whole board is checked. *(Revised 2026-10-28 by the Supervisor after the Stage 4 security-review, finding 4, and a 3-Advocate Debate. The first text allowed a Todo/Done/absent task's push, and that emptied both lists, so a branch named after a Done task met no check at all.)*
 
 **D4. `git merge` and every non-push trigger are not scoped** (see Out of scope).
 
@@ -95,9 +95,9 @@ Design decisions are made here by the Supervisor. The agent does not reopen them
 | 2 | Same fixture, `git push origin feat/t901-x` -> blocked, and the reason names `T901` and not `T900` | Restated intent |
 | 3 | Same fixture, `git push origin main` -> blocked, naming `T901`. This is today's output, byte for byte | Restated intent, second sentence |
 | 4 | **Negative case:** a branch naming two IDs (`plan/t900-t901-x`) -> whole-board check, blocked on `T901` | D1.3, D2 |
-| 5 | **Negative case:** a scoped push of T900 with T900 itself In Progress -> blocked | D3 |
-| 6 | **Negative case:** a scoped push of T900 whose own companion row reads `☑ fail` -> blocked (T190 rule still binds the pushed task) | D3 |
-| 7 | **Negative case:** `git push` with no refspec, `cwd` on branch `feat/t900-x` -> scoped to T900. With `cwd` not a git repo, or a detached HEAD -> whole board | D1.2, D2 |
+| 5 | **Negative case:** a scoped push of T900 with T900 itself In Progress -> blocked. With T900 in Todo, Done or outside the two lanes, and T901 unverified -> whole board, blocked on `T901` | D3 |
+| 6 | **Negative case:** a scoped push of T900 (in Ready for Review) whose own companion row reads `☑ fail` -> blocked (T190 rule still binds the pushed task) | D3 |
+| 7 | **Negative case:** `git push` with no refspec, `cwd` on branch `feat/t900-x`, T900 in Ready for Review -> scoped to T900. With `cwd` not a git repo, or a detached HEAD -> whole board | D1.2, D2, D3 |
 | 8 | **Negative case:** `git merge feat/t900-x` with T901 unverified -> blocked, naming `T901` | D4 |
 | 9 | **Negative case:** `git push --all`, `git push --mirror`, `git push origin v1.0` (tag) -> whole board | D2 |
 | 10 | **Negative case:** a branch name that merely contains a task-like string inside a longer word (`feat/fix-t9000-typo` against board IDs T900/T9000, `feat/cat900`) resolves only on a whole-ID match, never a substring | D1.3 |
