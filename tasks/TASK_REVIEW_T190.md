@@ -97,9 +97,66 @@ $ grep -c "has_failed_companion_row" .claude/hooks/pre_bash_block_unsafe_merge.p
 
 A `☑ fail` Companion score row on a Ready-for-Review task passes the gate: the push is allowed.
 
-**AFTER**: [same command, post-change]
+**AFTER**: captured at `2026-10-28T05:43:53Z` at `62bc352`.
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```
+AFTER capture: 2026-10-28T05:43:53Z
+HEAD: 62bc352
 
-**WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
-implementing agent alone]
+$ python3 -m pytest .claude/hooks/tests/test_merge_gate_companion_rows.py -q
+..........................................                               [100%]
+42 passed in 0.06s
+
+$ python3 -m pytest .claude/hooks/tests/ -q
+=========================== short test summary info ============================
+FAILED .claude/hooks/tests/test_guide_sections.py::test_ac1_moved_evidence_rows_are_byte_identical_to_the_baseline
+FAILED .claude/hooks/tests/test_stop_auto_mode_check.py::test_merge_gate_is_untouched
+2 failed, 957 passed, 25 subtests passed in 20.95s
+
+$ sh scripts/validate.sh | tail -2
+validate.sh: PASS
+
+$ grep -c "Companion score" templates/TASK_REVIEW_template.md
+1
+$ grep -c "has_failed_companion_row" .claude/hooks/pre_bash_block_unsafe_merge.py
+2
+```
+
+The two failures are PRE-EXISTING scope guards, left untouched and escalated — see the report.
+
+End-to-end run of the shipped hook as a real subprocess, real stdin, at
+`2026-10-28T05:45:11Z` (`/tmp/claude-1000/.../scratchpad/t190_e2e.sh`, a constructed
+repo with the hook tree copied in; `git push origin feat/t900` as the tool_input):
+
+```
+1) no companion row at all -> allowed (silent)
+  [exit 0]
+
+2) the Companion score row reads a checked fail -> blocked
+{"decision": "block", "reason": "[hook:pre_bash] Pipeline gate failed — cannot push/merge:
+  • Tasks in Ready for Review with an Evidence row marked fail: T900 (Companion score) ...
+  [exit 0]
+
+3) the same row rewritten to N/A -> allowed again
+  [exit 0]
+
+4) a UI design row reads a checked fail -> blocked
+{"decision": "block", "reason": "... Tasks in Ready for Review with an Evidence row marked fail: T900 (UI: Responsiveness) ...
+  [exit 0]
+
+5) a pass row citing a report that does not exist -> allowed, one advisory on stderr
+[hook:pre_bash] T900 Companion score row reads pass but the verifier report it cites is not a
+file on disk: /nonexistent/score.html — that row is unscored, not a pass (FR-005).
+  [exit 0]
+```
+
+**DELTA**: A reviewer can now stop a merge by writing `☑ fail` in a task's Companion score row or
+in any of its three UI design rows, and a machine that runs neither companion tool sees no change
+at all — same decision, byte for byte.
+
+**WITNESS**: Run by the `common-infrastructure` agent on 2026-10-28 (05:40:05Z BEFORE, 05:43:53Z
+AFTER, 05:45:11Z end-to-end) in `/home/hungnguyenhuu/workspace/pets/wt-t190-gate`. Trace:
+`memory/event-trace/T190.jsonl` carries the BEFORE-side runs; the runs after 05:40:25Z are
+attributed to `T188.jsonl`, because another live session overwrote the shared
+`.claude/hooks/.state/active_task` with its own task ID mid-run. A second witness is still owed:
+the real `git push` refused by a real failed row is Stage 5 `/verify`, which is the user's to run.
