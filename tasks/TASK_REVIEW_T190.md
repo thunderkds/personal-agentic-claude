@@ -39,17 +39,21 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 ## Evidence
 
+> Filled by the Supervisor at Stage 4, 2026-10-28. Every output below was re-run by the Supervisor in
+> this worktree, not copied from the implementing agent's report.
+
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_merge_gate_companion_rows.py` (46 cases, AC 1-7) and `.claude/hooks/tests/data/t190_pre_change_gate_output.txt` (the AC-4 oracle, captured from the unchanged hook at 05:39:25Z and committed in `7dab0e9` **before** the implementation existed). Two anti-vacuity stubs: neutralising `failed_companion_rows` turns the blocking scenario back to allowed, and neutralising `companion_report_advisories` silences the advisory, so neither test is green with and without the change. `.claude/hooks/tests/test_guide_sections.py` gains `test_the_evidence_row_subsequence_check_rejects_a_changed_row`, which mutation-proves the relaxed T064 guard against the real baseline rows. |
+| Verification command run | ☑ pass | The guide's exact chain, re-run by the Supervisor: `964 passed, 25 subtests passed` (hooks), `846 passed` (tests), `validate.sh: PASS`. Baselines before the task: `917 passed, 25 subtests` and `846 passed` — so +47 hook tests and no change to `tests/`. |
+| Negative cases hold | ☑ pass | AC 6: `no failures observed`, `the M2 mutation must fail`, a bare `fail`, and a checked-fail token inside a **Notes** cell are all inert — the verdict is read from the Result cell of a pipe-delimited row, never as a substring (the T044 defect, re-aimed). AC 7: a failed row on a task under `### Done`, under `### Todo`, absent from the board, or on a non-git command does not block. Stage 4 P1 regression, re-run by the Supervisor against the shipped function: a Notes cell containing the decoy `` `scripts/validate.sh` `` with no `report:` label yields `None` (the decoy is a real file on disk — asserted — so this proves the FR-005 check cannot be silenced by an unrelated existing path). |
+| verify | ☐ | NOT RUN. `/verify` is the user's to invoke (recorded in memory as user-only), and the Supervisor does not tick this row on their behalf. The merge gate correctly refuses the push while this row is unfilled. Surface for when it is run: create a fixture task in Ready for Review with a checked-fail Companion score row, attempt a real `git push`, observe the block, rewrite the row to `☑ N/A`, attempt again. |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Scope was the 9 changed files plus direct callers of the changed functions. `python3 scripts/lane_check.py tasks/TASK_GUIDE_T190.md plan/t190-t194-companion-scoring...HEAD` → `lane: C2, 8 files, 1146 lines, EXCEEDS (lines 1146 > 500)` with no `unpredicted:` set after the P2 fix. The EXCEEDS is recorded, not re-labelled: 662 of those lines are the single new test file. |
+| Full smoke suite still green (no regression) | ☑ pass | `964 passed, 25 subtests passed` and `846 passed`, clean working tree. Three pre-existing guards failed mid-task and were widened with the user's explicit authorisation (`9d99aa8`); `BASE_REF` was deliberately not repointed in either copy, so an unnamed or uncommitted change to the merge gate still fails. Live-repo regression check across all 174 real task files in `tasks/`: `tasks that would now block: []`, `advisories: []`. |
+| **Companion score (easy-verifier)** | ☑ N/A | The feature this task builds cannot score this task: `skills/score/SKILL.md` ships in T191 and no easy-verifier server is registered or installed on this machine. Per FR-006 an `N/A` row never blocks, and per FR-014 a machine with neither companion tool behaves exactly as it did before this feature. Written here deliberately rather than omitted, as the first use of the row's own convention. |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | Pure-hook task. The change is Python in `.claude/hooks/` plus Markdown template text; it renders nothing and has no UI component. |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | Same reason — no rendered surface exists for this change. |
+| **UI: Responsiveness at target viewports** | ☑ N/A | Same reason — no rendered surface exists for this change. |
 
 ---
 
