@@ -53,18 +53,37 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 ### Decisions worth the reviewer's eye
 
-1. **The merge-gate commit names T182 in its subject, and neither guard test was edited.** Two tests
-   require that every commit since `effd395` touching `.claude/hooks/pre_bash_block_unsafe_merge.py`
-   names T182 in its **subject** (`--format=%s`), and that nothing is left uncommitted:
+1. **The merge-gate tripwire is now an explicit allowlist, and it is tested (Stage 4 P2, fixed).**
+   Two tests assert that only an authorised task has changed
+   `.claude/hooks/pre_bash_block_unsafe_merge.py`:
    `.claude/hooks/tests/test_stop_auto_mode_check.py::test_merge_gate_is_untouched` and
-   `tests/test_auto_mode.py::test_ac4_merge_gate_file_is_unchanged`. T188's AC 5 requires changing
-   that file, while AC 1 requires `test_stop_auto_mode_check.py` to stay green **unchanged** — read
-   literally, the two pull against each other. The resolution sacrifices neither: the change *is*
-   T182's own D5 run-record rule carried to the second track, so the commit subject says so
-   (`feat(T188): … T182's D5 record rule now covers a Decision record's verify: line`). Both guards
-   pass untouched and the lineage is in the git log rather than in a widened test. **If the
-   Supervisor would rather the guard name T188 explicitly, that is a one-line change to each test
-   and this commit can be reworded.**
+   `tests/test_auto_mode.py::test_ac4_merge_gate_file_is_unchanged`. Both read
+   `all("T182" in subject ...)` — one ID, as a bare substring. T188 had to change that file (AC 5),
+   its commit subject names both T188 and T182, and the check passed; but it would then equally pass
+   for any later commit that merely *mentioned* T182 while changing the gate, which is the one thing
+   the check exists to catch. Fixed as the reviewer directed, with the commit subject left as it is:
+   - `.claude/hooks/tests/merge_gate_guard.py` (**new**) holds the rule **once**, as
+     `AUTHORISED_TASKS = ("T182", "T188")` with the rule each task owns in the gate recorded beside
+     its ID, matched whole (`\bT182\b`), plus the unchanged pending-change check. Both suites call
+     it; the duplicated helper is gone from both. A task that must touch the gate adds its ID with
+     the Supervisor's sign-off — that edit is the audit trail.
+   - `.claude/hooks/tests/test_merge_gate_guard.py` (**new**, 10 tests) is the part that was missing
+     all along: proof that the tripwire **rejects** something. An unauthorised commit is reported;
+     so is one unauthorised commit among authorised ones, an uncommitted change, and a `base_ref`
+     that does not resolve (fails closed). Before this, the guard had never rejected anything —
+     T044 defect C's lesson, in a second place.
+   - AC 1's "stays green unchanged" held where it was aimed: the 45 behaviour tests of
+     `test_stop_auto_mode_check.py` are untouched and green, and only its guard test moved onto the
+     shared helper.
+   - **Residual, stated plainly:** matching is still on the commit subject's text, so a commit
+     belonging to task T999 whose subject says "extends T182" would pass. Closing that needs the
+     subject's own `type(Txxx):` scope to be the authorised one. Not done — the reviewer specified
+     "every subject names at least one of them", and a stricter prefix rule could reject an
+     unconventional but honest subject. Say the word and it is a two-line change in one place now.
+
+   Both test names still read "untouched" / "is_unchanged" although the gate *was* changed by an
+   authorised task. They were left as they are (they are cited in T180's and T182's evidence); each
+   one's docstring and failure message now states the real rule.
 2. **A hand-typed `verify:` line in a Decision record counts for nothing** — including one claiming
    the user ran `/verify`. Before T188 a minimal-track task at Ready for Review always blocked the
    merge (no guide, no review file, so no Evidence section). Accepting only a hook-written line with
@@ -84,6 +103,27 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
   extended track cannot hit this (one file per task). No locking was added — the cut list rules out
   anything beyond the prescribed re-read.
 - The gate still **trusts that a recorded test command ran** (T044's own stated limit, unchanged).
+
+### Lane check (Stage 4 P3, recorded)
+
+```
+$ python3 scripts/lane_check.py tasks/TASK_GUIDE_T188.md main...HEAD
+lane: C2, 10 files, 1741 lines, EXCEEDS (lines 1741 > 500); unpredicted:
+  .claude/hooks/lib/verify_record.py, tasks/TASK_GUIDE_T188.md, tasks/TASK_GUIDE_T189.md
+```
+
+- **`.claude/hooks/lib/verify_record.py` was a real prediction miss** in the guide's
+  `## Files to Change (Predicted)` table, now added there with what changed in it. It is where the
+  change belonged: the D3 `verify:` line shape and the `Checked:` field are the record's shape, and
+  that module already owned the row's shape and the run record, so the writer hook and the merge
+  gate could keep reading one definition instead of two.
+- `tasks/TASK_GUIDE_T188.md` is this task's own guide (the Fidelity Gate tick, the Completion
+  Checklist, and the P3 table row) and `tasks/TASK_GUIDE_T189.md` arrived with the same planning
+  commit as this branch's base — neither is implementation surface.
+- **EXCEEDS is warn-only and the Supervisor is not relabelling the task.** Of the 1741 lines, 540 are
+  `tests/test_auto_verify.py` and 355 are the two task guides; the implementation itself is the new
+  reader plus edits to four files, and `stop_auto_mode_check.py` got *shorter* (428 → 322 lines)
+  because its discovery logic moved into the shared reader.
 
 -------|--------|------------------------|
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |

@@ -140,9 +140,10 @@ python3 -m pytest -q tests/test_auto_verify.py .claude/hooks/tests && python3 -m
 | `.claude/hooks/lib/auto_mode.py` | new: the one reader for auto-mode tasks, their track and their report file |
 | `.claude/hooks/stop_auto_verify.py` | use the reader; drop the `Track: minimal` exclusion; write the D3 line for a minimal task; rewrite the D7 report slot when the run ends |
 | `.claude/hooks/stop_auto_mode_check.py` | use the reader; behaviour unchanged |
+| `.claude/hooks/lib/verify_record.py` | **not predicted at Stage 2 (T188 P3)** — the D3 `verify:` line shape and the `Checked:` field live with the record and the row, not in a hook: `record_line`, `checked_field`, `record_verify_line`, `minimal_verify_line`, `MINIMAL_LOG_REL`, and an optional `report_rel` on `same_code` / `auto_row_confirmed` so a minimal task's result file is the one a commit may touch |
 | `.claude/hooks/pre_bash_block_unsafe_merge.py` | resolve a minimal-track `verify:` line under the T182 record rule |
 | `tests/test_auto_verify.py` | AC 2–6 |
-| `.claude/hooks/tests/test_merge_gate_evidence.py` | AC 5 |
+| `tests/test_auto_verify.py` (AC 5 end-to-end) and `.claude/hooks/tests/merge_gate_guard.py` + `test_merge_gate_guard.py` (**new, T188 P2**: the gate's authorised-task allowlist, defined once and now tested) | AC 5. `test_merge_gate_evidence.py` was predicted but not changed: it covers `trace_shows_verification`, while AC 5 needs a real git checkout, an anchor directory and a run record, which `tests/test_auto_verify.py` already has |
 | `docs/claude-md/tracks.md` | `### Auto verify (Stop hook)`: both tracks, and where each result lands |
 | `PROJECT_SPEC.md` | glossary: **Auto verify** on both tracks |
 
