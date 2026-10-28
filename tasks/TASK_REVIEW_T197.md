@@ -31,12 +31,12 @@ Not done: merge (yours); auto verify: running (T182)
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_merge_gate_push_scope.py` (new, 103 tests: AC 1-12 + Edge Case checklist + online mode + anti-vacuity), oracle `.claude/hooks/tests/data/t197_pre_change_gate_output.txt` captured from the unchanged hook and committed in `83f5891` before the hook edit (`9b295e9`). RED at `83f5891`: `67 failed, 27 passed in 1.45s` (2026-10-28T08:09:38Z). GREEN: `103 passed in 1.14s` |
-| Verification command run | ☑ pass | 2026-10-28T08:16:29Z, exact command from the guide: `103 passed in 1.14s` / `1089 passed, 25 subtests passed in 22.08s` / `validate.sh: PASS`. Also `python3 -m pytest tests/ -q` → `889 passed in 62.15s` |
-| Negative cases hold | ☑ pass | AC 4-11 each have a test that asserts the whole-board answer (`T901 (no evidence row)`): two IDs, own In Progress row, own `☑ fail` companion row, not-a-repo / detached / no `cwd`, merge and rebase, `--all`/`--mirror`/tag/`--tags`/delete, `cat900`/`t900x`/`t900_x`, heredoc/echo/`bash -c`/comment/`$(...)`/backtick/env prefix/wrapper. Mutation check (each guard removed in turn on a copy of the hook): every mutation turns the suite red |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_merge_gate_push_scope.py` (new, 131 tests: AC 1-12 + Edge Case checklist + online mode + the four Stage 4 security-review findings + anti-vacuity), oracle `.claude/hooks/tests/data/t197_pre_change_gate_output.txt` captured from the unchanged hook and committed in `83f5891` before the hook edit (`9b295e9`). First RED at `83f5891`: `67 failed, 27 passed in 1.45s` (2026-10-28T08:09:38Z), GREEN `103 passed`. Findings RED at `96bbc32` (hook unchanged since `9b295e9`): `25 failed, 106 passed in 1.90s` (2026-10-28T08:33:07Z); GREEN at `b379c3e`: `131 passed in 1.37s` |
+| Verification command run | ☑ pass | 2026-10-28T08:35:52Z at `b379c3e`, exact command from the guide: `131 passed in 1.37s` / `1117 passed, 25 subtests passed in 23.01s` / `validate.sh: PASS`. Also `python3 -m pytest tests/ -q` → `889 passed in 62.42s` |
+| Negative cases hold | ☑ pass | AC 4-11 each have a test that asserts the whole-board answer (`T901 (no evidence row)`): two IDs, own In Progress row, own `☑ fail` companion row, not-a-repo / detached / no `cwd`, merge and rebase, `--all`/`--mirror`/tag/`--tags`/delete, `cat900`/`t900x`/`t900_x`, heredoc/echo/`bash -c`/comment/`$(...)`/backtick/env prefix/wrapper. Stage 4 security-review findings, each a test that failed before `b379c3e`: (1) `git push {origin,--all}` / `{origin,--mirror}` / `{origin,--tags}` and path/URL remotes; (2) `cd <T-branch repo> && git status & git push origin` from `main`, and any `&`; (3) `git fetch --upload-pack='git merge feat/t901-y' . ; git push origin feat/t900-x`, `git diff/log --output=`, unknown options, `-m -x`, `{--stat,--output=.git/HEAD}`, `git log *`; (4) a branch named after a Todo / Done / lane-less task, and online a teammate's task the filter drops. Mutation check (each guard removed in turn on a copy of the hook): 19 mutations, all 19 killed |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | For the Stage 4 reviewer. Blast radius: `pre_bash_block_unsafe_merge.py` (new `pushed_task_ids` section + 9 lines in `main()`), the guard allowlist (`merge_gate_guard.py`, `test_merge_gate_guard.py`), `docs/claude-md/tracks.md` (two sentences + one paragraph). Every gate caller is this one hook |
-| Full smoke suite still green (no regression) | ☑ pass | `.claude/hooks/tests/` `1089 passed, 25 subtests passed`; `tests/` `889 passed`; no pre-existing test edited except the allowlist pin in `test_merge_gate_guard.py` |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | For the Stage 4 reviewer. Blast radius: `pre_bash_block_unsafe_merge.py` (new `pushed_task_ids` section + the narrowing in `main()`), the guard allowlist (`merge_gate_guard.py`, `test_merge_gate_guard.py`), `docs/claude-md/tracks.md` (two sentences + one paragraph). Every gate caller is this one hook |
+| Full smoke suite still green (no regression) | ☑ pass | `.claude/hooks/tests/` `1117 passed, 25 subtests passed`; `tests/` `889 passed`; no pre-existing test edited except the allowlist pin in `test_merge_gate_guard.py` |
 | **Companion score (easy-verifier)** | ☑ N/A | neither companion tool was run by the implementing agent |
 | **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | no UI component: a hook and its tests |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | no UI component |
@@ -96,11 +96,14 @@ $ python3 -m pytest .claude/hooks/tests/test_merge_gate_push_scope.py -q   # 202
 no tests ran in 0.00s
 ```
 
-**AFTER**: same script, same fixture, against the changed hook (`9b295e9`):
+**AFTER**: same script, same fixture, against the changed hook after the Stage 4 security-review fixes
+(`b379c3e`). The output is the same as the first AFTER run at `9b295e9` (2026-10-28T08:18:08Z). The four
+bypass commands the security-review reproduced now all resolve to "unresolved" (the whole board): see
+the `Negative cases hold` Evidence row.
 
 ```
-captured 2026-10-28T08:18:08Z
-hook: /home/hungnguyenhuu/workspace/pets/wt-t197/.claude/hooks/pre_bash_block_unsafe_merge.py @ 9b295e9
+captured 2026-10-28T08:37:26Z
+hook: /home/hungnguyenhuu/workspace/pets/wt-t197/.claude/hooks/pre_bash_block_unsafe_merge.py @ b379c3e
 
 $ git push origin feat/t900-x   (cwd: fixture repo on branch feat/t900-x)
 exit 0, empty stdout -> ALLOWED
@@ -161,8 +164,8 @@ run "git add -A && git commit -m 'wip' && git push -u origin feat/t900-x"
 no nested heredoc. The board text is the same.)
 
 **DELTA**: A session can now push its own verified task's branch while another session's task sits
-unverified in Ready for Review. `main`, merges, and any push the hook cannot tie to one task are still
-checked against the whole board.
+unverified in Ready for Review. `main`, merges, a branch named after a task that is not in In Progress or
+Ready for Review, and any push the hook cannot tie to one task are still checked against the whole board.
 
 **WITNESS**: pending. The implementing agent (common-infrastructure, T197) ran BEFORE at
 2026-10-28T08:04:54Z and AFTER at 2026-10-28T08:18:08Z (`memory/event-trace/T197.jsonl`). An independent
