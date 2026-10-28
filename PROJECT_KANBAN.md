@@ -257,6 +257,7 @@
 ---
 
 ### Closed (investigated, will not do)
+- [~] **T184** — **Closed 2026-10-27, will not do — the kit will not install settings defaults.** User: "the config should go by the taste, we no need to update as initial". The evaluation in `tasks/TASK_GUIDE_T184.md` (keys considered, why each was kept or cut) is reused as the content source for the site settings tool, T185/T187 on `PROJECT_KANBAN_SITE.md`. | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T184.md`
 - [~] **T142** — Two machines cannot grab the same task: an atomic claim/release | Common-Infrastructure-Agent | C2 | Risk: Medium | P2 | Depends on: none | Registered 2026-10-16 from the improvement-list grilling (#5), **deferred by the user**. Grilling found the constraint any design must meet: `pre_bash_block_unsafe_merge.py` blocks every push while a task is In Progress, so a claim recorded by moving the row cannot be pushed. Candidate recorded, not chosen: an empty `claim/Txxx` remote branch (a push of an existing name fails, which makes it atomic) | Closed 2026-10-19: superseded by T157 — in online mode the board assignee is the claim, and only my tasks block my push.
 
 > Rows kept with their reasoning rather than deleted — the analysis is the value, and a

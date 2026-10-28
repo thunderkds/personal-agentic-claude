@@ -1316,3 +1316,94 @@ def test_tracks_section_does_not_say_auto_merges_pushes_or_supervisor_runs_verif
 def test_pipeline_diagram_desc_says_stages_are_the_extended_track():
     desc = re.search(r'<desc id="pipeline-diagram-desc">(.*?)</desc>', _page_text(), re.DOTALL)
     assert desc and "extended track" in desc.group(1)
+
+# ---------------------------------------------------------------------------
+# T185 — Settings tool (Build mode). Spec: PROJECT_SPEC_SITE.md § "Settings tool".
+# ---------------------------------------------------------------------------
+
+def _script_block(script_id):
+    match = re.search(
+        r'<script\b[^>]*\bid="%s"[^>]*>(.*?)</script>' % re.escape(script_id),
+        _page_text(), re.DOTALL,
+    )
+    assert match, f'page has no <script id="{script_id}">'
+    return match.group(1)
+
+
+def _settings_catalog():
+    return json.loads(_script_block("settings-catalog"))
+
+
+def _settings_section():
+    match = re.search(r'<section id="settings-tool">.*?\n</section>', _page_text(), re.DOTALL)
+    assert match, "page has no <section id=\"settings-tool\">"
+    return match.group(0)
+
+
+def test_settings_tool_section_nav_and_no_script_fallback():
+    section = _settings_section()
+    assert "<h2>Settings tool</h2>" in section
+    nav = re.search(r'<nav id="site-nav".*?</nav>', _page_text(), re.DOTALL).group(0)
+    assert nav.index('href="#update-flow"') < nav.index('href="#settings-tool"') < nav.index('href="#install-variants"')
+    assert 'class="st-nojs"' in section
+    assert "https://code.claude.com/docs/en/settings-reference" in section
+    # T187: the Check tab is live (it was disabled "coming soon" in T185).
+    tab = re.search(r'<button[^>]*id="st-tab-check"[^>]*>', section).group(0)
+    assert "disabled" not in tab and "coming soon" not in section
+    assert 'aria-controls="st-check-panel"' in tab and 'id="st-check-panel"' in section
+
+
+def test_settings_check_mode_controls_and_privacy_line():
+    """T187 AC1: paste area, target-file choice, the three buttons, the privacy line."""
+    section = _settings_section()
+    assert re.search(r'<textarea\b[^>]*id="st-paste"', section)
+    for value in ("user", "project", "local"):
+        assert f'name="st-check-target" value="{value}"' in section
+    for button, label in (("st-format", "Format"), ("st-check", "Check"), ("st-edit", "Edit in Build")):
+        assert re.search(rf'<button type="button"[^>]*id="{button}"[^>]*>{label}</button>', section), button
+    assert "Runs in your browser only. Nothing is sent or saved." in section
+
+
+def test_settings_tool_never_writes_html_from_text():
+    """T187: pasted text is untrusted; the tool renders with textContent only."""
+    source = _script_block("settings-tool-core") + _script_block("settings-tool-ui")
+    for banned in ("innerHTML", "outerHTML", "insertAdjacentHTML", "document.write", "eval(", "new Function"):
+        assert banned not in source, f"tool script contains {banned}"
+
+
+def test_settings_catalog_shape_and_version_stamp():
+    catalog = _settings_catalog()
+    assert re.fullmatch(r"\d+\.\d+\.\d+", catalog["version"])
+    known = set(catalog["knownKeys"])
+    assert catalog["settings"], "catalog has no settings"
+    for entry in catalog["settings"]:
+        for field in ("key", "category", "type", "scopes", "why"):
+            assert entry.get(field), f"catalog entry {entry.get('key')} missing {field}"
+        assert entry["category"] in catalog["categories"], entry["key"]
+        assert set(entry["scopes"]) <= {"user", "project", "local"}, entry["key"]
+        if entry["type"] == "enum":
+            assert entry.get("values"), f"enum {entry['key']} has no values"
+        assert entry["key"] in known, f"{entry['key']} not in knownKeys"
+    keys = [e["key"] for e in catalog["settings"]]
+    assert len(keys) == len(set(keys)), "duplicate catalog keys"
+
+
+def test_settings_tool_script_uses_no_network_or_storage_api():
+    """Spec rule 1: pasted and generated text never leaves the browser."""
+    source = _script_block("settings-tool-core") + _script_block("settings-tool-ui")
+    for banned in ("fetch(", "XMLHttpRequest", "sendBeacon", "WebSocket",
+                   "localStorage", "sessionStorage", "indexedDB", "document.cookie"):
+        assert banned not in source, f"tool script contains {banned}"
+    assert "document" not in _script_block("settings-tool-core"), "core block must not touch the DOM"
+
+
+def test_settings_tool_has_no_submitting_form_and_no_package_json():
+    """Spec rules 2 and 4."""
+    assert not re.search(r"<form\b", _settings_section(), re.IGNORECASE)
+    assert not os.path.exists(os.path.join(ROOT, "package.json"))
+
+
+def test_settings_tool_css_adds_no_color_literals():
+    """Design-system rule: only existing var(--…) tokens inside the scoped CSS."""
+    css = re.search(r"/\* ---- settings tool \(scoped\).*?(?=</style>)", _page_text(), re.DOTALL).group(0)
+    assert not re.search(r"#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(", css), "color literal in settings-tool CSS"

@@ -2884,3 +2884,19 @@ highest ID anywhere, not only `PROJECT_KANBAN.md` on the checked-out branch. Ren
   `settings.json` entry whose command contains `.claude/hooks/` is silently removed by the ownership rule while
   `drop_dangling` warns (`TASK_REVIEW_T111.md`); ~35 duplicated `merge_settings` lines in `setup.sh`/`update.sh`
   could move to a shared helper; stale `pets/wt-*` worktrees are not pruned.
+- **`node --test <dir>/` fails on Node 26** (T185). A directory argument is read as a module path
+  ("Cannot find module …/tests/settings_tool"). Use a quoted glob: `node --test "tests/settings_tool/*.mjs"`.
+- **Pure core in its own inline `<script id>` block makes a no-build page testable** (T185). Node tests read
+  `site/index.html`, extract the `settings-tool-core` block and run it in `node:vm`; a test asserts the block
+  never names `document`. One file, no bundler, no package.json.
+- **The hot tier's real cap is the test's `HOT_TIER_CHAR_BUDGET` (42,000 chars), not the 50,000 in AGENTS.md** (T185).
+  `MEMORY.md` sat at ~41,6xx chars, so two new index lines broke 5 tests on `main`. Before adding a hot-tier
+  line, run `pytest .claude/hooks/tests/test_token_audit_format.py -q`; near the cap, write cold-tier only.
+- **A sub-agent's Verification Command is not the full suite** (T187). The agent ran only its task command; the
+  Supervisor's full `pytest .claude/hooks/tests/ tests/` run found a corpus test reading the review file's
+  unfilled `verify` row. Always run the full suite at Stage 4.
+- **Two live sessions can mint the same task ID** (T187, 2026-10-27). This session registered T186 locally while
+  another session pushed its own T186 to `origin/main`; found only at push time (ahead 27 / behind 117). Fix:
+  renumber the unpushed one (here → T187) before merging, and run `git fetch` + check `origin/main`'s IDs
+  before registering a new task when another session may be active. Do not `git stash` mid-merge — it aborts
+  the merge (redo it; conflict resolution of append-only memory files is mechanical: keep both sides).
