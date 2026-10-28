@@ -795,9 +795,9 @@ def test_mcps_section_is_linked_from_the_reference_nav_group():
 
 def test_mcps_section_has_one_named_entry_per_server():
     body = _mcps_section_body()
-    for name in ("easy-verifier-mcp", "easy-ui-mcp"):
+    for name in ("easy-verifier-mcp", "easy-ui-mcp", "easy-memory-mcp"):
         assert re.search(rf"<h3>[^<]*{name}[^<]*</h3>", body), f"no <h3> naming {name}"
-    assert len(re.findall(r'<div class="agent-card"', body)) == 2, "expected exactly two entries"
+    assert len(re.findall(r'<div class="agent-card"', body)) == 3, "expected exactly three entries"
     assert 'id="verifier"' in body, 'verifier entry lost id="verifier"; old #verifier links break'
 
 
@@ -852,6 +852,73 @@ def test_mcps_section_says_separate_and_never_claims_kit_integration():
     lowered = body.lower()
     for phrase in HONESTY_PHRASES:
         assert phrase not in lowered, f"#mcps must not say {phrase!r}"
+
+
+# ---------------------------------------------------------------------------
+# T199 — easy-memory-mcp as a third, optional companion card. The kit does not
+# ship, install or require it, so the card must say so and claim nothing more
+# than the easy-memory-mcp README proves.
+# ---------------------------------------------------------------------------
+
+MEMORY_MCP_REPO_URL = "https://github.com/thunderkds/easy-memory-mcp"
+
+
+def _memory_mcp_entry_body():
+    return _mcp_entry_body("easy-memory-mcp")
+
+
+def test_mcps_section_lead_counts_three_companions():
+    lead = re.search(r'<p class="lead">(.*?)</p>', _mcps_section_body(), re.DOTALL).group(1).lower()
+    assert "three" in lead and "two" not in lead, "section lead must say three companion tools, not two"
+
+
+def test_memory_mcp_card_is_the_third_card_and_says_optional():
+    body = _mcps_section_body()
+    ids = re.findall(r'<div class="agent-card" id="([^"]+)"', body)
+    assert ids == ["verifier", "easy-ui-mcp", "easy-memory-mcp"], f"card order is {ids}"
+    card = _memory_mcp_entry_body()
+    assert re.search(r"<h3>[^<]*easy-memory-mcp[^<]*</h3>", card), "h3 must name easy-memory-mcp"
+    lead = re.search(r'<p class="lead">(.*?)</p>', card, re.DOTALL)
+    assert lead, "easy-memory-mcp card has no lead paragraph"
+    for word in ("separate", "companion", "optional"):
+        assert word in lead.group(1).lower(), f"card lead must contain {word!r}"
+
+
+def test_memory_mcp_card_has_four_to_five_one_line_highlights():
+    items = re.findall(r"<li>(.*?)</li>", _memory_mcp_entry_body(), re.DOTALL)
+    assert 4 <= len(items) <= 5, f"expected 4-5 highlights, found {len(items)}"
+    assert all("\n" not in i.strip() for i in items), "each highlight must sit on one line"
+
+
+def test_memory_mcp_card_says_the_kit_runs_as_before_without_it():
+    items = [i.lower() for i in re.findall(r"<li>(.*?)</li>", _memory_mcp_entry_body(), re.DOTALL)]
+    assert any("without it" in i and "runs as before" in i for i in items), (
+        "one highlight must say the kit runs as before without easy-memory-mcp"
+    )
+
+
+def test_memory_mcp_card_names_the_four_tools_from_the_readme():
+    card = _memory_mcp_entry_body()
+    for tool in ("memory_search", "memory_read", "memory_list", "memory_forget"):
+        assert f"<code>{tool}</code>" in card, f"card must name the MCP tool {tool}"
+
+
+def test_memory_mcp_card_states_the_token_figure_only_as_a_scripted_test_result():
+    items = [i.lower() for i in re.findall(r"<li>(.*?)</li>", _memory_mcp_entry_body(), re.DOTALL)]
+    measured = [i for i in items if "28%" in i]
+    assert len(measured) == 1, "exactly one highlight may carry the ~28% figure"
+    assert "scripted" in measured[0] and "real work" in measured[0], (
+        "the figure must be tied to scripted tests and say it is not yet measured on real work"
+    )
+
+
+def test_memory_mcp_card_links_the_repo_safely_and_invents_no_site():
+    card = _memory_mcp_entry_body()
+    assert (
+        f'href="{MEMORY_MCP_REPO_URL}" target="_blank" rel="noopener noreferrer"' in card
+    ), "easy-memory-mcp card must link its repo with target=_blank rel=noopener noreferrer"
+    hrefs = re.findall(r'href="([^"]+)"', card)
+    assert hrefs == [MEMORY_MCP_REPO_URL], f"easy-memory-mcp card must carry only its repo link, found {hrefs}"
 
 
 # ---------------------------------------------------------------------------
@@ -1407,3 +1474,32 @@ def test_settings_tool_css_adds_no_color_literals():
     """Design-system rule: only existing var(--…) tokens inside the scoped CSS."""
     css = re.search(r"/\* ---- settings tool \(scoped\).*?(?=</style>)", _page_text(), re.DOTALL).group(0)
     assert not re.search(r"#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(", css), "color literal in settings-tool CSS"
+
+
+def _media_blocks(css):
+    """[(min_width_px, body)] for every `@media (min-width: Npx)` block."""
+    out = []
+    for m in re.finditer(r"@media\s*\(min-width:\s*(\d+)px\)\s*\{", css):
+        depth, i = 1, m.end()
+        while depth:
+            depth += {"{": 1, "}": -1}.get(css[i], 0)
+            i += 1
+        out.append((int(m.group(1)), css[m.end():i - 1]))
+    return out
+
+
+def test_hooks_first_two_columns_only_refuse_to_wrap_from_900px():
+    """Scope addendum: between 768 and ~884 px the nowrap EVENT and MATCHER columns made the
+    4-column table 851 px wide, wider than the column, so the page scrolled sideways."""
+    css = _style_block()
+    nowrap = [w for w, body in _media_blocks(css)
+              if re.search(r"#hooks td:nth-child\(-n\+2\)\s*\{[^}]*white-space\s*:\s*nowrap", body)]
+    assert nowrap, "no media query holds the nowrap rule for the first two #hooks columns"
+    assert min(nowrap) >= 900, f"nowrap starts at {min(nowrap)}px; below 900px the table overflows"
+    outside = re.sub(r"@media[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}", "", css)
+    assert not re.search(r"#hooks t[dh]:nth-child\(-n\+2\)[^{]*\{[^}]*nowrap", outside), \
+        "nowrap on the first two #hooks columns sits outside a min-width media query"
+    # Wrapping only helps if the Matcher cell offers break points: nowrap was not the only
+    # thing that kept the table 554px wide, the unbreakable `Edit|Write|Bash` was too.
+    hooks = re.search(r'<section id="hooks">(.*?)</section>', _raw_page_text(), re.DOTALL).group(1)
+    assert "Edit|<wbr>Write|<wbr>Bash" in hooks, "the multi-tool Matcher has no break points after `|`"

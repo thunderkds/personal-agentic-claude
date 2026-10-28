@@ -193,9 +193,15 @@
 
   footer { color: var(--muted); font-size: .8rem; margin: 3rem 0 1.5rem; }
 
-  /* desktop: Event and Matcher take only their content width so Script and Behavior share the rest */
-  @media (min-width: 768px) {
+  /* wide desktop: Event and Matcher take only their content width so Script and Behavior share the rest.
+     Below 900px they must wrap, or the 4-column table is wider than the page */
+  @media (min-width: 900px) {
     #hooks th:nth-child(-n+2), #hooks td:nth-child(-n+2) { width: 1%; white-space: nowrap; }
+  }
+
+  /* 768-899px: the content column is narrower than the 4 columns need, so tighten the cell padding */
+  @media (min-width: 768px) and (max-width: 899px) {
+    #hooks th, #hooks td { padding-left: .4rem; padding-right: .4rem; }
   }
 
   /* ---- mobile ------------------------------------------------------ */
@@ -1857,7 +1863,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <tbody>
 <tr><td data-label="Event">PreToolUse</td><td data-label="Matcher"><code>Agent</code></td><td data-label="Script"><code>pre_<wbr>agent_<wbr>validate_<wbr>guide.py</code></td><td data-label="Behavior"><span class="tag tag-block">blocks</span> spawn if the TASK_GUIDE is missing; otherwise only <span class="tag tag-advise">advises</span> (never blocks) <details><summary>When it advises</summary><ul><li>The spawn prompt has no memory slice or no <code>**Startup reads**</code> block</li><li>A <code>Depends on</code> task is not Done</li><li>A task's Demonstration BEFORE is still blank</li></ul></details></td></tr>
 <tr><td data-label="Event">PreToolUse</td><td data-label="Matcher"><code>Bash</code></td><td data-label="Script"><code>pre_<wbr>bash_<wbr>block_<wbr>unsafe_<wbr>merge.py</code></td><td data-label="Behavior"><span class="tag tag-block">blocks</span> git push/merge if pipeline gates are unsatisfied</td></tr>
-<tr><td data-label="Event">PreToolUse</td><td data-label="Matcher"><code>Edit|Write|Bash</code></td><td data-label="Script"><code>pre_<wbr>tool_<wbr>sensitive_<wbr>path.py</code></td><td data-label="Behavior"><span class="tag tag-block">asks</span> you to confirm before a call touches a path listed in <code>.claude/<wbr>sensitive-<wbr>paths.txt</code> — unless the active task's guide predicted that exact path <details><summary>What the list covers</summary><p><code>.env*</code>, secrets, production configs, infra.</p></details></td></tr>
+<tr><td data-label="Event">PreToolUse</td><td data-label="Matcher"><code>Edit|<wbr>Write|<wbr>Bash</code></td><td data-label="Script"><code>pre_<wbr>tool_<wbr>sensitive_<wbr>path.py</code></td><td data-label="Behavior"><span class="tag tag-block">asks</span> you to confirm before a call touches a path listed in <code>.claude/<wbr>sensitive-<wbr>paths.txt</code> — unless the active task's guide predicted that exact path <details><summary>What the list covers</summary><p><code>.env*</code>, secrets, production configs, infra.</p></details></td></tr>
 <tr><td data-label="Event">PreToolUse</td><td data-label="Matcher"><code>.*</code></td><td data-label="Script"><code>pre_<wbr>agent_<wbr>step_<wbr>limit.py</code></td><td data-label="Behavior"><span class="tag tag-block">blocks</span> a task's tool call once it exceeds the step limit (default <strong>90</strong>) — self-clearing on the very next call</td></tr>
 <tr><td data-label="Event">PostToolUse</td><td data-label="Matcher"><code>Write</code></td><td data-label="Script"><code>post_<wbr>write_<wbr>register_<wbr>task.py</code></td><td data-label="Behavior"><span class="tag tag-advise">advises</span> — auto-registers new TASK_GUIDE files on the board</td></tr>
 <tr><td data-label="Event">PostToolUse</td><td data-label="Matcher"><code>Agent</code></td><td data-label="Script"><code>post_<wbr>agent_<wbr>move_<wbr>to_<wbr>review.py</code></td><td data-label="Behavior"><span class="tag tag-inert">inert</span> — <strong>does not move anything and does not touch any step counter</strong>; it only prints a reminder to move the row by hand <details><summary>Why by hand</summary><p>The reminder is for the Supervisor. The hand move is deliberate, after two past defects made the automatic move actively harmful.</p></details></td></tr>
@@ -2013,7 +2019,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <section id="mcps">
 <h2>MCPs</h2>
 <p class="lead">
-  Two separate companion tools, not part of this kit: MCP servers you can run alongside it, each from its own repository.
+  Three separate companion tools, not part of this kit: MCP servers you can run alongside it, each from its own repository.
 </p>
 
 <div class="agent-card" id="verifier">
@@ -2044,6 +2050,21 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
   <li>Version 1 covers web only (Chromium) and runs locally only</li>
 </ul>
 <p><a href="https://github.com/thunderkds/easy-ui-mcp" target="_blank" rel="noopener noreferrer">easy-ui-mcp on GitHub</a></p>
+</div>
+
+<div class="agent-card" id="easy-memory-mcp">
+<h3>easy-memory-mcp</h3>
+<p class="lead">
+  A separate companion tool, optional and not part of this kit: an MCP server that saves what a session found out and hands it to the next one.
+</p>
+<ul>
+  <li>Without it installed, the kit runs as before — it is optional and not needed</li>
+  <li>After a long answer it saves a local note; your next prompt gets a short index of matching notes</li>
+  <li>MCP tools <code>memory_search</code>, <code>memory_read</code>, <code>memory_list</code> and <code>memory_forget</code>, plus a per-repo on/off switch and a report of sessions with memory on against off</li>
+  <li>One file, standard library only; notes are saved in clear text with mode 0600, so only you can read them</li>
+  <li>A working prototype: about 28% fewer tokens in scripted tests (experiment 03), not yet measured on real work</li>
+</ul>
+<p><a href="https://github.com/thunderkds/easy-memory-mcp" target="_blank" rel="noopener noreferrer">easy-memory-mcp on GitHub</a></p>
 </div>
 </section>
 
