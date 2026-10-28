@@ -25,6 +25,7 @@
      run; read them there. The enforced gate is the whole-file character budget above. -->
 
 ### Decisions
+- [T199: site `#mcps` lists easy-memory-mcp as a third OPTIONAL companion card](decisions.md) — README facts only, 28% tied to scripted tests; T194 + T199 both edit the `#mcps` lead and the one-entry-per-server test (merge by hand)
 - [T198: `wake` prints the Decisions + Learning Records entries with `memory_sections.py`, never reads all of MEMORY.md](decisions.md) — ~9k tokens less per session; **add new index lines at the TOP of a section (newest first) or the script misses them**; `wake/SKILL.md` is 8,152 of 8,192 bytes
 - [T195: easy-memory installed; base sub-agents get memory_search/read and use the spawn slice, not all of MEMORY.md](decisions.md) — OPTIONAL: kit works the same without it, agents skip it if absent; `memory/` NOT replaced; decide after ~2 weeks of `easy_memory.py report`
 - [T182: auto verify — Stop hook runs real `/verify` headless for `[auto]` tasks](decisions.md) — gate trusts the row only with the anchor-dir run record; $2 cap per commit
@@ -261,6 +262,7 @@
 - [Parallel tasks merge together; 401 ≠ permanent](learnings.md) — T156/T157: gate serialises merges
 
 ### Learning Records
+- [Merge gate reads evidence at hook time; `pkill -f` can kill its own shell](learnings.md) — commit the verify row in one Bash call, merge in the next; use a saved PID, not `pkill -f`
 - [easy-memory `switch off` leaves the MCP tools on](learnings.md) — an off-run can still call memory_search if the prompt says to check notes; judge on/off by `report`, not one pair
 <!-- One-liner per active LR: - [LR-NNNN slug](memory/learning-records/LR-NNNN-slug.md) — summary -->
 <!-- Superseded LRs: ~~old text~~ → see LR-NNNN -->

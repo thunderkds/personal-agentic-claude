@@ -2913,3 +2913,7 @@ highest ID anywhere, not only `PROJECT_KANBAN.md` on the checked-out branch. Ren
 
 ### The push gate reads the whole board, so one session's open task blocks every other session's push (T197)
 `pre_bash_block_unsafe_merge.py` builds `in_progress` and `ready_review` from the whole `PROJECT_KANBAN.md` and never reads which branch a `git push` names. Seen 2026-10-28: the push of `feat/t190-companion-gate` was refused over T195, another session's task with no Evidence row; it cleared only after T195 was verified. Do not work around it (moving the other task, editing the hook, or disguising the command); the user's `! <command>` prefix runs outside the hook, and T197 scopes a branch push to the one task its branch names. Also: the hook runs before the whole Bash command, so an edit that fills the Evidence row and the `git push` in one command is blocked before the edit runs. Split them. **Files**: .claude/hooks/pre_bash_block_unsafe_merge.py, tasks/TASK_GUIDE_T197.md
+
+
+### The merge gate reads evidence at hook time, and `pkill -f` can kill its own shell
+Two Bash gotchas seen at T199 (2026-10-28). (1) `pre_bash_block_unsafe_merge.py` runs before the command, so a command that writes the `verify` Evidence row and then merges is blocked: write and commit the row in one Bash call, set the `active_task` state file, then merge in the next call. (2) `pkill -f "<pattern>"` inside a command whose own text contains the pattern kills the shell (exit 144) and leaves later steps unrun; save the server PID (`echo $! > file`) and `kill $(cat file)` instead.
