@@ -41,7 +41,10 @@ GATE_REL = ".claude/hooks/pre_bash_block_unsafe_merge.py"
 #          push. Fail-open on every absence (FR-006), so a machine with neither companion tool
 #          behaves as before (`tasks/TASK_GUIDE_T190.md`, AC 2-7). Authorised by the user,
 #          2026-10-28.
-AUTHORISED_TASKS = ("T182", "T188", "T190")
+#   T197 — D1-D4: a `git push` of one task's branch is judged by that task alone; every
+#          unresolved push, and every merge, still checks the whole board
+#          (`tasks/TASK_GUIDE_T197.md`). Authorised by the user, 2026-10-28.
+AUTHORISED_TASKS = ("T182", "T188", "T190", "T197")
 
 
 def _git(root, *args):
