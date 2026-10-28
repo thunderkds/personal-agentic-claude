@@ -343,18 +343,45 @@ def test_the_installer_merge_adds_the_stop_entry(tmp_path):
     assert any(c.endswith("stop_auto_mode_check.py") for c in commands), commands
 
 
-def _gate_changed_only_by_t182(root, base_ref, gate):
-    """T182 is the one task allowed to change the merge gate (its D5 run-record guard): every
-    commit since `base_ref` that touches it names T182, and nothing uncommitted is pending."""
+# ── The merge-gate change guard (two copies of ONE guard) ────────────────────────────────
+#
+# This helper, its `GATE_AUTHORISED_TASKS` list and the test under it are duplicated verbatim in
+# `tests/test_auto_mode.py` (where the test is T180's AC 4) and in
+# `.claude/hooks/tests/test_stop_auto_mode_check.py`. Edit both or neither.
+#
+# What this guard is, and what it is not: it was written as **T180's own acceptance criterion**,
+# so that T180 could not quietly widen the merge gate while it added auto mode. It is not standing
+# doctrine that the gate may never change. It outlived T180 and froze the file against every later
+# task — T182 met it first and widened it from "nobody" to "T182" (see `tasks/TASK_REVIEW_T182.md`),
+# and T190 met it again, because FR-004 *is* a merge-gate change.
+#
+# So the fix is always to name the task authorised to change the gate, **never to repoint
+# `BASE_REF`**: repointing would drop the whole history from the check, and the property worth
+# keeping is that an *unnamed* change to the gate — including any uncommitted one — still fails.
+GATE_AUTHORISED_TASKS = (
+    "T182",  # the auto-verify run-record guard (D5)
+    "T190",  # FR-004: a companion score or UI design row marked fail blocks the merge
+)
+
+
+def _gate_changed_only_by_authorised_tasks(root, base_ref, gate):
+    """Every commit since `base_ref` that touches the merge gate names a task in
+    `GATE_AUTHORISED_TASKS`, and nothing uncommitted is pending."""
     log = subprocess.run(["git", "-C", str(root), "log", "--no-merges", "--format=%s",
                           f"{base_ref}..HEAD", "--", gate], capture_output=True, text=True)
     pending = subprocess.run(["git", "-C", str(root), "diff", "--quiet", "HEAD", "--", gate])
     subjects = log.stdout.splitlines()
-    return log.returncode == 0 and pending.returncode == 0 and all("T182" in s for s in subjects)
+    return (log.returncode == 0 and pending.returncode == 0
+            and all(any(task in s for task in GATE_AUTHORISED_TASKS) for s in subjects))
 
 
 def test_merge_gate_is_untouched():
-    assert _gate_changed_only_by_t182(ROOT, BASE_REF, ".claude/hooks/pre_bash_block_unsafe_merge.py")
+    """Name left alone (two Evidence records cite it); the property is unchanged in kind — no
+    change to the gate except under a task named in `GATE_AUTHORISED_TASKS`."""
+    assert _gate_changed_only_by_authorised_tasks(
+        ROOT, BASE_REF, ".claude/hooks/pre_bash_block_unsafe_merge.py"), (
+        "pre_bash_block_unsafe_merge.py changed under a commit naming no task in "
+        f"GATE_AUTHORISED_TASKS {GATE_AUTHORISED_TASKS}, or has an uncommitted change")
 
 
 # ── D9 (a) — discovery from files; finished tasks skipped ─────────────────────────────────

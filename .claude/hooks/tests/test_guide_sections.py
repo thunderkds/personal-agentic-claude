@@ -543,15 +543,53 @@ def test_ac1_review_template_exists_with_both_sections():
     assert re.search(r"^## Demonstration\s*$", review, re.M)
 
 
-def test_ac1_moved_evidence_rows_are_byte_identical_to_the_baseline():
+def _is_subsequence(needle, haystack):
+    """Every element of `needle` appears in `haystack`, unchanged, in the same relative order."""
+    remaining = iter(haystack)
+    return all(any(row == candidate for candidate in remaining) for row in needle)
+
+
+def _baseline_and_current_evidence_rows():
     baseline = _git_show(BASELINE_REF, "templates/TASK_GUIDE_template.md")
     review = _read(os.path.join(TEMPLATES_DIR, "TASK_REVIEW_template.md"))
-    old_rows = [l for l in _slice(baseline, EVIDENCE_SLICE_RE).splitlines()
-                if l.startswith("|")]
-    new_rows = [l for l in _slice(review, EVIDENCE_SLICE_RE).splitlines()
-                if l.startswith("|")]
+    return ([l for l in _slice(baseline, EVIDENCE_SLICE_RE).splitlines() if l.startswith("|")],
+            [l for l in _slice(review, EVIDENCE_SLICE_RE).splitlines() if l.startswith("|")])
+
+
+def test_ac1_moved_evidence_rows_are_present_unchanged_and_in_order():
+    """T064's AC1: every row T064 moved out of the guide template is still in the review
+    template, byte-for-byte, in the same relative order.
+
+    Named `..._are_byte_identical_to_the_baseline` until T190, which asserted full list
+    equality. That froze the table against ever gaining a row, and T190's FR-001 adds one
+    (`Companion score (easy-verifier)`). The property T064 needs is that the *moved* rows did
+    not change in the move — not that the table can never grow — so the assertion is now a
+    subsequence check. `test_the_evidence_row_subsequence_check_rejects_a_changed_row` below
+    proves the relaxation did not trade the guard for a weaker one with no teeth.
+    """
+    old_rows, new_rows = _baseline_and_current_evidence_rows()
     assert old_rows, "baseline slice found no Evidence rows — the slicer is vacuous"
-    assert new_rows == old_rows
+    assert _is_subsequence(old_rows, new_rows), (
+        "a row T064 moved is missing, altered, or reordered:\n"
+        + "\n".join(f"  {'ok ' if r in new_rows else 'GONE'} {r[:80]}" for r in old_rows))
+
+
+def test_the_evidence_row_subsequence_check_rejects_a_changed_row():
+    """The relaxation above must still catch a corrupted move. Mutation-proven against the real
+    baseline rows: an altered row, a dropped row and a reordering are each rejected, while an
+    added row is accepted."""
+    old_rows, _ = _baseline_and_current_evidence_rows()
+    assert len(old_rows) > 2, old_rows
+
+    altered = list(old_rows)
+    altered[-1] = altered[-1].replace("☐ pass", "☐ PASSED")
+    assert altered != old_rows, "the mutation did not change anything — the proof is vacuous"
+    assert not _is_subsequence(old_rows, altered)
+
+    assert not _is_subsequence(old_rows, old_rows[:-1]), "a dropped row must be rejected"
+    assert not _is_subsequence(old_rows, list(reversed(old_rows))), "reordering must be rejected"
+    assert _is_subsequence(old_rows, old_rows + ["| **A new row** | ☐ pass | x |"]), \
+        "an appended row must still be accepted — that is the whole point of the relaxation"
 
 
 def test_ac1_moved_demonstration_fields_are_byte_identical_to_the_baseline():
