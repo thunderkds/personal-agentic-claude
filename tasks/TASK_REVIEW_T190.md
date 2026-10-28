@@ -138,6 +138,31 @@ $ python3 -m pytest tests/ -q
 846 passed in 44.28s
 ```
 
+After the Stage 4 P1 fix (`4cdcc23`, FR-005 reads the path after a literal `report:` label) and the
+P2 table update (`3e642ef`) — four more cases, same three suites:
+
+```
+$ python3 -m pytest .claude/hooks/tests/ -q
+964 passed, 25 subtests passed in 20.49s
+
+$ python3 -m pytest tests/ -q
+846 passed in 38.36s
+
+$ sh scripts/validate.sh
+validate.sh: PASS
+```
+
+The end-to-end subprocess run was repeated against the label contract at `2026-10-28T06:47:26Z`:
+cases 1–5 unchanged, plus a sixth — a `☑ pass` row with no `report:` label but an unrelated real
+path (`skills/score/SKILL.md`) in the cell now still warns, where before the fix the advisory was
+suppressed:
+
+```
+[hook:pre_bash] T900 Companion score row reads pass but its Notes cite no verifier report path
+ — that row is unscored, not a pass (FR-005).
+  [exit 0]
+```
+
 Baselines before the task: `917 passed, 25 subtests` (hooks) and `846 passed` (tests). The hook
 suite gains 42 companion-row cases and one mutation proof for the relaxed T064 row check.
 
