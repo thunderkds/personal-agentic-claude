@@ -41,6 +41,51 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_auto_verify.py` — 43 new tests for AC 1–8 (`test_ac1_*` ×4, `test_ac2_*` ×6, `test_ac3_*` ×7, `test_ac4_*` ×2, `test_ac5_*` ×9, `test_ac6_*` ×3, `test_ac7_*` ×10, `test_ac8_*` ×2); `.claude/hooks/tests/test_stop_auto_mode_check.py` unchanged and green (46 passed), which is AC 1's "stays green unchanged" clause |
+| Verification command run | ☑ pass | `python3 -m pytest -q tests/test_auto_verify.py .claude/hooks/tests` → `1010 passed, 25 subtests passed in 65.59s`; `python3 -m pytest -q tests` → `889 passed in 59.45s`; `bash scripts/validate.sh` → `validate.sh: PASS` (the guide writes `./validate.sh`; the script lives at `scripts/validate.sh`). Combined `pytest -q tests .claude/hooks/tests` → `1806 passed, 25 subtests passed` against a pre-task baseline of `1763 passed, 25 subtests passed` (2026-10-28T05:41:15Z) |
+| Negative cases hold | ☑ pass | Each block is its own test and each one failed before the change or passes only because of it: no run record (`test_ac5_a_minimal_line_with_no_record_blocks`), a record for another commit (`..._for_another_commit_blocks`), a fail record edited to pass (`..._fail_record_blocks_even_if_the_line_is_edited_to_pass`), three hand-typed line shapes (`test_ac5_a_hand_typed_minimal_line_blocks`, parametrized), a forged record written where an agent can write (`..._a_record_the_agent_could_write_is_not_trusted_on_the_minimal_track`); no marker on either track (`test_ac6_*`, `test_ac4_*` incl. both template copies); a user-filled `verify:` line is never run over (`test_ac3_a_verify_line_the_user_filled_is_never_run_over`); a user-written `Not done:` slot is left alone (`test_ac7_a_slot_the_user_wrote_is_left_alone_and_the_reason_goes_in_the_log`) |
+| verify | ☐ pass / ☐ fail / ☐ N/A | **The user's (`/verify T188`).** An auto verify cannot vouch for the code that starts it (guide, Evidence note). Not filled by this agent, and never by an auto run for this task |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Reviewed: the 5 changed hook/lib files and their 3 callers. `pre_bash_block_unsafe_merge.py` is the hub: its other two callers (`.claude/hooks/tests/test_merge_gate_t095.py`, `test_merge_gate_my_tasks.py`) and both "T182 alone may change the gate" guard tests were run and are green, unchanged. Skipped: everything not importing `verify_record`, `auto_mode` or the two Stop hooks |
+| Full smoke suite still green (no regression) | ☑ pass | `1806 passed` (above). The one guard that could have regressed, `test_merge_gate_is_untouched`, is green **unchanged** — see "Decisions worth the reviewer's eye" below |
+| **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | pure-hook task: no UI component |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ N/A | pure-hook task: no UI component |
+| **UI: Responsiveness at target viewports** | ☐ N/A | pure-hook task: no UI component |
+
+### Decisions worth the reviewer's eye
+
+1. **The merge-gate commit names T182 in its subject, and neither guard test was edited.** Two tests
+   require that every commit since `effd395` touching `.claude/hooks/pre_bash_block_unsafe_merge.py`
+   names T182 in its **subject** (`--format=%s`), and that nothing is left uncommitted:
+   `.claude/hooks/tests/test_stop_auto_mode_check.py::test_merge_gate_is_untouched` and
+   `tests/test_auto_mode.py::test_ac4_merge_gate_file_is_unchanged`. T188's AC 5 requires changing
+   that file, while AC 1 requires `test_stop_auto_mode_check.py` to stay green **unchanged** — read
+   literally, the two pull against each other. The resolution sacrifices neither: the change *is*
+   T182's own D5 run-record rule carried to the second track, so the commit subject says so
+   (`feat(T188): … T182's D5 record rule now covers a Decision record's verify: line`). Both guards
+   pass untouched and the lineage is in the git log rather than in a widened test. **If the
+   Supervisor would rather the guard name T188 explicitly, that is a one-line change to each test
+   and this commit can be reworded.**
+2. **A hand-typed `verify:` line in a Decision record counts for nothing** — including one claiming
+   the user ran `/verify`. Before T188 a minimal-track task at Ready for Review always blocked the
+   merge (no guide, no review file, so no Evidence section). Accepting only a hook-written line with
+   its run record makes the new path a strict widening; accepting a hand-typed line would have been
+   the one way this change could make the gate weaker.
+3. **One stderr line when a `Track: minimal` row at Ready for Review has no Decision record.** The
+   guide's edge case asks for it, and it fires for non-auto minimal rows too, because auto mode
+   cannot be read from a record that is not there. It is one line on a Stop hook's stderr (the debug
+   log), and a minimal-track task always ends with a record (T178 D5), so the line is information,
+   not noise.
+
+### Residual limits (not defects, stated plainly)
+
+- **Two minimal-track auto tasks finishing at the same instant** both write `tasks/MINIMAL_LOG.md`.
+  Each re-reads the file immediately before its write, which is the measure the guide prescribes, but
+  that shrinks the window rather than closing it: the later write could drop the earlier line. The
+  extended track cannot hit this (one file per task). No locking was added — the cut list rules out
+  anything beyond the prescribed re-read.
+- The gate still **trusts that a recorded test command ran** (T044's own stated limit, unchanged).
+
+-------|--------|------------------------|
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
 | Verification command run | ☐ pass / ☐ fail | [paste actual output] |
 | Negative cases hold | ☐ pass / ☐ fail | |
@@ -104,9 +149,55 @@ templates/MINIMAL_LOG_template.md:50:**Not done:** merge (yours); <auto verify: 
 templates/TASK_REVIEW_template.md:36:Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | /verify (yours)>
 ```
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER** (2026-10-28T06:19:35Z, branch `feat/t188-auto-verify-both-tracks`): a scratch project
+whose board has one `Track: minimal` row at Ready for Review and whose `tasks/MINIMAL_LOG.md` record
+carries `Mode: auto`. `claude` is a stub on `PATH` that prints `**Verdict:** PASS` — no paid call.
+The Stop hook is run exactly as `.claude/settings.json` runs it:
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```
+Wed Oct 28 06:19:35 AM UTC 2026
+=== AFTER: the Stop hook fires for a Track: minimal, Mode: auto task at Ready for Review ===
+[hook:stop_auto_verify] T777: auto verify started for commit e825370c3e2b — log .claude/verify-runs/T777-e825370c3e2b.log
 
-**WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
-implementing agent alone]
+=== the Decision record after the run ===
+## T777 — Sort the names · minimal
+Mode: auto
+**Asked:** "sort the names [auto]"
+**Decisions:**
+1. sort A–Z — RULE: `docs/claude-md/tracks.md` `### Minimal-track flow`
+**Checked:**
+- New test `test_sort_is_alphabetical` — failed before the change, passes after
+- Suite: `pytest -q` — 12 passed
+- verify: ☑ pass — auto-run by hook, session d3f0a1b2-1111-4c0d-9e8f-abcdef012345, commit e825370c3e2b8dde600e4e05fefb9920cc6fc1b5, log .claude/verify-runs/T777-e825370c3e2b.log
+**Files:** `src/app.py`
+**Not done:** merge (yours); auto verify: ☑ pass (session d3f0a1b2-1111-4c0d-9e8f-abcdef012345, commit e825370c3e2b8dde600e4e05fefb9920cc6fc1b5, log .claude/verify-runs/T777-e825370c3e2b.log)
+
+=== the run record, outside the repo (agents are denied writes there) ===
+{"task": "T777", "commit": "e825370c3e2b8dde600e4e05fefb9920cc6fc1b5", "verdict": "pass", "session": "d3f0a1b2-1111-4c0d-9e8f-abcdef012345", "log": ".claude/verify-runs/T777-e825370c3e2b.log"}
+
+=== the merge gate on this task: allow, then block once the record is gone ===
+with the run record: exit 0 and no block printed above = allow
+{"decision": "block", "reason": "[hook:pre_bash] Pipeline gate failed — cannot push/merge:
+  • Tasks in Ready for Review missing Stage 5 verify evidence: T777 (no evidence row) …"}
+```
+
+The user's three BEFORE symptoms are gone: the run starts for a minimal row, the record carries the
+`verify:` line inside its `Checked:` field, and the `Not done:` slot names the result instead of
+`auto verify: running (T182)`.
+
+**This run found a defect the tests had missed** and is why it was worth doing: the first AFTER
+capture (06:17:40Z) put the `verify:` line *after* `**Not done:**`, because the `Checked:` field's
+bullet pattern `[-*]` also matched the record's own `**Files:**` and `**Not done:**` lines. The
+bullet is now `(?:[-+]|\*(?!\*))` and `test_ac3_the_checked_lines_the_user_wrote_are_left_exactly_as_they_were`
+now pins the order `verify: < **Files:** < **Not done:**`.
+
+**DELTA**: A task started with `[auto]` on the **minimal track** now gets the same real `/verify` run
+the extended track has had since T182 — the hook writes its result into the Decision record and the
+merge gate reads it there under T182's record rule — and on both tracks the report the user reads
+stops saying `auto verify: running (T182)` once the run has ended.
+
+**WITNESS**: `common-infrastructure` agent ran every command above on 2026-10-28 (05:41:15Z baseline,
+05:51:12Z BEFORE, 06:19:35Z AFTER, 06:19:47Z final suite), attributed in
+`memory/event-trace/T188.jsonl` via `.claude/hooks/.state/active_task`. **Not the implementing agent
+alone**: AC 9, the one paid live `/verify` run, is the user's and has not been run — the Supervisor
+must ask for the go first. `/verify T188` itself is the user's.

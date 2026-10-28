@@ -283,7 +283,7 @@ def main():
 
     dirs = am.tasks_dirs(ROOT)
     request_ts = auto_request_time(event.get("transcript_path"))
-    open_rows = am.candidates(kanban)
+    open_rows = am.board_rows(kanban)
     done = {task_id for task_id, _ in am.board_rows(kanban, ("Done",))}
     tasks = list(open_rows)
     skip = done | {task_id for task_id, _ in open_rows}

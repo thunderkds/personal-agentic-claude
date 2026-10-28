@@ -51,7 +51,7 @@ Supervisor design decisions (defaults the user can overrule before the build):
 ### Requirement Fidelity Gate
 
 - [x] Restated intent confirmed (Supervisor, 2026-10-28; user chose "Everything except merge and push")
-- [ ] Domain terms: `PROJECT_SPEC.md` glossary **Auto verify** gains "on both tracks" (agent)
+- [x] Domain terms: `PROJECT_SPEC.md` glossary **Auto verify** gains "on both tracks" (agent, 2026-10-28)
 - [x] Every Acceptance Criterion traces to a decision above
 - [x] Requirement Refs covered (none)
 
@@ -164,9 +164,11 @@ Unit tests with the `claude` binary stubbed by a script on `PATH` that prints a 
 
 ## Completion Checklist
 
-- [ ] Implementation done
-- [ ] Self-review: `Skill({ skill: "code-review" })` run
-- [ ] Security review: `Skill({ skill: "security-review" })` run (Risk High)
-- [ ] Tests written AND pass — output pasted into `tasks/TASK_REVIEW_T188.md`'s Evidence table (Hard-Stop Gate 5)
-- [ ] UI Evidence rows marked ☐ N/A (pure-hook task)
-- [ ] Supervisor notified: task ready for Stage 4 review
+- [x] Implementation done (AC 1–8; AC 9 is the user's paid run and is not done)
+- [ ] Self-review: `Skill({ skill: "code-review" })` run — **the agent has no `Skill` tool; a manual
+      review pass is written up in `tasks/TASK_REVIEW_T188.md` under "Decisions worth the reviewer's
+      eye" and "Residual limits". The skill itself is the Supervisor's to run.**
+- [ ] Security review: `Skill({ skill: "security-review" })` run (Risk High) — same: Supervisor's
+- [x] Tests written AND pass — output pasted into `tasks/TASK_REVIEW_T188.md`'s Evidence table (Hard-Stop Gate 5)
+- [x] UI Evidence rows marked ☐ N/A (pure-hook task)
+- [x] Supervisor notified: task ready for Stage 4 review

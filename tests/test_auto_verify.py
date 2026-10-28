@@ -774,7 +774,7 @@ def test_ac1_the_reader_returns_each_task_with_its_track_and_report_file(tmp_pat
     dirs = am.tasks_dirs(str(project))
     kanban = (project / "PROJECT_KANBAN.md").read_text(encoding="utf-8")
     found = {}
-    for task_id, row in am.candidates(kanban, ("Ready for Review",)):
+    for task_id, row in am.board_rows(kanban, ("Ready for Review",)):
         task = am.resolve(task_id, row, dirs)
         found[task_id] = (task.track, task.report_path, task.marker, task.marked)
     assert found[TASK] == ("extended", str(project / "tasks" / f"TASK_REVIEW_{TASK}.md"), True, True)
@@ -925,7 +925,9 @@ def test_ac3_the_checked_lines_the_user_wrote_are_left_exactly_as_they_were(tmp_
     body = _record_body(checkout)
     for line in mine:
         assert line in body, line
+    # inside the `Checked:` field: after the user's own bullets, before the next field
     assert body.index(mine[0]) < body.index(mine[1]) < body.index("- verify:")
+    assert body.index("- verify:") < body.index("**Files:**") < body.index("**Not done:**")
     assert "**Files:** `src/app.py`" in body and "**Decisions:**" in body
 
 

@@ -44,8 +44,13 @@ GIT_TIMEOUT_S = 5
 # `**Not done:**`, and the slot it carries reads `auto verify:`, not a line-leading `verify:`.
 MINIMAL_LOG_REL = auto_mode.MINIMAL_LOG_REL
 VERIFY_LINE_PREFIX = "verify: "
-CHECKED_FIELD = re.compile(r"^[ \t]*(?:\*\*)?Checked:(?:\*\*)?[^\n]*(?:\n[ \t]*[-*][^\n]*)*", re.M)
-VERIFY_LINE = re.compile(r"^[ \t]*[-*]?[ \t]*verify:[ \t]*(?P<result>[^—\n]*?)[ \t]*"
+# A bullet is `-`, `+`, or a `*` that does not start a `**bold**` field name: `[-*]` would read the
+# record's own `**Files:**` and `**Not done:**` lines as bullets of the `Checked:` field, and the
+# appended line would then land after them instead of inside the field (caught by a real run).
+BULLET = r"(?:[-+]|\*(?!\*))"
+CHECKED_FIELD = re.compile(rf"^[ \t]*(?:\*\*)?Checked:(?:\*\*)?[^\n]*(?:\n[ \t]*{BULLET}[^\n]*)*",
+                           re.M)
+VERIFY_LINE = re.compile(rf"^[ \t]*{BULLET}?[ \t]*verify:[ \t]*(?P<result>[^—\n]*?)[ \t]*"
                          r"(?:—[ \t]*(?P<notes>[^\n]*))?$", re.M | re.I)
 
 

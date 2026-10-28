@@ -149,7 +149,7 @@ def stop_hook():
     except Exception:
         return
     dirs = am.tasks_dirs(ROOT)
-    for task_id, row in am.candidates(kanban, ("Ready for Review",)):
+    for task_id, row in am.board_rows(kanban, ("Ready for Review",)):
         try:
             task = am.resolve(task_id, row, dirs)
             if task.minimal and not task.exists:

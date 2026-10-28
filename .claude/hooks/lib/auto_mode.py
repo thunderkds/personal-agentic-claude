@@ -160,12 +160,6 @@ def board_rows(kanban, titles=("In Progress", "Ready for Review")):
     return rows
 
 
-def candidates(kanban, titles=("In Progress", "Ready for Review")):
-    """The board rows a caller should resolve. Same shape as `board_rows`; named apart because a
-    caller pairs it with `file_candidates`."""
-    return board_rows(kanban, titles)
-
-
 def file_candidates(dirs, skip):
     """D9: the auto-mode tasks found from their files, so a project with no board is still checked.
 
