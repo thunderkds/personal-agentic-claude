@@ -45,7 +45,7 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 | Verification command run | ☑ pass | `python3 -m pytest tests/test_agent_frontmatter.py tests/test_agent_memory_tools.py -q` -> `47 passed in 0.10s` |
 | Negative cases hold | ☑ pass | `test_other_startup_steps_kept` (4 cases) and the `tools:` retention assert pass: no existing Startup step or tool removed |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Supervisor inline review of the 4 `agents/*.md` diffs, `tests/test_agent_memory_tools.py`; `skills/` and `memory/` untouched. Accepted deviation: the memory rule is step 6, not step 3, so "the first four" stays correct. Full multi-reviewer `code-review` skill not run (docs and one test file) |
 | Full smoke suite still green (no regression) | ☑ pass | `python3 -m pytest tests -q -x` -> `862 passed in 77.28s` |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
@@ -98,9 +98,9 @@ FAILED tests/test_agent_memory_tools.py::test_memory_md_step_uses_the_slice[qa]
 
 (The 4 passing are the negative `test_other_startup_steps_kept` cases, which must hold before and after.)
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER** (Supervisor re-ran 2026-10-28): `python3 -m pytest tests/test_agent_frontmatter.py tests/test_agent_memory_tools.py -q` -> `47 passed in 0.04s`. New `agents/backend.md:4`: `tools: Read, Write, Edit, Bash, Glob, Grep, mcp__easy-memory__memory_search, mcp__easy-memory__memory_read`. Live check (Success Criteria #2): `claude -p --agent backend-developer` run in this worktree called `mcp__easy-memory__memory_read` on a note saved by an earlier session, with `permission_denials: []`, and did not read `memory/MEMORY.md` in full (it used `wc`/`grep`). Limit: that run was the main thread of the agent, so the prompt hook injected the index; a sub-agent spawned by `Agent()` and calling `memory_search` itself is not yet observed.
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+**DELTA**: The four base sub-agents can search and open easy-memory notes, and they no longer read all of `memory/MEMORY.md` (about 10,400 tokens) at startup when the spawn prompt carries the slice (about 700 tokens).
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
