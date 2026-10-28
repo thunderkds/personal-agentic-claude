@@ -167,6 +167,31 @@ suppressed:
   [exit 0]
 ```
 
+After the Stage 4 P2 fix (`20eb01e`, both verdict patterns take the `-ed` form) — three more
+end-to-end cases against the shipped hook at `2026-10-28T06:58:30Z`, and the three suites again:
+
+```
+7) Companion score row reads `☑ failed`
+  BLOCKED: • Tasks in Ready for Review with an Evidence row marked fail: T900 (Companion score)
+8) a UI design row reads `☑ failed`
+  BLOCKED: • Tasks in Ready for Review with an Evidence row marked fail: T900 (UI: Visual regression)
+9) boundary: `☑ failing` is prose, not a verdict
+  allowed, silent
+
+$ python3 -m pytest .claude/hooks/tests/ -q
+974 passed, 25 subtests passed in 20.05s
+
+$ python3 -m pytest tests/ -q
+846 passed in 39.68s
+
+$ sh scripts/validate.sh
+validate.sh: PASS
+```
+
+The AC-4 oracle is unchanged since `7dab0e9` and still matches byte-for-byte — 3630 bytes,
+re-captured against the shipped hook — so neither the P1 nor the P2 fix touched the
+no-companion-row path.
+
 Baselines before the task: `917 passed, 25 subtests` (hooks) and `846 passed` (tests). The hook
 suite gains 42 companion-row cases and one mutation proof for the relaxed T064 row check.
 
