@@ -289,32 +289,49 @@ stderr. It does not read or write Evidence: the merge gate is unchanged.
 ### Auto verify (Stop hook)
 
 `.claude/hooks/stop_auto_verify.py` runs the real `/verify` for an auto-mode task, so the Supervisor never
-runs it. It fires when the Supervisor stops. It acts on a task only when all of these hold:
+runs it. It fires when the Supervisor stops, on **both tracks** (T188). It acts on a task only when all of
+these hold:
 
 1. The task's row is in `### Ready for Review` on `PROJECT_KANBAN.md`.
-2. Its `tasks/TASK_REVIEW_<ID>.md` has the `Mode: auto` line.
-3. Its `verify` row is empty, or holds an earlier auto run for other code.
+2. Its report has the `Mode: auto` line: `tasks/TASK_REVIEW_<ID>.md` on the extended track, the task's own
+   record in `tasks/MINIMAL_LOG.md` on the minimal track.
+3. Its result is empty, or holds an earlier auto run for other code.
+
+`.claude/hooks/lib/auto_mode.py` is the one reader of which tasks those are, which track each one is on, and
+which file holds its report. The auto-mode check above reads the same module, so the two hooks can never
+disagree about which tasks are in auto mode.
 
 The hook then starts one new headless session in the task's checkout (the main checkout or its worktree):
 `claude -p "/verify <ID>" --max-budget-usd 2 --output-format json`. The session uses your normal permission
 settings, never `--dangerously-skip-permissions`. The hook returns at once: the run is detached in its own
 session (`setsid`). `CLAUDE_AUTO_VERIFY_BUDGET_USD` changes the budget, and `CLAUDE_AUTO_VERIFY_TIMEOUT_S`
 the time limit (default 1800). The run writes its output to `.claude/verify-runs/<ID>-<commit>.log`
-(gitignored). One task and commit run once: to run again on the same commit, delete that log. A commit that
-changes only the task's review file counts as the same code.
+(gitignored) — the same path and the same one-run-per-commit lock on both tracks. One task and commit run
+once: to run again on the same commit, delete that log. A commit that changes only the file holding the
+task's result counts as the same code.
 
-When the run ends, the hook, never the Supervisor, writes two things:
+When the run ends, the hook, never the Supervisor, writes three things:
 
 - A run record, in the directory that `.claude/settings.json` denies agents write access to (the trace
   anchors' directory, `~/.claude/harness-anchors/`).
-- The `verify` row: `☑ pass`, `☑ fail` or `☐ blocked`, with the Notes
-  `auto-run by hook, session <id>, commit <sha>, log .claude/verify-runs/<file> — <pass|fail|blocked>`.
+- The result, where that track keeps its evidence:
+  - **extended track** — the `verify` Evidence row: `☑ pass`, `☑ fail` or `☐ blocked`, with the Notes
+    `auto-run by hook, session <id>, commit <sha>, log .claude/verify-runs/<file> — <pass|fail|blocked>`.
+  - **minimal track** — one line under the Decision record's `Checked:` field, in the same shape:
+    `- verify: ☑ pass — auto-run by hook, session <id>, commit <sha>, log .claude/verify-runs/<file>`. A
+    `Checked:` line you wrote is never edited or removed.
+- The report's `Not done:` auto verify slot, so the report you read stops saying
+  `auto verify: running (T182)` after the run ended. It becomes
+  `auto verify: ☑ pass (session <id>, commit <sha>, log .claude/verify-runs/<file>)`, in
+  `## Auto decisions` (extended) or the record's `**Not done:**` line (minimal). The merge clause is left
+  exactly as it is. A slot you wrote by hand is left alone, and the reason goes in the run log.
 
-Only the `**Verdict:** PASS` or `FAIL` line of the skill's result sets the row. Each of these is `blocked`: a
-SKIP or BLOCKED verdict, no verdict line, a budget stop, a timeout, or no `claude` on the PATH. A blocked
-row never contains the word "pass". The hook never overwrites a row you filled. The merge gate accepts an
-`auto-run by hook` row only when its run record exists for that task and the head commit, and says pass.
-The merge stays yours. Without `[auto]`, nothing changes: `/verify` stays yours.
+Only the `**Verdict:** PASS` or `FAIL` line of the skill's result sets the result. Each of these is
+`blocked`: a SKIP or BLOCKED verdict, no verdict line, a budget stop, a timeout, or no `claude` on the PATH.
+A blocked result never contains the word "pass". The hook never overwrites a row or a line you filled. The
+merge gate accepts an `auto-run by hook` row — or a minimal-track `verify:` line — only when its run record
+exists for that task and the head commit, and says pass; a hand-typed line in a Decision record counts for
+nothing. The merge stays yours. Without `[auto]`, nothing changes on either track: `/verify` stays yours.
 
 ### Stops that stay
 

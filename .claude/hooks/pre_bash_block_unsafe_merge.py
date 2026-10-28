@@ -45,7 +45,8 @@ try:
     from board.moments import (  # noqa: E402
         board_mode, my_blocking_tasks, my_review_tasks, pull_cache)
     from verify_record import (  # noqa: E402
-        AUTO_CHECKED_TAG, AUTO_ROW_TAG, auto_row_confirmed)
+        AUTO_CHECKED_TAG, AUTO_ROW_TAG, MINIMAL_LOG_REL, auto_row_confirmed,
+        minimal_verify_line)
 except Exception as exc:  # pragma: no cover - exercised via subprocess test
     print(json.dumps({
         "decision": "block",
@@ -337,6 +338,17 @@ def has_filled_verify_row(task_id, tasks_dir=None):
     the one place in T064 where a wrong answer is silent and repo-wide: if
     "review file missing" ever became anything other than "no evidence", the
     merge gate would stop gating on every task at once.
+
+    T188 D5 adds one more place to look, and only after every Evidence table has
+    said no: a **minimal-track** task has no guide and no review file, so its
+    result is the `verify:` line in its Decision record
+    (`tasks/MINIMAL_LOG.md`). That line is read under exactly T182's rule and
+    nothing weaker — it counts only when it is an `auto-run by hook` line whose
+    run record exists for this task and the checkout's head commit and says
+    pass. A hand-typed line counts for nothing there, including one that claims
+    the user ran `/verify`: before T188 a minimal-track task at Ready for Review
+    always blocked, so reading a line the hook did not write would be the one
+    way this change could make the gate weaker.
     """
     for directory in evidence_search_dirs(tasks_dir):
         section = read_guide_section(task_id, "Evidence", directory)
@@ -355,6 +367,19 @@ def has_filled_verify_row(task_id, tasks_dir=None):
                     ROOT, os.path.dirname(os.path.abspath(directory)), task_id,
                     match.group("notes")):
                 continue
+            return True
+    for directory in evidence_search_dirs(tasks_dir):
+        line = minimal_verify_line(task_id, directory)
+        if not line:
+            continue
+        result, notes = line
+        if "☑" not in result or "pass" not in result.lower():
+            continue
+        low = notes.lower()
+        if AUTO_CHECKED_TAG in low or AUTO_ROW_TAG not in low:
+            continue
+        if auto_row_confirmed(ROOT, os.path.dirname(os.path.abspath(directory)), task_id,
+                              notes, MINIMAL_LOG_REL):
             return True
     return False
 
