@@ -37,7 +37,11 @@ GATE_REL = ".claude/hooks/pre_bash_block_unsafe_merge.py"
 #   T188 — D5 on the second track: the same rule for a minimal-track `verify:` line in a Decision
 #          record (`tasks/MINIMAL_LOG.md`), and nothing weaker — a hand-typed line counts for
 #          nothing there (`tasks/TASK_GUIDE_T188.md` D5, AC 5).
-AUTHORISED_TASKS = ("T182", "T188")
+#   T190 — FR-004: a checked `☑ fail` in the Companion score row or a UI design row blocks the
+#          push. Fail-open on every absence (FR-006), so a machine with neither companion tool
+#          behaves as before (`tasks/TASK_GUIDE_T190.md`, AC 2-7). Authorised by the user,
+#          2026-10-28.
+AUTHORISED_TASKS = ("T182", "T188", "T190")
 
 
 def _git(root, *args):

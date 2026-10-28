@@ -107,8 +107,8 @@ def test_a_base_ref_that_does_not_resolve_fails_closed(tmp_path):
     assert "git log failed" in problem and "cannot confirm" in problem
 
 
-def test_the_allowlist_names_the_two_tasks_that_own_rules_in_the_gate():
-    assert guard.AUTHORISED_TASKS == ("T182", "T188")
+def test_the_allowlist_names_the_tasks_that_own_rules_in_the_gate():
+    assert guard.AUTHORISED_TASKS == ("T182", "T188", "T190")
     text = open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              "merge_gate_guard.py"), encoding="utf-8").read()
     for task in guard.AUTHORISED_TASKS:
