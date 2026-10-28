@@ -359,6 +359,175 @@ def has_filled_verify_row(task_id, tasks_dir=None):
     return False
 
 
+# --- The companion score row and the three UI design rows (T190) ------------
+#
+# Four Evidence rows become binding here, named by their Check cell:
+# `Companion score (easy-verifier)`, `UI: Visual regression`,
+# `UI: Design-system compliance` and `UI: Responsiveness`. Only the **Result**
+# cell decides, and only one spelling decides it: a checked `☑ fail`.
+#
+# **This check is deliberately fail-OPEN, and that inverts the rule every other
+# check in this file follows. It is intentional — do not "fix" it.** Above,
+# every absence resolves to *block*: a missing guide, an unreadable review file,
+# an unparsable trace all mean "not verified". Here every absence resolves to
+# *allow*: no row, a blank row, the unchecked template placeholder, `☑ N/A`, a
+# malformed table, an unreadable file — none of them block.
+#
+# The reason is user decision D6 (2026-10-28): *"if you use verifier mcp, and ui
+# to check, the code must pass them. if not, just work on the normal flow, that
+# all"*. The companion tools (easy-verifier, easy-ui) are optional, so a machine
+# with neither — no Docker, no Python package, no MCP server — must behave
+# exactly as it did before this feature existed (FR-006, FR-014;
+# `.claude/hooks/tests/data/t190_pre_change_gate_output.txt` is that assertion's
+# oracle). Reading these rows fail-closed would require a score row on every
+# task, which is how an optional tool becomes a mandatory one.
+# The binding half is FR-015: a tool that *did* run is binding, and the only
+# thing that tells this hook it ran is an explicit `☑ fail`.
+#
+# Structural, never a substring search — the T044 comment at the top of this
+# file records what a `\bfail\b` scan over the row would cost: Notes prose such
+# as "no failures observed" or "the M2 mutation must fail" would refuse a push.
+# The Check cell is matched inside a pipe-delimited row and the verdict is read
+# from the Result cell alone.
+#
+# Not generalised to the other Evidence rows (`Negative cases hold`, `Full smoke
+# suite still green`). Deliberate cut: binding rows this feature was not asked
+# to touch would block a push on a pre-existing `☑ fail` the moment it ships.
+COMPANION_ROW_NAMES = (
+    "Companion score",
+    "UI: Visual regression",
+    "UI: Design-system compliance",
+    "UI: Responsiveness",
+)
+
+
+def _companion_row_pattern(name):
+    """A pipe-delimited Evidence row whose Check cell contains `name`, with its
+    Result and Notes cells captured separately. Line-anchored, and no cell can
+    span a `|` or a newline — the same shape as `VERIFY_ROW_PATTERN`."""
+    return re.compile(
+        r"^[ \t]*\|[^|\n]*" + re.escape(name) + r"[^|\n]*\|"
+        r"(?P<result>[^|\n]*)\|(?P<notes>[^|\n]*)",
+        re.IGNORECASE | re.MULTILINE,
+    )
+
+
+COMPANION_ROW_PATTERNS = tuple(
+    (name, _companion_row_pattern(name)) for name in COMPANION_ROW_NAMES)
+
+# The checked box, attached to its verdict. `UNCHECKED_PASS_PATTERN` above is
+# the same idea in the other direction: `☐ fail` is the template's guidance text,
+# not an answer, so it must never match. Optional `**` because a reviewer may
+# bold the verdict.
+CHECKED_FAIL_PATTERN = re.compile(r"☑\s*\**\s*fail\b", re.IGNORECASE)
+CHECKED_PASS_PATTERN = re.compile(r"☑\s*\**\s*pass\b", re.IGNORECASE)
+
+# The verifier report a `pass` row cites. A backticked span comes first so a path
+# containing a space resolves; otherwise a bare `~`/absolute token. A candidate
+# without a `/` is not a path — the same Notes cell also carries `overall`,
+# `change_risk`, the scope and the ref.
+REPORT_PATH_PATTERN = re.compile(r"`([^`\n]+)`|([~/][^\s|`]+)")
+
+
+def cited_report_path(notes, checkout_root=None):
+    """The verifier report path a Notes cell cites, resolved, or None.
+
+    `~` is expanded (`EASY_VERIFIER_REPORTS_DIR` writes to
+    `$HOME/.easy-verifier-reports/<repo>/`) and a relative path resolves against
+    the checkout the row was read from. Never raises.
+    """
+    if not isinstance(notes, str):
+        return None
+    for match in REPORT_PATH_PATTERN.finditer(notes):
+        candidate = (match.group(1) or match.group(2) or "").strip()
+        if "/" not in candidate or "\x00" in candidate:
+            continue
+        try:
+            path = os.path.expanduser(candidate)
+            if not os.path.isabs(path):
+                path = os.path.join(checkout_root or ROOT, path)
+        except Exception:
+            return None
+        return path
+    return None
+
+
+def companion_rows(task_id, tasks_dir=None):
+    """Every bound Evidence row present for `task_id`:
+    `({row name: (result cell, notes cell)}, checkout root)`.
+
+    Resolved exactly like `has_filled_verify_row`: main checkout first, then each
+    live worktree, and within each the guide first then `TASK_REVIEW_Txxx.md`.
+    The first directory carrying any bound row wins, and its checkout root is
+    returned so a relative report path resolves against the right tree.
+
+    Never raises. Every failure — a missing file, an unreadable one, an absent
+    Evidence section, a malformed table — resolves to `({}, None)`, which means
+    "no companion row" and therefore allows.
+    """
+    try:
+        for directory in evidence_search_dirs(tasks_dir):
+            section = read_guide_section(task_id, "Evidence", directory)
+            if not section:
+                continue
+            rows = {}
+            for name, pattern in COMPANION_ROW_PATTERNS:
+                match = pattern.search(section)
+                if match:
+                    rows[name] = (match.group("result"), match.group("notes"))
+            if rows:
+                return rows, os.path.dirname(os.path.abspath(directory))
+    except Exception:
+        pass
+    return {}, None
+
+
+def has_failed_companion_row(task_id, tasks_dir=None):
+    """The bound rows whose Result cell carries a checked `☑ fail`, in table
+    order — `[]` when there are none.
+
+    Returns the row names rather than a bare boolean because the block message
+    must name the row it refuses on (AC 2). An empty list is falsey, so the
+    caller still reads as a predicate, and `[]` is the answer for every absence:
+    see the inversion comment above.
+    """
+    rows, _ = companion_rows(task_id, tasks_dir)
+    return [name for name in COMPANION_ROW_NAMES
+            if name in rows and CHECKED_FAIL_PATTERN.search(rows[name][0])]
+
+
+def companion_report_advisories(task_id, tasks_dir=None):
+    """One line per `☑ pass` **Companion score** row whose cited verifier report
+    is not a file on disk (FR-005: a `pass` is trusted only against the report
+    it cites, the same rule the `verify` row follows against the event trace).
+
+    Advisory only, never a block — an unresolvable citation costs a warning on
+    stderr, so this cannot refuse a push on a path the hook merely failed to
+    parse. The three UI rows are not checked: easy-ui is one named method among
+    screenshot diff, LLM vision and Storybook snapshot (FR-011), and the other
+    three cite no report file.
+    """
+    rows, checkout_root = companion_rows(task_id, tasks_dir)
+    result, notes = rows.get("Companion score", (None, None))
+    if result is None or not CHECKED_PASS_PATTERN.search(result):
+        return []
+    if CHECKED_FAIL_PATTERN.search(result):
+        return []  # already blocking; one message about this row is enough
+    path = cited_report_path(notes, checkout_root)
+    if path is None:
+        return [f"{task_id} Companion score row reads pass but its Notes cite no "
+                f"verifier report path — that row is unscored, not a pass (FR-005)."]
+    try:
+        is_file = os.path.isfile(path)
+    except Exception:
+        is_file = False
+    if not is_file:
+        return [f"{task_id} Companion score row reads pass but the verifier report "
+                f"it cites is not a file on disk: {path} — that row is unscored, "
+                f"not a pass (FR-005)."]
+    return []
+
+
 # --- What to actually do about an unattributed Bash call (T095 defect B) ----
 #
 # This gate used to end its block with "a Bash command is attributed to a task
@@ -500,6 +669,7 @@ def main():
     if ready_review:
         # Check each for verify evidence in their task guide
         unverified = []
+        failed_rows = []
         for tid in ready_review:
             # Look for a filled verify row in the Evidence table — in the guide,
             # or in the sibling TASK_REVIEW file it may have moved to (T064) —
@@ -513,10 +683,24 @@ def main():
                 if has_evidence_row and not has_trace:
                     unverified[-1] = f"{tid} (evidence row present but no verified tool call in memory/event-trace/{tid}.jsonl)"
 
+            # T190: a companion score row or a UI design row that explicitly
+            # reads `☑ fail` is binding. Everything else about those four rows
+            # is silent — see the inversion comment above
+            # `COMPANION_ROW_NAMES`: this check allows unless a fail is explicit.
+            failed_rows.extend(f"{tid} ({row})" for row in has_failed_companion_row(tid))
+            for advisory in companion_report_advisories(tid):
+                print(f"[hook:pre_bash] {advisory}", file=sys.stderr)
+
         if unverified:
             blockers.append(
                 f"Tasks in Ready for Review missing Stage 5 verify evidence: "
                 f"{', '.join(unverified)}"
+            )
+
+        if failed_rows:
+            blockers.append(
+                f"Tasks in Ready for Review with an Evidence row marked fail: "
+                f"{', '.join(failed_rows)}"
             )
 
     if blockers:
