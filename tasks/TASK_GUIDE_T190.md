@@ -190,7 +190,18 @@ check.
 |------|--------|
 | `templates/TASK_REVIEW_template.md` | One new Evidence row (AC 1) |
 | `.claude/hooks/pre_bash_block_unsafe_merge.py` | `failed_companion_rows` + its call in the `ready_review` loop + the inversion comment |
-| `.claude/hooks/tests/test_merge_gate_companion_rows.py` | New — AC 2–7 |
+| `.claude/hooks/tests/test_merge_gate_companion_rows.py` | New — AC 2–7, the edge-case checklist, and the AC-4 oracle assertion (662 lines, the bulk of this task's diff) |
+| `.claude/hooks/tests/data/t190_pre_change_gate_output.txt` | New — the AC-4 oracle: the pre-change gate's stdout+stderr across nine no-companion-row scenarios, captured before the hook edit existed |
+| `tests/test_auto_mode.py` | **Added mid-task, user-authorised.** T180's AC 4 froze the merge gate against every later task; its allow-list now names the tasks authorised to change the gate (`GATE_AUTHORISED_TASKS`), `BASE_REF` untouched |
+| `.claude/hooks/tests/test_stop_auto_mode_check.py` | **Added mid-task, user-authorised.** The second, verbatim copy of that same guard — edit both or neither |
+| `.claude/hooks/tests/test_guide_sections.py` | **Added mid-task, user-authorised.** T064's row check asserted full list equality, which forbade the Evidence table gaining AC 1's row; now a subsequence check, with a mutation proof that a changed, dropped or reordered baseline row is still rejected |
+| `tasks/TASK_GUIDE_T190.md` | **Added mid-task, user-authorised.** This file: the `report:` label in AC 1 (Stage 4 P1), the renamed Entry point, the corrected AC-4 oracle note, and these rows |
+
+> **Lane check, recorded not re-labelled** (`python3 scripts/lane_check.py tasks/TASK_GUIDE_T190.md
+> plan/t190-t194-companion-scoring...HEAD`): `lane: C2, 8 files, 1133 lines, EXCEEDS (lines 1133 >
+> 500)`. The C2 label stands: 662 of those lines are the one new test file, and the four guard/guide
+> files were authorised by the user mid-task after the planned change met tests that forbade it.
+> The Supervisor records the EXCEEDS rather than re-labelling the task.
 
 ## Files Must NOT Touch
 
