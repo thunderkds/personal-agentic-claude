@@ -422,15 +422,37 @@ COMPANION_ROW_PATTERNS = tuple(
 CHECKED_FAIL_PATTERN = re.compile(r"☑\s*\**\s*fail\b", re.IGNORECASE)
 CHECKED_PASS_PATTERN = re.compile(r"☑\s*\**\s*pass\b", re.IGNORECASE)
 
-# The verifier report a `pass` row cites. A backticked span comes first so a path
-# containing a space resolves; otherwise a bare `~`/absolute token. A candidate
-# without a `/` is not a path — the same Notes cell also carries `overall`,
-# `change_risk`, the scope and the ref.
-REPORT_PATH_PATTERN = re.compile(r"`([^`\n]+)`|([~/][^\s|`]+)")
+# The verifier report a `pass` row cites, read after a literal `report:` label.
+#
+# **The label is load-bearing; do not drop it back to "the first path in the
+# cell".** That is what this did until the Stage 4 P1 on T190, and it failed in
+# both directions at once:
+#   * False advisory on the common case. The Notes cell must also carry the ref
+#     (FR-001, and T191's AC 11), and a ref is naturally written in backticks —
+#     `plan/t190-t194-companion-scoring...HEAD`. That has a `/` in it, so the ref
+#     was read as the report path, which does not exist, and an honest row warned.
+#   * Silent inertness, which is the one that matters. A row citing **no report
+#     at all** was excused by any unrelated backticked path that happened to sit
+#     in the cell: `skills/score/SKILL.md` exists on disk, `os.path.isfile` said
+#     true, and the advisory never fired. FR-005 is the whole "measured, not
+#     claimed" protection for this row, so that made it inert while still
+#     looking like a check — the same shape of defect as T044's substring scan.
+#
+# So: the path is the first backticked-or-bare path token **after** `report:`.
+# No label means no citation, which the caller reports as "cites no verifier
+# report path". Deterministic, unsatisfiable by an unrelated path elsewhere in
+# the cell, and it survives the cell gaining more fields later.
+REPORT_LABEL_PATTERN = re.compile(r"report\s*:", re.IGNORECASE)
+
+# A backticked span first, so a path containing a space resolves whole; else a
+# bare whitespace-delimited token. A candidate without a `/` is not a path — the
+# same cell also carries `overall`, `change_risk`, the scope and the ref.
+REPORT_PATH_PATTERN = re.compile(r"`([^`\n]+)`|([^\s|`]+)")
 
 
 def cited_report_path(notes, checkout_root=None):
-    """The verifier report path a Notes cell cites, resolved, or None.
+    """The verifier report path a Notes cell cites after its `report:` label,
+    resolved, or None when the cell carries no label or no path after it.
 
     `~` is expanded (`EASY_VERIFIER_REPORTS_DIR` writes to
     `$HOME/.easy-verifier-reports/<repo>/`) and a relative path resolves against
@@ -438,7 +460,10 @@ def cited_report_path(notes, checkout_root=None):
     """
     if not isinstance(notes, str):
         return None
-    for match in REPORT_PATH_PATTERN.finditer(notes):
+    label = REPORT_LABEL_PATTERN.search(notes)
+    if not label:
+        return None
+    for match in REPORT_PATH_PATTERN.finditer(notes, label.end()):
         candidate = (match.group(1) or match.group(2) or "").strip()
         if "/" not in candidate or "\x00" in candidate:
             continue

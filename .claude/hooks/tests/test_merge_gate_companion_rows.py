@@ -328,7 +328,7 @@ def test_pass_row_citing_an_existing_report_does_not_block_and_says_nothing():
             fixture.main_tasks, "TASK_REVIEW_T900.md",
             review_with(row(COMPANION, "☑ pass",
                             f"overall 86 (>= 80), change_risk pass, scope changes, "
-                            f"ref main...HEAD, report `{report}`")))
+                            f"ref `main...HEAD`, report: `{report}`")))
         stdout, stderr = run_gate("git push origin feat/t900")
         assert stdout.strip() == "", stdout
         assert stderr.strip() == "", stderr
@@ -339,8 +339,8 @@ def test_pass_row_citing_an_existing_report_does_not_block_and_says_nothing():
 def test_pass_row_citing_a_missing_report_does_not_block_but_warns_once():
     reason, stderr = gate(review_with(
         row(COMPANION, "☑ pass",
-            "overall 86, change_risk pass, scope changes, ref main...HEAD, "
-            "report /nonexistent/report.html")))
+            "overall 86, change_risk pass, scope changes, ref `main...HEAD`, "
+            "report: /nonexistent/report.html")))
     assert reason is None, reason
     lines = [l for l in stderr.splitlines() if l.strip()]
     assert len(lines) == 1, lines
@@ -364,7 +364,7 @@ def test_a_report_path_with_a_space_resolves():
         open(report, "w").write("<html>report</html>")
         GateFixture._write(
             fixture.main_tasks, "TASK_REVIEW_T900.md",
-            review_with(row(COMPANION, "☑ pass", f"overall 86, report `{report}`")))
+            review_with(row(COMPANION, "☑ pass", f"overall 86, report: `{report}`")))
         stdout, stderr = run_gate("git push origin feat/t900")
         assert stdout.strip() == "" and stderr.strip() == "", (stdout, stderr)
     finally:
@@ -384,7 +384,7 @@ def test_a_tilde_report_path_is_expanded(monkeypatch):
         GateFixture._write(
             fixture.main_tasks, "TASK_REVIEW_T900.md",
             review_with(row(COMPANION, "☑ pass",
-                            "overall 86, report ~/.easy-verifier-reports/kit/score.html")))
+                            "overall 86, report: ~/.easy-verifier-reports/kit/score.html")))
         stdout, stderr = run_gate("git push origin feat/t900")
         assert stdout.strip() == "" and stderr.strip() == "", (stdout, stderr)
     finally:
@@ -398,7 +398,7 @@ def test_a_report_path_that_is_a_directory_warns():
         os.makedirs(reports)
         GateFixture._write(
             fixture.main_tasks, "TASK_REVIEW_T900.md",
-            review_with(row(COMPANION, "☑ pass", f"overall 86, report `{reports}`")))
+            review_with(row(COMPANION, "☑ pass", f"overall 86, report: `{reports}`")))
         stdout, stderr = run_gate("git push origin feat/t900")
         assert stdout.strip() == "", stdout
         assert reports in stderr
@@ -416,12 +416,76 @@ def test_the_cited_path_is_checked_not_the_newest_in_the_directory():
         cited = os.path.join(fixture.root, "score_this_session.html")
         GateFixture._write(
             fixture.main_tasks, "TASK_REVIEW_T900.md",
-            review_with(row(COMPANION, "☑ pass", f"overall 86, report `{cited}`")))
+            review_with(row(COMPANION, "☑ pass", f"overall 86, report: `{cited}`")))
         stdout, stderr = run_gate("git push origin feat/t900")
         assert stdout.strip() == "", stdout
         assert cited in stderr and "score_other_session" not in stderr
     finally:
         fixture.cleanup()
+
+
+# --- FR-005 reads the `report:` label, not "the first path in the cell" (P1) --
+#
+# Both directions of the Stage 4 P1 are pinned here. The second is the one that
+# matters: without the label, any unrelated existing path in the cell silenced
+# the check, so a row citing no report at all passed FR-005.
+
+def test_a_backticked_ref_before_the_report_path_is_not_mistaken_for_it():
+    """FR-001 and T191's AC 11 require the ref in the same cell, and a ref is
+    naturally backticked: `plan/t190-t194-companion-scoring...HEAD` carries a
+    `/`. Reading the first path in the cell warned on this honest row."""
+    fixture = GateFixture(review=review_with())
+    try:
+        report = os.path.join(fixture.root, "score.html")
+        open(report, "w").write("<html>report</html>")
+        notes = ("overall 86 (>= 80), change_risk pass, scope changes, "
+                 f"ref `plan/t190-t194-companion-scoring...HEAD`, report: `{report}`")
+        assert merge_gate.cited_report_path(notes, fixture.root) == report
+        GateFixture._write(fixture.main_tasks, "TASK_REVIEW_T900.md",
+                           review_with(row(COMPANION, "☑ pass", notes)))
+        stdout, stderr = run_gate("git push origin feat/t900")
+        assert stdout.strip() == "" and stderr.strip() == "", (stdout, stderr)
+    finally:
+        fixture.cleanup()
+
+
+def test_an_unrelated_existing_path_cannot_silence_the_check():
+    """Anti-vacuity for FR-005. `skills/score/SKILL.md` is a real file, so
+    reading the first path in the cell made `os.path.isfile` true and suppressed
+    the advisory for a row that cited no report whatsoever."""
+    real_file = os.path.join(os.path.dirname(os.path.dirname(HOOKS_DIR)), "scripts", "validate.sh")
+    assert os.path.isfile(real_file), real_file
+    notes = f"overall 86, change_risk pass — see `{real_file}` for the runner"
+    assert merge_gate.cited_report_path(notes, None) is None
+    reason, stderr = gate(review_with(row(COMPANION, "☑ pass", notes)))
+    assert reason is None, reason
+    lines = [l for l in stderr.splitlines() if l.strip()]
+    assert len(lines) == 1 and "cite no verifier report path" in lines[0], lines
+
+
+def test_the_label_resolves_a_path_with_a_space_a_tilde_and_a_relative_path(monkeypatch):
+    """The three shapes the edge-case checklist names, all after the label."""
+    fixture = GateFixture(review=review_with())
+    try:
+        spaced = os.path.join(fixture.root, "score report.html")
+        open(spaced, "w").write("x")
+        assert merge_gate.cited_report_path(f"report: `{spaced}`", None) == spaced
+
+        monkeypatch.setenv("HOME", fixture.root)
+        assert merge_gate.cited_report_path("report: ~/score.html", None) == \
+            os.path.join(fixture.root, "score.html")
+
+        assert merge_gate.cited_report_path("report: reports/score.html", fixture.root) == \
+            os.path.join(fixture.root, "reports", "score.html")
+    finally:
+        fixture.cleanup()
+
+
+def test_no_report_label_means_no_citation():
+    for notes in ("overall 86, change_risk pass",
+                  "overall 86 — /home/u/score.html was written somewhere",
+                  "see `main...HEAD`"):
+        assert merge_gate.cited_report_path(notes, None) is None, notes
 
 
 def test_a_missing_report_on_a_ui_row_is_not_checked():
@@ -449,7 +513,7 @@ def test_the_word_fail_in_a_notes_cell_never_blocks(notes):
         open(report, "w").write("<html>report</html>")
         GateFixture._write(
             fixture.main_tasks, "TASK_REVIEW_T900.md",
-            review_with(row(COMPANION, "☑ pass", f"{notes} — report `{report}`")))
+            review_with(row(COMPANION, "☑ pass", f"{notes} — report: `{report}`")))
         stdout, _ = run_gate("git push origin feat/t900")
         assert stdout.strip() == "", stdout
     finally:
@@ -611,7 +675,7 @@ def test_the_block_depends_on_the_new_check():
 
 
 def test_the_advisory_depends_on_the_new_check():
-    passed = review_with(row(COMPANION, "☑ pass", "overall 86, report /nonexistent/x.html"))
+    passed = review_with(row(COMPANION, "☑ pass", "overall 86, report: /nonexistent/x.html"))
     assert gate(passed)[1].strip() != ""
 
     saved = merge_gate.companion_report_advisories
@@ -634,8 +698,11 @@ def test_the_template_carries_the_companion_score_row():
     template = open(REVIEW_TEMPLATE, encoding="utf-8").read()
     assert "| **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A |" in template
     companion_line = [l for l in template.splitlines() if "Companion score" in l][0]
-    for field in ("overall", "change_risk", "scope", "ref", "report"):
+    for field in ("overall", "change_risk", "scope", "ref", "report:"):
         assert field in companion_line, f"the Notes cell never names {field}: {companion_line}"
+    # The label is what `cited_report_path` reads; a placeholder without it would
+    # teach every future row the shape FR-005 cannot check.
+    assert merge_gate.REPORT_LABEL_PATTERN.search(companion_line)
 
 
 def test_the_templates_unchecked_companion_row_does_not_block():

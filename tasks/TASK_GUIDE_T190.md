@@ -80,7 +80,7 @@ normal flow, that all"*.
 
 | # | Criterion (testable) | Traces to requirement |
 |---|----------------------|-----------------------|
-| 1 | `templates/TASK_REVIEW_template.md` carries one new Evidence row whose Check cell reads `**Companion score (easy-verifier)**`, Result cell `☐ pass / ☐ fail / ☐ N/A`, and Notes cell naming all five of: `overall`, `change_risk`, the scope, the ref, and the report path | FR-001 |
+| 1 | `templates/TASK_REVIEW_template.md` carries one new Evidence row whose Check cell reads `**Companion score (easy-verifier)**`, Result cell `☐ pass / ☐ fail / ☐ N/A`, and Notes cell naming all five of: `overall`, `change_risk`, the scope, the ref, and the report path **after a literal `report:` label**. The label is the contract `cited_report_path` reads (Stage 4 P1, 2026-10-28): without it the check resolved the first `/`-bearing token in the cell, which both warned on an honest row whose ref was backticked and — the reason it is a P1 — was silenced entirely by any unrelated existing path in the cell. T191's AC 11 inherits the label | FR-001, FR-005 |
 | 2 | A Ready-for-Review task whose Companion score row Result cell carries a checked `☑ fail` blocks push/merge, and the blocked reason names the task ID and the row | FR-004 |
 | 3 | The same block occurs for a checked `☑ fail` in any of the three UI design rows (`UI: Visual regression`, `UI: Design-system compliance`, `UI: Responsiveness`) | FR-004 |
 | 4 | No block when the row is absent, blank, still the unchecked template placeholder, or `☑ N/A` with a written reason — in each case the gate's decision is the same as before this change | FR-006, FR-014 |
