@@ -25,6 +25,7 @@
      run; read them there. The enforced gate is the whole-file character budget above. -->
 
 ### Decisions
+- [T198: `wake` prints the Decisions + Learning Records entries with `memory_sections.py`, never reads all of MEMORY.md](decisions.md) — ~9k tokens less per session; **add new index lines at the TOP of a section (newest first) or the script misses them**; `wake/SKILL.md` is 8,152 of 8,192 bytes
 - [T195: easy-memory installed; base sub-agents get memory_search/read and use the spawn slice, not all of MEMORY.md](decisions.md) — OPTIONAL: kit works the same without it, agents skip it if absent; `memory/` NOT replaced; decide after ~2 weeks of `easy_memory.py report`
 - [T182: auto verify — Stop hook runs real `/verify` headless for `[auto]` tasks](decisions.md) — gate trusts the row only with the anchor-dir run record; $2 cap per commit
 - [T180: auto mode — `[auto]` runs either track to Ready for Review; Debate size by Risk; auto-mode Stop hook](decisions.md) — Low decides, Medium 2 / High 3 Advocates, High always debates once; hook reads report + trace; merge/verify stay the user's
