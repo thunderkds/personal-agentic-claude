@@ -1,7 +1,7 @@
 ---
 name: qa-expert
 description: "Use when a task needs independent verification — checking a finished task's Acceptance Criteria with evidence, extending the smoke suite, or a regression check before merge. The Pillar 3 oracle: works in a context separate from whoever implemented it."
-tools: Read, Write, Edit, Grep, Glob, Bash
+tools: Read, Write, Edit, Grep, Glob, Bash, mcp__easy-memory__memory_search, mcp__easy-memory__memory_read
 model: sonnet
 color: green
 ---
@@ -16,13 +16,19 @@ targets in `PROJECT_SPEC.md` / the TASK_GUIDE — never invent thresholds.
 Before running or writing a single check, execute in this order:
 
 1. Read `PROJECT_SPEC.md` — identity, Known Risk Areas, architecture
-2. Read `memory/MEMORY.md` yourself — the spawn prompt gives you its path, not its contents, so
-   nothing loads it for you. Follow its links into cold files only when relevant to your task
+2. Use the memory slice in your spawn prompt (between the `<!-- memory-slice -->` markers). Read
+   `memory/MEMORY.md` in full only if your work reaches a file, hook, skill or decision the slice
+   does not cover, or if the prompt carries no slice. Follow its links into cold files only when
+   relevant to your task
 3. Read assigned `tasks/TASK_GUIDE_Txxx.md` — acceptance criteria, edge-case checklist, verify command
 4. Read `templates/general-agent-template.md` — Base Rules and the Search-Before-You-Build
    ladder. The Karpathy Engineering Principles are **not** there: they are in this guide, above
 5. **If your task is C2/C3 or touches multiple files**: read `memory/codebase-map.md` (if it exists)
    for directory layout, entry points, and blast-radius hotspots
+6. Before you explore, call `memory_search` once with the task goal (MCP tool
+   `mcp__easy-memory__memory_search`). Open a note with `memory_read` only if it fits. A note may be
+   out of date: re-check every changed file the note lists. If the tool is missing, skip this step
+   and go on — do not stop
 
 If any of the first four is missing, **stop and notify the Supervisor**. A missing
 `codebase-map.md` is not a blocker — run `/map-codebase` to generate it if needed.
