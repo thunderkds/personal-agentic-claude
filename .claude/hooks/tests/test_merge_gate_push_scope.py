@@ -419,7 +419,8 @@ def test_edge_a_directory_change_the_parser_cannot_prove_is_global(gate, command
 
 def test_d4_merge_rebase_and_branch_moves_are_never_read_only_subcommands():
     """D4 is enforced by the allowlist: a `git merge`/`rebase` segment is unresolved."""
-    for sub in ("merge", "rebase", "pull", "checkout", "switch", "reset", "worktree", "branch"):
+    for sub in ("merge", "rebase", "pull", "checkout", "switch", "reset", "worktree", "branch",
+                "fetch"):
         assert sub not in merge_gate.SAFE_GIT_SUBCOMMANDS, sub
 
 
@@ -512,13 +513,19 @@ def test_edge_mixed_case_branch_resolves(gate):
     assert run_gate(f"{PUSH} origin Feat/T900-X", cwd) == ("", "")
 
 
-@pytest.mark.parametrize("board", [kanban(ready=("T901",), todo=("T900",)),
-                                   kanban(ready=("T901",), done=("T900",))],
-                         ids=["todo", "done"])
-def test_d3_scoped_push_of_a_todo_or_done_task_is_allowed(gate, board):
+@pytest.mark.parametrize("board", [
+    kanban(ready=("T901",), todo=("T900",)),
+    kanban(ready=("T901",), done=("T900",)),
+    kanban(ready=("T901",)) + "\n### Backlog\n- [ ] **T900** — parked | agent | C1 | P2\n",
+], ids=["todo", "done", "outside-the-lanes"])
+def test_d3_push_of_a_task_not_in_the_two_lanes_checks_the_whole_board(gate, board):
+    """Stage 4 security-review finding 4 (D3 changed by the Supervisor after a 3-Advocate
+    Debate): a branch named after a Todo, Done or lane-less task used to empty both lists,
+    so T901's work pushed as `feat/t900-x` met no check at all. It now narrows nothing."""
     fx = gate(board=board)
     cwd = fx.repo("wt-t900", "feat/t900-x")
-    assert run_gate(f"{PUSH} origin feat/t900-x", cwd) == ("", "")
+    assert merge_gate.pushed_task_ids(f"{PUSH} origin feat/t900-x", cwd) == "T900"
+    blocks_on_t901_only_as_global(f"{PUSH} origin feat/t900-x", cwd)
 
 
 @pytest.mark.parametrize("failure", [subprocess.TimeoutExpired("git", 5),
@@ -579,6 +586,81 @@ def test_edge_git_dash_c_directory_is_read(gate):
 
 
 # ---------------------------------------------------------------------------
+# Stage 4 security-review findings 1-3 — each command below resolved to T900 before the fix
+# (finding 4 is `test_d3_...` and the online test below)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("args", [
+    " {origin,--all}", " {origin,--mirror}", " {origin,--tags}",
+    " ../elsewhere feat/t900-x", " git@host:o/r.git feat/t900-x",
+], ids=["brace-all", "brace-mirror", "brace-tags", "path-remote", "url-remote"])
+def test_finding1_the_remote_must_be_a_plain_name(gate, args):
+    """Bash expands `{origin,--all}` to `origin --all`; the remote slot was never checked."""
+    fx = gate()
+    cwd = fx.repo("wt-t900", "feat/t900-x")
+    assert merge_gate.pushed_task_ids(PUSH + args, cwd) is None
+    blocks_on_t901_only_as_global(PUSH + args, cwd)
+
+
+@pytest.mark.parametrize("command", [
+    "cd {wt} && git status & {push} origin",
+    "{push} origin feat/t900-x &",
+    "git status & {push} origin feat/t900-x",
+], ids=["backgrounded-cd", "backgrounded-push", "background-before"])
+def test_finding2_a_background_separator_anywhere_is_global(gate, command):
+    """`cd X && git status & git push origin` backgrounds `(cd X && git status)`; the push
+    runs from the original cwd, which here is the main checkout on `main`."""
+    fx = gate()
+    main_checkout = fx.repo("main-checkout", "main")
+    wt = fx.repo("wt-t900", "feat/t900-x")
+    command = command.format(wt=wt, push=PUSH)
+    assert merge_gate.pushed_task_ids(command, main_checkout) is None
+    blocks_on_t901_only_as_global(command, main_checkout)
+
+
+@pytest.mark.parametrize("command", [
+    "git fetch --upload-pack='git merge feat/t901-y' . ; {push} origin feat/t900-x",
+    "git fetch && {push} origin feat/t900-x",
+    "git diff --output=.git/HEAD && {push} origin HEAD",
+    "git log --output=/tmp/t197-x && {push} origin feat/t900-x",
+    "git add --chmod=+x f && {push} origin feat/t900-x",
+    "git commit -m -x && {push} origin feat/t900-x",
+    "git commit -m && {push} origin feat/t900-x",
+    "git status --ignored && {push} origin feat/t900-x",
+    "git diff -- f && {push} origin feat/t900-x",
+    "git diff {{--stat,--output=.git/HEAD}} && {push} origin HEAD",
+    "git log * && {push} origin HEAD",
+    "git add 'f{{a,b}}' && {push} origin HEAD",
+], ids=["fetch-upload-pack", "fetch-dropped", "diff-output", "log-output", "add-chmod",
+        "message-is-an-option", "message-missing", "status-unknown", "double-dash",
+        "brace-hides-option", "glob-can-expand-to-option", "brace-in-path"])
+def test_finding3_read_only_git_takes_only_allowlisted_options(gate, command):
+    fx = gate()
+    cwd = fx.repo("wt-t900", "feat/t900-x")
+    command = command.format(push=PUSH)
+    assert merge_gate.pushed_task_ids(command, cwd) is None
+    blocks_on_t901_only_as_global(command, cwd)
+
+
+@pytest.mark.parametrize("command", [
+    "git add -A && git commit -am 'why? [T900] *wip*' && {push} origin feat/t900-x",
+    "git add -u src/a.py && git commit -q -s --no-verify -m msg && {push} origin HEAD",
+    "git commit --amend --no-edit && {push} --force-with-lease origin feat/t900-x",
+    "git status -s -b && git log --oneline -5 && {push} origin feat/t900-x",
+    "git log -n 3 --stat --graph && {push} origin feat/t900-x",
+    "git diff --stat --cached && git diff --name-only HEAD && {push} origin feat/t900-x",
+    "git show --stat HEAD && {push} origin feat/t900-x",
+], ids=["commit-am-glob-in-message", "add-u-commit-flags", "amend", "status-log",
+        "log-n", "diff-flags", "show"])
+def test_finding3_the_allowlisted_options_stay_scoped(gate, command):
+    fx = gate()
+    cwd = fx.repo("wt-t900", "feat/t900-x")
+    command = command.format(push=PUSH)
+    assert merge_gate.pushed_task_ids(command, cwd) == "T900"
+    assert run_gate(command, cwd) == ("", "")
+
+
+# ---------------------------------------------------------------------------
 # board mode `online`: the filters run first, scoping narrows their result (T157/T161)
 # ---------------------------------------------------------------------------
 
@@ -628,12 +710,17 @@ def test_online_pull_and_filters_run_then_scoping_narrows_their_result(tmp_path)
     assert "ENG-170" not in text and "ENG-171" not in text
 
 
-def test_online_a_teammates_task_the_filter_drops_stays_dropped(tmp_path):
+def test_online_a_branch_named_after_a_task_the_filter_drops_checks_the_whole_board(tmp_path):
+    """Finding 4 in board mode `online`: bob's ENG-171 is in a lane, but the T157 filter
+    does not check it for alice. Narrowing to it would empty both lists, so alice's own
+    unverified ENG-170 could leave on a branch named `feat/eng-171-x`. It narrows nothing."""
     tasks = [online_task("ENG-170", "In Progress", "alice"),
              online_task("ENG-171", "In Progress", "bob")]
     project = online_project(tmp_path, tasks, "feat/eng-171-x")
     result = online_gate(project, f"{PUSH} origin feat/eng-171-x")
-    assert result.returncode == 0 and result.stdout.strip() == "", result.stdout
+    text = json.loads(result.stdout)["reason"]
+    assert "Tasks still In Progress: ENG-170\n" in text
+    assert "ENG-171" not in text
 
 
 # ---------------------------------------------------------------------------
