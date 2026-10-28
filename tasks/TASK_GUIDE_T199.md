@@ -173,3 +173,20 @@ Red first: write the new tests, see them fail. Add the card. Run the Verificatio
 - [ ] UI / Design Evidence rows filled (Hard-Stop Gate 6)
 - [ ] `Skill({ skill: "verify" })` run (user only)
 - [ ] Supervisor notified: task ready for Stage 4 review
+
+---
+
+## Scope addendum (user, 2026-10-28: "yes, include in this one, and push the branch")
+
+**Finding from `/verify T199`** (not caused by T199, same on `main`): between about 768 px and 899 px wide the page scrolls sideways, because the `#hooks` table (4 columns) is 851 px wide while the content column is 753 to 785 px. Measured with headless Chrome: client width 753 px, 785 px give `scrollWidth` 851; 885 px and above give none; 600 px and below none (the table reflows to cards under 768 px). Cause: `site/index.html` has `@media (min-width: 768px) { #hooks th:nth-child(-n+2), #hooks td:nth-child(-n+2) { width: 1%; white-space: nowrap; } }`, which forbids the EVENT and MATCHER columns from wrapping.
+
+**Design rule to keep (T167):** tables never scroll sideways inside a wrapper. `test_tables_do_not_force_a_minimum_width_or_scroll_sideways` forbids `overflow-x: auto|scroll` on `.table-wrap` and a `min-width` on `table`. Do **not** add either. Fix by letting the first two columns wrap in the 768 to 899 px band, for example by moving the `nowrap` rule to `@media (min-width: 900px)`. Pick the smallest change that makes `scrollWidth` equal `clientWidth` at 768, 800 and 899 px.
+
+| # | Criterion (testable) |
+|---|----------------------|
+| 11 | At viewport widths 768, 800 and 899 px, `document.documentElement.scrollWidth` equals `clientWidth` (no horizontal scroll). Measured in headless Chrome and pasted. |
+| 12 | At 1000 px and 1280 px the `#hooks` table looks as before: the EVENT and MATCHER columns do not wrap (compare `white-space` computed style: `nowrap`). |
+| 13 | A new test asserts that the `nowrap` rule for `#hooks` first two columns sits in a media query whose `min-width` is at least 900px. **Mutation M5:** changing that back to 768px turns the test RED. |
+| 14 | The T167 test above, the T181 tests and every existing test still pass; none deleted. |
+
+**Files to change (added):** `site/index.html` (one CSS rule), `tests/test_site_content.py` (one test). Nothing else.

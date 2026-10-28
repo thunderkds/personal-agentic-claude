@@ -26,6 +26,9 @@ from pathlib import Path
 
 import pytest
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import merge_gate_guard  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[3]
 HOOKS = ROOT / ".claude" / "hooks"
 HOOK = "stop_auto_mode_check.py"
@@ -343,18 +346,12 @@ def test_the_installer_merge_adds_the_stop_entry(tmp_path):
     assert any(c.endswith("stop_auto_mode_check.py") for c in commands), commands
 
 
-def _gate_changed_only_by_t182(root, base_ref, gate):
-    """T182 is the one task allowed to change the merge gate (its D5 run-record guard): every
-    commit since `base_ref` that touches it names T182, and nothing uncommitted is pending."""
-    log = subprocess.run(["git", "-C", str(root), "log", "--no-merges", "--format=%s",
-                          f"{base_ref}..HEAD", "--", gate], capture_output=True, text=True)
-    pending = subprocess.run(["git", "-C", str(root), "diff", "--quiet", "HEAD", "--", gate])
-    subjects = log.stdout.splitlines()
-    return log.returncode == 0 and pending.returncode == 0 and all("T182" in s for s in subjects)
-
-
 def test_merge_gate_is_untouched():
-    assert _gate_changed_only_by_t182(ROOT, BASE_REF, ".claude/hooks/pre_bash_block_unsafe_merge.py")
+    """Only a task authorised to change the merge gate has changed it (`merge_gate_guard`, T188 P2:
+    an explicit allowlist, because `"T182" in subject` also accepted any commit that merely
+    mentioned T182 while changing the gate)."""
+    assert merge_gate_guard.unauthorised_gate_commits(ROOT, BASE_REF) == [], \
+        merge_gate_guard.unauthorised_gate_commits(ROOT, BASE_REF)
 
 
 # ── D9 (a) — discovery from files; finished tasks skipped ─────────────────────────────────

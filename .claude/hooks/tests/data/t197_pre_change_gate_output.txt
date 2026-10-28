@@ -1,0 +1,48 @@
+=== AC3 two in review, push main ===
+--- stdout ---
+{"decision": "block", "reason": "[hook:pre_bash] Pipeline gate failed \u2014 cannot push/merge:\n  \u2022 Tasks in Ready for Review missing Stage 5 verify evidence: T901 (no evidence row)\nComplete Stage 4 review and Stage 5 verify first.\n  Note: if a task above is missing its trace record rather than its evidence row, attribute your Bash calls by writing the active-task state file first: `mkdir -p <main-checkout>/.claude/hooks/.state && printf '%s\\n%s\\n' \"Txxx\" \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\" > <main-checkout>/.claude/hooks/.state/active_task` \u2014 using the literal absolute path of the main checkout (not $CLAUDE_PROJECT_DIR, which is empty inside a Bash tool call, and not a relative path, which resolves into your worktree). Valid for CLAUDE_ACTIVE_TASK_STATE_MAX_AGE_S seconds (default 6h). CLAUDE_ACTIVE_TASK=Txxx <command> does NOT work from inside a session: a hook is a sibling process of the tool call and never inherits its subshell (T047). The env var only takes effect when set before the session starts."}
+
+--- stderr ---
+
+=== AC3 two in review, push main, -u ===
+--- stdout ---
+{"decision": "block", "reason": "[hook:pre_bash] Pipeline gate failed \u2014 cannot push/merge:\n  \u2022 Tasks in Ready for Review missing Stage 5 verify evidence: T901 (no evidence row)\nComplete Stage 4 review and Stage 5 verify first.\n  Note: if a task above is missing its trace record rather than its evidence row, attribute your Bash calls by writing the active-task state file first: `mkdir -p <main-checkout>/.claude/hooks/.state && printf '%s\\n%s\\n' \"Txxx\" \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\" > <main-checkout>/.claude/hooks/.state/active_task` \u2014 using the literal absolute path of the main checkout (not $CLAUDE_PROJECT_DIR, which is empty inside a Bash tool call, and not a relative path, which resolves into your worktree). Valid for CLAUDE_ACTIVE_TASK_STATE_MAX_AGE_S seconds (default 6h). CLAUDE_ACTIVE_TASK=Txxx <command> does NOT work from inside a session: a hook is a sibling process of the tool call and never inherits its subshell (T047). The env var only takes effect when set before the session starts."}
+
+--- stderr ---
+
+=== AC8 two in review, merge task branch ===
+--- stdout ---
+{"decision": "block", "reason": "[hook:pre_bash] Pipeline gate failed \u2014 cannot push/merge:\n  \u2022 Tasks in Ready for Review missing Stage 5 verify evidence: T901 (no evidence row)\nComplete Stage 4 review and Stage 5 verify first.\n  Note: if a task above is missing its trace record rather than its evidence row, attribute your Bash calls by writing the active-task state file first: `mkdir -p <main-checkout>/.claude/hooks/.state && printf '%s\\n%s\\n' \"Txxx\" \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\" > <main-checkout>/.claude/hooks/.state/active_task` \u2014 using the literal absolute path of the main checkout (not $CLAUDE_PROJECT_DIR, which is empty inside a Bash tool call, and not a relative path, which resolves into your worktree). Valid for CLAUDE_ACTIVE_TASK_STATE_MAX_AGE_S seconds (default 6h). CLAUDE_ACTIVE_TASK=Txxx <command> does NOT work from inside a session: a hook is a sibling process of the tool call and never inherits its subshell (T047). The env var only takes effect when set before the session starts."}
+
+--- stderr ---
+
+=== AC12 nothing pending, push task branch ===
+--- stdout ---
+
+--- stderr ---
+
+=== AC12 nothing pending, push no refspec ===
+--- stdout ---
+
+--- stderr ---
+
+=== AC12 nothing pending, push main ===
+--- stdout ---
+
+--- stderr ---
+
+=== AC12 nothing pending, merge ===
+--- stdout ---
+
+--- stderr ---
+
+=== AC12 nothing pending, rebase ===
+--- stdout ---
+
+--- stderr ---
+
+=== AC12 nothing pending, not git ===
+--- stdout ---
+
+--- stderr ---
+

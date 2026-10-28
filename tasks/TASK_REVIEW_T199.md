@@ -53,6 +53,17 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 ---
 
+### Addendum Evidence (Supervisor, 2026-10-28, scope addendum AC 11 to 14)
+
+| Check | Result | Notes |
+|-------|--------|-------|
+| AC 11: no sideways scroll at 768, 800, 899 px | pass | Supervisor re-measured in headless Chrome over HTTP: client widths 768, 800, 899 give `scrollWidth` equal to `clientWidth` (also 485 px) |
+| AC 12: `nowrap` kept at 900 px and wider | pass | computed `white-space` is `nowrap` at client widths 899, 1000 and 1280, `normal` at 768 and 800 |
+| AC 13: new test and mutation M5 | pass | `test_hooks_first_two_columns_only_refuse_to_wrap_from_900px`; agent run: M5 (900px back to 768px) RED `assert 768 >= 900`, revert green |
+| AC 14: existing tests intact | pass | `python3 -m pytest tests -q -x` passed in the worktree; the T167 test still passes |
+| Deviation | accepted | The guide blamed `nowrap` alone. The agent measured the real cause: the table's minimum width was 554 px (unbreakable `Edit\|Write\|Bash` plus cell padding), so it also added `<wbr>` after each `\|` and tighter cell padding at 768 to 899 px. No `overflow-x`, no `min-width` (T167 rule kept) |
+| /verify of the addendum | pending | The user's `/verify T199` covered the card. The addendum is verified by Supervisor measurement only; run `/verify T199` again before this branch merges into `main` |
+
 ## Demonstration
 
 > Anchors what this task delivered to an observable before/after pair. BEFORE has no `N/A` path:
@@ -132,3 +143,64 @@ Mutations by hand (each applied alone, suite run, page restored; restored page: 
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
+
+### Addendum BEFORE (scope addendum: sideways scroll of the `#hooks` table at 768 to 899 px)
+
+Captured 2026-10-28, before any addendum implementation commit; worktree `/home/hungnguyenhuu/workspace/pets/wt-t199b`.
+
+(a) Verbatim current CSS in `site/index.html` (lines 195-197):
+
+```css
+  /* desktop: Event and Matcher take only their content width so Script and Behavior share the rest */
+  @media (min-width: 768px) {
+    #hooks th:nth-child(-n+2), #hooks td:nth-child(-n+2) { width: 1%; white-space: nowrap; }
+  }
+```
+
+(b) Headless Chrome (method: page copy plus a `load` script, served on `127.0.0.1:48213`; window width minus 15 gives `clientWidth`):
+
+```
+2026-10-28T09:01:03Z window=783  {"clientWidth":768,"scrollWidth":851,"hooksTdWhiteSpace":"nowrap"}
+2026-10-28T09:01:04Z window=815  {"clientWidth":800,"scrollWidth":851,"hooksTdWhiteSpace":"nowrap"}
+2026-10-28T09:01:04Z window=914  {"clientWidth":899,"scrollWidth":899,"hooksTdWhiteSpace":"nowrap"}
+2026-10-28T09:01:05Z window=1015 {"clientWidth":1000,"scrollWidth":1000,"hooksTdWhiteSpace":"nowrap"}
+2026-10-28T09:01:06Z window=1295 {"clientWidth":1280,"scrollWidth":1280,"hooksTdWhiteSpace":"nowrap"}
+```
+
+Note: 768 and 800 px overflow (851 > 768 and 800). 899 px already fits on this build (the overflow band ends near 884 px, as the guide says).
+
+(c) New test red before the CSS change: see the paste directly below.
+
+```
+$ date -u +%Y-%m-%dT%H:%M:%SZ && python3 -m pytest tests/test_site_content.py -q   # new test written, CSS unchanged
+2026-10-28T09:01:34Z
+E       AssertionError: nowrap starts at 768px; below 900px the table overflows
+E       assert 768 >= 900
+FAILED tests/test_site_content.py::test_hooks_first_two_columns_only_refuse_to_wrap_from_900px
+1 failed, 86 passed in 0.31s
+```
+
+### Addendum AFTER (agent run, 2026-10-28)
+
+**Deviation from the guide's diagnosis.** Moving `nowrap` to `@media (min-width: 900px)` alone did NOT fix it: after only that change, 768 and 800 px still gave `scrollWidth` 851 (measured 09:01:54Z, `hooksTdWhiteSpace` already `normal`). Cause: the table's minimum content width is 554 px (columns 106+149+171+128 measured with the wrapper at 1 px) while the column is 456 px at 768 px; `nowrap` was not the binding limit, the unbreakable `Edit|Write|Bash` and the cell padding were. Fix (same two files, no `overflow-x`, no `min-width`): (1) `nowrap` rule moved to `@media (min-width: 900px)`; (2) `<wbr>` after each `|` in the Matcher cell (one cell: `Edit|<wbr>Write|<wbr>Bash`); (3) `@media (min-width: 768px) and (max-width: 899px) { #hooks th, #hooks td { padding-left: .4rem; padding-right: .4rem; } }`. Measured table minimum width: 554 -> 443 px (fits 456).
+
+Widths (headless Chrome, same method; window width minus 15 is `clientWidth`):
+
+```
+2026-10-28T09:03:36Z  after the change
+window=783  clientWidth=768  scrollWidth=768  td white-space=normal
+window=800  clientWidth=785  scrollWidth=785  normal
+window=815  clientWidth=800  scrollWidth=800  normal
+window=850  clientWidth=835  scrollWidth=835  normal
+window=880  clientWidth=865  scrollWidth=865  normal
+window=899  clientWidth=884  scrollWidth=884  normal
+window=914  clientWidth=899  scrollWidth=899  nowrap
+window=1015 clientWidth=1000 scrollWidth=1000 nowrap     (AC 12)
+window=1295 clientWidth=1280 scrollWidth=1280 nowrap     (AC 12)
+edges: window 700/767 -> 685/752 no overflow; 768/769 -> 753/754 no overflow; 900/901/905 -> 885/886/890 no overflow, nowrap
+```
+Before: clientWidth 768 and 800 had scrollWidth 851.
+
+Tests: `python3 -m pytest tests/test_site_content.py -q` -> `87 passed in 0.19s`; full `python3 -m pytest tests -q -x` -> `897 passed in 62.18s`.
+
+M5 (changed `@media (min-width: 900px) {` back to 768px): RED `test_hooks_first_two_columns_only_refuse_to_wrap_from_900px` (`assert 768 >= 900`, 1 failed, 86 passed); reverted -> `87 passed`.

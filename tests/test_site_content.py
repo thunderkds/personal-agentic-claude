@@ -1474,3 +1474,32 @@ def test_settings_tool_css_adds_no_color_literals():
     """Design-system rule: only existing var(--…) tokens inside the scoped CSS."""
     css = re.search(r"/\* ---- settings tool \(scoped\).*?(?=</style>)", _page_text(), re.DOTALL).group(0)
     assert not re.search(r"#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(", css), "color literal in settings-tool CSS"
+
+
+def _media_blocks(css):
+    """[(min_width_px, body)] for every `@media (min-width: Npx)` block."""
+    out = []
+    for m in re.finditer(r"@media\s*\(min-width:\s*(\d+)px\)\s*\{", css):
+        depth, i = 1, m.end()
+        while depth:
+            depth += {"{": 1, "}": -1}.get(css[i], 0)
+            i += 1
+        out.append((int(m.group(1)), css[m.end():i - 1]))
+    return out
+
+
+def test_hooks_first_two_columns_only_refuse_to_wrap_from_900px():
+    """Scope addendum: between 768 and ~884 px the nowrap EVENT and MATCHER columns made the
+    4-column table 851 px wide, wider than the column, so the page scrolled sideways."""
+    css = _style_block()
+    nowrap = [w for w, body in _media_blocks(css)
+              if re.search(r"#hooks td:nth-child\(-n\+2\)\s*\{[^}]*white-space\s*:\s*nowrap", body)]
+    assert nowrap, "no media query holds the nowrap rule for the first two #hooks columns"
+    assert min(nowrap) >= 900, f"nowrap starts at {min(nowrap)}px; below 900px the table overflows"
+    outside = re.sub(r"@media[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}", "", css)
+    assert not re.search(r"#hooks t[dh]:nth-child\(-n\+2\)[^{]*\{[^}]*nowrap", outside), \
+        "nowrap on the first two #hooks columns sits outside a min-width media query"
+    # Wrapping only helps if the Matcher cell offers break points: nowrap was not the only
+    # thing that kept the table 554px wide, the unbreakable `Edit|Write|Bash` was too.
+    hooks = re.search(r'<section id="hooks">(.*?)</section>', _raw_page_text(), re.DOTALL).group(1)
+    assert "Edit|<wbr>Write|<wbr>Bash" in hooks, "the multi-tool Matcher has no break points after `|`"
