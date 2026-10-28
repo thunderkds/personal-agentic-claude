@@ -309,7 +309,7 @@ def test_an_unreadable_review_file_contributes_no_companion_block():
         stdout, stderr = run_gate("git push origin feat/t900")
         assert "Traceback" not in stderr, stderr
         assert "Companion score" not in stdout, stdout
-        assert merge_gate.has_failed_companion_row("T900", [fixture.main_tasks]) == []
+        assert merge_gate.failed_companion_rows("T900", [fixture.main_tasks]) == []
     finally:
         os.chmod(unreadable, 0o644)
         fixture.cleanup()
@@ -602,12 +602,12 @@ def test_the_block_depends_on_the_new_check():
     failed = review_with(row(COMPANION, "☑ fail", "overall 62"))
     assert gate(failed)[0] is not None
 
-    saved = merge_gate.has_failed_companion_row
+    saved = merge_gate.failed_companion_rows
     try:
-        merge_gate.has_failed_companion_row = lambda task_id, tasks_dir=None: []
+        merge_gate.failed_companion_rows = lambda task_id, tasks_dir=None: []
         assert gate(failed)[0] is None, "pre-change behaviour: no row is binding"
     finally:
-        merge_gate.has_failed_companion_row = saved
+        merge_gate.failed_companion_rows = saved
 
 
 def test_the_advisory_depends_on_the_new_check():

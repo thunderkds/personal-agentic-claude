@@ -72,7 +72,7 @@ normal flow, that all"*.
 
 **Depends on**: `None` — this is the first slice and everything else depends on it.
 
-**Entry point**: `has_failed_companion_row`
+**Entry point**: `failed_companion_rows`
 
 ---
 
@@ -151,7 +151,7 @@ already reads *"Do not merge while any evidence row reads fail or is blank"*. Un
 `verify` row was enforced in code. This task does not invent a rule; it makes an existing sentence
 true for these four rows.
 
-**Vital slice**: the one function `has_failed_companion_row(task_id)` plus its call beside the
+**Vital slice**: the one function `failed_companion_rows(task_id)` plus its call beside the
 existing verify check in the `ready_review` loop. Four row names, one regex shape, one existence
 check.
 
@@ -183,7 +183,7 @@ check.
 | File | Change |
 |------|--------|
 | `templates/TASK_REVIEW_template.md` | One new Evidence row (AC 1) |
-| `.claude/hooks/pre_bash_block_unsafe_merge.py` | `has_failed_companion_row` + its call in the `ready_review` loop + the inversion comment |
+| `.claude/hooks/pre_bash_block_unsafe_merge.py` | `failed_companion_rows` + its call in the `ready_review` loop + the inversion comment |
 | `.claude/hooks/tests/test_merge_gate_companion_rows.py` | New — AC 2–7 |
 
 ## Files Must NOT Touch

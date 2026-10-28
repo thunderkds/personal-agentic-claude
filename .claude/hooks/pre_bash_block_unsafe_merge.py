@@ -482,14 +482,15 @@ def companion_rows(task_id, tasks_dir=None):
     return {}, None
 
 
-def has_failed_companion_row(task_id, tasks_dir=None):
+def failed_companion_rows(task_id, tasks_dir=None):
     """The bound rows whose Result cell carries a checked `☑ fail`, in table
     order — `[]` when there are none.
 
-    Returns the row names rather than a bare boolean because the block message
-    must name the row it refuses on (AC 2). An empty list is falsey, so the
-    caller still reads as a predicate, and `[]` is the answer for every absence:
-    see the inversion comment above.
+    Named for what it returns: the row names, not a verdict, because the block
+    message must name the row it refuses on (AC 2), and
+    `docs/claude-md/code-naming-conventions.md` reserves the `has_` prefix for
+    booleans. An empty list is falsey, so the caller still reads as a predicate,
+    and `[]` is the answer for every absence: see the inversion comment above.
     """
     rows, _ = companion_rows(task_id, tasks_dir)
     return [name for name in COMPANION_ROW_NAMES
@@ -687,7 +688,7 @@ def main():
             # reads `☑ fail` is binding. Everything else about those four rows
             # is silent — see the inversion comment above
             # `COMPANION_ROW_NAMES`: this check allows unless a fail is explicit.
-            failed_rows.extend(f"{tid} ({row})" for row in has_failed_companion_row(tid))
+            failed_rows.extend(f"{tid} ({row})" for row in failed_companion_rows(tid))
             for advisory in companion_report_advisories(tid):
                 print(f"[hook:pre_bash] {advisory}", file=sys.stderr)
 
