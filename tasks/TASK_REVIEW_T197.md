@@ -10,47 +10,37 @@
 
 ---
 
-<!-- Optional: the final report, only for a task run in auto mode (the user's `[auto]` tag,
-`docs/claude-md/tracks.md` `## Auto mode`). To use it, copy the block below out of this comment, to this
-place, and replace every <...>. Keep `Mode: auto` as its first line, exactly as written: T182's hook reads
-it. Write it to this file before the run ends; the chat message is a copy, not the report. The same
-block is the Supervisor's final chat message. It is not the `delivery-report` page and not
-Evidence. A taste decision (what the user wants) also ends with the flag. Write `DEBATED` only when ≥2
-Advocate `Agent` calls ran for that question, naming each Advocate's option. A decision with no Advocates is
-labelled `RULE`, `FACT` or `SAFER OPTION`, never `DEBATED`. A decision flagged `⚠ decided for you` is a choice, and is never labelled `FACT`. A
-safety action a rule requires (for example the backup before a delete) is `RULE` without the flag.
-At Risk Medium or High, a `RULE:` counts only when it names a written rule (`path:line`,
-`path § <heading>`, or `docs/claude-md/tracks.md` `### <section>`), and a `FACT:` needs a Citation
-(`path:line "quoted text"`); without one it is a choice and must be `DEBATED`. Good: `2. backed up the CSV
-— RULE: `docs/claude-md/tracks.md` `### Stops that stay``. Bad: `1. kept recurring.csv — RULE: Surgical Changes`.
-
 ## Auto decisions
 
 Mode: auto
-1. <what was decided> — RULE: <the rule>
-2. <what was decided> — FACT: <path>:<line> "<quoted text>"
-3. <what was decided> — DEBATED: <option> (Advocate 1: <its option>; Advocate 2: <its option>) ⚠ decided for you — please review
-4. <what was decided> — SAFER OPTION: <why> ⚠ decided for you — please review
-Paused: <only when a stop that stays paused the task: which one, and why>
-Checks: tests `<command>` — <result>; reviews <skill — result>; real run `<command>` — printed `<what it printed>` (auto-checked, not /verify)
-Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | /verify (yours)>
-
--->
+1. A branch whose one task ID is not on the board (`feat/t999-x`) checks the whole board. D3 also says "absent from the board is allowed"; D2 and the Edge Case line both say global, and global is the safe side — RULE: `tasks/TASK_GUIDE_T197.md:164`
+2. Every scoped push also needs the directory it runs in to be a git repo with a branch checked out, and no push config that can move the destination (`remote.*.push`, `remote.*.mirror`, a `push.default` other than simple/current). Otherwise the whole board — RULE: `tasks/TASK_GUIDE_T197.md:11`
+3. A destination must name the same one task as the source (`feat/t900-x:feat/t900-x` scopes; `HEAD:main`, `feat/t900-x:release/1.0`, `HEAD:feat/t901-x` are global), and a source or destination rooted at `release/` or `integration/` is global even with one ID — RULE: `tasks/TASK_GUIDE_T197.md:161`
+4. In a chain, each `git push` is resolved; two pushes of different tasks, or any unresolved one, are global — RULE: `tasks/TASK_GUIDE_T197.md:163`
+5. D4 (merge/rebase never scoped) is enforced by the segment allowlist: `merge`/`rebase` are not in `SAFE_GIT_SUBCOMMANDS`, pinned by `test_d4_merge_rebase_and_branch_moves_are_never_read_only_subcommands`. A separate merge regex was written, then removed because no mutation could make a test fail without it — RULE: `.claude/hooks/tests/test_merge_gate_guard.py:8`
+6. The command is tokenized with stdlib `shlex` and comments are switched off, because shlex drops the rest of a line after a mid-word `#` and could hide a second push — RULE: `tasks/TASK_GUIDE_T197.md:145`
+7. How strict the allowlist is: only `cd <dir> &&`, `git add/commit/status/log/diff/show/fetch`, and `tail/head/cat/grep/wc` reading the push's output through a pipe may share a command with a scoped push. Anything else (e.g. `python3 -m pytest && git push origin feat/t900-x`) checks the whole board — SAFER OPTION: a command the resolver does not read is checked exactly as before T197; a wider list can only add ways to scope wrongly ⚠ decided for you — please review
+8. `git -C <dir> push` is not seen by `BLOCKED_PATTERNS` at all (a gap that existed before T197). Not fixed here; reported to the Supervisor — RULE: `agents/common-infrastructure.md:35`
+9. No pre-existing test was edited: every earlier merge-gate test sends an event with no `cwd`, so it stays on the whole-board path, and the T190 oracle is still byte-identical — FACT: `.claude/hooks/tests/test_merge_gate_companion_rows.py:196` "event = json.dumps({"tool_name": "Bash", "tool_input": {"command": command}})"
+10. The two `docs/claude-md/tracks.md` lines that said the gate "blocks every push" are reworded, and one paragraph documents the scoping — RULE: `tasks/TASK_GUIDE_T197.md:179`
+11. Decision labels follow the written report shape (`RULE`/`FACT`/`DEBATED`/`SAFER OPTION`), not the `RULE/DEBATE/FLAG` wording in the coordinator's message — RULE: `docs/claude-md/tracks.md` `### Final report`
+Checks: tests `python3 -m pytest .claude/hooks/tests/test_merge_gate_push_scope.py -q && python3 -m pytest .claude/hooks/tests/ -q && sh scripts/validate.sh` — 103 passed; 1089 passed, 25 subtests passed; `validate.sh: PASS` (auto-checked, not /verify); tests `python3 -m pytest tests/ -q` — 889 passed (auto-checked, not /verify); mutation check of the resolver — 12 mutations (each guard removed in turn on a copy of the hook), all 12 killed (auto-checked, not /verify); reviews: `code-review` and `security-review` not run by this sub-agent (no Skill tool) — the Supervisor's (auto-checked, not /verify); real run `sh t197_demo.sh /home/hungnguyenhuu/workspace/pets/wt-t197` (the real hook on stdin, constructed repo) — printed `exit 0, empty stdout -> ALLOWED` for `git push origin feat/t900-x` and `BLOCKED ... T901 (no evidence row)` for `git push origin main` and `git merge feat/t900-x` (auto-checked, not /verify)
+Not done: merge (yours); auto verify: running (T182)
 
 ## Evidence
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_merge_gate_push_scope.py` (new, 103 tests: AC 1-12 + Edge Case checklist + online mode + anti-vacuity), oracle `.claude/hooks/tests/data/t197_pre_change_gate_output.txt` captured from the unchanged hook and committed in `83f5891` before the hook edit (`9b295e9`). RED at `83f5891`: `67 failed, 27 passed in 1.45s` (2026-10-28T08:09:38Z). GREEN: `103 passed in 1.14s` |
+| Verification command run | ☑ pass | 2026-10-28T08:16:29Z, exact command from the guide: `103 passed in 1.14s` / `1089 passed, 25 subtests passed in 22.08s` / `validate.sh: PASS`. Also `python3 -m pytest tests/ -q` → `889 passed in 62.15s` |
+| Negative cases hold | ☑ pass | AC 4-11 each have a test that asserts the whole-board answer (`T901 (no evidence row)`): two IDs, own In Progress row, own `☑ fail` companion row, not-a-repo / detached / no `cwd`, merge and rebase, `--all`/`--mirror`/tag/`--tags`/delete, `cat900`/`t900x`/`t900_x`, heredoc/echo/`bash -c`/comment/`$(...)`/backtick/env prefix/wrapper. Mutation check (each guard removed in turn on a copy of the hook): every mutation turns the suite red |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | For the Stage 4 reviewer. Blast radius: `pre_bash_block_unsafe_merge.py` (new `pushed_task_ids` section + 9 lines in `main()`), the guard allowlist (`merge_gate_guard.py`, `test_merge_gate_guard.py`), `docs/claude-md/tracks.md` (two sentences + one paragraph). Every gate caller is this one hook |
+| Full smoke suite still green (no regression) | ☑ pass | `.claude/hooks/tests/` `1089 passed, 25 subtests passed`; `tests/` `889 passed`; no pre-existing test edited except the allowlist pin in `test_merge_gate_guard.py` |
+| **Companion score (easy-verifier)** | ☑ N/A | neither companion tool was run by the implementing agent |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | no UI component: a hook and its tests |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | no UI component |
+| **UI: Responsiveness at target viewports** | ☑ N/A | no UI component |
 
 ---
 
@@ -106,9 +96,79 @@ $ python3 -m pytest .claude/hooks/tests/test_merge_gate_push_scope.py -q   # 202
 no tests ran in 0.00s
 ```
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**: same script, same fixture, against the changed hook (`9b295e9`):
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```
+captured 2026-10-28T08:18:08Z
+hook: /home/hungnguyenhuu/workspace/pets/wt-t197/.claude/hooks/pre_bash_block_unsafe_merge.py @ 9b295e9
 
-**WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
-implementing agent alone]
+$ git push origin feat/t900-x   (cwd: fixture repo on branch feat/t900-x)
+exit 0, empty stdout -> ALLOWED
+
+$ git push origin feat/t901-x   (cwd: fixture repo on branch feat/t900-x)
+BLOCKED: [hook:pre_bash] Pipeline gate failed — cannot push/merge:
+  • Tasks in Ready for Review missing Stage 5 verify evidence: T901 (no evidence row)
+Complete Stage 4 review and Stage 5 verify first.
+
+$ git push origin main   (cwd: fixture repo on branch feat/t900-x)
+BLOCKED: [hook:pre_bash] Pipeline gate failed — cannot push/merge:
+  • Tasks in Ready for Review missing Stage 5 verify evidence: T901 (no evidence row)
+Complete Stage 4 review and Stage 5 verify first.
+
+$ git merge feat/t900-x   (cwd: fixture repo on branch feat/t900-x)
+BLOCKED: [hook:pre_bash] Pipeline gate failed — cannot push/merge:
+  • Tasks in Ready for Review missing Stage 5 verify evidence: T901 (no evidence row)
+Complete Stage 4 review and Stage 5 verify first.
+
+$ git add -A && git commit -m 'wip' && git push -u origin feat/t900-x   (cwd: fixture repo on branch feat/t900-x)
+exit 0, empty stdout -> ALLOWED
+```
+
+The demo script, for a witness to rerun (`sh t197_demo.sh <worktree>`; it builds and deletes its own
+fixture in `mktemp -d`):
+
+```sh
+#!/bin/sh
+set -e
+WT="$1"
+FIX=$(mktemp -d)
+trap 'rm -rf "$FIX"' EXIT
+mkdir -p "$FIX/.claude" "$FIX/tasks" "$FIX/memory/event-trace"
+cp -r "$WT/.claude/hooks" "$FIX/.claude/hooks"
+rm -rf "$FIX/.claude/hooks/.state"
+printf '# PROJECT_KANBAN\n\n### Todo\n\n### In Progress\n\n### Ready for Review\n- [ ] **T900** — verified fixture task | common-infrastructure | C2 | Risk: Medium | P0\n- [ ] **T901** — unverified fixture task (another session) | backend-developer | C1 | Risk: Low | P1\n\n### Done\n' > "$FIX/PROJECT_KANBAN.md"
+printf '# TASK_GUIDE - T900\n\n### Evidence\n\n> Moved to tasks/TASK_REVIEW_T900.md.\n' > "$FIX/tasks/TASK_GUIDE_T900.md"
+printf '# TASK_REVIEW - T900\n\n## Evidence\n\n| Check | Result | Notes |\n|---|---|---|\n| verify | ☑ pass | verify skill run, feature confirmed working — pass |\n' > "$FIX/tasks/TASK_REVIEW_T900.md"
+python3 -c 'import json;print(json.dumps({"timestamp":"2026-10-28T00:00:00+00:00","tool_name":"Bash","summary":json.dumps({"command":"python3 -m pytest -q"}),"is_error":False}))' > "$FIX/memory/event-trace/T900.jsonl"
+git -C "$FIX" init -q -b feat/t900-x
+git -C "$FIX" -c user.email=d@example.com -c user.name=d commit -q --allow-empty -m fixture
+run() {
+  printf '\n$ %s   (cwd: fixture repo on branch %s)\n' "$1" "$(git -C "$FIX" rev-parse --abbrev-ref HEAD)"
+  python3 -c 'import json,sys;print(json.dumps({"tool_name":"Bash","cwd":sys.argv[2],"tool_input":{"command":sys.argv[1]}}))' "$1" "$FIX" \
+    | GIT_CONFIG_GLOBAL=/dev/null python3 "$FIX/.claude/hooks/pre_bash_block_unsafe_merge.py" \
+    | python3 -c 'import json,sys;t=sys.stdin.read().strip();print("exit 0, empty stdout -> ALLOWED" if not t else "BLOCKED: "+json.loads(t)["reason"].split("\n  Note:")[0])'
+}
+date -u +"captured %Y-%m-%dT%H:%M:%SZ"
+echo "hook: $WT/.claude/hooks/pre_bash_block_unsafe_merge.py @ $(git -C "$WT" rev-parse --short HEAD)"
+run "git push origin feat/t900-x"
+run "git push origin feat/t901-x"
+run "git push origin main"
+run "git merge feat/t900-x"
+run "git add -A && git commit -m 'wip' && git push -u origin feat/t900-x"
+```
+
+(The script captured above wrote the board with a heredoc; this copy uses `printf` so the block has
+no nested heredoc. The board text is the same.)
+
+**DELTA**: A session can now push its own verified task's branch while another session's task sits
+unverified in Ready for Review. `main`, merges, and any push the hook cannot tie to one task are still
+checked against the whole board.
+
+**WITNESS**: pending. The implementing agent (common-infrastructure, T197) ran BEFORE at
+2026-10-28T08:04:54Z and AFTER at 2026-10-28T08:18:08Z (`memory/event-trace/T197.jsonl`). An independent
+witness is T182's headless `/verify T197` run or the user.
+
+**Trust boundary (Edge Case checklist)**: the scoping trusts the branch name. A branch that lies about its
+task (T901's work pushed on `feat/t900-x`) is checked against T900, and the push needs T900's own
+evidence; it no longer needs T901's. Stated, not closed: closing it would need the gate to know which
+task wrote which commit, which nothing records today.
