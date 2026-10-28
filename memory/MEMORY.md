@@ -25,6 +25,7 @@
      run; read them there. The enforced gate is the whole-file character budget above. -->
 
 ### Decisions
+- [T195: easy-memory installed; base sub-agents get memory_search/read and use the spawn slice, not all of MEMORY.md](decisions.md) — `memory/` NOT replaced; decide after ~2 weeks of `easy_memory.py report`; wake still reads all 10.4k tokens
 - [T182: auto verify — Stop hook runs real `/verify` headless for `[auto]` tasks](decisions.md) — gate trusts the row only with the anchor-dir run record; $2 cap per commit
 - [T180: auto mode — `[auto]` runs either track to Ready for Review; Debate size by Risk; auto-mode Stop hook](decisions.md) — Low decides, Medium 2 / High 3 Advocates, High always debates once; hook reads report + trace; merge/verify stay the user's
 - [T179: Debate — 2–3 read-only Advocates argue a choice in auto mode](decisions.md) — safer option first, flagged `⚠ decided for you`, max 3 per task
@@ -133,7 +134,6 @@
 - [T146/T147: sensitive-path ask hook; sub-agent sandbox is CLI-only (b)](decisions.md) — predicted path ⇒ no decision (never `allow`); `Agent()` spawns not sandboxed; T147 /verify FAIL on Ubuntu userns
 - [T144/T145/T148/T149 merged: lane check, decisions.md slice, anchored trace, prod approval](decisions.md) — lane_check needs `base...HEAD`; trace anchors in `~/.claude/harness-anchors` behind deny-only rules; merge-settings unions kit deny
 - [T150: spawns are background `Agent()` by default; `wake` flags dirty In Progress worktrees](decisions.md) — CLI pane only on request / non-Claude CLI; sandbox profile unused until nested-userns passes
-- [T195: easy-memory installed; base sub-agents get memory_search/read and use the spawn slice, not all of MEMORY.md](decisions.md) — `memory/` NOT replaced; decide after ~2 weeks of `easy_memory.py report`; wake still reads all 10.4k tokens
 
 ### Patterns & Gotchas
 - [Task IDs: scan the whole board for the highest ID before registering](learnings.md) — `git log` and `tasks/` filenames miss Todo rows with no guide (T119 collision, 2026-09-23)
@@ -258,9 +258,9 @@
 - [A board-pulled guide is gate input](learnings.md) — T154: forged Evidence vacated; sensitive-path ask → T157
 - [Injected input hid a dead /dev/tty](learnings.md) — T155: test on a real pty
 - [Parallel tasks merge together; 401 ≠ permanent](learnings.md) — T156/T157: gate serialises merges
-- [easy-memory `switch off` leaves the MCP tools on](learnings.md) — an off-run can still call memory_search if the prompt says to check notes; judge on/off by `report`, not one pair
 
 ### Learning Records
+- [easy-memory `switch off` leaves the MCP tools on](learnings.md) — an off-run can still call memory_search if the prompt says to check notes; judge on/off by `report`, not one pair
 <!-- One-liner per active LR: - [LR-NNNN slug](memory/learning-records/LR-NNNN-slug.md) — summary -->
 <!-- Superseded LRs: ~~old text~~ → see LR-NNNN -->
 
