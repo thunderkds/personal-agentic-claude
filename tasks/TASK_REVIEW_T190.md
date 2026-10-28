@@ -122,7 +122,24 @@ $ grep -c "has_failed_companion_row" .claude/hooks/pre_bash_block_unsafe_merge.p
 2
 ```
 
-The two failures are PRE-EXISTING scope guards, left untouched and escalated — see the report.
+The two failures were PRE-EXISTING scope guards. The user authorised widening all three
+(`9d99aa8`); final state at `c5f8768`, captured `2026-10-28T06:38:36Z`, the guide's exact
+verification chain, exit 0:
+
+```
+$ python3 -m pytest .claude/hooks/tests/test_merge_gate_companion_rows.py -q \
+    && python3 -m pytest .claude/hooks/tests/ -q \
+    && sh scripts/validate.sh
+42 passed in 0.09s
+960 passed, 25 subtests passed in 30.65s
+validate.sh: PASS
+
+$ python3 -m pytest tests/ -q
+846 passed in 44.28s
+```
+
+Baselines before the task: `917 passed, 25 subtests` (hooks) and `846 passed` (tests). The hook
+suite gains 42 companion-row cases and one mutation proof for the relaxed T064 row check.
 
 End-to-end run of the shipped hook as a real subprocess, real stdin, at
 `2026-10-28T05:45:11Z` (`/tmp/claude-1000/.../scratchpad/t190_e2e.sh`, a constructed
