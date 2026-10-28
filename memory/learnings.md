@@ -2917,3 +2917,7 @@ highest ID anywhere, not only `PROJECT_KANBAN.md` on the checked-out branch. Ren
 
 ### The merge gate reads evidence at hook time, and `pkill -f` can kill its own shell
 Two Bash gotchas seen at T199 (2026-10-28). (1) `pre_bash_block_unsafe_merge.py` runs before the command, so a command that writes the `verify` Evidence row and then merges is blocked: write and commit the row in one Bash call, set the `active_task` state file, then merge in the next call. (2) `pkill -f "<pattern>"` inside a command whose own text contains the pattern kills the shell (exit 144) and leaves later steps unrun; save the server PID (`echo $! > file`) and `kill $(cat file)` instead.
+
+
+### A table that scrolls the page sideways: measure its minimum content width, not just the rule you suspect
+T199 addendum (2026-10-28): the `#hooks` table overflowed at 768 to 899 px. The guide blamed `white-space: nowrap` on two columns, but removing it alone changed nothing: the table's minimum content width was 554 px (unbreakable `Edit|Write|Bash` plus cell padding) against a 456 px column. Squeeze the wrapper to 1 px and read the table's width to find the real floor, then give the unbreakable string `<wbr>` points. T167 forbids `overflow-x` on `.table-wrap` and `min-width` on `table`, so the fix is wrapping, never a scrollbar. Measure with headless Chrome over HTTP; `--window-size` width minus 15 is the client width.
