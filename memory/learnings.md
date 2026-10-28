@@ -2909,3 +2909,7 @@ highest ID anywhere, not only `PROJECT_KANBAN.md` on the checked-out branch. Ren
 
 ### easy-memory `switch off` does not remove the MCP tools, so an on/off comparison can be contaminated
 `switch off` (or `auto` on an off day) only stops the prompt hook injecting the index. `memory_search`/`memory_read` stay callable, and an agent told to "check earlier notes" uses them anyway (seen 2026-10-28: the off run called `memory_search`). Do not tell agents to check memory in a prompt you want to measure as "off"; read `easy_memory.py report` for the on/off comparison, not a single paired run. Related: T195.
+
+
+### The push gate reads the whole board, so one session's open task blocks every other session's push (T197)
+`pre_bash_block_unsafe_merge.py` builds `in_progress` and `ready_review` from the whole `PROJECT_KANBAN.md` and never reads which branch a `git push` names. Seen 2026-10-28: the push of `feat/t190-companion-gate` was refused over T195, another session's task with no Evidence row; it cleared only after T195 was verified. Do not work around it (moving the other task, editing the hook, or disguising the command); the user's `! <command>` prefix runs outside the hook, and T197 scopes a branch push to the one task its branch names. Also: the hook runs before the whole Bash command, so an edit that fills the Evidence row and the `git push` in one command is blocked before the edit runs. Split them. **Files**: .claude/hooks/pre_bash_block_unsafe_merge.py, tasks/TASK_GUIDE_T197.md
