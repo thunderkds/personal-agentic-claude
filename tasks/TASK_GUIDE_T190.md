@@ -104,9 +104,15 @@ normal flow, that all"*.
 | 5 | Same fixture, Notes cell containing the prose `no failures observed`, Result cell `☑ pass` | no block | automated test |
 | 6 | Same fixture, `☑ fail` Companion score row, but T900 under `### Done` | no block | automated test |
 
-> The AC-4 oracle is written by the Supervisor, not the implementing agent: capture the pre-change
-> output first (`git stash` the edit, run the fixture, save stdout+stderr to a file in the scratchpad),
-> then assert equality against it after the edit. Capturing it after the edit proves nothing.
+> The AC-4 oracle is **specified** by the Supervisor, here, and **captured** by the implementing
+> agent — before the implementation edit exists. Write the fixture and its capture entry point
+> first, run it against the unchanged hook, save stdout+stderr to a committed file, and only then
+> edit the hook; the test asserts equality against that file. Capturing it after the edit proves
+> nothing.
+>
+> Do **not** stash the edit to get the pre-change output: `memory/learnings.md` records "never
+> stash mid-merge", and several live worktrees share this repo, so a stash is a repo-wide action
+> taken for one task. Capturing before the edit exists needs no stash at all.
 
 ### Verification Command (exact, runnable)
 
