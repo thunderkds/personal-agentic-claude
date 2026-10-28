@@ -1,4 +1,4 @@
-# TASK_REVIEW — T197: [Short Title]
+# TASK_REVIEW — T197: The push gate checks the task being pushed, not every task on the board
 
 > Sibling of `tasks/TASK_GUIDE_T197.md`. Everything here is **filled by the reviewer at Stage
 > 4/5** — it is deliberately NOT in the guide, because the implementing agent re-reads the guide on
@@ -61,8 +61,50 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured against the unchanged hook (branch head `c8c863c`, no implementation commit yet).
+The demo script copies the worktree's `.claude/hooks/` into a throwaway git repo on branch `feat/t900-x`,
+writes a board with T900 (filled `verify` row + pytest trace record) and T901 (no evidence) both in Ready
+for Review, and pipes a real `PreToolUse` event (`tool_name`, `cwd`, `tool_input.command`) into
+`pre_bash_block_unsafe_merge.py`. Command: `sh <scratchpad>/t197_demo.sh /home/hungnguyenhuu/workspace/pets/wt-t197`
+(the ATTRIBUTION_REMEDY note is cut from each reason for length).
+
+```
+captured 2026-10-28T08:04:54Z
+hook: /home/hungnguyenhuu/workspace/pets/wt-t197/.claude/hooks/pre_bash_block_unsafe_merge.py @ c8c863c
+
+$ git push origin feat/t900-x   (cwd: fixture repo on branch feat/t900-x)
+BLOCKED: [hook:pre_bash] Pipeline gate failed — cannot push/merge:
+  • Tasks in Ready for Review missing Stage 5 verify evidence: T901 (no evidence row)
+Complete Stage 4 review and Stage 5 verify first.
+
+$ git push origin feat/t901-x   (cwd: fixture repo on branch feat/t900-x)
+BLOCKED: [hook:pre_bash] Pipeline gate failed — cannot push/merge:
+  • Tasks in Ready for Review missing Stage 5 verify evidence: T901 (no evidence row)
+Complete Stage 4 review and Stage 5 verify first.
+
+$ git push origin main   (cwd: fixture repo on branch feat/t900-x)
+BLOCKED: [hook:pre_bash] Pipeline gate failed — cannot push/merge:
+  • Tasks in Ready for Review missing Stage 5 verify evidence: T901 (no evidence row)
+Complete Stage 4 review and Stage 5 verify first.
+
+$ git merge feat/t900-x   (cwd: fixture repo on branch feat/t900-x)
+BLOCKED: [hook:pre_bash] Pipeline gate failed — cannot push/merge:
+  • Tasks in Ready for Review missing Stage 5 verify evidence: T901 (no evidence row)
+Complete Stage 4 review and Stage 5 verify first.
+
+$ git add -A && git commit -m 'wip' && git push -u origin feat/t900-x   (cwd: fixture repo on branch feat/t900-x)
+BLOCKED: [hook:pre_bash] Pipeline gate failed — cannot push/merge:
+  • Tasks in Ready for Review missing Stage 5 verify evidence: T901 (no evidence row)
+Complete Stage 4 review and Stage 5 verify first.
+```
+
+The verified task T900's own branch push is refused for T901, another session's task. The first
+Verification Command step, at the same time:
+
+```
+$ python3 -m pytest .claude/hooks/tests/test_merge_gate_push_scope.py -q   # 2026-10-28T08:04:54Z
+no tests ran in 0.00s
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
