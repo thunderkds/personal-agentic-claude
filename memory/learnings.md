@@ -2900,3 +2900,8 @@ highest ID anywhere, not only `PROJECT_KANBAN.md` on the checked-out branch. Ren
   renumber the unpushed one (here → T187) before merging, and run `git fetch` + check `origin/main`'s IDs
   before registering a new task when another session may be active. Do not `git stash` mid-merge — it aborts
   the merge (redo it; conflict resolution of append-only memory files is mechanical: keep both sides).
+- **A release approval names one commit; if `main` moves before the push, ask again** (v2.2.0, 2026-10-28). Another
+  live session merged 30 commits (site Settings tool, T185/T187) to GitHub `main` between the approval of `99d55be`
+  and the push. The fast-forward failed; the release branch merged `github/main` (one test-file conflict, both blocks
+  kept), re-ran every check, and the user approved the new commit `45b6957`. Fetch and check `HEAD..github/main` is
+  empty right before tagging.
