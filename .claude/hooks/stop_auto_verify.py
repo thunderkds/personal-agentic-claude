@@ -46,7 +46,8 @@ When the run ends, this script (never the Supervisor) writes three things:
         `- verify: ☑ pass — auto-run by hook, session <id>, commit <sha>, log .claude/...`;
   * the report's `Not done:` auto verify slot (T188 D7), so the report the user reads stops saying
     `auto verify: running (T182)` after the run has ended. The merge clause is left as it is.
-The verdict is the result's `**Verdict:** PASS|FAIL` line. SKIP, BLOCKED, no verdict line, two
+The verdict is the result's `**Verdict:** PASS|FAIL` line (the bold may also close after the
+word or the sentence: `**Verdict: PASS**`, T208). SKIP, BLOCKED, no verdict line, two
 different verdicts, a non-success run (budget stop, error), output that is not JSON, a timeout or no
 `claude` on PATH are all `blocked`. The run's text is data: only that line decides.
 
@@ -87,7 +88,11 @@ TIMEOUT_ENV, TIMEOUT_DEFAULT_S = "CLAUDE_AUTO_VERIFY_TIMEOUT_S", 1800
 SWITCH_ENV = "CLAUDE_AUTO_VERIFY"  # T203 D3: `off` -> only `Mode: auto` tasks run
 FILLED = "its result is already filled for commit"
 VERIFY_ROW = re.compile(r"^\|\s*verify\s*\|(?P<result>[^|\n]*)\|(?P<notes>[^|\n]*)\|?[^\n]*$", re.M | re.I)
-VERDICT = re.compile(r"^\s*\*\*Verdict:\*\*\s*([A-Z]+)\b", re.M)
+# T208: the verdict line starts a line with a bold `Verdict` label, then one upper-case word. The bold
+# may close after the label (`**Verdict:** PASS`, `**Verdict**: PASS`) or after the whole sentence
+# (`**Verdict: PASS**`, `**Verdict: PASS. All six ... hold.**`). The line-start anchor keeps a mention
+# inside prose out; a line inside a fenced code block of the report still counts.
+VERDICT = re.compile(r"^\s*\*\*Verdict(?::\*\*|\*\*:|:)\s*([A-Z]+)\b", re.M)
 SESSION = re.compile(r"[^A-Za-z0-9-]")
 
 # D7 — the report's `Not done:` line and the auto verify slot inside it. Three spellings count as
