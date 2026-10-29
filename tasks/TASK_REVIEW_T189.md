@@ -41,16 +41,16 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_auto_verify.py` (46 `test_t189_*` cases: AC 1 ×2, AC 2 ×2, AC 3 ×7, AC 4 ×6, AC 6 ×3, AC 7 ×5, AC 8 ×12, AC 9 ×7, edge ×2 — `claude` stubbed, a git spy on PATH for AC 6) and `.claude/hooks/tests/test_stop_auto_mode_check.py` (6 `test_t189_d5_*` cases, AC 5). `python3 -m pytest -q tests/test_auto_verify.py .claude/hooks/tests/test_stop_auto_mode_check.py -k t189` → `52 passed, 139 deselected in 7.74s` (2026-10-29T10:26Z, `5cb4ca4`). RED: the 4 D5 block cases fail on the pre-change hook (`4 failed, 2 passed`); mutations of `auto_closeout.py` — D3 off `5 failed`, D2 off `6 failed`, D9 off `6 failed`, write-once off `1 failed` |
+| Verification command run | ☑ pass | 2026-10-29T10:26:17Z at `5cb4ca4`: `python3 -m pytest -q tests/test_auto_verify.py .claude/hooks/tests` → `1287 passed, 25 subtests passed in 79.03s`; `python3 -m pytest -q tests` → `1010 passed in 71.50s`; `./scripts/validate.sh` (the guide's `./validate.sh`; it lives in `scripts/`) → `validate.sh: PASS` |
+| Negative cases hold | ☑ pass | fail and blocked verdicts leave the board byte-identical (AC 2); blank tests row, blank / no-reason / `☑ fail` design row, no trace test run, no minimal `New test` line each keep the row (AC 3); no record (run could not write it), another commit, fail record, hand-typed `auto-run by hook` row, another session, a FAIL run whose prose asks for the move each keep the row (AC 4); each of 6 missing D9 fields and 3 placeholders keep the row (AC 8); a deleted report moves and creates nothing |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| Full smoke suite still green (no regression) | ☑ pass | same run as the verification command: `1287 passed` + `1010 passed` + `validate.sh: PASS`. `git diff 026bc61 -- .claude/hooks/pre_bash_block_unsafe_merge.py` is empty (0 lines): the merge gate is untouched |
+| **Companion score (easy-verifier)** | ☑ N/A | neither companion tool was run for this task |
+| **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | pure-hook task: no UI component (Stop hooks, a lib module, doctrine text) |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ N/A | pure-hook task: no UI component (Stop hooks, a lib module, doctrine text) |
+| **UI: Responsiveness at target viewports** | ☐ N/A | pure-hook task: no UI component (Stop hooks, a lib module, doctrine text) |
 
 ---
 
@@ -85,9 +85,58 @@ stdout: (empty — the stop is allowed)
 
 (1) The auto verify passed, the record and the evidence are complete, and the row still sits in Ready for Review with `- [ ]`; `### Done` is empty, `**Last updated**` is unchanged and the report has no `Closed:` line. (2) A report with no `Memory:` line ends the auto run unchallenged.
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**: captured 2026-10-29T10:29:02Z at `5cb4ca4`, the same command:
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```
+$ python3 <scratchpad>/demo_t189.py /home/hungnguyenhuu/workspace/pets/wt-t189
+== (1) after an auto verify pass ==
+**Last updated**: 2026-10-29
+### Ready for Review
+
+### Done
+- [x] **T951** — Move the data | Supervisor | C2 | Risk: Low | P1 | Done 2026-10-29: auto verify pass (session bb6500c2-6ee9-4ce9-bc0e-ea2f246f2fd4, commit 3e4758153e3565a96b32a7f2b505f162bc8d58c8)
+-- report ## Auto decisions --
+Mode: auto
+1. kept recurring.csv — RULE: `docs/claude-md/tracks.md` `### Stops that stay`
+Checks: tests `pytest -q` — 12 passed; reviews code-review — 0 P0/P1
+Memory: nothing new
+Not done: merge (yours); auto verify: ☑ pass (session bb6500c2-6ee9-4ce9-bc0e-ea2f246f2fd4, commit 3e4758153e3565a96b32a7f2b505f162bc8d58c8, log .claude/verify-runs/T951-3e4758153e35.log)
+Closed: row moved to Done 2026-10-29 — auto verify pass (session bb6500c2-6ee9-4ce9-bc0e-ea2f246f2fd4, commit 3e4758153e3565a96b32a7f2b505f162bc8d58c8); Gates 5 and 6 checked
+-- verify row --
+| verify | ☑ pass | auto-run by hook, session bb6500c2-6ee9-4ce9-bc0e-ea2f246f2fd4, commit 3e4758153e3565a96b32a7f2b505f162bc8d58c8, log .claude/verify-runs/T951-3e4758153e35.log — pass |
+== (2) auto-mode Stop check, report with no `Memory:` line ==
+stdout: {"decision": "block", "reason": "[hook:stop_auto_mode_check] Auto-mode final report check failed \u2014 fix it before you stop (docs/claude-md/tracks.md `## Auto mode`):\n  \u2022 T951: no `Memory:` line in the report \u2014 run the memory pass before you stop and record it there (each entry written, or `Memory: nothing new`)"}
+```
+
+Script note: after the first change the script's part (2) gained one line that puts the row back in Ready for Review before the Stop check (part 1 now moves it to Done, and the check skips Done rows). That is the board state the BEFORE run had in part (2). Re-run against the pre-change hooks (`git stash` of the two hook edits), part (2) still printed `stdout: (empty — the stop is allowed)`.
+
+**DELTA**: An `[auto]` task whose auto verify passes, with its run record, Gate 5/6 evidence and a complete final report, now reaches Done on its own, and the report says so on a `Closed:` line. An auto run can no longer stop without recording its memory pass. The merge, the push and `ship` stay the user's.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
+
+---
+
+## Implementer notes for Stage 4 (common-infrastructure, 2026-10-29)
+
+**Decisions worth the reviewer's eye**
+- **The merge gate is read, never edited.** `auto_closeout.load_gate()` loads `pre_bash_block_unsafe_merge.py` with its bare bottom-of-file `main()` stripped (the technique `test_merge_gate_evidence.py` uses), then calls `has_filled_verify_row`, `trace_shows_verification`, `read_guide_section`, `COMPANION_ROW_PATTERNS`, `CHECKED_PASS/FAIL_PATTERN` and the row builder `_companion_row_pattern` (a private name, used for the tests row so the row shape has one definition). If the gate stops ending in `main()` or its guarded import fails, the load raises, and the run writes `done not moved: close-out failed (...)`: fail closed, never a crash.
+- **D2 is stricter than the merge gate today, by the guide's wording.** The gate blocks only on a `☑ fail` design row (T190, fail-open). The close-out also needs each design row filled: `☑ pass` with evidence, or N/A with a reason; a missing row counts as blank. On the minimal track, Gate 5 needs a `New test` line under `Checked:` (the template's Gate 5 line), and Gate 6 does not apply (a UI component puts a task on the extended track).
+- **D3** checks the record for (task, head) says pass for the session the run parsed, then the gate's `has_filled_verify_row(task, [that checkout's tasks/])`.
+- **D9 order**: the report is read after the slot write (T188), checked, then `Closed:` is written and the report is read again before the move. A row not in Ready for Review is checked first, so a task the user already moved gets no note at all.
+- **D2 suffix** goes only on a hook-written result (`auto-run by hook` in the Notes / `verify:` line), once.
+- **Lock**: `.claude/hooks/.state/closeout.lock` (gitignored), `flock` around the read-check-write of the report and the board, so two runs that end together cannot lose a board write. A live session's edit is not locked out; the board is re-read just before the write and the row is matched by task ID.
+- **D7 split**: `### Never in auto mode` now lists only merge, push, `ship`. The other T180 D6 rules (the Supervisor never runs `/verify` or writes its row, never moves a task to Done, never moves a task down a track) moved unchanged to a new `### The Supervisor never`, so no rule was dropped.
+
+**Files changed outside the guide's predicted table**
+- `tests/test_auto_mode.py` — its D6 test pinned the old never-list that D7 rewrites; it now asserts the two subsections and every rule it pinned before.
+- `docs/claude-md/pipeline-stages.md` Stage 5 item 5 — said "Never in auto mode: the task stops at Ready for Review", which D7 makes false.
+- `.claude/hooks/pre_bash_block_unsafe_merge.py` — predicted as "expose the readers"; **not changed** (Supervisor constraint; they were already module level).
+
+**Residual limits (recorded, not fixed)**
+- Same as T182's record: an agent that runs `stop_auto_verify.py --run` itself with a fake `claude` first on its PATH gets a record from the script, and now a Done move as well. The record raises the bar; it is not a proof.
+- A placeholder is `<` + a lowercase letter … `>`. A real field whose only text is HTML such as `<details>` reads as a placeholder, so the row stays out of Done (fail closed).
+- `Memory:` is checked for presence and not a placeholder; the hook cannot tell whether the pass named every entry it wrote.
+
+**Cut list** (guide's, unchanged): `ship`; a release note; a notification when a row moves; an undo command.
+**Not done**: AC 11 (paid live check, cap $3, the user's go); Stage 4 `code-review` and `security-review` (Risk High) — this agent has no `Skill` tool, so both are the Supervisor's; `verify` row is the user's (`/verify T189`).
