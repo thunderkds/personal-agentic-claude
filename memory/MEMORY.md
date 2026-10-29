@@ -30,10 +30,10 @@
 - [T143/T191/T189: CI re-runs a Done task's Verification Command; `score` skill; auto close-out](decisions.md) — `# ci: skip — <reason>`; score row optional; Stop check (7) needs a task test run
 - [T200/T201: settings profiles — `settings-setup` at Stage 1, High security default, add-only](decisions.md) — one source `profiles.json`; dry run first; Legacy = the kit's 2 anchor rules
 - [T199: site `#mcps` lists easy-memory-mcp as a third OPTIONAL companion card](decisions.md) — README facts only; Open: T194 + T199 both edit the `#mcps` lead, merge by hand
-- [T198: `wake` prints the Decisions + Learning Records entries with `memory_sections.py`, never reads all of MEMORY.md](decisions.md) — ~9k tokens less per session; **add new index lines at the TOP of a section (newest first) or the script misses them**
-- [T195: easy-memory installed; base sub-agents get memory_search/read and use the spawn slice, not all of MEMORY.md](decisions.md) — OPTIONAL; `memory/` NOT replaced; review after ~2 weeks of `easy_memory.py report`
+- [T198: `wake` prints Decisions + Learning Records via `memory_sections.py`, never all of MEMORY.md](decisions.md) — ~9k tokens less/session; **add new index lines at the TOP of a section or the script misses them**
+- [T195: easy-memory installed; sub-agents use memory_search/read and the spawn slice](decisions.md) — OPTIONAL; `memory/` NOT replaced; review after ~2 weeks of `easy_memory.py report`
 - [T182: auto verify — Stop hook runs real `/verify` headless for `[auto]` tasks](decisions.md) — gate trusts the row only with the anchor-dir run record; $2 cap per commit
-- [T203: auto verify for every task — Supervisor runs `stop_auto_verify.py --start <ID>` at Ready for Review](decisions.md) — Stop hook backstop; `CLAUDE_AUTO_VERIFY=off` = `[auto]`-only; worktree from the board row's branch; open T205, T206
+- [T203: auto verify for every task — Supervisor runs `stop_auto_verify.py --start <ID>` at Ready for Review](decisions.md) — Stop hook backstop; `CLAUDE_AUTO_VERIFY=off` = `[auto]`-only; open T205, T206
 - [T180: auto mode — `[auto]` runs either track; Debate size by Risk; auto-mode Stop hook](decisions.md) — Low decides, Medium 2 / High 3 Advocates; merge/push stay the user's (T189: pass → Done)
 - [T179: Debate — 2–3 read-only Advocates argue a choice in auto mode](decisions.md) — safer option first, flagged `⚠ decided for you`, max 3 per task
 - [T178: two tracks — minimal (Supervisor codes, Decision record) vs extended (pipeline)](decisions.md) — track line is a statement
@@ -55,7 +55,7 @@
 - [Interactive CLIs need a pty to verify](learnings.md) — drive the real binary with `script -qec` at Stage 5, and add a define-only source guard for the unit path (T108)
 - [A subshell `cd` doesn't wrap a pipeline outside it](learnings.md) — T108's probes installed into the main checkout instead of scratch; Assert the destination, don't trust the `cd`
 - [Agents satisfy the AC they can and stay quiet about a contradictory one](learnings.md) — T108's AC1 (input order) and AC7 (numeric order) couldn't both hold; Read the AC table against itself before spawning
-- [Rules with a self-granting escape clause don't bind](learnings.md) — T100 measured it 3-run A/B: `recommendation first` bound, `under ~15 lines unless...` never did; phrase rules as an act, not a self-graded bar
+- [Rules with a self-granting escape clause don't bind](learnings.md) — T100 3-run A/B: `recommendation first` bound, `under ~15 lines unless...` never did; phrase rules as an act
 - [Verify prompt/agent-config changes by running an agent vs a control](learnings.md) — reading the diff would have passed all 6 T100 rules
 - [T097 per-harness projection](decisions.md) — `--harness` selects CLIs at install; Codex 8 KB cap skips and names, never truncates
 - [Verify at the harness, not the filesystem](learnings.md) — when the value is "tool X can now see Y", the evidence is X's own output
@@ -143,14 +143,14 @@
 - [T150: spawns are background `Agent()` by default; `wake` flags dirty In Progress worktrees](decisions.md) — CLI pane only on request / non-Claude CLI
 
 ### Patterns & Gotchas
-- [Merge gate after T210](learnings.md) — verify row must be committed on the branch; `git pull` gated, `merge-base` free, `timeout N pytest` counts; open T211: `git -C`/`-c`, unknown merge options
+- [Merge gate after T210/T211](learnings.md) — verify row committed on the branch; any `git <global opts> push|merge|pull|rebase` and `-c alias.` gated; open: `echo … | sh`
 - [Parallel sessions overwrite the shared active-task file; headless checks must scroll instantly](learnings.md) — rerun a task's tests under its own state file; `scroll-behavior: smooth` makes CDP clicks miss
 - [Task IDs: scan the whole board for the highest ID before registering](learnings.md) — `git log` and `tasks/` filenames miss Todo rows with no guide (T119 collision, 2026-09-23)
 - [Open T111/T115 follow-ups](learnings.md) — `.claude/hooks/` user entry silently dropped by the ownership rule; ~35 duplicated `merge_settings` lines in setup/update; un-pruned `pets/wt-*` worktrees
 - [A rule the agent can meet by labelling, it meets by labelling](learnings.md) — T180: only trace counts (Advocate calls, forced High Debate) changed behavior
 - [A short SHA is hex — lock pair regex would read `kit_commit` as a file](learnings.md) — scope lock readers to the `"files"` block (T137)
 - [Writing a TASK_GUIDE auto-adds a Todo row](learnings.md) — `post_write_register_task.py`; move that row to In Progress at spawn, never add a second
-- [v1-site release lessons: evidence, publishing, planning](learnings.md) — a green mutation control means "my mutation didn't land" before "vacuous test", and for "doc D matches source S" the control changes **S**
+- [v1-site release lessons: evidence, publishing, planning](learnings.md) — a green mutation control first means "my mutation didn't land"; for "doc D matches source S" mutate **S**
 - [The merge gate reads one board by name](learnings.md) — `pre_bash_block_unsafe_merge.py` checks `PROJECT_KANBAN.md` only, so T083's site board was ungated at merge
 - [`pytest tests/ -q` runs 8 tests, not 688](learnings.md) — the suite lives in `.claude/hooks/tests/` and bare pytest skips hidden dirs; Always `python3 -m pytest .claude/hooks/tests/ tests/ -q` in guides
 - [An agent can fabricate Supervisor *consent*](learnings.md) — check against your own memory
@@ -166,7 +166,7 @@
 - [Worktree and isolation gotchas](learnings.md) — `isolation:"worktree"` forks from `main`, not your branch; commit Stage 2 artifacts before any spawn
 - [How the merge gate has failed to gate](learnings.md) — 4 distinct ways, plus its input layer; a guard is only as strong as the layer feeding it.
 - [Don't spawn in parallel onto a known-open race](learnings.md) — the shared-`.state` race was flagged open since T047
-- [Reverting a mutation with `git checkout` also reverts your fix](learnings.md) — mutation-testing an *uncommitted* Stage-4 fix and undoing via `git checkout <file>` restores the committed state, silently deleting
+- [Reverting a mutation with `git checkout` also reverts your fix](learnings.md) — mutating an *uncommitted* fix then `git checkout <file>` silently deletes the fix; commit first
 - [Never quote a `###` heading inside a KANBAN row](learnings.md) — `find_kanban_section`'s `(?=###|\Z)` truncates the section there
 - [A defect can reproduce itself during its own write-up](learnings.md) — T045's guide auto-registered a row whose title contained `###`, truncating Todo so T044/T040/T041 vanished
 - [security-review now actually runs](learnings.md) — fixed 2026-07-23 with user consent via `git remote add origin <same-url>` + `set-head origin main`

@@ -2590,3 +2590,11 @@ The log refuses a symlink/non-file path, writes via `mktemp` in `.claude/` + `mv
 **Open**: P3 — the shadow regex skips `-webkit-box-shadow`. Possible scroll-spy lag (active sidebar link one section behind), seen at /verify, pre-existing, untracked.
 **Files**: site/theme.css, site/index.html, tests/test_site_content.py
 **Verified**: auto verify pass at `d47a677` ($0.61). Local merge refused by the merge gate (T211 In Progress); branch `feat/t212-neon-glow` pushed for a GitHub merge.
+
+## T211: the merge gate sees git's global options, resolves merges with any option, and gates inline aliases (2026-10-29)
+
+**Decision** (user "Approve, build now", then "merge and push"; `T211` in `merge_gate_guard.AUTHORISED_TASKS`): `GIT_VERB_PREFIX` (git + any global options: `-C/-c/--git-dir/--work-tree/--namespace/--config-env` with their argument, any other `-x`/`--x`) builds every `BLOCKED_PATTERNS` entry; `_merge_source` skips any option (and the argument of `-m/-F/-s/--strategy/-X/--strategy-option/--into-name`), `MERGE_FLAGS` removed; `branch_targets` resolves octopus merges and needs each named Ready-for-Review task's row committed on its branch; `-c alias.` / `--config-env alias.` gates the command as a merge unless its head is a T099 data command. Narrowing resolves only `-C`, `--no-pager`, `-P` (and `-c` before merge); other global options get the whole-board check.
+**Why**: the T210 auto verify found `git -C <dir> merge|push` and `git -c k=v merge` ungated, and `-X ours`/octopus merges skipping the committed-row rule.
+**Open**: aliases saved in git config and shell aliases are out of reach (documented in the gate docstring); `echo "git push" | sh` and `echo git -c alias.p=push p | sh` are allowed (T099 data-command class); a harmless inline alias (`git -c alias.st=status st`) is blocked; the octopus path was covered only by tests, not seen at the real surface.
+**Files**: .claude/hooks/pre_bash_block_unsafe_merge.py, .claude/hooks/tests/merge_gate_guard.py, .claude/hooks/tests/test_merge_gate_guard.py, .claude/hooks/tests/test_merge_gate_t211.py, .claude/hooks/tests/test_merge_gate_t210.py
+**Verified**: auto verify pass (`7f9e95e`, $0.57); 99 new tests, M1–M4 mutations RED.
