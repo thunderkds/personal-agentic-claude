@@ -2870,6 +2870,11 @@ highest ID anywhere, not only `PROJECT_KANBAN.md` on the checked-out branch. Ren
   were all task questions. Q2 again "minimal is enough". Gotcha: Claude Code 2.1.310 stores `-p` sessions in
   `$CLAUDE_CONFIG_DIR` or else `$HOME/.claude/projects/<cwd>/<id>.jsonl`, so a containerised `--resume` needs
   the same writable HOME mounted on every turn and the same cwd; plain `--resume` keeps the session id.
+- **A frozen experiment's test that pins the live installer goes red when the kit grows** (T177 merge, 2026-10-29).
+  `test_sc8_full_arm_is_the_installer_output` asserted 9 hooks; T180/T182 made it 11 while the branch sat unmerged
+  226 commits behind. The recorded results stay valid (they ran on the 9-hook kit); update the count with a dated
+  comment. To drive a paid runner's guards at $0, put a fake `docker` first on PATH that exits 0 only for
+  `image inspect`: kit-arms then reaches the per-run cap check, voids every run and prints Q1/Q2 INCOMPLETE.
 - **A doctrine change needs a live agent run; text tests only prove the words are there** (T178). 45 → 54 text
   tests stayed green through three live failures (task 5 went minimal for a data delete; task 2 skipped the
   template and asked to commit; task 3 asked "minimal or full?"). Each fix was one clause in `AGENTS.md`, found
