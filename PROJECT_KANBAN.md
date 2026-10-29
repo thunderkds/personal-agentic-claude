@@ -85,6 +85,7 @@
 
 
 ### In Progress
+- [ ] **T213** — Sidebar scroll-spy highlights the item above the clicked one | frontend-developer | C1 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_T213.md` | Depends on: none | Registered 2026-10-29 (bugfix); user: "when I click the nav item, but the highlight is the nav item that above the item click"; mental model confirmed, bottom sections: "Clicked item stays lit". | Started 2026-10-29, worktree `../wt-t213` (`fix/t213-scrollspy`).
 
 
 
