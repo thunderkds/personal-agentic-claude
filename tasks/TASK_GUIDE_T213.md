@@ -25,14 +25,18 @@
 - Risk: Low
 
 ### Diagnosis Gates (Pillar 1 — must pass before any fix)
-- [ ] Phase 1 feedback loop built and running (headless Chrome, see Approach)
-- [ ] Bug reproduces deterministically on the loop (list every sidebar link whose click leaves a different link active)
-- [ ] 3–5 ranked falsifiable hypotheses listed (consistent with confirmed mental model)
-- [ ] Correct hypothesis identified via Phase 4 instrumentation
+- [x] Phase 1 feedback loop built and running (headless Chrome, see Approach)
+- [x] Bug reproduces deterministically on the loop (list every sidebar link whose click leaves a different link active)
+- [x] 3–5 ranked falsifiable hypotheses listed (consistent with confirmed mental model)
+- [x] Correct hypothesis identified via Phase 4 instrumentation
 
 ### Attempts Log (filled live during diagnosis — required if >1 hypothesis tested)
 | # | Hypothesis | Predicted signal | Actual result | Verdict |
 |---|---|---|---|---|
+| 1 | Previous section's tail is inside the observer band [0, 40% vh] after an anchor jump (band top is the viewport top, under the header) | After `#skills` click: `agent-roles` rect bottom between 0 and 360 and `paint()` picks it first | `agent-roles` top=-446 bottom=40, `skills` top=80; active = agent-roles | Confirmed |
+| 2 | Counterfactual: a band starting at the 80px anchor offset excludes the previous section | A second IntersectionObserver with `-80px 0px -60% 0px` reports only the target | today `["agent-roles","skills"]`; `-80px` -> `["skills"]` (also install/tracks, hooks/skills) | Confirmed |
+| 3 | Harness artifact: smooth scroll not settled when read | Result changes with longer wait / rects not final | `scroll-behavior: auto`, 400ms wait, rects static; same result every run | Disproven |
+| 4 | Stale `visible` map (observer only reports transitions) | A section flagged visible that is not in the band | The wrongly active section really intersects the band; no stale entry needed | Disproven |
 
 **Stuck checkpoint** (if 2 consecutive hypotheses disproven):
 - [ ] 3 options presented (next hypothesis / widen scope / abandon+escalate)
@@ -40,16 +44,16 @@
 - [ ] User's explicit go-ahead: ___
 
 ### Fix Gates (Pillar 2)
-- [ ] Regression test written before the fix (or no-seam documented)
-- [ ] Fix applied; regression test passes
-- [ ] Phase 1 loop no longer reproduces the bug
-- [ ] Fix matches the "correct behaviour" definition from the mental model (a), (b) and (c)
+- [x] Regression test written before the fix (or no-seam documented)
+- [x] Fix applied; regression test passes
+- [x] Phase 1 loop no longer reproduces the bug
+- [x] Fix matches the "correct behaviour" definition from the mental model (a), (b) and (c)
 
 ### Cleanup Checklist (Pillar 3)
-- [ ] All [DEBUG-...] instrumentation removed (grep verified)
-- [ ] Throwaway prototypes deleted
-- [ ] Correct hypothesis stated in commit message
-- [ ] Post-mortem: what would have prevented this?
+- [x] All [DEBUG-...] instrumentation removed (grep verified)
+- [x] Throwaway prototypes deleted
+- [x] Correct hypothesis stated in commit message
+- [x] Post-mortem: what would have prevented this?
 
 ### Evidence (filled by reviewer at Stage 4/5)
 
