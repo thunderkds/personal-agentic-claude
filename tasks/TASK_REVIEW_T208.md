@@ -47,16 +47,16 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_auto_verify.py` (`test_t208_ac1_…` 12 cases, `test_t208_ac2_…` 2, `test_t208_ac3_still_blocked` 12 cases); fixture `tests/fixtures/auto_verify/verify_pass_bold_sentence.json`. Red first on the unchanged hook: `11 failed, 15 passed, 200 deselected` (`-k t208`); after the change: `26 passed, 200 deselected in 0.29s`. AC 4 mutation A (old regex restored): `11 failed, 15 passed` — ac1 `**Verdict: {w}**`, `**Verdict: {w}. All six things hold.**`, `**Verdict**: {w}`, indented `**Verdict: {w}**` (PASS and FAIL), ac2 parse + ac2 stub row, ac3 `pass-and-fail`. Mutation B (`^` anchor dropped): `2 failed, 24 passed` — ac3 `mid-sentence`, `mid-sentence-label-only`. Regex restored, `26 passed`. |
+| Verification command run | ☑ pass | `python3 -m pytest tests/test_auto_verify.py -q` → `226 passed in 91.74s (0:01:31)`; `python3 -m pytest .claude/hooks/tests -q` → `1158 passed, 25 subtests passed in 23.51s` |
+| Negative cases hold | ☑ pass | `test_t208_ac3_still_blocked` (12 cases, all `blocked`): no verdict line, one PASS and one FAIL (label-bold and sentence-bold), `BLOCKED`, `SKIP`, `PASSED`, lower-case `pass`, `Verdict: PASS` mid-sentence (bold sentence and bold label), plain prose `My Verdict: PASS`, non-success subtype, `is_error` run |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| Full smoke suite still green (no regression) | ☑ pass | the two suites above: 226 passed and 1158 passed, 25 subtests passed |
 | **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | no UI component: hook-only change |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | no UI component: hook-only change |
+| **UI: Responsiveness at target viewports** | ☑ N/A | no UI component: hook-only change |
 
 ---
 
@@ -67,12 +67,31 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured 2026-10-29T19:26:48+0700, before any implementation commit; unchanged hook at `f2bc739`, real `--start` path, stub `claude` on PATH printing the saved T207 output, throwaway project via the `tests/test_auto_verify.py` helpers):
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+```
+$ python3 <throwaway>/.claude/hooks/stop_auto_verify.py --start T951
+T951: auto verify started for commit cfb069405fab — log .claude/verify-runs/T951-cfb069405fab.log
+verify row: ☐ blocked | auto-run by hook, session 4af6b987-45a0-4709-9b67-2ffb823aa29d, commit cfb069405faba5a779ac1505b8f3885f6ff4bf7c, log .claude/verify-runs/T951-cfb069405fab.log — blocked (no single verdict line)
+== log T951-cfb069405fab.log
+$ claude -p '/verify T951' --max-budget-usd 2 --output-format json
+verdict: blocked (no single verdict line)
+```
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+**AFTER** (captured 2026-10-29T19:27:50+0700, same command and stub, hook with the new `VERDICT`):
+
+```
+$ python3 <throwaway>/.claude/hooks/stop_auto_verify.py --start T951
+T951: auto verify started for commit f4515f11c6fc — log .claude/verify-runs/T951-f4515f11c6fc.log
+verify row: ☑ pass | auto-run by hook, session 4af6b987-45a0-4709-9b67-2ffb823aa29d, commit f4515f11c6fcf7f665b30817ce0f7c95575bca24, log .claude/verify-runs/T951-f4515f11c6fc.log — pass
+== log T951-f4515f11c6fc.log
+$ claude -p '/verify T951' --max-budget-usd 2 --output-format json
+verdict: pass
+```
+
+Regex: before `^\s*\*\*Verdict:\*\*\s*([A-Z]+)\b`; after `^\s*\*\*Verdict(?::\*\*|\*\*:|:)\s*([A-Z]+)\b` (both `re.M`).
+
+**DELTA**: A real `/verify` PASS written as `**Verdict: PASS. …**` is now recorded as `☑ pass` instead of `☐ blocked`, and the hook still blocks a missing, doubled, non-PASS/FAIL or mid-sentence verdict.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
