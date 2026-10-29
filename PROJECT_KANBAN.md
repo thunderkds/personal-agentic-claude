@@ -93,6 +93,7 @@
 
 
 ### Ready for Review
+- [ ] **T207** — Visual-first landing page — diagrams lead each heavy section, long prose folds into Details | frontend-developer | C2 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T207.md` | Depends on: T204 | Registered 2026-10-29; user: "too much text to read hard to follow … should focus on the flow chart … All as you recommend and automatic" | Started 2026-10-29: branch `feat/t207-visual-first` in `../wt-t207` | Stage 4 pass 2026-10-29 (F1 stale auto-verify paragraph fixed 3d50b67); auto verify started by the Supervisor (T203) | **Blocked 2026-10-29 by T208**: the auto verify run passed the page but the old parser recorded `blocked (no single verdict line)`; rerun after T208 merges | Unblocked 2026-10-29: T208 merged; auto verify re-run on 17b4a1c
 
 
 ### Done
@@ -291,7 +292,6 @@
 
 ## Blocked
 
-- [ ] **T207** — Visual-first landing page — diagrams lead each heavy section, long prose folds into Details | frontend-developer | C2 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T207.md` | Depends on: T204 | Registered 2026-10-29; user: "too much text to read hard to follow … should focus on the flow chart … All as you recommend and automatic" | Started 2026-10-29: branch `feat/t207-visual-first` in `../wt-t207` | Stage 4 pass 2026-10-29 (F1 stale auto-verify paragraph fixed 3d50b67); auto verify started by the Supervisor (T203) | **Blocked 2026-10-29 by T208**: the auto verify run passed the page but the old parser recorded `blocked (no single verdict line)`; rerun after T208 merges
 - [ ] **T147** — Spawned sub-agents run under a tighter sandbox profile than the Supervisor | common-infrastructure | C2 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_T147.md` | Branch: `feat/t146-t147-harness-hardening` (one agent, T146 then T147), started 2026-10-17 | Depends on: T146 | Registered 2026-10-16 from the improvement-list grilling + brainstorm (`BRAINSTORMING_LOG_harness-hardening.md`): **HITL**: whether in-process `Agent()` spawns can be sandboxed depends on hook input identifying a sub-agent — verify, then the user decides | **Blocked 2026-10-17**: user /verify FAIL — every sandboxed Bash call dies with `apply-seccomp: write /proc/self/setgroups (nested userns is capability-restricted ...)` under Ubuntu `kernel.apparmor_restrict_unprivileged_userns = 1`; needs an environment decision before it can pass
 
 ---
