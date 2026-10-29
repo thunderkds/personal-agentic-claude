@@ -8,6 +8,7 @@
 ## Board
 
 ### Todo
+- [ ] **T210** — Merge gate closes four gaps — `git pull` is gated, `timeout`-wrapped test runs count, `git merge-base` is read-only, and the verify row must be committed on the branch | common-infrastructure | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T210.md` | Depends on: T197, T208 | Registered 2026-10-29 (user "go") from the 2026-10-29 merge-gate learnings | **Awaits user sign-off** to add T210 to `merge_gate_guard.AUTHORISED_TASKS`
 - [ ] **T206** — `stop_auto_verify.py --start` with no task ID falls through to `stop_hook()` and starts a paid run for every due task; make a bare or extra-arg `--start` exit 2 with a usage line | common-infrastructure | C0 | Risk: Medium | P1 | Guide: to write at Stage 2 | Depends on: T203 | Registered 2026-10-29 from T203 /verify finding (`main()` matches `--start` only when `len(sys.argv) == 3`)
 - [ ] **T205** — The merge gate binds an `auto-run by hook` verify row to the branch being merged or pushed: the run record carries the branch (and worktree), and `pre_bash_block_unsafe_merge.py` accepts the row only when the record's commit is the head of that branch — not the head of whichever checkout holds the row; a decoy worktree's genuine pass no longer clears another branch's merge | common-infrastructure | C2 | Risk: High | P1 | Guide: to write at Stage 2 | Depends on: T203 | Registered 2026-10-29 from T203 security-review (Medium, confidence 8/10): gate reads main first then each worktree, first filled row wins, record checked against that checkout's head
 - [ ] **T192** — `ui-test` skill: health-check `localhost:8765`, drive one labelled easy-ui session, write the verdict and report path into the three UI design rows; the guide template names easy-ui as one method beside the existing ones, never the required one | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T192.md` | Depends on: T190 | Registered 2026-10-28 from `PRD_companion-scoring.md` (Stage 0.5 grilling D1-D6, Path A selected). User: "checking the repos and adding the options to use the easy-ui and easy-verifier as scoring to evaluate gate", then "if you use verifier mcp, and ui to check, the code must pass them. if not, just work on the normal flow, that all". Optional feature: binding when a tool ran, invisible when none did (FR-014, FR-015).
@@ -85,6 +86,7 @@
 
 
 ### In Progress
+- [ ] **T209** — Auto verify refuses a verdict line that lists choices (`**Verdict:** PASS | FAIL | …`) and the doctrine names every accepted shape | common-infrastructure | C1 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T209.md` | Depends on: T208 | Registered 2026-10-29 (user "go") from T208 verify step 8 | Started 2026-10-29: branch `fix/t209-verdict-choices` in `../wt-t209`
 
 
 
