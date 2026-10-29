@@ -294,15 +294,16 @@ def close_out(root, task_id, report_path, head, session, minimal, say=print):
         if text is None:
             say(f"{INCOMPLETE}file missing — done not moved")
             return False
+        if ready_row(am.read(board_path) or "", task_id) is None:
+            # The user already moved it (or it was never there): nothing to move, no note added.
+            say(f"{task_id} has no row in Ready for Review — nothing moved")
+            return False
         block = _block(text, task_id, minimal)
         body = block[2] if block else ""
         gate = load_gate()
         proof = record_gaps(gate, root, task_id, tasks_dir, head, session)
         evidence = evidence_gaps(gate, task_id, tasks_dir, minimal, body)
         reasons = proof + evidence + [INCOMPLETE + f for f in report_gaps(body, minimal)]
-        if not reasons and ready_row(am.read(board_path) or "", task_id) is None:
-            say(f"{task_id} has no row in Ready for Review — nothing moved")
-            return False
         day = date.today().isoformat()
         if not reasons:
             closed = (f"Closed: row moved to Done {day} — auto verify pass (session {session}, "

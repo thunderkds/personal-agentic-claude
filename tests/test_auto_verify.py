@@ -1628,3 +1628,94 @@ def test_t189_ac8_a_complete_report_moves_the_row(tmp_path):
     project, checkout, head, env, task, report = _passed(tmp_path)
     assert "RESULT True" in _close(project, env, task, report, head)
     assert any(f"**{TASK}**" in r for r in _section_rows(_board_text(project), "Done"))
+
+
+# ── AC 9 — doctrine, templates, glossary ──────────────────────────────────────────────────
+def _tracks_subsection(heading):
+    m = re.search(rf"^### {re.escape(heading)}[^\n]*\n(.*?)(?=^##+ |\Z)", _auto_mode_section(),
+                  re.M | re.S)
+    assert m, f"no `### {heading}` in `## Auto mode`"
+    return m.group(1)
+
+
+def test_t189_ac9_row_19_and_the_never_list_name_only_merge_push_and_ship():
+    row = next(l for l in _auto_mode_section().splitlines() if l.startswith("| 19 |"))
+    rule = row.split("|")[3]
+    assert re.search(r"Merge, push and `ship`: never in auto mode", rule), rule
+    assert "`### Auto close-out`" in rule and "`Memory:`" in rule
+    never = _tracks_subsection("Never in auto mode")
+    assert [l for l in never.splitlines() if l.startswith("- ")] == ["- merge;", "- push;", "- `ship`."]
+    assert "Done" not in [w.strip(".;") for w in " ".join(
+        l for l in never.splitlines() if l.startswith("- ")).split()]
+
+
+def test_t189_ac9_tracks_md_documents_the_memory_pass_the_done_move_and_the_report_gate():
+    body = re.sub(r"\s+", " ", _tracks_subsection("Auto close-out"))
+    for needle in ("`.claude/hooks/lib/auto_closeout.py`", "It is not a merge", "run record",
+                   "Hard-Stop Gates 5 and 6", "N/A", "`Mode: auto`", "`Checks:`", "`Memory:`",
+                   "`Not done:`", "names the merge", "`Closed: row moved to Done <date>",
+                   "`Paused: done not moved — <reason>`", "`report incomplete: <field>`",
+                   "no git command that writes", "no memory file", "`**Last updated**`"):
+        assert needle in body, needle
+    final = re.sub(r"\s+", " ", _tracks_subsection("Final report"))
+    assert "`Memory:` — the diff-driven memory pass" in final and "`Closed:` — written by the hook" in final
+    check = re.sub(r"\s+", " ", _tracks_subsection("Auto-mode check (Stop hook)"))
+    assert "6. the report has no `Memory:` line" in check
+
+
+@pytest.mark.parametrize("name,memory", [("TASK_REVIEW_template.md", "Memory: <"),
+                                         ("MINIMAL_LOG_template.md", "**Memory:** <")])
+def test_t189_ac9_templates_carry_the_memory_and_closed_fields(name, memory):
+    text = (ROOT / "templates" / name).read_text(encoding="utf-8")
+    assert re.search(rf"^{re.escape(memory)}", text, re.M), memory
+    assert "`Closed: row moved to Done <date> — …`" in text
+    assert "`Paused: done not moved — <reason>`" in text
+    assert "`### Auto close-out`" in text
+
+
+def test_t189_ac9_the_memory_placeholder_in_a_template_copy_is_not_a_memory_line():
+    sys.path.insert(0, str(HOOKS / "lib"))
+    try:
+        import auto_closeout  # noqa: WPS433
+    finally:
+        sys.path.pop(0)
+    assert not auto_closeout.has_memory_line(
+        "Memory: <each entry the memory pass wrote, as `file — entry` | nothing new>\n")
+    assert auto_closeout.has_memory_line("Memory: nothing new\n")
+    assert auto_closeout.has_memory_line("**Memory:** memory/decisions.md — T951 decision\n")
+
+
+def test_t189_ac9_glossary_auto_close_out_is_not_a_merge():
+    rows = [l for l in SPEC.read_text(encoding="utf-8").splitlines() if l.startswith("| Auto close-out |")]
+    assert len(rows) == 1
+    assert "**Not a merge**" in rows[0] and "T189" in rows[0] and "never the Supervisor" in rows[0]
+
+
+def test_t189_ac9_agents_md_stays_within_its_line_cap():
+    assert len((ROOT / "AGENTS.md").read_text(encoding="utf-8").splitlines()) <= 200
+
+
+def test_t189_edge_a_row_the_user_already_moved_gets_no_note(tmp_path):
+    """Edge case: the row is already in Done, and the report is incomplete — nothing is written."""
+    project, checkout, head, env, task, report = _passed(tmp_path, review=_review())  # no Memory:
+    board = _board_text(project).replace(f"{RFR_ROW}\n", "").replace(
+        "### Done\n", f"### Done\n{RFR_ROW.replace('- [ ]', '- [x]')}\n")
+    (project / "PROJECT_KANBAN.md").write_text(board, encoding="utf-8")
+    text = report.read_text(encoding="utf-8")
+    out = _close(project, env, task, report, head)
+    assert "RESULT False" in out and "nothing moved" in out, out
+    assert _board_text(project) == board and report.read_text(encoding="utf-8") == text
+
+
+def test_t189_edge_two_auto_tasks_passing_in_one_turn_both_move(tmp_path):
+    second = "- [ ] **T953** — Sort | Supervisor | C2 | Risk: Medium | P1"
+    project, checkout = _project(tmp_path, review=COMPLETE, rows=(RFR_ROW, second),
+                                 extra_reviews=[("T953", _review(task="T953", memory=MEMORY))])
+    stub_dir, _ = _stub(tmp_path)
+    _stop(project, _env(tmp_path, project, stub_dir))
+    assert "T951: moved to Done" in _wait_close(project, TASK)
+    assert "T953: moved to Done" in _wait_close(project, "T953")
+    board = _board_text(project)
+    assert _section_rows(board, "Ready for Review") == []
+    assert sorted(re.search(r"\*\*(T\d+)\*\*", r).group(1) for r in _section_rows(board, "Done")) == [
+        "T951", "T953"]
