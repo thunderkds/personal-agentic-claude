@@ -234,7 +234,8 @@ After all Stage 4 reviews pass:
    Skill({ skill: "verify" })
    ```
    Record the observed result in the task guide's **Evidence** table (`verify` row). Do not merge while any evidence row reads fail or is blank.
-   Auto mode: the Supervisor runs its own real-run check instead, and writes it under the final report's `Checks:` as `auto-checked, not /verify`. It never runs `/verify` or fills the `verify` row: T182's hook does, or the user.
+   The Supervisor starts this run, never in its own session: right after it moves a task to Ready for Review, it runs `python3 .claude/hooks/stop_auto_verify.py --start <ID>` (every task, both tracks, any mode; the Stop hook is the backstop). That headless run writes the `verify` row and its run record; the Supervisor waits for the verdict and reports it. The user may still run `/verify`, and does when the run is blocked or `CLAUDE_AUTO_VERIFY=off` (`docs/claude-md/tracks.md` `### Auto verify (Stop hook)`).
+   Auto mode: the Supervisor also writes its own real-run check under the final report's `Checks:` as `auto-checked, not /verify`. It never runs `/verify` in its own session or fills the `verify` row: T182's hook does, or the user.
 
 2. **Confirm smoke tests pass** (coordinate with QA-Automation-Agent).
 

@@ -2106,3 +2106,55 @@ def test_t203_ac7_manifest_ships_the_hook_file():
         assert (ROOT / path).is_file(), path
         assert not any(fnmatch.fnmatch(path, ex) or path.startswith(ex.rstrip("/") + "/")
                        for ex in excluded), path
+
+
+# ── AC 6 — doctrine (D4) ─────────────────────────────────────────────────────────────────
+START_CMD = "python3 .claude/hooks/stop_auto_verify.py --start <ID>"
+
+
+def test_t203_ac6_tracks_md_auto_verify_says_every_task_start_and_the_off_switch():
+    m = re.search(r"^### Auto verify[^\n]*\n(.*?)(?=^##+ |\Z)", _auto_mode_section(), re.M | re.S)
+    body = re.sub(r"\s+", " ", m.group(1))
+    for needle in ("**every task**", "with or without `[auto]`", START_CMD, "share one lock",
+                   "The Stop hook is the backstop", "`CLAUDE_AUTO_VERIFY=off`", "The default is on",
+                   "`CLAUDE_AUTO_VERIFY_BUDGET_USD`", "waits for the run", "verdict"):
+        assert needle in body, needle
+    assert "Without `[auto]`, nothing changes" not in body
+    assert "Since T203" in body and "never runs it in its own session" in body
+
+
+def test_t203_ac6_row_18_and_the_minimal_track_merge_paragraph():
+    text = re.sub(r"\s+", " ", TRACKS_MD.read_text(encoding="utf-8"))
+    row = next(l for l in TRACKS_MD.read_text(encoding="utf-8").splitlines() if l.startswith("| 18 |"))
+    assert "only the user can run it" not in row
+    assert "--start <ID>" in row and "`/verify (yours)`" in row
+    assert "the user runs `/verify`, then" not in text
+    assert ("Stage 5 verify is still mandatory before any merge: the Supervisor starts the headless auto "
+            "verify run") in text
+
+
+def test_t203_ac6_pipeline_stage_5_and_agents_md_name_the_supervisor_start():
+    stage5 = (ROOT / "docs" / "claude-md" / "pipeline-stages.md").read_text(encoding="utf-8")
+    stage5 = re.sub(r"\s+", " ", stage5.split("## Stage 5", 1)[1].split("2. **Confirm smoke", 1)[0])
+    assert f"`{START_CMD}`" in stage5 and "never in its own session" in stage5
+    assert "`CLAUDE_AUTO_VERIFY=off`" in stage5
+    agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+    para = agents.splitlines()[agents.splitlines().index("## Tracks") + 1]
+    assert f"`{START_CMD}`" in para and "runs `/verify` in its own session" in para
+    assert len(agents.splitlines()) <= 200
+
+
+def test_t203_ac6_no_live_doc_says_only_the_user_runs_verify():
+    """Outside the off switch / blocked fallback, no live doctrine file says `/verify` is the user's
+    alone. Task files, memory and experiments are history, not doctrine."""
+    bad = re.compile(r"only the user can run|the user runs `/verify`|Without `\[auto\]`, nothing changes")
+    for path in ("AGENTS.md", "docs/claude-md/tracks.md", "docs/claude-md/pipeline-stages.md",
+                 "PROJECT_SPEC.md", ".claude/hooks/stop_auto_verify.py"):
+        hits = bad.findall((ROOT / path).read_text(encoding="utf-8"))
+        assert not hits, (path, hits)
+
+
+def test_t203_ac6_glossary_auto_verify_names_every_task_start_and_off():
+    row = next(l for l in SPEC.read_text(encoding="utf-8").splitlines() if l.startswith("| Auto verify |"))
+    for needle in ("**every task**", "T203", "--start <ID>", "backstop", "`CLAUDE_AUTO_VERIFY=off`"):
+        assert needle in row, needle
