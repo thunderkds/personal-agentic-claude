@@ -164,8 +164,8 @@ def _resolve_root():
     module happens to execute (the worktree's, in a subprocess-sandboxed
     test) — which is exactly the split that made the state file unreadable
     by the real hook (T047 Stage 4 review): an agent's `mkdir -p
-    .claude/hooks/.state && ... > .claude/hooks/.state/active_task`, run
-    from a worktree cwd, wrote to `<worktree>/.claude/hooks/.state/`, while
+    .claude/hooks/.state && ... > .claude/hooks/.state/active_task` (T047's
+    shared file, no longer read since T196), run from a worktree cwd, wrote to `<worktree>/.claude/hooks/.state/`, while
     the live hook — always invoked as `$CLAUDE_PROJECT_DIR/.claude/hooks/*.py`
     — read `<main-checkout>/.claude/hooks/.state/`. Different files, so the
     agent's own writes were invisible to the hook it was trying to satisfy.

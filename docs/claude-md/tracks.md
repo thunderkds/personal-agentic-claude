@@ -72,7 +72,7 @@ The Supervisor runs these steps itself, in one context, straight through. No tas
 Stage 4 skills. In auto mode, the Debate's read-only `Explore` Advocates are the one exception
 (`## Auto mode`).
 
-1. **Register.** Take the next task ID and set the active-task state (`.claude/hooks/.state/active_task`, at the literal absolute path of the main checkout), so the trace hook attributes every call to the task.
+1. **Register.** Take the next task ID and set the active-task state for this session (`.claude/hooks/.state/active_task.d/$CLAUDE_CODE_SESSION_ID`, at the literal absolute path of the main checkout), so the trace hook attributes every call to the task.
 2. **Branch.** Work on a new branch for the task, never on `main`.
 3. **Test first.** Write a new test that fails for the right reason, and run it to see it fail. Gate 5 holds on this track too: a new test, and its passing output in the record's `Checked:` field.
 4. **Change.** Make the smallest change that passes the test. Touch only the code the task needs.

@@ -164,3 +164,26 @@ def test_ac7_incident_replay_has_no_crossings_and_t188_is_not_verified_by_t190()
         assert gate.trace_shows_verification("T190") is True
     finally:
         co.cleanup()
+
+
+# ---------------------------------------------------------------------------
+# AC 8 (D5): every live writer instruction names the per-session path. A
+# historical guide may still quote the shared one; these files may not.
+# ---------------------------------------------------------------------------
+
+REPO_ROOT = os.path.dirname(os.path.dirname(HOOKS_DIR))
+LIVE_INSTRUCTIONS = (
+    "skills/craft-spawn-prompt/SKILL.md",
+    "skills/resolve-question/SKILL.md",
+    "docs/claude-md/tracks.md",
+    ".claude/hooks/pre_bash_block_unsafe_merge.py",
+)
+SHARED_WRITE = __import__("re").compile(r">\s*\S*\.claude/hooks/\.state/active_task(?![.\w])")
+
+
+def test_ac8_live_instructions_name_the_per_session_file_and_never_the_shared_one():
+    for rel in LIVE_INSTRUCTIONS:
+        with open(os.path.join(REPO_ROOT, rel), encoding="utf-8") as f:
+            text = f.read()
+        assert ".claude/hooks/.state/active_task.d/" in text, rel
+        assert not SHARED_WRITE.search(text), f"{rel} still writes the shared file"
