@@ -41,16 +41,16 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/settings_tool/test_generate.mjs` (AC1-5, AC7 + drift vs profiles.json), `tests/test_site_content.py` (5 new tests: ids order, label/for/values drift, NFR-001, lead, for line). Tail: `ℹ tests 59 / ℹ pass 59 / ℹ fail 0` (node, `*.mjs`); `92 passed` (test_site_content.py); `964 passed in 64.44s` (full `python3 -m pytest tests -q`). Mutations (all RED then green): M1 one high-security rule changed -> node AC2/AC3 + AC4 and pytest `test_page_profiles_values_label_and_for_equal_profiles_json` fail; M2 extra preset id on page only -> node AC1 + AC2/AC3 and pytest `test_page_profiles_match_profiles_json_ids_in_order` fail; M3 old lead sentence restored -> pytest `test_settings_lead_says_what_the_installer_and_stage_1_do` fails; restored -> 59 / 92 pass. |
 | Verification command run | ☐ pass / ☐ fail | [paste actual output] |
 | Negative cases hold | ☐ pass / ☐ fail | |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
 | Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
 | **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | Not judged by the implementer: no screenshot reviewed. Observed only via headless Chrome DOM probe (buttons are the same `.st-btn`; `for` line is `p.st-why`). Left for Supervisor /verify. |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ pass | Headless Chrome computed style, `#st-presetfor` vs existing `p.st-why`: both `13.6px / rgb(107, 107, 154) / margin-top 3.2px / margin-bottom 4.8px`. No new CSS added, so `test_settings_tool_css_adds_no_color_literals` still passes. |
+| **UI: Responsiveness at target viewports** | ☑ pass | Headless Chrome (new headless has a 500 px floor, so 375 was measured in a 375 px iframe on a local server): 375 px: `scrollWidth 360 == clientWidth 360` (scrollbar 15 px), preset bar 5 buttons wrap to height 66.6 px; 1280 px: `scrollWidth 1265 == clientWidth 1265`, bar height 30.1 px (one row). No overflow after click, confirm and Replace. Screenshots not reviewed. |
 
 ---
 
@@ -68,9 +68,26 @@ presets: safe-baseline [no for], solo-engineer [no for], team-project [no for], 
 lead: Pick the Claude Code settings you want and copy a ready <code>settings.json</code>, or paste yours to check it. The kit installs no settings of its own. Everything stays in your browser.
 ```
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**: same probe, 2026-10-29, after the change:
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```
+presets: high-security [for], legacy [for], solo-engineer [for], team-project [for], empty [for]
+lead: Pick the Claude Code settings you want and copy a ready <code>settings.json</code>, or paste yours to check it. The installer adds only the kit's hooks and 2 deny rules.
+```
+Headless Chrome run on the page: hover Legacy shows "Legacy: Keeps today's kit behavior: only the 2 deny rules that protect the trace anchors."; clicking it gives output `{"permissions":{"deny":["Edit(~/.claude/harness-anchors/**)","Bash(*harness-anchors*)"]}}` and the note "The kit's hooks are added by the installer, not by this file."
 
-**WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
-implementing agent alone]
+**DELTA**: A user can start the Build tab from High security or Legacy as well as Solo engineer, Team project and Empty, read who each is for, and the page values cannot drift from `skills/settings-setup/profiles.json` unnoticed.
+
+**WITNESS**: [left for the Supervisor: derived from `memory/event-trace/T201.jsonl`]
+
+---
+
+## Decisions
+
+1. **Intro split in two.** `test_visible_lead_paragraphs_are_one_line_summaries` caps a lead at 35 words. The lead keeps the true installer fact ("The installer adds only the kit's hooks and 2 deny rules."). The Stage 1 / approval / never-removes sentences sit in a second paragraph, `p.st-why`, so no new CSS. SAFER OPTION: keeps the existing cap test, no test loosened.
+2. **`for` line** is `p#st-presetfor.st-why`, filled by `textContent` (never `innerHTML`). Buttons get `aria-describedby="st-presetfor"`. Hover or focus shows that profile as "Label: for text"; otherwise the last applied profile while the picks still equal it (any edit ends it, so the line and the Legacy note never describe a stale state); otherwise the hint "Point at a profile to see who it is for." Touch users see it after a tap, because a tap applies the profile.
+3. **Legacy note** is a `note` field on the Legacy preset in the catalog, appended to the existing `#st-note` text only while Legacy is the active unedited profile. Only Legacy has a `note` (tested).
+4. **Catalog stays compact**: `high-security`, `solo-engineer`, `team-project` keep `$suggest` for deny/ask (the catalog `suggest` lists already equal the profile lists); the drift tests expand `$suggest` and compare to `profiles.json` in both node (through the real `applyPreset`) and pytest. `legacy` lists its 2 rules explicitly.
+5. **AC3 "generate() equals"**: pytest compares expanded values (no node subprocess); the node test compares `applyPreset` output to `profiles.json` through the real core, and AC4/AC5 test `generate()` output.
+6. **Verification command**: `node --test tests/settings_tool/` (directory form from the guide) exits with `test failed` on this machine's Node v26.7.0 even before my change (checked with `git stash`); the glob form `node --test tests/settings_tool/*.mjs` runs all 59 tests. Not fixed (out of scope); Supervisor may want the guide command changed.
+7. **Not done**: `Skill code-review` and `Skill verify` were not invoked (no Skill tool in this run); screenshots not taken or reviewed (the Visual regression row is left for the Supervisor); Evidence rows other than the ones above are untouched.
