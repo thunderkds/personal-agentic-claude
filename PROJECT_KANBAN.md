@@ -89,7 +89,6 @@
 
 
 ### In Progress
-- [ ] **T200** — `settings-setup` skill — the Supervisor offers settings profiles at Stage 1 and writes High security by default, add-only | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T200.md` | Depends on: none | Registered 2026-10-29 from the user request "we should provide more options for users to pick … if the users do not choose from the settings setup, the agents supervisor should generate the default settings with the high security". Stage 0.5: `PRD_settings-profiles.md` (D1 more profiles, D2 Supervisor at Stage 1, D3 Legacy = today's kit settings, D4 project `.claude/settings.json`, D5 High security = rules only), `BRAINSTORMING_LOG_settings-profiles.md` (user chose Path A: shipped `skills/settings-setup/profiles.json` + add-only script; page copy held equal by a test). Started 2026-10-29 (user: "start it as automatically and merge to main, push after done"; not the `[auto]` tag — normal extended track, no stops): worktree `../wt-t200`, branch `feat/t200-settings-setup` off `main` (`0deff10`); background `Agent()` common-infrastructure on opus.
 
 
 
@@ -98,6 +97,7 @@
 
 
 ### Ready for Review
+- [ ] **T200** — `settings-setup` skill — the Supervisor offers settings profiles at Stage 1 and writes High security by default, add-only | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T200.md` | Depends on: none | Registered 2026-10-29 from the user request "we should provide more options for users to pick … if the users do not choose from the settings setup, the agents supervisor should generate the default settings with the high security". Stage 0.5: `PRD_settings-profiles.md` (D1 more profiles, D2 Supervisor at Stage 1, D3 Legacy = today's kit settings, D4 project `.claude/settings.json`, D5 High security = rules only), `BRAINSTORMING_LOG_settings-profiles.md` (user chose Path A: shipped `skills/settings-setup/profiles.json` + add-only script; page copy held equal by a test). Started 2026-10-29 (user: "start it as automatically and merge to main, push after done"; not the `[auto]` tag — normal extended track, no stops): worktree `../wt-t200`, branch `feat/t200-settings-setup` off `main` (`0deff10`); background `Agent()` common-infrastructure on opus. Ready for Review 2026-10-29 (branch head `c5cd1c7`): 35 new tests, `tests` 959 passed (Supervisor re-run), hook failures identical to `main` (15, pre-existing, T202); M1–M4 RED/green; code-review 0 P0/P1 (P2: merge with a merge commit, pins name `65fe3a8`); security-review no findings. Waiting: `/verify T200`.
 
 
 ### Done
