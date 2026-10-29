@@ -541,6 +541,14 @@ T209_CHOICES = {
     "no-space-pipe": "**Verdict:** PASS|FAIL",
     "pipe-then-other-word": "**Verdict:** PASS | maybe",
     "fail-first": "**Verdict:** FAIL | PASS",
+    "lower-case-or": "**Verdict:** PASS or fail",
+    "lower-case-pipe": "**Verdict:** PASS | fail",
+    "mixed-case-slash": "**Verdict: PASS / Fail**",
+    "hyphen": "**Verdict:** PASS - FAIL",
+    "hyphen-lower": "**Verdict:** PASS - fail",
+    "en-dash": "**Verdict:** PASS – FAIL",
+    "em-dash": "**Verdict: PASS — FAIL**",
+    "em-dash-no-space": "**Verdict: PASS—FAIL**",
 }
 
 
@@ -561,6 +569,9 @@ def test_t209_ac2_the_blank_template_line_beside_a_real_verdict_is_ignored(word,
     "**Verdict: PASS. All six hold, so nothing is left to FAIL or BLOCKED.**",
     "**Verdict: PASS, all six hold.**",
     "**Verdict:** PASS, and no FAIL was seen",
+    "**Verdict: PASS — all six hold.**",
+    "**Verdict:** PASS - nothing broke",
+    "**Verdict:** PASS – nothing broke",
 ])
 def test_t209_ac3_a_verdict_word_later_in_the_sentence_is_not_a_choice(line):
     assert _parse(_verdict_output(line))[0] == "pass"

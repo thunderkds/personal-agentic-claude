@@ -366,7 +366,7 @@ When the run ends, the hook, never the Supervisor, writes three things:
 Only a verdict line of the skill's result sets the result. The line starts with the bold label and names one
 word, `PASS` or `FAIL`, in one of four shapes: `**Verdict:** PASS`, `**Verdict: PASS**`,
 `**Verdict: PASS. <sentence>**` or `**Verdict**: PASS`. A line that lists choices (`**Verdict:** PASS | FAIL | BLOCKED | SKIP`,
-`PASS / FAIL`, `PASS or FAIL`) is not a verdict and is ignored, so the blank report template never reads as a
+`PASS / FAIL`, `PASS or fail`, `PASS - FAIL`; a second verdict word in any case, after `|`, `/`, `,`, a dash, `or` or `and`) is not a verdict and is ignored, so the blank report template never reads as a
 pass. The parser fails closed: anything it does not recognise is `blocked`. Each of these is
 `blocked`: a SKIP or BLOCKED verdict, no verdict line, a budget stop, a timeout, or no `claude` on the PATH.
 A blocked result never contains the word "pass". The hook never overwrites a row or a line you filled. The

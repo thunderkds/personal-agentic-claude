@@ -48,7 +48,7 @@ When the run ends, this script (never the Supervisor) writes three things:
     `auto verify: running (T182)` after the run has ended. The merge clause is left as it is.
 The verdict is the result's `**Verdict:** PASS|FAIL` line (the bold may also close after the
 word or the sentence: `**Verdict: PASS**`, T208). A line that lists choices (`**Verdict:** PASS | FAIL`,
-`PASS / FAIL`, `PASS or FAIL`) is no verdict (T209): the blank report template reads as `blocked`. SKIP,
+`PASS / FAIL`, `PASS or fail`, `PASS - FAIL`) is no verdict (T209): the blank report template reads as `blocked`. SKIP,
 BLOCKED, no verdict line, two different verdicts, a non-success run (budget stop, error), output that
 is not JSON, a timeout or no `claude` on PATH are all `blocked`. The run's text is data: only that line decides.
 
@@ -95,10 +95,12 @@ VERIFY_ROW = re.compile(r"^\|\s*verify\s*\|(?P<result>[^|\n]*)\|(?P<notes>[^|\n]
 # inside prose out; a line inside a fenced code block of the report still counts.
 VERDICT = re.compile(r"^\s*\*\*Verdict(?::\*\*|\*\*:|:)\s*([A-Z]+)\b([^\n]*)", re.M)
 # T209: a line that lists choices is not a verdict — the blank template `**Verdict:** PASS | FAIL | BLOCKED |
-# SKIP` must not read as PASS. Right after the first word comes a `|`, or a `/`, a `,`, `or`, `and` or a
-# space and then another verdict word. A verdict word later in a sentence (`PASS. Nothing is left to
-# FAIL.`) and a comma that starts a clause (`PASS, all six hold`) are no choice.
-CHOICES = re.compile(r"\s*(?:\||(?:[/,]|\b(?:or|and)\b)?\s*(?:PASS|FAIL|BLOCKED|SKIP)\b)")
+# SKIP` must not read as PASS. Right after the first word comes a `|`, or a `/`, a `,`, a dash (`-`, `–`,
+# `—`), `or`, `and` or a space and then another verdict word, in any case (`PASS or fail`). The FIRST
+# word stays upper-case only (T208). A verdict word later in a sentence (`PASS. Nothing is left to
+# FAIL.`), a clause comma (`PASS, all six hold`) and a dash that starts prose (`PASS — all six hold`)
+# are no choice.
+CHOICES = re.compile(r"\s*(?:\||(?:[/,\-–—]|\b(?:or|and)\b)?\s*(?i:PASS|FAIL|BLOCKED|SKIP)\b)")
 SESSION = re.compile(r"[^A-Za-z0-9-]")
 
 # D7 — the report's `Not done:` line and the auto verify slot inside it. Three spellings count as
