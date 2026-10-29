@@ -144,7 +144,7 @@ def _agent_card(name):
     """The <div class="agent-card"> block whose .name is `name`, or None."""
     m = re.search(r'<section id="agent-roles">(.*?)</section>', _page_text(), re.DOTALL)
     assert m, 'page has no <section id="agent-roles">'
-    for card in re.findall(r'<div class="agent-card">(.*?)\n</div>', m.group(1), re.DOTALL):
+    for card in re.findall(r'<div class="[^"]*\bagent-card\b[^"]*">(.*?)\n</div>', m.group(1), re.DOTALL):
         if re.search(rf'<div class="name">{re.escape(name)}</div>', card):
             return card
     return None
@@ -158,7 +158,7 @@ def test_role_cards_show_frontmatter_colour_and_trigger():
         fm = _agent_frontmatter(fname)
         card = _agent_card(name)
         assert card, f"no agent card for {name}"
-        swatch = re.search(r'<span class="swatch" data-color="([a-z]+)"></span>\s*([a-z]+)', card)
+        swatch = re.search(r'<span class="dot swatch" data-color="([a-z]+)"></span>\s*([a-z]+)', card)
         assert swatch, f"{name} card has no colour swatch + label"
         assert swatch.groups() == (fm["color"], fm["color"]), (
             f"{name} card colour {swatch.groups()} drifted from {fname} color: {fm['color']}"
@@ -175,7 +175,7 @@ def test_role_cards_show_frontmatter_colour_and_trigger():
 
 def test_every_swatch_colour_has_a_css_rule():
     css = re.search(r"<style>(.*?)</style>", _page_text(), re.DOTALL).group(1)
-    used = set(re.findall(r'<span class="swatch" data-color="([a-z]+)">', _page_text()))
+    used = set(re.findall(r'<span class="dot swatch" data-color="([a-z]+)">', _page_text()))
     assert used, "no swatches on the page"
     missing = [c for c in sorted(used) if f'.swatch[data-color="{c}"]' not in css]
     assert not missing, f"swatch colour(s) with no CSS rule: {missing}"
@@ -323,8 +323,9 @@ TOKEN_AUDIT_TEST = os.path.join(
 def _nav_hrefs():
     """Every in-page anchor href inside the sidebar <nav> block."""
     text = _page_text()
-    nav = re.search(r"<nav\b[^>]*>(.*?)</nav>", text, re.DOTALL)
-    assert nav, "page has no <nav> element — the sidebar navigation is missing"
+    # T204: the header also holds a (family) <nav>; the sidebar one is #site-nav.
+    nav = re.search(r'<nav\b[^>]*id="site-nav"[^>]*>(.*?)</nav>', text, re.DOTALL)
+    assert nav, "page has no <nav id=\"site-nav\"> element — the sidebar navigation is missing"
     return re.findall(r'href\s*=\s*"#([^"]+)"', nav.group(1))
 
 
@@ -771,7 +772,7 @@ def _mcps_section_body():
 
 def _mcp_entry_body(entry_id):
     """The card inside #mcps carrying id=<entry_id> (cards hold no nested <div>)."""
-    m = re.search(rf'<div class="agent-card" id="{entry_id}">(.*?)</div>', _mcps_section_body(), re.DOTALL)
+    m = re.search(rf'<div class="card agent-card" id="{entry_id}">(.*?)</div>', _mcps_section_body(), re.DOTALL)
     assert m, f'#mcps has no entry with id="{entry_id}"'
     return m.group(1)
 
@@ -782,8 +783,8 @@ def _verifier_section_body():
 
 def test_mcps_section_is_linked_from_the_reference_nav_group():
     text = _page_text()
-    nav = re.search(r"<nav\b[^>]*>(.*?)</nav>", text, re.DOTALL).group(1)
-    reference = nav[nav.index("Reference"):]
+    nav = re.search(r'<nav\b[^>]*id="site-nav"[^>]*>(.*?)</nav>', text, re.DOTALL).group(1)
+    reference = nav[nav.index("// reference"):]
     assert 'href="#mcps"' in reference, "Reference nav group has no #mcps link"
     assert 'href="#verifier"' not in reference, "Reference nav group still links #verifier"
     ids = _top_level_section_ids()
@@ -797,7 +798,7 @@ def test_mcps_section_has_one_named_entry_per_server():
     body = _mcps_section_body()
     for name in ("easy-verifier-mcp", "easy-ui-mcp", "easy-memory-mcp"):
         assert re.search(rf"<h3>[^<]*{name}[^<]*</h3>", body), f"no <h3> naming {name}"
-    assert len(re.findall(r'<div class="agent-card"', body)) == 3, "expected exactly three entries"
+    assert len(re.findall(r'<div class="card agent-card"', body)) == 3, "expected exactly three entries"
     assert 'id="verifier"' in body, 'verifier entry lost id="verifier"; old #verifier links break'
 
 
@@ -821,7 +822,7 @@ HONESTY_PHRASES = ("the kit uses", "ships with", "built in", "required")
 
 
 def _ui_mcp_entry_body():
-    m = re.search(r'<div class="agent-card" id="easy-ui-mcp">(.*?)</div>', _mcps_section_body(), re.DOTALL)
+    m = re.search(r'<div class="card agent-card" id="easy-ui-mcp">(.*?)</div>', _mcps_section_body(), re.DOTALL)
     assert m, '#mcps has no entry with id="easy-ui-mcp"'
     return m.group(1)
 
@@ -874,7 +875,7 @@ def test_mcps_section_lead_counts_three_companions():
 
 def test_memory_mcp_card_is_the_third_card_and_says_optional():
     body = _mcps_section_body()
-    ids = re.findall(r'<div class="agent-card" id="([^"]+)"', body)
+    ids = re.findall(r'<div class="card agent-card" id="([^"]+)"', body)
     assert ids == ["verifier", "easy-ui-mcp", "easy-memory-mcp"], f"card order is {ids}"
     card = _memory_mcp_entry_body()
     assert re.search(r"<h3>[^<]*easy-memory-mcp[^<]*</h3>", card), "h3 must name easy-memory-mcp"
@@ -1053,7 +1054,7 @@ def test_quick_reference_is_the_first_section_and_has_a_nav_link():
     assert _top_level_section_ids()[0] == "quick-reference", (
         f"first top-level section is {_top_level_section_ids()[0]!r}, want quick-reference"
     )
-    assert text.index('<div class="header">') < text.index('<section id="quick-reference">')
+    assert text.index('<div class="hero">') < text.index('<section id="quick-reference">')
     assert "quick-reference" in _nav_hrefs(), "sidebar nav has no #quick-reference link"
 
 
@@ -1231,9 +1232,11 @@ def test_skills_flow_snakes_with_an_arrow_between_every_consecutive_pair():
 # ---- T167: tables never scroll sideways --------------------------------
 
 def _style_block():
+    """T204: the shared site/theme.css plus the page's own <style> block."""
     m = re.search(r"<style>(.*?)</style>", _page_text(), re.DOTALL)
     assert m, "page has no <style> block"
-    return m.group(1)
+    with open(os.path.join(ROOT, "site", "theme.css"), encoding="utf-8") as f:
+        return f.read() + "\n" + m.group(1)
 
 
 def _css_rule(css, selector):
@@ -1562,3 +1565,378 @@ def test_build_tab_has_a_for_line_for_the_profiles():
     """T201 AC2: a static line the script fills with the hovered, focused or active profile's text."""
     section = _settings_section()
     assert re.search(r'<p\b[^>]*id="st-presetfor"[^>]*class="st-why"|<p\b[^>]*class="st-why"[^>]*id="st-presetfor"', section)
+
+
+# ---------------------------------------------------------------------------
+# T204 — Graphite Mint restyle. Colours live in one shared site/theme.css; the
+# page takes tokens from it. Expected values below are the spec's own token
+# block (tasks/T204_graphite_mint_spec.md), so a drifted token fails here.
+# ---------------------------------------------------------------------------
+
+SITE_DIR = os.path.join(ROOT, "site")
+THEME_CSS = os.path.join(SITE_DIR, "theme.css")
+FONTS_DIR = os.path.join(SITE_DIR, "fonts")
+RUNBOOK_PATH = os.path.join(ROOT, "RUNBOOK.md")
+CANONICAL_REPO_URL = "https://github.com/thunderkds/personal-agentic-claude"
+
+GRAPHITE_MINT_TOKENS = {
+    "color-scheme": "dark",
+    "--bg": "#121413", "--bg-sunken": "#0E100F", "--bg-hover": "#181B1A",
+    "--line-subtle": "#1F2321", "--line": "#262B29", "--line-strong": "#2C3230", "--line-header": "#232826",
+    "--text-strong": "#EAEDEA", "--text": "#DCE0DD", "--text-2": "#ABB3AE",
+    "--text-nav": "#B5BCB7", "--text-muted": "#8C9590", "--text-dim": "#6E7772",
+    "--accent": "#7EDDB0", "--accent-hover": "#B2EDCF",
+    "--accent-soft": "rgba(126, 221, 176, 0.09)", "--accent-line": "rgba(126, 221, 176, 0.33)",
+    "--on-accent": "#0E100F", "--dot-idle": "#3A413E",
+    "--role-backend": "#7AA7E8", "--role-infra": "#E3A66B", "--role-frontend": "#B39AE8", "--role-qa": "#86CFA0",
+    "--font-sans": '"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif',
+    "--font-mono": '"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace',
+    "--r-xs": "4px", "--r-sm": "6px", "--r-md": "8px",
+    "--s-1": "4px", "--s-2": "8px", "--s-3": "12px", "--s-4": "16px", "--s-5": "20px",
+    "--s-6": "24px", "--s-7": "32px", "--s-8": "40px", "--s-9": "48px", "--s-10": "56px",
+    "--header-h": "64px", "--sidebar-w": "248px", "--content-max": "920px",
+    "--page-max": "1280px",  # T204 AC 9a: the one token added to the spec block
+}
+
+
+def _theme_text():
+    assert os.path.isfile(THEME_CSS), "site/theme.css does not exist"
+    with open(THEME_CSS, encoding="utf-8") as f:
+        return f.read()
+
+
+def _inline_style():
+    m = re.search(r"<style>(.*?)</style>", _raw_page_text(), re.DOTALL)
+    return m.group(1) if m else ""
+
+
+def _all_site_css():
+    """theme.css plus the page's own <style> block."""
+    return _theme_text() + "\n" + _inline_style()
+
+
+def _site_text_files():
+    """Every text file shipped in site/ (the woff2 files are binary)."""
+    out = []
+    for dirpath, _dirs, files in os.walk(SITE_DIR):
+        for name in files:
+            if name.endswith((".html", ".css", ".txt", ".svg", ".js", ".json")):
+                out.append(os.path.join(dirpath, name))
+    return sorted(out)
+
+
+def _root_tokens(css):
+    block = re.search(r":root\s*\{(.*?)\n\}", css, re.DOTALL)
+    assert block, "theme.css has no :root token block"
+    body = re.sub(r"/\*.*?\*/", "", block.group(1), flags=re.DOTALL)
+    return {k: " ".join(v.split()) for k, v in re.findall(r"([\w-]+)\s*:\s*([^;]+);", body)}
+
+
+def _rule_bodies(css, selector):
+    """Bodies of every rule whose selector list contains exactly `selector`."""
+    css = re.sub(r"/\*.*?\*/", "", css, flags=re.DOTALL)
+    out = []
+    for sel, body in re.findall(r"([^{}]+)\{([^{}]*)\}", css):
+        if selector in [s.strip() for s in sel.split(",")]:
+            out.append(body)
+    return out
+
+
+# ---- AC 1: theme.css holds the tokens verbatim and the base components ----
+
+def test_theme_css_holds_the_spec_tokens_verbatim():
+    tokens = _root_tokens(_theme_text())
+    assert tokens == GRAPHITE_MINT_TOKENS, {
+        k: (tokens.get(k), GRAPHITE_MINT_TOKENS.get(k))
+        for k in set(tokens) | set(GRAPHITE_MINT_TOKENS) if tokens.get(k) != GRAPHITE_MINT_TOKENS.get(k)
+    }
+
+
+def test_theme_css_defines_the_base_components():
+    css = _theme_text()
+    for selector in ("body", "a", ":focus-visible", ".btn", ".btn-primary", ".btn-secondary", ".codebox",
+                     ".strip", ".step-no", ".step-title", ".step-meta", ".card", ".chip", ".dot", ".bar",
+                     ".table-wrap", "table", "th", "td"):
+        assert _rule_bodies(css, selector), f"theme.css has no rule for {selector}"
+    assert "prefers-color-scheme" not in css, "no light theme in this pass"
+
+
+def test_page_links_theme_css_with_a_relative_href():
+    links = re.findall(r"<link\b[^>]*>", _raw_page_text())
+    hrefs = [re.search(r'href="([^"]*)"', l).group(1) for l in links
+             if 'rel="stylesheet"' in l and re.search(r'href="([^"]*)"', l)]
+    assert "theme.css" in hrefs, f"index.html does not link theme.css: {hrefs}"
+    assert all(not re.match(r"^(https?:)?//|^/", h) for h in hrefs), hrefs
+
+
+# ---- AC 2: colours only in theme.css; the old tokens are gone ----
+
+def test_hex_colours_appear_only_in_theme_css():
+    offenders = {}
+    for path in _site_text_files():
+        if path == THEME_CSS:
+            continue
+        with open(path, encoding="utf-8") as f:
+            hits = re.findall(r"#[0-9a-fA-F]{6}\b", f.read())
+        if hits:
+            offenders[os.path.relpath(path, ROOT)] = hits
+    assert not offenders, f"hex colour outside site/theme.css: {offenders}"
+
+
+def test_page_has_no_functional_colour_literals_and_no_old_tokens():
+    page = _raw_page_text()
+    assert not re.search(r"\b(?:rgba?|hsla?)\(", page), "rgb()/rgba()/hsl() literal in index.html"
+    for old in ("--cyan", "--green", "--amber", "--purple", "--surface", "--surface2", "--border", "--muted", "--measure"):
+        assert not re.search(re.escape(old) + r"(?![\w-])", page), f"old token {old} still in index.html"
+    assert not re.search(r"(?<![\w-])--(?:bg|text|accent|line)\w*\s*:", page), "index.html redefines a token"
+
+
+# ---- AC 3: self-hosted IBM Plex, nothing else ----
+
+def test_fonts_load_from_relative_woff2_files_under_site_fonts():
+    css = _theme_text()
+    faces = re.findall(r"@font-face\s*\{([^{}]*)\}", css)
+    got = set()
+    for face in faces:
+        family = re.search(r'font-family:\s*"([^"]+)"', face).group(1)
+        weight = int(re.search(r"font-weight:\s*(\d+)", face).group(1))
+        src = re.findall(r'url\(\s*["\']?([^"\')]+)["\']?\s*\)', face)
+        assert len(src) == 1, f"{family} {weight}: expected one src url, got {src}"
+        assert re.fullmatch(r"fonts/[\w.-]+\.woff2", src[0]), f"{family} {weight}: src not relative woff2 under fonts/: {src[0]}"
+        assert os.path.isfile(os.path.join(SITE_DIR, src[0])), f"missing font file {src[0]}"
+        assert re.search(r"font-display:\s*swap", face), f"{family} {weight} lacks font-display: swap"
+        got.add((family, weight))
+    assert got == {("IBM Plex Sans", 400), ("IBM Plex Sans", 500), ("IBM Plex Sans", 600),
+                   ("IBM Plex Mono", 400), ("IBM Plex Mono", 500)}
+
+
+def test_ofl_license_ships_beside_the_fonts():
+    with open(os.path.join(FONTS_DIR, "OFL.txt"), encoding="utf-8") as f:
+        text = f.read()
+    assert "SIL OPEN FONT LICENSE Version 1.1" in text
+    assert os.path.isfile(os.path.join(FONTS_DIR, "README.txt"))
+
+
+def test_no_other_font_family_loads_and_theme_css_makes_no_external_request():
+    css = _all_site_css()
+    stripped = re.sub(r"@font-face\s*\{[^{}]*\}", "", css)
+    stripped = re.sub(r":root\s*\{.*?\n\}", "", stripped, flags=re.DOTALL)
+    for value in re.findall(r"font-family:\s*([^;}]+)", stripped):
+        assert value.strip() in ("var(--font-sans)", "var(--font-mono)", "inherit"), f"font-family {value!r}"
+    for url in re.findall(r'url\(\s*["\']?([^"\')]+)["\']?\s*\)', css):
+        assert not re.match(r"^(https?:)?//", url), f"external url() in site CSS: {url}"
+    assert not re.search(r"@import", css), "@import in site CSS"
+    assert "fonts.googleapis.com" not in _raw_page_text() and "fonts.gstatic.com" not in _raw_page_text()
+
+
+# ---- AC 4: no glow, no gradient ----
+
+def test_site_css_has_no_gradient_glow_or_blur():
+    css = re.sub(r"/\*.*?\*/", "", _all_site_css(), flags=re.DOTALL)
+    for banned in ("linear-gradient", "radial-gradient", "conic-gradient", "text-shadow", "backdrop-filter", "drop-shadow("):
+        assert banned not in css, f"{banned} in site CSS"
+    for value in re.findall(r"box-shadow\s*:\s*([^;}]+)", css):
+        assert value.strip() == "none", f"box-shadow: {value}"
+
+
+# ---- AC 5: header and family nav ----
+
+def _header():
+    m = re.search(r"<header\b[^>]*>(.*?)</header>", _raw_page_text(), re.DOTALL)
+    assert m, "page has no <header>"
+    return m.group(0)
+
+
+FAMILY_NAV = [
+    ("Easy Kit", "https://personal-agentic-claude.vercel.app/"),
+    ("Easy Memory", "https://easy-memory.vercel.app/"),
+    ("Easy Verifier", "https://easy-verifier.vercel.app/"),
+    ("GitHub", CANONICAL_REPO_URL),
+]
+
+
+def _family_nav(header):
+    nav = re.search(r'<nav\b[^>]*class="[^"]*\bfamily-nav\b[^"]*"[^>]*>(.*?)</nav>', header, re.DOTALL)
+    assert nav, "header has no family nav"
+    return nav.group(1)
+
+
+def test_header_has_glyph_name_and_versioned_tag():
+    header = _header()
+    svg = re.search(r"<svg\b[^>]*>", header)
+    assert svg and 'aria-hidden="true"' in svg.group(0), "header glyph must be an aria-hidden inline <svg>"
+    brand = re.search(r'<a\b[^>]*class="brand"[^>]*>(.*?)</a>', header, re.DOTALL)
+    assert brand, "header has no .brand link"
+    assert _words(re.sub(r'<span class="tag-version".*?</span>', "", brand.group(1), flags=re.DOTALL)) == ["Easy", "Kit"]
+    tag = re.search(r'<span class="tag-version">(.*?)</span>', header, re.DOTALL)
+    assert tag, "header has no .tag-version"
+    assert " ".join(_words(tag.group(1))) == f"supervisor kit · {_newest_runbook_version()}"
+    assert any("height: var(--header-h)" in b for b in _rule_bodies(_theme_text(), ".site-header"))
+
+
+def test_family_nav_lists_the_three_sites_then_github_with_the_current_page_marked():
+    nav = _family_nav(_header())
+    links = re.findall(r"<a\b([^>]*)>(.*?)</a>", nav, re.DOTALL)
+    assert [(" ".join(_words(t)), re.search(r'href="([^"]*)"', a).group(1)) for a, t in links] == FAMILY_NAV
+    current = [" ".join(_words(t)) for a, t in links if 'aria-current="page"' in a]
+    assert current == ["Easy Kit"], f"aria-current must mark Easy Kit only: {current}"
+    for attrs, text in links[:3]:
+        assert re.search(r'<span class="dot"[^>]*aria-hidden="true"></span>', text), "family link needs a leading .dot"
+    css = _theme_text()
+    assert any("var(--accent)" in b for b in _rule_bodies(css, '.family-nav a[aria-current="page"] .dot'))
+    assert any("var(--dot-idle)" in b for b in _rule_bodies(css, ".family-nav .dot"))
+
+
+# ---- AC 6: sidebar groups ----
+
+SIDEBAR_GROUPS = [
+    ("// overview", ["Quick reference", "What you get", "Minimal and extended tracks"]),
+    ("// getting started", ["Install", "Update flow", "Settings tool", "Install variants"]),
+    ("// the team", ["Agent roles", "Skills", "Hooks", "Agent focus"]),
+    ("// reference", ["Packs", "Providers", "Repository layout", "Memory system", "MCPs", "Options"]),
+]
+
+
+def test_sidebar_groups_are_the_four_spec_groups_in_order():
+    nav = re.search(r'<nav\b[^>]*id="site-nav"[^>]*>(.*?)</nav>', _raw_page_text(), re.DOTALL).group(1)
+    groups = re.findall(r'<p class="nav-group-title">(.*?)</p>\s*<ul>(.*?)</ul>', nav, re.DOTALL)
+    got = [(" ".join(_words(t)), [" ".join(_words(x)) for x in re.findall(r"<a\b[^>]*>(.*?)</a>", ul, re.DOTALL)])
+           for t, ul in groups]
+    assert got == SIDEBAR_GROUPS
+
+
+def test_sidebar_group_labels_are_mono_lowercase_and_active_item_uses_the_accent_tokens():
+    css = _theme_text()
+    label = " ".join(_rule_bodies(css, ".nav-group-title"))
+    assert "var(--font-mono)" in label and "text-transform" not in label
+    active = " ".join(_rule_bodies(css, ".sidebar a.active"))
+    assert "var(--accent-soft)" in active and "var(--accent)" in active
+
+
+# ---- AC 10: accessibility and type ----
+
+def test_focus_ring_is_the_accent_outline_and_never_removed():
+    css = re.sub(r"/\*.*?\*/", "", _all_site_css(), flags=re.DOTALL)
+    ring = " ".join(_rule_bodies(css, ":focus-visible"))
+    assert "outline: 2px solid var(--accent)" in ring and "outline-offset: 2px" in ring
+    assert not re.search(r"outline\s*:\s*(?:none|0)\b", css), "a rule removes the focus outline"
+
+
+def test_no_font_weight_above_600_and_no_uppercase_transform():
+    css = re.sub(r"/\*.*?\*/", "", _all_site_css(), flags=re.DOTALL)
+    for w in re.findall(r"font-weight\s*:\s*([\w]+)", css):
+        assert w.isdigit() and int(w) <= 600, f"font-weight: {w}"
+    for w in re.findall(r"(?<![-\w])font\s*:\s*(\w+)\s", css):
+        assert not w.isdigit() or int(w) <= 600, f"font shorthand weight {w}"
+    assert not re.search(r"\b(?:bold|bolder)\b", css)
+    assert "uppercase" not in css, "text-transform: uppercase is banned"
+    # The browser default for strong and headings is 700, so the theme must pin them to 600.
+    assert any("font-weight: 600" in b for b in _rule_bodies(_theme_text(), "strong"))
+    assert any("font-weight: 600" in b for b in _rule_bodies(_theme_text(), "h1"))
+
+
+def test_touch_targets_reach_44px_below_720px():
+    css = re.sub(r"/\*.*?\*/", "", _all_site_css(), flags=re.DOTALL)
+    m = re.search(r"@media \(max-width: 719px\)\s*\{", css)
+    assert m, "no phone (max-width: 719px) block"
+    depth, i = 1, m.end()
+    while depth:
+        depth += {"{": 1, "}": -1}.get(css[i], 0)
+        i += 1
+    phone = css[m.end():i - 1]
+    for selector in (".btn", ".sidebar a", ".nav-toggle", ".family-nav a"):
+        assert any("min-height: 44px" in b for b in _rule_bodies(phone, selector)), f"{selector} < 44px on phones"
+
+
+# ---- AC 8: components (the vital slice) ----
+
+def test_hero_has_the_eyebrow_h1_and_the_existing_lede():
+    hero = re.search(r'<div class="hero">(.*?)</div>\s*<section id="quick-reference">', _raw_page_text(), re.DOTALL)
+    assert hero, "no .hero before the quick reference"
+    eyebrow = re.search(r'<p class="eyebrow">(.*?)</p>', hero.group(1), re.DOTALL)
+    assert eyebrow and " ".join(_words(eyebrow.group(1))) == "> multi-agent supervisor framework"
+    assert "<h1>Easy Kit</h1>" in hero.group(1)
+    assert "A multi-agent supervisor framework: one Supervisor session" in " ".join(_words(hero.group(1)))
+
+
+def test_install_commands_sit_in_codeboxes_with_a_prompt_and_a_primary_copy_button():
+    page = _raw_page_text()
+    boxes = re.findall(r'<div class="codebox">(.*?)</div>\s*(?=<)', page, re.DOTALL)
+    install_boxes = [b for b in boxes if ONE_LINE_INSTALL in b]
+    assert len(install_boxes) >= 2, "expected the quick-reference and Install codeboxes"
+    for box in install_boxes:
+        assert '<span class="prompt">$ </span>' in box
+        button = re.search(r'<button\b[^>]*>', box)
+        assert button and 'type="button"' in button.group(0) and "btn btn-primary" in button.group(0)
+        assert re.search(r'aria-label="Copy [^"]+"', button.group(0)), "Copy button needs an accessible name"
+    assert not re.search(r"<pre class=\"install\">curl", page), "a bare install <pre> is left"
+
+
+def _strip_cells():
+    m = re.search(r'<ul class="strip">(.*?)</ul>', _quick_reference_body(), re.DOTALL)
+    assert m, "quick reference has no .strip"
+    return re.findall(r'<a\b[^>]*>\s*<span class="num">(.*?)</span>\s*<span class="label">(.*?)</span>\s*</a>', m.group(1), re.DOTALL)
+
+
+def test_quick_reference_strip_has_four_cells_whose_numbers_match_source():
+    cells = [(" ".join(_words(n)), " ".join(_words(l))) for n, l in _strip_cells()]
+    assert len(cells) == 4, cells
+    assert cells[0] == (str(len(_agent_names())), "spawnable roles")
+    assert cells[1] == (str(len(_skill_dirs())), "skills")
+    assert cells[2] == (str(_blocking_hook_count()), f"blocking hooks (of {len(_hook_scripts())})")
+    assert cells[3] == (str(len(_pack_names())), "optional domain packs")
+    assert "repeat(var(--cols, 4)" in _theme_text(), "the strip defaults to 4 columns"
+
+
+def test_pipeline_step_grid_has_one_numbered_cell_per_stage_in_diagram_order():
+    body = re.search(r'<section id="what-you-get">(.*?)</section>', _raw_page_text(), re.DOTALL).group(1)
+    grid = re.search(r'<ol class="strip steps"[^>]*>(.*?)</ol>', body, re.DOTALL)
+    assert grid, "no step grid in #what-you-get"
+    cells = re.findall(r'<li data-stage="([^"]+)">\s*<span class="step-no">(.*?)</span>\s*<span class="step-title">(.*?)</span>\s*<span class="step-meta">(.*?)</span>', grid.group(1), re.DOTALL)
+    assert [c[0] for c in cells] == _pipeline_stage_numbers()
+    svg = _pipeline_svg()
+    titles = [_html.unescape(t) for t in re.findall(r'class="node-title"[^>]*>(.*?)</text>', svg)]
+    outs = [_html.unescape(t) for t in re.findall(r'class="node-out"[^>]*>(.*?)</text>', svg)]
+    assert [_html.unescape(c[2]) for c in cells] == titles
+    assert [_html.unescape(c[3]) for c in cells] == outs
+    numbers = [c[1] for c in cells]
+    assert all(re.fullmatch(r"0\d|0\.5|1\.5", n) for n in numbers), numbers
+    assert [n for n in numbers if re.fullmatch(r"0\d", n)] == ["00", "01", "02", "03", "04", "05"]
+
+
+def test_agent_roles_are_cards_with_role_dots_and_mcps_are_three_cards():
+    roles = re.search(r'<section id="agent-roles">(.*?)</section>', _raw_page_text(), re.DOTALL).group(1)
+    assert len(re.findall(r'<div class="card agent-card">', roles)) == 4
+    assert len(re.findall(r'<span class="dot swatch" data-color="[a-z]+"></span>', roles)) == 4
+    css = _all_site_css()
+    for colour, token in (("blue", "backend"), ("orange", "infra"), ("purple", "frontend"), ("green", "qa")):
+        assert any(f"var(--role-{token})" in b for b in _rule_bodies(css, f'.swatch[data-color="{colour}"]')), colour
+    mcps = re.search(r'<section id="mcps">(.*?)</section>', _raw_page_text(), re.DOTALL).group(1)
+    assert len(re.findall(r'<div class="card agent-card"', mcps)) == 3
+
+
+def test_every_table_sits_in_a_table_wrap():
+    page = _raw_page_text()
+    assert page.count("<table>") == len(re.findall(r'<div class="table-wrap">\s*<table>', page))
+
+
+def test_settings_tool_fields_use_the_sunken_surface_and_40px_height():
+    css = re.sub(r"/\*.*?\*/", "", _all_site_css(), flags=re.DOTALL)
+    field = " ".join(b for sel, b in re.findall(r"([^{}]+)\{([^{}]*)\}", css) if "#settings-tool select" in sel)
+    assert "var(--bg-sunken)" in field and "var(--line-strong)" in field and "var(--r-sm)" in field
+    assert "min-height: 40px" in field or "height: 40px" in field
+
+
+# ---- AC 9a: the page sits in a centered container, not the full screen width ----
+
+def test_page_container_is_centered_and_capped_by_the_page_max_token():
+    theme = _theme_text()
+    assert _root_tokens(theme)["--page-max"] == "1280px"
+    for selector in (".layout", ".site-header-inner"):
+        body = " ".join(_rule_bodies(theme, selector))
+        assert "max-width: var(--page-max)" in body, f"{selector} is not capped by --page-max"
+        assert re.search(r"margin:\s*0 auto", body), f"{selector} is not centered"
+    header = " ".join(_rule_bodies(theme, ".site-header"))
+    assert "var(--bg)" in header and "border-bottom" in header and "max-width" not in header, \
+        "the header background and border span the screen; only its content is capped"
+    assert re.search(r'<header class="site-header">\s*<div class="site-header-inner">', _raw_page_text())
