@@ -85,6 +85,7 @@
 
 
 ### In Progress
+- [ ] **T213** — Sidebar scroll-spy highlights the item above the clicked one | frontend-developer | C1 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_T213.md` | Depends on: none | Registered 2026-10-29 (bugfix); user: "when I click the nav item, but the highlight is the nav item that above the item click"; mental model confirmed, bottom sections: "Clicked item stays lit". | Started 2026-10-29, worktree `../wt-t213` (`fix/t213-scrollspy`). | Ready for Review 2026-10-29: root cause confirmed (band under header; last sections unreachable); fix `26b489e` (band top = scroll-margin-top; click holds link until wheel/touch/scroll key); BEFORE 16 of 17 links wrong, AFTER 0; `tests/site_scrollspy/test_scrollspy.mjs` 5/5, full tests 1226 passed; code-review 0 P0/P1/P2, 3 P3. Auto verify pass at 82d1ef6 ($0.51), finding: hold not released by scrollbar drag, Ctrl+F, in-page links. User chose "Fix it first": back to In Progress 2026-10-29 — release the hold once the page scrolls away from the click landing position.
 
 
 
@@ -93,7 +94,6 @@
 
 
 ### Ready for Review
-- [ ] **T213** — Sidebar scroll-spy highlights the item above the clicked one | frontend-developer | C1 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_T213.md` | Depends on: none | Registered 2026-10-29 (bugfix); user: "when I click the nav item, but the highlight is the nav item that above the item click"; mental model confirmed, bottom sections: "Clicked item stays lit". | Started 2026-10-29, worktree `../wt-t213` (`fix/t213-scrollspy`). | Ready for Review 2026-10-29: root cause confirmed (band under header; last sections unreachable); fix `26b489e` (band top = scroll-margin-top; click holds link until wheel/touch/scroll key); BEFORE 16 of 17 links wrong, AFTER 0; `tests/site_scrollspy/test_scrollspy.mjs` 5/5, full tests 1226 passed; code-review 0 P0/P1/P2, 3 P3. Auto verify started.
 
 
 ### Done
