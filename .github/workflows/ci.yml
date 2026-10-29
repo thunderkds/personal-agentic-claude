@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install shellcheck
         run: sudo apt-get update && sudo apt-get install -y shellcheck python3-pytest
@@ -74,3 +76,11 @@ jobs:
 
       - name: CI wires every shell suite (drift guard)
         run: python3 tests/test_ci_wires_shell_suites.py
+
+      # T143: runs commands taken from task guides, so only on pull_request and with no secret in reach.
+      - name: Re-run Verification Command of tasks moved to Done (T143)
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: python3 scripts/ci_verify_done_tasks.py --base "$BASE_SHA" --head "$HEAD_SHA"

@@ -94,7 +94,7 @@ If docs/legacy/ exists (legacy mode): also read `docs/legacy/risk-hotspots.md` a
 ### Verification Command (exact, runnable)
 
 ```bash
-# the single command (or short sequence) that proves this task works
+# the command(s) that prove this task works; CI re-runs them at Done. Cannot run in CI? Start the block with: # ci: skip — <reason>
 [e.g. pytest tests/test_T001.py -q   |   npm test -- T001   |   curl ... | grep ...]
 ```
 
