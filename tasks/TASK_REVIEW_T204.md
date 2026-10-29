@@ -61,8 +61,33 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured 2026-10-29T11:01:11Z, branch `feat/t204-graphite-mint`, before any implementation commit; the guide names no Demonstration command, so these are the AC 1-5 absence checks plus the current suite):
+
+```
+2026-10-29T11:01:11Z
+$ ls site/ site/theme.css site/fonts
+ls: cannot access 'site/theme.css': No such file or directory
+ls: cannot access 'site/fonts': No such file or directory
+site/:
+index.html
+$ grep -c -E "#[0-9a-fA-F]{6}" site/index.html
+12
+$ grep -c -E "linear-gradient|radial-gradient|text-shadow|backdrop-filter|box-shadow" site/index.html
+1
+$ grep -E "^\s*--(bg|cyan|green|amber|purple|surface|accent):" site/index.html
+    --bg:        #0a0a12;
+    --surface:   #111128;
+    --cyan:      #00d4ff;
+    --green:     #00ff88;
+    --amber:     #ffb800;
+    --purple:    #a855f7;
+$ grep -c aria-current site/index.html; grep -c "<header" site/index.html
+0
+0
+$ python3 -m pytest tests/test_site_content.py -q | tail -2
+....................                                                     [100%]
+92 passed in 0.22s
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
