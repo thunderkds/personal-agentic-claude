@@ -26,47 +26,63 @@ Precedence — first match wins:
      single ``Bash`` tool call. This precedence slot still fires correctly
      when the var is set in the process that launched the whole session
      (e.g. a sub-agent's terminal, before ``claude`` starts) — it just cannot
-     be set *from inside* a running session. See slot 2.
-  2. **The active-task state file** (T047), ``.claude/hooks/.state/active_task``
-     — a plain two-line file (``Txxx`` on line 1, an ISO-8601 UTC
-     "written at" timestamp on line 2) that any tool call *inside a running
-     session* can write with a shell redirect, which is the channel slot 1
-     cannot reach mid-session. Rejected when malformed, unreadable, or older
-     than ``CLAUDE_ACTIVE_TASK_STATE_MAX_AGE_S`` seconds (default 21600 = 6h)
-     — a stale pointer left over from a finished task is worse than no
-     pointer (the exact T043 mis-attribution class), so age alone degrades it
-     to absent rather than trusting it forever. There is no automated
-     completion signal that clears it (see `post_agent_move_to_review.py`'s
-     docstring for why); clearing is manual, same as the step-limit counters.
+     be set *from inside* a running session. See slots 2 and 3.
+  2. **Spawn binding** (T196) — sub-agent calls only. The harness puts
+     ``agent_id`` on every hook event a sub-agent's tool call fires, and
+     nothing on a main-session call. The sub-agent's transcript is
+     ``<dirname(transcript_path)>/<session_id>/subagents/agent-<agent_id>.jsonl``
+     and its first line is the spawn prompt, verbatim. The task is the first
+     structural reference in that prompt — the same two patterns slot 5 uses
+     (a ``TASK_GUIDE_Txxx.md`` path, or a ``Task ID:`` line). The agent writes
+     nothing. The result is cached at
+     ``.state/agent_task/<session_id>/<agent_id>`` so later calls do not
+     re-read the transcript. That transcript layout is internal to Claude Code
+     and undocumented (measured on 2.1.312, `tasks/TASK_GUIDE_T196.md` F1–F3):
+     if it moves, this slot yields nothing and resolution falls through.
+  3. **The per-session state file** (T196; replaces T047's shared file),
+     ``.claude/hooks/.state/active_task.d/<session_id>`` — a plain two-line file
+     (``Txxx`` on line 1, an ISO-8601 UTC "written at" timestamp on line 2)
+     that a ``Bash`` tool call inside a running session writes with a shell
+     redirect, using ``$CLAUDE_CODE_SESSION_ID`` (set in every ``Bash`` call's
+     environment, equal to the hook's ``session_id``, F2). The
+     ``<session_id>`` comes from the event, never from the file. Rejected when
+     malformed, unreadable, or older than ``CLAUDE_ACTIVE_TASK_STATE_MAX_AGE_S``
+     seconds (default 21600 = 6h) — a stale pointer left over from a finished
+     task is worse than no pointer (the T043 mis-attribution class). Nothing
+     clears it automatically; the age rule degrades it.
+
+     **Why per session (T196).** T047's file was ``.state/active_task``, one
+     per checkout. On 2026-10-28 the T190 agent wrote it and, six minutes
+     later, another live session overwrote it with ``T188``: 89 of T190's
+     calls were filed under T188, and ``trace_shows_verification("T188")``
+     passed on T190's test run without anyone lying. A sub-agent shares its
+     parent's ``session_id`` — slot 2 is what separates sibling sub-agents.
+     **The shared file is no longer read** (D2): a file left there is ignored.
+     **Residual:** two sub-agents of one session spawned *without* a structural
+     ID in their prompt both fall through to that session's file.
 
      **Path resolution (T047 Stage 4 fix — see `_resolve_root`).** The state
-     file's root is ``$CLAUDE_PROJECT_DIR`` when set, never ``__file__``
-     arithmetic alone. The harness always invokes hooks as
+     root is ``$CLAUDE_PROJECT_DIR`` when set, never ``__file__`` arithmetic
+     alone. The harness always invokes hooks as
      ``$CLAUDE_PROJECT_DIR/.claude/hooks/*.py`` (see `settings.json`) — the
      *main checkout*, regardless of which worktree's cwd triggered the tool
-     call. A Stage-3 sub-agent's cwd is its own worktree, so a naive
-     ``__file__``-relative path written a level below (as the first cut of
-     this fix did) resolves to two *different* files: the agent writes
-     ``<worktree>/.claude/hooks/.state/active_task``, the live hook reads
-     ``<main-checkout>/.claude/hooks/.state/active_task``. Anchoring to
-     ``$CLAUDE_PROJECT_DIR`` closes that gap — both agent-side shell
-     redirects (`craft-spawn-prompt`'s instruction) and this module resolve
-     the same root the harness already uses for hook wiring itself.
-     **Known limitation, not solved here:** because the root is shared by
-     every worktree using the same checkout, two tasks whose Bash calls are
-     in flight at the same time can still race and mis-attribute each
-     other's calls. Safe for the common case this task was scoped to fix (one
-     task's verification run at a time); not a fix for true concurrent
-     Stage 3 execution. Flagged to the Supervisor rather than solved here.
-  3. A ``TASK_GUIDE_Txxx.md`` reference inside a **path-valued** ``tool_input``
+     call. A writer must therefore use the main checkout's literal absolute
+     path: a cwd-relative path from a worktree writes a file the hook never
+     reads, and ``$CLAUDE_PROJECT_DIR`` is empty inside a ``Bash`` tool call.
+
+     **Path safety (D3).** ``session_id`` and ``agent_id`` reach a file name
+     only when they match ``SAFE_KEY`` (letters, digits, ``_``, ``-``; 1–128);
+     otherwise slots 2 and 3 are skipped. The transcript path is derived only
+     from the event's absolute ``transcript_path``, and is only ever read.
+  4. A ``TASK_GUIDE_Txxx.md`` reference inside a **path-valued** ``tool_input``
      field (``file_path``, ``notebook_path``, ``path``). Path fields only, an
      explicit list — a whole-payload scan is the defect being removed. This is
      what makes writing/reading a task's own guide attribute to it.
-  4. ``Agent`` calls only: a structural reference inside ``tool_input.prompt`` —
+  5. ``Agent`` calls only: a structural reference inside ``tool_input.prompt`` —
      a ``TASK_GUIDE_Txxx.md`` path, or an explicit ``Task ID:`` declaration
      line. Only an ``Agent`` spawn prompt is task-scoped by construction; any
      other tool's prompt-ish field is free text.
-  5. Otherwise ``None`` — unattributed. The caller decides what that means
+  6. Otherwise ``None`` — unattributed. The caller decides what that means
      (`_untagged.jsonl` for the trace; no counting for the step limit).
 
 Deliberate decisions:
@@ -76,13 +92,16 @@ Deliberate decisions:
   text that can quote arbitrary file content; scanning it is the same class of
   guess this module exists to remove. Such a call is unattributed.
 * **``tool_response`` is never read.** A tool's *output* describes what a file
-  says, not what the agent is working on.
+  says, not what the agent is working on. The one file slot 2 reads is the
+  sub-agent's own transcript, and only its first line: the spawn prompt, which
+  is task-scoped by construction exactly as slot 5's ``Agent`` prompt is.
 * Task IDs are matched case-insensitively and normalized to upper case with at
   least 3 digits (``t44`` and ``T044`` are the same bucket, never two).
 
 ``resolve_task_id`` never raises: any unexpected input degrades to ``None``, so
 a hook that runs on every tool call in the repo can never crash or block on it.
 """
+import json
 import os
 import re
 import sys
@@ -160,14 +179,21 @@ def _resolve_root():
     return env_root if env_root else _FILE_ROOT
 
 
-# Structural, writable-from-a-Bash-tool-call channel (T047). See module
-# docstring, precedence slot 2, for why this exists and its known limits.
-# Resolved once at import time — matches every other module-level constant
-# here (PATH_FIELDS, the compiled patterns); see resolve_task_id's
-# never-raises contract for what happens if the resolved path is bogus.
+# Structural channels, per caller (T196). See module docstring, precedence
+# slots 2 and 3. Resolved once at import time — matches every other
+# module-level constant here (PATH_FIELDS, the compiled patterns); see
+# resolve_task_id's never-raises contract for what happens if the resolved
+# path is bogus. T047's shared `STATE_DIR/active_task` is deliberately not
+# named here: it is no longer read (D2).
 STATE_DIR = os.path.join(_resolve_root(), ".claude", "hooks", ".state")
-ACTIVE_TASK_FILE = os.path.join(STATE_DIR, "active_task")
+ACTIVE_TASK_DIR = os.path.join(STATE_DIR, "active_task.d")  # slot 3: <session_id>
+AGENT_TASK_DIR = os.path.join(STATE_DIR, "agent_task")     # slot 2 cache: <session_id>/<agent_id>
 ACTIVE_TASK_MAX_AGE_DEFAULT_S = 21600  # 6h
+
+# D3: the only shape of `session_id` / `agent_id` allowed into a file name.
+SAFE_KEY = re.compile(r"\A[A-Za-z0-9_-]{1,128}\Z")
+# The first transcript line is the whole spawn prompt; read no more than this.
+TRANSCRIPT_FIRST_LINE_MAX_BYTES = 1 << 20  # 1 MB
 
 
 def _resolve_max_age_s():
@@ -209,12 +235,83 @@ def _task_id_from_env():
     return normalize_task_id(match.group(1)) if match else None
 
 
-def _task_id_from_state_file():
-    """Read + validate the active-task state file. Never raises: any read
-    error, bad format, or stale timestamp degrades to None (falls through to
-    the next precedence slot), never to a trusted-but-wrong task ID."""
+def _safe_key(value):
+    """`value` when it may name a file (D3), else None."""
+    return value if isinstance(value, str) and SAFE_KEY.match(value) else None
+
+
+def _task_id_from_cache(cache_path):
     try:
-        with open(ACTIVE_TASK_FILE) as f:
+        with open(cache_path) as f:
+            match = _env_task_pattern().match(f.read().strip())
+        return normalize_task_id(match.group(1)) if match else None
+    except Exception:
+        return None
+
+
+def _write_cache(cache_path, task_id):
+    """Best effort: a read-only state dir still resolves, from the transcript."""
+    try:
+        os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+        with open(cache_path, "w") as f:
+            f.write(task_id + "\n")
+    except Exception:
+        pass
+
+
+def _spawn_prompt(transcript_path, session_id, agent_id):
+    """The sub-agent's spawn prompt: the first line of its own transcript (F3),
+    or None when that line is missing, too long, or not a user message."""
+    if not isinstance(transcript_path, str) or not os.path.isabs(transcript_path):
+        return None
+    path = os.path.join(os.path.dirname(transcript_path), session_id, "subagents",
+                        f"agent-{agent_id}.jsonl")
+    with open(path, "rb") as f:
+        first = f.readline(TRANSCRIPT_FIRST_LINE_MAX_BYTES + 1)
+    if len(first) > TRANSCRIPT_FIRST_LINE_MAX_BYTES:
+        return None
+    record = json.loads(first.decode("utf-8"))
+    if not isinstance(record, dict):
+        return None
+    message = record.get("message")
+    if record.get("type") != "user" or not isinstance(message, dict):
+        return None
+    if message.get("role") != "user" or not isinstance(message.get("content"), str):
+        return None
+    return message["content"]
+
+
+def _task_id_from_spawn_binding(event):
+    """Slot 2: the task a sub-agent's spawn prompt structurally names. Never
+    raises; a non-binding prompt is not cached, so it is simply re-checked."""
+    try:
+        session_id = _safe_key(event.get("session_id"))
+        agent_id = _safe_key(event.get("agent_id"))
+        if not session_id or not agent_id:
+            return None
+        cache_path = os.path.join(AGENT_TASK_DIR, session_id, agent_id)
+        task_id = _task_id_from_cache(cache_path)
+        if task_id:
+            return task_id
+        prompt = _spawn_prompt(event.get("transcript_path"), session_id, agent_id)
+        task_id = _task_id_from_agent_prompt({"prompt": prompt})
+        if task_id:
+            _write_cache(cache_path, task_id)
+        return task_id
+    except Exception:
+        return None
+
+
+def _task_id_from_state_file(event):
+    """Slot 3: read + validate this session's state file. Never raises: an
+    unsafe session ID, any read error, bad format, or stale timestamp degrades
+    to None (falls through to the next precedence slot), never to a
+    trusted-but-wrong task ID."""
+    try:
+        session_id = _safe_key(event.get("session_id"))
+        if not session_id:
+            return None
+        with open(os.path.join(ACTIVE_TASK_DIR, session_id)) as f:
             lines = f.read().splitlines()
         if len(lines) < 2:
             return None
@@ -265,11 +362,18 @@ def resolve_task_id(event):
         if task_id:
             return task_id
 
-        task_id = _task_id_from_state_file()
+        if not isinstance(event, dict):
+            return None
+
+        task_id = _task_id_from_spawn_binding(event)
         if task_id:
             return task_id
 
-        tool_input = event.get("tool_input") if isinstance(event, dict) else None
+        task_id = _task_id_from_state_file(event)
+        if task_id:
+            return task_id
+
+        tool_input = event.get("tool_input")
         if not isinstance(tool_input, dict):
             return None
 

@@ -223,12 +223,12 @@ def test_resolve_task_id_from_env_and_agent_prompt(tmp_path):
 
 def test_resolve_task_id_from_state_file(tmp_path):
     project = make_project(tmp_path, ENG)
-    state = project / ".claude" / "hooks" / ".state"
-    state.mkdir()
+    state = project / ".claude" / "hooks" / ".state" / "active_task.d"  # T196: per session
+    state.mkdir(parents=True)
     from datetime import datetime, timezone
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    (state / "active_task").write_text(f"ENG-170\n{now}\n")
-    assert resolve(project, {}) == "ENG-170"
+    (state / "S1").write_text(f"ENG-170\n{now}\n")
+    assert resolve(project, {"session_id": "S1"}) == "ENG-170"
 
 
 def test_resolve_task_id_without_config_ignores_board_ids(tmp_path):
