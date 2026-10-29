@@ -165,15 +165,42 @@ def test_ac6_old_vs_new_pattern_over_real_corpus_differs_only_on_placeholders():
         for row in row_pattern.findall(text):
             old_verdict = bool(old_pattern.search(row))
             new_verdict = row_is_filled(row)
-            if old_verdict != new_verdict:
-                # Only allowed direction: old said filled, new correctly says
-                # unfilled, on a row that is a placeholder-shaped guidance row.
-                is_placeholder_shape = "☐ pass" in row and "must literally state" in row
-                if old_verdict and not new_verdict and is_placeholder_shape:
-                    continue
+            if old_verdict != new_verdict and not is_allowed_difference(row, old_verdict, new_verdict):
                 differences.append((path, row, old_verdict, new_verdict))
 
     assert differences == [], differences
+
+
+def is_allowed_difference(row, old_verdict, new_verdict):
+    """The only directions the old and new verdicts may differ in over the corpus: the old
+    pattern said filled and the real gate correctly says unfilled, on (a) a placeholder-shaped
+    guidance row, or (b) an `auto-run by hook` row (T182): the gate accepts such a row only with
+    its run record for that task and head commit, and a temp copy of the corpus has none."""
+    if not (old_verdict and not new_verdict):
+        return False
+    is_placeholder_shape = "☐ pass" in row and "must literally state" in row
+    is_auto_run_row = "auto-run by hook" in row
+    return is_placeholder_shape or is_auto_run_row
+
+
+AUTO_RUN_ROW = "| verify | ☑ pass | auto-run by hook: /verify T000 — pass |"
+OTHER_MISMATCH_ROW = "| verify | ☐ pass / ☐ fail | looked fine, pass still to be ticked |"
+
+
+def test_ac6b_auto_run_row_without_a_run_record_is_an_allowed_difference():
+    old_pattern = re.compile(r"verify\s*\|[^|\n]+\|[^|\n]*pass", re.IGNORECASE)
+    assert bool(old_pattern.search(AUTO_RUN_ROW)) is True, "control: the old pattern accepts the row"
+    assert row_is_filled(AUTO_RUN_ROW) is False, "control: the real gate rejects it (no run record)"
+    assert is_allowed_difference(AUTO_RUN_ROW, True, False) is True
+
+
+def test_ac6b_a_non_auto_non_placeholder_difference_is_still_reported():
+    old_pattern = re.compile(r"verify\s*\|[^|\n]+\|[^|\n]*pass", re.IGNORECASE)
+    assert bool(old_pattern.search(OTHER_MISMATCH_ROW)) is True, "control: the old pattern accepts the row"
+    assert row_is_filled(OTHER_MISMATCH_ROW) is False, "control: the real gate rejects it"
+    assert is_allowed_difference(OTHER_MISMATCH_ROW, True, False) is False
+    # The other direction (old rejects, new accepts) is never allowed, even for an auto-run row.
+    assert is_allowed_difference(AUTO_RUN_ROW, False, True) is False
 
 
 def test_ac7_mutation_reverting_to_old_pattern_turns_ac1_red():
