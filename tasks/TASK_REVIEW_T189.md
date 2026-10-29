@@ -117,6 +117,98 @@ implementing agent alone]
 
 ---
 
+## AC 11 — paid live check (user go 2026-10-29 "go for T189"; cap $3)
+
+**Result: FAIL — the row did NOT reach Done.** The verify verdict was pass, the run record is correct, and the report was complete. One close-out check stopped the move: `done not moved: Gate 5: no test run in memory/event-trace/T002.jsonl`. This is a finding. It was not worked around.
+
+**Cost: $0.448 total** — Supervisor session `$0.2643` (sonnet, `--max-budget-usd 1.8`, 12 turns) + auto verify run `$0.1839` (sonnet, `CLAUDE_AUTO_VERIFY_BUDGET_USD=0.9`, 7 turns).
+
+**Setup.** Throwaway project `<scratchpad>/ac11-*/proj` outside this repo:
+- `git init`, no remote;
+- the MANIFEST paths, `CLAUDE.md`, `.claude/settings.json` and `.gitignore` copied from this worktree at `af75114`;
+- the `.claude/{skills,agents}` symlinks;
+- a 7-line `src/greet.py` and its test;
+- a board with one Done row (T001);
+- `.claude/settings.local.json` with a narrow allow list, so the hook's `claude -p "/verify T002"` (the user's own permission settings) can read and run.
+
+Command (env: `ANTHROPIC_MODEL=sonnet CLAUDE_AUTO_VERIFY_BUDGET_USD=0.9 CLAUDE_TRACE_ANCHOR_DIR=<scratchpad>/ac11-anchors`):
+```
+claude -p 'add a function shout(name) to src/greet.py that returns the greeting from greet(name) in upper case [auto]' \
+  --model sonnet --max-budget-usd 1.8 --output-format json --allowedTools 'Read,Write,Edit,Glob,Grep,Skill,Bash(git status*),Bash(git diff*),Bash(git log*),Bash(git add*),Bash(git commit*),Bash(git checkout -b*),Bash(git switch -c*),Bash(git branch*),Bash(git rev-parse*),Bash(python3 -m pytest*),Bash(python3 src/*),Bash(mkdir -p*),Bash(printf*),Bash(date*),Bash(ls*),Bash(cat*),Bash(grep*),Bash(head*),Bash(sed -n*),Bash(echo*)'
+```
+The Supervisor took the minimal track (`Track: minimal · auto`), committed `0355159` on branch `T002-shout`, and stopped at Ready for Review. The Stop hook started the detached `/verify T002` run.
+
+**Board row before** (2026-10-29T10:44:24Z):
+```
+### Ready for Review
+
+### Done
+- [x] **T001** — Initial greet script | Supervisor | C0 | Risk: Low | P2 | Done 2026-10-28
+```
+**Board row after** (2026-10-29T10:46:10Z) — still in Ready for Review, `- [ ]`, board unchanged by the close-out:
+```
+### Ready for Review
+- [ ] **T002** — Add shout(name) to src/greet.py | Supervisor | C0 | Risk: Low | P2 | Track: minimal | Record: tasks/MINIMAL_LOG.md
+
+### Done
+- [x] **T001** — Initial greet script | Supervisor | C0 | Risk: Low | P2 | Done 2026-10-28
+```
+
+**Final report** (the Decision record in `tasks/MINIMAL_LOG.md`, after the run):
+```
+## T002 — Add shout(name) to src/greet.py · minimal
+Mode: auto
+**Asked:** "add a function shout(name) to src/greet.py that returns the greeting from greet(name) in upper case [auto]"
+**Decisions:**
+1. Track minimal: C0, Risk Low, one source file, no Gate-2 word, no user data, no UI — RULE: `docs/claude-md/tracks.md` `## Track rule`
+2. `shout` returns `greet(name).upper()`, so the whole greeting is upper case ("HELLO, ANN!"), not only the name — FACT: `src/greet.py:2` "return f"Hello, {name}!""
+3. Left the `__main__` block unchanged; the request asked only for the function — RULE: Surgical Changes (`AGENTS.md` § Karpathy Engineering Principles)
+**Checked:**
+- New test `test_shout` — failed before the change (ImportError: cannot import name 'shout'), passes after
+- Suite: `python3 -m pytest -q tests` — 2 passed in 0.01s
+- Real run: `python3 -c "... print(shout('Ann'))"` — printed `HELLO, ANN!`; `python3 src/greet.py` — printed `Hello, world!` (auto-checked, not /verify)
+- verify: ☑ pass — auto-run by hook, session 3dc37d0d-8e09-491f-bf94-32cc9cfefa3b, commit 035515965b112a53dc0f8278e8a5d7529da86148, log .claude/verify-runs/T002-035515965b11.log; done not moved: Gate 5: no test run in memory/event-trace/T002.jsonl
+**Files:** `src/greet.py`, `tests/test_greet.py`, `tasks/MINIMAL_LOG.md`, `PROJECT_KANBAN.md`
+**Memory:** nothing new
+**Not done:** merge (yours); auto verify: ☑ pass (session 3dc37d0d-8e09-491f-bf94-32cc9cfefa3b, commit 035515965b112a53dc0f8278e8a5d7529da86148, log .claude/verify-runs/T002-035515965b11.log)
+Paused: done not moved — Gate 5: no test run in memory/event-trace/T002.jsonl
+```
+No `Closed:` line: the move did not happen. The minimal record has `**Checked:**` where an extended report has `Checks:`, and every D9 field is present. Gate 6 does not apply on the minimal track.
+
+**Run log** `.claude/verify-runs/T002-035515965b11.log` (close-out lines):
+```
+verdict: pass
+done not moved: Gate 5: no test run in memory/event-trace/T002.jsonl
+```
+
+**Run record** (`<scratchpad>/ac11-anchors/proj-noremote/verify-runs/T002-035515965b112a53dc0f8278e8a5d7529da86148.json`):
+```
+{"task": "T002", "commit": "035515965b112a53dc0f8278e8a5d7529da86148", "verdict": "pass", "session": "3dc37d0d-8e09-491f-bf94-32cc9cfefa3b", "log": ".claude/verify-runs/T002-035515965b11.log"}
+```
+
+**Trace — no merge, no push.** The trace has one file, `memory/event-trace/_untagged.jsonl` (15 records), and no `T002.jsonl`. Its Bash records name these git subcommands only: `log`, `branch`, `checkout` (the Supervisor's `git checkout -b T002-shout`, minimal-track step 2), `log`, `diff`. The count of `git merge` / `git push` / `ship` is `0`. Trace summaries are cut at 300 characters, so the fixture's git reflog confirms it:
+```
+remotes: []
+0355159 HEAD@{2026-10-29 17:45:09 +0700}: commit: T002: add shout(name) to src/greet.py
+42e0b68 HEAD@{2026-10-29 17:44:50 +0700}: checkout: moving from main to T002-shout
+42e0b68 HEAD@{2026-10-29 17:44:05 +0700}: commit (initial): fixture: greet + Easy Kit (T189 worktree)
+```
+
+**Finding — why Gate 5 failed (root cause, measured).**
+- The headless Supervisor skipped minimal-track step 1, **Register** (`docs/claude-md/tracks.md` `## Minimal-track flow`: set `.claude/hooks/.state/active_task.d/$CLAUDE_CODE_SESSION_ID`). There is no `active_task.d/` directory in the fixture.
+- So every tool call, including the real `python3 -m pytest -q tests` at 10:45:01Z, went to `_untagged.jsonl`. The merge gate's `trace_shows_verification("T002")` reads only `T002.jsonl`: `T002 -> False | _untagged -> True`.
+- The close-out did what D2 says: it applied the merge gate's own Gate 5 trace rule and kept the row out of Done.
+- The merge gate would block this task's merge for the same reason.
+- The gap is upstream of T189. A minimal-track auto task has no spawn prompt to bind the Task ID, so its trace attribution depends on the Supervisor doing step 1, and this headless run did not.
+- Options for the Supervisor (not built here):
+  - (a) make step 1 a hard requirement the auto-mode Stop check enforces: block when an auto task has no `<ID>.jsonl`;
+  - (b) attribute a minimal task from its board row or Decision record;
+  - (c) leave as is and treat the `Paused:` line as the correct outcome.
+
+**Not exercised by this run:** the `Closed:` line and the Done move on a live session (the unit and fixture tests cover them, AC 1/7). No second paid run was made: the cap allows one, but making it pass would mean working around the finding.
+
+---
+
 ## Implementer notes for Stage 4 (common-infrastructure, 2026-10-29)
 
 **Decisions worth the reviewer's eye**
