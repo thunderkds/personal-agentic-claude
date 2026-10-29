@@ -47,7 +47,7 @@ User, 2026-10-29: "yes" — to the Supervisor's offer to plan T211 (registered f
 ### Requirement Fidelity Gate (sign off BEFORE implementation)
 
 - [x] Restated intent confirmed (Supervisor, 2026-10-29; user "yes")
-- [ ] **User sign-off: add `T211` to `merge_gate_guard.AUTHORISED_TASKS`** — PENDING
+- [x] **User sign-off: add `T211` to `merge_gate_guard.AUTHORISED_TASKS`** — given 2026-10-29: "Approve, build now"
 - [x] Every Acceptance Criterion traces to G5–G7 / D1–D4
 - [x] Requirement Refs — N/A, traced to the log and decision above
 
