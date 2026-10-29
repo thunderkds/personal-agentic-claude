@@ -497,10 +497,19 @@
   <code>⚠ decided for you — please review</code>. A task has at most 3 Debates. The 4th question goes to you.
 </p>
 <p>
-  A Stop hook checks the final report before the run may end. For an extended-track task that waits for your review,
-  <strong>auto verify</strong> works like this: a second Stop hook starts a fresh headless <code>/verify</code> session and writes the <code>verify</code> row.
-  The Supervisor does not run <code>/verify</code>. Without <code>[auto]</code>, you type <code>/verify</code>.
-  Safety hooks still block. <strong>Merge, push and Done stay with you.</strong>
+  A Stop hook checks the final report before the run may end. Safety hooks still block.
+</p>
+<p>
+  <strong>Auto verify</strong> runs for any task, with or without <code>[auto]</code>. When a task waits for your review,
+  the Supervisor starts a fresh headless <code>/verify</code> run with
+  <code>python3 .claude/hooks/stop_auto_verify.py --start &lt;ID&gt;</code>. A Stop hook starts it as a backstop.
+  That run, not the Supervisor's own session, writes the <code>verify</code> row.
+</p>
+<p>
+  <strong>Close-out:</strong> after a pass, the hook moves the row to Done only if the run record proves the pass,
+  the tests row and the UI rows hold, and the report is complete. With <code>CLAUDE_AUTO_VERIFY=off</code>,
+  <code>/verify</code> is yours again for every task without <code>[auto]</code>.
+  <strong>Merge, push and ship stay with you.</strong>
 </p></details>
 </section>
 

@@ -393,7 +393,13 @@ BASELINE_SENTENCES = [
     ("4a9d43367d1a", 'A working prototype: about 28% fewer tokens in s'),
     ("685318ee77a9", 'easy-memory-mcp on GitHub'),
 ]
-DUPLICATES_OF_A_VISUAL_LABEL = set()  # none: every sentence moved into a fold, none was deleted
+# Allowed removals: hash -> reason. Nothing is allowed because a visual repeats it; the one entry is a stale claim.
+DUPLICATES_OF_A_VISUAL_LABEL = {
+    # The old tracks paragraph held two stale sentences: "Without [auto], you type /verify." and
+    # "Merge, push and Done stay with you." It is replaced by three paragraphs that follow
+    # docs/claude-md/tracks.md `### Auto verify (Stop hook)` and `### Auto close-out`.
+    "02fcd665c525": "stale since T203/T189 (Supervisor decision)",
+}
 
 
 def test_every_paragraph_and_list_item_from_before_is_still_on_the_page():
