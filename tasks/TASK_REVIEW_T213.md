@@ -70,8 +70,26 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: Repro loop = `node --test tests/site_scrollspy/*.mjs` (headless Chrome over raw CDP, 1440x900, `scroll-behavior: auto`, `el.click()` per sidebar link), run 2026-10-29T15:44:52Z on `fix/t213-scrollspy` at `2cb0f2b` (script unchanged from `main`). 16 of 17 sidebar links leave a different link active:
+```
+what-you-get -> active: [quick-reference]
+tracks -> active: [what-you-get]
+install -> active: [tracks]
+update-flow -> active: [install]
+settings-tool -> active: [update-flow]
+install-variants -> active: [settings-tool]
+agent-roles -> active: [install-variants]
+skills -> active: [agent-roles]
+hooks -> active: [skills]
+agent-focus -> active: [hooks]
+packs -> active: [agent-focus]
+providers -> active: [packs]
+repository-layout -> active: [providers]
+memory-system -> active: [repository-layout]
+mcps -> active: [memory-system]
+options -> active: [memory-system]
+```
+(only `quick-reference`, the first link, is right). Result: `fail 6` of 6 tests (AC1 x2, AC2, AC3, 375px drawer). Instrumentation after clicking `#skills`: scrollY 5964, `agent-roles` rect top=-446 bottom=40, `skills` top=80; IntersectionObserver hits with today's `rootMargin "0px 0px -60% 0px"` = `["agent-roles","skills"]`; with `"-80px 0px -60% 0px"` = `["skills"]`.
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
