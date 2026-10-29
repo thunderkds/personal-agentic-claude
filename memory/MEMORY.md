@@ -25,7 +25,7 @@
      run; read them there. The enforced gate is the whole-file character budget above. -->
 
 ### Decisions
-- [T207/T208: visual-first site; auto verify reads `**Verdict: PASS …**`](decisions.md) — diagrams lead, prose in Details, ≤150 visible words/section; a blank-template verdict still reads as pass
+- [T207–T209: visual-first site; verdict parser](decisions.md) — diagrams lead, prose in Details; `**Verdict: PASS …**` reads; a line listing choices is ignored
 - [T143/T191/T189: CI re-runs a Done task's Verification Command; `score` skill; auto close-out](decisions.md) — `# ci: skip — <reason>`; score row optional; Stop check (7) needs a task test run
 - [T200/T201: settings profiles — `settings-setup` at Stage 1, High security default, add-only](decisions.md) — one source `profiles.json`; dry run first; Legacy = the kit's 2 anchor rules
 - [T199: site `#mcps` lists easy-memory-mcp as a third OPTIONAL companion card](decisions.md) — README facts only; Open: T194 + T199 both edit the `#mcps` lead, merge by hand
@@ -142,7 +142,7 @@
 - [T150: spawns are background `Agent()` by default; `wake` flags dirty In Progress worktrees](decisions.md) — CLI pane only on request / non-Claude CLI
 
 ### Patterns & Gotchas
-- [Merge-gate blind spots](learnings.md) — `git pull` is ungated; `timeout N pytest` is not counted as a test run; `git merge-base` in any command blocks as a merge
+- [Merge gate after T210](learnings.md) — verify row must be committed on the branch; `git pull` gated, `merge-base` free, `timeout N pytest` counts; open T211: `git -C`/`-c`, unknown merge options
 - [Parallel sessions overwrite the shared active-task file; headless checks must scroll instantly](learnings.md) — rerun a task's tests under its own state file; `scroll-behavior: smooth` makes CDP clicks miss
 - [Task IDs: scan the whole board for the highest ID before registering](learnings.md) — `git log` and `tasks/` filenames miss Todo rows with no guide (T119 collision, 2026-09-23)
 - [Open T111/T115 follow-ups](learnings.md) — `.claude/hooks/` user entry silently dropped by the ownership rule; ~35 duplicated `merge_settings` lines in setup/update; un-pruned `pets/wt-*` worktrees
