@@ -47,19 +47,19 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/site_scrollspy/test_scrollspy.mjs` (5 tests: AC1 fresh-page per link, AC1 sequential, AC2 section at top, AC3 wheel-up after last-section click, 375px drawer click). Before fix: fail 6 of 6 (16 of 17 links wrong). After fix 2026-10-29T15:50Z: `ℹ tests 5 / ℹ pass 5 / ℹ fail 0`. Mutation checks: no wheel release -> AC3 fails; topEdge 0 -> AC2 and AC3 fail. |
+| Verification command run | ☑ pass | `node --test tests/site_scrollspy/*.mjs` pass 5/5; `python3 -m pytest tests/test_site_content.py -q` 134 passed; `node --test tests/settings_tool/*.mjs` pass 59/59. Note: the guide's `node --test tests/site_scrollspy/` (bare directory) errors on Node 26 with MODULE_NOT_FOUND, so the glob form is used. |
+| Negative cases hold | ☑ pass | Script still returns early without IntersectionObserver (guard line untouched, before the new code). Wheel after a click releases the hold (AC3). Mutations above fail the tests as expected. |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| Full smoke suite still green (no regression) | ☑ pass | `python3 -m pytest tests -q` -> `1226 passed in 112.54s`. |
 | **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
-| Repro loop | ☐ pass / ☐ fail | [command/observation that reproduced the bug before the fix] |
-| Regression test | ☐ pass / ☐ fail | [test file path(s) added to lock the fix in] |
-| Smoke suite | ☐ pass / ☐ fail | [bug-specific smoke check beyond the full suite row above] |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ pass | No CSS touched. Measured at 1440x900 (headless Chrome, CDP): all 17 sidebar links, fresh page and sequential, show exactly the clicked link `.active`; every section that can reach 80px below the top (>=10 of 17) is the active one when scrolled there; after a click on the last 3 links plus a real wheel-up of 1500px, the active link equals the section at the top of the view. No screenshot taken (`reports/` is gitignored). |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | Diff touches only the scroll-spy script in `site/index.html`; no colour, glow or token edit (`git diff main -- site/theme.css` is empty). The offset is read from the existing `scroll-margin-top` token. |
+| **UI: Responsiveness at target viewports** | ☑ pass | 1440x900 and 375x700 (CDP `Emulation.setDeviceMetricsOverride`): open the Menu drawer, click `skills`, `hooks`, `agent-focus`, `options` -> only the clicked link is `.active` each time. No overflow checked; layout unchanged. |
+| Repro loop | ☑ pass | `node --test tests/site_scrollspy/*.mjs` on unfixed code, 2026-10-29T15:44:52Z: 16 of 17 links leave the link above active (full list in Demonstration BEFORE). Re-run after fix: no repro. |
+| Regression test | ☑ pass | `tests/site_scrollspy/test_scrollspy.mjs` (skips with a message when no Chrome binary is found; set `CHROME` to override). |
+| Smoke suite | ☑ pass | Bug-specific: sequential click of all 17 links on one page, plus the 375px drawer click, both pass. |
 
 ---
 
@@ -91,9 +91,17 @@ options -> active: [memory-system]
 ```
 (only `quick-reference`, the first link, is right). Result: `fail 6` of 6 tests (AC1 x2, AC2, AC3, 375px drawer). Instrumentation after clicking `#skills`: scrollY 5964, `agent-roles` rect top=-446 bottom=40, `skills` top=80; IntersectionObserver hits with today's `rootMargin "0px 0px -60% 0px"` = `["agent-roles","skills"]`; with `"-80px 0px -60% 0px"` = `["skills"]`.
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**: same command, 2026-10-29T15:50Z, after `site/index.html` fix:
+```
+✔ AC1: after a click on any sidebar link, only that link is active (fresh page per link)
+✔ AC1: clicking every link in order on one page keeps the clicked link the only active one
+✔ AC2: a section scrolled to just below the header is the active one
+✔ AC3: after clicking a last section, a manual scroll up hands the highlight back to the scroll
+✔ 375px: opening the drawer and clicking a link makes that link the only active one
+ℹ tests 5  ℹ pass 5  ℹ fail 0
+```
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+**DELTA**: Clicking any sidebar link now lights that link (not the one above it), and the highlight follows the section at the top of the view when the user scrolls by hand.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/T213.jsonl`, never the
 implementing agent alone]
