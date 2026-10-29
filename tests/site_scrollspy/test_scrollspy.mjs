@@ -87,11 +87,15 @@ before(async () => {
   ({ sessionId } = await send("Target.attachToTarget", { targetId, flatten: true }, false));
 });
 
-after(() => {
+after(async () => {
   if (ws) { ws.close(); }
-  if (chrome) { chrome.kill(); }
+  if (chrome) {
+    const exited = new Promise((r) => chrome.once("exit", r));
+    chrome.kill();
+    await exited;
+  }
   if (server) { server.close(); }
-  if (profile) { rmSync(profile, { recursive: true, force: true }); }
+  if (profile) { rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }); }
 });
 
 test("AC1: after a click on any sidebar link, only that link is active (fresh page per link)",
