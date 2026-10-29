@@ -14,6 +14,8 @@ import json
 import os
 import re
 
+import pytest
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE_PAGE = os.path.join(ROOT, "site", "index.html")
 AGENTS_DIR = os.path.join(ROOT, "agents")
@@ -1585,8 +1587,14 @@ GRAPHITE_MINT_TOKENS = {
     "--line-subtle": "#1F2321", "--line": "#262B29", "--line-strong": "#2C3230", "--line-header": "#232826",
     "--text-strong": "#EAEDEA", "--text": "#DCE0DD", "--text-2": "#ABB3AE",
     "--text-nav": "#B5BCB7", "--text-muted": "#8C9590", "--text-dim": "#6E7772",
-    "--accent": "#7EDDB0", "--accent-hover": "#B2EDCF",
-    "--accent-soft": "rgba(126, 221, 176, 0.09)", "--accent-line": "rgba(126, 221, 176, 0.33)",
+    # T212: neon accent with glow. Values from the updated design board, tasks/TASK_GUIDE_T212.md "Token table".
+    "--accent": "#3CF5A8", "--accent-hover": "#8AF9CB",
+    "--accent-soft": "rgba(60, 245, 168, 0.08)", "--accent-line": "rgba(60, 245, 168, 0.35)",
+    "--link": "#7EDDB0", "--link-hover": "#B2EDCF",
+    "--glow-text": "0 0 12px rgba(60, 245, 168, 0.35)",
+    "--glow-button": "0 0 0 1px rgba(60, 245, 168, 0.25), 0 0 18px rgba(60, 245, 168, 0.25)",
+    "--glow-dot": "0 0 8px var(--accent)",
+    "--glow-box": "0 0 0 1px rgba(60, 245, 168, 0.20), 0 0 24px rgba(60, 245, 168, 0.12)",
     "--on-accent": "#0E100F", "--dot-idle": "#3A413E",
     "--role-backend": "#7AA7E8", "--role-infra": "#E3A66B", "--role-frontend": "#B39AE8", "--role-qa": "#86CFA0",
     "--font-sans": '"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif',
@@ -1729,14 +1737,106 @@ def test_no_other_font_family_loads_and_theme_css_makes_no_external_request():
     assert "fonts.googleapis.com" not in _raw_page_text() and "fonts.gstatic.com" not in _raw_page_text()
 
 
-# ---- AC 4: no glow, no gradient ----
+# ---- T212 AC 1-5: neon accent, glow only through tokens, no gradient, no blur ----
 
-def test_site_css_has_no_gradient_glow_or_blur():
-    css = re.sub(r"/\*.*?\*/", "", _all_site_css(), flags=re.DOTALL)
-    for banned in ("linear-gradient", "radial-gradient", "conic-gradient", "text-shadow", "backdrop-filter", "drop-shadow("):
+def _strip_comments(css):
+    return re.sub(r"/\*.*?\*/", "", css, flags=re.DOTALL)
+
+
+def test_neon_accent_is_the_accent_and_the_old_mint_is_only_the_link_colour():
+    css = _strip_comments(_theme_text())
+    tokens = _root_tokens(_theme_text())
+    assert tokens["--accent"] == "#3CF5A8"
+    assert tokens["--link"] == "#7EDDB0"
+    hits = re.findall(r"[^\n;{]*#7EDDB0[^\n;]*", css, flags=re.IGNORECASE)
+    assert len(hits) == 1 and "--link:" in hits[0], f"#7EDDB0 outside --link: {hits}"
+    assert "126, 221, 176" not in css, "old mint rgba left in theme.css"
+    assert "7EDDB0" not in _inline_style().upper()
+
+
+def test_favicon_stroke_uses_the_neon_accent():
+    page = _raw_page_text()
+    icon = re.search(r'<link rel="icon"[^>]*>', page).group(0)
+    assert "stroke='%233CF5A8'" in icon and "7EDDB0" not in icon.upper()
+
+
+ALLOWED_SHADOW = re.compile(r"none|var\(--glow-(?:text|button|dot|box)\)|inset 0 0 0 1px var\(--accent-line\)")
+
+
+def test_shadows_are_tokens_and_gradient_and_blur_stay_banned():
+    """T212 AC 2 (replaces the T204 no-glow test; the no-gradient, no-blur intent stays)."""
+    css = _strip_comments(_all_site_css())
+    for banned in ("linear-gradient", "radial-gradient", "conic-gradient", "backdrop-filter", "drop-shadow("):
         assert banned not in css, f"{banned} in site CSS"
-    for value in re.findall(r"box-shadow\s*:\s*([^;}]+)", css):
-        assert value.strip() == "none", f"box-shadow: {value}"
+    assert not re.search(r"filter\s*:[^;}]*blur", css), "filter: blur in site CSS"
+    values = re.findall(r"(?<![\w-])(?:text|box)-shadow\s*:\s*([^;}]+)", css)
+    assert values, "no glow declared at all"
+    for value in values:
+        assert ALLOWED_SHADOW.fullmatch(value.strip()), f"raw shadow value: {value.strip()}"
+
+
+def _decls(selector):
+    """Every declaration block of rules for `selector`, from theme.css and the page's own style."""
+    return " ".join(_rule_bodies(_all_site_css(), selector))
+
+
+GLOW_PLACEMENTS = [
+    (".eyebrow", "text-shadow: var(--glow-text)"),
+    (".sidebar a.active", "text-shadow: var(--glow-text)"),
+    (".sidebar a.active", "box-shadow: inset 0 0 0 1px var(--accent-line)"),
+    (".strip .num", "text-shadow: var(--glow-text)"),
+    (".codebox", "box-shadow: var(--glow-box)"),
+    (".btn-primary", "box-shadow: var(--glow-button)"),
+    ("#settings-tool .st-primary", "box-shadow: var(--glow-button)"),
+    ('.family-nav a[aria-current="page"] .dot', "box-shadow: var(--glow-dot)"),
+    (".card.is-highlight", "box-shadow: var(--glow-button)"),
+    (".flow-node.is-outcome", "box-shadow: var(--glow-button)"),
+    (".bar > span", "box-shadow: var(--glow-dot)"),
+]
+
+
+@pytest.mark.parametrize("selector,declaration", GLOW_PLACEMENTS)
+def test_each_glow_placement_carries_its_token(selector, declaration):
+    body = " ".join(_decls(selector).split())
+    assert declaration in body, f"{selector} lacks '{declaration}': {body}"
+
+
+def test_stat_numbers_use_the_accent_colour_and_the_suffix_stays_dim():
+    assert "color: var(--accent)" in " ".join(_decls(".strip .num").split())
+    assert "var(--text-dim)" in _decls(".strip .num small")
+
+
+def test_plain_links_use_the_soft_mint_and_primary_button_text_stays_dark_on_hover():
+    css = _theme_text()
+    assert "color: var(--link)" in " ".join(_rule_bodies(css, "a"))
+    assert "color: var(--link-hover)" in " ".join(_rule_bodies(css, "a:hover"))
+    assert "color: var(--on-accent)" in " ".join(_rule_bodies(css, ".btn-primary:hover"))
+
+
+def test_prefers_contrast_more_turns_every_glow_token_off():
+    css = _strip_comments(_theme_text())
+    m = re.search(r"@media\s*\(prefers-contrast:\s*more\)\s*\{(.*?\})\s*\}", css, re.DOTALL)
+    assert m, "theme.css has no prefers-contrast: more block"
+    block = {k: v.strip() for k, v in re.findall(r"(--glow-[\w-]+)\s*:\s*([^;}]+)", m.group(1))}
+    glow = [k for k in _root_tokens(_theme_text()) if k.startswith("--glow-")]
+    assert glow and {k: "none" for k in glow} == block
+
+
+def _luminance(hex_colour):
+    channels = [int(hex_colour[i:i + 2], 16) / 255 for i in (1, 3, 5)]
+    lin = [c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4 for c in channels]
+    return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2]
+
+
+def _contrast(a, b):
+    hi, lo = sorted((_luminance(a), _luminance(b)), reverse=True)
+    return (hi + 0.05) / (lo + 0.05)
+
+
+def test_neon_accent_text_contrast_is_at_least_4_5_to_1():
+    tokens = _root_tokens(_theme_text())
+    assert _contrast(tokens["--accent"], tokens["--bg"]) >= 4.5
+    assert _contrast(tokens["--on-accent"], tokens["--accent"]) >= 4.5
 
 
 # ---- AC 5: header and family nav ----
