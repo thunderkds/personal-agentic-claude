@@ -85,7 +85,6 @@
 
 
 ### In Progress
-- [ ] **T208** — Auto verify reads a PASS written as `**Verdict: PASS …**` — a real pass is no longer recorded as blocked | common-infrastructure | C1 | Risk: Medium | P0 | Guide: `tasks/TASK_GUIDE_T208.md` | Depends on: T203 | Registered 2026-10-29: `--start T207` ran a real /verify that passed, but `parse()` logged `blocked (no single verdict line)` on `**Verdict: PASS. …**`; user: "if the verify do not run by automated, let fix the tasks" | Started 2026-10-29: branch `fix/t208-verdict-parse` in `../wt-t208`
 
 
 
@@ -94,6 +93,7 @@
 
 
 ### Ready for Review
+- [ ] **T208** — Auto verify reads a PASS written as `**Verdict: PASS …**` — a real pass is no longer recorded as blocked | common-infrastructure | C1 | Risk: Medium | P0 | Guide: `tasks/TASK_GUIDE_T208.md` | Depends on: T203 | Registered 2026-10-29: `--start T207` ran a real /verify that passed, but `parse()` logged `blocked (no single verdict line)` on `**Verdict: PASS. …**`; user: "if the verify do not run by automated, let fix the tasks" | Started 2026-10-29: branch `fix/t208-verdict-parse` in `../wt-t208` | Stage 4 pass 2026-10-29 (no P0-P2); auto verify started by the Supervisor
 - [ ] **T207** — Visual-first landing page — diagrams lead each heavy section, long prose folds into Details | frontend-developer | C2 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T207.md` | Depends on: T204 | Registered 2026-10-29; user: "too much text to read hard to follow … should focus on the flow chart … All as you recommend and automatic" | Started 2026-10-29: branch `feat/t207-visual-first` in `../wt-t207` | Stage 4 pass 2026-10-29 (F1 stale auto-verify paragraph fixed 3d50b67); auto verify started by the Supervisor (T203)
 
 
