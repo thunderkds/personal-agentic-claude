@@ -2870,6 +2870,10 @@ highest ID anywhere, not only `PROJECT_KANBAN.md` on the checked-out branch. Ren
   were all task questions. Q2 again "minimal is enough". Gotcha: Claude Code 2.1.310 stores `-p` sessions in
   `$CLAUDE_CONFIG_DIR` or else `$HOME/.claude/projects/<cwd>/<id>.jsonl`, so a containerised `--resume` needs
   the same writable HOME mounted on every turn and the same cwd; plain `--resume` keeps the session id.
+- **The push gate narrows to the pushed task only when `main`'s board shows that task In Progress or Ready for Review** (T202, 2026-10-29).
+  A task whose board moves live only on its branch still reads Todo on `main`, so the gate checks the whole board and
+  another session's In Progress task blocks the push. Commit the Ready for Review row on `main` first (user-approved
+  here), then push the branch. `git merge` stays whole-board: with a second session live, merge via PR.
 - **A frozen experiment's test that pins the live installer goes red when the kit grows** (T177 merge, 2026-10-29).
   `test_sc8_full_arm_is_the_installer_output` asserted 9 hooks; T180/T182 made it 11 while the branch sat unmerged
   226 commits behind. The recorded results stay valid (they ran on the 9-hook kit); update the count with a dated
