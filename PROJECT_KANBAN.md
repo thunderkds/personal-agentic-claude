@@ -85,6 +85,7 @@
 
 
 ### In Progress
+- [ ] **T207** — Visual-first landing page — diagrams lead each heavy section, long prose folds into Details | frontend-developer | C2 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T207.md` | Depends on: T204 | Registered 2026-10-29; user: "too much text to read hard to follow … should focus on the flow chart … All as you recommend and automatic" | Started 2026-10-29: branch `feat/t207-visual-first` in `../wt-t207`
 
 
 
