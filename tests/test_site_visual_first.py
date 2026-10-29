@@ -121,10 +121,10 @@ def test_no_visual_marker_outside_its_own_section():
 # ---- AC 2: the tracks visual ---------------------------------------------------
 
 def test_tracks_visual_names_both_outcomes_and_every_trigger():
-    text = " ".join(_words_of(_visual("tracks")))
-    for needle in ("Extended track", "Minimal track", "5-stage pipeline", "Decision record",
-                   "C2", "Risk Medium", "refactor", "migrate", "user data",
-                   "more than one session or agent", "UI component", "yes", "no"):
+    text = " ".join(_words_of(_visual("tracks"))).lower()
+    for needle in ("extended track", "minimal track", "5-stage pipeline", "decision record",
+                   "c2", "risk medium", "refactor", "migrate", "user data",
+                   "more than one session or agent", "ui component", "yes", "no"):
         assert needle in text, f"tracks visual lacks {needle!r}"
 
 

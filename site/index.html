@@ -54,7 +54,7 @@
   .agent-card .lead { font-size: 14px; color: var(--text-2); }
   .agent-card ul { margin: 0; padding-left: 1.2em; font-size: 14px; }
   .agent-card.agent-card-plain { padding: 0; border: 0; margin-top: var(--s-4); gap: var(--s-1); }
-  .mcp-cards { display: flex; flex-direction: column; gap: var(--s-4); margin: var(--s-4) 0; }
+  .mcp-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr)); gap: var(--s-4); margin: var(--s-4) 0; }
   .swatch[data-color="orange"] { background: var(--role-infra); }
   .swatch[data-color="blue"]   { background: var(--role-backend); }
   .swatch[data-color="purple"] { background: var(--role-frontend); }
@@ -431,6 +431,43 @@
   Small work runs on the minimal track. Big or risky work runs the full pipeline above, which is the
   extended track. The Supervisor picks the track and says it in one line before it starts.
 </p>
+<div class="flow-visual" data-visual="tracks">
+  <ol class="flow flow-col" aria-label="How the Supervisor picks the track">
+    <li class="flow-node is-plain"><span class="flow-title">Your request</span></li>
+    <li class="flow-node">
+      <span class="flow-head"><span class="flow-diamond" aria-hidden="true"></span><span class="flow-title">Is any one of these true?</span></span>
+      <ul class="flow-list">
+        <li>Complexity C2 or above</li>
+        <li>Risk Medium or High</li>
+        <li>A word like <em>refactor</em> or <em>migrate</em></li>
+        <li>It changes user data</li>
+        <li>More than one session or agent</li>
+        <li>A UI component</li>
+      </ul>
+    </li>
+    <li class="flow-split">
+      <ul class="flow-branches">
+        <li><span class="flow-edge">yes</span><div class="flow-node is-outcome"><span class="flow-title">Extended track</span><span class="flow-meta">the 5-stage pipeline</span></div></li>
+        <li><span class="flow-edge">no</span><div class="flow-node is-outcome"><span class="flow-title">Minimal track</span><span class="flow-meta">7 steps, one Decision record</span></div></li>
+      </ul>
+    </li>
+  </ol>
+  <h3>Auto mode</h3>
+  <ol class="flow flow-row is-long" aria-label="Auto mode, in order">
+    <li class="flow-node"><span class="step-no">01</span><span class="flow-title">Request</span><span class="flow-meta">tagged <code>[auto]</code></span></li>
+    <li class="flow-node"><span class="step-no">02</span><span class="flow-title">Track runs</span><span class="flow-meta">no questions asked</span></li>
+    <li class="flow-node"><span class="step-no">03</span><span class="flow-title">Stop check</span><span class="flow-meta">final report checked</span></li>
+    <li class="flow-node"><span class="step-no">04</span><span class="flow-title">Auto verify</span><span class="flow-meta">headless <code>/verify</code></span></li>
+    <li class="flow-node"><span class="step-no">05</span><span class="flow-title">Close-out</span><span class="flow-meta">Gates 5 and 6, report complete</span></li>
+    <li class="flow-node is-outcome"><span class="step-no">06</span><span class="flow-title">Done</span><span class="flow-meta">row moved by the hook</span></li>
+  </ol>
+  <div class="flow-lane" data-owner="you" role="group" aria-label="Stays with you, never in auto mode">
+    <span class="flow-lane-label">Stays yours</span>
+    <ul class="flow-chips"><li class="chip">merge</li><li class="chip">push</li><li class="chip">ship</li></ul>
+  </div>
+</div>
+<details class="more">
+<summary>Details</summary>
 <ul>
   <li><strong>The line</strong> is a statement, not a question: <code>Track: minimal — C0, Risk Low, one file</code>
     or <code>Track: extended — C2, Risk Medium</code>.</li>
@@ -444,7 +481,6 @@
   <li><strong>Your override:</strong> reply <code>full</code> or <code>minimal</code> at any time and the
     Supervisor switches. It may move a task up to extended on its own. It never moves a task down.</li>
 </ul>
-<h3>Auto mode</h3>
 <p>
   Put the exact tag <code>[auto]</code> in your request. The Supervisor runs either track up to the point where it waits for your review
   and asks you no question. It pauses only for a few stops, such as a safety-hook block. It writes a final report that lists every decision and how it made each one.
@@ -465,7 +501,7 @@
   <strong>auto verify</strong> works like this: a second Stop hook starts a fresh headless <code>/verify</code> session and writes the <code>verify</code> row.
   The Supervisor does not run <code>/verify</code>. Without <code>[auto]</code>, you type <code>/verify</code>.
   Safety hooks still block. <strong>Merge, push and Done stay with you.</strong>
-</p>
+</p></details>
 </section>
 
 <section id="install">
@@ -475,10 +511,21 @@
   and a POSIX <code>sh</code> on your PATH.
 </p>
 <div class="codebox"><code><span class="prompt">$ </span>curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh</code><button type="button" class="btn btn-primary" aria-label="Copy install command">Copy</button></div>
+<div class="flow-visual" data-visual="install">
+  <ol class="flow flow-row" aria-label="Install, in four steps">
+    <li class="flow-node"><span class="step-no">01</span><span class="flow-title">Run the command</span><span class="flow-meta">inside your git repo</span></li>
+    <li class="flow-node"><span class="step-no">02</span><span class="flow-title">Pick from numbered menus</span><span class="flow-meta">Enter takes the default</span></li>
+    <li class="flow-node"><span class="step-no">03</span><span class="flow-title">Read the plan</span><span class="flow-meta">CLIs, project type, backups</span></li>
+    <li class="flow-node is-outcome"><span class="step-no">04</span><span class="flow-title">Confirm</span><span class="flow-meta"><code>Proceed? [Y/n]</code></span></li>
+  </ol>
+  <p class="flow-badge"><strong>Never deletes.</strong> A file it replaces is backed up first.</p>
+</div>
 <p class="lead">
   <strong>Restart Claude Code</strong> after install so it picks up the new
   <code>.claude/agents/</code>, <code>.claude/skills/</code>, and <code>.claude/settings.json</code>.
 </p>
+<details class="more">
+<summary>Details</summary>
 <p class="lead">
   Installing into an existing project never deletes what is already there: a file or folder the kit
   would replace is first moved to a backup, listed in the install output. Identical files are left alone.
@@ -515,11 +562,41 @@
   <li><strong>No terminal</strong> (CI, containers) — no menus: the defaults are printed and taken.</li>
   <li><strong>Anything on the command line</strong> — it stops with nothing written.</li>
 </ul>
-<p class="lead">To pull in newer Easy Kit changes later, run the same command again from your repo root and choose <strong>Update</strong> (see below).</p>
+<p class="lead">To pull in newer Easy Kit changes later, run the same command again from your repo root and choose <strong>Update</strong> (see below).</p></details>
 </section>
 
 <section id="update-flow">
 <h2>Update flow</h2>
+<p class="lead">
+  Run the install command again from your project and choose <strong>Update</strong>. Update keeps your edits.
+</p>
+<div class="flow-visual" data-visual="update-flow">
+  <p class="flow-caption">Update compares each file with the hash saved at your last install or update.</p>
+  <ul class="flow-map" aria-label="What Update does with each file">
+    <li>
+      <div class="flow-node"><span class="flow-key">Your copy is</span><span class="flow-title">Untouched</span></div>
+      <span class="flow-arrow" aria-hidden="true"></span>
+      <div class="flow-node is-outcome"><span class="flow-title">Overwritten</span><span class="flow-meta">with the latest upstream version</span></div>
+    </li>
+    <li>
+      <div class="flow-node"><span class="flow-key">Your copy is</span><span class="flow-title">Customized</span></div>
+      <span class="flow-arrow" aria-hidden="true"></span>
+      <div class="flow-node is-outcome"><span class="flow-title">You are asked, per file</span><span class="flow-meta">diff, overwrite or skip; overwrite backs yours up first</span></div>
+    </li>
+    <li>
+      <div class="flow-node"><span class="flow-key">Your copy is</span><span class="flow-title">No longer shipped</span></div>
+      <span class="flow-arrow" aria-hidden="true"></span>
+      <div class="flow-node is-outcome"><span class="flow-title">Removed if untouched</span><span class="flow-meta">kept and named if you edited it</span></div>
+    </li>
+    <li>
+      <div class="flow-node"><span class="flow-key">The file is</span><span class="flow-title"><code>.claude/settings.json</code></span></div>
+      <span class="flow-arrow" aria-hidden="true"></span>
+      <div class="flow-node is-outcome"><span class="flow-title">Merged</span><span class="flow-meta">not copied, on install and on update</span></div>
+    </li>
+  </ul>
+</div>
+<details class="more">
+<summary>Details</summary>
 <p class="lead">
   There is one command: run the same install line again inside your installed project (still a git
   repository). Easy Kit sees it is installed and asks what to do:
@@ -624,6 +701,7 @@ Decided by: auto-approve (overwrite all)
 <details>
 <summary>Why Update leaves them absent</summary>
 <p>With nothing present, the project is indistinguishable from one that never picked Claude Code.</p>
+</details>
 </details>
 </section>
 
@@ -1751,7 +1829,17 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
   <code>TASK_GUIDE</code>. Their shared base, <code>general-agent-template</code>, is <strong>not a
   spawnable role</strong>; it lives in <code>templates/</code>.
 </p>
-
+<div class="flow-visual" data-visual="agent-roles">
+  <ul class="flow-roles" aria-label="The Supervisor and the four roles it spawns">
+    <li class="flow-node" data-role="hub"><span class="flow-title">Supervisor</span><span class="flow-meta">spawns each role on one task guide</span></li>
+    <li class="flow-node" data-role="backend"><span class="flow-title"><span class="dot" aria-hidden="true"></span>backend-developer</span><span class="flow-meta">server-side APIs and services</span></li>
+    <li class="flow-node" data-role="infra"><span class="flow-title"><span class="dot" aria-hidden="true"></span>common-infrastructure</span><span class="flow-meta">worktrees, installs, shared config</span></li>
+    <li class="flow-node" data-role="frontend"><span class="flow-title"><span class="dot" aria-hidden="true"></span>frontend-developer</span><span class="flow-meta">UI, state, accessibility</span></li>
+    <li class="flow-node" data-role="qa"><span class="flow-title"><span class="dot" aria-hidden="true"></span>qa-expert</span><span class="flow-meta">independent verification</span></li>
+  </ul>
+</div>
+<details class="more">
+<summary>Details</summary>
 <div class="cards">
 <div class="card agent-card">
   <div class="name">backend-developer</div>
@@ -1788,6 +1876,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
   <div class="subtype">not directly spawnable — shared base only, in <code>templates/</code></div>
   <p>Base template inherited by all four roles above. Contains the universal Base Rules, engineering principles, and output requirements that are not restated per role. It has no <code>subagent_type</code> of its own and is never spawned directly.</p>
 </div>
+</details>
 </section>
 
 <section id="skills">
@@ -1846,6 +1935,40 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
   <span class="tag tag-block">blocks</span> the tool call or only
   <span class="tag tag-advise">advises</span> (prints, never stops execution).
 </p>
+<div class="flow-visual" data-visual="hooks">
+  <ol class="flow flow-row is-long" aria-label="The life of a tool call, with the hooks that fire at each point">
+    <li class="flow-node is-plain"><span class="flow-title">Tool call</span></li>
+    <li class="flow-node is-phase">
+      <span class="flow-title">PreToolUse</span><span class="flow-meta">before the tool runs</span>
+      <ul class="flow-items">
+        <li class="is-block"><span class="tag tag-block">blocks</span> a spawn with no task guide</li>
+        <li class="is-block"><span class="tag tag-block">blocks</span> an unsafe push or merge</li>
+        <li class="is-block"><span class="tag tag-block">blocks</span> a call past the step limit</li>
+        <li class="is-block"><span class="tag tag-block">asks</span> before a sensitive path</li>
+      </ul>
+    </li>
+    <li class="flow-node is-plain"><span class="flow-title">Tool runs</span></li>
+    <li class="flow-node is-phase">
+      <span class="flow-title">PostToolUse</span><span class="flow-meta">after the tool ran</span>
+      <ul class="flow-items">
+        <li class="is-advise"><span class="tag tag-advise">advises</span> logs every call to the trace</li>
+        <li class="is-advise"><span class="tag tag-advise">advises</span> prompts a memory update</li>
+        <li class="is-advise"><span class="tag tag-advise">advises</span> registers new task guides</li>
+        <li class="is-inert"><span class="tag tag-inert">inert</span> a reminder to move the row</li>
+      </ul>
+    </li>
+    <li class="flow-node is-phase">
+      <span class="flow-title">Stop</span><span class="flow-meta">when the run ends</span>
+      <ul class="flow-items">
+        <li class="is-block"><span class="tag tag-block">blocks</span> an <code>[auto]</code> run until its report checks out</li>
+        <li class="is-advise"><span class="tag tag-advise">advises</span> starts auto verify</li>
+        <li class="is-advise"><span class="tag tag-advise">advises</span> reminds you of Stage 4 review</li>
+      </ul>
+    </li>
+  </ol>
+</div>
+<details class="more">
+<summary>Details</summary>
 <p class="lead">
   The wiring lives in <code>.claude/settings.json</code>. Both <code>setup.sh</code> and
   <code>update.sh</code> merge every entry below into that file. No manual merge step.
@@ -1876,6 +1999,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 </tbody>
 </table>
 </div>
+</details>
 </section>
 
 <section id="agent-focus">
@@ -1884,6 +2008,8 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
   Each row is a mechanism the kit applies, and the cost or waste it saves. Where the idea came from
   one of three open-source repos, the last column says which.
 </p>
+<details class="more">
+<summary>Details</summary>
 <div class="table-wrap">
 <table>
 <thead><tr><th>We apply</th><th>To save</th><th>Idea from</th></tr></thead>
@@ -1896,7 +2022,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <tr><td data-label="We apply"><strong>Measure before keeping</strong> — a claimed saving is measured from session transcripts first (DDR-0009)</td><td data-label="To save">Building what doesn't pay: a headroom-style Bash-output compressor was measured at about 1 percent of spend and parked</td><td data-label="Idea from">—</td></tr>
 </tbody>
 </table>
-</div>
+</div></details>
 </section>
 
 <section id="packs">
@@ -1932,6 +2058,8 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
   Codex reads it directly; Claude Code reads it through the one-line <code>CLAUDE.md</code> import.
   Cursor gets a thin adapter.
 </p>
+<details class="more">
+<summary>Details</summary>
 <details>
 <summary>What an adapter carries</summary>
 <p>
@@ -1968,7 +2096,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
     <code>migration-safety</code>, and the git-guardrails hook.</li>
   <li>Those stay on the Claude supervisor: an adapter carries the doctrine, and Codex can now run the
     skills it has room for, but the deterministic enforcement layer does not follow.</li>
-</ul>
+</ul></details>
 </section>
 
 <section id="repository-layout">
@@ -2003,6 +2131,19 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
   A two-tier hot/cold memory design keeps agents aligned across sessions. <strong>Writes are
   Supervisor-only</strong> — sub-agents never write to memory directly.
 </p>
+<div class="flow-visual" data-visual="memory-system">
+  <ol class="flow flow-row" aria-label="How memory moves, in order">
+    <li class="flow-node"><span class="step-no">01</span><span class="flow-title">Supervisor writes</span><span class="flow-meta">the only writer</span></li>
+    <li class="flow-node is-outcome"><span class="step-no">02</span><span class="flow-title">Hot tier</span><span class="flow-meta"><code>memory/MEMORY.md</code>, an index capped in characters</span></li>
+    <li class="flow-node"><span class="step-no">03</span><span class="flow-title">Cold tier</span><span class="flow-meta"><code>decisions.md</code>, <code>learnings.md</code>, <code>glossary.md</code></span></li>
+  </ol>
+  <div class="flow-lane" data-owner="agents" role="group" aria-label="What agents do with memory">
+    <span class="flow-lane-label">Agents</span>
+    <span>read a slice pasted in the spawn prompt; never write</span>
+  </div>
+</div>
+<details class="more">
+<summary>Details</summary>
 <div class="table-wrap">
 <table>
 <thead><tr><th>File</th><th>Tier</th><th>Holds</th></tr></thead>
@@ -2014,7 +2155,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <tr><td data-label="File"><code>memory/<wbr>codebase-<wbr>map.md</code></td><td data-label="Tier">Structural</td><td data-label="Holds">Directory tree, entry points, blast-radius hotspots — generated by <code>map-codebase</code></td></tr>
 </tbody>
 </table>
-</div>
+</div></details>
 </section>
 
 <section id="mcps">
@@ -2030,6 +2171,8 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <p class="lead">
   A separate companion tool, not part of this kit: a no-LLM evidence engine you can run alongside Stage 4 review.
 </p>
+<details class="more">
+<summary>Details</summary>
 <ul>
   <li>No LLM and no model API key — ratings are deterministic rules over cited metrics</li>
   <li>Seven independently callable dimensions, from architecture to blast-radius</li>
@@ -2037,6 +2180,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
   <li>Read-only and local — never runs the target repo's code, no outbound network</li>
   <li>Kit-aware mode treats this kit's specs, task guides and memory as ground truth</li>
 </ul>
+</details>
 <p><a href="https://github.com/thunderkds/easy-verifier-mcp" target="_blank" rel="noopener noreferrer">easy-verifier-mcp on GitHub</a> &middot; <a href="https://easy-verifier.vercel.app/" target="_blank" rel="noopener noreferrer">Easy Verifier site</a></p>
 </div>
 
@@ -2045,6 +2189,8 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <p class="lead">
   A separate companion tool, not part of this kit: a Dockerized MCP server for testing a web UI locally.
 </p>
+<details class="more">
+<summary>Details</summary>
 <ul>
   <li>Playwright browser automation that an agent such as Claude Code drives step by step</li>
   <li>Returns a JSON and HTML report with screenshots — no server-side LLM, no test scripts to write</li>
@@ -2052,6 +2198,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
   <li>Captures console errors, page errors and failed network requests as "Browser problems"</li>
   <li>Version 1 covers web only (Chromium) and runs locally only</li>
 </ul>
+</details>
 <p><a href="https://github.com/thunderkds/easy-ui-mcp" target="_blank" rel="noopener noreferrer">easy-ui-mcp on GitHub</a></p>
 </div>
 
@@ -2060,6 +2207,8 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <p class="lead">
   A separate companion tool, optional and not part of this kit: an MCP server that saves what a session found out and hands it to the next one.
 </p>
+<details class="more">
+<summary>Details</summary>
 <ul>
   <li>Without it installed, the kit runs as before — it is optional and not needed</li>
   <li>After a long answer it saves a local note; your next prompt gets a short index of matching notes</li>
@@ -2067,6 +2216,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
   <li>One file, standard library only; notes are saved in clear text with mode 0600, so only you can read them</li>
   <li>A working prototype: about 28% fewer tokens in scripted tests (experiment 03), not yet measured on real work</li>
 </ul>
+</details>
 <p><a href="https://github.com/thunderkds/easy-memory-mcp" target="_blank" rel="noopener noreferrer">easy-memory-mcp on GitHub</a></p>
 </div>
 
