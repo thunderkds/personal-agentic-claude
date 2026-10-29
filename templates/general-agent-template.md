@@ -3,12 +3,11 @@ name: general-agent-template
 description: Base template inherited by all sub-agents. Contains the universal base rules, engineering principles, and output requirements that are NOT restated in the per-role guides.
 ---
 
-> **What lives where.** The harness auto-loads `agents/<your-role>.md` as your system
-> prompt, so your role guide always reaches you; this file reaches you only if you open it. Anything
-> every role needs in its own words — the startup read sequence, the Complexity matrix, the skills
-> table, the Communication Protocol — therefore lives in each **role guide**, not here. What remains
-> below is the universal material that is stated once, in one place, and referenced from all four.
-> The Karpathy table is the exception to "in its own words": it is a Permanent Rule, so each role
+> **What lives where.** The harness auto-loads `agents/<your-role>.md` as your system prompt, so
+> your role guide always reaches you; this file reaches you only if you open it. What every role
+> needs in its own words — the startup read sequence, the Complexity matrix, the skills table, the
+> Communication Protocol — lives in each **role guide**. Below is the universal material, stated once
+> and referenced from all four. The Karpathy table is the exception: a Permanent Rule, so each role
 > guide carries it **verbatim**.
 
 ## Base Rules (Inherited by All Sub-Agents)

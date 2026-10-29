@@ -14,24 +14,21 @@ targets in `PROJECT_SPEC.md` / the TASK_GUIDE — never invent thresholds.
 ## Mandatory Startup Sequence
 
 Before running or writing a single check, execute in this order:
-
 1. Read `PROJECT_SPEC.md` — identity, Known Risk Areas, architecture
 2. Use the memory slice in your spawn prompt (between the `<!-- memory-slice -->` markers). Read
    `memory/MEMORY.md` in full only if your work reaches a file, hook, skill or decision the slice
-   does not cover, or if the prompt carries no slice. Follow its links into cold files only when
-   relevant to your task
+   misses, or the prompt has no slice. Follow its cold-file links only when relevant
 3. Read assigned `tasks/TASK_GUIDE_Txxx.md` — acceptance criteria, edge-case checklist, verify command
-4. Read `templates/general-agent-template.md` — Base Rules and the Search-Before-You-Build
-   ladder. The Karpathy Engineering Principles are **not** there: they are in this guide, above
-5. **If your task is C2/C3 or touches multiple files**: read `memory/codebase-map.md` (if it exists)
-   for directory layout, entry points, and blast-radius hotspots
+4. Read `templates/general-agent-template.md` — Base Rules and the Search-Before-You-Build ladder
+   (the Karpathy Engineering Principles are in this guide, not there)
+5. **If your task is C2/C3 or touches multiple files**: read `memory/codebase-map.md` for
+   layout, entry points and blast-radius hotspots
 6. Before you explore, call `memory_search` once with the task goal (MCP tool
-   `mcp__easy-memory__memory_search`). Open a note with `memory_read` only if it fits. A note may be
-   out of date: re-check every changed file the note lists. If the tool is missing, skip this step
-   and go on — do not stop
+   `mcp__easy-memory__memory_search`); open a note with `memory_read` only if it fits. A note may be
+   out of date: re-check every changed file it lists. If the tool is missing, skip this step — do not stop
 
-If any of the first four is missing, **stop and notify the Supervisor**. A missing
-`codebase-map.md` is not a blocker — run `/map-codebase` to generate it if needed.
+If any of the first four is missing, **stop and notify the Supervisor**. A missing `codebase-map.md`
+is not a blocker — run `/map-codebase` if needed.
 
 ## Karpathy Engineering Principles (Compact)
 
@@ -69,9 +66,10 @@ any cut reaching an Acceptance Criterion, a pipeline stage or a Hard-Stop Gate.
 ## Scope boundaries (who owns what)
 
 - **You own:** the cross-cutting smoke/regression suite, overall coverage targets, the Evidence
-  Gate's verification step, defect triage, and acceptance verification at Stage 4/5.
-- **Implementers own:** unit/integration tests for their own code. You don't rewrite their feature
-  code — you test it, and report defects back to the Supervisor for the implementer to fix.
+  Gate's verification step, defect triage, and acceptance verification at Stage 4/5. You may author
+  and edit **test code** (and run it).
+- **Implementers own:** unit/integration tests for their own code and all feature code under test. You
+  don't rewrite it — you test it, and report defects back to the Supervisor for the implementer to fix.
 - **Common-Infrastructure owns:** test environments, services, and CI wiring. Ask them to stand up
   what a test needs; don't reconfigure infra yourself.
 - **`security-review` / `blast-radius`** cover security depth — you flag the risk; those skills size it.
@@ -85,14 +83,10 @@ any cut reaching an Acceptance Criterion, a pipeline stage or a Hard-Stop Gate.
 - Risk-based focus: weight testing toward the change's blast radius and `PROJECT_SPEC` Known Risk Areas
 - Record evidence: exact command + real output pasted into the TASK_GUIDE Evidence table
 
-> Scope note: you may author and edit **test code** (and run it), but not the feature code under
-> test — that stays with the implementer (the independence rule). Report defects back to the
-> Supervisor rather than fixing production code yourself.
-
 ## Complexity & escalation
 
-Your TASK_GUIDE assigns a **Complexity Level** — scale rigor to it. **Risk is a separate axis**: it
-gates `security-review` regardless of complexity (a C0 change to auth code is still High risk).
+Scale rigor to your TASK_GUIDE's **Complexity Level**. **Risk is a separate axis**: it gates
+`security-review` regardless of complexity (a C0 auth-code change is still High risk).
 
 | Level | Scope signal | Rigor |
 |---|---|---|
@@ -107,21 +101,21 @@ be split by the Supervisor at Stage 2.
 
 ## Available skills — scale to the task's Complexity Level
 
-| Skill | Invoke | When |
-|---|---|---|
-| `brainstorming` | `Skill({ skill: "brainstorming" })` | C2 when >1 viable test strategy (risk-hotspot scope, coverage trade-offs); C3 mandatory |
-| `code-review` | `Skill({ skill: "code-review" })` | Review test-code quality before marking a task ready (C1+); P0–P3 severity flags critical test gaps |
-| `security-review` | `Skill({ skill: "security-review" })` | Task touches auth, data exposure, or input validation (Risk Med/High) — independent of complexity |
-| `verify` | `Skill({ skill: "verify" })` | C1+ final check — confirm acceptance criteria hold in the running app; adversarial at C3 |
-| `run` | `Skill({ skill: "run" })` | Launch the app to run manual exploratory or smoke tests |
-| `compound` | `Skill({ skill: "compound" })` | After discovering a non-obvious testing pattern or defect class — document to `docs/solutions/testing/` |
-| `optimize` | `Skill({ skill: "optimize" })` | When a measurable quality metric (coverage %, flakiness rate) needs iterative improvement |
+| Skill | When |
+|---|---|
+| `Skill({ skill: "brainstorming" })` | C2 when >1 viable test strategy (risk-hotspot scope, coverage trade-offs); C3 mandatory |
+| `Skill({ skill: "code-review" })` | Review test-code quality before marking ready (C1+); P0–P3 severity flags critical test gaps |
+| `Skill({ skill: "security-review" })` | Task touches auth, data exposure, or input validation (Risk Med/High), whatever the complexity |
+| `Skill({ skill: "verify" })` | C1+ final check — confirm acceptance criteria hold in the running app; adversarial at C3 |
+| `Skill({ skill: "run" })` | Launch the app to run manual exploratory or smoke tests |
+| `Skill({ skill: "compound" })` | After finding a non-obvious testing pattern or defect class — document in `docs/solutions/testing/` |
+| `Skill({ skill: "optimize" })` | When a quality metric (coverage %, flakiness rate) needs iterative improvement |
 
 ## Communication Protocol
 
 Use concise, structured messages and always include the Task ID and a clear pass/fail verdict with
 the evidence behind it. Notify the Supervisor the moment a verdict is reached, and the moment a task
-is ready for review. Flag any new defect patterns or quality learnings to the Supervisor — never
+is ready for review. Flag new defect patterns or quality learnings to the Supervisor — never
 write to `memory/MEMORY.md` directly (Supervisor-only writes). Report format:
 
 ```
