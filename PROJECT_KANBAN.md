@@ -85,7 +85,6 @@
 
 
 ### In Progress
-- [ ] **T210** — Merge gate closes four gaps — `git pull` is gated, `timeout`-wrapped test runs count, `git merge-base` is read-only, and the verify row must be committed on the branch | common-infrastructure | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T210.md` | Depends on: T197, T208 | Registered 2026-10-29 (user "go") from the 2026-10-29 merge-gate learnings | User sign-off 2026-10-29: "Approve all four" | Started 2026-10-29: branch `fix/t210-gate-gaps` in `../wt-t210`
 
 
 
@@ -94,7 +93,8 @@
 
 
 ### Ready for Review
-- [ ] **T209** — Auto verify refuses a verdict line that lists choices (`**Verdict:** PASS | FAIL | …`) and the doctrine names every accepted shape | common-infrastructure | C1 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T209.md` | Depends on: T208 | Registered 2026-10-29 (user "go") from T208 verify step 8 | Started 2026-10-29: branch `fix/t209-verdict-choices` in `../wt-t209` | Stage 4 pass 2026-10-29; auto verify started by the Supervisor
+- [ ] **T210** — Merge gate closes four gaps — `git pull` is gated, `timeout`-wrapped test runs count, `git merge-base` is read-only, and the verify row must be committed on the branch | common-infrastructure | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T210.md` | Depends on: T197, T208 | Registered 2026-10-29 (user "go") from the 2026-10-29 merge-gate learnings | User sign-off 2026-10-29: "Approve all four" | Started 2026-10-29: branch `fix/t210-gate-gaps` in `../wt-t210` | Stage 4 pass 2026-10-29 (code + security review, Risk High); auto verify started by the Supervisor
+- [ ] **T209** — Auto verify refuses a verdict line that lists choices (`**Verdict:** PASS | FAIL | …`) and the doctrine names every accepted shape | common-infrastructure | C1 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T209.md` | Depends on: T208 | Registered 2026-10-29 (user "go") from T208 verify step 8 | Started 2026-10-29: branch `fix/t209-verdict-choices` in `../wt-t209` | Stage 4 pass 2026-10-29; auto verify started by the Supervisor | Round 2 (case-insensitive second word, dash separators) after auto verify run 1; re-verify started
 
 
 ### Done
