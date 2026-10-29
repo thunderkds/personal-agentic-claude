@@ -87,9 +87,61 @@ An unmarked task at Ready for Review gets no run: the Stop hook is silent, `--st
 (it falls through to the Stop hook and does nothing), `claude` is never called, and the `verify` row
 stays empty — the merge waits on the user's `/verify`.
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**: the same scratch script, same fixture (unmarked `T951`, stub `claude`), run against the
+changed tree at `2616322` (the later `0eeb35f` changes only the wording of the no-`verify`-row
+reason, which this fixture does not reach):
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```
+2026-10-29T10:59:03Z
+$ grep -c "Mode: auto" tasks/TASK_REVIEW_T951.md
+0
+$ echo {"hook_event_name":"Stop"} | python3 .claude/hooks/stop_auto_verify.py
+[hook:stop_auto_verify] T951: auto verify started for commit e7c79d3a0073 — log .claude/verify-runs/T951-e7c79d3a0073.log
+exit 0
+$ python3 .claude/hooks/stop_auto_verify.py --start T951 </dev/null
+T951: its result is already filled for commit e7c79d3a0073 — nothing started
+exit 1
+$ ls .claude/verify-runs
+T951-e7c79d3a0073.log
+$ cat claude_calls.txt
+stub claude called: -p /verify T951 --max-budget-usd 2 --output-format json
+$ grep "^| verify" tasks/TASK_REVIEW_T951.md
+| verify | ☑ pass | auto-run by hook, session bb6500c2-6ee9-4ce9-bc0e-ea2f246f2fd4, commit e7c79d3a0073facdcf577e90d04d6be47da26196, log .claude/verify-runs/T951-e7c79d3a0073.log — pass |
+```
+
+And with the Supervisor's `--start` as the first entry, plus the off switch (`demo_start.sh`, same
+fixture):
+
+```
+2026-10-29T10:59:18Z
+$ grep -c "Mode: auto" tasks/TASK_REVIEW_T951.md
+0
+$ CLAUDE_AUTO_VERIFY=off python3 .claude/hooks/stop_auto_verify.py --start T951 </dev/null
+T951: CLAUDE_AUTO_VERIFY=off and the task has no `Mode: auto` line — nothing started; /verify stays yours
+exit 1
+$ python3 .claude/hooks/stop_auto_verify.py --start T951 </dev/null
+T951: auto verify started for commit c66d6c90c75d — log .claude/verify-runs/T951-c66d6c90c75d.log
+exit 0
+$ python3 .claude/hooks/stop_auto_verify.py --start T951 </dev/null
+T951: its result is already filled for commit c66d6c90c75d — nothing started
+exit 1
+$ echo {"hook_event_name":"Stop"} | python3 .claude/hooks/stop_auto_verify.py
+exit 0
+$ ls .claude/verify-runs
+T951-c66d6c90c75d.log
+$ cat claude_calls.txt
+stub claude called: -p /verify T951 --max-budget-usd 2 --output-format json
+$ grep "^| verify" tasks/TASK_REVIEW_T951.md
+| verify | ☑ pass | auto-run by hook, session bb6500c2-6ee9-4ce9-bc0e-ea2f246f2fd4, commit c66d6c90c75d9128593254a8158b6a69bdb7c2ea, log .claude/verify-runs/T951-c66d6c90c75d.log — pass |
+```
+
+(The stub answers at once, so the second `--start` finds the row already filled; the "already started"
+answer for a run still going is pinned by `test_t203_ac2_start_twice_on_one_commit_runs_once`.)
+
+**DELTA**: A task with no `[auto]` tag now gets its real headless `/verify` run as soon as it reaches
+Ready for Review — started by the Supervisor with `--start <ID>`, or by the Stop hook as a backstop —
+so the merge gate no longer waits on the user to type `/verify`; `CLAUDE_AUTO_VERIFY=off` brings back
+the old rule.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/T203.jsonl`, never the
 implementing agent alone]
