@@ -85,7 +85,6 @@
 
 
 ### In Progress
-- [ ] **T211** — Merge gate: `git -C <dir> pull|merge|push` and `git -c k=v merge` are ungated, and a merge with an option outside `MERGE_FLAGS` (`-X ours`, `--strategy`, octopus) leaves the branch unresolved, so D4 falls back to the working-tree read | common-infrastructure | C2 | Risk: High | P1 | Depends on: T210 | Registered 2026-10-29 from the T210 auto verify findings and Stage 4 P2; gate file → needs user sign-off for `merge_gate_guard.AUTHORISED_TASKS`; Guide: `tasks/TASK_GUIDE_T211.md` (D1–D4); User sign-off 2026-10-29 ("Approve, build now"). Also open (P3, T209 verify): `**Verdict:** PASS; FAIL` reads as pass | Started 2026-10-29: branch `fix/t211-gate-global-options` in `../wt-t211`
 
 
 
@@ -94,6 +93,7 @@
 
 
 ### Ready for Review
+- [ ] **T211** — Merge gate: `git -C <dir> pull|merge|push` and `git -c k=v merge` are ungated, and a merge with an option outside `MERGE_FLAGS` (`-X ours`, `--strategy`, octopus) leaves the branch unresolved, so D4 falls back to the working-tree read | common-infrastructure | C2 | Risk: High | P1 | Depends on: T210 | Registered 2026-10-29 from the T210 auto verify findings and Stage 4 P2; gate file → needs user sign-off for `merge_gate_guard.AUTHORISED_TASKS`; Guide: `tasks/TASK_GUIDE_T211.md` (D1–D4); User sign-off 2026-10-29 ("Approve, build now"). Also open (P3, T209 verify): `**Verdict:** PASS; FAIL` reads as pass | Started 2026-10-29: branch `fix/t211-gate-global-options` in `../wt-t211` | Stage 4 pass 2026-10-29 (code + security review, Risk High); auto verify started by the Supervisor
 - [ ] **T212** — Landing page takes the neon Graphite Mint accent (#3CF5A8) with glow, per the updated design canvas | frontend-developer | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T212.md` | Depends on: T204, T207 | Registered 2026-10-29; user: "checking the design and update following <canvas link>"; user chose "Yes, neon + glow" (supersedes the T204 no-glow rule). | Started 2026-10-29, worktree `../wt-t212` (`feat/t212-neon-glow`). | Ready for Review 2026-10-29: agent commit f08ce08; Supervisor re-run 134 passed + node 59/59; mutations M1-M4 RED; code-review 0 P0/P1, 1 P2, 2 P3; evidence `tasks/TASK_REVIEW_T212.md`. Auto verify pass 2026-10-29 at d47a677 ($0.61; computed styles, prefers-contrast off-glow, 390px no overflow); not exercised on this page: `.card.is-highlight`, `.bar > span`. Awaiting merge approval (user).
 
 
