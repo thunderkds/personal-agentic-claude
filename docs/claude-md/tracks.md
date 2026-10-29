@@ -321,6 +321,10 @@ There are two ways in, and they share one lock:
 - **The Stop hook is the backstop.** It fires when the Supervisor stops and does the same for every task on
   the board.
 
+Both read the main checkout's board only. Run from a linked worktree, they start nothing and say so in one
+line. A task's report is read from its worktree first, so the run uses the task's own code and head commit,
+never a placeholder copy on main.
+
 `CLAUDE_AUTO_VERIFY=off` turns this back to the T182 rule. Then only a task whose report has the
 `Mode: auto` line runs, through the hook and through `--start`. Every other task's `/verify` stays yours.
 The default is on. Each run costs at most `CLAUDE_AUTO_VERIFY_BUDGET_USD` (default 2), so several tasks at

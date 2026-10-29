@@ -18,6 +18,9 @@ Two ways in, one lock (D2):
     prints one line — the log path, or why nothing started (not at Ready for Review, result already
     filled for this commit, a run for this commit already started, the switch is off) — and exits 0
     only when it started a run.
+Both read the main checkout's board only: run from a linked worktree, they start nothing (one
+line). The task's report is read from its worktree copy first (`auto_mode.find_for_task`), so the
+run's cwd and head commit are the task's own.
 
 `lib/auto_mode.py` is the one reader of which tasks those are, on which track, and which file holds
 each one's report — `tasks/TASK_REVIEW_<ID>.md` (extended) or the task's record in
@@ -176,11 +179,34 @@ def start(task, head):
     return log_rel, True
 
 
+def linked_worktree(root):
+    """T203 (Stage 4 P2): True when `root` is a linked worktree, not the main checkout — its
+    `PROJECT_KANBAN.md` is a stale branch copy, so nothing may start from it. Any git failure is
+    False: the main-checkout behaviour, unchanged."""
+    try:
+        done = subprocess.run(["git", "-C", root, "rev-parse", "--git-dir", "--git-common-dir"],
+                              capture_output=True, text=True, timeout=5)
+        lines = done.stdout.splitlines() if done.returncode == 0 else []
+        if len(lines) != 2:
+            return False
+        git_dir, common = (os.path.realpath(os.path.join(root, l.strip())) for l in lines)
+        return git_dir != common
+    except Exception:
+        return False
+
+
+WORKTREE_NOTE = ("this checkout is a linked worktree; auto verify starts only from the main "
+                 "checkout's board — nothing started")
+
+
 def stop_hook():
     try:
         json.load(sys.stdin)
     except Exception:
         pass
+    if linked_worktree(ROOT):
+        warn(WORKTREE_NOTE)
+        return
     try:
         with open(KANBAN, encoding="utf-8") as f:
             kanban = f.read()
@@ -219,6 +245,9 @@ def start_one(task_id):
     started) and returns at once. 0 when this call started a run, 1 otherwise."""
     if os.environ.get(CHILD_ENV):
         print(f"{task_id}: inside an auto verify run ({CHILD_ENV}=1) — nothing started")
+        return 1
+    if linked_worktree(ROOT):
+        print(f"{task_id}: {WORKTREE_NOTE}")
         return 1
     try:
         with open(KANBAN, encoding="utf-8") as f:

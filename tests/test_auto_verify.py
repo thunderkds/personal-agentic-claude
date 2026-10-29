@@ -2168,3 +2168,71 @@ def test_t203_ac2_start_on_a_task_with_no_review_file_says_why_in_one_line(tmp_p
     assert result.returncode == 1 and result.stderr == ""
     assert result.stdout == f"{TASK}: no `verify` row under `## Evidence` — nothing started\n"
     assert _calls(calls) == []
+
+
+# ── Stage 4 P1 — a worktree copy of the report wins over main's placeholder copy ─────────
+def _placeholder_in_main(project):
+    """The Supervisor creates `tasks/TASK_REVIEW_<ID>.md` on main at Stage 2: an empty placeholder."""
+    (project / "tasks" / f"TASK_REVIEW_{TASK}.md").write_text(_plain_review(), encoding="utf-8")
+    _git(project, "add", "-A")
+    _git(project, "commit", "-qm", "plan: review file placeholder on main")
+
+
+def test_t203_p1_a_worktree_copy_wins_over_main_placeholder_and_the_run_is_in_the_worktree(tmp_path):
+    project, checkout = _project(tmp_path, review=_plain_review(), worktree=True)
+    _placeholder_in_main(project)
+    main_copy = (project / "tasks" / f"TASK_REVIEW_{TASK}.md").read_text(encoding="utf-8")
+    am = _auto_mode()
+    task = am.resolve(TASK, RFR_ROW, am.tasks_dirs(str(project)))
+    assert Path(task.checkout).resolve() == checkout.resolve()
+    stub_dir, calls = _stub(tmp_path)
+    _stop(project, _env(tmp_path, project, stub_dir))
+    assert _wait_row(checkout)[0] == "☑ pass"
+    assert [Path(c["cwd"]).resolve() for c in _calls(calls)] == [checkout.resolve()]
+    assert (project / "tasks" / f"TASK_REVIEW_{TASK}.md").read_text(encoding="utf-8") == main_copy
+
+
+def test_t203_p1_with_two_worktree_copies_the_branch_naming_the_task_wins(tmp_path):
+    project, checkout = _project(tmp_path, review=_plain_review(), worktree=True)
+    _placeholder_in_main(project)
+    decoy = tmp_path / "a-decoy"  # sorts before `wt-t951`, so it is listed first
+    _git(project, "worktree", "add", "-q", "-b", "chore/decoy-t9510", str(decoy))
+    (decoy / "tasks" / f"TASK_REVIEW_{TASK}.md").write_text(_plain_review(), encoding="utf-8")
+    am = _auto_mode()
+    dirs = am.tasks_dirs(str(project))
+    assert [Path(d).parent.resolve() for d in dirs[1:]] == [decoy.resolve(), checkout.resolve()]
+    task = am.resolve(TASK, RFR_ROW, dirs)
+    assert Path(task.checkout).resolve() == checkout.resolve()
+
+
+@pytest.mark.parametrize("branch,hit", [("feat/t951-x", True), ("T951", True), ("fix/T951", True),
+                                        ("feat/t9510", False), ("feat/xt951", False), (None, False)])
+def test_t203_p1_branch_names_the_task_word_bounded(branch, hit):
+    assert _auto_mode().names_task(branch, TASK) is hit
+
+
+def test_t203_p1_a_minimal_record_in_a_worktree_wins_over_main_without_it(tmp_path):
+    project, checkout = _project(tmp_path, rows=(MIN_ROW,), review_file=False, worktree=True,
+                                 minimal_log=_log(_plain_record()))
+    (project / "tasks" / "MINIMAL_LOG.md").write_text(_log(_record(task="T900", title="older")),
+                                                      encoding="utf-8")
+    am = _auto_mode()
+    task = am.resolve(MIN_TASK, MIN_ROW, am.tasks_dirs(str(project)))
+    assert task.exists and Path(task.checkout).resolve() == checkout.resolve()
+
+
+# ── Stage 4 P2 — a session inside a linked worktree starts nothing ──────────────────────
+@pytest.mark.parametrize("entry", ["stop", "start"])
+def test_t203_p2_the_hook_in_a_linked_worktree_starts_nothing(tmp_path, entry):
+    project, checkout = _project(tmp_path, review=_plain_review(), worktree=True)
+    stub_dir, calls = _stub(tmp_path)
+    env = _env(tmp_path, checkout, stub_dir)
+    hook = str(checkout / ".claude" / "hooks" / HOOK)
+    args = [sys.executable, hook] + (["--start", TASK] if entry == "start" else [])
+    done = subprocess.run(args, input="{}", capture_output=True, text=True, cwd=checkout, env=env,
+                          timeout=30)
+    _settle()
+    out = done.stdout if entry == "start" else done.stderr
+    assert "linked worktree" in out and "nothing started" in out, (done.stdout, done.stderr)
+    assert done.returncode == (1 if entry == "start" else 0)
+    assert _calls(calls) == [] and not (checkout / ".claude" / "verify-runs").exists()
