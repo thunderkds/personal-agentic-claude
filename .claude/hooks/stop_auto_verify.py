@@ -130,13 +130,13 @@ def due(task, head):
     if task.minimal:
         hit, result, notes = vr.record_verify_line(task.body)
         if hit is None and vr.checked_field(task.body) is None:
-            return "its Decision record has no `Checked:` field — auto verify not started"
+            return "its Decision record has no `Checked:` field"
         if hit is not None and filled_for(task, result, notes, head):
             return f"{FILLED} {head[:12]}"
         return ""
     row, _ = evidence_row(task.text or "")
     if row is None:
-        return "no `verify` row under `## Evidence` — auto verify not started"
+        return "no `verify` row under `## Evidence`"
     if filled_for(task, row.group("result"), row.group("notes"), head):
         return f"{FILLED} {head[:12]}"
     return ""
@@ -204,7 +204,7 @@ def stop_hook():
             reason = due(task, head)
             if reason:
                 if not reason.startswith(FILLED):
-                    warn(f"{task_id}: {reason}")
+                    warn(f"{task_id}: {reason} — auto verify not started")
                 continue
             log_rel, started = start(task, head)
             if started:

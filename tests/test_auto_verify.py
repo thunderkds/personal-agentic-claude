@@ -2158,3 +2158,13 @@ def test_t203_ac6_glossary_auto_verify_names_every_task_start_and_off():
     row = next(l for l in SPEC.read_text(encoding="utf-8").splitlines() if l.startswith("| Auto verify |"))
     for needle in ("**every task**", "T203", "--start <ID>", "backstop", "`CLAUDE_AUTO_VERIFY=off`"):
         assert needle in row, needle
+
+
+def test_t203_ac2_start_on_a_task_with_no_review_file_says_why_in_one_line(tmp_path):
+    project, _ = _project(tmp_path, review_file=False)
+    stub_dir, calls = _stub(tmp_path)
+    result, _ = _start(project, _env(tmp_path, project, stub_dir))
+    _settle()
+    assert result.returncode == 1 and result.stderr == ""
+    assert result.stdout == f"{TASK}: no `verify` row under `## Evidence` — nothing started\n"
+    assert _calls(calls) == []
