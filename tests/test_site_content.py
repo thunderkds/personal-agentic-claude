@@ -1503,3 +1503,62 @@ def test_hooks_first_two_columns_only_refuse_to_wrap_from_900px():
     # thing that kept the table 554px wide, the unbreakable `Edit|Write|Bash` was too.
     hooks = re.search(r'<section id="hooks">(.*?)</section>', _raw_page_text(), re.DOTALL).group(1)
     assert "Edit|<wbr>Write|<wbr>Bash" in hooks, "the multi-tool Matcher has no break points after `|`"
+
+
+# ---- T201: Build-tab profiles held equal to skills/settings-setup/profiles.json ----
+PROFILES_PATH = os.path.join(ROOT, "skills", "settings-setup", "profiles.json")
+
+
+def _profiles():
+    with open(PROFILES_PATH, encoding="utf-8") as f:
+        return json.load(f)["profiles"]
+
+
+def _expanded_page_preset(catalog, preset):
+    """Preset values with `$suggest` replaced by the catalog entry's suggest list."""
+    by_key = {e["key"]: e for e in catalog["settings"]}
+    out = {}
+    for key, value in preset["values"].items():
+        out[key] = list(by_key[key]["suggest"]) if value == "$suggest" else value
+    return out
+
+
+def test_page_profiles_match_profiles_json_ids_in_order():
+    """T201 AC1/AC3: same ids, same order; safe-baseline is gone."""
+    page_ids = [p["id"] for p in _settings_catalog()["presets"]]
+    assert page_ids == [p["id"] for p in _profiles()]
+    assert "safe-baseline" not in page_ids
+
+
+def test_page_profiles_values_label_and_for_equal_profiles_json():
+    """T201 AC3: drift in a rule, a label or a for line fails here."""
+    catalog = _settings_catalog()
+    page = {p["id"]: p for p in catalog["presets"]}
+    for profile in _profiles():
+        preset = page[profile["id"]]
+        assert preset["label"] == profile["label"], profile["id"]
+        assert preset.get("for") == profile["for"], f"{profile['id']} for text drifted"
+        assert _expanded_page_preset(catalog, preset) == profile["values"], f"{profile['id']} values drifted"
+
+
+def test_no_page_profile_lowers_safety():
+    """T201 AC7 / NFR-001."""
+    text = json.dumps(_settings_catalog()["presets"])
+    for banned in ("bypassPermissions", "permissions.allow", "defaultMode"):
+        assert banned not in text, banned
+
+
+def test_settings_lead_says_what_the_installer_and_stage_1_do():
+    """T201 AC6 / FR-008: the old "installs no settings" claim is gone; the intro says what is true."""
+    section = _settings_section()
+    intro = re.sub(r"\s+", " ", section[:section.index('<div id="st-app"')])
+    assert "installs no settings" not in section
+    assert "The installer adds only the kit's hooks and 2 deny rules." in intro
+    assert "At Stage 1 the Supervisor offers the profiles below, and uses High security if you skip." in intro
+    assert "writes only after you approve, and never removes an entry" in intro
+
+
+def test_build_tab_has_a_for_line_for_the_profiles():
+    """T201 AC2: a static line the script fills with the hovered, focused or active profile's text."""
+    section = _settings_section()
+    assert re.search(r'<p\b[^>]*id="st-presetfor"[^>]*class="st-why"|<p\b[^>]*class="st-why"[^>]*id="st-presetfor"', section)
