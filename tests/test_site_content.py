@@ -1123,7 +1123,7 @@ def test_verifier_section_links_the_easy_verifier_site_beside_the_repo():
 # The one place the grouping is pinned (T166 Requirement): stage -> skills.
 SKILL_FLOW_GROUPING = {
     "0.5": {"brainstorming", "ideate"},
-    "1": {"git-guardrails-claude-code", "map-codebase"},
+    "1": {"git-guardrails-claude-code", "map-codebase", "settings-setup"},
     "1.5": {"craft-agent"},
     "2": {"grill-with-docs", "to-issues"},
     "3": {"tdd", "bugfix", "diagnose", "craft-spawn-prompt", "migration-safety"},

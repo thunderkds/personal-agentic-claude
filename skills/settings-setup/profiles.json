@@ -1,0 +1,95 @@
+{
+  "profiles": [
+    {
+      "id": "high-security",
+      "label": "High security",
+      "for": "The default. Blocks reads of secret files, asks before destructive commands, and locks out bypass mode.",
+      "values": {
+        "permissions.deny": [
+          "Read(./.env)",
+          "Read(./.env.*)",
+          "Read(./**/*.pem)",
+          "Read(./**/*.key)",
+          "Read(~/.ssh/**)",
+          "Read(~/.aws/**)",
+          "Read(~/.config/gh/**)"
+        ],
+        "permissions.ask": [
+          "Bash(git push --force *)",
+          "Bash(git push -f *)",
+          "Bash(git reset --hard *)",
+          "Bash(rm -rf *)"
+        ],
+        "permissions.disableBypassPermissionsMode": "disable"
+      }
+    },
+    {
+      "id": "legacy",
+      "label": "Legacy",
+      "for": "Keeps today's kit behavior: only the 2 deny rules that protect the trace anchors.",
+      "values": {
+        "permissions.deny": [
+          "Edit(~/.claude/harness-anchors/**)",
+          "Bash(*harness-anchors*)"
+        ]
+      }
+    },
+    {
+      "id": "solo-engineer",
+      "label": "Solo engineer",
+      "for": "One person on the project. Secret and destructive-command rules, stable updates, 90 days of session history.",
+      "values": {
+        "permissions.deny": [
+          "Read(./.env)",
+          "Read(./.env.*)",
+          "Read(./**/*.pem)",
+          "Read(./**/*.key)",
+          "Read(~/.ssh/**)",
+          "Read(~/.aws/**)",
+          "Read(~/.config/gh/**)"
+        ],
+        "permissions.ask": [
+          "Bash(git push --force *)",
+          "Bash(git push -f *)",
+          "Bash(git reset --hard *)",
+          "Bash(rm -rf *)"
+        ],
+        "autoUpdatesChannel": "stable",
+        "cleanupPeriodDays": 90
+      }
+    },
+    {
+      "id": "team-project",
+      "label": "Team project",
+      "for": "Several people share the repo. Secret and destructive-command rules, and worktrees that start from your local HEAD.",
+      "values": {
+        "permissions.deny": [
+          "Read(./.env)",
+          "Read(./.env.*)",
+          "Read(./**/*.pem)",
+          "Read(./**/*.key)",
+          "Read(~/.ssh/**)",
+          "Read(~/.aws/**)",
+          "Read(~/.config/gh/**)"
+        ],
+        "permissions.ask": [
+          "Bash(git push --force *)",
+          "Bash(git push -f *)",
+          "Bash(git reset --hard *)",
+          "Bash(rm -rf *)"
+        ],
+        "worktree.baseRef": "head",
+        "worktree.symlinkDirectories": [
+          "node_modules",
+          ".venv"
+        ]
+      }
+    },
+    {
+      "id": "empty",
+      "label": "Empty",
+      "for": "Adds nothing. Choose this to keep the settings file exactly as it is.",
+      "values": {}
+    }
+  ]
+}

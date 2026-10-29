@@ -134,7 +134,8 @@ T069_BASELINE_REF = "8d6d56b"
 # Merged by the main <- plan/t178-t180-tracks merge (2026-10-27): AGENTS.md now holds both T183's template path and
 # T178/T180's `## Tracks` edits, so it matches neither `05a23df` nor `d455cfb`: repointed to the merge commit `9e0bb48`. Repointed, NOT deleted.
 # REPOINTED AGAIN by the v2.2.0 release (`9e0bb48` -> `c8a9af9`, the release commit; user approved the version bump 2026-10-27): AGENTS.md line 2 `**Version:** 1.17` -> `1.18`. One label; nothing collapsed. Repointed, NOT deleted.
-T070_BASELINE_REF = "c8a9af9"  # v2.2.0 release (was 9e0bb48, the main <- plan/t178-t180-tracks merge)
+# REPOINTED AGAIN by T200 (`c8a9af9` -> `65fe3a8`, T200's edit commit; required by TASK_GUIDE_T200 AC 10, not separately user-approved): the AGENTS.md stage index `1=` list gains `settings-setup`. One token on one line; nothing collapsed. Repointed, NOT deleted.
+T070_BASELINE_REF = "65fe3a8"  # T200 (was c8a9af9, the v2.2.0 release)
 
 # T082's own edit commit (same commit as the repoint above). T082 adds a mandatory Base Rule bullet
 # to `general-agent-template.md` too (the same untrusted-content pointer) — a legitimate, required
