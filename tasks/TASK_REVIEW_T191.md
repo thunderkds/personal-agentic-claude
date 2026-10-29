@@ -41,12 +41,12 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_companion_scoring_skills.py` (21 tests, AC 1-13 plus guide edge cases; AC 14 is the file itself). Run 2026-10-29T10:11:56Z in `wt-t191`: `21 passed in 0.28s`. Mutation proof: deleting each of 7 load-bearing phrases (`waits forever`, `never averaged`, `not a failing rule`, `0.5 × confidence`, `unbacked pass`, `stays abstained`, `report: <absolute path>`) turned exactly 1 test red each time; the 8193-byte cap check is asserted to reject 8193 and accept 8192 bytes |
+| Verification command run | ☑ pass | `python3 -m pytest tests/test_companion_scoring_skills.py -q && sh scripts/validate.sh` -> `21 passed in 0.28s` then `validate.sh: PASS`. SKILL.md is 7298 bytes (cap 8192) |
+| Negative cases hold | ☑ pass | AC 10 (unanswerable gate stays abstained; `0.5 × confidence` consequence), AC 13 (unbacked pass rewritten as N/A), AC 6 (chore abstention is not `fail`): each sentence pinned by a test that goes red when the sentence is removed (see the first row) |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| Full smoke suite still green (no regression) | ☑ pass | `python3 -m pytest tests .claude/hooks/tests -q` -> `2133 passed, 25 subtests passed in 120.85s`; `sh tests/test_harness_projection.sh` 41 passed, `test_manifest_exclusions.sh` 8 passed, `test_harness_fetch.sh` 9 passed |
 | **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
@@ -75,9 +75,26 @@ $ python3 -c "import easy_verifier"
 ModuleNotFoundError: No module named 'easy_verifier'
 ```
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**: same commands, 2026-10-29T10:11:56Z, after commit `1e62153` plus the follow-up commit:
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```
+$ python3 -m pytest tests/test_companion_scoring_skills.py -q && sh scripts/validate.sh | tail -1
+.....................                                                    [100%]
+21 passed in 0.28s
+validate.sh: PASS
+$ wc -c skills/score/SKILL.md
+7298 skills/score/SKILL.md
+```
+
+Real CLI session (rung 2) with the reference package on `PYTHONPATH` (the package is not installed on this machine), scratch repo, `--scope changes --ref main...HEAD < /dev/null`:
+
+- Bugfix branch with no test: `overall` 100 from 2 of 13 dimensions (12 abstentions), `change_risk` rating 0, kind `bugfix`, `bugfix_without_regression_test` `passed: false`. The skill's rule gives `☑ fail`, although `overall` is high.
+- Docs-only branch: `change_risk` is `rating_abstention` (kind `chore`, `all_metrics_abstained`), and `overall` itself is an abstention (`no_dimension_rated`). The skill's rule gives `☑ N/A` with that reason, not `fail`. This was found in the run and added to the skill (a tool-fact the guide did not carry).
+- `write-report ... --findings <[]> < /dev/null` returned an absolute `path` and the file exists (under `EASY_VERIFIER_REPORTS_DIR`).
+- Rung 3: with no `PYTHONPATH`, `python -c "import easy_verifier" < /dev/null` -> `ModuleNotFoundError: No module named 'easy_verifier'`, so the row is `☑ N/A` naming the missing tool and the rung reached.
+- Rung 1 (registered MCP, the asking round) was NOT run live: no verifier MCP tools are registered in this agent session. The round-by-round text comes from the verifier's own docs and `gate.py`, not from a live session.
+
+**DELTA**: A reviewer can run `Skill({ skill: "score" })` at Stage 4 and get one scoring session that ends in a filled Companion score row (or an N/A row that names the missing tool), instead of writing that row by hand.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]

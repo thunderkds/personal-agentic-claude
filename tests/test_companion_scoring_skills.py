@@ -199,3 +199,10 @@ def test_edge_security_and_exposure_statements_present():
     assert "never run it yourself" in t
     assert "shows up in the task's own diff" in t  # reports/ in the evaluated repo
     assert "not the newest file in the directory" in t
+
+
+def test_edge_failing_rule_and_overall_abstention_are_defined():
+    """Found in the real CLI run: a failing rule is `passed: false`; `overall` can itself abstain."""
+    t = _norm(_text(SCORE))
+    assert "A failing rule is an entry of `change_risk.inputs` with `passed: false`" in t
+    assert "If `overall` itself is an abstention" in t and "write `☑ N/A` with that reason code" in t

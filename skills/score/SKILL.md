@@ -13,9 +13,9 @@ You run one easy-verifier scoring session over the branch, answer what it asks, 
 
 ## The floor
 
-The row is `pass` only when `overall ≥ 80` and no `change_risk` rule failed. A failing `change_risk` rule sets the row to `fail` whatever `overall` says, because `change_risk` is never averaged into `overall`. Exactly at the floor passes; 79.9 fails, and the row states the comparison it made. A `TASK_GUIDE` cannot name another floor; there are no per-dimension floors. A dimension that abstains is recorded as an abstention, never read as a zero.
+The row is `pass` only when `overall ≥ 80` and no `change_risk` rule failed. A failing `change_risk` rule sets the row to `fail` whatever `overall` says, because `change_risk` is never averaged into `overall`. A failing rule is an entry of `change_risk.inputs` with `passed: false`. Exactly at the floor passes; 79.9 fails, and the row states the comparison it made. A `TASK_GUIDE` cannot name another floor; there are no per-dimension floors. A dimension that abstains is recorded as an abstention, never read as a zero.
 
-`change_kind: chore` (docs, config, dependencies) abstains by design (`"chore: no test expectation"`). That abstention is not a failing rule. Never write `fail` for it: judge the row on `overall` alone and record the abstention. Any other `change_risk` abstention is also recorded with its reason, not read as `fail`.
+`change_kind: chore` (docs, config, dependencies) abstains by design (`"chore: no test expectation"`). That abstention is not a failing rule. Never write `fail` for it: judge the row on `overall` alone and record the abstention. Any other `change_risk` abstention is also recorded with its reason, not read as `fail`. If `overall` itself is an abstention (`kind: rating_abstention`, no `value`, e.g. a docs-only change: `no_dimension_rated`), there is no number to compare: write `☑ N/A` with that reason code, unless a rule failed.
 
 ## The ladder
 
