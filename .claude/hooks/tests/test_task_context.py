@@ -609,27 +609,39 @@ def _load_merge_gate_module():
     return module
 
 
-class StateFileOverride:
-    """Point task_context.ACTIVE_TASK_FILE at a throwaway path for the
-    duration of a block, restoring it after. Unit-level equivalent of
-    EnvOverride for the new state-file channel."""
+# T196: the state file is per session — `active_task.d/<session_id>` — so an
+# event must carry the `session_id` whose file it reads.
+SESSION = "sess-t196-unit"
 
-    def __init__(self, content=None):
+
+class StateFileOverride:
+    """Point task_context's state directories (T196: `ACTIVE_TASK_DIR` and the
+    spawn-binding cache `AGENT_TASK_DIR`) at a throwaway tree for the duration
+    of a block, restoring them after. `content`, when given, is written as
+    session `session`'s state file. Unit-level equivalent of EnvOverride."""
+
+    def __init__(self, content=None, session=SESSION):
         self.content = content
+        self.session = session
         self.dir = None
         self.previous = None
 
     def __enter__(self):
         self.dir = _tempfile.mkdtemp(prefix="t047_state_")
-        self.previous = task_context.ACTIVE_TASK_FILE
-        task_context.ACTIVE_TASK_FILE = os.path.join(self.dir, "active_task")
+        self.previous = (task_context.ACTIVE_TASK_DIR, task_context.AGENT_TASK_DIR)
+        task_context.ACTIVE_TASK_DIR = os.path.join(self.dir, "active_task.d")
+        task_context.AGENT_TASK_DIR = os.path.join(self.dir, "agent_task")
         if self.content is not None:
-            with open(task_context.ACTIVE_TASK_FILE, "w") as f:
-                f.write(self.content)
+            self.write(self.session, self.content)
         return self
 
+    def write(self, session, content):
+        os.makedirs(task_context.ACTIVE_TASK_DIR, exist_ok=True)
+        with open(os.path.join(task_context.ACTIVE_TASK_DIR, session), "w") as f:
+            f.write(content)
+
     def __exit__(self, *exc):
-        task_context.ACTIVE_TASK_FILE = self.previous
+        task_context.ACTIVE_TASK_DIR, task_context.AGENT_TASK_DIR = self.previous
         shutil.rmtree(self.dir, ignore_errors=True)
         return False
 
@@ -681,25 +693,29 @@ def _fresh_state_content(task_id, age_seconds=0):
 
 
 def test_state_file_attributes_when_env_and_payload_are_silent():
-    event = {"tool_name": "Bash", "tool_input": {"command": "python3 -m pytest -q"}}
+    event = {"tool_name": "Bash", "session_id": SESSION,
+             "tool_input": {"command": "python3 -m pytest -q"}}
     with StateFileOverride(_fresh_state_content("T047")):
         assert resolve(event) == "T047"
 
 
 def test_env_var_still_wins_over_state_file():
-    event = {"tool_name": "Bash", "tool_input": {"command": "python3 -m pytest -q"}}
+    event = {"tool_name": "Bash", "session_id": SESSION,
+             "tool_input": {"command": "python3 -m pytest -q"}}
     with StateFileOverride(_fresh_state_content("T047")):
         assert resolve(event, "T099") == "T099"
 
 
 def test_state_file_wins_over_path_field_and_agent_prompt():
-    event = {"tool_name": "Read", "tool_input": {"file_path": "tasks/TASK_GUIDE_T044.md"}}
+    event = {"tool_name": "Read", "session_id": SESSION,
+             "tool_input": {"file_path": "tasks/TASK_GUIDE_T044.md"}}
     with StateFileOverride(_fresh_state_content("T047")):
         assert resolve(event) == "T047"
 
 
 def test_missing_state_file_falls_through_to_next_slot():
-    event = {"tool_name": "Read", "tool_input": {"file_path": "tasks/TASK_GUIDE_T044.md"}}
+    event = {"tool_name": "Read", "session_id": SESSION,
+             "tool_input": {"file_path": "tasks/TASK_GUIDE_T044.md"}}
     with StateFileOverride(None):
         assert resolve(event) == "T044"
 
@@ -708,7 +724,8 @@ def test_malformed_state_file_content_is_ignored_not_trusted():
     """Negative control: junk task ID text must degrade to absent, exactly
     like a malformed CLAUDE_ACTIVE_TASK — never trusted as a literal path
     component."""
-    event = {"tool_name": "Bash", "tool_input": {"command": "python3 -m pytest -q"}}
+    event = {"tool_name": "Bash", "session_id": SESSION,
+             "tool_input": {"command": "python3 -m pytest -q"}}
     for junk in ("", "not-a-task\n2026-07-31T00:00:00+00:00\n", "T99\n2026-07-31T00:00:00+00:00\n",
                  "../../etc/passwd\n2026-07-31T00:00:00+00:00\n", "T047\n"):
         with StateFileOverride(junk):
@@ -718,19 +735,22 @@ def test_malformed_state_file_content_is_ignored_not_trusted():
 def test_stale_state_file_is_rejected():
     """The T043 mis-attribution class: a pointer left over from a finished
     task must not silently attribute a new task's work to the old one."""
-    event = {"tool_name": "Bash", "tool_input": {"command": "python3 -m pytest -q"}}
+    event = {"tool_name": "Bash", "session_id": SESSION,
+             "tool_input": {"command": "python3 -m pytest -q"}}
     with StateFileOverride(_fresh_state_content("T047", age_seconds=task_context.ACTIVE_TASK_MAX_AGE_S + 1)):
         assert resolve(event) is None
 
 
 def test_state_file_at_exactly_the_age_boundary_is_still_fresh():
-    event = {"tool_name": "Bash", "tool_input": {"command": "python3 -m pytest -q"}}
+    event = {"tool_name": "Bash", "session_id": SESSION,
+             "tool_input": {"command": "python3 -m pytest -q"}}
     with StateFileOverride(_fresh_state_content("T047", age_seconds=task_context.ACTIVE_TASK_MAX_AGE_S - 1)):
         assert resolve(event) == "T047"
 
 
 def test_state_file_corrupt_timestamp_degrades_to_absent():
-    event = {"tool_name": "Bash", "tool_input": {"command": "python3 -m pytest -q"}}
+    event = {"tool_name": "Bash", "session_id": SESSION,
+             "tool_input": {"command": "python3 -m pytest -q"}}
     with StateFileOverride("T047\nnot-a-timestamp\n"):
         assert resolve(event) is None
 
@@ -749,11 +769,12 @@ def test_end_to_end_bash_test_run_via_state_file_is_traced_and_verifies():
     fed through the real post_tool_trace.py subprocess."""
     sandbox = HookSandbox()
     try:
-        os.makedirs(sandbox.state_dir, exist_ok=True)
-        with open(os.path.join(sandbox.state_dir, "active_task"), "w") as f:
+        os.makedirs(os.path.join(sandbox.state_dir, "active_task.d"), exist_ok=True)
+        with open(os.path.join(sandbox.state_dir, "active_task.d", SESSION), "w") as f:
             f.write(_fresh_state_content("T047"))
 
         event = {
+            "session_id": SESSION,
             "tool_name": "Bash",
             "tool_input": {"command": "python3 -m pytest .claude/hooks/tests/ -q"},
             "tool_response": {"is_error": False},
@@ -806,17 +827,18 @@ def test_state_file_resolves_off_claude_project_dir_not_the_executing_copy():
 
         # The state file exists only under main_checkout_root — where the
         # corrected craft-spawn-prompt instruction actually writes it.
-        main_state_dir = os.path.join(main_checkout_root, ".claude", "hooks", ".state")
+        main_state_dir = os.path.join(main_checkout_root, ".claude", "hooks", ".state",
+                                      "active_task.d")
         os.makedirs(main_state_dir)
-        with open(os.path.join(main_state_dir, "active_task"), "w") as f:
+        with open(os.path.join(main_state_dir, SESSION), "w") as f:
             f.write(_fresh_state_content("T047"))
 
         script = (
             "import sys; sys.path.insert(0, %r)\n"
             "import task_context\n"
-            "print(task_context.resolve_task_id({'tool_name': 'Bash', "
+            "print(task_context.resolve_task_id({'tool_name': 'Bash', 'session_id': %r, "
             "'tool_input': {'command': 'python3 -m pytest -q'}}))\n"
-        ) % copy_lib_dir
+        ) % (copy_lib_dir, SESSION)
 
         env = dict(os.environ)
         env.pop("CLAUDE_ACTIVE_TASK", None)
@@ -877,18 +899,18 @@ def test_malformed_max_age_env_var_does_not_disable_attribution():
     """
     root = _tempfile.mkdtemp(prefix="t047_maxage_")
     try:
-        state_dir = os.path.join(root, ".claude", "hooks", ".state")
+        state_dir = os.path.join(root, ".claude", "hooks", ".state", "active_task.d")
         os.makedirs(state_dir)
-        with open(os.path.join(state_dir, "active_task"), "w") as f:
+        with open(os.path.join(state_dir, SESSION), "w") as f:
             f.write(_fresh_state_content("T047"))
 
         script = (
             "import sys; sys.path.insert(0, %r)\n"
             "import task_context\n"
             "print(task_context.ACTIVE_TASK_MAX_AGE_S)\n"
-            "print(task_context.resolve_task_id({'tool_name': 'Bash', "
+            "print(task_context.resolve_task_id({'tool_name': 'Bash', 'session_id': %r, "
             "'tool_input': {'command': 'python3 -m pytest -q'}}))\n"
-        ) % os.path.join(HOOKS_DIR, "lib")
+        ) % (os.path.join(HOOKS_DIR, "lib"), SESSION)
 
         for bad_value in ("6h", "", "not-a-number", "-1", "0"):
             env = dict(os.environ)
@@ -912,6 +934,257 @@ def test_malformed_max_age_env_var_does_not_disable_attribution():
             )
     finally:
         shutil.rmtree(root, ignore_errors=True)
+
+
+# ---------------------------------------------------------------------------
+# T196 — attribution per caller: spawn binding (slot 2) and the per-session
+# state file (slot 3). The shared `.state/active_task` is no longer read.
+# ---------------------------------------------------------------------------
+
+AGENT = "a54df34ef9d22bed6"
+
+
+class Transcripts:
+    """A throwaway `<projects>/<slug>/` dir laid out as F3 measured it: the main
+    transcript `<session>.jsonl`, and each sub-agent's
+    `<session>/subagents/agent-<agent_id>.jsonl` whose first line is the spawn prompt."""
+
+    def __init__(self):
+        self.dir = _tempfile.mkdtemp(prefix="t196_transcripts_")
+
+    def path(self, session=SESSION):
+        return os.path.join(self.dir, f"{session}.jsonl")
+
+    def agent_file(self, session=SESSION, agent=AGENT):
+        return os.path.join(self.dir, session, "subagents", f"agent-{agent}.jsonl")
+
+    def write_raw(self, first_line, session=SESSION, agent=AGENT):
+        path = self.agent_file(session, agent)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as f:
+            f.write(first_line)
+
+    def write_prompt(self, prompt, session=SESSION, agent=AGENT):
+        record = {"type": "user", "message": {"role": "user", "content": prompt}}
+        self.write_raw(json.dumps(record) + "\n" + json.dumps({"type": "assistant"}) + "\n",
+                       session, agent)
+
+    def event(self, session=SESSION, agent=AGENT, tool="Bash"):
+        event = {"tool_name": tool, "session_id": session, "transcript_path": self.path(session),
+                 "tool_input": {"command": "python3 -m pytest -q"}}
+        if agent is not None:
+            event["agent_id"] = agent
+        return event
+
+    def cleanup(self):
+        shutil.rmtree(self.dir, ignore_errors=True)
+
+
+def test_t196_ac1_spawn_binding_beats_the_same_sessions_state_file():
+    for prompt in ("Task ID: T190\nRun the suite.",
+                   "Guide: `tasks/TASK_GUIDE_T190.md` (read it first)"):
+        tr = Transcripts()
+        try:
+            tr.write_prompt(prompt)
+            with StateFileOverride(_fresh_state_content("T188")):
+                assert resolve(tr.event()) == "T190", prompt
+                # The main session (no agent_id) still gets its own file.
+                assert resolve(tr.event(agent=None)) == "T188"
+        finally:
+            tr.cleanup()
+
+
+def test_t196_binding_declared_task_id_beats_an_earlier_guide_path():
+    """Stage 4 P2: a spawn prompt that names another task's guide *before* its own
+    `Task ID:` line binds to the declared task, not the first guide path."""
+    tr = Transcripts()
+    try:
+        tr.write_prompt("Context: also read tasks/TASK_GUIDE_T175.md for round 1.\n"
+                        "Task ID: T177\nGuide: tasks/TASK_GUIDE_T177.md")
+        with StateFileOverride():
+            assert resolve(tr.event()) == "T177"
+            cache = os.path.join(task_context.AGENT_TASK_DIR, SESSION, AGENT)
+            with open(cache) as f:
+                assert f.read().strip() == "T177"
+    finally:
+        tr.cleanup()
+
+
+def test_t196_binding_with_only_a_guide_path_binds_to_that_guide():
+    tr = Transcripts()
+    try:
+        tr.write_prompt("Your guide is `tasks/TASK_GUIDE_T175.md`. Read it first.")
+        with StateFileOverride(_fresh_state_content("T188")):
+            assert resolve(tr.event()) == "T175"
+    finally:
+        tr.cleanup()
+
+
+def test_t196_ac2_binding_is_cached_and_the_cache_is_read_not_the_transcript():
+    tr = Transcripts()
+    try:
+        tr.write_prompt("Task ID: T190")
+        with StateFileOverride():
+            assert resolve(tr.event()) == "T190"
+            cache = os.path.join(task_context.AGENT_TASK_DIR, SESSION, AGENT)
+            with open(cache) as f:
+                assert f.read().strip() == "T190"
+            os.remove(tr.agent_file())
+            assert resolve(tr.event()) == "T190"
+    finally:
+        tr.cleanup()
+
+
+def test_t196_ac2_unwritable_cache_still_resolves_from_the_transcript():
+    tr = Transcripts()
+    try:
+        tr.write_prompt("Task ID: T190")
+        with StateFileOverride() as state:
+            blocker = os.path.join(state.dir, "not_a_dir")
+            open(blocker, "w").close()
+            task_context.AGENT_TASK_DIR = os.path.join(blocker, "agent_task")
+            assert resolve(tr.event()) == "T190"
+    finally:
+        tr.cleanup()
+
+
+def test_t196_ac3_two_sessions_each_resolve_to_their_own_file():
+    a, b = "sess-a", "sess-b"
+    ev_a = {"tool_name": "Bash", "session_id": a, "tool_input": {"command": "ls"}}
+    ev_b = {"tool_name": "Bash", "session_id": b, "tool_input": {"command": "ls"}}
+    with StateFileOverride() as state:
+        state.write(a, _fresh_state_content("T188"))
+        state.write(b, _fresh_state_content("T190"))
+        assert (resolve(ev_a), resolve(ev_b)) == ("T188", "T190")
+        state.write(b, _fresh_state_content("T199"))     # overwrite b
+        assert (resolve(ev_a), resolve(ev_b)) == ("T188", "T199")
+        os.remove(os.path.join(task_context.ACTIVE_TASK_DIR, b))  # delete b
+        assert (resolve(ev_a), resolve(ev_b)) == ("T188", None)
+        state.write(a, "garbage\n")                      # corrupt a
+        state.write(b, _fresh_state_content("T190"))
+        assert (resolve(ev_a), resolve(ev_b)) == (None, "T190")
+
+
+def test_t196_ac4_the_old_shared_file_is_ignored():
+    with StateFileOverride() as state:
+        shared = os.path.join(state.dir, "active_task")
+        with open(shared, "w") as f:
+            f.write(_fresh_state_content("T188"))
+        event = {"tool_name": "Bash", "session_id": SESSION, "tool_input": {"command": "ls"}}
+        assert resolve(event) is None
+    assert "ACTIVE_TASK_FILE" not in vars(task_context)
+
+
+def test_t196_ac4_old_shared_file_ignored_by_the_real_hook_subprocess():
+    """Same as above, through the real trace hook reading a real `.state/`."""
+    sandbox = HookSandbox()
+    try:
+        os.makedirs(sandbox.state_dir)
+        with open(os.path.join(sandbox.state_dir, "active_task"), "w") as f:
+            f.write(_fresh_state_content("T188"))
+        event = {"session_id": SESSION, "tool_name": "Bash",
+                 "tool_input": {"command": "python3 -m pytest -q"},
+                 "tool_response": {"is_error": False}}
+        result = sandbox.run_hook("post_tool_trace.py", event,
+                                  {"CLAUDE_PROJECT_DIR": sandbox.root})
+        assert result.returncode == 0, result.stderr
+        assert sandbox.trace_files() == ["_untagged.jsonl"], sandbox.trace_files()
+    finally:
+        sandbox.cleanup()
+
+
+UNSAFE_KEYS = ("../x", "", "a" * 200, "a/b", ".", "..", "x\n", "sess id", None, 7, ["s"])
+
+
+def test_t196_ac5_unsafe_session_ids_never_reach_a_path():
+    with StateFileOverride() as state:
+        # A file an unsafe ID would reach if it were joined into a path.
+        escape = os.path.join(state.dir, "x")
+        with open(escape, "w") as f:
+            f.write(_fresh_state_content("T188"))
+        for bad in UNSAFE_KEYS:
+            event = {"tool_name": "Bash", "session_id": bad, "tool_input": {"command": "ls"}}
+            assert resolve(event) is None, repr(bad)
+        assert task_context._safe_key("a" * 128) == "a" * 128
+        assert task_context._safe_key("a" * 129) is None
+
+
+def test_t196_ac5_unsafe_agent_ids_skip_the_binding_and_write_no_cache():
+    tr = Transcripts()
+    try:
+        tr.write_prompt("Task ID: T190")
+        with StateFileOverride(_fresh_state_content("T188")):
+            for bad in UNSAFE_KEYS:
+                event = tr.event()
+                event["agent_id"] = bad
+                assert resolve(event) == "T188", repr(bad)    # fell through to slot 3
+            for bad in UNSAFE_KEYS:
+                event = tr.event(session=bad)
+                assert resolve(event) is None, repr(bad)      # both slots skipped
+            assert not os.path.exists(task_context.AGENT_TASK_DIR)
+    finally:
+        tr.cleanup()
+
+
+def test_t196_ac6_every_unusable_transcript_falls_through_to_the_session_file():
+    cases = {
+        "missing": None,
+        "empty": "",
+        "not a user message": json.dumps({"type": "assistant", "message": {
+            "role": "assistant", "content": "Task ID: T190"}}) + "\n",
+        "role not user": json.dumps({"type": "user", "message": {
+            "role": "assistant", "content": "Task ID: T190"}}) + "\n",
+        "content not a string": json.dumps({"type": "user", "message": {
+            "role": "user", "content": [{"type": "text", "text": "Task ID: T190"}]}}) + "\n",
+        "non-JSON": "Task ID: T190 {not json\n",
+        "JSON not an object": json.dumps(["Task ID: T190"]) + "\n",
+        "prose mention only": json.dumps({"type": "user", "message": {
+            "role": "user", "content": "memory slice:\n- T190 merged: the gate\n"}}) + "\n",
+        "second line names it": "{}\n" + json.dumps({"type": "user", "message": {
+            "role": "user", "content": "Task ID: T190"}}) + "\n",
+    }
+    for name, first_line in cases.items():
+        tr = Transcripts()
+        try:
+            if first_line is not None:
+                tr.write_raw(first_line)
+            with StateFileOverride(_fresh_state_content("T188")):
+                assert resolve(tr.event()) == "T188", name
+                assert not os.path.exists(task_context.AGENT_TASK_DIR), name
+        finally:
+            tr.cleanup()
+
+
+def test_t196_ac6_transcript_path_absent_or_relative_skips_the_binding():
+    tr = Transcripts()
+    try:
+        tr.write_prompt("Task ID: T190")
+        with StateFileOverride(_fresh_state_content("T188")):
+            for transcript_path in (None, "", 7, os.path.relpath(tr.path())):
+                event = tr.event()
+                event["transcript_path"] = transcript_path
+                assert resolve(event) == "T188", repr(transcript_path)
+    finally:
+        tr.cleanup()
+
+
+def test_t196_ac6_oversized_first_line_is_not_read_past_the_cap():
+    tr = Transcripts()
+    try:
+        prompt = "Task ID: T190\n" + "x" * (task_context.TRANSCRIPT_FIRST_LINE_MAX_BYTES + 10)
+        tr.write_prompt(prompt)
+        with StateFileOverride(_fresh_state_content("T188")):
+            assert resolve(tr.event()) == "T188"
+    finally:
+        tr.cleanup()
+
+
+def test_t196_spawn_binding_never_raises_on_odd_events():
+    with StateFileOverride():
+        for event in ({"agent_id": AGENT}, {"agent_id": AGENT, "session_id": SESSION},
+                      {"agent_id": AGENT, "session_id": SESSION, "transcript_path": "/nonexistent/x"},
+                      {"agent_id": AGENT, "session_id": SESSION, "transcript_path": "/"}):
+            assert resolve(event) is None, event
 
 
 if __name__ == "__main__":
