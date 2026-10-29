@@ -266,3 +266,117 @@ section { margin: var(--s-8) 0; scroll-margin-top: calc(var(--header-h) + var(--
   .family-nav a { min-height: 44px; }
   .brand { min-height: 44px; }
 }
+
+/* ---- flow visuals (T207) ----------------------------------------------------
+   A diagram leads each heavy section: HTML lists drawn with the tokens above.
+   Arrows are CSS content with an empty alt text, so a screen reader reads the list order only.
+   Hooks differ by shape (solid, dashed, dotted edge) and by a text label, never by colour alone.
+   Mint marks an outcome or the Done node. Role colours mark role nodes. No motion.
+   Every flow stacks at 768px and below; the long ones stack at 1100px. */
+.flow-visual { display: flex; flex-direction: column; gap: var(--s-5); margin: var(--s-5) 0; }
+.flow-visual h3 { margin: var(--s-2) 0 0; }
+.flow-visual ol, .flow-visual ul { list-style: none; margin: 0; padding: 0; max-width: none; }
+.flow-visual p { margin: 0; max-width: none; }
+.flow-visual code { font-size: 0.9em; }
+details.more { margin: var(--s-4) 0 0; }
+
+.flow-node { position: relative; display: flex; flex-direction: column; gap: var(--s-1); min-width: 0;
+  padding: var(--s-3) var(--s-4); background: var(--bg-sunken); border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm); overflow-wrap: anywhere; }
+.flow-node.is-plain { background: transparent; border-style: dashed; }
+.flow-node.is-outcome { border-color: var(--accent-line); }
+.flow-node.is-outcome > .flow-title { color: var(--accent); }
+.flow-title { font-size: 15px; font-weight: 600; line-height: 1.4; color: var(--text-strong); }
+.flow-meta { font: 400 12.5px/1.5 var(--font-mono); color: var(--text-muted); }
+.flow-key { font: 400 12px/1.4 var(--font-mono); color: var(--text-muted); }
+.flow-edge { font: 500 12px/1.4 var(--font-mono); color: var(--text-muted); }
+.flow-caption { font-size: 14px; color: var(--text-2); }
+
+/* A flow is an ordered list; the arrow between two steps is the ::after of the first. */
+.flow { display: flex; gap: 28px; }
+.flow > li { position: relative; min-width: 0; }
+.flow-row > li { flex: 1 1 0; }
+.flow-row > li.is-plain { flex: 0 1 6rem; align-self: center; text-align: center; }
+.flow-row > li:not(:last-child)::after { content: "\2192" / ""; position: absolute; left: 100%; top: 50%;
+  width: 28px; margin-top: -10px; text-align: center; font-size: 18px; line-height: 20px; color: var(--text-muted); }
+.flow-col { flex-direction: column; }
+.flow-col > li { width: min(100%, 36rem); margin: 0 auto; }
+.flow-col > li.flow-split { width: 100%; }
+.flow-col > li:not(:last-child)::after { content: "\2193" / ""; position: absolute; top: 100%; left: 0; right: 0;
+  height: 28px; text-align: center; font-size: 18px; line-height: 28px; color: var(--text-muted); }
+
+/* Decision node (tracks): a diamond marker, the question, the triggers. */
+.flow-head { display: flex; align-items: center; gap: var(--s-3); }
+.flow-diamond { flex: none; width: 10px; height: 10px; border: 1.5px solid var(--text-2); transform: rotate(45deg); }
+.flow-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-1) var(--s-5); margin-top: var(--s-2); font-size: 14px; }
+.flow-list > li::before { content: "\2013\00a0" / ""; color: var(--text-muted); }
+.flow-branches { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-4); }
+.flow-branches > li { display: flex; flex-direction: column; gap: var(--s-1); min-width: 0; }
+
+/* Lane: what stays with the user. */
+.flow-lane { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-4);
+  padding: var(--s-3) var(--s-4); border: 1px dashed var(--line-strong); border-radius: var(--r-sm); }
+.flow-lane-label { font: 500 12.5px/1.4 var(--font-mono); color: var(--text-strong); }
+.flow-chips { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.flow-badge { padding: var(--s-3) var(--s-4); border: 1px solid var(--line-strong); border-radius: var(--r-sm); color: var(--text-2); font-size: 14px; }
+.flow-badge strong { color: var(--text-strong); }
+
+/* Update map: one row per file state, the state, an arrow, what Update does. */
+.flow-map { display: flex; flex-direction: column; gap: var(--s-3); }
+.flow-map > li { display: grid; grid-template-columns: minmax(0, 1fr) 40px minmax(0, 1.7fr); align-items: stretch; }
+.flow-arrow { display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--text-muted); }
+.flow-arrow::before { content: "\2192" / ""; }
+
+/* Hook lifecycle: phases hold the hooks; the edge shape tells blocking from advisory. */
+.flow-row > li.is-phase { flex: 1 1 0; }
+.flow-items { display: flex; flex-direction: column; gap: var(--s-2); margin-top: var(--s-2); font-size: 14px; }
+.flow-items > li { padding-left: var(--s-3); border-left: 1px solid var(--line-strong); }
+.flow-items > li.is-block { border-left: 3px solid var(--text-strong); }
+.flow-items > li.is-advise { border-left: 2px dashed var(--text-muted); }
+.flow-items > li.is-inert { border-left: 2px dotted var(--text-muted); }
+.flow-visual .tag-inert { color: var(--text-muted); }
+
+/* Hub (agent roles): the Supervisor in the middle, the four roles around it. */
+.flow-roles { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1fr);
+  grid-template-areas: ". n ." "w hub e" ". s ."; gap: 32px; }
+.flow-roles > li { position: relative; }
+.flow-roles > li[data-role="hub"] { grid-area: hub; text-align: center; border-color: var(--line-strong); }
+.flow-roles > li[data-role="backend"] { grid-area: n; }
+.flow-roles > li[data-role="infra"] { grid-area: w; }
+.flow-roles > li[data-role="frontend"] { grid-area: e; }
+.flow-roles > li[data-role="qa"] { grid-area: s; }
+.flow-roles > li[data-role]:not([data-role="hub"])::after { position: absolute; display: block; text-align: center;
+  font-size: 18px; color: var(--text-muted); }
+.flow-roles > li[data-role="backend"]::after { content: "\2191" / ""; top: 100%; left: 0; right: 0; height: 32px; line-height: 32px; }
+.flow-roles > li[data-role="qa"]::after { content: "\2193" / ""; bottom: 100%; left: 0; right: 0; height: 32px; line-height: 32px; }
+.flow-roles > li[data-role="infra"]::after { content: "\2190" / ""; left: 100%; top: 50%; width: 32px; margin-top: -10px; line-height: 20px; }
+.flow-roles > li[data-role="frontend"]::after { content: "\2192" / ""; right: 100%; top: 50%; width: 32px; margin-top: -10px; line-height: 20px; }
+.flow-roles .dot { margin-right: var(--s-2); vertical-align: baseline; }
+.flow-roles [data-role="backend"] .dot { background: var(--role-backend); }
+.flow-roles [data-role="infra"] .dot { background: var(--role-infra); }
+.flow-roles [data-role="frontend"] .dot { background: var(--role-frontend); }
+.flow-roles [data-role="qa"] .dot { background: var(--role-qa); }
+
+/* The six-step and five-part flows stack at 1100px: four columns of a narrow column would not read. */
+@media (max-width: 1100px) {
+  .flow-row.is-long { flex-direction: column; }
+  .flow-row.is-long > li:not(:last-child)::after { content: "\2193" / ""; left: 0; right: 0; top: 100%; width: auto; margin: 0; height: 28px; line-height: 28px; }
+  .flow-row.is-long > li.is-plain { flex: 0 0 auto; align-self: stretch; }
+}
+
+@media (max-width: 768px) {
+  .flow-row { flex-direction: column; }
+  .flow-row > li:not(:last-child)::after { content: "\2193" / ""; left: 0; right: 0; top: 100%; width: auto; margin: 0; height: 28px; line-height: 28px; }
+  .flow-row > li.is-plain { flex: 0 0 auto; align-self: stretch; }
+  .flow-branches { grid-template-columns: minmax(0, 1fr); }
+  .flow-list { grid-template-columns: minmax(0, 1fr); }
+  .flow-map > li { grid-template-columns: minmax(0, 1fr); }
+  .flow-arrow { height: 28px; }
+  .flow-arrow::before { content: "\2193" / ""; }
+  .flow-lane { flex-direction: column; align-items: flex-start; }
+  .flow-roles { grid-template-columns: minmax(0, 1fr); grid-template-areas: none; }
+  .flow-roles > li[data-role] { grid-area: auto; }
+  .flow-roles > li[data-role]:not([data-role="hub"])::after { content: none; }
+  .flow-roles > li[data-role="hub"]::after { content: "\2193" / ""; position: absolute; top: 100%; left: 0; right: 0;
+    height: 32px; text-align: center; font-size: 18px; line-height: 32px; color: var(--text-muted); }
+}
