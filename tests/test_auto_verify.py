@@ -529,6 +529,59 @@ def test_t208_ac3_still_blocked(case):
     assert verdict == "blocked" and reason, (case, verdict)
 
 
+# ── T209 — a verdict line that lists choices is not a verdict ────────────────────────────
+BLANK_TEMPLATE = "**Verdict:** PASS | FAIL | BLOCKED | SKIP"
+T209_CHOICES = {
+    "blank-template": BLANK_TEMPLATE,
+    "pass-or-fail-pipe": "**Verdict:** PASS | FAIL",
+    "bold-sentence-slash": "**Verdict: PASS / FAIL**",
+    "pass-or-fail-word": "**Verdict:** PASS or FAIL",
+    "bold-sentence-pipe": "**Verdict: PASS | FAIL**",
+    "comma-list": "**Verdict:** PASS, FAIL",
+    "no-space-pipe": "**Verdict:** PASS|FAIL",
+    "pipe-then-other-word": "**Verdict:** PASS | maybe",
+    "fail-first": "**Verdict:** FAIL | PASS",
+}
+
+
+@pytest.mark.parametrize("case", sorted(T209_CHOICES))
+def test_t209_ac1_a_line_that_lists_choices_is_blocked(case):
+    verdict, _, reason = _parse(_verdict_output(T209_CHOICES[case]))
+    assert (verdict, reason) == ("blocked", "no single verdict line"), (case, verdict)
+
+
+@pytest.mark.parametrize("word, expected", [("PASS", "pass"), ("FAIL", "fail")])
+def test_t209_ac2_the_blank_template_line_beside_a_real_verdict_is_ignored(word, expected):
+    both = f"{BLANK_TEMPLATE}\n\n**Verdict:** {word}"
+    assert _parse(_verdict_output(both))[0] == expected
+    assert _parse(_verdict_output(f"**Verdict:** {word}\n\n{BLANK_TEMPLATE}"))[0] == expected
+
+
+@pytest.mark.parametrize("line", [
+    "**Verdict: PASS. All six hold, so nothing is left to FAIL or BLOCKED.**",
+    "**Verdict: PASS, all six hold.**",
+    "**Verdict:** PASS, and no FAIL was seen",
+])
+def test_t209_ac3_a_verdict_word_later_in_the_sentence_is_not_a_choice(line):
+    assert _parse(_verdict_output(line))[0] == "pass"
+
+
+def test_t209_sc1_the_blank_template_is_recorded_blocked_by_the_hook(tmp_path):
+    project, checkout = _project(tmp_path)
+    stub_dir, _ = _stub(tmp_path, output=_verdict_output(BLANK_TEMPLATE))
+    _stop(project, _env(tmp_path, project, stub_dir))
+    verdict, notes = _wait_row(checkout)
+    assert verdict == "☐ blocked" and "no single verdict line" in notes and "pass" not in notes.lower(), notes
+
+
+def test_t209_ac4_the_doctrine_names_the_shapes_and_fails_closed():
+    text = TRACKS_MD.read_text(encoding="utf-8")
+    start = text.index("\n### Auto verify (Stop hook)\n")
+    section = text[start:text.index("\n### ", start + 5)]
+    assert "**Verdict: PASS**" in section and "**Verdict**: PASS" in section
+    assert re.search(r"lists? choices[^.]*not a verdict", section, re.I), section
+
+
 def test_ac4_timeout_is_blocked(tmp_path):
     project, checkout = _project(tmp_path)
     stub_dir, _ = _stub(tmp_path, sleep=30)

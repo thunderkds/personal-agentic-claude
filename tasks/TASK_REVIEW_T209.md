@@ -47,16 +47,16 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_auto_verify.py` (T209 block: `test_t209_ac1_a_line_that_lists_choices_is_blocked` x9, `test_t209_ac2_...` x2, `test_t209_ac3_...` x3, `test_t209_sc1_...`, `test_t209_ac4_...`). Red before the change: `12 failed, 2 passed` for `-k t209` on the unchanged hook. AC 5 mutation (the choice filter `if not CHOICES.match(rest)` replaced by `if True`): `11 failed, 5 passed` for `-k t209`, AC 1 cases all RED; restored, green. |
+| Verification command run | ☑ pass | `python3 -m pytest tests/test_auto_verify.py -q` -> `242 passed in 91.74s`; `python3 -m pytest .claude/hooks/tests -q` -> `1158 passed, 25 subtests passed in 23.29s`; `python3 -m pytest tests -q` -> `1198 passed in 108.10s` |
+| Negative cases hold | ☑ pass | the 12 T208 fail-closed cases (`test_t208_ac3_still_blocked`) still blocked; the blank template alone is `blocked (no single verdict line)`; a verdict word later in a sentence (`PASS. ... FAIL or BLOCKED`) or a clause comma (`PASS, all six hold`) stays a pass (`test_t209_ac3_...`) |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| Full smoke suite still green (no regression) | ☑ pass | `tests` 1198 passed; `.claude/hooks/tests` 1158 passed, 25 subtests passed (output above) |
 | **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | no UI component: hook-only change |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ N/A | no UI component: hook-only change |
+| **UI: Responsiveness at target viewports** | ☐ N/A | no UI component: hook-only change |
 
 ---
 
@@ -80,9 +80,20 @@ verdict: pass
 verify row: ☑ pass | auto-run by hook, session bb6500c2-6ee9-4ce9-bc0e-ea2f246f2fd4, commit cea035562a03785c2356e1c9112338f9809287f2, log .claude/verify-runs/T951-cea035562a03.log — pass
 ```
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**: same script (`--start` on a throwaway project, stub `claude`, same blank-template report), run on the changed working-tree hook, 2026-10-29T20:10:24+07:00:
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```
+date: 2026-10-29T20:10:24+07:00
+hook sha1 source: 1a282329df95b706ef72bc0676341f3c82765757
+$ python3 .claude/hooks/stop_auto_verify.py --start T951
+T951: auto verify started for commit 837e65c32570 — log .claude/verify-runs/T951-837e65c32570.log exit 0
+--- log T951-837e65c32570.log
+$ claude -p '/verify T951' --max-budget-usd 2 --output-format json
+verdict: blocked (no single verdict line)
+verify row: ☐ blocked | auto-run by hook, session bb6500c2-6ee9-4ce9-bc0e-ea2f246f2fd4, commit 837e65c3257019d15bf72f844aeb39fa8656aa43, log .claude/verify-runs/T951-837e65c32570.log — blocked (no single verdict line)
+```
+
+**DELTA**: A session that copies the report template's `**Verdict:** PASS | FAIL | BLOCKED | SKIP` line without choosing is now recorded as `blocked`, not as a pass.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]

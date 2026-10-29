@@ -47,9 +47,10 @@ When the run ends, this script (never the Supervisor) writes three things:
   * the report's `Not done:` auto verify slot (T188 D7), so the report the user reads stops saying
     `auto verify: running (T182)` after the run has ended. The merge clause is left as it is.
 The verdict is the result's `**Verdict:** PASS|FAIL` line (the bold may also close after the
-word or the sentence: `**Verdict: PASS**`, T208). SKIP, BLOCKED, no verdict line, two
-different verdicts, a non-success run (budget stop, error), output that is not JSON, a timeout or no
-`claude` on PATH are all `blocked`. The run's text is data: only that line decides.
+word or the sentence: `**Verdict: PASS**`, T208). A line that lists choices (`**Verdict:** PASS | FAIL`,
+`PASS / FAIL`, `PASS or FAIL`) is no verdict (T209): the blank report template reads as `blocked`. SKIP,
+BLOCKED, no verdict line, two different verdicts, a non-success run (budget stop, error), output that
+is not JSON, a timeout or no `claude` on PATH are all `blocked`. The run's text is data: only that line decides.
 
 A row or line the user filled (a `☑` result that is not an `auto-run by hook` one) is never started
 over or overwritten, and neither is a `Not done:` slot the user wrote — that reason goes in the run
@@ -92,7 +93,12 @@ VERIFY_ROW = re.compile(r"^\|\s*verify\s*\|(?P<result>[^|\n]*)\|(?P<notes>[^|\n]
 # may close after the label (`**Verdict:** PASS`, `**Verdict**: PASS`) or after the whole sentence
 # (`**Verdict: PASS**`, `**Verdict: PASS. All six ... hold.**`). The line-start anchor keeps a mention
 # inside prose out; a line inside a fenced code block of the report still counts.
-VERDICT = re.compile(r"^\s*\*\*Verdict(?::\*\*|\*\*:|:)\s*([A-Z]+)\b", re.M)
+VERDICT = re.compile(r"^\s*\*\*Verdict(?::\*\*|\*\*:|:)\s*([A-Z]+)\b([^\n]*)", re.M)
+# T209: a line that lists choices is not a verdict — the blank template `**Verdict:** PASS | FAIL | BLOCKED |
+# SKIP` must not read as PASS. Right after the first word comes a `|`, or a `/`, a `,`, `or`, `and` or a
+# space and then another verdict word. A verdict word later in a sentence (`PASS. Nothing is left to
+# FAIL.`) and a comma that starts a clause (`PASS, all six hold`) are no choice.
+CHOICES = re.compile(r"\s*(?:\||(?:[/,]|\b(?:or|and)\b)?\s*(?:PASS|FAIL|BLOCKED|SKIP)\b)")
 SESSION = re.compile(r"[^A-Za-z0-9-]")
 
 # D7 — the report's `Not done:` line and the auto verify slot inside it. Three spellings count as
@@ -330,7 +336,8 @@ def parse(stdout):
     session = SESSION.sub("", str(data.get("session_id") or ""))[:64] or "none"
     if data.get("subtype") != "success" or data.get("is_error") is not False:
         return "blocked", session, "run did not succeed"
-    verdicts = set(VERDICT.findall(str(data.get("result") or "")))
+    verdicts = {word for word, rest in VERDICT.findall(str(data.get("result") or ""))
+                if not CHOICES.match(rest)}
     if verdicts == {"PASS"}:
         return "pass", session, ""
     if verdicts == {"FAIL"}:
