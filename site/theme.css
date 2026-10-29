@@ -71,7 +71,7 @@
 
 /* ---- base -------------------------------------------------------------- */
 * { box-sizing: border-box; }
-html { background: var(--bg); scroll-behavior: smooth; }
+html { background: var(--bg); scroll-behavior: smooth; scrollbar-color: var(--line-strong) transparent; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 body {
   margin: 0; background: var(--bg); color: var(--text);
@@ -206,8 +206,12 @@ tbody tr:hover td { background: var(--bg-hover); }
 .sidebar {
   position: sticky; top: var(--header-h); align-self: start;
   height: calc(100vh - var(--header-h)); overflow-y: auto;
+  scrollbar-color: var(--line-strong) transparent; scrollbar-width: thin;
   padding: var(--s-7) var(--s-5); border-right: 1px solid var(--line-subtle);
 }
+.sidebar::-webkit-scrollbar { width: 8px; }
+.sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: var(--r-xs); }
 .nav-group-title { font: 400 11.5px/1.4 var(--font-mono); color: var(--text-muted); margin: 0; padding: 0 12px 8px; }
 .sidebar ul { list-style: none; margin: 0 0 28px; padding: 0; display: flex; flex-direction: column; gap: 2px; }
 .sidebar ul:last-child { margin-bottom: 0; }
@@ -260,4 +264,5 @@ section { margin: var(--s-8) 0; scroll-margin-top: calc(var(--header-h) + var(--
   .nav-toggle { min-height: 44px; }
   .sidebar a { min-height: 44px; display: flex; align-items: center; }
   .family-nav a { min-height: 44px; }
+  .brand { min-height: 44px; }
 }

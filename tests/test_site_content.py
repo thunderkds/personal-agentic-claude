@@ -1844,7 +1844,7 @@ def test_touch_targets_reach_44px_below_720px():
         depth += {"{": 1, "}": -1}.get(css[i], 0)
         i += 1
     phone = css[m.end():i - 1]
-    for selector in (".btn", ".sidebar a", ".nav-toggle", ".family-nav a"):
+    for selector in (".btn", ".sidebar a", ".nav-toggle", ".family-nav a", ".brand"):
         assert any("min-height: 44px" in b for b in _rule_bodies(phone, selector)), f"{selector} < 44px on phones"
 
 
@@ -1940,3 +1940,12 @@ def test_page_container_is_centered_and_capped_by_the_page_max_token():
     assert "var(--bg)" in header and "border-bottom" in header and "max-width" not in header, \
         "the header background and border span the screen; only its content is capped"
     assert re.search(r'<header class="site-header">\s*<div class="site-header-inner">', _raw_page_text())
+
+
+def test_scrolling_sidebar_and_drawer_use_token_scrollbars():
+    """/verify: the browser-default bright scrollbar showed on the sidebar and the drawer."""
+    css = _theme_text()
+    body = " ".join(_rule_bodies(css, ".sidebar"))
+    assert "scrollbar-color: var(--line-strong) transparent" in body and "scrollbar-width: thin" in body
+    webkit = " ".join(_rule_bodies(css, ".sidebar::-webkit-scrollbar-thumb"))
+    assert "var(--line-strong)" in webkit
