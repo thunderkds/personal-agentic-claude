@@ -2,7 +2,7 @@
 """
 PreToolUse hook — fires before every Bash tool call.
 
-Blocks git push/merge/rebase commands if:
+Blocks git push/merge/rebase/pull commands if:
   1. Any task in PROJECT_KANBAN.md is still In Progress or Ready for Review
   2. No Stage 5 verify evidence is found in any pending task guide
 
@@ -40,14 +40,17 @@ TRACE_DIR = os.path.join(ROOT, "memory", "event-trace")
 # unavailable resolver is a block — rather than two.
 sys.path.insert(0, os.path.join(HOOKS_DIR, "lib"))
 try:
-    from guide_sections import read_guide_section  # noqa: E402
+    from guide_sections import (  # noqa: E402
+        GUIDE_PREFIX, REVIEW_PREFIX, _candidate_paths, is_pointer_only, normalize_task_id,
+        read_guide_section, slice_section)
     from shell_data import strip_heredoc_bodies, strip_quoted_spans  # noqa: E402
     from board.config import load_config, task_id_pattern  # noqa: E402
     from board.moments import (  # noqa: E402
         board_mode, my_blocking_tasks, my_review_tasks, pull_cache)
     from verify_record import (  # noqa: E402
-        AUTO_CHECKED_TAG, AUTO_ROW_TAG, MINIMAL_LOG_REL, auto_row_confirmed,
-        minimal_verify_line)
+        AUTO_CHECKED_TAG, AUTO_ROW_TAG, MINIMAL_LOG_REL, ROW_COMMIT, ROW_SESSION, SHA_PATTERN,
+        auto_row_confirmed, minimal_verify_line, read_record, record_verify_line, same_code)
+    from auto_mode import record_block  # noqa: E402
 except Exception as exc:  # pragma: no cover - exercised via subprocess test
     print(json.dumps({
         "decision": "block",
@@ -62,10 +65,14 @@ except Exception as exc:  # pragma: no cover - exercised via subprocess test
     }))
     sys.exit(0)
 
+# T210: `git pull` fetches and merges, so it is a merge (D1), in every form (`--ff-only` and
+# `--rebase` both move the branch). `git merge-base` is a read-only query and is the only
+# `merge-*` subcommand exempted (D3): `merge-file` and `merge-tree` stay blocked.
 BLOCKED_PATTERNS = [
     r"\bgit\s+push\b",
-    r"\bgit\s+merge\b",
+    r"\bgit\s+merge\b(?!-base\b)",
     r"\bgit\s+rebase\b",
+    r"\bgit\s+pull\b",
 ]
 
 # --- Evidence matching: "invoked" vs "merely mentioned" (T044 defect C) ------
@@ -119,12 +126,19 @@ COMMAND_SEPARATOR_PATTERN = re.compile(r"[;&|\n]+|\$\(|`")
 # `CLAUDE_ACTIVE_TASK=T044 python3 -m pytest …` — the assignment is not the command.
 ENV_ASSIGNMENT_PREFIX = re.compile(r"^(?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)+")
 
-# Wrappers that pass through to the real command.
+# Wrappers that pass through to the real command. T210 (D2): `timeout [options] <duration>`,
+# where `-k`/`-s` take a separate argument (`timeout -k 5 60s pytest`). The duration is
+# required, so `timeout pytest` stays a mention.
 BENIGN_COMMAND_PREFIX = re.compile(
     r"^(?:(?:sudo|env|time|nohup|npx|uv\s+run|poetry\s+run|pipenv\s+run|"
-    r"pnpm\s+exec|yarn\s+exec)\s+)+",
+    r"pnpm\s+exec|yarn\s+exec|"
+    r"timeout(?:\s+(?:-[ks]\s+\S+|-[-\w=]+))*\s+\d+(?:\.\d+)?[smhd]?)\s+)+",
     re.IGNORECASE,
 )
+
+# A subshell's opening paren: `(timeout 300 python3 -m pytest)` runs the runner (T210 AC 3).
+# One paren only — `((` opens an arithmetic expression, not a command.
+SUBSHELL_OPEN = re.compile(r"^\((?!\()\s*")
 
 # Anchored at the head of a command — `match`, never `search`.
 TEST_INVOCATION_PATTERN = re.compile(
@@ -144,9 +158,10 @@ TEST_INVOCATION_PATTERN = re.compile(
 
 
 def strip_command_prefixes(candidate):
-    """Peel leading env assignments and benign wrappers until nothing changes."""
+    """Peel a subshell paren, leading env assignments and benign wrappers until nothing changes."""
     while True:
-        shorter = BENIGN_COMMAND_PREFIX.sub("", ENV_ASSIGNMENT_PREFIX.sub("", candidate))
+        shorter = BENIGN_COMMAND_PREFIX.sub("", ENV_ASSIGNMENT_PREFIX.sub(
+            "", SUBSHELL_OPEN.sub("", candidate)))
         if shorter == candidate:
             return candidate
         candidate = shorter
@@ -352,37 +367,114 @@ def has_filled_verify_row(task_id, tasks_dir=None):
     way this change could make the gate weaker.
     """
     for directory in evidence_search_dirs(tasks_dir):
-        section = read_guide_section(task_id, "Evidence", directory)
-        if not section:
-            continue
-        for match in VERIFY_ROW_PATTERN.finditer(section):
-            if UNCHECKED_PASS_PATTERN.search(match.group("result")):
-                continue
-            notes = match.group("notes").lower()
-            # T182: the Supervisor's own real-run check (T180) is never `/verify`, and an
-            # `auto-run by hook` row counts only with its run record (D5) for this task and the
-            # head commit of the checkout this row was read from.
-            if AUTO_CHECKED_TAG in notes:
-                continue
-            if AUTO_ROW_TAG in notes and not auto_row_confirmed(
-                    ROOT, os.path.dirname(os.path.abspath(directory)), task_id,
-                    match.group("notes")):
-                continue
+        checkout = os.path.dirname(os.path.abspath(directory))
+        if verify_row_passes(
+                read_guide_section(task_id, "Evidence", directory),
+                lambda notes, rel: auto_row_confirmed(ROOT, checkout, task_id, notes, rel)):
             return True
     for directory in evidence_search_dirs(tasks_dir):
-        line = minimal_verify_line(task_id, directory)
-        if not line:
-            continue
-        result, notes = line
-        if "☑" not in result or "pass" not in result.lower():
-            continue
-        low = notes.lower()
-        if AUTO_CHECKED_TAG in low or AUTO_ROW_TAG not in low:
-            continue
-        if auto_row_confirmed(ROOT, os.path.dirname(os.path.abspath(directory)), task_id,
-                              notes, MINIMAL_LOG_REL):
+        checkout = os.path.dirname(os.path.abspath(directory))
+        if minimal_line_passes(
+                minimal_verify_line(task_id, directory),
+                lambda notes, rel: auto_row_confirmed(ROOT, checkout, task_id, notes, rel)):
             return True
     return False
+
+
+def verify_row_passes(section, confirm):
+    """True when an Evidence `section` holds a filled `verify` pass row. `confirm(notes, None)`
+    decides an `auto-run by hook` row (T182 D5): against which commit is the caller's choice."""
+    if not section:
+        return False
+    for match in VERIFY_ROW_PATTERN.finditer(section):
+        if UNCHECKED_PASS_PATTERN.search(match.group("result")):
+            continue
+        notes = match.group("notes").lower()
+        # T182: the Supervisor's own real-run check (T180) is never `/verify`, and an
+        # `auto-run by hook` row counts only with its run record (D5) for this task and the
+        # head commit of the checkout (or branch) this row was read from.
+        if AUTO_CHECKED_TAG in notes:
+            continue
+        if AUTO_ROW_TAG in notes and not confirm(match.group("notes"), None):
+            continue
+        return True
+    return False
+
+
+def minimal_line_passes(line, confirm):
+    """True when a minimal-track `verify:` line `(result, notes)` is a confirmed hook pass (T188
+    D5). A hand-typed line counts for nothing."""
+    if not line:
+        return False
+    result, notes = line
+    if "☑" not in result or "pass" not in result.lower():
+        return False
+    low = notes.lower()
+    if AUTO_CHECKED_TAG in low or AUTO_ROW_TAG not in low:
+        return False
+    return confirm(notes, MINIMAL_LOG_REL)
+
+
+# --- The verify row must be committed on the branch (T210 D4) -----------------
+#
+# The working-tree read above let T207 and T208 merge with a pass their merged commit did not
+# contain: the auto verify run writes its row into the worktree AFTER the branch's last commit.
+# So for a merge, or a narrowed push, of one task's branch, that task's row is read from the
+# branch tip with `git show <tip>:tasks/...` — guide first, review second, then the minimal-track
+# Decision record, the same order as `has_filled_verify_row`. An `auto-run by hook` row is
+# confirmed against the tip, not the checkout's HEAD: a merge runs on `main`.
+#
+# The T095 note above rejected `git show` because a pushed commit may not be in the main
+# checkout's object store. This reads in the directory the command runs in, where the merged or
+# pushed ref must resolve for the command itself to work.
+#
+# Never weaker than before: when the tip cannot be resolved, the caller falls back to
+# `has_filled_verify_row` (the working trees), exactly the pre-T210 rule.
+UNCOMMITTED_ROW_MESSAGE = "verify row for {tid} is not committed on {branch} — commit it, then merge"
+
+
+def _auto_row_confirmed_at(directory, task_id, notes, tip, report_rel=None):
+    """`verify_record.auto_row_confirmed`, with the branch `tip` in place of the checkout HEAD."""
+    commit, session = ROW_COMMIT.search(notes or ""), ROW_SESSION.search(notes or "")
+    if not commit or not session:
+        return False
+    sha = commit.group(1)
+    record = read_record(ROOT, task_id, sha)
+    if not record or (record.get("task"), record.get("commit"), record.get("verdict"),
+                      record.get("session")) != (task_id, sha, "pass", session.group(1)):
+        return False
+    return same_code(directory, task_id, sha, tip, report_rel)
+
+
+def committed_verify_row(task_id, branch, directory):
+    """True/False: whether `branch`'s tip, read in `directory`, commits a filled `verify` row (or a
+    confirmed minimal-track `verify:` line) for `task_id`. None when the tip cannot be resolved —
+    the caller then keeps the pre-T210 working-tree read. Never raises."""
+    try:
+        done = _git(directory, "rev-parse", "--verify", "--quiet", f"{branch}^{{commit}}")
+        tip = done.stdout.strip() if done is not None and done.returncode == 0 else ""
+        normalized = normalize_task_id(task_id, ROOT)
+        if not SHA_PATTERN.match(tip) or not normalized:
+            return None
+
+        def show(rel):
+            shown = _git(directory, "show", f"{tip}:{rel}")
+            return shown.stdout if shown is not None and shown.returncode == 0 else None
+
+        def confirm(notes, rel):
+            return _auto_row_confirmed_at(directory, task_id, notes, tip, rel)
+
+        sections = (slice_section(show(rel), "Evidence")
+                    for prefix in (GUIDE_PREFIX, REVIEW_PREFIX)
+                    for rel in _candidate_paths("tasks", prefix, normalized))
+        if verify_row_passes(next((s for s in sections if s is not None
+                                   and not is_pointer_only(s)), None), confirm):
+            return True
+        block = record_block(show(MINIMAL_LOG_REL) or "", task_id, skip_comments=True)
+        hit, result, notes = record_verify_line(block[2]) if block else (None, "", "")
+        return minimal_line_passes((result, notes) if hit else None, confirm)
+    except Exception:
+        return False
 
 
 # --- The companion score row and the three UI design rows (T190) ------------
@@ -720,8 +812,9 @@ def _ref_task_id(name, id_regex):
     return ids.pop() if len(ids) == 1 else None
 
 
-def _push_task_id(args, directory, id_regex):
-    """The one task a single `git push <args>` run in `directory` pushes, or None."""
+def _push_task_id(args, directory, id_regex, sources=None):
+    """The one task a single `git push <args>` run in `directory` pushes, or None.
+    `sources`, when a list, collects `(directory, source branch)` per refspec (T210 D4)."""
     if directory is None:
         return None
     positionals = []
@@ -746,6 +839,8 @@ def _push_task_id(args, directory, id_regex):
             if task_id is None:
                 return None
             ids.add(task_id)
+        if sources is not None:
+            sources.append((directory, names[0]))
     return ids.pop() if len(ids) == 1 else None
 
 
@@ -794,14 +889,15 @@ def _command_segments(command):
     return [segment for segment in segments if segment[0]]
 
 
-def _resolve_pushed_task(command, cwd, id_pattern):
+def _git_actions(command, cwd):
+    """`[(git args, directory)]` for every `git` segment that is not an allowlisted read-only
+    one, in order, or None when the command holds anything else this resolver does not read."""
     if not isinstance(command, str) or not isinstance(cwd, str) or not os.path.isabs(cwd):
         return None
     segments = _command_segments(command)
     if not segments:
         return None
-    id_regex = re.compile(id_pattern or task_id_pattern(ROOT, bounded=True), re.IGNORECASE)
-    directory, found, pushes = cwd, set(), 0
+    directory, actions = cwd, []
     for tokens, before, after in segments:
         head, args = tokens[0], tokens[1:]
         if head == "cd":
@@ -821,15 +917,28 @@ def _resolve_pushed_task(command, cwd, id_pattern):
             where, args = os.path.normpath(os.path.join(where, args[1])), args[2:]
         if not args:
             return None
-        if args[0] == "push":
-            task_id = _push_task_id(args[1:], where, id_regex)
-            if task_id is None:
+        if args[0] in SAFE_GIT_SUBCOMMANDS:
+            if not _read_only_git_args_ok(args[0], args[1:]):
                 return None
-            found.add(task_id)
-            pushes += 1
-        elif args[0] not in SAFE_GIT_SUBCOMMANDS or not _read_only_git_args_ok(args[0], args[1:]):
+            continue
+        actions.append((args, where))
+    return actions
+
+
+def _resolve_pushed_task(command, cwd, id_pattern, sources=None):
+    actions = _git_actions(command, cwd)
+    if not actions:
+        return None
+    id_regex = re.compile(id_pattern or task_id_pattern(ROOT, bounded=True), re.IGNORECASE)
+    found = set()
+    for args, where in actions:
+        if args[0] != "push":
             return None
-    return found.pop() if pushes and len(found) == 1 else None
+        task_id = _push_task_id(args[1:], where, id_regex, sources)
+        if task_id is None:
+            return None
+        found.add(task_id)
+    return found.pop() if len(found) == 1 else None
 
 
 def pushed_task_ids(command, cwd, id_pattern=None):
@@ -841,6 +950,52 @@ def pushed_task_ids(command, cwd, id_pattern=None):
     """
     try:
         return _resolve_pushed_task(command, cwd, id_pattern)
+    except Exception:
+        return None
+
+
+# T210 D4: the options a `git merge` of one task branch may carry and still resolve. Any other
+# option (`--strategy`, `-X`, `--into-name`, …) leaves the branch unresolved: the pre-T210 read.
+MERGE_FLAGS = frozenset({"--no-ff", "--ff", "--ff-only", "--no-edit", "--edit", "-q", "--quiet",
+                         "--stat", "--no-stat", "--log", "--no-log", "--squash", "--no-verify"})
+
+
+def _merge_source(args, where):
+    """`(directory, branch)` for `git merge <args>` naming exactly one branch, or None."""
+    names, index = [], 0
+    while index < len(args):
+        if args[index] == "-m":
+            index += 2  # the message
+            continue
+        if args[index].startswith("-"):
+            if args[index] not in MERGE_FLAGS:
+                return None
+        else:
+            names.append(args[index])
+        index += 1
+    return (where, names[0]) if where is not None and len(names) == 1 else None
+
+
+def branch_target(command, cwd, id_pattern=None):
+    """`(task ID, branch, directory)` when `command` merges, or pushes, exactly one branch that
+    names exactly one task; None on every doubt (T210 D4). `git pull` and `git rebase` are
+    always None: what they merge is not a local branch tip. Never raises."""
+    try:
+        actions = _git_actions(command, cwd)
+        if not actions:
+            return None
+        sources = []
+        if len(actions) == 1 and actions[0][0][0] == "merge":
+            source = _merge_source(actions[0][0][1:], actions[0][1])
+            sources = [source] if source else []
+        elif _resolve_pushed_task(command, cwd, id_pattern, sources) is None:
+            return None
+        if len(set(sources)) != 1:
+            return None
+        directory, branch = sources[0]
+        id_regex = re.compile(id_pattern or task_id_pattern(ROOT, bounded=True), re.IGNORECASE)
+        task_id = _ref_task_id(branch, id_regex)
+        return (task_id, branch, directory) if task_id else None
     except Exception:
         return None
 
@@ -1002,15 +1157,25 @@ def main():
         # Check each for verify evidence in their task guide
         unverified = []
         failed_rows = []
+        uncommitted = []
+        # T210 D4: the one task branch this command merges or pushes, if it can be resolved.
+        target = branch_target(command, event.get("cwd"))
         for tid in ready_review:
             # Look for a filled verify row in the Evidence table — in the guide,
             # or in the sibling TASK_REVIEW file it may have moved to (T064) —
             # AND a matching real tool call in the event trace. The text claim
             # alone is not trusted (the model can lie about success). Every
             # absence resolves to False, so this stays fail-closed.
-            has_evidence_row = has_filled_verify_row(tid)
+            # T210 D4: for the merged or pushed task, the row must be committed on its branch;
+            # an unresolvable tip (None) keeps the working-tree read.
+            committed = None
+            if target is not None and tid.upper() == target[0]:
+                committed = committed_verify_row(tid, target[1], target[2])
+            has_evidence_row = has_filled_verify_row(tid) if committed is None else committed
             has_trace = trace_shows_verification(tid)
-            if not has_evidence_row or not has_trace:
+            if committed is False and has_filled_verify_row(tid):
+                uncommitted.append(UNCOMMITTED_ROW_MESSAGE.format(tid=tid, branch=target[1]))
+            elif not has_evidence_row or not has_trace:
                 unverified.append(tid if has_evidence_row else f"{tid} (no evidence row)")
                 if has_evidence_row and not has_trace:
                     unverified[-1] = f"{tid} (evidence row present but no verified tool call in memory/event-trace/{tid}.jsonl)"
@@ -1028,6 +1193,8 @@ def main():
                 f"Tasks in Ready for Review missing Stage 5 verify evidence: "
                 f"{', '.join(unverified)}"
             )
+
+        blockers.extend(uncommitted)
 
         if failed_rows:
             blockers.append(
