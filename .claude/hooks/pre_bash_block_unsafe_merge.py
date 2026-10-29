@@ -8,6 +8,13 @@ Blocks git push/merge/rebase/pull commands if:
 
 This enforces the pipeline gate: Stage 4 review + Stage 5 verify must
 complete before code ships.
+
+T211: git's global options between `git` and the verb (`git -C <dir> push`, `git -c k=v merge`,
+`git --no-pager pull`, an unknown `--x`) do not hide it, and `git -c alias.<x>=… <x>` (or
+`--config-env alias.<x>=…`) is gated as a merge. Known limit, by design: an alias set in a git
+config file, or through the `GIT_CONFIG_*` environment variables, is out of reach of a static
+check of the command text — this hook does not read git config. Shell aliases and functions,
+scripts that call git, and `gh pr merge` are out of scope too.
 """
 import json
 import os
@@ -43,7 +50,8 @@ try:
     from guide_sections import (  # noqa: E402
         GUIDE_PREFIX, REVIEW_PREFIX, _candidate_paths, is_pointer_only, normalize_task_id,
         read_guide_section, slice_section)
-    from shell_data import strip_heredoc_bodies, strip_quoted_spans  # noqa: E402
+    from shell_data import (  # noqa: E402
+        DATA_COMMAND_PATTERN, strip_heredoc_bodies, strip_quoted_spans)
     from board.config import load_config, task_id_pattern  # noqa: E402
     from board.moments import (  # noqa: E402
         board_mode, my_blocking_tasks, my_review_tasks, pull_cache)
@@ -68,12 +76,45 @@ except Exception as exc:  # pragma: no cover - exercised via subprocess test
 # T210: `git pull` fetches and merges, so it is a merge (D1), in every form (`--ff-only` and
 # `--rebase` both move the branch). `git merge-base` is a read-only query and is the only
 # `merge-*` subcommand exempted (D3): `merge-file` and `merge-tree` stay blocked.
+#
+# T211 (D1, D4): any run of git's global options may come between `git` and the verb. The ones
+# that take an argument are `GIT_OPTIONS_WITH_ARG` (separate, attached `-Cdir`, or `--opt=value`);
+# every other `-` word is skipped as a flag, known (`--no-pager`, `-P`, `--bare`,
+# `--no-replace-objects`, `--literal-pathspecs`, `--exec-path[=<p>]`) or not (D4: fail closed).
+# `_git_actions` resolves only `-C`, `-c`, `--no-pager` and `-P` of these and treats any other
+# option as unresolved, so narrowing can never read a command classification did not. An argument
+# may be quoted (`-C "dir with space"`). Each option consumes its argument with no alternative
+# parse — the flag clause never starts with an arg-taking name — so matching stays linear.
+GIT_OPTIONS_WITH_ARG = ("-C", "-c", "--git-dir", "--work-tree", "--namespace", "--config-env")
+_GIT_ARG = r"""(?:"[^"\n]*"|'[^'\n]*'|[^\s;&|"'])+"""
+_GIT_SHORT_WITH_ARG = "".join(o[1] for o in GIT_OPTIONS_WITH_ARG if not o.startswith("--"))
+_GIT_LONG_WITH_ARG = "|".join(re.escape(o[2:]) for o in GIT_OPTIONS_WITH_ARG if o.startswith("--"))
+GIT_GLOBAL_OPTION = (
+    rf"(?:-[{_GIT_SHORT_WITH_ARG}]\s*{_GIT_ARG}"
+    rf"|--(?:{_GIT_LONG_WITH_ARG})(?:=|\s+){_GIT_ARG}"
+    rf"|-(?![{_GIT_SHORT_WITH_ARG}]|-(?:{_GIT_LONG_WITH_ARG})(?:[=\s]|$))[^\s;&|]*)"
+)
+GIT_VERB_PREFIX = rf"\bgit(?:\s+{GIT_GLOBAL_OPTION})*\s+"
 BLOCKED_PATTERNS = [
-    r"\bgit\s+push\b",
-    r"\bgit\s+merge\b(?!-base\b)",
-    r"\bgit\s+rebase\b",
-    r"\bgit\s+pull\b",
+    GIT_VERB_PREFIX + r"push\b",
+    GIT_VERB_PREFIX + r"merge\b(?!-base\b)",
+    GIT_VERB_PREFIX + r"rebase\b",
+    GIT_VERB_PREFIX + r"pull\b",
 ]
+
+# T211 (D3): `git -c alias.p=push p` defines and runs an alias in one command, so the verb never
+# appears. `-c alias.` (or `--config-env alias.`) anywhere in a `git` command gates it as a merge:
+# the whole board. Matched per command segment, and skipped only when that segment's command is
+# one T099's `DATA_COMMAND_PATTERN` names (`echo git -c alias.p=push p` prints it) — the same
+# keep-unless-known-data direction as `strip_quoted_spans`.
+GIT_ALIAS_PATTERN = re.compile(
+    r"\bgit\b.*?\s(?:-c\s*|--config-env(?:=|\s+))[\"']?(?i:alias)\.")
+
+
+def defines_git_alias(scannable):
+    """True when a command segment of `scannable` runs `git` with an inline alias (T211 D3)."""
+    return any(GIT_ALIAS_PATTERN.search(segment) and not DATA_COMMAND_PATTERN.match(segment)
+               for segment in COMMAND_SEPARATOR_PATTERN.split(scannable))
 
 # --- Evidence matching: "invoked" vs "merely mentioned" (T044 defect C) ------
 #
@@ -910,12 +951,25 @@ def _git_actions(command, cwd):
             continue  # reads the push's output in a subshell; cannot move the push
         if head != "git":
             return None
-        where = directory
-        while args[:1] == ["-C"]:
-            if len(args) < 2 or where is None or not SAFE_PATH_PATTERN.fullmatch(args[1]):
+        # T211 D1: git's global options. `-C <dir>` moves the directory, like `cd <dir> &&`.
+        # `-c <k=v>` can change what a push or a read-only command does (`push.default`,
+        # `core.fsmonitor`), so it is read only before `merge`, where it cannot change which tip
+        # is merged. `--no-pager`/`-P` change nothing. Every other option — another repository,
+        # work tree or ref namespace, an attached form, an unknown flag — is unresolved.
+        where, configured = directory, False
+        while args and args[0].startswith("-"):
+            if args[0] in ("--no-pager", "-P"):
+                args = args[1:]
+                continue
+            if args[0] not in ("-C", "-c") or len(args) < 2:
                 return None
-            where, args = os.path.normpath(os.path.join(where, args[1])), args[2:]
-        if not args:
+            if args[0] == "-C":
+                if where is None or not SAFE_PATH_PATTERN.fullmatch(args[1]):
+                    return None
+                where = os.path.normpath(os.path.join(where, args[1]))
+            configured = configured or args[0] == "-c"
+            args = args[2:]
+        if not args or (configured and args[0] != "merge"):
             return None
         if args[0] in SAFE_GIT_SUBCOMMANDS:
             if not _read_only_git_args_ok(args[0], args[1:]):
@@ -954,50 +1008,70 @@ def pushed_task_ids(command, cwd, id_pattern=None):
         return None
 
 
-# T210 D4: the options a `git merge` of one task branch may carry and still resolve. Any other
-# option (`--strategy`, `-X`, `--into-name`, …) leaves the branch unresolved: the pre-T210 read.
-MERGE_FLAGS = frozenset({"--no-ff", "--ff", "--ff-only", "--no-edit", "--edit", "-q", "--quiet",
-                         "--stat", "--no-stat", "--log", "--no-log", "--squash", "--no-verify"})
+# T211 D2: the `git merge` options that take a separate argument. Every other `-` word is skipped
+# alone (`--opt=value` and `-Xours` are one word), so any option leaves the branches resolvable.
+MERGE_OPTIONS_WITH_ARG = frozenset({"-m", "-F", "-s", "--strategy", "-X", "--strategy-option",
+                                    "--into-name"})
+OCTOPUS_DOUBT_MESSAGE = ("octopus merge: cannot confirm {branch} — each branch must name exactly "
+                         "one task and resolve to a commit")
 
 
-def _merge_source(args, where):
-    """`(directory, branch)` for `git merge <args>` naming exactly one branch, or None."""
+def _merge_sources(args, where):
+    """`[(directory, branch)]` for every branch `git merge <args>` names, in order."""
     names, index = [], 0
     while index < len(args):
-        if args[index] == "-m":
-            index += 2  # the message
+        if args[index] in MERGE_OPTIONS_WITH_ARG:
+            index += 2  # the option and its argument (a message, a strategy, …)
             continue
-        if args[index].startswith("-"):
-            if args[index] not in MERGE_FLAGS:
-                return None
-        else:
+        if not args[index].startswith("-"):
             names.append(args[index])
         index += 1
-    return (where, names[0]) if where is not None and len(names) == 1 else None
+    return [(where, name) for name in names]
 
 
-def branch_target(command, cwd, id_pattern=None):
-    """`(task ID, branch, directory)` when `command` merges, or pushes, exactly one branch that
-    names exactly one task; None on every doubt (T210 D4). `git pull` and `git rebase` are
-    always None: what they merge is not a local branch tip. Never raises."""
+def branch_targets(command, cwd, id_pattern=None):
+    """`(targets, doubts)` for what `command` merges or pushes (T210 D4, T211 D2), never raising.
+
+    `targets` is `[(task ID, branch, directory)]`, each branch whose task's verify row must be
+    committed on it. One merged or pushed branch that cannot be resolved gives `([], [])`: the
+    pre-T210 working-tree read. An octopus merge (two or more branches) resolves every branch, and
+    each one that names no single task, or whose tip does not resolve, is a `doubts` entry (a
+    block). `git pull` and `git rebase` are always `([], [])`: what they merge is not a local tip.
+    """
     try:
         actions = _git_actions(command, cwd)
         if not actions:
-            return None
+            return [], []
+        id_regex = re.compile(id_pattern or task_id_pattern(ROOT, bounded=True), re.IGNORECASE)
         sources = []
         if len(actions) == 1 and actions[0][0][0] == "merge":
-            source = _merge_source(actions[0][0][1:], actions[0][1])
-            sources = [source] if source else []
+            sources = _merge_sources(actions[0][0][1:], actions[0][1])
         elif _resolve_pushed_task(command, cwd, id_pattern, sources) is None:
-            return None
-        if len(set(sources)) != 1:
-            return None
-        directory, branch = sources[0]
-        id_regex = re.compile(id_pattern or task_id_pattern(ROOT, bounded=True), re.IGNORECASE)
-        task_id = _ref_task_id(branch, id_regex)
-        return (task_id, branch, directory) if task_id else None
+            return [], []
+        if len(set(sources)) == 1:
+            directory, branch = sources[0]
+            task_id = _ref_task_id(branch, id_regex) if directory is not None else None
+            return ([(task_id, branch, directory)] if task_id else []), []
+        if actions[0][0][0] != "merge" or len(sources) < 2:
+            return [], []
+        targets, doubts = [], []
+        for directory, branch in sources:
+            task_id = _ref_task_id(branch, id_regex)
+            tip = None if directory is None else _git(
+                directory, "rev-parse", "--verify", "--quiet", f"{branch}^{{commit}}")
+            if task_id is None or tip is None or tip.returncode != 0:
+                doubts.append(branch)
+            else:
+                targets.append((task_id, branch, directory))
+        return targets, doubts
     except Exception:
-        return None
+        return [], []
+
+
+def branch_target(command, cwd, id_pattern=None):
+    """The one `(task ID, branch, directory)` `command` merges or pushes, or None (T210 D4)."""
+    targets, doubts = branch_targets(command, cwd, id_pattern)
+    return targets[0] if len(targets) == 1 and not doubts else None
 
 
 # --- What to actually do about an unattributed Bash call (T095 defect B) ----
@@ -1077,7 +1151,8 @@ def main():
     # negative means "not verified" and refuses the merge; here it would mean
     # "not a push" and wave one through.
     scannable = strip_quoted_spans(strip_heredoc_bodies(command))
-    if not any(re.search(p, scannable) for p in BLOCKED_PATTERNS):
+    if (not any(re.search(p, scannable) for p in BLOCKED_PATTERNS)
+            and not defines_git_alias(scannable)):
         sys.exit(0)
 
     # T157: in board mode `online` the board cache is refreshed before it is evaluated
@@ -1158,23 +1233,28 @@ def main():
         unverified = []
         failed_rows = []
         uncommitted = []
-        # T210 D4: the one task branch this command merges or pushes, if it can be resolved.
-        target = branch_target(command, event.get("cwd"))
+        # T210 D4: the task branches this command merges or pushes, where they can be resolved;
+        # T211 D2: every branch of an octopus merge, and the ones it cannot confirm.
+        targets, doubts = branch_targets(command, event.get("cwd"))
+        uncommitted.extend(OCTOPUS_DOUBT_MESSAGE.format(branch=branch) for branch in doubts)
         for tid in ready_review:
             # Look for a filled verify row in the Evidence table — in the guide,
             # or in the sibling TASK_REVIEW file it may have moved to (T064) —
             # AND a matching real tool call in the event trace. The text claim
             # alone is not trusted (the model can lie about success). Every
             # absence resolves to False, so this stays fail-closed.
-            # T210 D4: for the merged or pushed task, the row must be committed on its branch;
-            # an unresolvable tip (None) keeps the working-tree read.
-            committed = None
-            if target is not None and tid.upper() == target[0]:
-                committed = committed_verify_row(tid, target[1], target[2])
+            # T210 D4: for a merged or pushed task, the row must be committed on each of its
+            # branches; a branch without it wins, and an unresolvable tip (None) otherwise keeps
+            # the working-tree read.
+            verdicts = [(committed_verify_row(tid, branch, directory), branch)
+                        for task_id, branch, directory in targets if task_id == tid.upper()]
+            missing_on = next((branch for found, branch in verdicts if found is False), None)
+            committed = (False if missing_on is not None
+                         else True if verdicts and all(found for found, _ in verdicts) else None)
             has_evidence_row = has_filled_verify_row(tid) if committed is None else committed
             has_trace = trace_shows_verification(tid)
             if committed is False and has_filled_verify_row(tid):
-                uncommitted.append(UNCOMMITTED_ROW_MESSAGE.format(tid=tid, branch=target[1]))
+                uncommitted.append(UNCOMMITTED_ROW_MESSAGE.format(tid=tid, branch=missing_on))
             elif not has_evidence_row or not has_trace:
                 unverified.append(tid if has_evidence_row else f"{tid} (no evidence row)")
                 if has_evidence_row and not has_trace:
