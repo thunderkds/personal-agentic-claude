@@ -15,6 +15,8 @@ auto-mode task whose board row is In Progress or Ready for Review, it blocks the
       Skill call at Risk Medium/High.
   (5) at Risk High, no `DEBATED` line names 3 Advocates, or the trace holds fewer than 3 Advocate
       `Agent` calls (D10): at least one High-risk decision is always debated.
+  (6) the report has no `Memory:` line (T189 D5): the auto run does the diff-driven memory pass
+      before it stops and records it there — each entry it wrote, or `Memory: nothing new`.
 
 Which tasks (D9): board rows in In Progress or Ready for Review, plus — so a project with no
 `PROJECT_KANBAN.md` is still checked — every `tasks/TASK_REVIEW_*.md` carrying `## Auto decisions`
@@ -53,6 +55,7 @@ KANBAN = os.path.join(ROOT, "PROJECT_KANBAN.md")
 TRACE_DIR = os.path.join(ROOT, "memory", "event-trace")
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib"))
+import auto_closeout as ac  # noqa: E402
 import auto_mode as am  # noqa: E402
 
 PAUSE = "Paused: auto-mode check failed — "
@@ -204,6 +207,9 @@ def check_task(task, request_ts):
     need_per_line = ADVOCATES_BY_RISK.get(risk)
     lines = [l.strip() for l in body.splitlines() if l.strip()]
     reasons = [] if task.strict else [missing]
+    if not ac.has_memory_line(body):
+        reasons.append("no `Memory:` line in the report — run the memory pass before you stop and "
+                       "record it there (each entry written, or `Memory: nothing new`)")
 
     if need_per_line:
         for line in lines:

@@ -48,6 +48,7 @@ def _advocates(n):
 def _report(decisions, marker="Mode: auto", heading="## Auto decisions"):
     return (f"# TASK_REVIEW — T951: Move the data\n\n{heading}\n\n{marker}\n" + "\n".join(decisions)
             + "\nChecks: tests pass; code-review 0 P0/P1; real run ok (auto-checked, not /verify)\n"
+            "Memory: nothing new\n"
             "Not done: merge (yours); /verify (yours)\n\n## Evidence\n\n| Check | Result | Notes |\n"
             "|---|---|---|\n| verify | ☐ pass / ☐ fail / ☐ N/A | |\n\n## Demonstration\n\n**BEFORE**: x\n")
 
@@ -155,7 +156,7 @@ def test_a_correct_minimal_record_passes(tmp_path):
            "**Asked:** \"sort the names [auto]\"\n**Decisions:**\n"
            f"1. sort A–Z — SAFER OPTION: the literal reading of \"sort\" {FLAG}\n"
            "**Checked:**\n- Suite: `pytest -q` — 12 passed\n**Files:** `x.py`\n"
-           "**Not done:** merge (yours); /verify (yours)\n")
+           "**Memory:** nothing new\n**Not done:** merge (yours); /verify (yours)\n")
     project = _project(tmp_path, [MIN_ROW], guide=False, minimal_log=log)
     _, out = _run(project)
     assert out == {}, out
@@ -402,7 +403,7 @@ def _log(*records):
 
 def _record(tid, risk_line, decision):
     return (f"## {tid} — Sort the names · minimal\nMode: auto\n{risk_line}**Asked:** \"sort [auto]\"\n"
-            f"**Decisions:**\n{decision}\n**Not done:** merge (yours)\n")
+            f"**Decisions:**\n{decision}\n**Memory:** nothing new\n**Not done:** merge (yours)\n")
 
 
 def test_d9_no_board_the_newest_minimal_record_is_checked(tmp_path):
@@ -532,3 +533,43 @@ def test_d10_second_fire_records_the_pause_and_does_not_loop(tmp_path):
     assert result.returncode == 0 and second == {}
     text = (project / "tasks" / "TASK_REVIEW_T951.md").read_text(encoding="utf-8")
     assert text.count(f"Paused: auto-mode check failed — {D10_REASON}") == 1, text
+
+
+# ── T189 D5 — the memory pass is recorded in the report before the auto run stops ─────────
+MEMORY_REASON = "no `Memory:` line in the report"
+
+
+@pytest.mark.parametrize("memory_line", ["", "Memory: <each entry the memory pass wrote | nothing new>"])
+def test_t189_d5_an_auto_report_with_no_memory_line_blocks_naming_the_task(tmp_path, memory_line):
+    review = _report(_good_decisions(3)).replace("Memory: nothing new\n",
+                                                 f"{memory_line}\n" if memory_line else "")
+    project = _project(tmp_path, [EXT_ROW], review=review, untagged=_trace(3))
+    _, out = _run(project)
+    assert _blocked(out), out
+    assert f"T951: {MEMORY_REASON}" in out["reason"], out["reason"]
+
+
+@pytest.mark.parametrize("memory_line", ["Memory: nothing new",
+                                         "Memory: memory/decisions.md — T951 decision (cold)"])
+def test_t189_d5_an_auto_report_with_a_memory_line_is_allowed(tmp_path, memory_line):
+    review = _report(_good_decisions(3)).replace("Memory: nothing new", memory_line)
+    project = _project(tmp_path, [EXT_ROW], review=review, untagged=_trace(3))
+    result, out = _run(project)
+    assert result.returncode == 0 and out == {}, (out, result.stderr)
+
+
+def test_t189_d5_a_minimal_record_with_no_memory_line_blocks(tmp_path):
+    log = _log(_record("T952", "", "1. sort A–Z — RULE: the request says A–Z").replace(
+        "**Memory:** nothing new\n", ""))
+    project = _project(tmp_path, [MIN_ROW], guide=False, minimal_log=log)
+    _, out = _run(project)
+    assert _blocked(out) and f"T952: {MEMORY_REASON}" in out["reason"], out
+
+
+def test_t189_d5_second_fire_records_the_missing_memory_line_in_the_pause(tmp_path):
+    review = _report(_good_decisions(3)).replace("Memory: nothing new\n", "")
+    project = _project(tmp_path, [EXT_ROW], review=review, untagged=_trace(3))
+    result, out = _run(project, active=True)
+    assert out == {}, out
+    text = (project / "tasks" / "TASK_REVIEW_T951.md").read_text(encoding="utf-8")
+    assert f"Paused: auto-mode check failed — {MEMORY_REASON}" in text
