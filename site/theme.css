@@ -1,8 +1,11 @@
 /*
   Graphite Mint: the shared theme for the Easy Kit family (T204).
   Every colour on the page comes from the tokens in :root. No hex or rgb value
-  appears anywhere else in site/. No gradient, glow, blur or light theme.
-  Source of every value: the Graphite Mint implementation spec.
+  appears anywhere else in site/. No gradient, blur or light theme.
+  Glow (T212): a soft neon glow, defined once as the --glow-* tokens below. A shadow
+  declaration is only none, a --glow-* token or the inset accent line.
+  Source of every value: the Graphite Mint implementation spec, accent and glow
+  from the updated design board (T212).
 */
 
 /* ---- fonts: IBM Plex, self-hosted (see fonts/README.txt) --------------- */
@@ -36,12 +39,20 @@
   --text-dim:      #6E7772;  /* comments in code, "/ 11" suffixes */
 
   /* Accent (mint) */
-  --accent:        #7EDDB0;
-  --accent-hover:  #B2EDCF;
-  --accent-soft:   rgba(126, 221, 176, 0.09);  /* active nav background */
-  --accent-line:   rgba(126, 221, 176, 0.33);  /* highlighted card border */
+  --accent:        #3CF5A8;                     /* neon mint */
+  --accent-hover:  #8AF9CB;                     /* primary button hover */
+  --accent-soft:   rgba(60, 245, 168, 0.08);   /* active nav background */
+  --accent-line:   rgba(60, 245, 168, 0.35);   /* highlighted card border */
+  --link:          #7EDDB0;                     /* plain links stay soft mint */
+  --link-hover:    #B2EDCF;
   --on-accent:     #0E100F;                     /* text on a mint button */
   --dot-idle:      #3A413E;                     /* inactive family-nav dot */
+
+  /* Glow (decoration only; prefers-contrast: more turns every one off) */
+  --glow-text:   0 0 12px rgba(60, 245, 168, 0.35);
+  --glow-button: 0 0 0 1px rgba(60, 245, 168, 0.25), 0 0 18px rgba(60, 245, 168, 0.25);
+  --glow-dot:    0 0 8px var(--accent);
+  --glow-box:    0 0 0 1px rgba(60, 245, 168, 0.20), 0 0 24px rgba(60, 245, 168, 0.12);
 
   /* Agent role colors (Easy Kit only, small dots) */
   --role-backend:  #7AA7E8;
@@ -79,7 +90,7 @@ body {
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
-::selection { background: rgba(126, 221, 176, 0.25); color: var(--text-strong); }
+::selection { background: rgba(60, 245, 168, 0.25); color: var(--text-strong); }
 
 h1, h2, h3, h4, h5, h6 { font-weight: 600; color: var(--text-strong); margin: 0; }
 h1 { font-size: 44px; line-height: 1.1; letter-spacing: -0.02em; }
@@ -90,11 +101,11 @@ p { margin: 0 0 var(--s-3); max-width: 72ch; }
 ul, ol { max-width: 72ch; }
 code, pre { font-family: var(--font-mono); }
 code { font-size: 0.9em; color: var(--text); background: var(--bg-sunken); border-radius: var(--r-xs); padding: 1px 6px; }
-.eyebrow { font: 400 12.5px/1.4 var(--font-mono); color: var(--accent); margin: 0 0 var(--s-3); }
+.eyebrow { font: 400 12.5px/1.4 var(--font-mono); color: var(--accent); margin: 0 0 var(--s-3); text-shadow: var(--glow-text); }
 
 /* Links */
-a { color: var(--accent); text-decoration: none; }
-a:hover { color: var(--accent-hover); text-decoration: underline; text-underline-offset: 3px; }
+a { color: var(--link); text-decoration: none; }
+a:hover { color: var(--link-hover); text-decoration: underline; text-underline-offset: 3px; }
 
 /* Focus: visible on every interactive element */
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--r-xs); }
@@ -110,7 +121,7 @@ a:hover { color: var(--accent-hover); text-decoration: underline; text-underline
 /* Buttons (min height 40px; 44px on touch) */
 .btn { display: inline-flex; align-items: center; height: 40px; padding: 0 18px;
   border-radius: var(--r-sm); font: 500 14px var(--font-sans); cursor: pointer; }
-.btn-primary { background: var(--accent); color: var(--on-accent); border: 0; }
+.btn-primary { background: var(--accent); color: var(--on-accent); border: 0; box-shadow: var(--glow-button); }
 .btn-primary:hover { background: var(--accent-hover); color: var(--on-accent); text-decoration: none; }
 .btn-secondary { background: transparent; color: var(--text); border: 1px solid var(--line-strong); }
 .btn-secondary:hover { background: var(--bg-hover); color: var(--text-strong); text-decoration: none; }
@@ -119,7 +130,7 @@ a:hover { color: var(--accent-hover); text-decoration: underline; text-underline
 .codebox { display: flex; align-items: center; justify-content: space-between; gap: 16px;
   padding: 12px 12px 12px 20px; background: var(--bg-sunken);
   border: 1px solid var(--line-strong); border-radius: var(--r-sm);
-  font: 400 14px/1.6 var(--font-mono); overflow-x: auto; }
+  font: 400 14px/1.6 var(--font-mono); overflow-x: auto; box-shadow: var(--glow-box); }
 .codebox code { flex: 1 1 auto; min-width: 0; padding: 0; background: none; font-size: inherit; white-space: pre-wrap; overflow-wrap: anywhere; }
 .codebox .prompt { color: var(--accent); }
 .codebox .comment { color: var(--text-dim); }
@@ -131,7 +142,7 @@ a:hover { color: var(--accent-hover); text-decoration: underline; text-underline
   list-style: none; margin: 0; padding: 0; max-width: none; }
 .strip > * { padding: 20px 22px; display: flex; flex-direction: column; gap: 6px; }
 .strip > * + * { border-left: 1px solid var(--line); }
-.strip .num { font: 500 28px/1.1 var(--font-mono); color: var(--text-strong); }
+.strip .num { font: 500 28px/1.1 var(--font-mono); color: var(--accent); text-shadow: var(--glow-text); }
 .strip .num small { font-size: 17px; color: var(--text-dim); }
 .strip .label { font-size: 13.5px; color: var(--text-muted); }
 
@@ -146,7 +157,7 @@ a:hover { color: var(--accent-hover); text-decoration: underline; text-underline
 /* Standalone card */
 .card { padding: 18px 20px; border: 1px solid var(--line); border-radius: var(--r-sm);
   display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.card.is-highlight { border-color: var(--accent-line); }   /* at most one per section */
+.card.is-highlight { border-color: var(--accent-line); box-shadow: var(--glow-button); }   /* at most one per section */
 
 /* Chip (dimension names, tags) */
 .chip { display: inline-block; padding: 4px 10px; border: 1px solid var(--line-strong);
@@ -157,7 +168,7 @@ a:hover { color: var(--accent-hover); text-decoration: underline; text-underline
 
 /* Progress bar (scorecard coverage) */
 .bar { height: 6px; border-radius: 3px; background: var(--line-header); overflow: hidden; }
-.bar > span { display: block; height: 100%; background: var(--accent); }
+.bar > span { display: block; height: 100%; background: var(--accent); box-shadow: var(--glow-dot); }
 
 /* Tables. A table never scrolls sideways on this page (T167): the wrapper clips
    its rounded corners, and phones stack each row as a card (see index.html). */
@@ -193,7 +204,7 @@ tbody tr:hover td { background: var(--bg-hover); }
 .family-nav a:not(.btn):hover { color: var(--text-strong); text-decoration: none; }
 .family-nav a[aria-current="page"] { color: var(--text-strong); }
 .family-nav .dot { width: 7px; height: 7px; background: var(--dot-idle); }
-.family-nav a[aria-current="page"] .dot { background: var(--accent); }
+.family-nav a[aria-current="page"] .dot { background: var(--accent); box-shadow: var(--glow-dot); }
 .family-nav .btn { height: auto; padding: 8px 14px; }
 .family-nav-drawer { display: none; }
 
@@ -217,7 +228,8 @@ tbody tr:hover td { background: var(--bg-hover); }
 .sidebar ul:last-child { margin-bottom: 0; }
 .sidebar a { display: block; padding: 7px 12px; border-radius: var(--r-sm); color: var(--text-nav); font-size: 14px; }
 .sidebar a:hover { background: var(--bg-hover); color: var(--text-strong); text-decoration: none; }
-.sidebar a.active { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+.sidebar a.active { background: var(--accent-soft); color: var(--accent); font-weight: 500;
+  text-shadow: var(--glow-text); box-shadow: inset 0 0 0 1px var(--accent-line); }
 
 .content { min-width: 0; padding: var(--s-9) var(--s-10); }
 .content > * { max-width: var(--content-max); }
@@ -284,7 +296,7 @@ details.more { margin: var(--s-4) 0 0; }
   padding: var(--s-3) var(--s-4); background: var(--bg-sunken); border: 1px solid var(--line-strong);
   border-radius: var(--r-sm); overflow-wrap: anywhere; }
 .flow-node.is-plain { background: transparent; border-style: dashed; }
-.flow-node.is-outcome { border-color: var(--accent-line); }
+.flow-node.is-outcome { border-color: var(--accent-line); box-shadow: var(--glow-button); }
 .flow-node.is-outcome > .flow-title { color: var(--accent); }
 .flow-title { font-size: 15px; font-weight: 600; line-height: 1.4; color: var(--text-strong); }
 .flow-meta { font: 400 12.5px/1.5 var(--font-mono); color: var(--text-muted); }
@@ -379,4 +391,14 @@ details.more { margin: var(--s-4) 0 0; }
   .flow-roles > li[data-role]:not([data-role="hub"])::after { content: none; }
   .flow-roles > li[data-role="hub"]::after { content: "\2193" / ""; position: absolute; top: 100%; left: 0; right: 0;
     height: 32px; text-align: center; font-size: 18px; line-height: 32px; color: var(--text-muted); }
+}
+
+/* Glow is decoration: with more contrast requested, every glow goes off and no information is lost. */
+@media (prefers-contrast: more) {
+  :root {
+    --glow-text: none;
+    --glow-button: none;
+    --glow-dot: none;
+    --glow-box: none;
+  }
 }
