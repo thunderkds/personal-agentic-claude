@@ -994,6 +994,32 @@ def test_t196_ac1_spawn_binding_beats_the_same_sessions_state_file():
             tr.cleanup()
 
 
+def test_t196_binding_declared_task_id_beats_an_earlier_guide_path():
+    """Stage 4 P2: a spawn prompt that names another task's guide *before* its own
+    `Task ID:` line binds to the declared task, not the first guide path."""
+    tr = Transcripts()
+    try:
+        tr.write_prompt("Context: also read tasks/TASK_GUIDE_T175.md for round 1.\n"
+                        "Task ID: T177\nGuide: tasks/TASK_GUIDE_T177.md")
+        with StateFileOverride():
+            assert resolve(tr.event()) == "T177"
+            cache = os.path.join(task_context.AGENT_TASK_DIR, SESSION, AGENT)
+            with open(cache) as f:
+                assert f.read().strip() == "T177"
+    finally:
+        tr.cleanup()
+
+
+def test_t196_binding_with_only_a_guide_path_binds_to_that_guide():
+    tr = Transcripts()
+    try:
+        tr.write_prompt("Your guide is `tasks/TASK_GUIDE_T175.md`. Read it first.")
+        with StateFileOverride(_fresh_state_content("T188")):
+            assert resolve(tr.event()) == "T175"
+    finally:
+        tr.cleanup()
+
+
 def test_t196_ac2_binding_is_cached_and_the_cache_is_read_not_the_transcript():
     tr = Transcripts()
     try:

@@ -31,9 +31,11 @@ Precedence — first match wins:
      ``agent_id`` on every hook event a sub-agent's tool call fires, and
      nothing on a main-session call. The sub-agent's transcript is
      ``<dirname(transcript_path)>/<session_id>/subagents/agent-<agent_id>.jsonl``
-     and its first line is the spawn prompt, verbatim. The task is the first
-     structural reference in that prompt — the same two patterns slot 5 uses
-     (a ``TASK_GUIDE_Txxx.md`` path, or a ``Task ID:`` line). The agent writes
+     and its first line is the spawn prompt, verbatim. The task is read with
+     the same two patterns slot 5 uses, but in the opposite order: an explicit
+     ``Task ID:`` line wins, and the first ``TASK_GUIDE_Txxx.md`` path counts
+     only when there is none — a prompt may cite another task's guide as
+     context, and a binding attributes every call. The agent writes
      nothing. The result is cached at
      ``.state/agent_task/<session_id>/<agent_id>`` so later calls do not
      re-read the transcript. That transcript layout is internal to Claude Code
@@ -281,6 +283,22 @@ def _spawn_prompt(transcript_path, session_id, agent_id):
     return message["content"]
 
 
+def _task_id_from_spawn_prompt(prompt):
+    """Slot 2's reading of a spawn prompt: an explicit `Task ID:` declaration
+    wins; the first guide path counts only when there is none. Slot 5 scans
+    guide paths first, which is acceptable for one `Agent` record but not here:
+    a binding attributes every call the sub-agent makes and is cached, so a
+    prompt that cites another task's guide before its own `Task ID:` line
+    (T196 Stage 4 P2) must not bind to that other task."""
+    if not isinstance(prompt, str):
+        return None
+    for pattern in (_task_id_declaration_pattern(), _guide_path_pattern()):
+        match = pattern.search(prompt)
+        if match:
+            return normalize_task_id(match.group(1))
+    return None
+
+
 def _task_id_from_spawn_binding(event):
     """Slot 2: the task a sub-agent's spawn prompt structurally names. Never
     raises; a non-binding prompt is not cached, so it is simply re-checked."""
@@ -294,7 +312,7 @@ def _task_id_from_spawn_binding(event):
         if task_id:
             return task_id
         prompt = _spawn_prompt(event.get("transcript_path"), session_id, agent_id)
-        task_id = _task_id_from_agent_prompt({"prompt": prompt})
+        task_id = _task_id_from_spawn_prompt(prompt)
         if task_id:
             _write_cache(cache_path, task_id)
         return task_id
