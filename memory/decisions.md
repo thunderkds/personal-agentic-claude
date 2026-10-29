@@ -2525,3 +2525,11 @@ The log refuses a symlink/non-file path, writes via `mktemp` in `.claude/` + `mv
 **Why**: user, 2026-10-29: "more options for users to pick … if the users do not choose … the agents supervisor should generate the default settings with the high security".
 **Files**: skills/settings-setup/, docs/claude-md/pipeline-stages.md, AGENTS.md, CLAUDE_LEGACY.md, site/index.html, tests/test_settings_setup.py, tests/test_site_content.py, tests/settings_tool/test_generate.mjs
 **Verified**: /verify T200 pass (real `claude -p`: skip → dry run, "yes" → write; a later session's Read of `.env` was denied). /verify T201 pass (real Chrome over CDP). Merged 2026-10-29 (`743399b`, `6bab0ec`) with merge commits: frozen test pins name `65fe3a8`, so never squash these.
+
+## T202: `main` made green by shrinking what grew, never by raising a cap (2026-10-29)
+
+**Decision** (user "yes" to registering it after the T177 merge exposed 15 failing tests on `main` @ `e4c7115`): fix every budget test by tightening the text it measures. The 4 role guides went from 150/143/146/135 to 145/134/140/129 lines (wording only; every rule, tool name and path kept; removed-sentence table in `tasks/TASK_REVIEW_T202.md`). `memory/MEMORY.md` went from 43,019 to 40,810 chars by shortening 45 index-line tails (no line, link or header removed). The corpus test in `test_verify_row_fill_detection.py` now allows a T182 `auto-run by hook` row, which the real gate rejects without its run record.
+**Why**: the failure texts say "do not raise the cap" (DDR-0005 §6) and "HOT_TIER_CHAR_BUDGET ... is a ratchet". T183/T195 grew the guides; nobody ran the full suite before merging them.
+**Open**: margins are thin (c-infra loaded size 11,645 vs < 11,663). After merging T200/T201, `MEMORY.md` is 41,418 chars, under the 42,000 cap but 418 over T202's 41,000 headroom target; the next `/compact-memory` should restore it.
+**Files**: agents/backend.md, agents/common-infrastructure.md, agents/frontend.md, agents/qa.md, templates/general-agent-template.md, memory/MEMORY.md, .claude/hooks/tests/test_verify_row_fill_detection.py
+**Verified**: /verify T202 pass (headless sub-agents from the branch guides restated the moved rules). PR #116 merged on GitHub 2026-10-29 (`de8ed6d`); full suite on `main`: 2089 passed.
