@@ -67,8 +67,25 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured 2026-10-29T15:15:55Z, before any implementation commit, against the UNCHANGED
+gate at `1f0603c`. Real PreToolUse JSON events fed to `.claude/hooks/pre_bash_block_unsafe_merge.py`
+of a throwaway `git clone` of this branch (driver: scratchpad `demo.py <repo> <dir>`; it rewrites the
+clone's `PROJECT_KANBAN.md`, adds worktree `wt-t900` on `feat/t900-x` and a T900 trace record):
+
+```
+clone of /home/hungnguyenhuu/workspace/pets/wt-t211 at 1f0603c
+-- board: T900 In Progress
+2026-10-29T15:15:56Z  ALLOW  git -C . merge feat/x
+2026-10-29T15:15:56Z  ALLOW  git -c alias.p=push p
+2026-10-29T15:15:56Z  ALLOW  git -C . log
+-- board: T900 Ready for Review; verify row only in wt-t900's working tree
+2026-10-29T15:15:56Z  ALLOW  git merge -X ours feat/t900-x
+-- verify row committed on feat/t900-x
+2026-10-29T15:15:56Z  ALLOW  git merge -X ours feat/t900-x
+```
+
+All three gaps are live: a `-C` merge and a `-c alias` push pass an In Progress board unchecked (G5,
+G7), and `-X ours` leaves the branch unresolved, so the working-tree row is accepted (G6).
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
