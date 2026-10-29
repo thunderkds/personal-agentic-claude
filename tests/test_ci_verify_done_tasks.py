@@ -250,6 +250,9 @@ class CiVerifyDoneTasksTest(unittest.TestCase):
         step = step.split("\n      - name:", 1)[0]
         self.assertIn("if: github.event_name == 'pull_request'", step)
         self.assertIn("fetch-depth: 0", text)
+        # F1: the job runs guide-authored commands, so its token is read-only.
+        self.assertRegex(text, r"(?m)^permissions:\n  contents: read$")
+        self.assertNotRegex(text, r"(?m)^\s*[a-z-]+:\s*write\s*$")
 
 
 if __name__ == "__main__":
