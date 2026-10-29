@@ -61,8 +61,29 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured 2026-10-29T10:09:30Z on `feat/t189-auto-closeout` at `026bc61` (the board commit; no T189 implementation commit exists yet). Command — a scripted fixture run of the kit's real Stop hooks in a temp project, `claude` stubbed with the T182 pass fixture, nothing paid, nothing in the repo written:
+
+```
+$ python3 <scratchpad>/demo_t189.py /home/hungnguyenhuu/workspace/pets/wt-t189
+== (1) after an auto verify pass ==
+**Last updated**: 2026-01-01
+### Ready for Review
+- [ ] **T951** — Move the data | Supervisor | C2 | Risk: Low | P1
+
+### Done
+-- report ## Auto decisions --
+Mode: auto
+1. kept recurring.csv — RULE: `docs/claude-md/tracks.md` `### Stops that stay`
+Checks: tests `pytest -q` — 12 passed; reviews code-review — 0 P0/P1
+Memory: nothing new
+Not done: merge (yours); auto verify: ☑ pass (session bb6500c2-6ee9-4ce9-bc0e-ea2f246f2fd4, commit e0b0cd5c138f931a5c292ef2a462be7d3f4dcf76, log .claude/verify-runs/T951-e0b0cd5c138f.log)
+-- verify row --
+| verify | ☑ pass | auto-run by hook, session bb6500c2-6ee9-4ce9-bc0e-ea2f246f2fd4, commit e0b0cd5c138f931a5c292ef2a462be7d3f4dcf76, log .claude/verify-runs/T951-e0b0cd5c138f.log — pass |
+== (2) auto-mode Stop check, report with no `Memory:` line ==
+stdout: (empty — the stop is allowed)
+```
+
+(1) The auto verify passed, the record and the evidence are complete, and the row still sits in Ready for Review with `- [ ]`; `### Done` is empty, `**Last updated**` is unchanged and the report has no `Closed:` line. (2) A report with no `Memory:` line ends the auto run unchallenged.
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
