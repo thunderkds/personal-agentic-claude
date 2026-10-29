@@ -61,8 +61,19 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: The skill is new text, so BEFORE is the prior content: nothing exists. Captured 2026-10-29T10:04:59Z in `/home/hungnguyenhuu/workspace/pets/wt-t191` (branch `feat/t191-score-skill`), before any implementation commit:
+
+```
+$ ls skills/score/SKILL.md
+ls: cannot access 'skills/score/SKILL.md': No such file or directory
+$ ls skills | grep -c "^score$"
+0
+$ python3 -m pytest tests/test_companion_scoring_skills.py -q
+ERROR: file or directory not found: tests/test_companion_scoring_skills.py
+no tests ran in 0.00s
+$ python3 -c "import easy_verifier"
+ModuleNotFoundError: No module named 'easy_verifier'
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
