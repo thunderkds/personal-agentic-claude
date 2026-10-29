@@ -47,16 +47,16 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_merge_gate_t211.py` (new, 99 tests: AC 1-7 + guide edge cases) and `.claude/hooks/tests/test_merge_gate_guard.py` (allowlist pin). Red first on the unchanged gate: `75 failed, 24 passed in 1.54s`. After the change: `python3 -m pytest .claude/hooks/tests/test_merge_gate_t211.py -q` → `99 passed in 1.27s` (2026-10-29T15:28Z). AC 8 mutations by hand, gate restored after each (2026-10-29T15:27:38Z): M1 drop the global-option prefix → `32 failed, 67 passed`; M2 unknown merge option → unresolved → `9 failed, 90 passed`; M3 octopus → first branch only → `5 failed, 94 passed`; M4 drop the alias rule → `14 failed, 85 passed` |
+| Verification command run | ☑ pass | `python3 -m pytest .claude/hooks/tests -q && python3 -m pytest tests -q` at `720b2ae` (2026-10-29T15:28:08Z): `1307 passed, 25 subtests passed in 26.63s` then `1209 passed in 110.22s (0:01:50)` |
+| Negative cases hold | ☑ pass | Allowed with an In Progress row: `git -C x merge-base A B`, `git -C x log`, `git --no-pager log --oneline`, `git -c core.x=y status`; mentions (`grep "git -C x push"`, heredoc body, `echo git -c alias.p=push p`, `printf` of a pull). Clean board allows every gated form. One unresolvable branch keeps the T210 working-tree read (`git merge main`). A push carrying `-c`, `--git-dir`, `--namespace` or `-Cdir` is not narrowed (whole board). Classification of 600 global options stays linear (< 5 s test bound) |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| Full smoke suite still green (no regression) | ☑ pass | Both suites green (row above). Oracle files `t190_pre_change_gate_output.txt`, `t197_pre_change_gate_output.txt` unchanged and their tests pass. Two T210 AC 5 params (`--strategy=ours`, octopus) retired: T211 D2 changes exactly that behaviour; replaced by T211 AC 3/4 tests |
 | **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | no UI component (hook-only change) |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | no UI component (hook-only change) |
+| **UI: Responsiveness at target viewports** | ☑ N/A | no UI component (hook-only change) |
 
 ---
 
@@ -87,9 +87,24 @@ clone of /home/hungnguyenhuu/workspace/pets/wt-t211 at 1f0603c
 All three gaps are live: a `-C` merge and a `-c alias` push pass an In Progress board unchecked (G5,
 G7), and `-X ours` leaves the branch unresolved, so the working-tree row is accepted (G6).
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**: same driver, same events, against the changed gate at `720b2ae` (2026-10-29T15:27:58Z):
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```
+clone of /home/hungnguyenhuu/workspace/pets/wt-t211 at 720b2ae
+-- board: T900 In Progress
+2026-10-29T15:27:58Z  BLOCK  git -C . merge feat/x   -> • Tasks still In Progress: T900
+2026-10-29T15:27:58Z  BLOCK  git -c alias.p=push p   -> • Tasks still In Progress: T900
+2026-10-29T15:27:58Z  ALLOW  git -C . log
+-- board: T900 Ready for Review; verify row only in wt-t900's working tree
+2026-10-29T15:27:58Z  BLOCK  git merge -X ours feat/t900-x   -> • verify row for T900 is not committed on feat/t900-x — commit it, then merge
+-- verify row committed on feat/t900-x
+2026-10-29T15:27:59Z  ALLOW  git merge -X ours feat/t900-x
+```
+
+This is Success Criterion 1 (`-C` merge and `-c alias` push blocked, `-C . log` allowed) and
+Success Criterion 2 (`-X ours` blocked with the D4 message, allowed once committed).
+
+**DELTA**: A merge, push, pull or rebase written with git global options (`-C`, `-c`, `--git-dir`, …) or as an inline `-c alias`, and a merge with any option or several branches, can no longer pass the gate unchecked or without each task's verify row committed on its branch.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
