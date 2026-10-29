@@ -61,8 +61,23 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured 2026-10-29T08:04:56Z, branch `feat/t196-trace-per-session` at `39fa195`
+(`git diff main -- .claude/hooks/lib/task_context.py` empty: unchanged resolver). The AC 7 incident
+replay `.claude/hooks/tests/test_trace_per_session.py` was written first and run against it:
+
+```
+$ python3 -m pytest -q -s .claude/hooks/tests/test_trace_per_session.py
+T190.jsonl: []
+T188.jsonl: ['cd /w/wt-t190-gate && git status', 'cd /w/wt-t188 && git log --oneline -1', 'cd /w/wt-t190-gate && python3 -m pytest -q .claude/hooks/tests/', 'cd /w/wt-t188 && ls tasks/', 'cd /w/wt-t190-gate && git diff --stat']
+crossings: 3
+trace_shows_verification('T188') = True
+E           AssertionError: 3 crossing(s): ['cd /w/wt-t190-gate && git status', 'cd /w/wt-t190-gate && python3 -m pytest -q .claude/hooks/tests/', 'cd /w/wt-t190-gate && git diff --stat']
+FAILED .claude/hooks/tests/test_trace_per_session.py::test_ac7_incident_replay_has_no_crossings_and_t188_is_not_verified_by_t190
+1 failed in 0.17s
+```
+
+Every call of session A's T190 sub-agent landed in `T188.jsonl` (3 of 3 crossings), and the T188
+gate check passed on T190's `pytest` run — the 2026-10-28 incident, reproduced.
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
