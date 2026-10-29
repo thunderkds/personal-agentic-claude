@@ -61,8 +61,31 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured on branch `feat/t203-auto-verify-all` at `ae719eb` (T189's code, no T203 change),
+by the scratch script `demo.sh <kit-checkout>`: it copies the kit's `.claude/hooks` into a throwaway git
+project whose board has one **unmarked** task (`T951`, no `Mode: auto`) at Ready for Review with an
+empty `verify` row, puts a stub `claude` first on `PATH` (it only logs its argv; no real run, no money),
+then fires the Stop hook and tries `--start T951`:
+
+```
+2026-10-29T10:46:54Z
+$ grep -c "Mode: auto" tasks/TASK_REVIEW_T951.md
+0
+$ echo {"hook_event_name":"Stop"} | python3 .claude/hooks/stop_auto_verify.py
+exit 0
+$ python3 .claude/hooks/stop_auto_verify.py --start T951 </dev/null
+exit 0
+$ ls .claude/verify-runs
+ls: cannot access '.claude/verify-runs': No such file or directory
+$ cat claude_calls.txt
+cat: /tmp/t203-demo.pLHCdA/claude_calls.txt: No such file or directory
+$ grep "^| verify" tasks/TASK_REVIEW_T951.md
+| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed] |
+```
+
+An unmarked task at Ready for Review gets no run: the Stop hook is silent, `--start` is not an entry
+(it falls through to the Stop hook and does nothing), `claude` is never called, and the `verify` row
+stays empty — the merge waits on the user's `/verify`.
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
