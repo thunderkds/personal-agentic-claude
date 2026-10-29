@@ -51,7 +51,11 @@ GATE_REL = ".claude/hooks/pre_bash_block_unsafe_merge.py"
 #          test run counts; for a merge or narrowed push of a task branch the `verify` row counts
 #          only when committed on that branch (`tasks/TASK_GUIDE_T210.md`). Authorised by the
 #          user, 2026-10-29.
-AUTHORISED_TASKS = ("T182", "T188", "T190", "T197", "T196", "T210")
+#   T211 — D1-D4: git's global options (`-C`, `-c`, `--git-dir`, any other) do not hide a push,
+#          merge, pull or rebase; a merge resolves its branches whatever its options, an octopus
+#          merge needs each task's row committed on its branch; `-c alias.<x>=…` is gated as a
+#          merge (`tasks/TASK_GUIDE_T211.md`). Authorised by the user, 2026-10-29.
+AUTHORISED_TASKS = ("T182", "T188", "T190", "T197", "T196", "T210", "T211")
 
 
 def _git(root, *args):

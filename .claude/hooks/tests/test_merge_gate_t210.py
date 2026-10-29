@@ -349,14 +349,14 @@ def test_edge_branch_names_with_slashes_resolve(gate, branch):
 # AC 5 — branch not resolvable: today's behaviour (working trees), never weaker
 # ---------------------------------------------------------------------------
 
+# T211 D2 retired two cases here: a merge option (`--strategy=ours`) now resolves to its branch,
+# and an octopus merge resolves every branch and blocks on doubt — see test_merge_gate_t211.py AC 3/4.
 @pytest.mark.parametrize("command", [
-    MERGE + " --strategy=ours feat/t900-x",   # an option the resolver does not know
-    MERGE + " feat/t900-x feat/t901-y",       # an octopus merge
     MERGE + " main",                          # names no task
     MERGE + " feat/t900-gone",                # names T900, but no such branch
     PULL + " origin feat/t900-x",             # pull: the merged commit is not local yet
     PUSH + " origin feat/t900-x && " + MERGE + " main",
-], ids=["unknown-option", "octopus", "no-task", "no-such-branch", "pull", "push-and-merge"])
+], ids=["no-task", "no-such-branch", "pull", "push-and-merge"])
 def test_ac5_unresolved_branch_reads_the_working_trees_as_before(gate, command):
     fx = gate(kanban(ready=("T900",)))
     fx.review(commit=False)
