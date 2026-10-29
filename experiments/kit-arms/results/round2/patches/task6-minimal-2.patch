@@ -1,0 +1,235 @@
+diff --git a/src/tally/cli.py b/src/tally/cli.py
+index cde1108..d16b4eb 100644
+--- a/src/tally/cli.py
++++ b/src/tally/cli.py
+@@ -6,14 +6,14 @@ import sys
+ 
+ from tally import __version__, recurring, reports, storage
+ from tally.models import new_expense, normalize_category, parse_date
+-from tally.money import parse_amount, split_evenly
++from tally.money import format_cents, parse_amount, split_evenly
+ 
+ 
+ def cmd_add(args):
+     date = parse_date(args.date) if args.date else None
+     expense = new_expense(args.amount, args.category, args.note or "", date=date)
+     storage.append(expense)
+-    dollars = f"${expense.amount // 100:,}.{expense.amount % 100:02d}"
++    dollars = format_cents(expense.amount)
+     print(f"Added {dollars} to {expense.category} on {expense.date.isoformat()}.")
+     return 0
+ 
+@@ -31,7 +31,7 @@ def cmd_list(args):
+         print("No expenses.")
+         return 0
+     for number, e in numbered:
+-        dollars = f"${e.amount // 100:,}.{e.amount % 100:02d}"
++        dollars = format_cents(e.amount)
+         print(f"{number:>4}  {e.date.isoformat()}  {dollars:>11}  {e.category:<14} {e.note}")
+     return 0
+ 
+@@ -42,10 +42,10 @@ def cmd_summary(args):
+         print("No expenses.")
+         return 0
+     for category, cents in reports.by_category(expenses):
+-        dollars = f"${cents // 100:,}.{cents % 100:02d}"
++        dollars = format_cents(cents)
+         print(f"{category:<14} {dollars:>11}")
+     grand = reports.total(expenses)
+-    dollars = f"${grand // 100:,}.{grand % 100:02d}"
++    dollars = format_cents(grand)
+     print(f"{'total':<14} {dollars:>11}")
+     return 0
+ 
+@@ -54,7 +54,7 @@ def cmd_top(args):
+     if args.count < 1:
+         raise ValueError("count must be at least 1")
+     for e in reports.largest(storage.load(), args.count):
+-        dollars = f"${e.amount // 100:,}.{e.amount % 100:02d}"
++        dollars = format_cents(e.amount)
+         print(f"{dollars:>11}  {e.date.isoformat()}  {e.category:<14} {e.note}")
+     return 0
+ 
+@@ -96,7 +96,7 @@ def build_parser():
+     sub = parser.add_subparsers(dest="command", required=True)
+ 
+     add = sub.add_parser("add", help="record an expense")
+-    add.add_argument("amount", help="e.g. 12.50")
++    add.add_argument("amount", help="e.g. 12.50, or -15.00 for a refund")
+     add.add_argument("category", help="e.g. food, rent, eating-out")
+     add.add_argument("note", nargs="?", help="optional free text")
+     add.add_argument("--date", help="YYYY-MM-DD (default: today)")
+diff --git a/src/tally/models.py b/src/tally/models.py
+index 7b548f2..17ae9be 100644
+--- a/src/tally/models.py
++++ b/src/tally/models.py
+@@ -4,7 +4,7 @@ import datetime as dt
+ import re
+ from dataclasses import dataclass
+ 
+-from tally.money import parse_amount, to_plain
++from tally.money import parse_signed_amount, to_plain
+ 
+ CATEGORY_RE = re.compile(r"^[a-z][a-z0-9-]{0,29}$")
+ FIELDS = ("date", "amount", "category", "note")
+@@ -13,13 +13,13 @@ FIELDS = ("date", "amount", "category", "note")
+ @dataclass(frozen=True)
+ class Expense:
+     date: dt.date
+-    amount: int  # cents
++    amount: int  # cents; negative for a refund
+     category: str
+     note: str = ""
+ 
+     def __post_init__(self):
+-        if not isinstance(self.amount, int) or self.amount <= 0:
+-            raise ValueError("amount must be greater than zero")
++        if not isinstance(self.amount, int) or self.amount == 0:
++            raise ValueError("amount must not be zero")
+         if not CATEGORY_RE.match(self.category):
+             raise ValueError(
+                 f"bad category {self.category!r}: use lowercase letters, digits and dashes"
+@@ -42,7 +42,7 @@ class Expense:
+         date_text, amount_text, category, note = row
+         return cls(
+             date=parse_date(date_text),
+-            amount=parse_amount(amount_text),
++            amount=parse_signed_amount(amount_text),
+             category=category,
+             note=note,
+         )
+@@ -65,7 +65,7 @@ def new_expense(amount_text, category_text, note="", date=None):
+     """Build an Expense from raw command-line strings."""
+     return Expense(
+         date=date or dt.date.today(),
+-        amount=parse_amount(amount_text),
++        amount=parse_signed_amount(amount_text),
+         category=normalize_category(category_text),
+         note=note.strip(),
+     )
+diff --git a/src/tally/money.py b/src/tally/money.py
+index 755de5c..97b6c2d 100644
+--- a/src/tally/money.py
++++ b/src/tally/money.py
+@@ -22,9 +22,29 @@ def parse_amount(text):
+     return int(whole) * 100 + int(frac.ljust(2, "0") or 0)
+ 
+ 
++def parse_signed_amount(text):
++    """Like parse_amount, but a leading "-" makes it a negative amount (a refund)."""
++    cleaned = text.strip()
++    if cleaned.startswith("-"):
++        rest = cleaned[1:]
++        if rest != rest.strip():
++            raise ValueError(f"not a valid amount: {text!r}")
++        return -parse_amount(rest)
++    return parse_amount(cleaned)
++
++
+ def to_plain(cents):
+     """Cents as the plain decimal string stored in the data file: 1250 -> "12.50"."""
+-    return f"{cents // 100}.{cents % 100:02d}"
++    sign = "-" if cents < 0 else ""
++    whole, frac = divmod(abs(cents), 100)
++    return f"{sign}{whole}.{frac:02d}"
++
++
++def format_cents(cents):
++    """Cents for display: 1250 -> "$12.50", -1500 -> "-$15.00"."""
++    sign = "-" if cents < 0 else ""
++    whole, frac = divmod(abs(cents), 100)
++    return f"{sign}${whole:,}.{frac:02d}"
+ 
+ 
+ def split_evenly(cents, parts):
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 97e72cb..884ebcb 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -53,3 +53,23 @@ def test_due(tally, data_file):
+     assert tally("due", "--today", "2026-03-10").stdout.strip() == "Nothing due."
+     out = tally("due", "--today", "2026-04-25").stdout
+     assert "rent" in out and "phone" in out
++
++
++def test_refund_flow(tally):
++    tally("add", "20.00", "groceries", "blender", "--date", "2026-03-01")
++    added = tally("add", "-15.00", "groceries", "returned the blender", "--date", "2026-03-02")
++    assert added.returncode == 0
++    assert "-$15.00" in added.stdout
++    listing = tally("list")
++    assert "-$15.00" in listing.stdout
++    assert "-$15.00" not in tally("top", "5").stdout.splitlines()[0]
++    assert "-$15.00" in tally("top", "5").stdout
++    summary = tally("summary").stdout
++    assert "$5.00" in summary and "-" not in summary
++    assert tally("add", "-0.50", "snacks").returncode == 0
++    assert "-$0.50" in tally("list", "--category", "snacks").stdout
++
++
++def test_zero_amount_still_rejected(tally):
++    assert tally("add", "0", "food").returncode == 2
++    assert tally("add", "-0.00", "food").returncode == 2
+diff --git a/tests/test_models.py b/tests/test_models.py
+index 59f07fd..6f115cd 100644
+--- a/tests/test_models.py
++++ b/tests/test_models.py
+@@ -20,9 +20,17 @@ def test_zero_amount_rejected(amount):
+         new_expense(amount, "food")
+ 
+ 
+-def test_negative_amount_rejected():
++@pytest.mark.parametrize("amount", ["-0", "-0.00"])
++def test_negative_zero_rejected(amount):
+     with pytest.raises(ValueError):
+-        new_expense("-5.00", "food")
++        new_expense(amount, "food")
++
++
++def test_refund_accepted_and_round_trips():
++    e = new_expense("-0.50", "food", "returned")
++    assert e.amount == -50
++    assert e.to_row()[1] == "-0.50"
++    assert Expense.from_row(e.to_row()) == e
+ 
+ 
+ def test_bad_category_rejected():
+diff --git a/tests/test_money.py b/tests/test_money.py
+index c31d239..13dd1e2 100644
+--- a/tests/test_money.py
++++ b/tests/test_money.py
+@@ -1,6 +1,6 @@
+ import pytest
+ 
+-from tally.money import parse_amount, split_evenly, to_plain
++from tally.money import format_cents, parse_amount, parse_signed_amount, split_evenly, to_plain
+ 
+ 
+ @pytest.mark.parametrize("text, cents", [
+@@ -25,3 +25,26 @@ def test_to_plain():
+ def test_split_evenly_adds_up():
+     assert split_evenly(100, 3) == [34, 33, 33]
+     assert sum(split_evenly(1001, 7)) == 1001
++
++
++@pytest.mark.parametrize("text, cents", [("-15.00", -1500), ("-0.50", -50), ("-$1,200", -120000), ("5", 500)])
++def test_parse_signed_amount(text, cents):
++    assert parse_signed_amount(text) == cents
++
++
++@pytest.mark.parametrize("text", ["--5", "-", "+5", "- 5", "-abc"])
++def test_parse_signed_amount_rejects_garbage(text):
++    with pytest.raises(ValueError):
++        parse_signed_amount(text)
++
++
++def test_to_plain_negative():
++    assert to_plain(-1500) == "-15.00"
++    assert to_plain(-50) == "-0.50"
++
++
++def test_format_cents():
++    assert format_cents(1250) == "$12.50"
++    assert format_cents(-1500) == "-$15.00"
++    assert format_cents(-50) == "-$0.50"
++    assert format_cents(-120000) == "-$1,200.00"

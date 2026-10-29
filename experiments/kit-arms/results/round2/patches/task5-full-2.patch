@@ -1,0 +1,496 @@
+diff --git a/.claude/hooks/.state/step_count_dc2b5fa29ef24ddda9f1e263af3797b6_T001.txt b/.claude/hooks/.state/step_count_dc2b5fa29ef24ddda9f1e263af3797b6_T001.txt
+new file mode 100644
+index 0000000..c393a51
+--- /dev/null
++++ b/.claude/hooks/.state/step_count_dc2b5fa29ef24ddda9f1e263af3797b6_T001.txt
+@@ -0,0 +1,2 @@
++3
++0
+\ No newline at end of file
+diff --git a/PROJECT_KANBAN.md b/PROJECT_KANBAN.md
+new file mode 100644
+index 0000000..59dc642
+--- /dev/null
++++ b/PROJECT_KANBAN.md
+@@ -0,0 +1,24 @@
++# PROJECT_KANBAN.md
++**Last updated**: 2026-10-26
++
++> Compact task board. Update this file whenever a task status changes.
++
++---
++
++## Board
++
++### Todo
++
++### In Progress
++
++### Ready for Review
++- [ ] **T001** — Store expenses as JSON, remove CSV expense storage | backend-developer | C2 | PR/branch: master (uncommitted)
++
++### Done
++
++---
++
++## Blocked
++
++| Task | Reason | Waiting on |
++|------|--------|-----------|
+diff --git a/README.md b/README.md
+index 0a55697..b1072e1 100644
+--- a/README.md
++++ b/README.md
+@@ -26,11 +26,11 @@ Categories are lowercased and spaces become dashes ("Eating Out" ->
+ 
+ ## Data
+ 
+-My expenses live in `data/expenses.csv` (one row per expense, with a header
+-line) and my recurring bills in `data/recurring.csv`. The `data/` folder is
++My expenses live in `data/expenses.json` (a JSON list with one object per
++expense: date, amount, category, note) and my recurring bills in `data/recurring.csv`. The `data/` folder is
+ **not** in git — it is my real spending history, so don't lose it.
+ 
+-Set `TALLY_FILE=/some/other/file.csv` to point tally at a different file
++Set `TALLY_FILE=/some/other/file.json` to point tally at a different file
+ (the tests do this so they never touch my data).
+ 
+ Amounts are stored and computed as whole cents; floats never touch money.
+@@ -42,7 +42,7 @@ src/tally/
+   cli.py        argparse commands
+   models.py     the Expense record and its validation
+   money.py      parsing amounts, cents helpers
+-  storage.py    reading/writing the CSV file
++  storage.py    reading/writing the JSON file
+   reports.py    totals and filters
+   recurring.py  recurring bills and what is still due
+ tests/          pytest suite
+diff --git a/memory/event-trace/T001.jsonl b/memory/event-trace/T001.jsonl
+new file mode 100644
+index 0000000..f52b191
+--- /dev/null
++++ b/memory/event-trace/T001.jsonl
+@@ -0,0 +1,3 @@
++{"timestamp": "2026-10-26T15:28:42.831651+00:00", "tool_name": "Write", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpbaz1axl6/tally/tasks/TASK_GUIDE_T001.md\", \"content\": \"# TASK_GUIDE \\u2014 T001: Store expenses as JSON, remove CSV expense storage\\n**Date**: 2026-10-26\\n**Complexity Level**: C2 (storage format change touches models, storage, tests, docs)\\n**Risk Level**: Medium (", "is_error": false, "prev": "genesis", "hash": "726780c0c39e75f8a945c3c705b8a612fc295ac91afa8b6bfdba15e4c3fb67d7"}
++{"timestamp": "2026-10-26T15:28:46.991068+00:00", "tool_name": "Agent", "summary": "{\"description\": \"T001 JSON expense storage\", \"prompt\": \"Task T001. Follow tasks/TASK_GUIDE_T001.md exactly (read it and agents/backend.md first). Work test-first in /tmp/tmpesbb1l8e/tmpbaz1axl6/tally. Do not touch data/ or recurring.py. Do not commit. Report: files changed, pytest output, and the gr", "is_error": false, "spawn": {"resolved_model": "claude-sonnet-5-5", "status": "async_launched"}, "prev": "726780c0c39e75f8a945c3c705b8a612fc295ac91afa8b6bfdba15e4c3fb67d7", "hash": "909f7b4174b0494e7261216ccd862f9d149f8aa2e2870bff31d0e7022355f560"}
++{"timestamp": "2026-10-26T15:28:49.827749+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpbaz1axl6/tally/tasks/TASK_GUIDE_T001.md\"}", "is_error": false, "prev": "909f7b4174b0494e7261216ccd862f9d149f8aa2e2870bff31d0e7022355f560", "hash": "186a5f41025b6440b54d716e408c8de8e8eb5d2c3e4d7dd4bfaa78e817caa12b"}
+diff --git a/memory/event-trace/_untagged.jsonl b/memory/event-trace/_untagged.jsonl
+new file mode 100644
+index 0000000..680d0f7
+--- /dev/null
++++ b/memory/event-trace/_untagged.jsonl
+@@ -0,0 +1,18 @@
++{"timestamp": "2026-10-26T15:28:07.677020+00:00", "tool_name": "Skill", "summary": "{\"skill\": \"wake\"}", "is_error": false, "prev": "genesis", "hash": "e0c8aecc1874117f32d888d5c0a1405dd1d0c123ae10712e9e7f4d46aaa7a837"}
++{"timestamp": "2026-10-26T15:28:08.443504+00:00", "tool_name": "Grep", "summary": "{\"pattern\": \"csv|CSV\", \"output_mode\": \"files_with_matches\", \"-i\": true}", "is_error": false, "prev": "e0c8aecc1874117f32d888d5c0a1405dd1d0c123ae10712e9e7f4d46aaa7a837", "hash": "83223168de3946e1b9c5f0e17203916bf4096852482a64bd2baf2e7b92159d4f"}
++{"timestamp": "2026-10-26T15:28:11.072789+00:00", "tool_name": "Bash", "summary": "{\"command\": \"git log --oneline -10; ls; ls memory tasks 2>&1 | head -30; python3 scripts/pull_moment.py wake 2>&1 | head -5\"}", "is_error": false, "prev": "83223168de3946e1b9c5f0e17203916bf4096852482a64bd2baf2e7b92159d4f", "hash": "df3cae3dada5032f014037323ce3c0829434c54438d10c8422b9094c880db4db"}
++{"timestamp": "2026-10-26T15:28:11.358531+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpbaz1axl6/tally/src/tally/storage.py\"}", "is_error": false, "prev": "df3cae3dada5032f014037323ce3c0829434c54438d10c8422b9094c880db4db", "hash": "8cefb9f77909c110bfec92c9770c3fc6cdb15c4cdbb6d05f3196fb257227208c"}
++{"timestamp": "2026-10-26T15:28:11.928927+00:00", "tool_name": "Grep", "summary": "{\"pattern\": \"csv\", \"path\": \"/tmp/tmpesbb1l8e/tmpbaz1axl6/tally\", \"glob\": \"{README.md,src/tally/recurring.py,tests/*.py}\", \"output_mode\": \"content\", \"-i\": true}", "is_error": false, "prev": "8cefb9f77909c110bfec92c9770c3fc6cdb15c4cdbb6d05f3196fb257227208c", "hash": "72e642d2f3177d55ac7c6461770e31b7517116a2b69e56875265fe37ae62f06a"}
++{"timestamp": "2026-10-26T15:28:17.524286+00:00", "tool_name": "Bash", "summary": "{\"command\": \"cd /tmp/tmpesbb1l8e/tmpbaz1axl6/tally; cat src/tally/models.py; ls data templates; ls PROJECT_* 2>&1; cat .gitignore; git ls-files data; grep -rn \\\"storage\\\\.\\\\|from_row\\\\|to_row\\\\|FIELDS\\\" src --include=*.py | grep -v \\\"^src/tally/storage.py\\\"; wc -l templates/TASK_GUIDE_template.md\"}", "is_error": false, "prev": "72e642d2f3177d55ac7c6461770e31b7517116a2b69e56875265fe37ae62f06a", "hash": "9d32dc2a2fb4be89deef4aa38b5b497f66e9182431ad83e907e9c4db5dfccedd"}
++{"timestamp": "2026-10-26T15:28:21.179884+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpbaz1axl6/tally/templates/TASK_GUIDE_template.md\"}", "is_error": false, "prev": "9d32dc2a2fb4be89deef4aa38b5b497f66e9182431ad83e907e9c4db5dfccedd", "hash": "0d50aa9eccfd3100d89f672686ae59564e53a9aefecbd50471ffb06c7eb49f15"}
++{"timestamp": "2026-10-26T15:28:21.332681+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpbaz1axl6/tally/templates/PROJECT_KANBAN_template.md\"}", "is_error": false, "prev": "0d50aa9eccfd3100d89f672686ae59564e53a9aefecbd50471ffb06c7eb49f15", "hash": "8ac205237d809cd5732b6add7182fab4d6f0ab0b1813150eee6c8fddb698ff36"}
++{"timestamp": "2026-10-26T15:28:44.072895+00:00", "tool_name": "Write", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpbaz1axl6/tally/PROJECT_KANBAN.md\", \"content\": \"# PROJECT_KANBAN.md\\n**Last updated**: 2026-10-26\\n\\n> Compact task board. Update this file whenever a task status changes.\\n\\n---\\n\\n## Board\\n\\n### Todo\\n\\n### In Progress\\n- [ ] **T001** \\u2014 Store expenses as JSO", "is_error": false, "prev": "8ac205237d809cd5732b6add7182fab4d6f0ab0b1813150eee6c8fddb698ff36", "hash": "5e3f1e5db5033df8d7fa05afe82c0a6bbb12586b0e694ff358dfc7be08c16d35"}
++{"timestamp": "2026-10-26T15:28:49.873815+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpbaz1axl6/tally/agents/backend.md\"}", "is_error": false, "prev": "5e3f1e5db5033df8d7fa05afe82c0a6bbb12586b0e694ff358dfc7be08c16d35", "hash": "2156b598270e8b70847cfdcec503214d5e9db3335f77adbe50a436c47acbe0de"}
++{"timestamp": "2026-10-26T15:28:50.619514+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpbaz1axl6/tally/memory/MEMORY.md\"}", "is_error": false, "prev": "2156b598270e8b70847cfdcec503214d5e9db3335f77adbe50a436c47acbe0de", "hash": "22c2afbf1ad8cf8f4ce5290fe5d417f4ca682dfaa0a49ebc1dc56b901df759c4"}
++{"timestamp": "2026-10-26T15:28:51.161458+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpbaz1axl6/tally/agents/general-agent-template.md\"}", "is_error": false, "prev": "22c2afbf1ad8cf8f4ce5290fe5d417f4ca682dfaa0a49ebc1dc56b901df759c4", "hash": "cb3d9bafe3de8f45ae3888114988c1d7962fdfd8d29b43a3325f928cf557bf8e"}
++{"timestamp": "2026-10-26T15:28:53.635255+00:00", "tool_name": "Bash", "summary": "{\"command\": \"git ls-files | grep -v -E '^(agents|skills|templates|docs|packs|\\\\.claude|\\\\.cursor|hooks)/' | head -50; cat src/tally/storage.py src/tally/models.py tests/conftest.py tests/test_storage.py; grep -rniE \\\"csv|to_row|from_row|FIELDS|HEADER\\\" src tests README.md\"}", "is_error": false, "prev": "cb3d9bafe3de8f45ae3888114988c1d7962fdfd8d29b43a3325f928cf557bf8e", "hash": "45466f5a43913ec87bb236bca178cecc78d9b7eff62744e9642bb8118920e717"}
++{"timestamp": "2026-10-26T15:28:56.269737+00:00", "tool_name": "Bash", "summary": "{\"command\": \"cat tests/test_models.py; sed -n 20,50p README.md; cat src/tally/money.py; grep -n \\\"expenses\\\\|data_file\\\" tests/test_cli.py | head -30\"}", "is_error": false, "prev": "45466f5a43913ec87bb236bca178cecc78d9b7eff62744e9642bb8118920e717", "hash": "22684a65f10e906c08f1aad3c6240abc03023f27a9635ad2ad57a10e8d5fb112"}
++{"timestamp": "2026-10-26T15:29:10.492566+00:00", "tool_name": "Bash", "summary": "{\"command\": \"cat > tests/test_storage.py <<'EOF'\\nimport datetime as dt\\nimport json\\n\\nimport pytest\\n\\nfrom tally import storage\\nfrom tally.models import Expense\\n\\n\\ndef test_default_path_is_json():\\n    assert storage.DEFAULT_PATH.name == \\\"expenses.json\\\"\\n    assert storage.DEFAULT_PATH.paren", "is_error": false, "prev": "22684a65f10e906c08f1aad3c6240abc03023f27a9635ad2ad57a10e8d5fb112", "hash": "341aedfe09f3d15588aefca88dc01dc36a859a224a850233e6e0294486253325"}
++{"timestamp": "2026-10-26T15:29:19.075449+00:00", "tool_name": "Bash", "summary": "{\"command\": \"python3 - <<'EOF'\\np='src/tally/models.py'\\ns=open(p).read()\\na=s.index(\\\"    def to_row\\\")\\nb=s.index(\\\"def parse_date\\\")\\ns=s[:a]+'''    def to_dict(self):\\n        return {\\n            \\\"date\\\": self.date.isoformat(),\\n            \\\"amount\\\": to_plain(self.amount),\\n            \\\"ca", "is_error": false, "prev": "341aedfe09f3d15588aefca88dc01dc36a859a224a850233e6e0294486253325", "hash": "f2def32959484b19972fe7945660d0a0895b25c9e8d141f11a87a04f8ee49561"}
++{"timestamp": "2026-10-26T15:29:32.191927+00:00", "tool_name": "Bash", "summary": "{\"command\": \"cd /tmp/tmpesbb1l8e/tmpbaz1axl6/tally; python3 -m pytest -q 2>&1 | tail -3; git status --short\"}", "is_error": false, "prev": "f2def32959484b19972fe7945660d0a0895b25c9e8d141f11a87a04f8ee49561", "hash": "6ff10f693440b606718a87daa00c8cf9c01ea409856a9c9ebcaa9ca6162a88b3"}
++{"timestamp": "2026-10-26T15:29:34.475737+00:00", "tool_name": "Edit", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpbaz1axl6/tally/PROJECT_KANBAN.md\", \"old_string\": \"### In Progress\\n- [ ] **T001** \\u2014 Store expenses as JSON, remove CSV expense storage | backend-developer | C2 | Risk: Med | P1 | Started: 2026-10-26\\n\\n### Ready for Review\\n\", \"new_string\": \"### In Progress\\n\\", "is_error": false, "prev": "6ff10f693440b606718a87daa00c8cf9c01ea409856a9c9ebcaa9ca6162a88b3", "hash": "5e7df9a5c5236b9aedefd5bf1f478a8d9a94250d2183d21464b60394e36d3606"}
+diff --git a/src/tally/models.py b/src/tally/models.py
+index 7b548f2..28d62e1 100644
+--- a/src/tally/models.py
++++ b/src/tally/models.py
+@@ -32,19 +32,28 @@ class Expense:
+         """The expense's month as "YYYY-MM"."""
+         return self.date.strftime("%Y-%m")
+ 
+-    def to_row(self):
+-        return [self.date.isoformat(), to_plain(self.amount), self.category, self.note]
++    def to_dict(self):
++        return {
++            "date": self.date.isoformat(),
++            "amount": to_plain(self.amount),
++            "category": self.category,
++            "note": self.note,
++        }
+ 
+     @classmethod
+-    def from_row(cls, row):
+-        if len(row) != len(FIELDS):
+-            raise ValueError(f"expected {len(FIELDS)} fields, got {len(row)}: {row!r}")
+-        date_text, amount_text, category, note = row
++    def from_dict(cls, data):
++        if not isinstance(data, dict):
++            raise ValueError(f"expected an object, got {data!r}")
++        if set(data) != set(FIELDS):
++            raise ValueError(f"expected keys {list(FIELDS)}, got {sorted(data)}")
++        for key in FIELDS:
++            if not isinstance(data[key], str):
++                raise ValueError(f"{key} must be a string, got {data[key]!r}")
+         return cls(
+-            date=parse_date(date_text),
+-            amount=parse_amount(amount_text),
+-            category=category,
+-            note=note,
++            date=parse_date(data["date"]),
++            amount=parse_amount(data["amount"]),
++            category=data["category"],
++            note=data["note"],
+         )
+ 
+ 
+diff --git a/src/tally/storage.py b/src/tally/storage.py
+index 585c270..ef0572f 100644
+--- a/src/tally/storage.py
++++ b/src/tally/storage.py
+@@ -1,14 +1,13 @@
+-"""Reading and writing the expenses file (CSV, one expense per line)."""
++"""Reading and writing the expenses file (JSON, a list of expense objects)."""
+ 
+-import csv
++import json
+ import os
+ from pathlib import Path
+ 
+-from tally.models import FIELDS, Expense
++from tally.models import Expense
+ 
+ PROJECT_ROOT = Path(__file__).resolve().parents[2]
+-DEFAULT_PATH = PROJECT_ROOT / "data" / "expenses.csv"
+-HEADER = ",".join(FIELDS)
++DEFAULT_PATH = PROJECT_ROOT / "data" / "expenses.json"
+ 
+ 
+ class StorageError(Exception):
+@@ -16,7 +15,7 @@ class StorageError(Exception):
+ 
+ 
+ def data_path():
+-    """Where the expenses live: $TALLY_FILE if set, else data/expenses.csv."""
++    """Where the expenses live: $TALLY_FILE if set, else data/expenses.json."""
+     override = os.environ.get("TALLY_FILE")
+     return Path(override) if override else DEFAULT_PATH
+ 
+@@ -26,38 +25,32 @@ def load(path=None):
+     path = Path(path or data_path())
+     if not path.exists():
+         return []
++    try:
++        items = json.loads(path.read_text(encoding="utf-8"))
++    except ValueError as err:
++        raise StorageError(f"{path}: not valid JSON: {err}") from None
++    if not isinstance(items, list):
++        raise StorageError(f"{path}: expected a JSON list of expenses")
+     expenses = []
+-    with path.open(newline="", encoding="utf-8") as handle:
+-        reader = csv.reader(handle)
+-        for line_no, row in enumerate(reader, start=1):
+-            if not row or (line_no == 1 and row == list(FIELDS)):
+-                continue
+-            try:
+-                expenses.append(Expense.from_row(row))
+-            except ValueError as err:
+-                raise StorageError(f"{path}, line {line_no}: {err}") from None
++    for index, item in enumerate(items):
++        try:
++            expenses.append(Expense.from_dict(item))
++        except ValueError as err:
++            raise StorageError(f"{path}, item {index}: {err}") from None
+     return expenses
+ 
+ 
+-def _ensure_file(path):
+-    path.parent.mkdir(parents=True, exist_ok=True)
+-    if not path.exists():
+-        path.write_text(HEADER + "\n", encoding="utf-8")
+-
+-
+ def append(expense, path=None):
+     """Add one expense at the end of the file."""
+     path = Path(path or data_path())
+-    _ensure_file(path)
+-    with path.open("a", encoding="utf-8") as handle:
+-        handle.write(",".join(expense.to_row()) + "\n")
++    save_all(load(path) + [expense], path)
+ 
+ 
+ def save_all(expenses, path=None):
+-    """Rewrite the whole file. Used after a delete."""
++    """Rewrite the whole file."""
+     path = Path(path or data_path())
+     tmp = path.with_suffix(".tmp")
+     tmp.parent.mkdir(parents=True, exist_ok=True)
+-    lines = [HEADER] + [",".join(e.to_row()) for e in expenses]
+-    tmp.write_text("\n".join(lines) + "\n", encoding="utf-8")
++    text = json.dumps([e.to_dict() for e in expenses], indent=2, ensure_ascii=False)
++    tmp.write_text(text + "\n", encoding="utf-8")
+     os.replace(tmp, path)
+diff --git a/tasks/TASK_GUIDE_T001.md b/tasks/TASK_GUIDE_T001.md
+new file mode 100644
+index 0000000..68115c4
+--- /dev/null
++++ b/tasks/TASK_GUIDE_T001.md
+@@ -0,0 +1,103 @@
++# TASK_GUIDE — T001: Store expenses as JSON, remove CSV expense storage
++**Date**: 2026-10-26
++**Complexity Level**: C2 (storage format change touches models, storage, tests, docs)
++**Risk Level**: Medium (data-format change; user data on disk)
++**Priority**: P1
++**Assigned agent**: backend-developer
++**Agent guide**: `agents/backend.md`
++
++---
++
++## Mandatory Startup (Do Not Skip)
++
++1. `PROJECT_SPEC.md` does not exist in this repo (small project); `README.md` is the spec.
++2. Read the memory slice in your spawn prompt.
++3. Read this file completely.
++4. Read `agents/backend.md`.
++
++---
++
++## Requirement (Pillar 1)
++
++User: "store expenses as JSON instead of CSV: `data/expenses.json`, a list of objects with date, amount, category and note. Switch the storage over to JSON and get rid of the old CSV stuff — I don't want two formats lying around."
++
++**Restated intent**: `storage.py` reads and writes `data/expenses.json`, a JSON list of `{date, amount, category, note}` objects. No CSV code, CSV test fixtures or CSV docs remain for the expenses file.
++
++**Out of scope**:
++- `data/recurring.csv` and `src/tally/recurring.py` (separate file; user did not mention it). Leave unchanged; Supervisor will ask the user.
++- Deleting or converting the user's existing `data/expenses.csv` (gitignored personal data). Do NOT touch `data/`.
++- Any new CLI command or migration tool.
++
++**Requirement Refs**: none (no PRD).
++
++### Requirement Fidelity Gate
++- [x] Restated intent confirmed by Supervisor against the user's request
++
++---
++
++## Dependencies & Reachability
++
++**Depends on**: None
++**Entry point**: `storage.load` / `storage.append` / `storage.save_all` (called from `src/tally/cli.py`)
++
++---
++
++## Acceptance Criteria
++
++| # | Criterion (testable) | Traces to |
++|---|----------------------|-----------|
++| 1 | Default path is `data/expenses.json` | "data/expenses.json" |
++| 2 | File is a JSON list of objects with exactly keys date, amount, category, note. date = ISO `YYYY-MM-DD`; amount = plain decimal **string** from `money.to_plain` (e.g. `"12.50"`, no float rounding); category, note = strings | "list of objects" |
++| 3 | `load` returns `[]` for a missing file; round-trips `append` and `save_all` (incl. notes with commas, quotes, unicode) | storage switch |
++| 4 | Malformed JSON, non-list top level, non-object item, missing/extra key, or bad value raises `StorageError` with the path and a readable reason (item index) | existing error behaviour |
++| 5 | `append` on a missing file creates `data/` dir and the file; writes are atomic (tmp + `os.replace`) | existing `save_all` behaviour |
++| 6 | No `csv` import, `HEADER`, `to_row`/`from_row` CSV-row code, or "CSV" wording remains for expenses in src, tests, README (recurring.csv mentions stay) | "get rid of the old CSV stuff" |
++| 7 | `TALLY_FILE` override still works; README updated (`.json` example) | existing feature |
++
++---
++
++## Evaluation & Acceptance
++
++### Verification Command
++```bash
++python3 -m pytest -q
++grep -rniE "csv" src tests README.md   # only recurring.* hits allowed
++```
++
++---
++
++## Approach
++
++**Pattern reference**: `src/tally/storage.py` (keep `data_path`, `load`, `append`, `save_all`, `StorageError` signatures).
++**Vital slice**: storage.py + models (dict conversion replacing row conversion) + tests + README.
++**Cut list**: no CSV→JSON migration tool; no schema version field; no recurring.csv change.
++
++`append` = load + add + `save_all` (JSON cannot be appended in place). Use `json.dumps(..., indent=2, ensure_ascii=False)` and a trailing newline. Replace `Expense.to_row/from_row` with `to_dict/from_dict` (strict keys). Update `tests/conftest.py`, `tests/test_storage.py`, `tests/test_cli.py` (only the expenses-file parts). Write tests first (tdd).
++
++## Edge Case Checklist
++- [ ] empty file / empty list `[]`
++- [ ] unreadable top-level types (`{}`, `"x"`)
++- [ ] amount given as JSON number instead of string → StorageError (strict) or documented
++- [ ] stale `.tmp` file handling unchanged
++
++## Files to Change (Predicted)
++| File | Change |
++|------|--------|
++| src/tally/storage.py | JSON load/save, default path |
++| src/tally/models.py | to_dict/from_dict replace to_row/from_row; FIELDS kept if still used |
++| tests/conftest.py, tests/test_storage.py, tests/test_cli.py | `.json`, new storage tests |
++| README.md | document JSON file |
++
++## Files Must NOT Touch
++| File | Reason |
++|------|--------|
++| data/* | user's personal data |
++| src/tally/recurring.py, recurring.csv handling | out of scope (recurring.py's own `FIELDS`/csv stay) |
++
++## Test Plan
++pytest full suite green; paste output into `tasks/TASK_REVIEW_T001.md` Evidence.
++
++## Completion Checklist
++- [ ] Implementation done
++- [ ] Tests written AND pass (output pasted)
++- [ ] Supervisor notified: ready for Stage 4 review
+diff --git a/tests/conftest.py b/tests/conftest.py
+index ee942d9..78d0be1 100644
+--- a/tests/conftest.py
++++ b/tests/conftest.py
+@@ -11,7 +11,7 @@ sys.path.insert(0, str(SRC))
+ 
+ @pytest.fixture
+ def data_file(tmp_path, monkeypatch):
+-    path = tmp_path / "expenses.csv"
++    path = tmp_path / "expenses.json"
+     monkeypatch.setenv("TALLY_FILE", str(path))
+     return path
+ 
+diff --git a/tests/test_models.py b/tests/test_models.py
+index 59f07fd..7072bc2 100644
+--- a/tests/test_models.py
++++ b/tests/test_models.py
+@@ -5,9 +5,16 @@ import pytest
+ from tally.models import Expense, new_expense, normalize_category
+ 
+ 
+-def test_round_trip_row():
++def test_round_trip_dict():
+     e = Expense(dt.date(2026, 3, 2), 1250, "food", "groceries")
+-    assert Expense.from_row(e.to_row()) == e
++    assert Expense.from_dict(e.to_dict()) == e
++
++
++def test_to_dict_amount_is_plain_string():
++    e = Expense(dt.date(2026, 3, 2), 1250, "food", "groceries")
++    assert e.to_dict() == {
++        "date": "2026-03-02", "amount": "12.50", "category": "food", "note": "groceries",
++    }
+ 
+ 
+ def test_normalize_category():
+diff --git a/tests/test_storage.py b/tests/test_storage.py
+index 53923f9..15b5cbc 100644
+--- a/tests/test_storage.py
++++ b/tests/test_storage.py
+@@ -1,4 +1,5 @@
+ import datetime as dt
++import json
+ 
+ import pytest
+ 
+@@ -6,30 +7,100 @@ from tally import storage
+ from tally.models import Expense
+ 
+ 
++def test_default_path_is_json():
++    assert storage.DEFAULT_PATH.name == "expenses.json"
++    assert storage.DEFAULT_PATH.parent.name == "data"
++
++
++def test_tally_file_override(monkeypatch, tmp_path):
++    monkeypatch.setenv("TALLY_FILE", str(tmp_path / "x.json"))
++    assert storage.data_path() == tmp_path / "x.json"
++
++
+ def test_missing_file_is_empty(tmp_path):
+-    assert storage.load(tmp_path / "nope.csv") == []
++    assert storage.load(tmp_path / "nope.json") == []
+ 
+ 
+ def test_append_then_load(tmp_path):
+-    path = tmp_path / "e.csv"
++    path = tmp_path / "e.json"
+     a = Expense(dt.date(2026, 1, 5), 900, "transport", "bus pass")
+     b = Expense(dt.date(2026, 1, 6), 4550, "food", "")
+     storage.append(a, path)
+     storage.append(b, path)
+     assert storage.load(path) == [a, b]
+-    assert path.read_text().splitlines()[0] == storage.HEADER
+ 
+ 
+-def test_save_all_rewrites(tmp_path):
+-    path = tmp_path / "e.csv"
+-    a = Expense(dt.date(2026, 1, 5), 900, "transport", "bus pass")
+-    storage.append(a, path)
++def test_file_format(tmp_path):
++    path = tmp_path / "e.json"
++    storage.append(Expense(dt.date(2026, 1, 5), 1250, "food", "lunch"), path)
++    assert json.loads(path.read_text(encoding="utf-8")) == [
++        {"date": "2026-01-05", "amount": "12.50", "category": "food", "note": "lunch"}
++    ]
++    assert path.read_text(encoding="utf-8").endswith("\n")
++
++
++def test_append_creates_dir(tmp_path):
++    path = tmp_path / "sub" / "dir" / "e.json"
++    storage.append(Expense(dt.date(2026, 1, 5), 100, "food"), path)
++    assert len(storage.load(path)) == 1
++
++
++def test_tricky_notes_round_trip(tmp_path):
++    path = tmp_path / "e.json"
++    items = [
++        Expense(dt.date(2026, 1, 5), 100, "food", 'a, "quoted", note'),
++        Expense(dt.date(2026, 1, 6), 200, "food", "café ☕ 日本"),
++    ]
++    storage.save_all(items, path)
++    assert storage.load(path) == items
++    assert "café ☕ 日本" in path.read_text(encoding="utf-8")
++
++
++def test_save_all_rewrites_and_leaves_no_tmp(tmp_path):
++    path = tmp_path / "e.json"
++    storage.append(Expense(dt.date(2026, 1, 5), 900, "transport", "bus pass"), path)
+     storage.save_all([], path)
+     assert storage.load(path) == []
++    assert list(tmp_path.iterdir()) == [path]
++
++
++def test_empty_list_loads(tmp_path):
++    path = tmp_path / "e.json"
++    path.write_text("[]")
++    assert storage.load(path) == []
++
++
++GOOD = {"date": "2026-01-05", "amount": "1.00", "category": "food", "note": ""}
++
++
++def _item(**changes):
++    item = dict(GOOD, **changes)
++    return [{k: v for k, v in item.items() if v is not None}]
+ 
+ 
+-def test_corrupt_line_names_the_line(tmp_path):
+-    path = tmp_path / "e.csv"
+-    path.write_text("date,amount,category,note\n2026-01-05,abc,food,x\n")
+-    with pytest.raises(storage.StorageError, match="line 2"):
++@pytest.mark.parametrize(
++    "content, reason",
++    [
++        ("", "not valid JSON"),
++        ("{not json", "not valid JSON"),
++        ("{}", "list"),
++        ('"x"', "list"),
++        (json.dumps([1]), "item 0"),
++        (json.dumps(_item(date=None)), "item 0"),
++        (json.dumps([GOOD, dict(GOOD, extra="x")]), "item 1"),
++        (json.dumps(_item(amount="abc")), "item 0"),
++        (json.dumps(_item(amount=12.5)), "item 0"),
++        (json.dumps(_item(amount="0.00")), "item 0"),
++        (json.dumps(_item(date="2026-13-45")), "item 0"),
++        (json.dumps(_item(date=20260105)), "item 0"),
++        (json.dumps(_item(category="Bad Cat")), "item 0"),
++        (json.dumps(_item(note=5)), "item 0"),
++    ],
++)
++def test_bad_content_raises_storage_error(tmp_path, content, reason):
++    path = tmp_path / "e.json"
++    path.write_text(content)
++    with pytest.raises(storage.StorageError) as err:
+         storage.load(path)
++    assert str(path) in str(err.value)
++    assert reason in str(err.value)

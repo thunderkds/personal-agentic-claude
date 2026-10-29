@@ -1,0 +1,110 @@
+diff --git a/src/tally/cli.py b/src/tally/cli.py
+index cde1108..cbda78d 100644
+--- a/src/tally/cli.py
++++ b/src/tally/cli.py
+@@ -6,14 +6,14 @@ import sys
+ 
+ from tally import __version__, recurring, reports, storage
+ from tally.models import new_expense, normalize_category, parse_date
+-from tally.money import parse_amount, split_evenly
++from tally.money import format_amount, parse_amount, split_evenly
+ 
+ 
+ def cmd_add(args):
+     date = parse_date(args.date) if args.date else None
+     expense = new_expense(args.amount, args.category, args.note or "", date=date)
+     storage.append(expense)
+-    dollars = f"${expense.amount // 100:,}.{expense.amount % 100:02d}"
++    dollars = format_amount(expense.amount)
+     print(f"Added {dollars} to {expense.category} on {expense.date.isoformat()}.")
+     return 0
+ 
+@@ -31,7 +31,7 @@ def cmd_list(args):
+         print("No expenses.")
+         return 0
+     for number, e in numbered:
+-        dollars = f"${e.amount // 100:,}.{e.amount % 100:02d}"
++        dollars = format_amount(e.amount)
+         print(f"{number:>4}  {e.date.isoformat()}  {dollars:>11}  {e.category:<14} {e.note}")
+     return 0
+ 
+@@ -42,10 +42,10 @@ def cmd_summary(args):
+         print("No expenses.")
+         return 0
+     for category, cents in reports.by_category(expenses):
+-        dollars = f"${cents // 100:,}.{cents % 100:02d}"
++        dollars = format_amount(cents)
+         print(f"{category:<14} {dollars:>11}")
+     grand = reports.total(expenses)
+-    dollars = f"${grand // 100:,}.{grand % 100:02d}"
++    dollars = format_amount(grand)
+     print(f"{'total':<14} {dollars:>11}")
+     return 0
+ 
+@@ -54,7 +54,7 @@ def cmd_top(args):
+     if args.count < 1:
+         raise ValueError("count must be at least 1")
+     for e in reports.largest(storage.load(), args.count):
+-        dollars = f"${e.amount // 100:,}.{e.amount % 100:02d}"
++        dollars = format_amount(e.amount)
+         print(f"{dollars:>11}  {e.date.isoformat()}  {e.category:<14} {e.note}")
+     return 0
+ 
+@@ -63,7 +63,7 @@ def cmd_split(args):
+     cents = parse_amount(args.amount)
+     shares = split_evenly(cents, args.people)
+     for person, share in enumerate(shares, start=1):
+-        dollars = f"${share // 100:,}.{share % 100:02d}"
++        dollars = format_amount(share)
+         print(f"person {person}: {dollars}")
+     return 0
+ 
+@@ -75,7 +75,7 @@ def cmd_due(args):
+         print("Nothing due.")
+         return 0
+     for bill in due:
+-        dollars = f"${bill.amount // 100:,}.{bill.amount % 100:02d}"
++        dollars = format_amount(bill.amount)
+         print(f"{bill.category:<14} {dollars:>11}  (day {bill.day}) {bill.note}".rstrip())
+     return 0
+ 
+diff --git a/src/tally/money.py b/src/tally/money.py
+index 755de5c..5cf3262 100644
+--- a/src/tally/money.py
++++ b/src/tally/money.py
+@@ -27,6 +27,11 @@ def to_plain(cents):
+     return f"{cents // 100}.{cents % 100:02d}"
+ 
+ 
++def format_amount(cents):
++    """Cents as a display string with dollar sign and separators: 123456 -> "$1,234.56"."""
++    return f"${cents // 100:,}.{cents % 100:02d}"
++
++
+ def split_evenly(cents, parts):
+     """Split an amount into `parts` shares that add back up to exactly `cents`.
+ 
+diff --git a/tests/test_money.py b/tests/test_money.py
+index c31d239..33905d7 100644
+--- a/tests/test_money.py
++++ b/tests/test_money.py
+@@ -1,6 +1,6 @@
+ import pytest
+ 
+-from tally.money import parse_amount, split_evenly, to_plain
++from tally.money import format_amount, parse_amount, split_evenly, to_plain
+ 
+ 
+ @pytest.mark.parametrize("text, cents", [
+@@ -25,3 +25,11 @@ def test_to_plain():
+ def test_split_evenly_adds_up():
+     assert split_evenly(100, 3) == [34, 33, 33]
+     assert sum(split_evenly(1001, 7)) == 1001
++
++
++@pytest.mark.parametrize("cents, text", [
++    (0, "$0.00"), (7, "$0.07"), (1250, "$12.50"), (123456, "$1,234.56"),
++    (100000000, "$1,000,000.00"),
++])
++def test_format_amount(cents, text):
++    assert format_amount(cents) == text

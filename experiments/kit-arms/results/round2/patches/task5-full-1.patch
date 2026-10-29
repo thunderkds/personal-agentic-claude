@@ -1,0 +1,373 @@
+diff --git a/README.md b/README.md
+index 0a55697..2df5904 100644
+--- a/README.md
++++ b/README.md
+@@ -26,11 +26,12 @@ Categories are lowercased and spaces become dashes ("Eating Out" ->
+ 
+ ## Data
+ 
+-My expenses live in `data/expenses.csv` (one row per expense, with a header
+-line) and my recurring bills in `data/recurring.csv`. The `data/` folder is
++My expenses live in `data/expenses.json` (a list of objects with `date`,
++`amount`, `category` and `note`) and my recurring bills in
++`data/recurring.json`. The `data/` folder is
+ **not** in git — it is my real spending history, so don't lose it.
+ 
+-Set `TALLY_FILE=/some/other/file.csv` to point tally at a different file
++Set `TALLY_FILE=/some/other/file.json` to point tally at a different file
+ (the tests do this so they never touch my data).
+ 
+ Amounts are stored and computed as whole cents; floats never touch money.
+@@ -42,7 +43,7 @@ src/tally/
+   cli.py        argparse commands
+   models.py     the Expense record and its validation
+   money.py      parsing amounts, cents helpers
+-  storage.py    reading/writing the CSV file
++  storage.py    reading/writing the JSON file
+   reports.py    totals and filters
+   recurring.py  recurring bills and what is still due
+ tests/          pytest suite
+diff --git a/memory/event-trace/_untagged.jsonl b/memory/event-trace/_untagged.jsonl
+new file mode 100644
+index 0000000..ceedb30
+--- /dev/null
++++ b/memory/event-trace/_untagged.jsonl
+@@ -0,0 +1,19 @@
++{"timestamp": "2026-10-26T15:14:45.057467+00:00", "tool_name": "Skill", "summary": "{\"skill\": \"wake\"}", "is_error": false, "prev": "genesis", "hash": "63afdce4535a5dbde8ec8fc2cc270d9437a933055888299ff37bc0355428cea5"}
++{"timestamp": "2026-10-26T15:14:45.385488+00:00", "tool_name": "Glob", "summary": "{\"pattern\": \"**/*\", \"path\": \"/tmp/tmpesbb1l8e/tmp_ws9aa7p/tally\"}", "is_error": false, "prev": "63afdce4535a5dbde8ec8fc2cc270d9437a933055888299ff37bc0355428cea5", "hash": "62d8a3a7a3a9febe484b6ad505c3292b97eb0c993097e6bea37eb2de7c1bcafe"}
++{"timestamp": "2026-10-26T15:14:47.415446+00:00", "tool_name": "Bash", "summary": "{\"command\": \"git log --oneline -10; ls PROJECT_KANBAN.md memory 2>&1 | head; python3 skills/wake/scripts/dirty_worktrees.py 2>&1 | head\"}", "is_error": false, "prev": "62d8a3a7a3a9febe484b6ad505c3292b97eb0c993097e6bea37eb2de7c1bcafe", "hash": "3b1c0e6b737688d63269ee7d3c84f32d3307e59cc9adfa95369bd5ea18e050c1"}
++{"timestamp": "2026-10-26T15:14:47.606848+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmp_ws9aa7p/tally/src/tally/storage.py\"}", "is_error": false, "prev": "3b1c0e6b737688d63269ee7d3c84f32d3307e59cc9adfa95369bd5ea18e050c1", "hash": "a2835eeb8f04ed08dbad1136a69f36f874e64603dfd961789728876df8a47b2f"}
++{"timestamp": "2026-10-26T15:14:48.294092+00:00", "tool_name": "Grep", "summary": "{\"pattern\": \"csv|CSV\", \"path\": \"/tmp/tmpesbb1l8e/tmp_ws9aa7p/tally\", \"glob\": \"{src,tests,data}/**,README.md\", \"output_mode\": \"content\"}", "is_error": false, "prev": "a2835eeb8f04ed08dbad1136a69f36f874e64603dfd961789728876df8a47b2f", "hash": "9f09e60f517ed9c8a1aa57d5857e15e762a59ffbf26214f90596e1196e074c38"}
++{"timestamp": "2026-10-26T15:14:51.765684+00:00", "tool_name": "Grep", "summary": "{\"pattern\": \"csv|CSV|to_row|from_row|FIELDS\", \"path\": \"/tmp/tmpesbb1l8e/tmp_ws9aa7p/tally\", \"glob\": \"*.{py,md}\", \"output_mode\": \"content\", \"head_limit\": 80}", "is_error": false, "prev": "9f09e60f517ed9c8a1aa57d5857e15e762a59ffbf26214f90596e1196e074c38", "hash": "071d4c5aa108790fb8b7485ef571609f5aaa92cdd4e5b7a1806414aa575a9870"}
++{"timestamp": "2026-10-26T15:14:52.304997+00:00", "tool_name": "Bash", "summary": "{\"command\": \"ls tasks templates 2>&1 | head -20; head -5 data/*.csv; ls docs 2>&1|head\"}", "is_error": false, "prev": "071d4c5aa108790fb8b7485ef571609f5aaa92cdd4e5b7a1806414aa575a9870", "hash": "6a6e5262fb4c3929497e5386f4ce4563b63a0ff9711ab83923d69eacf6b62bfd"}
++{"timestamp": "2026-10-26T15:15:02.074486+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmp_ws9aa7p/tally/src/tally/models.py\"}", "is_error": false, "prev": "6a6e5262fb4c3929497e5386f4ce4563b63a0ff9711ab83923d69eacf6b62bfd", "hash": "4defb9508dfd5b80e3ee8b843bd828c75499adb0373ad256a924d163c0a7092d"}
++{"timestamp": "2026-10-26T15:15:02.397170+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmp_ws9aa7p/tally/src/tally/recurring.py\"}", "is_error": false, "prev": "4defb9508dfd5b80e3ee8b843bd828c75499adb0373ad256a924d163c0a7092d", "hash": "b945d6ca7e139644a9b34a6205e677e26ba386e3c913145f114fe74472955ee5"}
++{"timestamp": "2026-10-26T15:15:02.760975+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmp_ws9aa7p/tally/tests/test_storage.py\"}", "is_error": false, "prev": "b945d6ca7e139644a9b34a6205e677e26ba386e3c913145f114fe74472955ee5", "hash": "79a550cee1a49209c678a07cb6c468bfb6b3c801e8f22e131df4564a7b154778"}
++{"timestamp": "2026-10-26T15:15:03.092016+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmp_ws9aa7p/tally/tests/test_models.py\"}", "is_error": false, "prev": "79a550cee1a49209c678a07cb6c468bfb6b3c801e8f22e131df4564a7b154778", "hash": "b25fc3eefd51f6a3f7aaefa89c1c0fccb4c6acea3de2f0127d13c61bc818a4af"}
++{"timestamp": "2026-10-26T15:15:03.464429+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmp_ws9aa7p/tally/tests/conftest.py\"}", "is_error": false, "prev": "b25fc3eefd51f6a3f7aaefa89c1c0fccb4c6acea3de2f0127d13c61bc818a4af", "hash": "a92c68c7f17d91325ff8778995421a5092462a17bfe09f2a5acf4378ad476af9"}
++{"timestamp": "2026-10-26T15:15:03.794517+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmp_ws9aa7p/tally/tests/test_cli.py\"}", "is_error": false, "prev": "a92c68c7f17d91325ff8778995421a5092462a17bfe09f2a5acf4378ad476af9", "hash": "7dbc5744d050b67aba68a2b0d52ee3d6768eb6f78dc7aa66dc4fac6db76dd08f"}
++{"timestamp": "2026-10-26T15:15:04.087838+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmp_ws9aa7p/tally/README.md\"}", "is_error": false, "prev": "7dbc5744d050b67aba68a2b0d52ee3d6768eb6f78dc7aa66dc4fac6db76dd08f", "hash": "ccf3a3640c742dd11d801c14e4dbf04edc61299bc064818cb4ceb47c12918cac"}
++{"timestamp": "2026-10-26T15:15:07.779033+00:00", "tool_name": "Grep", "summary": "{\"pattern\": \"storage\\\\.|recurring\\\\.|Error\", \"path\": \"/tmp/tmpesbb1l8e/tmp_ws9aa7p/tally/src/tally/cli.py\", \"output_mode\": \"content\"}", "is_error": false, "prev": "ccf3a3640c742dd11d801c14e4dbf04edc61299bc064818cb4ceb47c12918cac", "hash": "eaeead89da89670fb76bf0a2d802bf9efc0ae2e5bd5616a282eacd68e7305d87"}
++{"timestamp": "2026-10-26T15:15:08.320131+00:00", "tool_name": "Bash", "summary": "{\"command\": \"wc -l data/*.csv && git check-ignore -v data/expenses.csv; cat src/tally/money.py | head -40\"}", "is_error": false, "prev": "eaeead89da89670fb76bf0a2d802bf9efc0ae2e5bd5616a282eacd68e7305d87", "hash": "6b4a5ceedb598fdcb6ce4df840e21260cf3321665bef05249d39579243830a5f"}
++{"timestamp": "2026-10-26T15:15:18.471055+00:00", "tool_name": "Bash", "summary": "{\"command\": \"python3 - <<'EOF'\\nimport re\\nfrom pathlib import Path\\n\\np = Path(\\\"src/tally/models.py\\\")\\ns = p.read_text()\\nstart = s.index(\\\"    def to_row(self):\\\")\\nend = s.index(\\\"def parse_date\\\")\\ns = s[:start] + '''    def to_dict(self):\\n        return {\\n            \\\"date\\\": self.date.iso", "is_error": false, "prev": "6b4a5ceedb598fdcb6ce4df840e21260cf3321665bef05249d39579243830a5f", "hash": "e98861764de666a5a9723b694133f4d5cefb63ae9ffbe69b9baaa6b263f52d9b"}
++{"timestamp": "2026-10-26T15:15:29.394368+00:00", "tool_name": "Bash", "summary": "{\"command\": \"python3 - <<'EOF'\\nfrom pathlib import Path\\ndef sub(f, pairs):\\n    p = Path(f); s = p.read_text()\\n    for a, b in pairs:\\n        assert a in s, (f, a)\\n        s = s.replace(a, b)\\n    p.write_text(s)\\n\\nsub(\\\"tests/conftest.py\\\", [('\\\"expenses.csv\\\"', '\\\"expenses.json\\\"')])\\nsub(\\\"", "is_error": false, "prev": "e98861764de666a5a9723b694133f4d5cefb63ae9ffbe69b9baaa6b263f52d9b", "hash": "64e22ac7c884f8afb61c6e79142fc3f50e308db7ddd4422c1f9a731fe76cb108"}
++{"timestamp": "2026-10-26T15:15:32.906703+00:00", "tool_name": "Bash", "summary": "{\"command\": \"rm data/expenses.csv data/recurring.csv && ls data && python3 -m pytest tests -q 2>&1 | tail -8; PYTHONPATH=src python3 -m tally summary | tail -3; grep -rniE \\\"csv\\\" src tests README.md; git status --short\"}", "is_error": false, "prev": "64e22ac7c884f8afb61c6e79142fc3f50e308db7ddd4422c1f9a731fe76cb108", "hash": "4b8a43f1e7c42bdd37a95da1ed5257b9260204b7813dd7048fd3665dc25cd5f1"}
+diff --git a/src/tally/models.py b/src/tally/models.py
+index 7b548f2..d0a47c0 100644
+--- a/src/tally/models.py
++++ b/src/tally/models.py
+@@ -32,19 +32,25 @@ class Expense:
+         """The expense's month as "YYYY-MM"."""
+         return self.date.strftime("%Y-%m")
+ 
+-    def to_row(self):
+-        return [self.date.isoformat(), to_plain(self.amount), self.category, self.note]
++    def to_dict(self):
++        return {
++            "date": self.date.isoformat(),
++            "amount": to_plain(self.amount),
++            "category": self.category,
++            "note": self.note,
++        }
+ 
+     @classmethod
+-    def from_row(cls, row):
+-        if len(row) != len(FIELDS):
+-            raise ValueError(f"expected {len(FIELDS)} fields, got {len(row)}: {row!r}")
+-        date_text, amount_text, category, note = row
++    def from_dict(cls, data):
++        if not isinstance(data, dict) or set(data) != set(FIELDS):
++            raise ValueError(f"expected an object with fields {', '.join(FIELDS)}: {data!r}")
++        if not all(isinstance(data[name], str) for name in FIELDS):
++            raise ValueError(f"every field must be a string: {data!r}")
+         return cls(
+-            date=parse_date(date_text),
+-            amount=parse_amount(amount_text),
+-            category=category,
+-            note=note,
++            date=parse_date(data["date"]),
++            amount=parse_amount(data["amount"]),
++            category=data["category"],
++            note=data["note"],
+         )
+ 
+ 
+diff --git a/src/tally/recurring.py b/src/tally/recurring.py
+index cd35554..8ccfec1 100644
+--- a/src/tally/recurring.py
++++ b/src/tally/recurring.py
+@@ -1,14 +1,12 @@
+ """Recurring bills (rent, phone, subscriptions) and which ones are still due.
+ 
+-Recurring bills live in data/recurring.csv next to the expenses file:
++Recurring bills live in data/recurring.json next to the expenses file, a list like:
+ 
+-    category,amount,day,note
+-    rent,1200.00,1,flat on Elm St
++    [{"category": "rent", "amount": "1200.00", "day": 1, "note": "flat on Elm St"}]
+ 
+ `day` is the day of the month the bill is normally paid (1-28).
+ """
+ 
+-import csv
+ from dataclasses import dataclass
+ from pathlib import Path
+ 
+@@ -36,25 +34,22 @@ class Bill:
+ 
+ 
+ def bills_path():
+-    return Path(storage.data_path()).with_name("recurring.csv")
++    return Path(storage.data_path()).with_name("recurring.json")
+ 
+ 
+ def load_bills(path=None):
+     path = Path(path or bills_path())
+-    if not path.exists():
+-        return []
+     bills = []
+-    with path.open(newline="", encoding="utf-8") as handle:
+-        for line_no, row in enumerate(csv.DictReader(handle), start=2):
+-            try:
+-                bills.append(Bill(
+-                    category=row["category"],
+-                    amount=parse_amount(row["amount"]),
+-                    day=int(row["day"]),
+-                    note=row.get("note") or "",
+-                ))
+-            except (KeyError, TypeError, ValueError) as err:
+-                raise storage.StorageError(f"{path}, line {line_no}: {err}") from None
++    for index, item in enumerate(storage.read_json_list(path), start=1):
++        try:
++            bills.append(Bill(
++                category=item["category"],
++                amount=parse_amount(item["amount"]),
++                day=item["day"],
++                note=item.get("note") or "",
++            ))
++        except (KeyError, TypeError, AttributeError, ValueError) as err:
++            raise storage.StorageError(f"{path}, item {index}: {err!r}") from None
+     return bills
+ 
+ 
+diff --git a/src/tally/storage.py b/src/tally/storage.py
+index 585c270..9687f07 100644
+--- a/src/tally/storage.py
++++ b/src/tally/storage.py
+@@ -1,63 +1,62 @@
+-"""Reading and writing the expenses file (CSV, one expense per line)."""
++"""Reading and writing the expenses file (JSON: a list of expense objects)."""
+ 
+-import csv
++import json
+ import os
+ from pathlib import Path
+ 
+-from tally.models import FIELDS, Expense
++from tally.models import Expense
+ 
+ PROJECT_ROOT = Path(__file__).resolve().parents[2]
+-DEFAULT_PATH = PROJECT_ROOT / "data" / "expenses.csv"
+-HEADER = ",".join(FIELDS)
++DEFAULT_PATH = PROJECT_ROOT / "data" / "expenses.json"
+ 
+ 
+ class StorageError(Exception):
+-    """The expenses file exists but cannot be read."""
++    """A data file exists but cannot be read."""
+ 
+ 
+ def data_path():
+-    """Where the expenses live: $TALLY_FILE if set, else data/expenses.csv."""
++    """Where the expenses live: $TALLY_FILE if set, else data/expenses.json."""
+     override = os.environ.get("TALLY_FILE")
+     return Path(override) if override else DEFAULT_PATH
+ 
+ 
++def read_json_list(path):
++    """The list stored in a JSON data file. A missing file is an empty list."""
++    if not path.exists():
++        return []
++    try:
++        items = json.loads(path.read_text(encoding="utf-8"))
++    except (OSError, ValueError) as err:
++        raise StorageError(f"{path}: {err}") from None
++    if not isinstance(items, list):
++        raise StorageError(f"{path}: expected a JSON list")
++    return items
++
++
+ def load(path=None):
+     """All expenses in file order. A missing file means no expenses yet."""
+     path = Path(path or data_path())
+-    if not path.exists():
+-        return []
+     expenses = []
+-    with path.open(newline="", encoding="utf-8") as handle:
+-        reader = csv.reader(handle)
+-        for line_no, row in enumerate(reader, start=1):
+-            if not row or (line_no == 1 and row == list(FIELDS)):
+-                continue
+-            try:
+-                expenses.append(Expense.from_row(row))
+-            except ValueError as err:
+-                raise StorageError(f"{path}, line {line_no}: {err}") from None
++    for index, item in enumerate(read_json_list(path), start=1):
++        try:
++            expenses.append(Expense.from_dict(item))
++        except ValueError as err:
++            raise StorageError(f"{path}, item {index}: {err}") from None
+     return expenses
+ 
+ 
+-def _ensure_file(path):
+-    path.parent.mkdir(parents=True, exist_ok=True)
+-    if not path.exists():
+-        path.write_text(HEADER + "\n", encoding="utf-8")
+-
+-
+ def append(expense, path=None):
+     """Add one expense at the end of the file."""
+     path = Path(path or data_path())
+-    _ensure_file(path)
+-    with path.open("a", encoding="utf-8") as handle:
+-        handle.write(",".join(expense.to_row()) + "\n")
++    save_all(load(path) + [expense], path)
+ 
+ 
+ def save_all(expenses, path=None):
+-    """Rewrite the whole file. Used after a delete."""
++    """Rewrite the whole file."""
+     path = Path(path or data_path())
+     tmp = path.with_suffix(".tmp")
+     tmp.parent.mkdir(parents=True, exist_ok=True)
+-    lines = [HEADER] + [",".join(e.to_row()) for e in expenses]
+-    tmp.write_text("\n".join(lines) + "\n", encoding="utf-8")
++    tmp.write_text(
++        json.dumps([e.to_dict() for e in expenses], indent=2) + "\n", encoding="utf-8"
++    )
+     os.replace(tmp, path)
+diff --git a/tests/conftest.py b/tests/conftest.py
+index ee942d9..78d0be1 100644
+--- a/tests/conftest.py
++++ b/tests/conftest.py
+@@ -11,7 +11,7 @@ sys.path.insert(0, str(SRC))
+ 
+ @pytest.fixture
+ def data_file(tmp_path, monkeypatch):
+-    path = tmp_path / "expenses.csv"
++    path = tmp_path / "expenses.json"
+     monkeypatch.setenv("TALLY_FILE", str(path))
+     return path
+ 
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 97e72cb..334fff4 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -1,3 +1,6 @@
++import json
++
++
+ def test_add_and_list(tally):
+     assert tally("add", "12.50", "Food", "groceries", "--date", "2026-03-02").returncode == 0
+     assert tally("add", "1200", "rent", "--date", "2026-03-01").returncode == 0
+@@ -46,9 +49,10 @@ def test_split(tally):
+ 
+ 
+ def test_due(tally, data_file):
+-    data_file.with_name("recurring.csv").write_text(
+-        "category,amount,day,note\nrent,1200.00,1,flat\nphone,30.00,20,mobile\n"
+-    )
++    data_file.with_name("recurring.json").write_text(json.dumps([
++        {"category": "rent", "amount": "1200.00", "day": 1, "note": "flat"},
++        {"category": "phone", "amount": "30.00", "day": 20, "note": "mobile"},
++    ]))
+     tally("add", "1200", "rent", "--date", "2026-03-01")
+     assert tally("due", "--today", "2026-03-10").stdout.strip() == "Nothing due."
+     out = tally("due", "--today", "2026-04-25").stdout
+diff --git a/tests/test_models.py b/tests/test_models.py
+index 59f07fd..fa59b76 100644
+--- a/tests/test_models.py
++++ b/tests/test_models.py
+@@ -5,9 +5,22 @@ import pytest
+ from tally.models import Expense, new_expense, normalize_category
+ 
+ 
+-def test_round_trip_row():
++def test_round_trip_dict():
+     e = Expense(dt.date(2026, 3, 2), 1250, "food", "groceries")
+-    assert Expense.from_row(e.to_row()) == e
++    assert e.to_dict() == {
++        "date": "2026-03-02", "amount": "12.50", "category": "food", "note": "groceries",
++    }
++    assert Expense.from_dict(e.to_dict()) == e
++
++
++@pytest.mark.parametrize("data", [
++    {"date": "2026-03-02", "amount": "1", "category": "food"},
++    {"date": "2026-03-02", "amount": 1.5, "category": "food", "note": ""},
++    ["2026-03-02", "1", "food", ""],
++])
++def test_from_dict_rejects_bad_shape(data):
++    with pytest.raises(ValueError):
++        Expense.from_dict(data)
+ 
+ 
+ def test_normalize_category():
+diff --git a/tests/test_storage.py b/tests/test_storage.py
+index 53923f9..1bdb49f 100644
+--- a/tests/test_storage.py
++++ b/tests/test_storage.py
+@@ -1,4 +1,5 @@
+ import datetime as dt
++import json
+ 
+ import pytest
+ 
+@@ -7,21 +8,21 @@ from tally.models import Expense
+ 
+ 
+ def test_missing_file_is_empty(tmp_path):
+-    assert storage.load(tmp_path / "nope.csv") == []
++    assert storage.load(tmp_path / "nope.json") == []
+ 
+ 
+ def test_append_then_load(tmp_path):
+-    path = tmp_path / "e.csv"
++    path = tmp_path / "e.json"
+     a = Expense(dt.date(2026, 1, 5), 900, "transport", "bus pass")
+     b = Expense(dt.date(2026, 1, 6), 4550, "food", "")
+     storage.append(a, path)
+     storage.append(b, path)
+     assert storage.load(path) == [a, b]
+-    assert path.read_text().splitlines()[0] == storage.HEADER
++    assert json.loads(path.read_text()) == [a.to_dict(), b.to_dict()]
+ 
+ 
+ def test_save_all_rewrites(tmp_path):
+-    path = tmp_path / "e.csv"
++    path = tmp_path / "e.json"
+     a = Expense(dt.date(2026, 1, 5), 900, "transport", "bus pass")
+     storage.append(a, path)
+     storage.save_all([], path)
+@@ -29,7 +30,17 @@ def test_save_all_rewrites(tmp_path):
+ 
+ 
+ def test_corrupt_line_names_the_line(tmp_path):
+-    path = tmp_path / "e.csv"
+-    path.write_text("date,amount,category,note\n2026-01-05,abc,food,x\n")
+-    with pytest.raises(storage.StorageError, match="line 2"):
++    path = tmp_path / "e.json"
++    path.write_text(json.dumps([
++        {"date": "2026-01-05", "amount": "1", "category": "food", "note": ""},
++        {"date": "2026-01-05", "amount": "abc", "category": "food", "note": "x"},
++    ]))
++    with pytest.raises(storage.StorageError, match="item 2"):
++        storage.load(path)
++
++
++def test_invalid_json_is_a_storage_error(tmp_path):
++    path = tmp_path / "e.json"
++    path.write_text("not json")
++    with pytest.raises(storage.StorageError):
+         storage.load(path)

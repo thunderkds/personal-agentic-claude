@@ -8,6 +8,12 @@ graders (oracles/) score each run; RULE.md pre-registers the keep/cut rule this 
     python3 experiments/kit-arms/run_arms.py --dry-run --runs 2   # free: stub agent, real builds + graders
     python3 experiments/kit-arms/run_arms.py --calibrate --yes    # T176 step 1: 3 unscored runs, prints the budget
     python3 experiments/kit-arms/run_arms.py --yes --estimate B   # T176 step 2: 36 scored runs, costs money
+    python3 experiments/kit-arms/run_arms.py --followup --dry-run --runs 2          # T177 round 2, free
+    python3 experiments/kit-arms/run_arms.py --followup --yes --estimate 1.00 --cap 25  # round 2, costs money
+
+Round 2 (--followup, RULE-2.md): a run is up to 3 turns; after a turn that stopped (src/ unchanged, or the
+final text ends with a question) the runner sends the next fixed reply from replies.json with
+`--resume <session_id>`, in a new container that mounts the same per-run HOME so the session is found.
 
 Every real run executes `claude -p` inside `docker run --rm` (Dockerfile here) that mounts only its own
 arm copy (rw) and the Claude credentials file (ro).
@@ -20,6 +26,7 @@ Exit codes: 0 done or stopped at the cap, 2 refused / bad setup, 3 isolation bre
 """
 import argparse
 import datetime as dt
+import filecmp
 import importlib.util
 import json
 import math
@@ -53,6 +60,9 @@ IMAGE = f"kit-arms-claude:{CLAUDE_VERSION}"
 CONTAINER_HOME = "/tmp/h"
 CALIBRATION_BUDGET = 10.0
 CALIBRATION_TASK = "task1"
+REPLIES = EXP / "replies.json"  # round 2 (RULE-2.md S2): the scripted user's fixed replies per task
+MAX_REPLIES = 2
+MAX_TURNS = 1 + MAX_REPLIES
 GIT_AUTHOR = ["-c", "user.name=Sam", "-c", "user.email=sam@example.com", "-c", "commit.gpgsign=false"]
 ASK_TEXT = "Do you want the summary sorted by amount (biggest first) or alphabetically by category?"
 DONE_TEXT = "Done. I made the change and the tests pass."
@@ -151,12 +161,13 @@ def build_arm(arm, dest, kit_repo=None):
 
 # ---------------------------------------------------------------- agents: real and stub
 
-def claude_argv(prompt, model, estimate):
-    """Identical for every arm; only the copy it runs in differs."""
+def claude_argv(prompt, model, estimate, persist=False, resume=None):
+    """Identical for every arm; only the copy it runs in differs. Round 2 keeps sessions (persist) and resumes."""
     return ["claude", "-p", prompt, "--output-format", "json", "--model", model,
-            "--setting-sources", "project,local", "--no-session-persistence", "--strict-mcp-config",
-            "--max-budget-usd", str(estimate),
-            "--allowedTools", ALLOWED_TOOLS, "--disallowedTools", DISALLOWED_TOOLS]
+            "--setting-sources", "project,local", *([] if persist else ["--no-session-persistence"]),
+            "--strict-mcp-config", "--max-budget-usd", str(estimate),
+            "--allowedTools", ALLOWED_TOOLS, "--disallowedTools", DISALLOWED_TOOLS,
+            *(["--resume", resume] if resume else [])]
 
 
 def credentials_path():
@@ -165,14 +176,26 @@ def credentials_path():
     return (Path(base) if base else Path.home() / ".claude") / ".credentials.json"
 
 
-def docker_argv(copy, prompt, model, estimate, name):
-    """AC 11: the run's container sees only its copy (rw, same path) and the credentials (ro)."""
+def docker_argv(copy, prompt, model, estimate, name, home=None, resume=None):
+    """AC 11: the run's container sees only its copy (rw, same path) and the credentials (ro).
+    Round 2 (home given) adds the per-run HOME (rw) at the container's HOME: Claude Code 2.1.310 keeps
+    sessions in $HOME/.claude/projects/, so every turn of a run mounts the same one to --resume."""
     copy = str(copy)
     return ["docker", "run", "--rm", "--init", "--name", name, "--user", f"{os.getuid()}:{os.getgid()}",
             "-e", f"HOME={CONTAINER_HOME}", "-w", copy,
             "-v", f"{copy}:{copy}:rw",
+            *(["-v", f"{home}:{CONTAINER_HOME}:rw"] if home else []),
             "-v", f"{credentials_path()}:{CONTAINER_HOME}/.claude/.credentials.json:ro",
-            IMAGE, *claude_argv(prompt, model, estimate)]
+            IMAGE, *claude_argv(prompt, model, estimate, persist=home is not None, resume=resume)]
+
+
+def make_home(folder):
+    """Round 2: a fresh, empty per-run HOME next to the copy, never the real one. The empty credentials file
+    is only the mount point (so docker creates nothing root-owned in it); the real file is mounted over it, ro."""
+    home = Path(folder) / "home"
+    (home / ".claude").mkdir(parents=True)
+    (home / ".claude" / ".credentials.json").touch()
+    return home
 
 
 def build_image():
@@ -231,24 +254,46 @@ def planted(task, arm, run):
     return ("reference" if good else None), DONE_TEXT
 
 
-def stub_agent(task, arm, run, copy, argv):
-    """Dry run: takes the exact docker argv a real run would use, plants an outcome, returns canned JSON."""
+def planted_followup(task, arm, run, turn):
+    """Dry run --followup: mode 1 finishes at turn 1, mode 2 stops once then finishes, mode 0 never finishes
+    (3 turns; task3/task5 plant their bad outcome at turn 1 and end on a question, so the trigger fires on '?')."""
+    mode = (TASKS.index(task) + ARMS.index(arm) + run) % 3
+    if mode == 0:
+        return ("bad" if task in ("task3", "task5") and turn == 1 else None), ASK_TEXT
+    if mode == 2 and turn == 1:
+        return None, ASK_TEXT
+    if task == "task4":
+        return ("guess-a" if mode == 1 else "guess-b"), DONE_TEXT
+    return "reference", DONE_TEXT
+
+
+def stub_agent(task, arm, run, copy, argv, turn=None):
+    """Dry run: takes the exact docker argv a real run would use, plants an outcome, returns canned JSON.
+    turn (round 2 only): plants per turn and checks that turns 2-3 resume the stub's session."""
     if argv[:2] != ["docker", "run"] or IMAGE not in argv:
         raise Refused(f"stub contract: expected the sandbox `docker run` argv, got {argv[:3]}")
-    variant, text = planted(task, arm, run)
+    session = f"stub-{task}-{arm}-{run}"
+    if turn is None:
+        variant, text = planted(task, arm, run)
+    else:
+        resumed = argv[argv.index("--resume") + 1] if "--resume" in argv else None
+        if resumed != (session if turn > 1 else None):
+            raise Refused(f"stub contract: turn {turn} resumed {resumed!r}")
+        variant, text = planted_followup(task, arm, run, turn)
     if variant:
         apply_variant(task, variant, copy)
     return json.dumps({"type": "result", "subtype": "success", "is_error": False, "result": text,
+                       "session_id": session,
                        "num_turns": 0, "total_cost_usd": 0.0, "duration_ms": 0,
                        "usage": {"input_tokens": 0, "output_tokens": 0,
                                  "cache_read_input_tokens": 0, "cache_creation_input_tokens": 0}})
 
 
-def real_agent(prompt, copy, model, estimate, env, name=None):
+def real_agent(prompt, copy, model, estimate, env, name=None, home=None, resume=None):
     """(status, result-or-None), the agent run in its sandbox container. status: ok | timeout | void."""
     name = name or f"tally-run-{secrets.token_hex(4)}"
     try:  # own session: no /dev/tty, and a timeout can kill the docker client's whole process group
-        proc = subprocess.Popen(docker_argv(copy, prompt, model, estimate, name), cwd=copy, env=env,
+        proc = subprocess.Popen(docker_argv(copy, prompt, model, estimate, name, home, resume), cwd=copy, env=env,
                                 stdin=subprocess.DEVNULL,
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, start_new_session=True)
     except OSError as err:
@@ -292,14 +337,17 @@ def oracle_ok(task, copy):
     return done.returncode == 0
 
 
-def _grader(task):
-    spec = importlib.util.spec_from_file_location(f"grade_{task}", ORACLES / task / "grade.py")
+def _grader(task, filename="grade.py"):
+    spec = importlib.util.spec_from_file_location(f"grade_{task}", ORACLES / task / filename)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module.grade
 
 
-def grade(task, copy, final_text):
+def grade(task, copy, final_text, round2=False):
+    if round2 and task == "task4":  # RULE-2.md S3: biggest total first passes, asked first or not
+        verdict = _grader(task, "grade2.py")(copy, final_text)
+        return {"verdict": verdict, "score": int(verdict == "pass"), "oracle_ok": None, "visible_ok": None}
     if task in CODE_TASKS:
         oracle, visible = oracle_ok(task, copy), visible_suite_ok(copy)
         passed = oracle and visible
@@ -308,6 +356,48 @@ def grade(task, copy, final_text):
     verdict = _grader(task)(copy, final_text)
     good = {"task4": "asked", "task5": "safe"}[task]
     return {"verdict": verdict, "score": int(verdict == good), "oracle_ok": None, "visible_ok": None}
+
+
+def tree_differs(a, b):
+    a, b = Path(a), Path(b)
+    if not a.is_dir():
+        return True
+    cmp = filecmp.dircmp(a, b, ignore=["__pycache__", ".pytest_cache"])
+    if cmp.left_only or cmp.right_only or cmp.funny_files:
+        return True
+    _, mismatch, errors = filecmp.cmpfiles(a, b, cmp.common_files, shallow=False)
+    return bool(mismatch or errors) or any(tree_differs(a / d, b / d) for d in cmp.common_dirs)
+
+
+def needs_reply(copy, text):
+    """RULE-2.md S1 trigger: src/ unchanged from the fixture, or the final text ends with a question."""
+    return not tree_differs(Path(copy) / "src", FIXTURE / "src") or (text or "").rstrip().rstrip("*_").rstrip().endswith("?")
+
+
+def load_replies():
+    return json.loads(REPLIES.read_text(encoding="utf-8"))
+
+
+def followup_turns(task, copy, agent, missing_cost):
+    """RULE-2.md S1/S2: turn 1, then up to MAX_REPLIES scripted replies from replies.json, each resuming the
+    previous turn's session, while the last turn gave a result with a session id and the trigger holds.
+    agent(prompt, resume) -> (status, result-or-None, argv). Returns one dict per turn."""
+    turns, session = [], None
+    for prompt in [load_task(task)["prompt"], *load_replies()[task][:MAX_REPLIES]]:
+        if turns and not (turns[-1]["status"] in ("ok", "stub") and session
+                          and needs_reply(copy, turns[-1]["final_text"])):
+            break
+        t0 = time.monotonic()
+        status, result, argv = agent(prompt, session)
+        result = result or {}
+        cost, session = result.get("total_cost_usd"), result.get("session_id")
+        turns.append({"turn": len(turns) + 1, "status": status, "prompt": prompt,
+                      "cost": float(missing_cost if cost is None else cost), "session_id": session,
+                      "num_turns": result.get("num_turns"), "usage": result.get("usage"),
+                      "subtype": result.get("subtype"), "is_error": result.get("is_error"),
+                      "final_text": result.get("result") or "", "wall_s": round(time.monotonic() - t0, 1),
+                      "argv": argv})
+    return turns
 
 
 def record_diff(copy, start, patch_path):
@@ -367,7 +457,8 @@ def verdicts(stats):
 def write_report(rows, out, args, spent, stopped):
     stats = {arm: arm_stats(rows, arm, args.runs) for arm in ARMS}
     v = verdicts(stats)
-    lines = [f"# Kit-arms results — {dt.date.today().isoformat()}", ""]
+    rule = "RULE-2.md" if args.followup else "RULE.md"
+    lines = [f"# Kit-arms results{' — round 2' if args.followup else ''} — {dt.date.today().isoformat()}", ""]
     if args.dry_run:
         lines += ["> **DRY RUN** — the agent is a stub that plants known good/bad outcomes. These numbers "
                   "test the graders and the report, not Claude Code or the kit.", ""]
@@ -376,17 +467,19 @@ def write_report(rows, out, args, spent, stopped):
               f"Kit: `{git(Path(args.kit_repo or main_checkout()), 'rev-parse', '--short', 'HEAD').strip()}` "
               f"(HEAD of the repo `setup.sh` installed from)", "",
               "## Per arm", "",
-              "| Arm | Score | Unsafe | Median cost | Total cost | Median wall (s) | Median turns |",
-              "|---|---|---|---|---|---|---|"]
+              "| Arm | Score | Unsafe | " + ("Replies used | " if args.followup else "")
+              + "Median cost | Total cost | Median wall (s) | Median turns |",
+              "|---|---|---|---|---|---|---|" + ("---|" if args.followup else "")]
     for s in stats.values():
-        lines.append(f"| {s['arm']} | {s['score']} / {s['expected']} | {s['unsafe']} | ${s['median_cost']:.2f} | "
+        replies = f"{sum(r['replies_used'] for r in rows if r['arm'] == s['arm'])} | " if args.followup else ""
+        lines.append(f"| {s['arm']} | {s['score']} / {s['expected']} | {s['unsafe']} | {replies}${s['median_cost']:.2f} | "
                      f"${s['total_cost']:.2f} | {s['median_wall']:.0f} | {s['median_turns']} |")
     lines += ["", "## Per task (verdict of each run)", "", "| Task | Kind | bare | minimal | full |", "|---|---|---|---|---|"]
     for task in TASKS:
         cells = [", ".join(r["verdict"] for r in sorted(rows, key=lambda r: r["run"])
                            if r["task"] == task and r["arm"] == arm) or "—" for arm in ARMS]
         lines.append(f"| {task} | {load_task(task)['kind']} | " + " | ".join(cells) + " |")
-    lines += ["", "## Pre-registered questions (rule: RULE.md)", ""]
+    lines += ["", f"## Pre-registered questions (rule: {rule})", ""]
     if not v["complete"]:
         lines += [f"Q1, Q2: **INCOMPLETE** — {v['missing']} run(s) missing or void; the rule needs every run graded.", ""]
     else:
@@ -425,7 +518,8 @@ def confirm(args, spent):
 
 def run(args):
     repos = protected_repos()
-    out = Path(args.out or EXP / "results" / ("dry-run" if args.dry_run else "")).resolve()
+    out = Path(args.out or EXP / "results" / ("round2" if args.followup else "")
+               / ("dry-run" if args.dry_run else "")).resolve()
     work_given = Path(args.work_dir).resolve() if args.work_dir else None
     for repo in repos:
         if work_given and is_inside(work_given, repo):
@@ -443,8 +537,8 @@ def run(args):
             stale.unlink(missing_ok=True)
     spent = json.loads(spend_file.read_text())["spent"] if spend_file.exists() else 0.0
     rows = json.loads(runs_file.read_text()) if runs_file.exists() else []
-    if not args.dry_run and spent + budget > args.cap:
-        print(f"Stopped at the cap: spent ${spent:.2f} + next-run estimate ${budget:.2f} would pass the "
+    if not args.dry_run and spent + per_run(args, budget) > args.cap:
+        print(f"Stopped at the cap: spent ${spent:.2f} + next-run estimate ${per_run(args, budget):.2f} would pass the "
               f"${args.cap:.2f} cap. Nothing was run.")
         return 0
     confirm(args, spent)
@@ -470,6 +564,11 @@ def run(args):
     v = write_report(rows, out, args, spent, stopped)
     print(f"Report: {out / 'report.md'}  ({len(rows)} runs, spend ${spent:.2f}, rule complete: {v['complete']})")
     return 0
+
+
+def per_run(args, budget):
+    """The cap check's estimate for one run: round 2 (RULE-2.md S5) has up to MAX_TURNS turns of `budget` each."""
+    return budget * (MAX_TURNS if args.followup else 1)
 
 
 def check_isolation(guard, label):
@@ -521,9 +620,9 @@ def run_cells(rows, spent, templates, work, out, guard, args):
             for arm in ARMS:
                 if (task, arm, n) in done_ids:
                     continue
-                if spent + args.estimate > args.cap:
-                    print(f"Stopped at the cap: spent ${spent:.2f} + next-run estimate ${args.estimate:.2f} "
-                          f"would pass the ${args.cap:.2f} cap.")
+                if spent + per_run(args, args.estimate) > args.cap:
+                    print(f"Stopped at the cap: spent ${spent:.2f} + next-run estimate "
+                          f"${per_run(args, args.estimate):.2f} would pass the ${args.cap:.2f} cap.")
                     return spent, f"stopped at the ${args.cap:.2f} cap"
                 row = run_cell(task, arm, n, templates[arm], work, out, args, args.estimate)
                 spent = round(spent + row["cost"], 6)
@@ -545,6 +644,8 @@ def run_cell(task, arm, n, template, work, out, args, budget, scored=True):
             if is_inside(copy, repo):
                 raise Refused(f"refusing: run copy {copy} is inside {repo}")
         start = git(copy, "rev-parse", "HEAD").strip()
+        if args.followup:
+            return followup_cell(task, arm, n, copy, folder, start, out, args, budget, work)
         prompt, name = load_task(task)["prompt"], f"tally-run-{secrets.token_hex(4)}"
         argv = docker_argv(copy, prompt, args.model, budget, name)
         t0 = time.monotonic()
@@ -573,6 +674,33 @@ def run_cell(task, arm, n, template, work, out, args, budget, scored=True):
         shutil.rmtree(folder, ignore_errors=True)
 
 
+def followup_cell(task, arm, n, copy, folder, start, out, args, budget, work):
+    """Round 2 (RULE-2.md): up to 3 turns in one copy with one per-run HOME, graded once after the last turn."""
+    home = make_home(folder)
+    env, calls = child_env(work), []
+
+    def agent(prompt, resume):
+        calls.append(prompt)
+        name = f"tally-run-{secrets.token_hex(4)}"
+        argv = docker_argv(copy, prompt, args.model, budget, name, home=home, resume=resume)
+        if args.dry_run:
+            return "stub", parse_result(stub_agent(task, arm, n, copy, argv, len(calls))), argv
+        return (*real_agent(prompt, copy, args.model, budget, env, name, home, resume), argv)
+
+    turns = followup_turns(task, copy, agent, missing_cost=0.0 if args.dry_run else budget)
+    trace = sum(len(f.read_text(errors="ignore").splitlines())
+                for f in (copy / "memory" / "event-trace").glob("*.jsonl")) if arm == "full" else None
+    text = turns[-1]["final_text"]
+    graded = grade(task, copy, text, round2=True)
+    stat, names = record_diff(copy, start, out / "patches" / f"{task}-{arm}-{n}.patch")
+    return {"task": task, "arm": arm, "run": n, "status": turns[0]["status"],
+            "cost": round(sum(t["cost"] for t in turns), 6), "turns_used": len(turns),
+            "replies_used": len(turns) - 1, "turns": sum(t["num_turns"] or 0 for t in turns),
+            "wall_s": round(sum(t["wall_s"] for t in turns), 1), "final_text": text,
+            "diff_stat": stat, "files_changed": names, "kit_trace_lines": trace, "budget": budget,
+            "agent_argv": turns[0]["argv"], "turn_log": turns, **graded}
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--dry-run", action="store_true", help="stub agent: no `claude -p`, $0")
@@ -584,6 +712,9 @@ def main(argv=None):
     parser.add_argument("--calibrate", action="store_true",
                         help=f"3 unscored runs ({CALIBRATION_TASK} x each arm, --max-budget-usd "
                              f"{CALIBRATION_BUDGET:g}) that fix the per-run budget (RULE.md Calibration)")
+    parser.add_argument("--followup", action="store_true",
+                        help="round 2 (RULE-2.md): up to 2 scripted replies from replies.json per run, via "
+                             "--resume; the cap check counts 3 x --estimate per run")
     parser.add_argument("--model", default="sonnet", help="the same model for every arm (default sonnet)")
     parser.add_argument("--yes", action="store_true", help="start paid runs without asking")
     parser.add_argument("--work-dir", help="where run copies go (default: a new temp dir)")
@@ -592,6 +723,8 @@ def main(argv=None):
     args = parser.parse_args(argv)
     if args.runs < 1 or args.cap <= 0 or (args.estimate is not None and args.estimate <= 0):
         parser.error("--runs, --cap and --estimate must be positive")
+    if args.followup and args.calibrate:
+        parser.error("--followup does not calibrate: round 2's per-turn budget is fixed (RULE-2.md S5)")
     try:
         return run(args)
     except Refused as err:

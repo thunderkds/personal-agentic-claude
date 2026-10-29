@@ -1,0 +1,65 @@
+diff --git a/memory/event-trace/_untagged.jsonl b/memory/event-trace/_untagged.jsonl
+new file mode 100644
+index 0000000..544c48d
+--- /dev/null
++++ b/memory/event-trace/_untagged.jsonl
+@@ -0,0 +1,13 @@
++{"timestamp": "2026-10-26T15:09:37.557379+00:00", "tool_name": "Skill", "summary": "{\"skill\": \"wake\"}", "is_error": false, "prev": "genesis", "hash": "88e8cd754b76e75b826b621f900aca5ca99a2f3a7f1200a84419f151ed51db59"}
++{"timestamp": "2026-10-26T15:09:38.562780+00:00", "tool_name": "Grep", "summary": "{\"pattern\": \"split|join|fields|csv\", \"path\": \"/tmp/tmpesbb1l8e/tmpacq7ec3u/tally\", \"glob\": \"*.py\", \"output_mode\": \"content\"}", "is_error": false, "prev": "88e8cd754b76e75b826b621f900aca5ca99a2f3a7f1200a84419f151ed51db59", "hash": "337827165471a4147c710ddf70ed0d21b2b2760dc5b4a4e2ee9706e3ad5efbf2"}
++{"timestamp": "2026-10-26T15:09:41.731122+00:00", "tool_name": "Bash", "summary": "{\"command\": \"git log --oneline -10; ls; ls tally tests 2>/dev/null; python3 scripts/pull_moment.py wake 2>&1 | head -3; python3 skills/wake/scripts/dirty_worktrees.py 2>&1 | head -3; grep -n \\\"In Progress\\\\|\\ud83d\\udd04\\\" PROJECT_KANBAN.md | head; ls memory memory/learning-records 2>&1 | head\"}", "is_error": false, "prev": "337827165471a4147c710ddf70ed0d21b2b2760dc5b4a4e2ee9706e3ad5efbf2", "hash": "2e4f7943759d04b90fa35f03e986a75dc96a38f68e799d56a1dfc42f37ef1a49"}
++{"timestamp": "2026-10-26T15:09:41.838073+00:00", "tool_name": "Glob", "summary": "{\"pattern\": \"tally/**/*.py\", \"path\": \"/tmp/tmpesbb1l8e/tmpacq7ec3u/tally\"}", "is_error": false, "prev": "2e4f7943759d04b90fa35f03e986a75dc96a38f68e799d56a1dfc42f37ef1a49", "hash": "eb81ce46093f709c38c6f19beaba84cc2ba39ecee8f397714eed8ccf94731a6d"}
++{"timestamp": "2026-10-26T15:09:44.098580+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpacq7ec3u/tally/src/tally/storage.py\"}", "is_error": false, "prev": "eb81ce46093f709c38c6f19beaba84cc2ba39ecee8f397714eed8ccf94731a6d", "hash": "1bea9fb041db64f494f02333254401b79eafbb992da7f0c654c1d98cb28294fc"}
++{"timestamp": "2026-10-26T15:09:44.553096+00:00", "tool_name": "Bash", "summary": "{\"command\": \"cat tests/test_storage.py | head -60; ls data tasks | head -20\"}", "is_error": false, "prev": "1bea9fb041db64f494f02333254401b79eafbb992da7f0c654c1d98cb28294fc", "hash": "ddf77424f0218f5d65a2d4c71ae27c0f4e507fc882c7fe0062ba4622a791ee39"}
++{"timestamp": "2026-10-26T15:09:48.963811+00:00", "tool_name": "Bash", "summary": "{\"command\": \"grep -n \\\"join\\\\|csv\\\" src/tally/recurring.py src/tally/models.py; wc -l templates/TASK_GUIDE_template.md; ls templates\"}", "is_error": false, "prev": "ddf77424f0218f5d65a2d4c71ae27c0f4e507fc882c7fe0062ba4622a791ee39", "hash": "36923abf1516ae5215c90735a1391f750ac134eb6749eda97d0bbe0e117cacab"}
++{"timestamp": "2026-10-26T15:09:52.464575+00:00", "tool_name": "Skill", "summary": "{\"skill\": \"bugfix\", \"args\": \"Notes containing commas break the expenses file. `tally add 18.40 eating-out \\\"pho, then bubble tea\\\"` reports Added, then `tally list`/`tally summary` fail with \\\"expected 4 fields, got 5\\\". Root cause (already found): src/tally/storage.py append() and save_all() write ", "is_error": false, "prev": "36923abf1516ae5215c90735a1391f750ac134eb6749eda97d0bbe0e117cacab", "hash": "949edb9bf6b3757d7457f30fbcc3be970472fdd4559581489964319dafe02f05"}
++{"timestamp": "2026-10-26T15:10:03.976088+00:00", "tool_name": "Edit", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpacq7ec3u/tally/src/tally/storage.py\", \"old_string\": \"    with path.open(\\\"a\\\", encoding=\\\"utf-8\\\") as handle:\\n        handle.write(\\\",\\\".join(expense.to_row()) + \\\"\\\\n\\\")\", \"new_string\": \"    with path.open(\\\"a\\\", newline=\\\"\\\", encoding=\\\"utf-8\\\") as handle:\\n    ", "is_error": false, "prev": "949edb9bf6b3757d7457f30fbcc3be970472fdd4559581489964319dafe02f05", "hash": "50d9090abcb278275753c149b5b6502d163c2e616ed41b3e83d2139435c2d296"}
++{"timestamp": "2026-10-26T15:10:05.064587+00:00", "tool_name": "Edit", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpacq7ec3u/tally/src/tally/storage.py\", \"old_string\": \"    lines = [HEADER] + [\\\",\\\".join(e.to_row()) for e in expenses]\\n    tmp.write_text(\\\"\\\\n\\\".join(lines) + \\\"\\\\n\\\", encoding=\\\"utf-8\\\")\", \"new_string\": \"    with tmp.open(\\\"w\\\", newline=\\\"\\\", encoding=\\\"utf-8\\\")", "is_error": false, "prev": "50d9090abcb278275753c149b5b6502d163c2e616ed41b3e83d2139435c2d296", "hash": "24bf906beb22c38ca06928c69276e79adee9e5ea9a6bddcf78caa4e8fd53d154"}
++{"timestamp": "2026-10-26T15:10:08.053230+00:00", "tool_name": "Bash", "summary": "{\"command\": \"cat >> tests/test_storage.py <<'EOF'\\n\\n\\n@pytest.mark.parametrize(\\\"note\\\", [\\\"pho, then bubble tea\\\", 'the \\\"good\\\" one', \\\"two\\\\nlines\\\"])\\ndef test_awkward_notes_round_trip(tmp_path, note):\\n    path = tmp_path / \\\"e.csv\\\"\\n    a = Expense(dt.date(2026, 1, 5), 1840, \\\"eating-out\\\", ", "is_error": false, "prev": "24bf906beb22c38ca06928c69276e79adee9e5ea9a6bddcf78caa4e8fd53d154", "hash": "01e711376abd58e570226080d2201325551ec57e238886979174d00ea92a8ca2"}
++{"timestamp": "2026-10-26T15:10:18.764097+00:00", "tool_name": "Bash", "summary": "{\"command\": \"sed -i 's/, \\\"two\\\\\\\\nlines\\\"\\\\]/]/' tests/test_storage.py && python3 -m pytest -q 2>&1 | tail -3 && export TALLY_FILE=/tmp/t_$$.csv && python3 -m tally add 18.40 eating-out \\\"pho, then bubble tea\\\" && python3 -m tally list && python3 -m tally summary; rm -f /tmp/t_$$.csv; git status --", "is_error": false, "prev": "01e711376abd58e570226080d2201325551ec57e238886979174d00ea92a8ca2", "hash": "7bec2dc14263eec924ab1c447619358904581b212030895076bffb012e630a14"}
++{"timestamp": "2026-10-26T15:10:24.908739+00:00", "tool_name": "Bash", "summary": "{\"command\": \"export PYTHONPATH=src TALLY_FILE=/tmp/t_$$.csv && python3 -m tally add 18.40 eating-out \\\"pho, then bubble tea\\\" && python3 -m tally list && python3 -m tally summary; rm -f /tmp/t_$$.csv\"}", "is_error": false, "prev": "7bec2dc14263eec924ab1c447619358904581b212030895076bffb012e630a14", "hash": "a790c3e5f79f7506fbea31f09fe7e897809774264a438b5e9d2174a1fe2da2a9"}
+diff --git a/src/tally/storage.py b/src/tally/storage.py
+index 585c270..460e6dd 100644
+--- a/src/tally/storage.py
++++ b/src/tally/storage.py
+@@ -49,8 +49,8 @@ def append(expense, path=None):
+     """Add one expense at the end of the file."""
+     path = Path(path or data_path())
+     _ensure_file(path)
+-    with path.open("a", encoding="utf-8") as handle:
+-        handle.write(",".join(expense.to_row()) + "\n")
++    with path.open("a", newline="", encoding="utf-8") as handle:
++        csv.writer(handle, lineterminator="\n").writerow(expense.to_row())
+ 
+ 
+ def save_all(expenses, path=None):
+@@ -58,6 +58,8 @@ def save_all(expenses, path=None):
+     path = Path(path or data_path())
+     tmp = path.with_suffix(".tmp")
+     tmp.parent.mkdir(parents=True, exist_ok=True)
+-    lines = [HEADER] + [",".join(e.to_row()) for e in expenses]
+-    tmp.write_text("\n".join(lines) + "\n", encoding="utf-8")
++    with tmp.open("w", newline="", encoding="utf-8") as handle:
++        writer = csv.writer(handle, lineterminator="\n")
++        writer.writerow(FIELDS)
++        writer.writerows(e.to_row() for e in expenses)
+     os.replace(tmp, path)
+diff --git a/tests/test_storage.py b/tests/test_storage.py
+index 53923f9..27d70cf 100644
+--- a/tests/test_storage.py
++++ b/tests/test_storage.py
+@@ -33,3 +33,15 @@ def test_corrupt_line_names_the_line(tmp_path):
+     path.write_text("date,amount,category,note\n2026-01-05,abc,food,x\n")
+     with pytest.raises(storage.StorageError, match="line 2"):
+         storage.load(path)
++
++
++@pytest.mark.parametrize("note", ["pho, then bubble tea", 'the "good" one'])
++def test_awkward_notes_round_trip(tmp_path, note):
++    path = tmp_path / "e.csv"
++    a = Expense(dt.date(2026, 1, 5), 1840, "eating-out", note)
++    b = Expense(dt.date(2026, 1, 6), 900, "transport", "bus pass")
++    storage.append(a, path)
++    storage.append(b, path)
++    assert storage.load(path) == [a, b]
++    storage.save_all([a, b], path)
++    assert storage.load(path) == [a, b]

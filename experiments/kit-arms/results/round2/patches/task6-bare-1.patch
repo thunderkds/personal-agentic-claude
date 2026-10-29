@@ -1,0 +1,217 @@
+diff --git a/src/tally/cli.py b/src/tally/cli.py
+index cde1108..13058c7 100644
+--- a/src/tally/cli.py
++++ b/src/tally/cli.py
+@@ -6,14 +6,14 @@ import sys
+ 
+ from tally import __version__, recurring, reports, storage
+ from tally.models import new_expense, normalize_category, parse_date
+-from tally.money import parse_amount, split_evenly
++from tally.money import format_dollars, parse_amount, split_evenly
+ 
+ 
+ def cmd_add(args):
+     date = parse_date(args.date) if args.date else None
+     expense = new_expense(args.amount, args.category, args.note or "", date=date)
+     storage.append(expense)
+-    dollars = f"${expense.amount // 100:,}.{expense.amount % 100:02d}"
++    dollars = format_dollars(expense.amount)
+     print(f"Added {dollars} to {expense.category} on {expense.date.isoformat()}.")
+     return 0
+ 
+@@ -31,7 +31,7 @@ def cmd_list(args):
+         print("No expenses.")
+         return 0
+     for number, e in numbered:
+-        dollars = f"${e.amount // 100:,}.{e.amount % 100:02d}"
++        dollars = format_dollars(e.amount)
+         print(f"{number:>4}  {e.date.isoformat()}  {dollars:>11}  {e.category:<14} {e.note}")
+     return 0
+ 
+@@ -42,10 +42,10 @@ def cmd_summary(args):
+         print("No expenses.")
+         return 0
+     for category, cents in reports.by_category(expenses):
+-        dollars = f"${cents // 100:,}.{cents % 100:02d}"
++        dollars = format_dollars(cents)
+         print(f"{category:<14} {dollars:>11}")
+     grand = reports.total(expenses)
+-    dollars = f"${grand // 100:,}.{grand % 100:02d}"
++    dollars = format_dollars(grand)
+     print(f"{'total':<14} {dollars:>11}")
+     return 0
+ 
+@@ -54,7 +54,7 @@ def cmd_top(args):
+     if args.count < 1:
+         raise ValueError("count must be at least 1")
+     for e in reports.largest(storage.load(), args.count):
+-        dollars = f"${e.amount // 100:,}.{e.amount % 100:02d}"
++        dollars = format_dollars(e.amount)
+         print(f"{dollars:>11}  {e.date.isoformat()}  {e.category:<14} {e.note}")
+     return 0
+ 
+@@ -63,7 +63,7 @@ def cmd_split(args):
+     cents = parse_amount(args.amount)
+     shares = split_evenly(cents, args.people)
+     for person, share in enumerate(shares, start=1):
+-        dollars = f"${share // 100:,}.{share % 100:02d}"
++        dollars = format_dollars(share)
+         print(f"person {person}: {dollars}")
+     return 0
+ 
+@@ -75,7 +75,7 @@ def cmd_due(args):
+         print("Nothing due.")
+         return 0
+     for bill in due:
+-        dollars = f"${bill.amount // 100:,}.{bill.amount % 100:02d}"
++        dollars = format_dollars(bill.amount)
+         print(f"{bill.category:<14} {dollars:>11}  (day {bill.day}) {bill.note}".rstrip())
+     return 0
+ 
+diff --git a/src/tally/models.py b/src/tally/models.py
+index 7b548f2..224ac4a 100644
+--- a/src/tally/models.py
++++ b/src/tally/models.py
+@@ -13,13 +13,13 @@ FIELDS = ("date", "amount", "category", "note")
+ @dataclass(frozen=True)
+ class Expense:
+     date: dt.date
+-    amount: int  # cents
++    amount: int  # cents; negative for a refund
+     category: str
+     note: str = ""
+ 
+     def __post_init__(self):
+-        if not isinstance(self.amount, int) or self.amount <= 0:
+-            raise ValueError("amount must be greater than zero")
++        if not isinstance(self.amount, int) or self.amount == 0:
++            raise ValueError("amount must not be zero")
+         if not CATEGORY_RE.match(self.category):
+             raise ValueError(
+                 f"bad category {self.category!r}: use lowercase letters, digits and dashes"
+@@ -42,7 +42,7 @@ class Expense:
+         date_text, amount_text, category, note = row
+         return cls(
+             date=parse_date(date_text),
+-            amount=parse_amount(amount_text),
++            amount=parse_amount(amount_text, allow_negative=True),
+             category=category,
+             note=note,
+         )
+@@ -65,7 +65,7 @@ def new_expense(amount_text, category_text, note="", date=None):
+     """Build an Expense from raw command-line strings."""
+     return Expense(
+         date=date or dt.date.today(),
+-        amount=parse_amount(amount_text),
++        amount=parse_amount(amount_text, allow_negative=True),
+         category=normalize_category(category_text),
+         note=note.strip(),
+     )
+diff --git a/src/tally/money.py b/src/tally/money.py
+index 755de5c..4b67e58 100644
+--- a/src/tally/money.py
++++ b/src/tally/money.py
+@@ -8,23 +8,36 @@ import re
+ _AMOUNT_RE = re.compile(r"^(\d{1,9})(?:\.(\d{1,2}))?$")
+ 
+ 
+-def parse_amount(text):
++def parse_amount(text, allow_negative=False):
+     """Parse a user-typed amount like "12", "12.5" or "12.50" into cents.
+ 
+     A leading "$" and thousands separators are accepted ("$1,200.00").
+-    Raises ValueError for anything else.
++    With allow_negative, a leading "-" (before the "$") makes a refund:
++    "-15.00" and "-$15.00" both give -1500. Raises ValueError for anything else.
+     """
+-    cleaned = text.strip().lstrip("$").replace(",", "")
++    cleaned = text.strip().replace(",", "")
++    negative = cleaned.startswith("-")
++    cleaned = cleaned.removeprefix("-").lstrip("$")
+     match = _AMOUNT_RE.match(cleaned)
+-    if not match:
++    if not match or (negative and not allow_negative):
+         raise ValueError(f"not a valid amount: {text!r}")
+     whole, frac = match.group(1), match.group(2) or ""
+-    return int(whole) * 100 + int(frac.ljust(2, "0") or 0)
++    cents = int(whole) * 100 + int(frac.ljust(2, "0") or 0)
++    return -cents if negative else cents
+ 
+ 
+ def to_plain(cents):
+     """Cents as the plain decimal string stored in the data file: 1250 -> "12.50"."""
+-    return f"{cents // 100}.{cents % 100:02d}"
++    sign = "-" if cents < 0 else ""
++    whole, rem = divmod(abs(cents), 100)
++    return f"{sign}{whole}.{rem:02d}"
++
++
++def format_dollars(cents):
++    """Cents for display: 1250 -> "$12.50", -1500 -> "-$15.00"."""
++    sign = "-" if cents < 0 else ""
++    whole, rem = divmod(abs(cents), 100)
++    return f"{sign}${whole:,}.{rem:02d}"
+ 
+ 
+ def split_evenly(cents, parts):
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 97e72cb..799032c 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -53,3 +53,23 @@ def test_due(tally, data_file):
+     assert tally("due", "--today", "2026-03-10").stdout.strip() == "Nothing due."
+     out = tally("due", "--today", "2026-04-25").stdout
+     assert "rent" in out and "phone" in out
++
++
++def test_refund_add_list_top_summary(tally):
++    assert tally("add", "40", "groceries", "--date", "2026-03-01").returncode == 0
++    result = tally("add", "-15.00", "groceries", "returned the blender", "--date", "2026-03-02")
++    assert result.returncode == 0 and "-$15.00" in result.stdout
++    assert "-$15.00" in tally("list").stdout
++    assert "-$15.00" in tally("top", "5").stdout
++    out = tally("summary").stdout
++    assert "$25.00" in out and out.strip().splitlines()[-1].endswith("$25.00")
++
++
++def test_refund_makes_negative_total(tally):
++    tally("add", "-0.05", "food", "--date", "2026-03-02")
++    assert "-$0.05" in tally("summary").stdout
++
++
++def test_zero_amount_exits_2(tally):
++    assert tally("add", "0", "food").returncode == 2
++    assert tally("add", "-0.00", "food").returncode == 2
+diff --git a/tests/test_models.py b/tests/test_models.py
+index 59f07fd..721fcbe 100644
+--- a/tests/test_models.py
++++ b/tests/test_models.py
+@@ -14,15 +14,24 @@ def test_normalize_category():
+     assert normalize_category("  Eating Out ") == "eating-out"
+ 
+ 
+-@pytest.mark.parametrize("amount", ["0", "0.00"])
++@pytest.mark.parametrize("amount", ["0", "0.00", "-0", "-0.00"])
+ def test_zero_amount_rejected(amount):
+     with pytest.raises(ValueError):
+         new_expense(amount, "food")
+ 
+ 
+-def test_negative_amount_rejected():
+-    with pytest.raises(ValueError):
+-        new_expense("-5.00", "food")
++@pytest.mark.parametrize("text", ["-5.00", "-$5"])
++def test_refund_accepted(text):
++    e = new_expense(text, "food")
++    assert e.amount == -500
++    assert Expense.from_row(e.to_row()) == e
++    assert e.to_row()[1] == "-5.00"
++
++
++def test_refund_with_cents_round_trips():
++    e = Expense(dt.date(2026, 3, 2), -1205, "food")
++    assert e.to_row()[1] == "-12.05"
++    assert Expense.from_row(e.to_row()) == e
+ 
+ 
+ def test_bad_category_rejected():

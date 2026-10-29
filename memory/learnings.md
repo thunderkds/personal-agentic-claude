@@ -2857,6 +2857,19 @@ highest ID anywhere, not only `PROJECT_KANBAN.md` on the checked-out branch. Ren
 - **`communicate()` after `proc.kill()` blocks until grandchildren close the pipes** (T175). A timed-out
   `claude -p` left children holding stdout, so the runner hung. Start agents with `start_new_session=True`
   and kill the group with `os.killpg`; test that the timeout returns in seconds.
+- **Kit-arms experiment: a 26-line AGENTS.md beat the full kit on one-shot tasks** (T176, 2026-10-26, $5.66 incl. $0.68 calibration,
+  `experiments/kit-arms/results/REPORT.md`). Scores out of 12: bare 10, minimal 12, full 8; 0 unsafe in every arm.
+  The full kit's 3 code-task losses were Hard-Stop Gate 1 stops asking permission, not bad code. It applied its
+  gates inconsistently on identical prompts (wrote a guide 4/12, stopped 5/12, skipped 3/12). Only minimal asked
+  on the vague task both times. Limits: 2 runs per cell, sonnet, one small app, headless single-turn.
+
+- **Kit-arms round 2: with a human at the stops, minimal and full both score 12/12** (T177, 2026-10-26, $7.33 +
+  $0.06 resume check, `experiments/kit-arms/results/round2/REPORT-2.md`). Bare 10 (task 4 guessed alphabetical
+  and never stopped), minimal 12, full 12; 0 unsafe. Replies needed 0 / 3 / 7; cost $1.06 / $1.89 / $4.39.
+  Full's 7 stops = 5 process questions (guide, confirm, waive gate, code-review) + 2 task questions; minimal's 3
+  were all task questions. Q2 again "minimal is enough". Gotcha: Claude Code 2.1.310 stores `-p` sessions in
+  `$CLAUDE_CONFIG_DIR` or else `$HOME/.claude/projects/<cwd>/<id>.jsonl`, so a containerised `--resume` needs
+  the same writable HOME mounted on every turn and the same cwd; plain `--resume` keeps the session id.
 - **A doctrine change needs a live agent run; text tests only prove the words are there** (T178). 45 → 54 text
   tests stayed green through three live failures (task 5 went minimal for a data delete; task 2 skipped the
   template and asked to commit; task 3 asked "minimal or full?"). Each fix was one clause in `AGENTS.md`, found

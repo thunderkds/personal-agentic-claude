@@ -1,0 +1,125 @@
+diff --git a/memory/event-trace/_untagged.jsonl b/memory/event-trace/_untagged.jsonl
+new file mode 100644
+index 0000000..2e37083
+--- /dev/null
++++ b/memory/event-trace/_untagged.jsonl
+@@ -0,0 +1,7 @@
++{"timestamp": "2026-10-26T15:24:49.985265+00:00", "tool_name": "Skill", "summary": "{\"skill\": \"wake\"}", "is_error": false, "prev": "genesis", "hash": "ee1641371a6aa94cdfc31c40dc4ae199a75daf69e713be1b7592c7515e80db1f"}
++{"timestamp": "2026-10-26T15:24:50.967326+00:00", "tool_name": "Grep", "summary": "{\"pattern\": \"cents|\\\\$\\\\{|,\\\\.2f|/ 100|// 100\", \"path\": \"/tmp/tmpesbb1l8e/tmpm3x6viiu/tally/src\", \"output_mode\": \"content\"}", "is_error": false, "prev": "ee1641371a6aa94cdfc31c40dc4ae199a75daf69e713be1b7592c7515e80db1f", "hash": "2d37dc1b1dc0fb2b34b1c7c37951de99da30943e4add5d356980d26e99272a11"}
++{"timestamp": "2026-10-26T15:24:54.723953+00:00", "tool_name": "Bash", "summary": "{\"command\": \"git log --oneline -10; ls; ls tasks memory 2>&1 | head -30; grep -n \\\"In Progress\\\\|\\ud83d\\udd04\\\" PROJECT_KANBAN.md 2>&1 | head\"}", "is_error": false, "prev": "2d37dc1b1dc0fb2b34b1c7c37951de99da30943e4add5d356980d26e99272a11", "hash": "bff21c410d58634c3c79023fce2a6f22962116856b4a1da6c67349a595053ebb"}
++{"timestamp": "2026-10-26T15:24:55.040727+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpm3x6viiu/tally/src/tally/cli.py\"}", "is_error": false, "prev": "bff21c410d58634c3c79023fce2a6f22962116856b4a1da6c67349a595053ebb", "hash": "3793fb33a57f5f4069e13f18a6c7d3cfed8e59ea268f709846346e9bbc05358c"}
++{"timestamp": "2026-10-26T15:24:55.131998+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpm3x6viiu/tally/src/tally/money.py\"}", "is_error": false, "prev": "3793fb33a57f5f4069e13f18a6c7d3cfed8e59ea268f709846346e9bbc05358c", "hash": "205d033ddc4ffffff4cb57cc6ef123834c9d63951352c6b1f3c16cbf10ea0cb6"}
++{"timestamp": "2026-10-26T15:25:10.018441+00:00", "tool_name": "Bash", "summary": "{\"command\": \"ls tests && grep -n \\\"^import\\\\|^from\\\\|to_plain\\\" tests/test_money.py | head\"}", "is_error": false, "prev": "205d033ddc4ffffff4cb57cc6ef123834c9d63951352c6b1f3c16cbf10ea0cb6", "hash": "923002f7bb6da28bc6bf85cb619e2450d1fab85289702fddcc765eaa12069933"}
++{"timestamp": "2026-10-26T15:25:15.720733+00:00", "tool_name": "Bash", "summary": "{\"command\": \"python - <<'EOF'\\nimport re\\np='src/tally/cli.py'\\ns=open(p).read()\\ns=re.sub(r'f\\\"\\\\$\\\\{([\\\\w.]+) // 100:,\\\\}\\\\.\\\\{\\\\1 % 100:02d\\\\}\\\"', r'format_amount(\\\\1)', s)\\ns=s.replace(\\\"from tally.money import parse_amount, split_evenly\\\",\\\"from tally.money import format_amount, parse_amount, s", "is_error": false, "prev": "923002f7bb6da28bc6bf85cb619e2450d1fab85289702fddcc765eaa12069933", "hash": "21d4de3e1104bbe538425167f5cf3c20ffad1f195ea853fb13f744968f0be53d"}
+diff --git a/src/tally/cli.py b/src/tally/cli.py
+index cde1108..cbda78d 100644
+--- a/src/tally/cli.py
++++ b/src/tally/cli.py
+@@ -6,14 +6,14 @@ import sys
+ 
+ from tally import __version__, recurring, reports, storage
+ from tally.models import new_expense, normalize_category, parse_date
+-from tally.money import parse_amount, split_evenly
++from tally.money import format_amount, parse_amount, split_evenly
+ 
+ 
+ def cmd_add(args):
+     date = parse_date(args.date) if args.date else None
+     expense = new_expense(args.amount, args.category, args.note or "", date=date)
+     storage.append(expense)
+-    dollars = f"${expense.amount // 100:,}.{expense.amount % 100:02d}"
++    dollars = format_amount(expense.amount)
+     print(f"Added {dollars} to {expense.category} on {expense.date.isoformat()}.")
+     return 0
+ 
+@@ -31,7 +31,7 @@ def cmd_list(args):
+         print("No expenses.")
+         return 0
+     for number, e in numbered:
+-        dollars = f"${e.amount // 100:,}.{e.amount % 100:02d}"
++        dollars = format_amount(e.amount)
+         print(f"{number:>4}  {e.date.isoformat()}  {dollars:>11}  {e.category:<14} {e.note}")
+     return 0
+ 
+@@ -42,10 +42,10 @@ def cmd_summary(args):
+         print("No expenses.")
+         return 0
+     for category, cents in reports.by_category(expenses):
+-        dollars = f"${cents // 100:,}.{cents % 100:02d}"
++        dollars = format_amount(cents)
+         print(f"{category:<14} {dollars:>11}")
+     grand = reports.total(expenses)
+-    dollars = f"${grand // 100:,}.{grand % 100:02d}"
++    dollars = format_amount(grand)
+     print(f"{'total':<14} {dollars:>11}")
+     return 0
+ 
+@@ -54,7 +54,7 @@ def cmd_top(args):
+     if args.count < 1:
+         raise ValueError("count must be at least 1")
+     for e in reports.largest(storage.load(), args.count):
+-        dollars = f"${e.amount // 100:,}.{e.amount % 100:02d}"
++        dollars = format_amount(e.amount)
+         print(f"{dollars:>11}  {e.date.isoformat()}  {e.category:<14} {e.note}")
+     return 0
+ 
+@@ -63,7 +63,7 @@ def cmd_split(args):
+     cents = parse_amount(args.amount)
+     shares = split_evenly(cents, args.people)
+     for person, share in enumerate(shares, start=1):
+-        dollars = f"${share // 100:,}.{share % 100:02d}"
++        dollars = format_amount(share)
+         print(f"person {person}: {dollars}")
+     return 0
+ 
+@@ -75,7 +75,7 @@ def cmd_due(args):
+         print("Nothing due.")
+         return 0
+     for bill in due:
+-        dollars = f"${bill.amount // 100:,}.{bill.amount % 100:02d}"
++        dollars = format_amount(bill.amount)
+         print(f"{bill.category:<14} {dollars:>11}  (day {bill.day}) {bill.note}".rstrip())
+     return 0
+ 
+diff --git a/src/tally/money.py b/src/tally/money.py
+index 755de5c..8b04d75 100644
+--- a/src/tally/money.py
++++ b/src/tally/money.py
+@@ -27,6 +27,11 @@ def to_plain(cents):
+     return f"{cents // 100}.{cents % 100:02d}"
+ 
+ 
++def format_amount(cents):
++    """Cents as a display string with dollar sign and thousands separators: 123456 -> "$1,234.56"."""
++    return f"${cents // 100:,}.{cents % 100:02d}"
++
++
+ def split_evenly(cents, parts):
+     """Split an amount into `parts` shares that add back up to exactly `cents`.
+ 
+diff --git a/tests/test_money.py b/tests/test_money.py
+index c31d239..fe44544 100644
+--- a/tests/test_money.py
++++ b/tests/test_money.py
+@@ -1,6 +1,6 @@
+ import pytest
+ 
+-from tally.money import parse_amount, split_evenly, to_plain
++from tally.money import format_amount, parse_amount, split_evenly, to_plain
+ 
+ 
+ @pytest.mark.parametrize("text, cents", [
+@@ -17,6 +17,13 @@ def test_parse_amount_rejects_garbage(text):
+         parse_amount(text)
+ 
+ 
++def test_format_amount():
++    assert format_amount(123456) == "$1,234.56"
++    assert format_amount(7) == "$0.07"
++    assert format_amount(0) == "$0.00"
++    assert format_amount(100000000) == "$1,000,000.00"
++
++
+ def test_to_plain():
+     assert to_plain(1250) == "12.50"
+     assert to_plain(7) == "0.07"

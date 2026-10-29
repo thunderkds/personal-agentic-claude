@@ -1,0 +1,262 @@
+diff --git a/.claude/hooks/.state/step_count_5bf61276f4c14594843287f9309b8a9c_T001.txt b/.claude/hooks/.state/step_count_5bf61276f4c14594843287f9309b8a9c_T001.txt
+new file mode 100644
+index 0000000..c393a51
+--- /dev/null
++++ b/.claude/hooks/.state/step_count_5bf61276f4c14594843287f9309b8a9c_T001.txt
+@@ -0,0 +1,2 @@
++3
++0
+\ No newline at end of file
+diff --git a/PROJECT_KANBAN.md b/PROJECT_KANBAN.md
+new file mode 100644
+index 0000000..105771c
+--- /dev/null
++++ b/PROJECT_KANBAN.md
+@@ -0,0 +1,18 @@
++# PROJECT_KANBAN.md
++**Last updated**: 2026-10-26
++
++## Board
++
++### Todo
++
++### In Progress
++
++
++### Ready for Review
++
++### Done
++- [x] **T001** — `tally summary --month YYYY-MM` | C1 | Completed: 2026-10-26
++
++---
++
++## Blocked
+diff --git a/memory/event-trace/T001.jsonl b/memory/event-trace/T001.jsonl
+new file mode 100644
+index 0000000..6d9fc1a
+--- /dev/null
++++ b/memory/event-trace/T001.jsonl
+@@ -0,0 +1,3 @@
++{"timestamp": "2026-10-26T15:07:16.808747+00:00", "tool_name": "Write", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpkr8df708/tally/tasks/TASK_GUIDE_T001.md\", \"content\": \"# TASK_GUIDE \\u2014 T001: `tally summary --month YYYY-MM`\\n**Date**: 2026-10-26\\n**Complexity Level**: C1\\n**Risk Level**: Low\\n**Priority**: P1\\n**Assigned agent**: backend-developer\\n**Agent guide**: `agents/b", "is_error": false, "prev": "genesis", "hash": "323c1e2f78d01f71206015c54d97faef9d4d69b63295fae754c81e06492bd157"}
++{"timestamp": "2026-10-26T15:07:24.729403+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpkr8df708/tally/tasks/TASK_GUIDE_T001.md\"}", "is_error": false, "prev": "323c1e2f78d01f71206015c54d97faef9d4d69b63295fae754c81e06492bd157", "hash": "32c802eeb08617c1c5c2eade4bd8c6cd33dad4e734f05537acce4b5b9f30aee1"}
++{"timestamp": "2026-10-26T15:07:53.747016+00:00", "tool_name": "Agent", "summary": "{\"description\": \"Implement summary --month\", \"prompt\": \"Task T001. Read tasks/TASK_GUIDE_T001.md and agents/backend.md, then implement exactly what the guide says (test-first). Run `python3 -m pytest tests -q` and report the pasted output plus a diff summary. Do not commit.\", \"subagent_type\": \"backe", "is_error": false, "spawn": {"total_tokens": 30030, "tool_use_count": 13, "duration_ms": 31011, "resolved_model": "claude-sonnet-5-5", "agent_type": "backend-developer", "status": "completed", "usage": {"input_tokens": 2, "output_tokens": 850, "cache_creation_input_tokens": 256, "cache_read_input_tokens": 28922, "cache_creation_5m": 256, "cache_creation_1h": 0}, "tool_stats": {"read_count": 6, "search_count": 1, "bash_count": 2, "edit_file_count": 4, "lines_added": 44, "lines_removed": 9}}, "prev": "32c802eeb08617c1c5c2eade4bd8c6cd33dad4e734f05537acce4b5b9f30aee1", "hash": "6cc08f09e343eab7b72928cab0c98fa6f651ec3f5655d05d47f77fe552c359b3"}
+diff --git a/memory/event-trace/_untagged.jsonl b/memory/event-trace/_untagged.jsonl
+new file mode 100644
+index 0000000..3816b8b
+--- /dev/null
++++ b/memory/event-trace/_untagged.jsonl
+@@ -0,0 +1,23 @@
++{"timestamp": "2026-10-26T15:06:51.941481+00:00", "tool_name": "Skill", "summary": "{\"skill\": \"wake\"}", "is_error": false, "prev": "genesis", "hash": "47d075e73bc0cbdf0ccd35fa2df29db118624d243b22f230aeb174c581114619"}
++{"timestamp": "2026-10-26T15:06:52.415948+00:00", "tool_name": "Glob", "summary": "{\"pattern\": \"**/*.py\"}", "is_error": false, "prev": "47d075e73bc0cbdf0ccd35fa2df29db118624d243b22f230aeb174c581114619", "hash": "f880bbf20d4945c3e38a4ac556afca402ccd213f47de7b0f8cb2245f92360bc9"}
++{"timestamp": "2026-10-26T15:06:55.679062+00:00", "tool_name": "Bash", "summary": "{\"command\": \"git log --oneline -10; ls; cat PROJECT_KANBAN.md 2>&1 | head -30; ls memory 2>&1; python3 skills/wake/scripts/dirty_worktrees.py 2>&1 | head\"}", "is_error": false, "prev": "f880bbf20d4945c3e38a4ac556afca402ccd213f47de7b0f8cb2245f92360bc9", "hash": "c9a3484049c5d8561e4ee2b1601b263dae9b4e640d9d1c191f06386f565b121a"}
++{"timestamp": "2026-10-26T15:06:55.755101+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpkr8df708/tally/src/tally/cli.py\"}", "is_error": false, "prev": "c9a3484049c5d8561e4ee2b1601b263dae9b4e640d9d1c191f06386f565b121a", "hash": "8d96d30c78924a5e32722746eabbc08b5f91bb09ea8e60060d56e0273055fac2"}
++{"timestamp": "2026-10-26T15:06:59.825289+00:00", "tool_name": "Bash", "summary": "{\"command\": \"ls tasks templates; wc -l templates/TASK_GUIDE_template.md; cat src/tally/models.py | head -50; grep -n \\\"since\\\" tests/test_cli.py | head; cat memory/MEMORY.md | head -30\"}", "is_error": false, "prev": "8d96d30c78924a5e32722746eabbc08b5f91bb09ea8e60060d56e0273055fac2", "hash": "a8fc37cf59233d7d60ecf720c7e9c9e3df90ef18677830889279d19e008af930"}
++{"timestamp": "2026-10-26T15:07:03.086175+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpkr8df708/tally/templates/TASK_GUIDE_template.md\"}", "is_error": false, "prev": "a8fc37cf59233d7d60ecf720c7e9c9e3df90ef18677830889279d19e008af930", "hash": "5ae97ec6d549127be8824d734c408953d6ee70056cc3c85ccdebd7a55cf26171"}
++{"timestamp": "2026-10-26T15:07:17.329542+00:00", "tool_name": "Bash", "summary": "{\"command\": \"sed -n 1,30p tests/test_cli.py; sed -n 1,25p templates/PROJECT_KANBAN_template.md\"}", "is_error": false, "prev": "5ae97ec6d549127be8824d734c408953d6ee70056cc3c85ccdebd7a55cf26171", "hash": "e7be8dc04dcdbbd0392a264d8e92636242bd0e79f45268ee4dd6f45c5784822e"}
++{"timestamp": "2026-10-26T15:07:21.709606+00:00", "tool_name": "Write", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpkr8df708/tally/PROJECT_KANBAN.md\", \"content\": \"# PROJECT_KANBAN.md\\n**Last updated**: 2026-10-26\\n\\n## Board\\n\\n### Todo\\n\\n### In Progress\\n- [ ] **T001** \\u2014 `tally summary --month YYYY-MM` | backend-developer | C1 | Risk: Low | P1 | Started: 2026-10-26\\n\\n###", "is_error": false, "prev": "e7be8dc04dcdbbd0392a264d8e92636242bd0e79f45268ee4dd6f45c5784822e", "hash": "b128d67dc40f417ebecd3448cdb1d97ef47d0b39b30b51620ac44204f7a8cf27"}
++{"timestamp": "2026-10-26T15:07:24.729374+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpkr8df708/tally/agents/backend.md\"}", "is_error": false, "prev": "b128d67dc40f417ebecd3448cdb1d97ef47d0b39b30b51620ac44204f7a8cf27", "hash": "c33545d1238ea02a4449f0187e66b1996e513d4adaf682e0ee87c4b8cb8d6a66"}
++{"timestamp": "2026-10-26T15:07:25.752295+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpkr8df708/tally/memory/MEMORY.md\"}", "is_error": false, "prev": "c33545d1238ea02a4449f0187e66b1996e513d4adaf682e0ee87c4b8cb8d6a66", "hash": "728c3aa519cc95348454d268e7f450640297d4f677c48442599a853d275736ba"}
++{"timestamp": "2026-10-26T15:07:29.253940+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpkr8df708/tally/src/tally/cli.py\"}", "is_error": false, "prev": "728c3aa519cc95348454d268e7f450640297d4f677c48442599a853d275736ba", "hash": "72dcb5507b3a2dc5bb3ee7232735eda9eff13587231b7c4e5857f805397ff049"}
++{"timestamp": "2026-10-26T15:07:29.556895+00:00", "tool_name": "Read", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpkr8df708/tally/tests/test_cli.py\"}", "is_error": false, "prev": "72dcb5507b3a2dc5bb3ee7232735eda9eff13587231b7c4e5857f805397ff049", "hash": "64167343c31799474d4a04ee91f2b2138c30b32d15fddc48bca5436518615ec5"}
++{"timestamp": "2026-10-26T15:07:33.682230+00:00", "tool_name": "Edit", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpkr8df708/tally/tests/test_cli.py\", \"old_string\": \"def test_delete(tally):\", \"new_string\": \"def test_summary_month(tally):\\n    tally(\\\"add\\\", \\\"10\\\", \\\"food\\\", \\\"--date\\\", \\\"2026-02-28\\\")\\n    tally(\\\"add\\\", \\\"5\\\", \\\"books\\\", \\\"--date\\\", \\\"2026-02-10\\\")\\n    tally(", "is_error": false, "prev": "64167343c31799474d4a04ee91f2b2138c30b32d15fddc48bca5436518615ec5", "hash": "f7eceffd540e552a32f5c13841765231b00209a58d6f87ee269be0aeba6e491c"}
++{"timestamp": "2026-10-26T15:07:35.752034+00:00", "tool_name": "Bash", "summary": "{\"command\": \"python3 -m pytest tests -q 2>&1 | tail -8\"}", "is_error": false, "prev": "f7eceffd540e552a32f5c13841765231b00209a58d6f87ee269be0aeba6e491c", "hash": "5a757c42451c9c8bb848f9d34bd2ba4a849c127004357ead8725635a88d8d6e8"}
++{"timestamp": "2026-10-26T15:07:38.932322+00:00", "tool_name": "Edit", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpkr8df708/tally/src/tally/cli.py\", \"old_string\": \"    expenses = storage.load()\\n    if not expenses:\\n        print(\\\"No expenses.\\\")\\n        return 0\\n    for category, cents in reports.by_category\", \"new_string\": \"    if args.month is not None and not re.fullmat", "is_error": false, "prev": "5a757c42451c9c8bb848f9d34bd2ba4a849c127004357ead8725635a88d8d6e8", "hash": "54ce7cba13399b12b165f39052be1942f0bd0913f3db5197508d198bfc125024"}
++{"timestamp": "2026-10-26T15:07:39.800488+00:00", "tool_name": "Edit", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpkr8df708/tally/src/tally/cli.py\", \"old_string\": \"    summary.set_defaults\", \"new_string\": \"    summary.add_argument(\\\"--month\\\", help=\\\"only expenses in this month, YYYY-MM\\\")\\n    summary.set_defaults\", \"replace_all\": false}", "is_error": false, "prev": "54ce7cba13399b12b165f39052be1942f0bd0913f3db5197508d198bfc125024", "hash": "c922013b11813630cb1be952cc37eae8ba2301cb2227ec4199c765b5a3943b95"}
++{"timestamp": "2026-10-26T15:07:40.537934+00:00", "tool_name": "Edit", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpkr8df708/tally/src/tally/cli.py\", \"old_string\": \"import datetime as dt\\nimport sys\", \"new_string\": \"import datetime as dt\\nimport re\\nimport sys\", \"replace_all\": false}", "is_error": false, "prev": "c922013b11813630cb1be952cc37eae8ba2301cb2227ec4199c765b5a3943b95", "hash": "e8c2180c4f7d51116d15e0f0f3d06ce944334250b6903d914b983514f0fe6b43"}
++{"timestamp": "2026-10-26T15:07:41.321919+00:00", "tool_name": "Grep", "summary": "{\"pattern\": \"def month\", \"path\": \"/tmp/tmpesbb1l8e/tmpkr8df708/tally/src/tally/models.py\", \"output_mode\": \"content\", \"-B\": 2, \"-A\": 3}", "is_error": false, "prev": "e8c2180c4f7d51116d15e0f0f3d06ce944334250b6903d914b983514f0fe6b43", "hash": "cf84b2cc0c28bdc254658c05da864e0e89e63b83ecd408346fb3ef3794724065"}
++{"timestamp": "2026-10-26T15:07:44.642153+00:00", "tool_name": "Bash", "summary": "{\"command\": \"python3 -m pytest tests -q 2>&1 | tail -8; git diff --stat\"}", "is_error": false, "prev": "cf84b2cc0c28bdc254658c05da864e0e89e63b83ecd408346fb3ef3794724065", "hash": "9771e536e4ef68ecb7aa7dfdc2605c9ebbaa95e2050e3449f1159c13e725f34a"}
++{"timestamp": "2026-10-26T15:07:58.458801+00:00", "tool_name": "Bash", "summary": "{\"command\": \"git diff src; python3 -m pytest tests -q 2>&1 | tail -2; python3 -m tally summary --month 2026-13; echo rc=$?\"}", "is_error": false, "prev": "9771e536e4ef68ecb7aa7dfdc2605c9ebbaa95e2050e3449f1159c13e725f34a", "hash": "242666dff95bb275860bc4cea195ac31d99dd251a0344f2302f8c4931d786ce7"}
++{"timestamp": "2026-10-26T15:08:01.209370+00:00", "tool_name": "Bash", "summary": "{\"command\": \"PYTHONPATH=src python3 -m tally summary --month 2026-13; echo rc=$?; sed -i 's/^### In Progress/### In Progress\\\\n/; ' PROJECT_KANBAN.md && python3 - <<'E'\\np=\\\"PROJECT_KANBAN.md\\\"\\ns=open(p).read()\\nline=\\\"- [ ] **T001** \\u2014 `tally summary --month YYYY-MM` | backend-developer | C1 |", "is_error": false, "prev": "242666dff95bb275860bc4cea195ac31d99dd251a0344f2302f8c4931d786ce7", "hash": "8156ea011b3d6b46bf51187fb8d7acd2b84e63421e00b3b45942a7a1eb62f297"}
++{"timestamp": "2026-10-26T15:08:09.822124+00:00", "tool_name": "Bash", "summary": "{\"command\": \"git diff tests\"}", "is_error": false, "prev": "8156ea011b3d6b46bf51187fb8d7acd2b84e63421e00b3b45942a7a1eb62f297", "hash": "6ad43dfd1aef14e78a68e964de1db7856d9f6984ad687214b4e039bf7b5f3f5f"}
++{"timestamp": "2026-10-26T15:08:15.004067+00:00", "tool_name": "Bash", "summary": "{\"command\": \"python3 - <<'E'\\np=\\\"PROJECT_KANBAN.md\\\"\\ns=open(p).read()\\ns=s.replace(\\\"- [ ] **T001** \\u2014 `tally summary --month YYYY-MM` | backend-developer | C1 | PR/branch: master (uncommitted)\\\\n\\\",\\\"\\\")\\ns=s.replace(\\\"### Done\\\\n\\\",\\\"### Done\\\\n- [x] **T001** \\u2014 `tally summary --month YY", "is_error": false, "prev": "6ad43dfd1aef14e78a68e964de1db7856d9f6984ad687214b4e039bf7b5f3f5f", "hash": "240287f2d2bf1552b23b280a07448606da7e3578cbd87192981421e38d7fa01f"}
+diff --git a/src/tally/cli.py b/src/tally/cli.py
+index cde1108..d238921 100644
+--- a/src/tally/cli.py
++++ b/src/tally/cli.py
+@@ -2,6 +2,7 @@
+ 
+ import argparse
+ import datetime as dt
++import re
+ import sys
+ 
+ from tally import __version__, recurring, reports, storage
+@@ -37,7 +38,11 @@ def cmd_list(args):
+ 
+ 
+ def cmd_summary(args):
++    if args.month is not None and not re.fullmatch(r"\d{4}-(0[1-9]|1[0-2])", args.month):
++        raise ValueError(f"bad month {args.month!r}, expected YYYY-MM")
+     expenses = storage.load()
++    if args.month is not None:
++        expenses = [e for e in expenses if e.month == args.month]
+     if not expenses:
+         print("No expenses.")
+         return 0
+@@ -108,6 +113,7 @@ def build_parser():
+     lst.set_defaults(func=cmd_list)
+ 
+     summary = sub.add_parser("summary", help="totals per category")
++    summary.add_argument("--month", help="only expenses in this month, YYYY-MM")
+     summary.set_defaults(func=cmd_summary)
+ 
+     top = sub.add_parser("top", help="the biggest single expenses")
+diff --git a/tasks/TASK_GUIDE_T001.md b/tasks/TASK_GUIDE_T001.md
+new file mode 100644
+index 0000000..cee5428
+--- /dev/null
++++ b/tasks/TASK_GUIDE_T001.md
+@@ -0,0 +1,113 @@
++# TASK_GUIDE — T001: `tally summary --month YYYY-MM`
++**Date**: 2026-10-26
++**Complexity Level**: C1
++**Risk Level**: Low
++**Priority**: P1
++**Assigned agent**: backend-developer
++**Agent guide**: `agents/backend.md`
++
++---
++
++## Mandatory Startup (Do Not Skip)
++
++1. Read the memory slice in your spawn prompt; `memory/MEMORY.md` only if needed
++2. Read this file completely
++3. Read `agents/backend.md`
++(`PROJECT_SPEC.md` does not exist in this repo yet; this task is a single-file CLI change.)
++
++---
++
++## Requirement (Pillar 1 — Adapt the requirement)
++
++Add a `--month` option to `tally summary`. `python3 -m tally summary --month 2026-03` counts only expenses dated in March 2026. An invalid month (`2026-13`, `march`) prints an error and exits with status 2, the same way `list --since` does with a bad date. Without `--month`, behavior is unchanged.
++
++**Restated intent**:
++> `summary` can be limited to one calendar month; bad input fails like `list --since`.
++
++**Out of scope**:
++- Month filters on other commands
++- Changing output format or `reports.py`
++
++**Requirement Refs**: None (no PRD.md in this repo)
++
++### Requirement Fidelity Gate
++
++- [x] Restated intent confirmed to match the user's request (Supervisor)
++- [x] Domain terms align (no glossary in repo)
++- [x] Every Acceptance Criterion traces to the Requirement
++- [x] No PRD refs to cover
++
++---
++
++## Dependencies & Reachability
++
++**Depends on**: None
++**Entry point**: `cmd_summary`
++
++---
++
++## Acceptance Criteria
++
++| # | Criterion (testable) | Traces to requirement |
++|---|----------------------|-----------------------|
++| 1 | `summary --month 2026-03` totals only March 2026 expenses | "only count expenses dated in March 2026" |
++| 2 | `--month 2026-13` and `--month march` exit 2 with `error: ...` on stderr | "print an error and exit with status 2" |
++| 3 | `summary` without `--month` output is unchanged | "keep working exactly like it does now" |
++| 4 | Valid month with no expenses prints `No expenses.` and exits 0 | boundary (matches existing empty behavior) |
++
++---
++
++## Evaluation & Acceptance
++
++### Success Criteria
++
++| # | Given | Expect | How it's checked |
++|---|-------|--------|------------------|
++| 1 | expenses in Feb and Mar 2026; `--month 2026-03` | only March categories and total | automated test |
++| 2 | `--month 2026-13`, `--month march` | returncode 2, stderr starts `error:` | automated test |
++| 3 | no `--month` | same output as before | existing + new test |
++
++### Verification Command
++
++```bash
++python3 -m pytest tests -q
++```
++
++---
++
++## Approach
++
++**Pattern reference**: `src/tally/cli.py` `cmd_list` / `--since` (parse then filter; ValueError becomes exit 2 in `main`). `Expense.month` in `src/tally/models.py` returns "YYYY-MM".
++**Vital slice**: validate the month string (strict `YYYY-MM`, month 1–12), filter by `e.month == args.month`, in `cmd_summary` only.
++**Cut list**: no `--month` on `list`/`top`; no shorthand like `march`.
++
++Validate strictly (e.g. regex `^\d{4}-(0[1-9]|1[0-2])$` or `dt.datetime.strptime(text, "%Y-%m")` plus a length check) and raise `ValueError`. Check validity before the empty-store early return, so a bad month errors even with no expenses.
++
++## Edge Case Checklist
++
++- [ ] `2026-3` (no zero pad) rejected or consistently handled
++- [ ] `2026-13`, `2026-00`, `march`, empty string rejected
++- [ ] Bad month errors even when there are no expenses
++
++## Files to Change (Predicted)
++
++| File | Change |
++|------|--------|
++| `src/tally/cli.py` | `--month` arg + filter in `cmd_summary` |
++| `tests/test_cli.py` | new tests |
++
++## Files Must NOT Touch
++
++| File | Reason |
++|------|--------|
++| `src/tally/reports.py`, `storage.py` | out of scope |
++
++## Test Plan
++
++Add tests in `tests/test_cli.py` next to the `--since` tests, using the existing `tally` fixture.
++
++## Completion Checklist
++
++- [ ] Implementation done
++- [ ] Tests written AND pass
++- [ ] Supervisor notified: ready for Stage 4 review
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 97e72cb..a937812 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -32,6 +32,35 @@ def test_bad_since_exits_2(tally):
+     assert tally("list", "--since", "yesterday").returncode == 2
+ 
+ 
++def test_summary_month(tally):
++    tally("add", "10", "food", "--date", "2026-02-28")
++    tally("add", "5", "books", "--date", "2026-02-10")
++    tally("add", "20", "food", "--date", "2026-03-01")
++    tally("add", "3", "food", "--date", "2026-03-31")
++    out = tally("summary", "--month", "2026-03").stdout
++    assert "$23.00" in out and "books" not in out
++    assert "total" in out and "$38.00" not in out
++
++
++def test_summary_month_no_expenses(tally):
++    tally("add", "10", "food", "--date", "2026-02-28")
++    result = tally("summary", "--month", "2026-04")
++    assert result.returncode == 0
++    assert result.stdout.strip() == "No expenses."
++
++
++def test_summary_bad_month_exits_2(tally):
++    tally("add", "10", "food", "--date", "2026-03-01")
++    for bad in ("2026-13", "2026-00", "2026-3", "march", ""):
++        result = tally("summary", "--month", bad)
++        assert result.returncode == 2, bad
++        assert result.stderr.startswith("error:"), bad
++
++
++def test_summary_bad_month_exits_2_when_empty(tally):
++    assert tally("summary", "--month", "2026-13").returncode == 2
++
++
+ def test_delete(tally):
+     tally("add", "1", "food", "keep", "--date", "2026-01-01")
+     tally("add", "2", "food", "drop", "--date", "2026-01-02")

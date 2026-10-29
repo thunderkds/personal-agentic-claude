@@ -1,0 +1,53 @@
+diff --git a/memory/event-trace/_untagged.jsonl b/memory/event-trace/_untagged.jsonl
+new file mode 100644
+index 0000000..a306105
+--- /dev/null
++++ b/memory/event-trace/_untagged.jsonl
+@@ -0,0 +1,10 @@
++{"timestamp": "2026-10-26T15:12:50.297143+00:00", "tool_name": "Skill", "summary": "{\"skill\": \"wake\"}", "is_error": false, "prev": "genesis", "hash": "0a28df99265741c27fd78a270e318373b2d0e0bed6edba4092aa4cf9db8a23b8"}
++{"timestamp": "2026-10-26T15:12:51.188648+00:00", "tool_name": "Grep", "summary": "{\"pattern\": \"summary\", \"glob\": \"!{docs,skills,agents,templates,memory,packs}/**\", \"-i\": true, \"head_limit\": 30}", "is_error": false, "prev": "0a28df99265741c27fd78a270e318373b2d0e0bed6edba4092aa4cf9db8a23b8", "hash": "044eac0dd96bf9e46002325c965685db20f04df9e8a1f9306826e6a57203edcc"}
++{"timestamp": "2026-10-26T15:12:53.755150+00:00", "tool_name": "Bash", "summary": "{\"command\": \"git log --oneline -10; ls; python3 skills/wake/scripts/dirty_worktrees.py 2>&1 | head\"}", "is_error": false, "prev": "044eac0dd96bf9e46002325c965685db20f04df9e8a1f9306826e6a57203edcc", "hash": "b59c849267e1260610713c13df92ee80bb8f6f3b6cc75eac49cf69fb42055e06"}
++{"timestamp": "2026-10-26T15:12:54.262450+00:00", "tool_name": "Grep", "summary": "{\"pattern\": \"summary\", \"path\": \"src/tally/cli.py\", \"output_mode\": \"content\", \"-C\": 8, \"-n\": true}", "is_error": false, "prev": "b59c849267e1260610713c13df92ee80bb8f6f3b6cc75eac49cf69fb42055e06", "hash": "76f4d5aee0dcdec856e0194afbfd8baa142feb32da90ec76ab4c057ead24b738"}
++{"timestamp": "2026-10-26T15:12:56.322778+00:00", "tool_name": "Grep", "summary": "{\"pattern\": \"def by_category\", \"path\": \"src/tally/reports.py\", \"output_mode\": \"content\", \"-A\": 12}", "is_error": false, "prev": "76f4d5aee0dcdec856e0194afbfd8baa142feb32da90ec76ab4c057ead24b738", "hash": "ed32059981b1563873428f146bcd1f168e4bc4d5b8825dc0fab36fc9159356c5"}
++{"timestamp": "2026-10-26T15:12:56.728382+00:00", "tool_name": "Grep", "summary": "{\"pattern\": \"by_category|summary\", \"path\": \"tests\", \"output_mode\": \"content\", \"-C\": 6}", "is_error": false, "prev": "ed32059981b1563873428f146bcd1f168e4bc4d5b8825dc0fab36fc9159356c5", "hash": "dfafc1b613ead286e4a00e5a6fede118d8536ccb24d9f11337ccb5afb570c008"}
++{"timestamp": "2026-10-26T15:12:57.017597+00:00", "tool_name": "Bash", "summary": "{\"command\": \"ls PROJECT_KANBAN.md tasks memory 2>&1 | head -20\"}", "is_error": false, "prev": "dfafc1b613ead286e4a00e5a6fede118d8536ccb24d9f11337ccb5afb570c008", "hash": "f2d925f10f203413cafe9847dcdaafebf2e666de9b65caf19aa426e1e09ee0d0"}
++{"timestamp": "2026-10-26T15:13:06.710720+00:00", "tool_name": "Edit", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpp3_rovv0/tally/src/tally/reports.py\", \"old_string\": \"    \\\"\\\"\\\"[(category, cents)] in the order each category first appears.\\\"\\\"\\\"\\n    totals = {}\\n    for expense in expenses:\\n        totals[expense.category] = totals.get(expense.category, 0) + expense.amount\\n ", "is_error": false, "prev": "f2d925f10f203413cafe9847dcdaafebf2e666de9b65caf19aa426e1e09ee0d0", "hash": "59fddc1f9afcc854c3c767c0c02d1d5b864d6fe470d579031dea14cc304cfe14"}
++{"timestamp": "2026-10-26T15:13:08.154620+00:00", "tool_name": "Edit", "summary": "{\"file_path\": \"/tmp/tmpesbb1l8e/tmpp3_rovv0/tally/tests/test_cli.py\", \"old_string\": \"def test_bad_amount_exits_2(tally):\", \"new_string\": \"def test_summary_biggest_total_first(tally):\\n    tally(\\\"add\\\", \\\"5\\\", \\\"snacks\\\", \\\"--date\\\", \\\"2026-03-02\\\")\\n    tally(\\\"add\\\", \\\"40\\\", \\\"books\\\", \\\"--date\\\",", "is_error": false, "prev": "59fddc1f9afcc854c3c767c0c02d1d5b864d6fe470d579031dea14cc304cfe14", "hash": "fdc780ed358fd956e8e206486ec50f39540e1446272e0a34decd2120e00969c6"}
++{"timestamp": "2026-10-26T15:13:11.053166+00:00", "tool_name": "Bash", "summary": "{\"command\": \"python3 -m pytest -q 2>&1 | tail -15\"}", "is_error": false, "prev": "fdc780ed358fd956e8e206486ec50f39540e1446272e0a34decd2120e00969c6", "hash": "0b7b2841dddb1f576b09e6965688270ba278b6687abef69386ee132c4bf1639e"}
+diff --git a/src/tally/reports.py b/src/tally/reports.py
+index fc77811..986cc48 100644
+--- a/src/tally/reports.py
++++ b/src/tally/reports.py
+@@ -6,11 +6,11 @@ def total(expenses):
+ 
+ 
+ def by_category(expenses):
+-    """[(category, cents)] in the order each category first appears."""
++    """[(category, cents)] biggest total first; ties sorted by name."""
+     totals = {}
+     for expense in expenses:
+         totals[expense.category] = totals.get(expense.category, 0) + expense.amount
+-    return list(totals.items())
++    return sorted(totals.items(), key=lambda item: (-item[1], item[0]))
+ 
+ 
+ def since(expenses, start_date):
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 97e72cb..c925d68 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -15,6 +15,14 @@ def test_summary_totals(tally):
+     assert "total" in out and "$52.50" in out
+ 
+ 
++def test_summary_biggest_total_first(tally):
++    tally("add", "5", "snacks", "--date", "2026-03-02")
++    tally("add", "40", "books", "--date", "2026-03-03")
++    tally("add", "20", "food", "--date", "2026-03-04")
++    out = tally("summary").stdout
++    assert out.index("books") < out.index("food") < out.index("snacks")
++
++
+ def test_bad_amount_exits_2(tally):
+     result = tally("add", "twelve", "food")
+     assert result.returncode == 2
