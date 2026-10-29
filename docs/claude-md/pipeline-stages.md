@@ -247,7 +247,7 @@ After all Stage 4 reviews pass:
    - Append any new decisions or learnings from this session to the appropriate cold file
    - Summarize new/changed entries as one-liners in `memory/MEMORY.md` (keep hot tier ≤50,000 characters)
 
-5. Merge the worktree and close the task on PROJECT_KANBAN.md. Never in auto mode: the task stops at Ready for Review, and the merge waits for the user.
+5. Merge the worktree and close the task on PROJECT_KANBAN.md. In auto mode the merge is never automatic: it waits for the user. After an auto verify pass, the hook moves the row to Done (`docs/claude-md/tracks.md` `### Auto close-out`), and the Supervisor ran item 4 before it stopped (the report's `Memory:` line).
 
 6. **Post-merge release planning** (once all tasks for the milestone are integrated):
    ```

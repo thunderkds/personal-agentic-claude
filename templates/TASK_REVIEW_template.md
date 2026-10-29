@@ -23,6 +23,11 @@ At Risk Medium or High, a `RULE:` counts only when it names a written rule (`pat
 `path § <heading>`, or `docs/claude-md/tracks.md` `### <section>`), and a `FACT:` needs a Citation
 (`path:line "quoted text"`); without one it is a choice and must be `DEBATED`. Good: `2. backed up the CSV
 — RULE: `docs/claude-md/tracks.md` `### Stops that stay``. Bad: `1. kept recurring.csv — RULE: Surgical Changes`.
+`Memory:` records the diff-driven memory pass you run before you stop: each entry written, or `nothing new`.
+After an auto verify pass the hook, never you, adds `Closed: row moved to Done <date> — …` and moves the row,
+or adds `Paused: done not moved — <reason>`. It moves the row only when this block holds `Mode: auto`, a
+numbered decision, `Checks:`, `Memory:`, the `Not done:` auto verify slot with its result, and `Not done:`
+naming the merge — no `<...>` left (`docs/claude-md/tracks.md` `### Auto close-out`).
 
 ## Auto decisions
 
@@ -33,6 +38,7 @@ Mode: auto
 4. <what was decided> — SAFER OPTION: <why> ⚠ decided for you — please review
 Paused: <only when a stop that stays paused the task: which one, and why>
 Checks: tests `<command>` — <result>; reviews <skill — result>; real run `<command>` — printed `<what it printed>` (auto-checked, not /verify)
+Memory: <each entry the memory pass wrote, as `file — entry` | nothing new>
 Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | /verify (yours)>
 
 -->

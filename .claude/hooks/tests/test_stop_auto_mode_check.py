@@ -48,6 +48,7 @@ def _advocates(n):
 def _report(decisions, marker="Mode: auto", heading="## Auto decisions"):
     return (f"# TASK_REVIEW — T951: Move the data\n\n{heading}\n\n{marker}\n" + "\n".join(decisions)
             + "\nChecks: tests pass; code-review 0 P0/P1; real run ok (auto-checked, not /verify)\n"
+            "Memory: nothing new\n"
             "Not done: merge (yours); /verify (yours)\n\n## Evidence\n\n| Check | Result | Notes |\n"
             "|---|---|---|\n| verify | ☐ pass / ☐ fail / ☐ N/A | |\n\n## Demonstration\n\n**BEFORE**: x\n")
 
@@ -79,7 +80,15 @@ def _trace(n_advocates, skills=("code-review", "security-review"), offset_s=0):
     return [_agent(i, offset_s) for i in range(1, n_advocates + 1)] + [_skill(s, offset_s) for s in skills]
 
 
+TEST_RUN_TASKS = ("T951", "T952", "T953")
+
+
+def _pytest_run():
+    return _rec("Bash", {"command": "python3 -m pytest -q tests"})
+
+
 def _project(tmp_path, rows, risk="High", review=None, guide=True, minimal_log=None,
+             test_runs=TEST_RUN_TASKS,
              untagged=(), tagged=(), transcript=None, board=True, done_rows=()):
     project = tmp_path / "proj"
     (project / ".claude").mkdir(parents=True)
@@ -107,6 +116,9 @@ def _project(tmp_path, rows, risk="High", review=None, guide=True, minimal_log=N
         (trace_dir / "_untagged.jsonl").write_text("".join(json.dumps(r) + "\n" for r in untagged))
     if tagged:
         (trace_dir / "T951.jsonl").write_text("".join(json.dumps(r) + "\n" for r in tagged))
+    for tid in test_runs:  # T189 check (7): a finished task's own trace holds its test run
+        with open(trace_dir / f"{tid}.jsonl", "a", encoding="utf-8") as f:
+            f.write(json.dumps(_pytest_run()) + "\n")
     tpath = project / "transcript.jsonl"
     tpath.write_text("".join(json.dumps(e) + "\n" for e in (transcript or [])), encoding="utf-8")
     return project
@@ -155,7 +167,7 @@ def test_a_correct_minimal_record_passes(tmp_path):
            "**Asked:** \"sort the names [auto]\"\n**Decisions:**\n"
            f"1. sort A–Z — SAFER OPTION: the literal reading of \"sort\" {FLAG}\n"
            "**Checked:**\n- Suite: `pytest -q` — 12 passed\n**Files:** `x.py`\n"
-           "**Not done:** merge (yours); /verify (yours)\n")
+           "**Memory:** nothing new\n**Not done:** merge (yours); /verify (yours)\n")
     project = _project(tmp_path, [MIN_ROW], guide=False, minimal_log=log)
     _, out = _run(project)
     assert out == {}, out
@@ -402,7 +414,7 @@ def _log(*records):
 
 def _record(tid, risk_line, decision):
     return (f"## {tid} — Sort the names · minimal\nMode: auto\n{risk_line}**Asked:** \"sort [auto]\"\n"
-            f"**Decisions:**\n{decision}\n**Not done:** merge (yours)\n")
+            f"**Decisions:**\n{decision}\n**Memory:** nothing new\n**Not done:** merge (yours)\n")
 
 
 def test_d9_no_board_the_newest_minimal_record_is_checked(tmp_path):
@@ -532,3 +544,86 @@ def test_d10_second_fire_records_the_pause_and_does_not_loop(tmp_path):
     assert result.returncode == 0 and second == {}
     text = (project / "tasks" / "TASK_REVIEW_T951.md").read_text(encoding="utf-8")
     assert text.count(f"Paused: auto-mode check failed — {D10_REASON}") == 1, text
+
+
+# ── T189 D5 — the memory pass is recorded in the report before the auto run stops ─────────
+MEMORY_REASON = "no `Memory:` line in the report"
+
+
+@pytest.mark.parametrize("memory_line", ["", "Memory: <each entry the memory pass wrote | nothing new>"])
+def test_t189_d5_an_auto_report_with_no_memory_line_blocks_naming_the_task(tmp_path, memory_line):
+    review = _report(_good_decisions(3)).replace("Memory: nothing new\n",
+                                                 f"{memory_line}\n" if memory_line else "")
+    project = _project(tmp_path, [EXT_ROW], review=review, untagged=_trace(3))
+    _, out = _run(project)
+    assert _blocked(out), out
+    assert f"T951: {MEMORY_REASON}" in out["reason"], out["reason"]
+
+
+@pytest.mark.parametrize("memory_line", ["Memory: nothing new",
+                                         "Memory: memory/decisions.md — T951 decision (cold)"])
+def test_t189_d5_an_auto_report_with_a_memory_line_is_allowed(tmp_path, memory_line):
+    review = _report(_good_decisions(3)).replace("Memory: nothing new", memory_line)
+    project = _project(tmp_path, [EXT_ROW], review=review, untagged=_trace(3))
+    result, out = _run(project)
+    assert result.returncode == 0 and out == {}, (out, result.stderr)
+
+
+def test_t189_d5_a_minimal_record_with_no_memory_line_blocks(tmp_path):
+    log = _log(_record("T952", "", "1. sort A–Z — RULE: the request says A–Z").replace(
+        "**Memory:** nothing new\n", ""))
+    project = _project(tmp_path, [MIN_ROW], guide=False, minimal_log=log)
+    _, out = _run(project)
+    assert _blocked(out) and f"T952: {MEMORY_REASON}" in out["reason"], out
+
+
+def test_t189_d5_second_fire_records_the_missing_memory_line_in_the_pause(tmp_path):
+    review = _report(_good_decisions(3)).replace("Memory: nothing new\n", "")
+    project = _project(tmp_path, [EXT_ROW], review=review, untagged=_trace(3))
+    result, out = _run(project, active=True)
+    assert out == {}, out
+    text = (project / "tasks" / "TASK_REVIEW_T951.md").read_text(encoding="utf-8")
+    assert f"Paused: auto-mode check failed — {MEMORY_REASON}" in text
+
+
+# ── T189 option (a), check (7) — an auto task's own trace must hold its test run ──────────
+TRACE_REASON = "no test run in memory/event-trace/"
+
+
+def _min_log():
+    return _log(_record("T952", "", "1. sort A–Z — RULE: the request says A–Z"))
+
+
+def test_t189_check7_an_auto_task_with_only_an_untagged_test_run_blocks(tmp_path):
+    """AC 11 run 1: the test run landed in `_untagged.jsonl`, so Gate 5 could never pass."""
+    project = _project(tmp_path, [MIN_ROW], guide=False, minimal_log=_min_log(),
+                       untagged=[_pytest_run()], test_runs=())
+    _, out = _run(project)
+    assert _blocked(out), out
+    reason = out["reason"]
+    assert f"T952: {TRACE_REASON}T952.jsonl" in reason, reason
+    assert str(project / ".claude" / "hooks" / ".state" / "active_task.d") in reason, reason
+    assert "$CLAUDE_CODE_SESSION_ID" in reason and "minimal-track step 1" in reason
+    assert "rerun the task's tests" in reason
+
+
+def test_t189_check7_an_extended_auto_task_with_no_own_test_run_blocks(tmp_path):
+    project = _project(tmp_path, [EXT_ROW], review=_report(_good_decisions(3)), untagged=_trace(3),
+                       test_runs=())
+    _, out = _run(project)
+    assert _blocked(out) and f"T951: {TRACE_REASON}T951.jsonl" in out["reason"], out
+
+
+def test_t189_check7_a_task_whose_own_trace_holds_a_test_run_is_not_blocked(tmp_path):
+    project = _project(tmp_path, [MIN_ROW], guide=False, minimal_log=_min_log(), test_runs=("T952",))
+    result, out = _run(project)
+    assert result.returncode == 0 and out == {}, (out, result.stderr)
+
+
+def test_t189_check7_second_fire_allows_the_stop_and_records_the_pause(tmp_path):
+    """The loop guard: never re-blocks on `stop_hook_active`; the reason goes on the Paused: line."""
+    project = _project(tmp_path, [MIN_ROW], guide=False, minimal_log=_min_log(), test_runs=())
+    result, out = _run(project, active=True)
+    assert result.returncode == 0 and out == {}, out
+    text = (project / "tasks" / "MINIMAL_LOG.md").read_text(encoding="utf-8")
+    assert f"Paused: auto-mode check failed — {TRACE_REASON}T952.jsonl" in text

@@ -1128,7 +1128,7 @@ SKILL_FLOW_GROUPING = {
     "1.5": {"craft-agent"},
     "2": {"grill-with-docs", "to-issues"},
     "3": {"tdd", "bugfix", "diagnose", "craft-spawn-prompt", "migration-safety"},
-    "4": {"blast-radius", "code-review", "html-report"},
+    "4": {"blast-radius", "code-review", "html-report", "score"},
     "5": {"ship", "delivery-report"},
 }
 

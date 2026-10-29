@@ -252,13 +252,21 @@ def test_ac1_d5_stops_that_stay():
     assert "`Paused:`" in sub and "final report" in sub
 
 
-D6_NEVER = (r"merge or push", r"running `/verify` or writing its `verify` Evidence row",
-            r"moving a task to Done", r"moving a task down a track")
+# T189 D7: `### Never in auto mode` names only what stays the user's in every mode — merge, push and
+# `ship`; the memory pass and Done moved to the automatic side. The Supervisor's own limits (D6 of
+# T180) are unchanged and now live in `### The Supervisor never`.
+D6_NEVER = (r"^- merge;$", r"^- push;$", r"^- `ship`\.$")
+D6_SUPERVISOR_NEVER = (r"runs `/verify` or writes its `verify` Evidence row", r"moves a task to Done",
+                       r"moves a task down a track")
 
 
 def test_ac1_d6_never_in_auto_mode():
-    sub = _norm(_subsection(_auto(), "Never in auto mode"))
+    raw = _subsection(_auto(), "Never in auto mode")
     for item in D6_NEVER:
+        assert re.search(item, raw, re.M), item
+    assert [l for l in raw.splitlines() if l.startswith("- ")] == ["- merge;", "- push;", "- `ship`."]
+    sub = _norm(_subsection(_auto(), "The Supervisor never"))
+    for item in D6_SUPERVISOR_NEVER:
         assert re.search(item, sub), item
     assert "only T182's hook writes it" in sub
     assert re.search(r"merge gate cannot tell who wrote the row", sub)
