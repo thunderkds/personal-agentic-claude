@@ -283,7 +283,8 @@ with a short reason when:
    Risk Medium or High;
 5. at Risk High, no `DEBATED` line names 3 Advocates, or the trace holds fewer than 3 Advocate `Agent`
    calls: `Risk High, but no decision was DEBATED with 3 Advocates`;
-6. the report has no `Memory:` line (T189): the memory pass is done before the stop, and recorded.
+6. the report has no `Memory:` line (T189): the memory pass is done before the stop, and recorded;
+7. the task's own trace `memory/event-trace/<ID>.jsonl` holds no test run (Gate 5): register the task (minimal-track step 1), rerun its tests, then stop.
 
 A board row counts as auto mode when its report carries `## Auto decisions` or a `Mode: auto` line, when its
 Decision record's request carries `[auto]`, or when this session's request carries `[auto]` and the task's
