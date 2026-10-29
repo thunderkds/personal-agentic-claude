@@ -626,9 +626,11 @@ def test_ac5_relative_record_dir_is_refused(tmp_path, monkeypatch):
 # ── AC 6 — not changed without [auto]; docs ──────────────────────────────────────────────
 @pytest.mark.parametrize("marker", ["Mode: manual", "<!-- Mode: auto -->", "Mode: auto (later)"])
 def test_ac6_no_auto_marker_no_run(tmp_path, marker):
+    # T203 D1 runs every task by default; this rule (no marker, no run) now holds under the D3
+    # off switch, `CLAUDE_AUTO_VERIFY=off`, which restores it exactly.
     project, checkout = _project(tmp_path, review=_review(marker=marker))
     stub_dir, calls = _stub(tmp_path)
-    result, _ = _stop(project, _env(tmp_path, project, stub_dir))
+    result, _ = _stop(project, _env(tmp_path, project, stub_dir, CLAUDE_AUTO_VERIFY="off"))
     _settle()
     assert result.returncode == 0 and _calls(calls) == []
     assert not (project / ".claude" / "verify-runs").exists()
@@ -985,10 +987,12 @@ def test_ac3_committing_only_the_record_does_not_start_a_new_run(tmp_path):
 
 # ── AC 4 — the extended track is unchanged; a template copy is not marked ────────────────
 def test_ac4_a_review_file_copied_from_the_template_starts_no_run(tmp_path):
+    # T203 D1 runs every task by default; this rule (no marker, no run) now holds under the D3
+    # off switch, `CLAUDE_AUTO_VERIFY=off`, which restores it exactly.
     project, _ = _project(tmp_path, review=(ROOT / "templates" / "TASK_REVIEW_template.md"
                                             ).read_text(encoding="utf-8"))
     stub_dir, calls = _stub(tmp_path)
-    result, _ = _stop(project, _env(tmp_path, project, stub_dir))
+    result, _ = _stop(project, _env(tmp_path, project, stub_dir, CLAUDE_AUTO_VERIFY="off"))
     _settle()
     assert result.returncode == 0 and _calls(calls) == []
     assert not (project / ".claude" / "verify-runs").exists()
@@ -1078,10 +1082,12 @@ def test_ac5_a_record_the_agent_could_write_is_not_trusted_on_the_minimal_track(
 # ── AC 6 — no marker, no run, on either track ────────────────────────────────────────────
 @pytest.mark.parametrize("marker", ["Mode: manual", "<!-- Mode: auto -->", "Mode: auto (later)"])
 def test_ac6_a_minimal_record_without_the_marker_starts_no_run(tmp_path, marker):
+    # T203 D1 runs every task by default; this rule (no marker, no run) now holds under the D3
+    # off switch, `CLAUDE_AUTO_VERIFY=off`, which restores it exactly.
     project, checkout = _project(tmp_path, rows=(MIN_ROW,), review_file=False,
                                  minimal_log=_log(_record(marker=marker)))
     stub_dir, calls = _stub(tmp_path)
-    result, _ = _stop(project, _env(tmp_path, project, stub_dir))
+    result, _ = _stop(project, _env(tmp_path, project, stub_dir, CLAUDE_AUTO_VERIFY="off"))
     _settle()
     assert result.returncode == 0 and _calls(calls) == []
     assert not (project / ".claude" / "verify-runs").exists()
@@ -1719,3 +1725,384 @@ def test_t189_edge_two_auto_tasks_passing_in_one_turn_both_move(tmp_path):
     assert _section_rows(board, "Ready for Review") == []
     assert sorted(re.search(r"\*\*(T\d+)\*\*", r).group(1) for r in _section_rows(board, "Done")) == [
         "T951", "T953"]
+
+
+# ══ T203 — auto verify for every task, started by the Supervisor ═════════════════════════
+# AC 1 — the Stop hook starts one detached run for a Ready for Review task with NO `Mode: auto`,
+#        on the extended track (`verify` row) and the minimal track (`Checked:` line).
+# AC 2 — `--start <ID>` starts the same run for one task and returns at once with the log path; it
+#        starts nothing, with a one-line reason, when the task is not at Ready for Review, its
+#        result is filled for the head commit, or a run for that commit already started. The Stop
+#        hook and `--start` share the lock.
+# AC 3 — `CLAUDE_AUTO_VERIFY=off`: only marked tasks run, through the hook and through `--start`.
+# AC 4 — a user-filled result is never overwritten; the child session starts nothing; (D6) a pass
+#        for an unmarked task does not move its row to Done.
+# AC 5 — the merge gate, for an UNMARKED task: an `auto-run by hook` row with its run record
+#        passes; no record, a record for another commit, a fail record, `auto-checked` block.
+# AC 6 — doctrine (D4).
+# AC 7 — the kit's Update merge adds the `stop_auto_verify.py` Stop entry to a project
+#        settings.json that lacks it, and keeps the user's own entries.
+OFF = {"CLAUDE_AUTO_VERIFY": "off"}
+PLAIN_NOT_DONE = "merge (yours); /verify (yours)"
+
+
+def _plain_review(verify_cells=UNFILLED, task=TASK):
+    """A review file with no auto-mode report at all: no `## Auto decisions`, no `Mode: auto`."""
+    text = re.sub(r"## Auto decisions\n.*?(?=## Evidence)", "", _review(verify_cells, task=task),
+                  flags=re.S)
+    assert "Mode: auto" not in text and "## Auto decisions" not in text
+    return text
+
+
+def _plain_record():
+    """A minimal-track Decision record with no `Mode: auto` line and no `[auto]` tag."""
+    text = _record(marker="", not_done=PLAIN_NOT_DONE).replace(" [auto]", "")
+    assert "Mode: auto" not in text and "[auto]" not in text
+    return text
+
+
+def _start(project, env, task=TASK):
+    begin = time.monotonic()
+    result = subprocess.run([sys.executable, str(project / ".claude" / "hooks" / HOOK), "--start", task],
+                            stdin=subprocess.DEVNULL, capture_output=True, text=True, cwd=project,
+                            env=env, timeout=30)
+    return result, time.monotonic() - begin
+
+
+def _run_finished(project, task, checkout=None):
+    """The run log once the run has written its verdict and everything after it."""
+    deadline = time.monotonic() + WAIT_S
+    log = ""
+    while time.monotonic() < deadline:
+        try:
+            log = _run_log(project, task, checkout)
+        except FileNotFoundError:
+            log = ""
+        if "close-out skipped" in log or any(m in log for m in CLOSE_TERMINAL) or (
+                "verdict:" in log and "verdict: pass" not in log):
+            return log
+        time.sleep(0.1)
+    raise AssertionError(f"the run never finished; log:\n{log}")
+
+
+# ── AC 1 — no marker needed, both tracks ─────────────────────────────────────────────────
+def test_t203_ac1_an_unmarked_extended_task_gets_one_run_and_its_row(tmp_path):
+    project, checkout = _project(tmp_path, review=_plain_review())
+    stub_dir, calls = _stub(tmp_path)
+    env = _env(tmp_path, project, stub_dir)
+    result, elapsed = _stop(project, env)
+    assert result.returncode == 0 and elapsed < 10
+    verdict, notes = _wait_row(checkout)
+    assert verdict == "☑ pass" and "auto-run by hook" in notes and notes.endswith("— pass")
+    _run_finished(project, TASK)
+    _stop(project, env)
+    _settle()
+    assert [c["argv"][:2] for c in _calls(calls)] == [["-p", f"/verify {TASK}"]]
+
+
+def test_t203_ac1_an_unmarked_minimal_task_gets_one_run_and_its_line(tmp_path):
+    project, checkout = _project(tmp_path, rows=(MIN_ROW,), review_file=False,
+                                 minimal_log=_log(_plain_record()))
+    stub_dir, calls = _stub(tmp_path)
+    env = _env(tmp_path, project, stub_dir)
+    _stop(project, env)
+    line = _wait_verify_line(checkout)
+    assert line.startswith("- verify: ☑ pass — auto-run by hook"), line
+    _run_finished(project, MIN_TASK)
+    _stop(project, env)
+    _settle()
+    assert [c["argv"][:2] for c in _calls(calls)] == [["-p", f"/verify {MIN_TASK}"]]
+
+
+def test_t203_ac1_a_ready_for_review_task_with_no_review_file_is_one_stderr_line(tmp_path):
+    """Edge: an old board row with no `TASK_REVIEW_<ID>.md` — one stderr line, no run, no crash."""
+    project, _ = _project(tmp_path, review_file=False)
+    stub_dir, calls = _stub(tmp_path)
+    result, _ = _stop(project, _env(tmp_path, project, stub_dir))
+    _settle()
+    assert result.returncode == 0 and _calls(calls) == []
+    lines = [l for l in result.stderr.splitlines() if "stop_auto_verify" in l]
+    assert len(lines) == 1 and TASK in lines[0] and "`verify` row" in lines[0], result.stderr
+
+
+# ── AC 2 — `--start <ID>` ────────────────────────────────────────────────────────────────
+def test_t203_ac2_start_returns_at_once_with_the_log_path_and_the_run_writes_the_row(tmp_path):
+    project, checkout = _project(tmp_path, review=_plain_review())
+    stub_dir, calls = _stub(tmp_path, sleep=3)
+    head = _git(project, "rev-parse", "HEAD")
+    result, elapsed = _start(project, _env(tmp_path, project, stub_dir))
+    assert result.returncode == 0, result
+    assert elapsed < 3, f"--start waited for the run ({elapsed:.1f}s)"
+    log_rel = f".claude/verify-runs/{TASK}-{head[:12]}.log"
+    assert result.stdout.strip() == f"{TASK}: auto verify started for commit {head[:12]} — log {log_rel}"
+    assert _wait_row(checkout)[0] == "☑ pass"
+    assert len(_calls(calls)) == 1
+
+
+def test_t203_ac2_start_twice_on_one_commit_runs_once(tmp_path):
+    project, checkout = _project(tmp_path, review=_plain_review())
+    stub_dir, calls = _stub(tmp_path, sleep=2)
+    env = _env(tmp_path, project, stub_dir)
+    head = _git(project, "rev-parse", "HEAD")
+    first, _ = _start(project, env)
+    second, _ = _start(project, env)  # the first run is still going
+    assert first.returncode == 0
+    assert second.returncode == 1
+    assert second.stdout.strip() == (f"{TASK}: a run for commit {head[:12]} already started — log "
+                                     f".claude/verify-runs/{TASK}-{head[:12]}.log")
+    _wait_row(checkout)
+    _run_finished(project, TASK)
+    third, _ = _start(project, env)  # the run ended and filled the row for this commit
+    assert third.returncode == 1 and "already filled" in third.stdout and "nothing started" in third.stdout
+    assert len(_calls(calls)) == 1
+
+
+@pytest.mark.parametrize("first", ["stop", "start"])
+def test_t203_ac2_the_stop_hook_and_start_share_one_lock(tmp_path, first):
+    project, checkout = _project(tmp_path, review=_plain_review())
+    stub_dir, calls = _stub(tmp_path, sleep=2)
+    env = _env(tmp_path, project, stub_dir)
+    if first == "stop":
+        _stop(project, env)
+        second, _ = _start(project, env)
+        assert second.returncode == 1 and "already started" in second.stdout, second.stdout
+    else:
+        assert _start(project, env)[0].returncode == 0
+        result, _ = _stop(project, env)
+        assert "auto verify started" not in result.stderr
+    _wait_row(checkout)
+    _settle()
+    assert len(_calls(calls)) == 1
+
+
+@pytest.mark.parametrize("where", ["nowhere", "In Progress", "Done"])
+def test_t203_ac2_start_starts_nothing_unless_the_task_is_ready_for_review(tmp_path, where):
+    project, _ = _project(tmp_path, review=_plain_review())
+    board = {s: (RFR_ROW if s == where else "") for s in ("In Progress", "Ready for Review", "Done")}
+    (project / "PROJECT_KANBAN.md").write_text(
+        "# Kanban\n\n" + "".join(f"### {s}\n{row}\n\n" for s, row in board.items()), encoding="utf-8")
+    stub_dir, calls = _stub(tmp_path)
+    result, _ = _start(project, _env(tmp_path, project, stub_dir))
+    _settle()
+    assert result.returncode == 1
+    assert result.stdout.strip() == f"{TASK}: not at Ready for Review on PROJECT_KANBAN.md — nothing started"
+    assert _calls(calls) == [] and not (project / ".claude" / "verify-runs").exists()
+
+
+def test_t203_ac2_start_starts_nothing_when_the_user_filled_the_row(tmp_path):
+    project, checkout = _project(tmp_path, review=_plain_review("☑ pass | user ran /verify T951 — pass"))
+    stub_dir, calls = _stub(tmp_path)
+    result, _ = _start(project, _env(tmp_path, project, stub_dir))
+    _settle()
+    assert result.returncode == 1 and "already filled" in result.stdout, result.stdout
+    assert _calls(calls) == [] and _row(checkout) == ("☑ pass", "user ran /verify T951 — pass")
+
+
+def test_t203_ac2_a_new_commit_gets_a_new_run_from_start(tmp_path):
+    """Edge: the Supervisor commits again — the old run was for the old commit."""
+    project, checkout = _project(tmp_path, review=_plain_review())
+    stub_dir, calls = _stub(tmp_path)
+    env = _env(tmp_path, project, stub_dir)
+    assert _start(project, env)[0].returncode == 0
+    _wait_row(checkout)
+    _run_finished(project, TASK)
+    (checkout / "src" / "app.py").write_text("print('v2')\n", encoding="utf-8")
+    _git(checkout, "commit", "-qam", "v2")
+    head = _git(checkout, "rev-parse", "HEAD")
+    result, _ = _start(project, env)
+    assert result.returncode == 0 and head[:12] in result.stdout, result.stdout
+    _run_finished(project, TASK)
+    assert len(_calls(calls)) == 2
+
+
+def test_t203_ac2_start_without_claude_on_path_is_blocked_with_no_crash(tmp_path):
+    project, checkout = _project(tmp_path, review=_plain_review())
+    result, _ = _start(project, _env(tmp_path, project))
+    assert result.returncode == 0
+    verdict, notes = _wait_row(checkout)
+    assert verdict == "☐ blocked" and "pass" not in notes.lower()
+
+
+# ── AC 3 — the off switch ────────────────────────────────────────────────────────────────
+@pytest.mark.parametrize("value", ["off", "OFF", " off "])
+def test_t203_ac3_off_leaves_an_unmarked_task_untouched_by_the_hook(tmp_path, value):
+    project, checkout = _project(tmp_path, review=_plain_review())
+    stub_dir, calls = _stub(tmp_path)
+    result, _ = _stop(project, _env(tmp_path, project, stub_dir, CLAUDE_AUTO_VERIFY=value))
+    _settle()
+    assert result.returncode == 0 and _calls(calls) == []
+    assert not (project / ".claude" / "verify-runs").exists()
+    assert _row(checkout)[0].startswith("☐ pass")
+
+
+def test_t203_ac3_off_leaves_an_unmarked_task_untouched_by_start(tmp_path):
+    project, checkout = _project(tmp_path, review=_plain_review())
+    stub_dir, calls = _stub(tmp_path)
+    result, _ = _start(project, _env(tmp_path, project, stub_dir, **OFF))
+    _settle()
+    assert result.returncode == 1
+    assert result.stdout.strip() == (f"{TASK}: CLAUDE_AUTO_VERIFY=off and the task has no `Mode: auto` "
+                                     "line — nothing started; /verify stays yours")
+    assert _calls(calls) == [] and not (project / ".claude" / "verify-runs").exists()
+
+
+def test_t203_ac3_off_leaves_an_unmarked_minimal_task_untouched(tmp_path):
+    project, checkout = _project(tmp_path, rows=(MIN_ROW,), review_file=False,
+                                 minimal_log=_log(_plain_record()))
+    stub_dir, calls = _stub(tmp_path)
+    env = _env(tmp_path, project, stub_dir, **OFF)
+    _stop(project, env)
+    assert _start(project, env, MIN_TASK)[0].returncode == 1
+    _settle()
+    assert _calls(calls) == [] and _verify_line(checkout) == ""
+
+
+@pytest.mark.parametrize("entry", ["stop", "start"])
+def test_t203_ac3_off_still_runs_a_marked_task(tmp_path, entry):
+    project, checkout = _project(tmp_path)  # the default fixture carries `Mode: auto`
+    stub_dir, calls = _stub(tmp_path)
+    env = _env(tmp_path, project, stub_dir, **OFF)
+    if entry == "stop":
+        _stop(project, env)
+    else:
+        assert _start(project, env)[0].returncode == 0
+    assert _wait_row(checkout)[0] == "☑ pass"
+    assert len(_calls(calls)) == 1
+
+
+# ── AC 4 — the user's result, the child guard, and T189's scope ──────────────────────────
+def test_t203_ac4_the_hook_never_runs_over_a_user_filled_row_on_an_unmarked_task(tmp_path):
+    project, checkout = _project(tmp_path, review=_plain_review("☑ fail | user ran /verify — broken"))
+    stub_dir, calls = _stub(tmp_path)
+    _stop(project, _env(tmp_path, project, stub_dir))
+    _settle()
+    assert _calls(calls) == [] and _row(checkout) == ("☑ fail", "user ran /verify — broken")
+
+
+def test_t203_ac4_a_user_line_on_an_unmarked_minimal_task_is_never_run_over(tmp_path):
+    record = _plain_record().replace("**Checked:**\n", "**Checked:**\n- verify: ☑ pass — user ran /verify\n")
+    project, checkout = _project(tmp_path, rows=(MIN_ROW,), review_file=False, minimal_log=_log(record))
+    stub_dir, calls = _stub(tmp_path)
+    _stop(project, _env(tmp_path, project, stub_dir))
+    _settle()
+    assert _calls(calls) == [] and _verify_line(checkout) == "- verify: ☑ pass — user ran /verify"
+
+
+@pytest.mark.parametrize("entry", ["stop", "start"])
+def test_t203_ac4_inside_the_headless_run_nothing_starts(tmp_path, entry):
+    project, _ = _project(tmp_path, review=_plain_review())
+    stub_dir, calls = _stub(tmp_path)
+    env = _env(tmp_path, project, stub_dir, CLAUDE_AUTO_VERIFY_RUN="1")
+    if entry == "stop":
+        _stop(project, env)
+    else:
+        result, _ = _start(project, env)
+        assert result.returncode == 1 and "nothing started" in result.stdout
+    _settle()
+    assert _calls(calls) == [] and not (project / ".claude" / "verify-runs").exists()
+
+
+def test_t203_ac4_a_pass_on_an_unmarked_task_does_not_move_the_row_to_done(tmp_path):
+    """T203 D6: T189's Done move keeps its scope — auto-mode tasks only. The unmarked report gets
+    no `Closed:` and no `Paused:` line either: it has no auto-mode report to write them in."""
+    project, checkout = _project(tmp_path, review=_plain_review())
+    stub_dir, _ = _stub(tmp_path)
+    board = _board_text(project)
+    _stop(project, _env(tmp_path, project, stub_dir))
+    log = _run_finished(project, TASK)
+    assert "verdict: pass" in log and "close-out skipped: not an auto-mode task" in log, log
+    assert _board_text(project) == board
+    text = (checkout / "tasks" / f"TASK_REVIEW_{TASK}.md").read_text(encoding="utf-8")
+    assert "Closed:" not in text and "Paused:" not in text
+
+
+def test_t203_ac4_a_marked_task_still_closes_out_after_its_pass(tmp_path):
+    project, checkout = _project(tmp_path, review=COMPLETE)
+    stub_dir, _ = _stub(tmp_path)
+    _stop(project, _env(tmp_path, project, stub_dir))
+    assert f"{TASK}: moved to Done" in _wait_close(project, TASK)
+
+
+# ── AC 5 — the merge gate, for an unmarked task ──────────────────────────────────────────
+def _ran_plain(tmp_path, output=None):
+    project, checkout = _project(tmp_path, review=_plain_review())
+    stub_dir, _ = _stub(tmp_path, output=output)
+    env = _env(tmp_path, project, stub_dir)
+    _stop(project, env)
+    _wait_row(checkout)
+    _run_finished(project, TASK)
+    return project, checkout, env
+
+
+def test_t203_ac5_an_unmarked_hook_row_with_its_record_is_accepted(tmp_path):
+    project, _, env = _ran_plain(tmp_path)
+    assert _merge(project, env) == ("allow", "")
+
+
+def test_t203_ac5_an_unmarked_hand_typed_row_with_no_record_blocks(tmp_path):
+    project, checkout = _project(tmp_path, review=_plain_review())
+    head = _git(project, "rev-parse", "HEAD")
+    _set_row(checkout, f"☑ pass | auto-run by hook, session forged-1, commit {head}, "
+                       f"log .claude/verify-runs/{TASK}-{head[:12]}.log — pass")
+    decision, reason = _merge(project, _env(tmp_path, project))
+    assert decision == "block" and f"{TASK} (no evidence row)" in reason
+
+
+def test_t203_ac5_an_unmarked_record_for_another_commit_blocks(tmp_path):
+    project, checkout, env = _ran_plain(tmp_path)
+    (checkout / "src" / "app.py").write_text("print('v2')\n", encoding="utf-8")
+    _git(checkout, "commit", "-qam", "v2 after the run")
+    assert _merge(project, env)[0] == "block"
+
+
+def test_t203_ac5_an_unmarked_fail_record_blocks_even_if_the_row_is_edited_to_pass(tmp_path):
+    project, checkout, env = _ran_plain(tmp_path, output=_verdict_output("**Verdict:** FAIL"))
+    _, notes = _row(checkout)
+    _set_row(checkout, f"☑ pass | {notes.replace('— fail', '— pass')}")
+    assert _merge(project, env)[0] == "block"
+
+
+def test_t203_ac5_an_unmarked_auto_checked_row_blocks(tmp_path):
+    project, _ = _project(tmp_path, review=_plain_review("☑ pass | auto-checked, not /verify — pass"))
+    decision, reason = _merge(project, _env(tmp_path, project))
+    assert decision == "block" and f"{TASK} (no evidence row)" in reason
+
+
+# ── AC 7 — the kit's Update reaches other repos ──────────────────────────────────────────
+def test_t203_ac7_update_merge_adds_the_auto_verify_stop_entry_and_keeps_user_entries(tmp_path):
+    kit_settings = ROOT / ".claude" / "settings.json"
+    kit = json.loads(kit_settings.read_text(encoding="utf-8"))
+    hook_cmd = f'python3 "$CLAUDE_PROJECT_DIR"/.claude/hooks/{HOOK}'
+    project = tmp_path / "other-repo"
+    shutil.copytree(HOOKS, project / ".claude" / "hooks",  # what MANIFEST's `.claude/hooks` ships
+                    ignore=shutil.ignore_patterns("tests", "__pycache__", ".state"))
+    old = json.loads(json.dumps(kit))
+    old["hooks"]["Stop"] = [e for e in old["hooks"]["Stop"]
+                            if not any(HOOK in h.get("command", "") for h in e["hooks"])]
+    user_stop = {"hooks": [{"type": "command", "command": "echo my-own-stop-hook"}]}
+    old["hooks"]["Stop"].append(user_stop)
+    old.setdefault("permissions", {})["allow"] = ["Bash(ls:*)"]
+    old["model"] = "my-choice"
+    target = project / ".claude" / "settings.json"
+    target.write_text(json.dumps(old, indent=2), encoding="utf-8")
+    assert hook_cmd not in target.read_text(encoding="utf-8")
+
+    done = subprocess.run([sys.executable, str(ROOT / "lib" / "merge-settings.py"), str(kit_settings),
+                           str(target), str(project)], capture_output=True, text=True, timeout=30)
+    assert done.returncode == 0, done.stderr
+    merged = json.loads(target.read_text(encoding="utf-8"))
+    commands = [h["command"] for e in merged["hooks"]["Stop"] for h in e["hooks"]]
+    assert hook_cmd in commands
+    assert user_stop in merged["hooks"]["Stop"]
+    assert merged["permissions"]["allow"] == ["Bash(ls:*)"] and merged["model"] == "my-choice"
+
+
+def test_t203_ac7_manifest_ships_the_hook_file():
+    lines = [l.strip() for l in (ROOT / "MANIFEST").read_text(encoding="utf-8").splitlines()]
+    assert ".claude/hooks" in lines
+    excluded = [l[1:] for l in lines if l.startswith("!")]
+    for path in (f".claude/hooks/{HOOK}", ".claude/hooks/lib/auto_mode.py",
+                 ".claude/hooks/lib/verify_record.py", ".claude/hooks/lib/auto_closeout.py"):
+        assert (ROOT / path).is_file(), path
+        assert not any(fnmatch.fnmatch(path, ex) or path.startswith(ex.rstrip("/") + "/")
+                       for ex in excluded), path
