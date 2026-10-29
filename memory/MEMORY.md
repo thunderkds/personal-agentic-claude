@@ -47,7 +47,7 @@
 - [`claude_md_source` records the CLAUDE file a project installed with](decisions.md) — T110: `update.sh` now delivers `CLAUDE.md` under the edit-safe rule
 - [A lock-file value is untrusted the moment it becomes a path](learnings.md) — T110: allowlist before concatenation, and pick a fallback that can't carry the bad value into the rewritten lock
 - [The Supervisor's own mutant is the Stage 4 step](learnings.md) — an agent's mutation controls prove its mutants fail, not that its suite is non-vacuous
-- [The push gate reads the board and the trace](learnings.md) — set `.claude/hooks/.state/active_task` before a task's verification work, or its Bash calls are attributed to nothing
+- [The push gate reads the board and the trace](learnings.md) — since T196 a sub-agent is bound by its spawn prompt; the main session writes `.state/active_task.d/$CLAUDE_CODE_SESSION_ID`
 - [Interactive CLIs need a pty to verify](learnings.md) — drive the real binary with `script -qec` at Stage 5, and add a define-only source guard for the unit path (T108)
 - [A subshell `cd` doesn't wrap a pipeline outside it](learnings.md) — T108's probes installed into the main checkout instead of scratch; Assert the destination, don't trust the `cd`
 - [Agents satisfy the AC they can and stay quiet about a contradictory one](learnings.md) — T108's AC1 (input order) and AC7 (numeric order) couldn't both hold; Read the AC table against itself before spawning
@@ -212,7 +212,7 @@
 - [The Kanban is test-covered](learnings.md) — `test_find_kanban_section_on_real_current_board` reads the LIVE board
 
 - [T056 merged: session-scoped step counters + TTL expiry](decisions.md) — step_count_<session>_<task>.txt + 6h TTL, after the guard blocked 3 whole sessions in one day
-- [Clear your own `active_task` pointer after verifying](learnings.md) — twice the poisoning pointer was one the Supervisor left armed after its own verification run
+- [Clear your own `active_task` pointer after verifying](learnings.md) — pre-T196 (shared file); T196 made the file per session, the shared one is ignored
 
 - [T054 merged: delivery-report skill + HTML template](decisions.md) — renders a task's Demonstration block
 - [An AC can be written against a file's older shape](learnings.md) — T054's AC9 wanted per-file MANIFEST paths, but MANIFEST lists directories copied with `cp -r`
