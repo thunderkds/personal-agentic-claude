@@ -136,7 +136,13 @@ class Gate:
             f.write(text)
 
     def repo(self, name, branch):
-        return make_repo(os.path.join(self.root, name), branch)
+        """T210 D4: a pushed task's `verify` row counts only when committed on its branch, so
+        the repo commits the fixture's `tasks/` — every verified row is on the branch."""
+        path = make_repo(os.path.join(self.root, name), branch)
+        shutil.copytree(self.tasks, os.path.join(path, "tasks"))
+        git(path, "add", "-A")
+        git(path, "-c", "user.email=t@example.com", "-c", "user.name=t", "commit", "-qm", "tasks")
+        return path
 
 
 @pytest.fixture

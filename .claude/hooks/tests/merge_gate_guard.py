@@ -47,7 +47,11 @@ GATE_REL = ".claude/hooks/pre_bash_block_unsafe_merge.py"
 #   T196 — the attribution remedy text names the per-session state file; no gate logic change
 #          (`ATTRIBUTION_REMEDY` only, `tasks/TASK_GUIDE_T196.md` D6). Authorised by the user,
 #          2026-10-29.
-AUTHORISED_TASKS = ("T182", "T188", "T190", "T197", "T196")
+#   T210 — D1-D4: `git pull` is gated as a merge; `git merge-base` is not; a `timeout <N>`
+#          test run counts; for a merge or narrowed push of a task branch the `verify` row counts
+#          only when committed on that branch (`tasks/TASK_GUIDE_T210.md`). Authorised by the
+#          user, 2026-10-29.
+AUTHORISED_TASKS = ("T182", "T188", "T190", "T197", "T196", "T210")
 
 
 def _git(root, *args):
