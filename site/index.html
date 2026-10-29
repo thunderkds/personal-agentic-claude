@@ -2295,7 +2295,11 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 
   // Scroll-spy. Deterministic: the active link is always the first section in
   // document order that is currently intersecting, so overlapping short
-  // sections cannot make the highlight flicker between them.
+  // sections cannot make the highlight flicker between them. The band starts
+  // where an anchor jump puts a section (its scroll-margin-top, below the sticky
+  // header), so the tail of the section above a jump target is not in it.
+  // A sidebar click holds its link active until the next wheel, touch or scroll
+  // key, because the last sections cannot scroll up to the band.
   var sections = [].slice.call(document.querySelectorAll("main > section[id]"));
   var links = {};
   [].forEach.call(document.querySelectorAll('#site-nav a[href^="#"]'), function (a) {
@@ -2304,19 +2308,56 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
   if (!("IntersectionObserver" in window) || !sections.length) { return; }
 
   var visible = {};
+  var held = null;
   function paint() {
-    var current = null;
-    for (var i = 0; i < sections.length; i++) {
-      if (visible[sections[i].id]) { current = sections[i].id; break; }
+    var current = held;
+    for (var i = 0; !current && i < sections.length; i++) {
+      if (visible[sections[i].id]) { current = sections[i].id; }
     }
     for (var id in links) {
       if (links[id]) { links[id].classList.toggle("active", id === current); }
     }
   }
+  function release() {
+    if (held) { held = null; paint(); }
+  }
+  // Once the jump settles, the hold also ends on any scroll that moves more than
+  // MOVED px from where the jump landed (scrollbar drag, find-in-page, autoscroll,
+  // other in-page links). Settled = `scrollend`, or 150ms with no scroll event;
+  // the timer starts at the click, so a click that cannot scroll still settles.
+  var MOVED = 40;
+  var landed = null;
+  var settleTimer = null;
+  function settle() {
+    clearTimeout(settleTimer);
+    if (held && landed === null) { landed = window.pageYOffset; }
+  }
+  function arm() {
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(settle, 150);
+  }
+  var SCROLL_KEYS = { ArrowUp: 1, ArrowDown: 1, PageUp: 1, PageDown: 1, Home: 1, End: 1, " ": 1 };
+  [].forEach.call(document.querySelectorAll("#site-nav a[href^=\"#\"]"), function (a) {
+    a.addEventListener("click", function () {
+      held = a.getAttribute("href").slice(1);
+      landed = null;
+      arm();
+      paint();
+    });
+  });
+  window.addEventListener("scroll", function () {
+    if (!held) { return; }
+    if (landed === null) { arm(); } else if (Math.abs(window.pageYOffset - landed) > MOVED) { release(); }
+  }, { passive: true });
+  window.addEventListener("scrollend", settle);
+  window.addEventListener("wheel", release, { passive: true });
+  window.addEventListener("touchmove", release, { passive: true });
+  window.addEventListener("keydown", function (event) { if (SCROLL_KEYS[event.key]) { release(); } });
+  var topEdge = parseFloat(getComputedStyle(sections[0]).scrollMarginTop) || 0;
   var observer = new IntersectionObserver(function (entries) {
     entries.forEach(function (entry) { visible[entry.target.id] = entry.isIntersecting; });
     paint();
-  }, { rootMargin: "0px 0px -60% 0px" });
+  }, { rootMargin: "-" + topEdge + "px 0px -60% 0px" });
   sections.forEach(function (section) { observer.observe(section); });
 })();
 </script>
