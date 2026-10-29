@@ -25,6 +25,7 @@
      run; read them there. The enforced gate is the whole-file character budget above. -->
 
 ### Decisions
+- [T213: scroll-spy band starts below the header; click holds its link until a hand scroll](decisions.md) — test `node --test tests/site_scrollspy/*.mjs` (headless Chrome; bare dir fails on Node 26)
 - [T212: neon accent `#3CF5A8` + glow tokens; supersedes T204 no-glow](decisions.md) — glow only via `--glow-*`; links stay `#7EDDB0` (`--link`); `prefers-contrast: more` turns glow off
 - [T207–T209: visual-first site; verdict parser](decisions.md) — diagrams lead, prose in Details; `**Verdict: PASS …**` reads; a line listing choices is ignored
 - [T143/T191/T189: CI re-runs a Done task's Verification Command; `score` skill; auto close-out](decisions.md) — `# ci: skip — <reason>`; score row optional; Stop check (7) needs a task test run

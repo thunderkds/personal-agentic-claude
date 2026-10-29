@@ -2587,7 +2587,7 @@ The log refuses a symlink/non-file path, writes via `mktemp` in `.claude/` + `mv
 
 **Decision** (user: "checking the design and update following <design canvas>", then chose "Yes, neon + glow"): the canvas board "B · Graphite Mint — Easy Kit" moved the accent to neon `#3CF5A8` with glow. `site/theme.css`: `--accent: #3CF5A8`, `--accent-hover: #8AF9CB`; plain links keep `#7EDDB0` as `--link` / `--link-hover: #B2EDCF`; glow only as four tokens `--glow-text|button|dot|box`, placed on eyebrow, active sidebar item (+ inset accent line), `.strip .num` (now accent colour), `.codebox`, `.btn-primary`, `#settings-tool .st-primary`, active family-nav dot, `.card.is-highlight`, `.flow-node.is-outcome`, `.bar > span`. `prefers-contrast: more` sets every `--glow-*` to `none`.
 **Supersedes**: T204's "No glow" rule (spec copy `tasks/T204_graphite_mint_spec.md` left as history). `test_site_css_has_no_gradient_glow_or_blur` → `test_shadows_are_tokens_and_gradient_and_blur_stay_banned` (a shadow is `none`, a `--glow-*` token or `inset 0 0 0 1px var(--accent-line)`; gradients, `backdrop-filter`, `filter: blur`, `drop-shadow(` banned).
-**Open**: P3 — the shadow regex skips `-webkit-box-shadow`. Possible scroll-spy lag (active sidebar link one section behind), seen at /verify, pre-existing, untracked.
+**Open**: P3 — the shadow regex skips `-webkit-box-shadow`. Scroll-spy lag seen at /verify — fixed by T213.
 **Files**: site/theme.css, site/index.html, tests/test_site_content.py
 **Verified**: auto verify pass at `d47a677` ($0.61). Local merge refused by the merge gate (T211 In Progress); branch `feat/t212-neon-glow` pushed for a GitHub merge.
 
@@ -2598,3 +2598,10 @@ The log refuses a symlink/non-file path, writes via `mktemp` in `.claude/` + `mv
 **Open**: aliases saved in git config and shell aliases are out of reach (documented in the gate docstring); `echo "git push" | sh` and `echo git -c alias.p=push p | sh` are allowed (T099 data-command class); a harmless inline alias (`git -c alias.st=status st`) is blocked; the octopus path was covered only by tests, not seen at the real surface.
 **Files**: .claude/hooks/pre_bash_block_unsafe_merge.py, .claude/hooks/tests/merge_gate_guard.py, .claude/hooks/tests/test_merge_gate_guard.py, .claude/hooks/tests/test_merge_gate_t211.py, .claude/hooks/tests/test_merge_gate_t210.py
 **Verified**: auto verify pass (`7f9e95e`, $0.57); 99 new tests, M1–M4 mutations RED.
+
+## T213: the sidebar scroll-spy lights the clicked item (2026-10-29)
+
+**Decision** (user: "when I click the nav item, but the highlight is the nav item that above the item click"; bottom sections: "Clicked item stays lit"; verify gap: "Fix it first"): `site/index.html` scroll-spy. The `IntersectionObserver` band now starts at `scroll-margin-top` of the first section (read from CSS, = header + 16px), not the viewport top, so the hidden tail of the section above a jump target is not counted (before: 16 of 17 links lit the item above). A sidebar click holds its link active; the hold ends on wheel, touchmove, a scroll key, or any scroll >40px (`MOVED`) from where the jump settled (`scrollend`, else 150ms with no scroll event; the timer starts at the click so an unscrollable bottom click still settles).
+**Open**: P3 — a scrollbar drag during the smooth jump settles the hold at the drag point until the next >40px scroll; a smooth jump whose first scroll event comes >150ms after the click would settle early; a wheel at page bottom after clicking `mcps`/`options` moves the highlight to `memory-system` (user's trade-off).
+**Files**: site/index.html, tests/site_scrollspy/test_scrollspy.mjs
+**Verified**: `tests/site_scrollspy/test_scrollspy.mjs` 8/8 (headless Chrome over raw CDP, skips without Chrome; run as `node --test tests/site_scrollspy/*.mjs` — a bare directory fails with MODULE_NOT_FOUND on Node 26); full tests 1226 passed; auto verify pass round 1 `82d1ef6` ($0.51), round 2 `aaded15` ($0.54).
