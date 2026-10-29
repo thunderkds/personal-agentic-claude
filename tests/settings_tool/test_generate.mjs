@@ -57,7 +57,8 @@ test("Team project preset on Project target gives the exact JSON", () => {
 
 test("preset key sets are exact and never select a lowersSafety key", () => {
   const keys = (id) => Object.keys(core.applyPreset(catalog, id)).sort();
-  assert.deepEqual(keys("safe-baseline"), ["permissions.ask", "permissions.deny"]);
+  assert.deepEqual(keys("high-security"), ["permissions.ask", "permissions.deny", "permissions.disableBypassPermissionsMode"]);
+  assert.deepEqual(keys("legacy"), ["permissions.deny"]);
   assert.deepEqual(keys("solo-engineer"), ["autoUpdatesChannel", "cleanupPeriodDays", "permissions.ask", "permissions.deny"]);
   assert.deepEqual(keys("team-project"), ["permissions.ask", "permissions.deny", "worktree.baseRef", "worktree.symlinkDirectories"]);
   assert.deepEqual(keys("empty"), []);
@@ -159,5 +160,55 @@ test("tool script source holds no network or storage API (spec rule 1)", () => {
   const src = block("settings-tool-core") + (html.match(/<script id="settings-tool-ui">([\s\S]*?)<\/script>/) || ["", ""])[1];
   for (const bad of ["fetch(", "XMLHttpRequest", "sendBeacon", "WebSocket", "localStorage", "sessionStorage", "indexedDB", "document.cookie"]) {
     assert.ok(!src.includes(bad), "tool script contains " + bad);
+  }
+});
+
+// ---- T201: named profiles ------------------------------------------------
+const profiles = JSON.parse(readFileSync(join(here, "..", "..", "skills", "settings-setup", "profiles.json"), "utf8")).profiles;
+
+test("T201 AC1: presets are the five profiles in order; safe-baseline is gone", () => {
+  assert.deepEqual(plain(catalog.presets.map((p) => p.id)), ["high-security", "legacy", "solo-engineer", "team-project", "empty"]);
+  assert.ok(!catalog.presets.some((p) => p.id === "safe-baseline"));
+});
+
+test("T201 AC2/AC3: every preset has label and for text, and its values equal profiles.json", () => {
+  assert.deepEqual(plain(catalog.presets.map((p) => p.id)), profiles.map((p) => p.id));
+  for (const prof of profiles) {
+    const page = catalog.presets.find((p) => p.id === prof.id);
+    assert.ok(page, prof.id + " missing on page");
+    assert.equal(typeof page.for, "string", prof.id + " needs a for line");
+    assert.equal(page.for, prof.for, prof.id + " for text drifted");
+    assert.equal(page.label, prof.label, prof.id + " label drifted");
+    assert.deepEqual(plain(core.applyPreset(catalog, prof.id)), prof.values, prof.id + " values drifted");
+  }
+});
+
+test("T201 AC4: High security on Project target gives the 7 deny, 4 ask, and the bypass lock", () => {
+  const out = core.generate(catalog, core.applyPreset(catalog, "high-security"), "project");
+  const j = JSON.parse(out.json);
+  assert.deepEqual(Object.keys(j), ["permissions"]);
+  assert.equal(j.permissions.deny.length, 7);
+  assert.equal(j.permissions.ask.length, 4);
+  assert.equal(j.permissions.disableBypassPermissionsMode, "disable");
+  assert.deepEqual(Object.keys(j.permissions).sort(), ["ask", "deny", "disableBypassPermissionsMode"]);
+  assert.deepEqual(plain(out.removed), []);
+});
+
+test("T201 AC5: Legacy gives the 2 anchor deny rules and a note that the installer adds the hooks", () => {
+  const out = core.generate(catalog, core.applyPreset(catalog, "legacy"), "user");
+  assert.deepEqual(JSON.parse(out.json), { permissions: { deny: ["Edit(~/.claude/harness-anchors/**)", "Bash(*harness-anchors*)"] } });
+  const legacy = catalog.presets.find((p) => p.id === "legacy");
+  assert.match(legacy.note, /hooks/);
+  assert.match(legacy.note, /installer/);
+  assert.match(legacy.note, /not by this file/);
+  for (const p of catalog.presets) if (p.id !== "legacy") assert.equal(p.note, undefined, p.id + " has a stray note");
+});
+
+test("T201 AC7 (NFR-001): no preset emits bypassPermissions, allow, or defaultMode", () => {
+  for (const p of catalog.presets) {
+    const sel = core.applyPreset(catalog, p.id);
+    for (const k of Object.keys(sel)) assert.ok(k !== "permissions.allow" && k !== "permissions.defaultMode", p.id + " selects " + k);
+    const text = core.generate(catalog, sel, "user").json;
+    assert.ok(!/bypassPermissions|"allow"|defaultMode/.test(text), p.id + " output carries a banned term");
   }
 });

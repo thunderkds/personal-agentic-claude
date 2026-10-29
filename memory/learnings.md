@@ -2870,6 +2870,10 @@ highest ID anywhere, not only `PROJECT_KANBAN.md` on the checked-out branch. Ren
   were all task questions. Q2 again "minimal is enough". Gotcha: Claude Code 2.1.310 stores `-p` sessions in
   `$CLAUDE_CONFIG_DIR` or else `$HOME/.claude/projects/<cwd>/<id>.jsonl`, so a containerised `--resume` needs
   the same writable HOME mounted on every turn and the same cwd; plain `--resume` keeps the session id.
+- **The push gate narrows to the pushed task only when `main`'s board shows that task In Progress or Ready for Review** (T202, 2026-10-29).
+  A task whose board moves live only on its branch still reads Todo on `main`, so the gate checks the whole board and
+  another session's In Progress task blocks the push. Commit the Ready for Review row on `main` first (user-approved
+  here), then push the branch. `git merge` stays whole-board: with a second session live, merge via PR.
 - **A frozen experiment's test that pins the live installer goes red when the kit grows** (T177 merge, 2026-10-29).
   `test_sc8_full_arm_is_the_installer_output` asserted 9 hooks; T180/T182 made it 11 while the branch sat unmerged
   226 commits behind. The recorded results stay valid (they ran on the 9-hook kit); update the count with a dated
@@ -2939,3 +2943,9 @@ Two Bash gotchas seen at T199 (2026-10-28). (1) `pre_bash_block_unsafe_merge.py`
 
 ### A table that scrolls the page sideways: measure its minimum content width, not just the rule you suspect
 T199 addendum (2026-10-28): the `#hooks` table overflowed at 768 to 899 px. The guide blamed `white-space: nowrap` on two columns, but removing it alone changed nothing: the table's minimum content width was 554 px (unbreakable `Edit|Write|Bash` plus cell padding) against a 456 px column. Squeeze the wrapper to 1 px and read the table's width to find the real floor, then give the unbreakable string `<wbr>` points. T167 forbids `overflow-x` on `.table-wrap` and `min-width` on `table`, so the fix is wrapping, never a scrollbar. Measure with headless Chrome over HTTP; `--window-size` width minus 15 is the client width.
+
+### Parallel sessions overwrite the shared active-task file, so a task's test runs can land in another task's trace
+T200 (2026-10-29): the merge gate refused T200 with "evidence row present but no verified tool call in memory/event-trace/T200.jsonl". The T200 agent had run pytest many times, but `.claude/hooks/.state/active_task` was rewritten by the T201 agent and by another session's T202 work, so those runs were attributed elsewhere (T200.jsonl even held T202 Reads). Fix used: write the state file for the task, re-run its own test command once, then merge. Check `grep -c pytest memory/event-trace/<task>.jsonl` before a merge whenever more than one task or session ran at once.
+
+### A headless-Chrome check of the site must scroll instantly: the page sets `scroll-behavior: smooth`
+T201 /verify (2026-10-29): CDP mouse events at coordinates taken right after `scrollIntoView()` hit nothing, because `html { scroll-behavior: smooth; }` was still scrolling; every hover and click silently missed and the output stayed `{}`. Use `scrollIntoView({block: "center", behavior: "instant"})`, wait ~100 ms, and log `document.elementFromPoint` to prove the hit. Also: `node --test tests/settings_tool/` fails on Node v26; use the `*.mjs` glob.

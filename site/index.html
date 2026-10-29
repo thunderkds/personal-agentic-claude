@@ -389,7 +389,7 @@
   <dt>Stages</dt>
   <dd>Phase 0 → 0.5 → 1 → 1.5 → 2 → 3 → 4 → 5</dd>
   <dt>Roster</dt>
-  <dd><a href="#agent-roles">4 spawnable roles</a> &middot; <a href="#skills">31 skills</a> &middot; <a href="#hooks">5 blocking hooks (of 11)</a></dd>
+  <dd><a href="#agent-roles">4 spawnable roles</a> &middot; <a href="#skills">32 skills</a> &middot; <a href="#hooks">5 blocking hooks (of 11)</a></dd>
 </dl>
 </div>
 </section>
@@ -657,7 +657,9 @@ Decided by: auto-approve (overwrite all)
 <section id="settings-tool">
 <h2>Settings tool</h2>
 <p class="lead">Pick the Claude Code settings you want and copy a ready <code>settings.json</code>, or paste yours to check it.
-  The kit installs no settings of its own. Everything stays in your browser.</p>
+  The installer adds only the kit's hooks and 2 deny rules.</p>
+<p class="st-why">At Stage 1 the Supervisor offers the profiles below, and uses High security if you skip.
+  It writes only after you approve, and never removes an entry. Everything on this page stays in your browser.</p>
 <p class="st-nojs">This tool needs JavaScript. Without it, read the
   <a href="https://code.claude.com/docs/en/settings-reference" target="_blank" rel="noopener noreferrer">official settings reference</a>.</p>
 <div id="st-app" class="st-app">
@@ -676,6 +678,7 @@ Decided by: auto-approve (overwrite all)
       <span class="st-label">Start from</span>
       <span id="st-presets" class="st-presets"></span>
     </div>
+    <p id="st-presetfor" class="st-why"></p>
     <div id="st-confirm" class="st-confirm" role="group" aria-label="Confirm preset" hidden>
       <span id="st-confirm-text"></span>
       <button type="button" class="st-btn" id="st-confirm-yes">Replace</button>
@@ -798,7 +801,7 @@ Decided by: auto-approve (overwrite all)
   {"key": "env", "category": "Updates & privacy", "type": "object", "scopes": ["user", "project", "local"], "placeholder": "NAME=value", "why": "Environment variables for every session. Values are plain text: never put tokens here."}
  ],
  "knownKeys": ["permissions.deny", "permissions.ask", "permissions.allow", "permissions.defaultMode", "permissions.additionalDirectories", "permissions.disableBypassPermissionsMode", "permissions.blockReadsOutsideWorkingDirectories", "autoMode.soft_deny", "autoMode.hard_deny", "autoMode.classifyAllShell", "sandbox.enabled", "sandbox.failIfUnavailable", "sandbox.autoAllowBashIfSandboxed", "sandbox.allowUnsandboxedCommands", "sandbox.excludedCommands", "sandbox.filesystem.denyRead", "sandbox.filesystem.allowWrite", "sandbox.network.allowedDomains", "sandbox.network.strictAllowlist", "worktree.baseRef", "worktree.symlinkDirectories", "worktree.sparsePaths", "model", "effortLevel", "maxEffortLevel", "fallbackModel", "alwaysThinkingEnabled", "showThinkingSummaries", "fastMode", "promptCacheTtl", "subagentPromptCacheTtl", "language", "outputStyle", "autoMemoryEnabled", "autoMemoryDirectory", "autoCompactEnabled", "autoCompactWindow", "idleCompaction", "claudeMdExcludes", "bashOutputMaxChars", "skillListingBudgetFraction", "fileCheckpointingEnabled", "plansDirectory", "attribution.commit", "attribution.pr", "attribution.sessionUrl", "includeGitInstructions", "prUrlTemplate", "disableAllHooks", "enableAllProjectMcpServers", "enabledMcpjsonServers", "disabledMcpjsonServers", "allowedHttpHookUrls", "statusLine", "theme", "showTurnDuration", "preferredNotifChannel", "respectGitignore", "autoUpdatesChannel", "minimumVersion", "cleanupPeriodDays", "feedbackSurveyRate", "env", "hooks", "permissions", "autoMode", "sandbox", "worktree", "attribution", "requiredMinimumVersion", "includeCoAuthoredBy", "disableArtifact", "enableArtifact", "taskOutputMaxChars", "keybindingFlavor", "autoConnectIde", "autoInstallIdeExtension", "copyFullResponse", "copyOnSelect", "defaultToAgentsView", "diffTool", "externalEditorContext", "leftArrowOpensAgents", "prStatusFooterEnabled", "claudeInChromeDefaultEnabled", "advisorModel", "agent", "agentPushNotifEnabled", "allowAllClaudeAiMcps", "allowClaudeInChromeWithManagedMcp", "allowedChannelPlugins", "allowedMcpServers", "allowedProviders", "allowManagedHooksOnly", "allowManagedMcpServersOnly", "allowManagedPermissionRulesOnly", "apiKeyHelper", "askUserQuestionTimeout", "appendPlugins", "autoContinueAtUsageLimit", "autoScrollEnabled", "availableModels", "availableModelsMatch", "awaySummaryEnabled", "awsAuthRefresh", "awsCredentialExport", "axScreenReader", "bashEditDiffEnabled", "blockedMarketplaces", "browserExternalPageTools", "channelsEnabled", "claudeMd", "companyAnnouncements", "crossSessionInbound", "defaultShell", "deniedMcpServers", "deniedModels", "desktopSessionCleanupPeriodDays", "dialogExpiry", "disableAgentView", "disableAutoMode", "disableBrowserExternalNavigation", "disableBundledSkills", "disableClaudeAiConnectors", "disableCommandPluginSources", "disableDeepLinkRegistration", "disableDesktopLocalSessions", "disableMobileSimulatorTools", "disableRemoteControl", "disableSideloadFlags", "disableSkillShellExecution", "disableWorkflows", "editorMode", "emojiCompletionEnabled", "enabledPlugins", "enableWorkflows", "enforceAvailableModels", "extraKnownMarketplaces", "fastModePerSessionOptIn", "feedbackDrafts", "fileSuggestion", "footerLinksRegexes", "forceLoginGatewayUrl", "forceLoginMethod", "forceLoginOrgUUID", "forceRemoteSettingsRefresh", "gatewayInternalNetworks", "gcpAuthRefresh", "httpHookAllowedEnvVars", "inputNeededNotifEnabled", "isolatePeerMachines", "managedMcpServers", "managedSourcesBehavior", "maxProseWidth", "modelOverrides", "modelPicker", "modelPricing", "modelSettings", "otelHeadersHelper", "parentSettingsBehavior", "permissionExplainerEnabled", "pluginConfigs", "pluginSuggestionMarketplaces", "pluginTrustMessage", "policyHelper", "policyHelper.path", "policyHelper.refreshIntervalMs", "policyHelper.timeoutMs", "prefersReducedMotion", "prependPlugins", "processWrapper", "promptSuggestionEnabled", "remote.defaultEnvironmentId", "remoteControlAtStartup", "requiredMaximumVersion", "respondToBashCommands", "sandbox.allowAppleEvents", "sandbox.allowNestedUserNamespaces", "sandbox.bwrapPath", "sandbox.credentials", "sandbox.credentials.allowPlaintextInject", "sandbox.credentials.awsPairs", "sandbox.credentials.envVars", "sandbox.credentials.files", "sandbox.credentials.sigv4", "sandbox.enableWeakerNestedSandbox", "sandbox.enableWeakerNetworkIsolation", "sandbox.filesystem", "sandbox.filesystem.allowManagedReadPathsOnly", "sandbox.filesystem.allowRead", "sandbox.filesystem.denyWrite", "sandbox.filesystem.disabled", "sandbox.ignoreViolations", "sandbox.network", "sandbox.network.allowAllUnixSockets", "sandbox.network.allowLocalBinding", "sandbox.network.allowMachLookup", "sandbox.network.allowManagedDomainsOnly", "sandbox.network.allowUnixSockets", "sandbox.network.deniedDomains", "sandbox.network.httpProxyPort", "sandbox.network.socksProxyPort", "sandbox.network.tlsTerminate", "sandbox.ripgrep", "sandbox.socatPath", "showClearContextOnPlanAccept", "skillListingMaxDescChars", "skillOverrides", "skipAutoPermissionPrompt", "skipDangerousModePermissionPrompt", "skipWebFetchPreflight", "spellcheck", "spinnerTipsEnabled", "spinnerTipsOverride", "spinnerVerbs", "sshConfigs", "sshHostAllowlist", "sshHostCommands", "strictKnownMarketplaces", "strictPluginOnlyCustomization", "strictPluginOnlyCustomization.agents", "strictPluginOnlyCustomization.hooks", "strictPluginOnlyCustomization.mcp", "strictPluginOnlyCustomization.skills", "subagentStatusLine", "switchModelsOnFlag", "syncClaudeAiPlugins", "syncClaudeAiSkills", "syntaxHighlightingDisabled", "teammateDefaultModel", "teammateMode", "terminalProgressBarEnabled", "terminalTitleFromRename", "timeFormat", "timeZone", "tui", "ultracode", "useAutoModeDuringPlan", "verbose", "viewMode", "vimInsertModeRemaps", "voice", "voiceEnabled", "wheelScrollAccelerationEnabled", "workflowKeywordTriggerEnabled", "workflowSizeGuideline", "worktree.bgIsolation", "worktree.location", "wslInheritsWindowsSettings", "permissions.disableAutoMode", "autoMode.environment", "autoMode.allow"],
- "presets": [{"id": "safe-baseline", "label": "Safe baseline", "values": {"permissions.deny": "$suggest", "permissions.ask": "$suggest"}}, {"id": "solo-engineer", "label": "Solo engineer", "values": {"permissions.deny": "$suggest", "permissions.ask": "$suggest", "autoUpdatesChannel": "stable", "cleanupPeriodDays": 90}}, {"id": "team-project", "label": "Team project", "values": {"permissions.deny": "$suggest", "permissions.ask": "$suggest", "worktree.baseRef": "head", "worktree.symlinkDirectories": ["node_modules", ".venv"]}}, {"id": "empty", "label": "Empty", "values": {}}],
+ "presets": [{"id": "high-security", "label": "High security", "for": "The default. Blocks reads of secret files, asks before destructive commands, and locks out bypass mode.", "values": {"permissions.deny": "$suggest", "permissions.ask": "$suggest", "permissions.disableBypassPermissionsMode": "disable"}}, {"id": "legacy", "label": "Legacy", "for": "Keeps today's kit behavior: only the 2 deny rules that protect the trace anchors.", "note": "The kit's hooks are added by the installer, not by this file.", "values": {"permissions.deny": ["Edit(~/.claude/harness-anchors/**)", "Bash(*harness-anchors*)"]}}, {"id": "solo-engineer", "label": "Solo engineer", "for": "One person on the project. Secret and destructive-command rules, stable updates, 90 days of session history.", "values": {"permissions.deny": "$suggest", "permissions.ask": "$suggest", "autoUpdatesChannel": "stable", "cleanupPeriodDays": 90}}, {"id": "team-project", "label": "Team project", "for": "Several people share the repo. Secret and destructive-command rules, and worktrees that start from your local HEAD.", "values": {"permissions.deny": "$suggest", "permissions.ask": "$suggest", "worktree.baseRef": "head", "worktree.symlinkDirectories": ["node_modules", ".venv"]}}, {"id": "empty", "label": "Empty", "for": "Adds nothing. Choose this to keep the settings file exactly as it is.", "values": {}}],
  "deprecated": {"includeCoAuthoredBy": "attribution", "disableArtifact": "enableArtifact"},
  "removed": ["taskOutputMaxChars", "keybindingFlavor", "permissionExplainerEnabled", "teammateDefaultModel"],
  "globalConfigOnly": ["autoConnectIde", "autoInstallIdeExtension", "copyFullResponse", "copyOnSelect", "defaultToAgentsView", "diffTool", "externalEditorContext", "leftArrowOpensAgents", "prStatusFooterEnabled", "claudeInChromeDefaultEnabled", "permissionExplainerEnabled", "teammateDefaultModel"],
@@ -1307,7 +1310,7 @@ var SettingsCore = (function () {
   if (!app) { return; }
   var catalog = core.loadCatalog(document.getElementById("settings-catalog").textContent);
   var REF = "https://code.claude.com/docs/en/settings-reference";
-  var state = { target: "user", selection: {}, filter: "", pending: null, passthrough: null, loadNote: "" };
+  var state = { target: "user", selection: {}, filter: "", pending: null, passthrough: null, loadNote: "", active: null };
   var rows = {};      // key -> { root, check, ctl, err, setControl }
   var details = {};   // category -> { root, summary, list }
 
@@ -1470,7 +1473,9 @@ var SettingsCore = (function () {
     });
     $("st-output").textContent = out.json;
     $("st-file").textContent = core.FILES[state.target];
-    $("st-note").textContent = out.note;
+    var cur = activePreset();
+    $("st-note").textContent = [out.note, cur && cur.note ? cur.note : ""].filter(Boolean).join(" ");
+    showFor(null);
     var kept = state.passthrough ? Object.keys(state.passthrough) : [];
     $("st-kept").textContent = (kept.length
       ? "Kept as-is from your pasted file: " + kept.join(", ") + ". Pick a preset to start over. " : "") + state.loadNote;
@@ -1498,15 +1503,35 @@ var SettingsCore = (function () {
   });
   catalog.settings.forEach(function (entry) { details[entry.category].list.appendChild(buildRow(entry)); });
 
-  var presetBox = $("st-presets"), confirmBox = $("st-confirm");
+  var presetBox = $("st-presets"), confirmBox = $("st-confirm"), forBox = $("st-presetfor");
+  var FOR_HINT = "Point at a profile to see who it is for.";
+  // The profile last applied, for as long as the picks still equal it. Any edit ends it.
+  function activePreset() {
+    if (!state.active || state.passthrough) { return null; }
+    var want = core.applyPreset(catalog, state.active), have = state.selection;
+    var keys = Object.keys(want);
+    if (keys.length !== Object.keys(have).length) { return null; }
+    for (var i = 0; i < keys.length; i++) {
+      if (!Object.prototype.hasOwnProperty.call(have, keys[i]) || JSON.stringify(have[keys[i]]) !== JSON.stringify(want[keys[i]])) { return null; }
+    }
+    return catalog.presets.filter(function (p) { return p.id === state.active; })[0] || null;
+  }
+  // Hover or focus shows that profile; otherwise the active profile, otherwise the hint.
+  function showFor(p) {
+    var shown = p || activePreset();
+    forBox.textContent = shown ? shown.label + ": " + shown.for : FOR_HINT;
+  }
   function applyNow(id) {
     state.selection = core.applyPreset(catalog, id);
+    state.active = id;
     state.passthrough = null; state.loadNote = "";
     state.pending = null; confirmBox.hidden = true;
     syncControls(); refresh();
   }
   catalog.presets.forEach(function (p) {
-    var b = el("button", { type: "button", "class": "st-btn", text: p.label });
+    var b = el("button", { type: "button", "class": "st-btn", text: p.label, "aria-describedby": "st-presetfor" });
+    ["mouseenter", "focus"].forEach(function (ev) { b.addEventListener(ev, function () { showFor(p); }); });
+    ["mouseleave", "blur"].forEach(function (ev) { b.addEventListener(ev, function () { showFor(null); }); });
     b.addEventListener("click", function () {
       var n = Object.keys(state.selection).length + (state.passthrough ? Object.keys(state.passthrough).length : 0);
       if (!n) { applyNow(p.id); return; }
@@ -1790,7 +1815,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 </section>
 
 <section id="skills">
-<h2>Skills (31)</h2>
+<h2>Skills (32)</h2>
 <p class="lead">
   One inline instruction set loaded per invocation, grouped by which pipeline stage it belongs to.
 </p>
@@ -1802,7 +1827,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
   </li>
   <li class="flow-step" data-stage="1" data-next="down">
     <h3>Stage 1 — Environment &amp; Provider Setup</h3>
-    <p class="chips"><span class="chip">git-guardrails-claude-code</span><span class="chip">map-codebase</span></p>
+    <p class="chips"><span class="chip">git-guardrails-claude-code</span><span class="chip">map-codebase</span><span class="chip">settings-setup</span></p>
   </li>
   <li class="flow-step" data-stage="1.5" data-next="left">
     <h3>Stage 1.5 — Sub-Agent Architecture</h3>
