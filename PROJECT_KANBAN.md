@@ -94,7 +94,7 @@
 
 
 ### Ready for Review
-- [ ] **T212** — Landing page takes the neon Graphite Mint accent (#3CF5A8) with glow, per the updated design canvas | frontend-developer | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T212.md` | Depends on: T204, T207 | Registered 2026-10-29; user: "checking the design and update following <canvas link>"; user chose "Yes, neon + glow" (supersedes the T204 no-glow rule). | Started 2026-10-29, worktree `../wt-t212` (`feat/t212-neon-glow`). | Ready for Review 2026-10-29: agent commit f08ce08; Supervisor re-run 134 passed + node 59/59; mutations M1-M4 RED; code-review 0 P0/P1, 1 P2, 2 P3; evidence `tasks/TASK_REVIEW_T212.md`. Auto verify started.
+- [ ] **T212** — Landing page takes the neon Graphite Mint accent (#3CF5A8) with glow, per the updated design canvas | frontend-developer | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T212.md` | Depends on: T204, T207 | Registered 2026-10-29; user: "checking the design and update following <canvas link>"; user chose "Yes, neon + glow" (supersedes the T204 no-glow rule). | Started 2026-10-29, worktree `../wt-t212` (`feat/t212-neon-glow`). | Ready for Review 2026-10-29: agent commit f08ce08; Supervisor re-run 134 passed + node 59/59; mutations M1-M4 RED; code-review 0 P0/P1, 1 P2, 2 P3; evidence `tasks/TASK_REVIEW_T212.md`. Auto verify pass 2026-10-29 at d47a677 ($0.61; computed styles, prefers-contrast off-glow, 390px no overflow); not exercised on this page: `.card.is-highlight`, `.bar > span`. Awaiting merge approval (user).
 
 
 ### Done
