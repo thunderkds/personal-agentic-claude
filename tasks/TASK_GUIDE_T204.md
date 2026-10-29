@@ -62,6 +62,7 @@ User decision, 2026-10-29: fonts are **self-hosted in `site/`** (not Google Font
 | 7 | Every existing section id and its order are unchanged; every existing nav-link test, drift test (page vs `agents/` and `skills/` and hooks) and settings-tool test passes. Tests that asserted old color names or old classes are updated to the new tokens, none deleted | Rules: keep anchors and order |
 | 8 | Components per the spec's Easy Kit list: hero = eyebrow `> multi-agent supervisor framework` + h1 "Easy Kit" + existing lede; install command in a `.codebox` with `$` prompt in `--accent` and a Copy `.btn-primary` (`<button>` with accessible name); Quick reference as a 4-col `.strip` (numbers from the existing section, not new hardcoded ones); pipeline as a 6-cell step grid numbered `00`–`05` with existing stage names; agent roles as 4 `.card`s with `.dot` in `--role-*` colors, `general-agent-template` as plain text below; settings-tool inputs/selects on `--bg-sunken`, `--line-strong`, 40px high; MCPs as 3 `.card`s; every reference table inside `.table-wrap` | Per-site → Easy Kit |
 | 9 | Responsive: ≥1024px header + sidebar + main; 720–1023px sidebar becomes the existing Menu toggle's left drawer; <720px family nav moves into the drawer top, h1 32px, grids to 1 col (strips to 2), main padding `24px 16px`. No horizontal page scroll at 1440, 1024, 768, 375px. "Skip to content" stays first focusable element | Responsive |
+| 9a | Container: the page does not stretch to the full screen width. Header content, sidebar and main sit inside one centered container, `max-width: var(--page-max)` with `--page-max: 1280px` added to the theme.css Layout tokens (the spec's artboard width), `margin: 0 auto`. The header's bottom border and the `--bg` background may span the full width; the content inside them may not. At 1920px the container is 1280px wide and centered (test on the CSS rule + `/verify` screenshot at 1920px). User, 2026-10-29: "the site should have container, do not open wide by the screen" | User follow-up |
 | 10 | Accessibility: focus ring visible on every link/button; touch targets ≥44px below 720px; no font weight above 600 in CSS; no `text-transform: uppercase` on headings | Accessibility, Typography |
 | 11 | Mutations RED then green: **M1** add `color: #ff0000` to `site/index.html`'s `<style>` (AC 2 test fails); **M2** add `text-shadow: 0 0 4px var(--accent)` (AC 4 test fails); **M3** remove `aria-current="page"` from the Easy Kit family link (AC 5 test fails); **M4** point one `@font-face` `src` at `https://fonts.gstatic.com/...` (AC 3 / external-asset test fails) | AC 2–5 asserted |
 
@@ -107,6 +108,7 @@ python3 -m pytest tests/test_site_content.py -q && node --test tests/settings_to
 ### 3. Layout / Responsiveness
 | Viewport | Method | Expected |
 |---|---|---|
+| 1920 | screenshot | layout centered in a 1280px container (AC 9a) |
 | 1440 / 1024 | screenshot | header + sidebar + main |
 | 768 | screenshot + Menu toggle | drawer from left |
 | 375 | screenshot + `scrollWidth == clientWidth` | family nav in drawer, 1-col grids, tables scroll inside `.table-wrap` |
