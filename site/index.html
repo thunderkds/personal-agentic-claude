@@ -2321,10 +2321,35 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
   function release() {
     if (held) { held = null; paint(); }
   }
+  // Once the jump settles, the hold also ends on any scroll that moves more than
+  // MOVED px from where the jump landed (scrollbar drag, find-in-page, autoscroll,
+  // other in-page links). Settled = `scrollend`, or 150ms with no scroll event;
+  // the timer starts at the click, so a click that cannot scroll still settles.
+  var MOVED = 40;
+  var landed = null;
+  var settleTimer = null;
+  function settle() {
+    clearTimeout(settleTimer);
+    if (held && landed === null) { landed = window.pageYOffset; }
+  }
+  function arm() {
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(settle, 150);
+  }
   var SCROLL_KEYS = { ArrowUp: 1, ArrowDown: 1, PageUp: 1, PageDown: 1, Home: 1, End: 1, " ": 1 };
   [].forEach.call(document.querySelectorAll("#site-nav a[href^=\"#\"]"), function (a) {
-    a.addEventListener("click", function () { held = a.getAttribute("href").slice(1); paint(); });
+    a.addEventListener("click", function () {
+      held = a.getAttribute("href").slice(1);
+      landed = null;
+      arm();
+      paint();
+    });
   });
+  window.addEventListener("scroll", function () {
+    if (!held) { return; }
+    if (landed === null) { arm(); } else if (Math.abs(window.pageYOffset - landed) > MOVED) { release(); }
+  }, { passive: true });
+  window.addEventListener("scrollend", settle);
   window.addEventListener("wheel", release, { passive: true });
   window.addEventListener("touchmove", release, { passive: true });
   window.addEventListener("keydown", function (event) { if (SCROLL_KEYS[event.key]) { release(); } });

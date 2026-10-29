@@ -47,9 +47,9 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/site_scrollspy/test_scrollspy.mjs` (5 tests: AC1 fresh-page per link, AC1 sequential, AC2 section at top, AC3 wheel-up after last-section click, 375px drawer click). Before fix: fail 6 of 6 (16 of 17 links wrong). After fix 2026-10-29T15:50Z: `ℹ tests 5 / ℹ pass 5 / ℹ fail 0`. Mutation checks: no wheel release -> AC3 fails; topEdge 0 -> AC2 and AC3 fail. |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/site_scrollspy/test_scrollspy.mjs` (5 tests: AC1 fresh-page per link, AC1 sequential, AC2 section at top, AC3 wheel-up after last-section click, 375px drawer click). Before fix: fail 6 of 6 (16 of 17 links wrong). After fix 2026-10-29T15:50Z: `ℹ tests 5 / ℹ pass 5 / ℹ fail 0`. Mutation checks: no wheel release -> AC3 fails; topEdge 0 -> AC2 and AC3 fail. Round 2 (2026-10-29): +3 tests in the same file. RED at 16:04:29Z before the fix: `ℹ tests 8 / ℹ pass 7 / ℹ fail 1` — `✖ round 2: a scroll with no wheel, touch or key event releases the hold` (`actual: [ 'settings-tool' ], expected: [ 'agent-roles' ]`); the smooth-jump and last-section tests are guards that already passed. Green at 16:05:21Z: `ℹ tests 8 / ℹ pass 8 / ℹ fail 0`; `pytest tests/test_site_content.py` 134 passed; settings_tool 59 pass. |
 | Verification command run | ☑ pass | `node --test tests/site_scrollspy/*.mjs` pass 5/5; `python3 -m pytest tests/test_site_content.py -q` 134 passed; `node --test tests/settings_tool/*.mjs` pass 59/59. Note: the guide's `node --test tests/site_scrollspy/` (bare directory) errors on Node 26 with MODULE_NOT_FOUND, so the glob form is used. |
-| Negative cases hold | ☑ pass | Script still returns early without IntersectionObserver (guard line untouched, before the new code). Wheel after a click releases the hold (AC3). Mutations above fail the tests as expected. |
+| Negative cases hold | ☑ pass | Script still returns early without IntersectionObserver (guard line untouched, before the new code). Wheel after a click releases the hold (AC3). Mutations above fail the tests as expected. Round 2: a mutation that releases on every scroll event fails AC1 (both), 375px and the smooth-jump test, so the settle logic is exercised; a click where the page cannot scroll (`options` at bottom) stays held across 1.3s with no scroll event. |
 | verify | ☑ pass | auto-run by hook, session 02bca57e-7f93-493f-9c36-ebaaf51d16ea, commit 82d1ef664840860fde540eece7c806bcf505ed54, log .claude/verify-runs/T213-82d1ef664840.log — pass |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Supervisor code-review 2026-10-29: diff main..HEAD (site/index.html scroll-spy block, tests/site_scrollspy/test_scrollspy.mjs); `lane: C1, 3 files, 260 lines, EXCEEDS (lines 260 > 250)` — excess is the new test file, C1 kept; 0 P0/P1/P2, 3 P3 (scrollbar drag keeps the hold — agreed cut; Space/arrows typed in settings-tool fields release the hold, harmless repaint; links queried twice). Fix matches mental model (a)(b)(c). Supervisor re-run: scrollspy 5/5, test_site_content 134 passed |
 | Full smoke suite still green (no regression) | ☑ pass | `python3 -m pytest tests -q` -> `1226 passed in 112.54s`. |
@@ -100,6 +100,8 @@ options -> active: [memory-system]
 ✔ 375px: opening the drawer and clicking a link makes that link the only active one
 ℹ tests 5  ℹ pass 5  ℹ fail 0
 ```
+
+**AFTER (round 2)**: 2026-10-29T16:05:21Z, same command: 8 of 8 pass, including `scrollBy(0, 2500)` with no input event after a `#settings-tool` click (active becomes `agent-roles`, the section at the top). Note: the coordinator's `scrollBy(0, 1500)` stays inside `settings-tool` (about 1930px tall), so the test uses 2500.
 
 **DELTA**: Clicking any sidebar link now lights that link (not the one above it), and the highlight follows the section at the top of the view when the user scrolls by hand.
 

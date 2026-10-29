@@ -204,3 +204,52 @@ test("375px: opening the drawer and clicking a link makes that link the only act
     }
     assert.deepEqual(wrong, [], "drawer clicks that mis-highlight:\n" + wrong.join("\n"));
   });
+
+// Round 2: the hold releases on ANY scroll away from where the click landed,
+// however the scroll was caused, and the jump itself never releases it.
+const topSectionId = () => evaluate(`(() => {
+  const secs = [...document.querySelectorAll('main > section[id]')];
+  const off = parseFloat(getComputedStyle(secs[0]).scrollMarginTop);
+  return (secs.find((s) => s.getBoundingClientRect().bottom > off) || secs[0]).id;
+})()`);
+const click = (id) => evaluate("document.querySelector('#site-nav a[href=\"#" + id + "\"]').click()");
+
+test("round 2: a scroll with no wheel, touch or key event releases the hold",
+  { skip }, async () => {
+    await open(1440, 900);
+    await click("settings-tool");
+    await sleep(600);
+    assert.deepEqual(await activeLinks(), ["settings-tool"]);
+    await evaluate("scrollBy(0, 2500)"); // settings-tool is ~1930px tall; scrollbar drag, find-in-page, autoscroll: no input events
+    await sleep(600);
+    const expected = await topSectionId();
+    assert.notEqual(expected, "settings-tool", "scrollBy did not leave the section");
+    assert.deepEqual(await activeLinks(), [expected]);
+  });
+
+test("round 2: a smooth-scroll jump does not release the hold",
+  { skip }, async () => {
+    await open(1440, 900);
+    await evaluate("document.documentElement.style.scrollBehavior = 'smooth'");
+    await click("hooks");
+    // Sample during the animation, then after it settles.
+    await sleep(120);
+    const midway = await evaluate("scrollY");
+    await sleep(1800);
+    const landed = await evaluate("scrollY");
+    assert.ok(landed > 1000, "smooth scroll did not move the page: " + landed);
+    assert.ok(midway < landed, "expected an animated jump (midway " + midway + ", landed " + landed + ")");
+    assert.deepEqual(await activeLinks(), ["hooks"]);
+  });
+
+test("round 2: a click on the last section, where the page cannot scroll, stays held",
+  { skip }, async () => {
+    await open(1440, 900);
+    await evaluate("scrollTo(0, document.documentElement.scrollHeight)");
+    await sleep(500);
+    await click("options");
+    await sleep(800); // longer than the settle debounce, with no scroll event at all
+    assert.deepEqual(await activeLinks(), ["options"]);
+    await sleep(500);
+    assert.deepEqual(await activeLinks(), ["options"]);
+  });
