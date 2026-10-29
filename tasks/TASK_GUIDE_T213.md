@@ -105,7 +105,7 @@
 ## Verification Command
 
 ```bash
-node --test tests/site_scrollspy/ && python3 -m pytest tests/test_site_content.py -q && node --test tests/settings_tool/*.mjs
+node --test tests/site_scrollspy/*.mjs && python3 -m pytest tests/test_site_content.py -q && node --test tests/settings_tool/*.mjs
 ```
 
 ## Completion Checklist
