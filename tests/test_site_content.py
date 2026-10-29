@@ -99,8 +99,9 @@ def test_every_skill_dir_appears_on_page():
 def test_every_spawnable_agent_appears_with_subagent_type():
     text = _page_text()
     agents = _agent_names()
-    assert "general-agent-template" in agents  # sanity: fixture is real
-    spawnable = {n: f for n, f in agents.items() if n != "general-agent-template"}
+    # T183: the base template lives in templates/, so every agents/*.md is a spawnable role.
+    assert "general-agent-template" not in agents, "the base template is back in agents/"
+    spawnable = agents
     assert len(spawnable) == 4, f"expected 4 spawnable agents, found {sorted(spawnable)}"
     missing = [name for name in spawnable if not _word_present(text, name)]
     assert not missing, f"spawnable agent(s) missing from page: {missing}"
@@ -115,6 +116,76 @@ def test_base_template_marked_not_spawnable():
         "general-agent-template must be explicitly labelled not spawnable "
         "near its mention on the page"
     )
+
+
+# ---- T183 AC 8: role cards show the agent's frontmatter colour and trigger ----
+
+def _agent_frontmatter(fname):
+    """{key: unquoted value} for one agents/*.md frontmatter block."""
+    with open(os.path.join(AGENTS_DIR, fname), encoding="utf-8") as f:
+        block = f.read().split("\n---\n", 1)[0]
+    keys = {}
+    for line in block.splitlines():
+        m = re.match(r"^([a-z]+):\s*(.*)$", line)
+        if m:
+            value = m.group(2).strip()
+            if len(value) >= 2 and value[0] == value[-1] == '"':
+                value = value[1:-1]
+            keys[m.group(1)] = value
+    return keys
+
+
+def _trigger(description):
+    """The "Use when ..." trigger: the description's first sentence."""
+    return re.split(r"(?<=\.)\s", description, maxsplit=1)[0]
+
+
+def _agent_card(name):
+    """The <div class="agent-card"> block whose .name is `name`, or None."""
+    m = re.search(r'<section id="agent-roles">(.*?)</section>', _page_text(), re.DOTALL)
+    assert m, 'page has no <section id="agent-roles">'
+    for card in re.findall(r'<div class="agent-card">(.*?)\n</div>', m.group(1), re.DOTALL):
+        if re.search(rf'<div class="name">{re.escape(name)}</div>', card):
+            return card
+    return None
+
+
+def test_role_cards_show_frontmatter_colour_and_trigger():
+    import html as _h
+    agents = _agent_names()
+    assert len(agents) == 4, f"expected 4 role agents, found {sorted(agents)}"
+    for name, fname in sorted(agents.items()):
+        fm = _agent_frontmatter(fname)
+        card = _agent_card(name)
+        assert card, f"no agent card for {name}"
+        swatch = re.search(r'<span class="swatch" data-color="([a-z]+)"></span>\s*([a-z]+)', card)
+        assert swatch, f"{name} card has no colour swatch + label"
+        assert swatch.groups() == (fm["color"], fm["color"]), (
+            f"{name} card colour {swatch.groups()} drifted from {fname} color: {fm['color']}"
+        )
+        trig = re.search(r'<p class="trigger">(.*?)</p>', card, re.DOTALL)
+        assert trig, f"{name} card has no trigger line"
+        shown = " ".join(_h.unescape(re.sub(r"<[^>]+>", "", trig.group(1))).split())
+        assert shown == _trigger(fm["description"]), (
+            f"{name} card trigger drifted from {fname}:\n  page: {shown!r}\n  file: "
+            f"{_trigger(fm['description'])!r}"
+        )
+        assert shown.startswith("Use when"), f"{name} trigger does not start with 'Use when'"
+
+
+def test_every_swatch_colour_has_a_css_rule():
+    css = re.search(r"<style>(.*?)</style>", _page_text(), re.DOTALL).group(1)
+    used = set(re.findall(r'<span class="swatch" data-color="([a-z]+)">', _page_text()))
+    assert used, "no swatches on the page"
+    missing = [c for c in sorted(used) if f'.swatch[data-color="{c}"]' not in css]
+    assert not missing, f"swatch colour(s) with no CSS rule: {missing}"
+
+
+def test_template_card_has_no_colour():
+    card = _agent_card("general-agent-template")
+    assert card, "general-agent-template card is missing"
+    assert "swatch" not in card and "trigger" not in card, "the template is not an agent: no colour"
+    assert "not directly spawnable" in card
 
 
 def test_every_wired_hook_appears_in_hook_table():
@@ -724,9 +795,9 @@ def test_mcps_section_is_linked_from_the_reference_nav_group():
 
 def test_mcps_section_has_one_named_entry_per_server():
     body = _mcps_section_body()
-    for name in ("easy-verifier-mcp", "easy-ui-mcp"):
+    for name in ("easy-verifier-mcp", "easy-ui-mcp", "easy-memory-mcp"):
         assert re.search(rf"<h3>[^<]*{name}[^<]*</h3>", body), f"no <h3> naming {name}"
-    assert len(re.findall(r'<div class="agent-card"', body)) == 2, "expected exactly two entries"
+    assert len(re.findall(r'<div class="agent-card"', body)) == 3, "expected exactly three entries"
     assert 'id="verifier"' in body, 'verifier entry lost id="verifier"; old #verifier links break'
 
 
@@ -781,6 +852,73 @@ def test_mcps_section_says_separate_and_never_claims_kit_integration():
     lowered = body.lower()
     for phrase in HONESTY_PHRASES:
         assert phrase not in lowered, f"#mcps must not say {phrase!r}"
+
+
+# ---------------------------------------------------------------------------
+# T199 — easy-memory-mcp as a third, optional companion card. The kit does not
+# ship, install or require it, so the card must say so and claim nothing more
+# than the easy-memory-mcp README proves.
+# ---------------------------------------------------------------------------
+
+MEMORY_MCP_REPO_URL = "https://github.com/thunderkds/easy-memory-mcp"
+
+
+def _memory_mcp_entry_body():
+    return _mcp_entry_body("easy-memory-mcp")
+
+
+def test_mcps_section_lead_counts_three_companions():
+    lead = re.search(r'<p class="lead">(.*?)</p>', _mcps_section_body(), re.DOTALL).group(1).lower()
+    assert "three" in lead and "two" not in lead, "section lead must say three companion tools, not two"
+
+
+def test_memory_mcp_card_is_the_third_card_and_says_optional():
+    body = _mcps_section_body()
+    ids = re.findall(r'<div class="agent-card" id="([^"]+)"', body)
+    assert ids == ["verifier", "easy-ui-mcp", "easy-memory-mcp"], f"card order is {ids}"
+    card = _memory_mcp_entry_body()
+    assert re.search(r"<h3>[^<]*easy-memory-mcp[^<]*</h3>", card), "h3 must name easy-memory-mcp"
+    lead = re.search(r'<p class="lead">(.*?)</p>', card, re.DOTALL)
+    assert lead, "easy-memory-mcp card has no lead paragraph"
+    for word in ("separate", "companion", "optional"):
+        assert word in lead.group(1).lower(), f"card lead must contain {word!r}"
+
+
+def test_memory_mcp_card_has_four_to_five_one_line_highlights():
+    items = re.findall(r"<li>(.*?)</li>", _memory_mcp_entry_body(), re.DOTALL)
+    assert 4 <= len(items) <= 5, f"expected 4-5 highlights, found {len(items)}"
+    assert all("\n" not in i.strip() for i in items), "each highlight must sit on one line"
+
+
+def test_memory_mcp_card_says_the_kit_runs_as_before_without_it():
+    items = [i.lower() for i in re.findall(r"<li>(.*?)</li>", _memory_mcp_entry_body(), re.DOTALL)]
+    assert any("without it" in i and "runs as before" in i for i in items), (
+        "one highlight must say the kit runs as before without easy-memory-mcp"
+    )
+
+
+def test_memory_mcp_card_names_the_four_tools_from_the_readme():
+    card = _memory_mcp_entry_body()
+    for tool in ("memory_search", "memory_read", "memory_list", "memory_forget"):
+        assert f"<code>{tool}</code>" in card, f"card must name the MCP tool {tool}"
+
+
+def test_memory_mcp_card_states_the_token_figure_only_as_a_scripted_test_result():
+    items = [i.lower() for i in re.findall(r"<li>(.*?)</li>", _memory_mcp_entry_body(), re.DOTALL)]
+    measured = [i for i in items if "28%" in i]
+    assert len(measured) == 1, "exactly one highlight may carry the ~28% figure"
+    assert "scripted" in measured[0] and "real work" in measured[0], (
+        "the figure must be tied to scripted tests and say it is not yet measured on real work"
+    )
+
+
+def test_memory_mcp_card_links_the_repo_safely_and_invents_no_site():
+    card = _memory_mcp_entry_body()
+    assert (
+        f'href="{MEMORY_MCP_REPO_URL}" target="_blank" rel="noopener noreferrer"' in card
+    ), "easy-memory-mcp card must link its repo with target=_blank rel=noopener noreferrer"
+    hrefs = re.findall(r'href="([^"]+)"', card)
+    assert hrefs == [MEMORY_MCP_REPO_URL], f"easy-memory-mcp card must carry only its repo link, found {hrefs}"
 
 
 # ---------------------------------------------------------------------------
@@ -957,7 +1095,7 @@ def test_quick_reference_counts_match_source():
     """AC5: skill, spawnable-role and blocking-hook counts, each derived here."""
     text = _quick_reference_text()
     skills = len(_skill_dirs())
-    roles = len([n for n in _agent_names() if n != "general-agent-template"])
+    roles = len(_agent_names())  # T183: agents/ holds only spawnable roles
     blocking = _blocking_hook_count()
     hooks = len(_hook_scripts())
     assert blocking, "no hook row carries tag-block — fixture broken"
@@ -1195,3 +1333,173 @@ def test_phone_layout_stacks_each_row_as_a_card_with_labelled_cells():
         raise AssertionError("rows and cells are not made display: block on phones")
     before = _css_rule(m, "td::before")
     assert before and "content: attr(data-label)" in before, before
+
+
+# ---------------------------------------------------------------------------
+# T181 — the two tracks, `[auto]` and the Debate are on the page
+# ---------------------------------------------------------------------------
+
+def _tracks_section():
+    match = re.search(
+        r'<section id="tracks">(.*?)</section>', _page_text(), re.DOTALL
+    )
+    assert match, 'site/index.html has no <section id="tracks">'
+    return match.group(1)
+
+
+def test_tracks_section_sits_after_what_you_get_and_before_install():
+    text = _page_text()
+    assert text.index('id="what-you-get"') < text.index('id="tracks"') < text.index('id="install"')
+
+
+def test_tracks_section_has_h2_naming_both_tracks():
+    h2 = re.search(r"<h2>(.*?)</h2>", _tracks_section(), re.DOTALL)
+    assert h2, "tracks section has no <h2>"
+    assert "minimal" in h2.group(1).lower() and "extended" in h2.group(1).lower()
+
+
+def test_tracks_nav_link_exists():
+    assert 'href="#tracks"' in _raw_page_text()
+
+
+def test_tracks_section_states_announcement_lines_and_override():
+    sec = _tracks_section()
+    for needle in ("Track: minimal", "Track: extended", "[auto]", "/verify",
+                   "<code>full</code>", "<code>minimal</code>",
+                   "MINIMAL_LOG.md", "Debate", "Advocate", "decided for you"):
+        assert needle in sec, f"tracks section lacks {needle!r}"
+
+
+def test_tracks_section_does_not_say_auto_merges_pushes_or_supervisor_runs_verify():
+    sec = re.sub(r"<[^>]+>", " ", _tracks_section())
+    sec = " ".join(sec.split()).lower()
+    assert "merge" in sec and "user" in sec
+    for bad in ("auto mode merges", "auto mode pushes", "merges your branch",
+                "pushes your branch", "supervisor runs /verify",
+                "supervisor runs `/verify`"):
+        assert bad not in sec, f"tracks section says {bad!r}"
+
+
+def test_pipeline_diagram_desc_says_stages_are_the_extended_track():
+    desc = re.search(r'<desc id="pipeline-diagram-desc">(.*?)</desc>', _page_text(), re.DOTALL)
+    assert desc and "extended track" in desc.group(1)
+
+# ---------------------------------------------------------------------------
+# T185 — Settings tool (Build mode). Spec: PROJECT_SPEC_SITE.md § "Settings tool".
+# ---------------------------------------------------------------------------
+
+def _script_block(script_id):
+    match = re.search(
+        r'<script\b[^>]*\bid="%s"[^>]*>(.*?)</script>' % re.escape(script_id),
+        _page_text(), re.DOTALL,
+    )
+    assert match, f'page has no <script id="{script_id}">'
+    return match.group(1)
+
+
+def _settings_catalog():
+    return json.loads(_script_block("settings-catalog"))
+
+
+def _settings_section():
+    match = re.search(r'<section id="settings-tool">.*?\n</section>', _page_text(), re.DOTALL)
+    assert match, "page has no <section id=\"settings-tool\">"
+    return match.group(0)
+
+
+def test_settings_tool_section_nav_and_no_script_fallback():
+    section = _settings_section()
+    assert "<h2>Settings tool</h2>" in section
+    nav = re.search(r'<nav id="site-nav".*?</nav>', _page_text(), re.DOTALL).group(0)
+    assert nav.index('href="#update-flow"') < nav.index('href="#settings-tool"') < nav.index('href="#install-variants"')
+    assert 'class="st-nojs"' in section
+    assert "https://code.claude.com/docs/en/settings-reference" in section
+    # T187: the Check tab is live (it was disabled "coming soon" in T185).
+    tab = re.search(r'<button[^>]*id="st-tab-check"[^>]*>', section).group(0)
+    assert "disabled" not in tab and "coming soon" not in section
+    assert 'aria-controls="st-check-panel"' in tab and 'id="st-check-panel"' in section
+
+
+def test_settings_check_mode_controls_and_privacy_line():
+    """T187 AC1: paste area, target-file choice, the three buttons, the privacy line."""
+    section = _settings_section()
+    assert re.search(r'<textarea\b[^>]*id="st-paste"', section)
+    for value in ("user", "project", "local"):
+        assert f'name="st-check-target" value="{value}"' in section
+    for button, label in (("st-format", "Format"), ("st-check", "Check"), ("st-edit", "Edit in Build")):
+        assert re.search(rf'<button type="button"[^>]*id="{button}"[^>]*>{label}</button>', section), button
+    assert "Runs in your browser only. Nothing is sent or saved." in section
+
+
+def test_settings_tool_never_writes_html_from_text():
+    """T187: pasted text is untrusted; the tool renders with textContent only."""
+    source = _script_block("settings-tool-core") + _script_block("settings-tool-ui")
+    for banned in ("innerHTML", "outerHTML", "insertAdjacentHTML", "document.write", "eval(", "new Function"):
+        assert banned not in source, f"tool script contains {banned}"
+
+
+def test_settings_catalog_shape_and_version_stamp():
+    catalog = _settings_catalog()
+    assert re.fullmatch(r"\d+\.\d+\.\d+", catalog["version"])
+    known = set(catalog["knownKeys"])
+    assert catalog["settings"], "catalog has no settings"
+    for entry in catalog["settings"]:
+        for field in ("key", "category", "type", "scopes", "why"):
+            assert entry.get(field), f"catalog entry {entry.get('key')} missing {field}"
+        assert entry["category"] in catalog["categories"], entry["key"]
+        assert set(entry["scopes"]) <= {"user", "project", "local"}, entry["key"]
+        if entry["type"] == "enum":
+            assert entry.get("values"), f"enum {entry['key']} has no values"
+        assert entry["key"] in known, f"{entry['key']} not in knownKeys"
+    keys = [e["key"] for e in catalog["settings"]]
+    assert len(keys) == len(set(keys)), "duplicate catalog keys"
+
+
+def test_settings_tool_script_uses_no_network_or_storage_api():
+    """Spec rule 1: pasted and generated text never leaves the browser."""
+    source = _script_block("settings-tool-core") + _script_block("settings-tool-ui")
+    for banned in ("fetch(", "XMLHttpRequest", "sendBeacon", "WebSocket",
+                   "localStorage", "sessionStorage", "indexedDB", "document.cookie"):
+        assert banned not in source, f"tool script contains {banned}"
+    assert "document" not in _script_block("settings-tool-core"), "core block must not touch the DOM"
+
+
+def test_settings_tool_has_no_submitting_form_and_no_package_json():
+    """Spec rules 2 and 4."""
+    assert not re.search(r"<form\b", _settings_section(), re.IGNORECASE)
+    assert not os.path.exists(os.path.join(ROOT, "package.json"))
+
+
+def test_settings_tool_css_adds_no_color_literals():
+    """Design-system rule: only existing var(--…) tokens inside the scoped CSS."""
+    css = re.search(r"/\* ---- settings tool \(scoped\).*?(?=</style>)", _page_text(), re.DOTALL).group(0)
+    assert not re.search(r"#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(", css), "color literal in settings-tool CSS"
+
+
+def _media_blocks(css):
+    """[(min_width_px, body)] for every `@media (min-width: Npx)` block."""
+    out = []
+    for m in re.finditer(r"@media\s*\(min-width:\s*(\d+)px\)\s*\{", css):
+        depth, i = 1, m.end()
+        while depth:
+            depth += {"{": 1, "}": -1}.get(css[i], 0)
+            i += 1
+        out.append((int(m.group(1)), css[m.end():i - 1]))
+    return out
+
+
+def test_hooks_first_two_columns_only_refuse_to_wrap_from_900px():
+    """Scope addendum: between 768 and ~884 px the nowrap EVENT and MATCHER columns made the
+    4-column table 851 px wide, wider than the column, so the page scrolled sideways."""
+    css = _style_block()
+    nowrap = [w for w, body in _media_blocks(css)
+              if re.search(r"#hooks td:nth-child\(-n\+2\)\s*\{[^}]*white-space\s*:\s*nowrap", body)]
+    assert nowrap, "no media query holds the nowrap rule for the first two #hooks columns"
+    assert min(nowrap) >= 900, f"nowrap starts at {min(nowrap)}px; below 900px the table overflows"
+    outside = re.sub(r"@media[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}", "", css)
+    assert not re.search(r"#hooks t[dh]:nth-child\(-n\+2\)[^{]*\{[^}]*nowrap", outside), \
+        "nowrap on the first two #hooks columns sits outside a min-width media query"
+    # Wrapping only helps if the Matcher cell offers break points: nowrap was not the only
+    # thing that kept the table 554px wide, the unbreakable `Edit|Write|Bash` was too.
+    hooks = re.search(r'<section id="hooks">(.*?)</section>', _raw_page_text(), re.DOTALL).group(1)
+    assert "Edit|<wbr>Write|<wbr>Bash" in hooks, "the multi-tool Matcher has no break points after `|`"

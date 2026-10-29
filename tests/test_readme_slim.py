@@ -65,3 +65,9 @@ def test_readme_step_limit_default_matches_hook_source():
             f"README cites step-limit default {value}, but "
             f"pre_agent_step_limit.py's source says {limit}"
         )
+
+
+def test_readme_intro_mentions_two_tracks_and_auto():
+    head = " ".join("\n".join(_read().splitlines()[:12]).split())
+    assert "minimal" in head and "extended" in head, "README intro lacks the two tracks"
+    assert "[auto]" in head, "README intro lacks [auto]"

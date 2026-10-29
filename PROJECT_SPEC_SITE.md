@@ -28,7 +28,7 @@ assume they know nothing about this repo's pipeline, agents, or vocabulary.
 
 - No search, no client-side routing, no framework, no build step, no package.json.
 - No per-skill detail pages — one line per skill on one page.
-- No analytics, no cookies, no forms, no external asset hosts.
+- No analytics, no cookies, no forms, no external asset hosts. **One exception (2026-10-27, user-requested): the Settings tool** — see "Settings tool" below.
 - No CI workflow in this repo deploys the site. Deploy is Vercel's Git integration: a push to `main` deploys production. The CLI steps in `RUNBOOK.md` are the manual/rollback route.
 
 ## Stack decision
@@ -48,13 +48,33 @@ Therefore the site's roster content is **asserted against the source of truth by
 
 | Site content | Source of truth |
 |---|---|
-| Agent list | `name:` frontmatter in `.claude/agents/*.md` (excluding `general-agent-template`) |
+| Agent list | `name:` frontmatter in `.claude/agents/*.md` (every file is a spawnable role; the base template lives in `templates/`) |
 | Skill list | directory names under `.claude/skills/` |
 | Hook list | `.claude/settings.json` `hooks` wiring |
 | Step-limit default | `STEP_LIMIT` literal in `.claude/hooks/pre_agent_step_limit.py` |
+| Settings tool catalog | inline `#settings-catalog` JSON, version-stamped against the official settings reference (see "Settings tool") |
 
 Adding a skill without updating the page must fail the suite. A page that merely *looks* right is
 not accepted.
+
+## Settings tool (T185, T187)
+
+User request 2026-10-27: "design a section that user can click on the settings and we can generate the settings for users, by the way support they paste their current settings and we check the settings following, it will looks like the support for the pick/format/visualize the settings". Context: the kit does **not** install settings defaults ("the config should go by the taste" — T184 closed); the site helps each developer build their own.
+
+One section, `#settings-tool`, two modes:
+
+- **Build** (T185) — pick settings from a catalog, set values, choose the target file (user / project / local), copy the generated JSON.
+- **Check** (T187) — paste an existing `settings.json`, get it formatted, validated against the catalog and the chosen target file, and shown as a grouped visual tree; load it into Build to edit.
+
+Hard rules for the tool:
+
+1. **Pasted text never leaves the browser.** No `fetch`/XHR/beacon, no `localStorage`/`sessionStorage`/IndexedDB/cookies of pasted or generated content. Asserted by test.
+2. **No forms that submit.** Inputs are page UI only (`<form>` absent, or `submit` handled with `preventDefault`).
+3. **Inline only.** Script and the settings catalog are inline in `site/index.html` (catalog in `<script type="application/json" id="settings-catalog">`); the existing no-external-assets and inline-script tests stay green.
+4. **No build, no package.json.** Logic tests use Node's built-in test runner (`node --test`), zero dependencies — the one exception to "no node toolchain".
+5. **The page works without the tool.** With script disabled, the section shows a short static explanation and a link to the official settings reference.
+
+Source of truth: the settings catalog is hand-curated from https://code.claude.com/docs/en/settings-reference and stamped with the CLI version it was checked against (first stamp: 2.1.311). The drift test checks the catalog's shape and stamp; content currency is re-checked by hand when the stamp is bumped.
 
 ## Glossary (site-facing terms)
 

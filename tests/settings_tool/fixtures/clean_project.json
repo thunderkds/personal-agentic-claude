@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "deny": ["Read(./.env)", "Read(./.env.*)", "Read(~/.ssh/**)"],
+    "ask": ["Bash(git push --force *)", "Bash(rm -rf *)"],
+    "defaultMode": "acceptEdits"
+  },
+  "worktree": { "baseRef": "head", "symlinkDirectories": ["node_modules"] },
+  "model": "opus",
+  "effortLevel": "high",
+  "enabledPlugins": { "example@example-marketplace": true },
+  "hooks": {
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": "python3 .claude/hooks/stop.py" } ] }
+    ]
+  }
+}

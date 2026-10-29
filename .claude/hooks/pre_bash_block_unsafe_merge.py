@@ -12,6 +12,7 @@ complete before code ships.
 import json
 import os
 import re
+import shlex
 import subprocess
 import sys
 
@@ -44,6 +45,9 @@ try:
     from board.config import load_config, task_id_pattern  # noqa: E402
     from board.moments import (  # noqa: E402
         board_mode, my_blocking_tasks, my_review_tasks, pull_cache)
+    from verify_record import (  # noqa: E402
+        AUTO_CHECKED_TAG, AUTO_ROW_TAG, MINIMAL_LOG_REL, auto_row_confirmed,
+        minimal_verify_line)
 except Exception as exc:  # pragma: no cover - exercised via subprocess test
     print(json.dumps({
         "decision": "block",
@@ -52,8 +56,8 @@ except Exception as exc:  # pragma: no cover - exercised via subprocess test
             f"({type(exc).__name__}: {exc}) — cannot confirm Stage 5 verify "
             "evidence for any task, so this push/merge is blocked. Restore "
             ".claude/hooks/lib/guide_sections.py, "
-            ".claude/hooks/lib/shell_data.py, .claude/hooks/lib/board/config.py "
-            "and .claude/hooks/lib/board/moments.py."
+            ".claude/hooks/lib/shell_data.py, .claude/hooks/lib/board/config.py, "
+            ".claude/hooks/lib/board/moments.py and .claude/hooks/lib/verify_record.py."
         ),
     }))
     sys.exit(0)
@@ -335,15 +339,510 @@ def has_filled_verify_row(task_id, tasks_dir=None):
     the one place in T064 where a wrong answer is silent and repo-wide: if
     "review file missing" ever became anything other than "no evidence", the
     merge gate would stop gating on every task at once.
+
+    T188 D5 adds one more place to look, and only after every Evidence table has
+    said no: a **minimal-track** task has no guide and no review file, so its
+    result is the `verify:` line in its Decision record
+    (`tasks/MINIMAL_LOG.md`). That line is read under exactly T182's rule and
+    nothing weaker — it counts only when it is an `auto-run by hook` line whose
+    run record exists for this task and the checkout's head commit and says
+    pass. A hand-typed line counts for nothing there, including one that claims
+    the user ran `/verify`: before T188 a minimal-track task at Ready for Review
+    always blocked, so reading a line the hook did not write would be the one
+    way this change could make the gate weaker.
     """
     for directory in evidence_search_dirs(tasks_dir):
         section = read_guide_section(task_id, "Evidence", directory)
         if not section:
             continue
         for match in VERIFY_ROW_PATTERN.finditer(section):
-            if not UNCHECKED_PASS_PATTERN.search(match.group("result")):
-                return True
+            if UNCHECKED_PASS_PATTERN.search(match.group("result")):
+                continue
+            notes = match.group("notes").lower()
+            # T182: the Supervisor's own real-run check (T180) is never `/verify`, and an
+            # `auto-run by hook` row counts only with its run record (D5) for this task and the
+            # head commit of the checkout this row was read from.
+            if AUTO_CHECKED_TAG in notes:
+                continue
+            if AUTO_ROW_TAG in notes and not auto_row_confirmed(
+                    ROOT, os.path.dirname(os.path.abspath(directory)), task_id,
+                    match.group("notes")):
+                continue
+            return True
+    for directory in evidence_search_dirs(tasks_dir):
+        line = minimal_verify_line(task_id, directory)
+        if not line:
+            continue
+        result, notes = line
+        if "☑" not in result or "pass" not in result.lower():
+            continue
+        low = notes.lower()
+        if AUTO_CHECKED_TAG in low or AUTO_ROW_TAG not in low:
+            continue
+        if auto_row_confirmed(ROOT, os.path.dirname(os.path.abspath(directory)), task_id,
+                              notes, MINIMAL_LOG_REL):
+            return True
     return False
+
+
+# --- The companion score row and the three UI design rows (T190) ------------
+#
+# Four Evidence rows become binding here, named by their Check cell:
+# `Companion score (easy-verifier)`, `UI: Visual regression`,
+# `UI: Design-system compliance` and `UI: Responsiveness`. Only the **Result**
+# cell decides, and only one spelling decides it: a checked `☑ fail`.
+#
+# **This check is deliberately fail-OPEN, and that inverts the rule every other
+# check in this file follows. It is intentional — do not "fix" it.** Above,
+# every absence resolves to *block*: a missing guide, an unreadable review file,
+# an unparsable trace all mean "not verified". Here every absence resolves to
+# *allow*: no row, a blank row, the unchecked template placeholder, `☑ N/A`, a
+# malformed table, an unreadable file — none of them block.
+#
+# The reason is user decision D6 (2026-10-28): *"if you use verifier mcp, and ui
+# to check, the code must pass them. if not, just work on the normal flow, that
+# all"*. The companion tools (easy-verifier, easy-ui) are optional, so a machine
+# with neither — no Docker, no Python package, no MCP server — must behave
+# exactly as it did before this feature existed (FR-006, FR-014;
+# `.claude/hooks/tests/data/t190_pre_change_gate_output.txt` is that assertion's
+# oracle). Reading these rows fail-closed would require a score row on every
+# task, which is how an optional tool becomes a mandatory one.
+# The binding half is FR-015: a tool that *did* run is binding, and the only
+# thing that tells this hook it ran is an explicit `☑ fail`.
+#
+# Structural, never a substring search — the T044 comment at the top of this
+# file records what a `\bfail\b` scan over the row would cost: Notes prose such
+# as "no failures observed" or "the M2 mutation must fail" would refuse a push.
+# The Check cell is matched inside a pipe-delimited row and the verdict is read
+# from the Result cell alone.
+#
+# Not generalised to the other Evidence rows (`Negative cases hold`, `Full smoke
+# suite still green`). Deliberate cut: binding rows this feature was not asked
+# to touch would block a push on a pre-existing `☑ fail` the moment it ships.
+COMPANION_ROW_NAMES = (
+    "Companion score",
+    "UI: Visual regression",
+    "UI: Design-system compliance",
+    "UI: Responsiveness",
+)
+
+
+def _companion_row_pattern(name):
+    """A pipe-delimited Evidence row whose Check cell contains `name`, with its
+    Result and Notes cells captured separately. Line-anchored, and no cell can
+    span a `|` or a newline — the same shape as `VERIFY_ROW_PATTERN`."""
+    return re.compile(
+        r"^[ \t]*\|[^|\n]*" + re.escape(name) + r"[^|\n]*\|"
+        r"(?P<result>[^|\n]*)\|(?P<notes>[^|\n]*)",
+        re.IGNORECASE | re.MULTILINE,
+    )
+
+
+COMPANION_ROW_PATTERNS = tuple(
+    (name, _companion_row_pattern(name)) for name in COMPANION_ROW_NAMES)
+
+# The checked box, attached to its verdict. `UNCHECKED_PASS_PATTERN` above is
+# the same idea in the other direction: `☐ fail` is the template's guidance text,
+# not an answer, so it must never match. Optional `**` because a reviewer may
+# bold the verdict.
+#
+# `(?:ed)?` is deliberate and the two patterns must stay symmetric. `fail\b`
+# alone did not match `☑ failed` — `\b` cannot sit between `l` and `e` — so a
+# reviewer who wrote the `-ed` form of the one word that makes this gate fire
+# got a **silent allow** (Stage 4 P2). The template prescribes `fail`, but on the
+# blocking side the safe direction is to catch more, not less. Widening only the
+# fail side would trade that gap for another: `☑ passed` would stop being read
+# as a pass, so `companion_report_advisories` would skip the FR-005 report check
+# on it. Bounded there on purpose: `failing`, `failure` and every prose variant
+# belong in the Notes cell, and `\b` after the optional `ed` is what keeps them
+# out.
+CHECKED_FAIL_PATTERN = re.compile(r"☑\s*\**\s*fail(?:ed)?\b", re.IGNORECASE)
+CHECKED_PASS_PATTERN = re.compile(r"☑\s*\**\s*pass(?:ed)?\b", re.IGNORECASE)
+
+# The verifier report a `pass` row cites, read after a literal `report:` label.
+#
+# **The label is load-bearing; do not drop it back to "the first path in the
+# cell".** That is what this did until the Stage 4 P1 on T190, and it failed in
+# both directions at once:
+#   * False advisory on the common case. The Notes cell must also carry the ref
+#     (FR-001, and T191's AC 11), and a ref is naturally written in backticks —
+#     `plan/t190-t194-companion-scoring...HEAD`. That has a `/` in it, so the ref
+#     was read as the report path, which does not exist, and an honest row warned.
+#   * Silent inertness, which is the one that matters. A row citing **no report
+#     at all** was excused by any unrelated backticked path that happened to sit
+#     in the cell: `skills/score/SKILL.md` exists on disk, `os.path.isfile` said
+#     true, and the advisory never fired. FR-005 is the whole "measured, not
+#     claimed" protection for this row, so that made it inert while still
+#     looking like a check — the same shape of defect as T044's substring scan.
+#
+# So: the path is the first backticked-or-bare path token **after** `report:`.
+# No label means no citation, which the caller reports as "cites no verifier
+# report path". Deterministic, unsatisfiable by an unrelated path elsewhere in
+# the cell, and it survives the cell gaining more fields later.
+REPORT_LABEL_PATTERN = re.compile(r"report\s*:", re.IGNORECASE)
+
+# A backticked span first, so a path containing a space resolves whole; else a
+# bare whitespace-delimited token. A candidate without a `/` is not a path — the
+# same cell also carries `overall`, `change_risk`, the scope and the ref.
+REPORT_PATH_PATTERN = re.compile(r"`([^`\n]+)`|([^\s|`]+)")
+
+
+def cited_report_path(notes, checkout_root=None):
+    """The verifier report path a Notes cell cites after its `report:` label,
+    resolved, or None when the cell carries no label or no path after it.
+
+    `~` is expanded (`EASY_VERIFIER_REPORTS_DIR` writes to
+    `$HOME/.easy-verifier-reports/<repo>/`) and a relative path resolves against
+    the checkout the row was read from. Never raises.
+    """
+    if not isinstance(notes, str):
+        return None
+    label = REPORT_LABEL_PATTERN.search(notes)
+    if not label:
+        return None
+    for match in REPORT_PATH_PATTERN.finditer(notes, label.end()):
+        candidate = (match.group(1) or match.group(2) or "").strip()
+        if "/" not in candidate or "\x00" in candidate:
+            continue
+        try:
+            path = os.path.expanduser(candidate)
+            if not os.path.isabs(path):
+                path = os.path.join(checkout_root or ROOT, path)
+        except Exception:
+            return None
+        return path
+    return None
+
+
+def companion_rows(task_id, tasks_dir=None):
+    """Every bound Evidence row present for `task_id`:
+    `({row name: (result cell, notes cell)}, checkout root)`.
+
+    Resolved exactly like `has_filled_verify_row`: main checkout first, then each
+    live worktree, and within each the guide first then `TASK_REVIEW_Txxx.md`.
+    The first directory carrying any bound row wins, and its checkout root is
+    returned so a relative report path resolves against the right tree.
+
+    Never raises. Every failure — a missing file, an unreadable one, an absent
+    Evidence section, a malformed table — resolves to `({}, None)`, which means
+    "no companion row" and therefore allows.
+    """
+    try:
+        for directory in evidence_search_dirs(tasks_dir):
+            section = read_guide_section(task_id, "Evidence", directory)
+            if not section:
+                continue
+            rows = {}
+            for name, pattern in COMPANION_ROW_PATTERNS:
+                match = pattern.search(section)
+                if match:
+                    rows[name] = (match.group("result"), match.group("notes"))
+            if rows:
+                return rows, os.path.dirname(os.path.abspath(directory))
+    except Exception:
+        pass
+    return {}, None
+
+
+def failed_companion_rows(task_id, tasks_dir=None):
+    """The bound rows whose Result cell carries a checked `☑ fail`, in table
+    order — `[]` when there are none.
+
+    Named for what it returns: the row names, not a verdict, because the block
+    message must name the row it refuses on (AC 2), and
+    `docs/claude-md/code-naming-conventions.md` reserves the `has_` prefix for
+    booleans. An empty list is falsey, so the caller still reads as a predicate,
+    and `[]` is the answer for every absence: see the inversion comment above.
+    """
+    rows, _ = companion_rows(task_id, tasks_dir)
+    return [name for name in COMPANION_ROW_NAMES
+            if name in rows and CHECKED_FAIL_PATTERN.search(rows[name][0])]
+
+
+def companion_report_advisories(task_id, tasks_dir=None):
+    """One line per `☑ pass` **Companion score** row whose cited verifier report
+    is not a file on disk (FR-005: a `pass` is trusted only against the report
+    it cites, the same rule the `verify` row follows against the event trace).
+
+    Advisory only, never a block — an unresolvable citation costs a warning on
+    stderr, so this cannot refuse a push on a path the hook merely failed to
+    parse. The three UI rows are not checked: easy-ui is one named method among
+    screenshot diff, LLM vision and Storybook snapshot (FR-011), and the other
+    three cite no report file.
+    """
+    rows, checkout_root = companion_rows(task_id, tasks_dir)
+    result, notes = rows.get("Companion score", (None, None))
+    if result is None or not CHECKED_PASS_PATTERN.search(result):
+        return []
+    if CHECKED_FAIL_PATTERN.search(result):
+        return []  # already blocking; one message about this row is enough
+    path = cited_report_path(notes, checkout_root)
+    if path is None:
+        return [f"{task_id} Companion score row reads pass but its Notes cite no "
+                f"verifier report path — that row is unscored, not a pass (FR-005)."]
+    try:
+        is_file = os.path.isfile(path)
+    except Exception:
+        is_file = False
+    if not is_file:
+        return [f"{task_id} Companion score row reads pass but the verifier report "
+                f"it cites is not a file on disk: {path} — that row is unscored, "
+                f"not a pass (FR-005)."]
+    return []
+
+
+# --- Which task a `git push` touches (T197) ---------------------------------
+#
+# Until T197 `main()` checked the whole board on every trigger, so one task parked
+# in Ready for Review by another live session refused every other session's push.
+# Now a `git push` of one task's branch is judged by that task alone (D3), and
+# `pushed_task_ids` is the only thing that decides "one task's branch".
+#
+# **This loosens a fail-closed gate, so the resolver is built the other way
+# round: it says which task only when it can prove it, and returns None on every
+# doubt.** None leaves `main()` exactly as it was — the whole board (D2). It
+# reads the branch from the command, never from the board (D1):
+#   * the source ref the command names (`src:dst` → `src`), or for `HEAD` or no
+#     refspec, the current branch of the directory the push runs in — the event's
+#     `cwd`, moved by a leading `cd <dir> &&` or `git -C <dir>`;
+#   * that name must hold exactly one whole task ID (`feat/t9000-x` is T9000, never
+#     T900; `plan/t190-t194` is two IDs, so None), and `main()` then also requires
+#     that task to be one it checks: a row in In Progress or Ready for Review that the
+#     online filters kept. Any other task keeps the whole board.
+# Everything else is None, by allowlist, never by denylist: an unknown option
+# (`--all`, `--mirror`, `--tags`, `-o`), a remote that is not a plain name (bash
+# expands `{origin,--all}` to `origin --all`), a tag, a deletion, a destination that
+# is not the same task (`HEAD:main`, `release/*`), `git merge`/`rebase` anywhere in
+# the command (D4), any segment that is not `cd`, a read-only `git` subcommand with
+# only its allowlisted options, or a pipe reader of the push's output, a `&` anywhere
+# (a backgrounded `cd` does not move the push), `$`/backticks/subshells/unknown
+# redirections, a `{` or `}` anywhere (brace expansion can turn a word into an
+# option), a glob in a path argument, a `cd` whose effect is not certain (`||`, `;`,
+# a pipe, `~`), a detached HEAD, a git that fails or takes over 5 s, and push config
+# that can move the destination (`remote.*.push`, `remote.*.mirror`, a
+# `push.default` other than simple/current).
+#
+# Tokenized with stdlib `shlex` — a tokenizer, not a shell parser — with
+# **comments switched off**: shlex reads `#` mid-word as a comment and would drop
+# a following line, so `... feat/t900-x #x` + newline + a push of main would read
+# as one scoped push. Seeing more text than bash runs can only make this global.
+#
+# Stated trust boundaries, both residual:
+#   * The scoping trusts the branch name. T901's work pushed on `feat/t900-x` is
+#     checked against T900 when T900 is itself in In Progress or Ready for Review,
+#     so it needs T900's evidence and no longer T901's. When T900 is in neither, the
+#     push checks the whole board, T901 included.
+#   * `git commit` can run the repo's own hooks, which run code no name check sees
+#     (they could switch the branch before the push reads `HEAD`).
+PUSH_SEPARATORS = frozenset({";", "&&", "||", "|"})  # `&` is not here: it is a None
+SHELL_PUNCTUATION = frozenset("();<>|&")
+EXPANSION_CHARS = frozenset("{}$`")  # brace, parameter and command expansion
+GLOB_CHARS = frozenset("*?[")
+REMOTE_NAME_PATTERN = re.compile(r"[A-Za-z0-9._-]+")
+
+# The two redirections agents append to a push. Removed before tokenizing; any
+# other `<`/`>` survives as a token and makes the command unresolved.
+OUTPUT_REDIRECT_PATTERN = re.compile(r"(?<!\S)(?:[12]?>&[12]|(?:[12]|&)?>>?\s*/dev/null)(?!\S)")
+
+SAFE_REF_PATTERN = re.compile(r"[A-Za-z0-9._/-]+")
+SAFE_PATH_PATTERN = re.compile(r"[A-Za-z0-9._/+-]+")  # no `~`, `$` or glob: no expansion
+GLOBAL_REF_ROOTS = frozenset({"release", "integration"})
+
+# Subcommands that cannot change which branch is checked out or merge anything, each
+# with the only options it may carry. Never add `merge` or `rebase`: their absence is
+# how D4 keeps a merge on the whole board. `fetch` is out: `--upload-pack` runs a
+# command. Any other `-` token is None, so `--output=<path>` cannot rewrite `.git/HEAD`.
+SAFE_GIT_OPTIONS = {
+    "add": frozenset({"-A", "-a", "--all", "-u"}),
+    "commit": frozenset({"-m", "-a", "-am", "--amend", "--no-edit", "-q", "-s", "--signoff",
+                         "--no-verify"}),
+    "status": frozenset({"-s", "--short", "-b", "--branch", "--porcelain"}),
+    "log": frozenset({"--oneline", "-n", "--stat", "--graph"}),
+    "diff": frozenset({"--stat", "--name-only", "--name-status", "--cached", "--staged",
+                       "--shortstat"}),
+    "show": frozenset({"--stat", "--name-only", "--oneline", "-s"}),
+}
+SAFE_GIT_SUBCOMMANDS = frozenset(SAFE_GIT_OPTIONS)
+MESSAGE_OPTIONS = frozenset({"-m", "-am"})  # `git commit`: the next token is the message
+LOG_COUNT_PATTERN = re.compile(r"-\d+")
+PIPE_READERS = frozenset({"tail", "head", "cat", "grep", "wc"})
+SCOPED_PUSH_FLAGS = frozenset({
+    "-u", "--set-upstream", "-f", "--force", "--force-with-lease", "--force-if-includes",
+    "-n", "--dry-run", "-v", "--verbose", "-q", "--quiet", "--no-verify", "--progress",
+})
+SAFE_PUSH_DEFAULTS = frozenset({"simple", "current"})
+PUSH_CONFIG_KEYS = r"^(push\.default|remote\..*\.(push|mirror))$"
+
+
+def _git(directory, *args):
+    """`git -C <directory> <args>` with the 5-second timeout, or None on any failure."""
+    try:
+        return subprocess.run(["git", "-C", directory, *args], capture_output=True,
+                              text=True, timeout=GIT_WORKTREE_TIMEOUT_S)
+    except Exception:
+        return None
+
+
+def _current_branch(directory):
+    """The branch checked out in `directory`; None when detached, not a repo, or git failed."""
+    done = _git(directory, "rev-parse", "--abbrev-ref", "HEAD")
+    if done is None or done.returncode != 0:
+        return None
+    name = done.stdout.strip()
+    return name if name and name != "HEAD" else None
+
+
+def _push_config_is_plain(directory):
+    """True only when no config in `directory` can send a push somewhere its refspec
+    does not say: no `remote.*.push`, no `remote.*.mirror`, `push.default` simple/current."""
+    done = _git(directory, "config", "--get-regexp", PUSH_CONFIG_KEYS)
+    if done is None:
+        return False
+    if done.returncode == 1 and not done.stdout.strip():
+        return True  # none of the keys is set
+    if done.returncode != 0:
+        return False
+    for line in done.stdout.splitlines():
+        key, _, value = line.partition(" ")
+        if key.lower() != "push.default" or value.strip().lower() not in SAFE_PUSH_DEFAULTS:
+            return False
+    return True
+
+
+def _ref_task_id(name, id_regex):
+    """The one task ID a branch name holds, upper-cased, or None."""
+    if name.startswith("refs/heads/"):
+        name = name[len("refs/heads/"):]
+    if (not SAFE_REF_PATTERN.fullmatch(name) or name.startswith("refs/")
+            or name.split("/")[0].lower() in GLOBAL_REF_ROOTS):
+        return None
+    ids = {match.group(0).upper() for match in id_regex.finditer(name)}
+    return ids.pop() if len(ids) == 1 else None
+
+
+def _push_task_id(args, directory, id_regex):
+    """The one task a single `git push <args>` run in `directory` pushes, or None."""
+    if directory is None:
+        return None
+    positionals = []
+    for arg in args:
+        if arg.startswith("-"):
+            if arg in SCOPED_PUSH_FLAGS or arg.startswith("--force-with-lease="):
+                continue
+            return None
+        positionals.append(arg)
+    if positionals and not REMOTE_NAME_PATTERN.fullmatch(positionals[0]):
+        return None  # a URL, a path, or a word bash expands (`{origin,--all}`)
+    branch = _current_branch(directory)
+    if branch is None or not _push_config_is_plain(directory):
+        return None
+    ids = set()
+    for spec in positionals[1:] or ["HEAD"]:  # positionals[0] is the remote
+        src, colon, dst = (spec[1:] if spec.startswith("+") else spec).partition(":")
+        # Only the source may be `HEAD` (the current branch); an empty source is a delete.
+        names = [branch if src == "HEAD" else src] + ([dst] if colon else [])
+        for name in names:
+            task_id = _ref_task_id(name, id_regex)
+            if task_id is None:
+                return None
+            ids.add(task_id)
+    return ids.pop() if len(ids) == 1 else None
+
+
+def _read_only_git_args_ok(subcommand, args):
+    """True only when every option is on `subcommand`'s allowlist and no path argument
+    carries a glob (a file named `--output=.git/HEAD` would expand into an option).
+    A commit message is the token after `-m`/`-am`; it may hold a glob, never a `-`."""
+    allowed = SAFE_GIT_OPTIONS[subcommand]
+    index = 0
+    while index < len(args):
+        arg = args[index]
+        if arg.startswith("-"):
+            if arg not in allowed and not (subcommand == "log" and LOG_COUNT_PATTERN.fullmatch(arg)):
+                return False
+            if subcommand == "commit" and arg in MESSAGE_OPTIONS:
+                index += 1
+                if index >= len(args) or args[index].startswith("-"):
+                    return False
+        elif GLOB_CHARS & set(arg):
+            return False
+        index += 1
+    return True
+
+
+def _command_segments(command):
+    """`[(tokens, separator before, separator after)]` for each simple command, or None
+    when the text holds anything this resolver does not read."""
+    text = OUTPUT_REDIRECT_PATTERN.sub(" ", strip_heredoc_bodies(command)).replace("\n", " ; ")
+    lexer = shlex.shlex(text, posix=True, punctuation_chars=True)
+    lexer.whitespace_split = True
+    lexer.commenters = ""
+    try:
+        tokens = list(lexer)
+    except ValueError:
+        return None
+    segments, current, before = [], [], None
+    for token in tokens:
+        if token in PUSH_SEPARATORS:
+            segments.append((current, before, token))
+            current, before = [], token
+        elif set(token) <= SHELL_PUNCTUATION or EXPANSION_CHARS & set(token):
+            return None  # `&` lands here too: a background job never moves the push
+        else:
+            current.append(token)
+    segments.append((current, before, None))
+    return [segment for segment in segments if segment[0]]
+
+
+def _resolve_pushed_task(command, cwd, id_pattern):
+    if not isinstance(command, str) or not isinstance(cwd, str) or not os.path.isabs(cwd):
+        return None
+    segments = _command_segments(command)
+    if not segments:
+        return None
+    id_regex = re.compile(id_pattern or task_id_pattern(ROOT, bounded=True), re.IGNORECASE)
+    directory, found, pushes = cwd, set(), 0
+    for tokens, before, after in segments:
+        head, args = tokens[0], tokens[1:]
+        if head == "cd":
+            # Only `cd <dir> &&` certainly runs the next command in <dir>.
+            certain = (len(args) == 1 and before in (None, ";", "&&") and after == "&&"
+                       and directory is not None and SAFE_PATH_PATTERN.fullmatch(args[0]))
+            directory = os.path.normpath(os.path.join(directory, args[0])) if certain else None
+            continue
+        if before == "|" and head in PIPE_READERS:
+            continue  # reads the push's output in a subshell; cannot move the push
+        if head != "git":
+            return None
+        where = directory
+        while args[:1] == ["-C"]:
+            if len(args) < 2 or where is None or not SAFE_PATH_PATTERN.fullmatch(args[1]):
+                return None
+            where, args = os.path.normpath(os.path.join(where, args[1])), args[2:]
+        if not args:
+            return None
+        if args[0] == "push":
+            task_id = _push_task_id(args[1:], where, id_regex)
+            if task_id is None:
+                return None
+            found.add(task_id)
+            pushes += 1
+        elif args[0] not in SAFE_GIT_SUBCOMMANDS or not _read_only_git_args_ok(args[0], args[1:]):
+            return None
+    return found.pop() if pushes and len(found) == 1 else None
+
+
+def pushed_task_ids(command, cwd, id_pattern=None):
+    """The one task ID (upper-cased) that every `git push` in `command` pushes, or None.
+
+    None means "unresolved — check the whole board" and is the answer to every doubt;
+    see the T197 comment above. `cwd` is the event's own `cwd`. `id_pattern` is a
+    bounded regex source, defaulting to the board's (`task_id_pattern`). Never raises.
+    """
+    try:
+        return _resolve_pushed_task(command, cwd, id_pattern)
+    except Exception:
+        return None
 
 
 # --- What to actually do about an unattributed Bash call (T095 defect B) ----
@@ -479,6 +978,18 @@ def main():
         for note in filter_notes:
             print(f"[hook:pre_bash] {note}", file=sys.stderr)
 
+    # T197: a push of one task's branch is judged by that task alone, on top of the
+    # online filters above, never instead of them. It narrows only when that task is
+    # one the gate checks — its row is in In Progress or Ready for Review, and online
+    # the filters kept it. Narrowing to any other task (Todo, Done, outside the two
+    # lanes, a teammate's row) would empty both lists, so a branch named after it
+    # would meet no check at all (Stage 4 finding 4; D3 as revised). An unresolved
+    # push, and every such task, keep the whole board (D2).
+    scoped = pushed_task_ids(command, event.get("cwd"))
+    if scoped is not None and scoped in {tid.upper() for tid in [*in_progress, *ready_review]}:
+        in_progress = [tid for tid in in_progress if tid.upper() == scoped]
+        ready_review = [tid for tid in ready_review if tid.upper() == scoped]
+
     blockers = []
 
     if in_progress:
@@ -487,6 +998,7 @@ def main():
     if ready_review:
         # Check each for verify evidence in their task guide
         unverified = []
+        failed_rows = []
         for tid in ready_review:
             # Look for a filled verify row in the Evidence table — in the guide,
             # or in the sibling TASK_REVIEW file it may have moved to (T064) —
@@ -500,10 +1012,24 @@ def main():
                 if has_evidence_row and not has_trace:
                     unverified[-1] = f"{tid} (evidence row present but no verified tool call in memory/event-trace/{tid}.jsonl)"
 
+            # T190: a companion score row or a UI design row that explicitly
+            # reads `☑ fail` is binding. Everything else about those four rows
+            # is silent — see the inversion comment above
+            # `COMPANION_ROW_NAMES`: this check allows unless a fail is explicit.
+            failed_rows.extend(f"{tid} ({row})" for row in failed_companion_rows(tid))
+            for advisory in companion_report_advisories(tid):
+                print(f"[hook:pre_bash] {advisory}", file=sys.stderr)
+
         if unverified:
             blockers.append(
                 f"Tasks in Ready for Review missing Stage 5 verify evidence: "
                 f"{', '.join(unverified)}"
+            )
+
+        if failed_rows:
+            blockers.append(
+                f"Tasks in Ready for Review with an Evidence row marked fail: "
+                f"{', '.join(failed_rows)}"
             )
 
     if blockers:

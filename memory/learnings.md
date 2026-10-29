@@ -2870,3 +2870,67 @@ highest ID anywhere, not only `PROJECT_KANBAN.md` on the checked-out branch. Ren
   were all task questions. Q2 again "minimal is enough". Gotcha: Claude Code 2.1.310 stores `-p` sessions in
   `$CLAUDE_CONFIG_DIR` or else `$HOME/.claude/projects/<cwd>/<id>.jsonl`, so a containerised `--resume` needs
   the same writable HOME mounted on every turn and the same cwd; plain `--resume` keeps the session id.
+- **A doctrine change needs a live agent run; text tests only prove the words are there** (T178). 45 → 54 text
+  tests stayed green through three live failures (task 5 went minimal for a data delete; task 2 skipped the
+  template and asked to commit; task 3 asked "minimal or full?"). Each fix was one clause in `AGENTS.md`, found
+  only by a $0.15 sandbox run. Budget 2–3 re-runs per doctrine task.
+- **A Docker bind mount under `/tmp/claude-<uid>/` breaks `claude` in the container** (T178 live check). Docker
+  creates the mount's parent dirs as root, and the CLI refuses: `Temp directory /tmp/claude-1000 is owned by uid 0,
+  expected 1000`. Put sandbox run copies outside `/tmp/claude-*` (e.g. `../.spawn/live-checks/`).
+- **`post_write_register_task.py` registers a guide written in a worktree on the main checkout's board** (T181/T182).
+  The hook resolves `$CLAUDE_PROJECT_DIR`, so a guide written in `../wt-*` added an uncommitted row to `main`'s
+  `PROJECT_KANBAN.md` — the kit board even for a site-board task. Check `git status` on main after writing guides.
+- **The spawn hook validates guides in the main checkout, not the worktree** (T178/T179 spawn). Guides that live
+  only on a plan branch must also exist as files in the main checkout, or the spawn is rejected; do not delete
+  those untracked copies before the spawn.
+- **A rule the agent can satisfy by labelling is a rule it will satisfy by labelling** (T180 D8–D10). Each text
+  rule for "debate this choice" was met in the cheapest way the check allowed: DEBATED with no Advocates, then
+  FACT, then RULE with no path, then RULE citing a real but unrelated section. Only a count the agent cannot fake
+  by wording (Advocate `Agent` calls in the trace, one forced Debate at High) changed the behavior.
+- **The built-in `security-review` needs an `origin/HEAD` ref** (T180 live checks). In a repo with no remote it
+  cannot start (`git diff origin/HEAD...` fails). It also reviews the cwd's branch, so from the main checkout it
+  cannot review a worktree branch: review a worktree branch inline against the same criteria and say so.
+- **Scan the whole board for the highest task ID before registering one** (2026-09-23, moved from the hot-tier
+  session handoff by /compact-memory 2026-10-27). T115's follow-ups were first registered as T119/T120 while a T119
+  already existed: a Todo row can exist with no guide on disk, so `git log` and `tasks/` filenames are not enough.
+- **Open follow-ups from T111/T115, status not re-checked** (moved from the same handoff, 2026-10-27): a user
+  `settings.json` entry whose command contains `.claude/hooks/` is silently removed by the ownership rule while
+  `drop_dangling` warns (`TASK_REVIEW_T111.md`); ~35 duplicated `merge_settings` lines in `setup.sh`/`update.sh`
+  could move to a shared helper; stale `pets/wt-*` worktrees are not pruned.
+- **`node --test <dir>/` fails on Node 26** (T185). A directory argument is read as a module path
+  ("Cannot find module …/tests/settings_tool"). Use a quoted glob: `node --test "tests/settings_tool/*.mjs"`.
+- **Pure core in its own inline `<script id>` block makes a no-build page testable** (T185). Node tests read
+  `site/index.html`, extract the `settings-tool-core` block and run it in `node:vm`; a test asserts the block
+  never names `document`. One file, no bundler, no package.json.
+- **The hot tier's real cap is the test's `HOT_TIER_CHAR_BUDGET` (42,000 chars), not the 50,000 in AGENTS.md** (T185).
+  `MEMORY.md` sat at ~41,6xx chars, so two new index lines broke 5 tests on `main`. Before adding a hot-tier
+  line, run `pytest .claude/hooks/tests/test_token_audit_format.py -q`; near the cap, write cold-tier only.
+- **A sub-agent's Verification Command is not the full suite** (T187). The agent ran only its task command; the
+  Supervisor's full `pytest .claude/hooks/tests/ tests/` run found a corpus test reading the review file's
+  unfilled `verify` row. Always run the full suite at Stage 4.
+- **Two live sessions can mint the same task ID** (T187, 2026-10-27). This session registered T186 locally while
+  another session pushed its own T186 to `origin/main`; found only at push time (ahead 27 / behind 117). Fix:
+  renumber the unpushed one (here → T187) before merging, and run `git fetch` + check `origin/main`'s IDs
+  before registering a new task when another session may be active. Do not `git stash` mid-merge — it aborts
+  the merge (redo it; conflict resolution of append-only memory files is mechanical: keep both sides).
+- **A release approval names one commit; if `main` moves before the push, ask again** (v2.2.0, 2026-10-28). Another
+  live session merged 30 commits (site Settings tool, T185/T187) to GitHub `main` between the approval of `99d55be`
+  and the push. The fast-forward failed; the release branch merged `github/main` (one test-file conflict, both blocks
+  kept), re-ran every check, and the user approved the new commit `45b6957`. Fetch and check `HEAD..github/main` is
+  empty right before tagging.
+
+
+### easy-memory `switch off` does not remove the MCP tools, so an on/off comparison can be contaminated
+`switch off` (or `auto` on an off day) only stops the prompt hook injecting the index. `memory_search`/`memory_read` stay callable, and an agent told to "check earlier notes" uses them anyway (seen 2026-10-28: the off run called `memory_search`). Do not tell agents to check memory in a prompt you want to measure as "off"; read `easy_memory.py report` for the on/off comparison, not a single paired run. Related: T195.
+
+
+### The push gate reads the whole board, so one session's open task blocks every other session's push (T197)
+`pre_bash_block_unsafe_merge.py` builds `in_progress` and `ready_review` from the whole `PROJECT_KANBAN.md` and never reads which branch a `git push` names. Seen 2026-10-28: the push of `feat/t190-companion-gate` was refused over T195, another session's task with no Evidence row; it cleared only after T195 was verified. Do not work around it (moving the other task, editing the hook, or disguising the command); the user's `! <command>` prefix runs outside the hook, and T197 scopes a branch push to the one task its branch names. Also: the hook runs before the whole Bash command, so an edit that fills the Evidence row and the `git push` in one command is blocked before the edit runs. Split them. **Files**: .claude/hooks/pre_bash_block_unsafe_merge.py, tasks/TASK_GUIDE_T197.md
+
+
+### The merge gate reads evidence at hook time, and `pkill -f` can kill its own shell
+Two Bash gotchas seen at T199 (2026-10-28). (1) `pre_bash_block_unsafe_merge.py` runs before the command, so a command that writes the `verify` Evidence row and then merges is blocked: write and commit the row in one Bash call, set the `active_task` state file, then merge in the next call. (2) `pkill -f "<pattern>"` inside a command whose own text contains the pattern kills the shell (exit 144) and leaves later steps unrun; save the server PID (`echo $! > file`) and `kill $(cat file)` instead.
+
+
+### A table that scrolls the page sideways: measure its minimum content width, not just the rule you suspect
+T199 addendum (2026-10-28): the `#hooks` table overflowed at 768 to 899 px. The guide blamed `white-space: nowrap` on two columns, but removing it alone changed nothing: the table's minimum content width was 554 px (unbreakable `Edit|Write|Bash` plus cell padding) against a 456 px column. Squeeze the wrapper to 1 px and read the table's width to find the real floor, then give the unbreakable string `<wbr>` points. T167 forbids `overflow-x` on `.table-wrap` and `min-width` on `table`, so the fix is wrapping, never a scrollbar. Measure with headless Chrome over HTTP; `--window-size` width minus 15 is the client width.

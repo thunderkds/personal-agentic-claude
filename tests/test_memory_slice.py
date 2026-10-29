@@ -165,7 +165,7 @@ def test_sc4_real_t124_guide_against_real_memory_runs_within_caps():
 # SC6 — one rule, five places
 # --------------------------------------------------------------------------
 AC6_DOCS = [
-    "agents/general-agent-template.md",
+    "templates/general-agent-template.md",
     "templates/TASK_GUIDE_template.md",
     "docs/claude-md/pipeline-stages.md",
     "docs/claude-md/memory-write-protocol.md",

@@ -150,6 +150,19 @@ def test_sc5_supervisor_settings_have_no_permissions_or_sandbox():
                    if line[:1] in "+-" and not line.startswith(("+++", "---"))]
         allowed = {'"permissions": {', '"deny": [', "]", "}", "},", ""} | {
             json.dumps(rule) for rule in ANCHOR_DENY_RULES}
+        # T180 D8: one Stop hook entry (a hook, not a permission or sandbox setting). Named
+        # line by line, so any other settings change still fails here.
+        allowed |= {"{", '"hooks": [', '"type": "command"',
+                    '"description": "Auto mode (T180 D8): block the stop until the final report '
+                    'holds up — report file, Advocates per Risk, Stage 4"',
+                    '"command": "python3 \\"$CLAUDE_PROJECT_DIR\\"/.claude/hooks/'
+                    'stop_auto_mode_check.py"'}
+        # T182: one more Stop hook entry (auto verify), likewise named line by line.
+        allowed |= {'"description": "Auto verify (T182): for a Mode: auto task at Ready for Review, '
+                    'start one detached headless /verify run per head commit; the run writes the '
+                    'verify row and its record"',
+                    '"command": "python3 \\"$CLAUDE_PROJECT_DIR\\"/.claude/hooks/'
+                    'stop_auto_verify.py"'}
         assert set(changed) <= allowed, set(changed) - allowed
 
 

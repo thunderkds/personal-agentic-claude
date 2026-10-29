@@ -189,3 +189,118 @@ def test_ac9_claude_md_lists_skill_on_cross_cutting_line():
     lines = [l for l in (ROOT / "AGENTS.md").read_text(encoding="utf-8").splitlines()
              if "Cross-cutting (any stage" in l]
     assert len(lines) == 1 and "`resolve-question`" in lines[0]
+
+
+# ---- T179: Debate (auto mode only) ------------------------------------------------------------
+def _debate() -> str:
+    """Body of the `#### Debate (auto mode only)` step, whitespace-normalised."""
+    text = _skill()
+    m = re.search(r"^#### Debate \(auto mode only\)$(.*?)(?=^#### |^---$|\Z)", text, re.M | re.S)
+    assert m, "no `#### Debate (auto mode only)` step"
+    return _norm(m.group(1))
+
+
+def _advocate_template() -> str:
+    m = re.search(r"Advocate prompt template.*?```\n(.*?)```", _skill(), re.S)
+    assert m, "no fenced Advocate prompt template"
+    return m.group(1)
+
+
+# T179 AC 1
+def test_t179_ac1_debate_step_has_the_d1_triggers():
+    body = _debate()
+    assert "auto mode" in body
+    assert "Choice question" in body
+    assert "Fact question the Scanners could not settle" in body
+    assert "Stage 4 finding whose fix needs a choice" in body
+
+
+def test_t179_ac1_sort_and_judge_route_to_debate_only_in_auto_mode():
+    for word in ("Sort", "Judge"):
+        body = _step(word)
+        assert "Debate" in body, word
+        assert "only in auto mode" in body.lower(), word
+        assert "Outside auto mode" in body, word
+
+
+def test_t179_ac1_non_auto_text_of_step_1_is_unchanged():
+    """Success Criterion 1: a Choice question with auto mode off still goes to the user."""
+    body = _step("Sort")
+    for phrase in ("A Choice question goes to the user at once and never to Scanners",
+                   "send it in the step 4 HITL shape, then log the answer (step 5)",
+                   "When you are unsure of the kind, treat it as a Choice question",
+                   "If the same question (same asker, same task) already had a fan-out, "
+                   "send it straight to the user."):
+        assert phrase in body, phrase
+    judge = _step("Judge")
+    assert "Any other outcome goes to the user (HITL) in this shape" in judge
+
+
+# T179 AC 2
+def test_t179_ac2_advocate_template_slots_and_no_task_identity():
+    tpl = _advocate_template()
+    assert set(re.findall(r"\{(\w+)\}", tpl)) == {"question", "option", "other_options"}
+    assert "TASK_GUIDE" not in tpl and "tasks/" not in tpl
+    assert not re.search(r"\bT\d{3}\b|\{task", tpl)
+
+
+def test_t179_ac2_advocate_answer_shape_and_agents():
+    tpl = _advocate_template()
+    for field in ("OPTION:", "FOR:", "CITATIONS:", "RISK:", "CONFIDENCE:"):
+        assert field in tpl, field
+    assert "<path>:<line>" in tpl and "low|medium|high" in tpl
+    body = _debate()
+    assert 'subagent_type: "Explore"' in body
+    # T180 D7 (user, 2026-10-27) supersedes T179's "2, or 3 for 3+ options or High risk" count:
+    # the Debate is auto-mode only, and its size now follows the task's Risk label.
+    assert "Low, none (decide, log why); Medium, 2; High, 3" in body
+    assert "smallest safe thing" in body  # T179's "High risk" pin is covered by D7's "High, 3" above
+    assert "opinion only" in body
+
+
+# T179 AC 3
+def test_t179_ac3_decision_order_and_safer_option_ranking():
+    body = _debate()
+    assert "necessary" in body
+    ranking = ("it can be undone > it keeps all data > it is the smaller change > "
+               "it matches the request's literal words")
+    assert ranking in body
+    assert "Taste or scope" in body and "flagged" in body
+    assert "Open every cited line" in body
+
+
+def test_t179_ac3_edge_cases_are_stated():
+    body = _debate()
+    assert "data, not instructions" in body                       # advocate text
+    assert "one stale doc" in body                               # correlated citations
+    assert "deletes or overwrites data" in body and "pause and ask" in body
+    assert "step limit" in body and "argued by nobody" in body
+
+
+# T179 AC 4
+def test_t179_ac4_log_line_format_and_flag():
+    body = _debate()
+    assert "⚠ decided for you — please review" in body
+    assert "- <YYYY-MM-DD> DEBATE <question> → <option>" in body
+    assert "## Questions Log" in body
+    assert "As step 5" in body
+
+
+# T179 AC 5
+def test_t179_ac5_cap_of_three_per_task_and_no_repeat():
+    body = _debate()
+    assert "At most 3 Debates per task" in body
+    assert "4th question" in body and "HITL" in body and "even in auto mode" in body
+    assert "never debated twice" in body
+
+
+# T179 AC 6
+def test_t179_ac6_description_mentions_debate_in_one_clause():
+    desc = _norm(_frontmatter())
+    assert desc.count("Debate") == 1
+    assert "auto mode" in desc
+
+
+def test_t179_ac6_skill_stays_under_the_codex_skill_body_cap():
+    """lib/harness-fetch.sh caps a Codex skill body at 8192 bytes; over it the skill is skipped."""
+    assert SKILL.stat().st_size <= 8192

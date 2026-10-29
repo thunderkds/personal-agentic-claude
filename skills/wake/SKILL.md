@@ -33,7 +33,7 @@ Read all five sources in parallel. If any source fails or is missing, record the
 |---|---|---|
 | Git history | Run `git log --oneline -10` via Bash tool | `"No git history found."` (if no commits) or `"Not a git repository."` (if git fails) |
 | `PROJECT_KANBAN.md` | Read full file, then filter to rows with status `In Progress` or `🔄` | `"No KANBAN found — project may be new or not yet planned."` |
-| `memory/MEMORY.md` | Read full file | `"No MEMORY.md found."` |
+| `memory/MEMORY.md` | Run `python3 skills/wake/scripts/memory_sections.py` via Bash (read-only; prints the Decisions and Learning Records entries only). Never read the whole file | Script prints `"No MEMORY.md found."`; any failure = missing |
 | Uncommitted work in In Progress worktrees | Run `python3 skills/wake/scripts/dirty_worktrees.py` via Bash (read-only; prints one `Txxx <worktree> N modified, M untracked` line per In Progress task whose worktree has uncommitted changes, nothing otherwise) | No output = nothing to report; any failure is treated the same, never halt |
 | `memory/learning-records/LR-*.md` | Read all `.md` files; keep only those with `status: active` in frontmatter; sort by filename descending; take top 3 | `"No active Learning Records yet."` (same note if folder does not exist) |
 
@@ -76,9 +76,7 @@ Then, under the list, emit each line from `dirty_worktrees.py` prefixed `⚠ unc
 
 #### Step 4 — Compose Section 3: Key Memory
 
-From `memory/MEMORY.md`, emit the `### Decisions` section and `### Learning Records` section one-liners verbatim. Do not include other sections (Patterns, Glossary index lines, etc.) unless the Decisions and LR sections are absent, in which case emit the raw `## Index` block as-is.
-
-If the Decisions or LR sections exceed 20 lines combined, show the 10 most recent entries instead.
+The `memory_sections.py` output (Step 1) is the Key Memory content: emit its lines verbatim. The script picks the sections, falls back to the `## Index` block, and caps at 5 entries per section above 20. Do not read `MEMORY.md` yourself.
 
 ```
 ## 🧠 Key Memory

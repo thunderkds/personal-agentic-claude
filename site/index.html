@@ -157,6 +157,12 @@
   .agent-card a { color: var(--cyan); }
   .agent-card h3 { margin: 0 0 .5rem; color: var(--green); font-size: 1rem; }
   .agent-card .subtype { color: var(--muted); font-size: .85rem; }
+  .agent-card .trigger { color: var(--text); font-size: .9rem; margin: .4rem 0 0; }
+  .swatch { display: inline-block; width: .7rem; height: .7rem; border-radius: 50%; margin: 0 .25rem 0 .5rem; vertical-align: middle; }
+  .swatch[data-color="orange"] { background: #ff8c42; }
+  .swatch[data-color="blue"]   { background: #4d8dff; }
+  .swatch[data-color="purple"] { background: var(--purple); }
+  .swatch[data-color="green"]  { background: var(--green); }
 
   pre.install {
     background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
@@ -187,9 +193,15 @@
 
   footer { color: var(--muted); font-size: .8rem; margin: 3rem 0 1.5rem; }
 
-  /* desktop: Event and Matcher take only their content width so Script and Behavior share the rest */
-  @media (min-width: 768px) {
+  /* wide desktop: Event and Matcher take only their content width so Script and Behavior share the rest.
+     Below 900px they must wrap, or the 4-column table is wider than the page */
+  @media (min-width: 900px) {
     #hooks th:nth-child(-n+2), #hooks td:nth-child(-n+2) { width: 1%; white-space: nowrap; }
+  }
+
+  /* 768-899px: the content column is narrower than the 4 columns need, so tighten the cell padding */
+  @media (min-width: 768px) and (max-width: 899px) {
+    #hooks th, #hooks td { padding-left: .4rem; padding-right: .4rem; }
   }
 
   /* ---- mobile ------------------------------------------------------ */
@@ -218,6 +230,90 @@
     td { border-bottom: none; padding: .3rem .8rem; }
     td::before { content: attr(data-label); display: block; color: var(--muted); text-transform: uppercase; font-size: .75rem; letter-spacing: .05em; }
   }
+
+  /* ---- settings tool (scoped) -------------------------------------- */
+  #settings-tool { width: min(58rem, 100%); }
+  @media (min-width: 768px) { #settings-tool { width: min(58rem, calc(100vw - var(--sidebar-w) - 5.5rem)); } }
+  #settings-tool .st-app { display: none; }
+  .js #settings-tool .st-app { display: block; }
+  .js #settings-tool .st-nojs { display: none; }
+  #settings-tool a { color: var(--cyan); }
+  #settings-tool [hidden] { display: none !important; }
+  #settings-tool .st-tabs { display: flex; gap: .4rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); }
+  #settings-tool .st-tab { font: inherit; color: var(--text); background: none; border: 1px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0; padding: .4rem .9rem; cursor: pointer; }
+  #settings-tool .st-tab[aria-selected="true"] { background: var(--surface); border-color: var(--border); color: var(--cyan); font-weight: 700; }
+  #settings-tool .st-tab:disabled { color: var(--muted); cursor: not-allowed; }
+  #settings-tool .st-target { border: 1px solid var(--border); border-radius: 8px; padding: .5rem .8rem; margin: 0 0 .8rem; display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; min-width: 0; }
+  #settings-tool .st-target legend { color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; padding: 0 .3rem; }
+  #settings-tool .st-target label { overflow-wrap: anywhere; }
+  #settings-tool .st-presetbar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-bottom: .8rem; }
+  #settings-tool .st-presets { display: flex; flex-wrap: wrap; gap: .4rem; }
+  #settings-tool .st-label { color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; }
+  #settings-tool .st-btn { font: inherit; font-size: .85rem; color: var(--text); background: var(--surface2); border: 1px solid var(--border); border-radius: 999px; padding: .2rem .8rem; cursor: pointer; max-width: 100%; overflow-wrap: anywhere; text-align: left; }
+  #settings-tool .st-btn:hover { border-color: var(--cyan); }
+  #settings-tool .st-primary { background: var(--cyan-dim); color: var(--cyan); border-color: var(--cyan); font-weight: 700; }
+  #settings-tool .st-confirm { background: var(--amber-dim); border: 1px solid var(--amber); border-radius: 8px; padding: .5rem .8rem; margin-bottom: .8rem; display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+  #settings-tool .st-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr)); gap: 1.2rem; align-items: start; }
+  #settings-tool .st-left, #settings-tool .st-right { min-width: 0; }
+  #settings-tool .st-right { position: sticky; top: 1rem; }
+  #settings-tool .st-filter, #settings-tool input[type="text"], #settings-tool input[type="number"], #settings-tool select, #settings-tool textarea {
+    font: inherit; font-size: .85rem; color: var(--text); background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: .3rem .5rem; max-width: 100%; }
+  #settings-tool .st-filter { width: 100%; margin-bottom: .6rem; }
+  #settings-tool textarea { width: 100%; }
+  #settings-tool details { margin: 0 0 .6rem; }
+  #settings-tool .st-row { border-top: 1px solid var(--border); padding: .6rem 0; }
+  #settings-tool .st-row:first-child { border-top: none; }
+  #settings-tool .st-head { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .5rem; }
+  #settings-tool .st-head label { overflow-wrap: anywhere; min-width: 0; }
+  #settings-tool .st-why { margin: .2rem 0 .3rem; color: var(--muted); font-size: .85rem; }
+  #settings-tool .st-ctl { margin: .3rem 0; }
+  #settings-tool .st-err { margin: .2rem 0 0; color: var(--amber); font-size: .8rem; min-height: 0; }
+  #settings-tool .st-err:empty { display: none; }
+  #settings-tool .st-chips { list-style: none; margin: 0 0 .4rem; padding: 0; display: flex; flex-wrap: wrap; gap: .3rem; }
+  #settings-tool .st-chips .chip { display: inline-flex; gap: .3rem; align-items: center; }
+  #settings-tool .st-x { font: inherit; color: var(--muted); background: none; border: none; cursor: pointer; padding: 0 .2rem; }
+  #settings-tool .st-add { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: .4rem; }
+  #settings-tool .st-sugg { display: flex; flex-wrap: wrap; gap: .3rem; }
+  #settings-tool .st-sug { font-size: .75rem; color: var(--muted); }
+  #settings-tool .st-file { margin: 0 0 .4rem; color: var(--green); overflow-wrap: anywhere; }
+  #settings-tool .st-output { margin: 0; max-height: 28rem; overflow: auto; }
+  #settings-tool .st-note { margin: .4rem 0 0; color: var(--amber); font-size: .85rem; }
+  #settings-tool .st-note:empty { display: none; }
+  #settings-tool .st-copybar { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin-top: .6rem; }
+  #settings-tool .st-status { color: var(--muted); font-size: .85rem; }
+  #settings-tool input:focus-visible, #settings-tool select:focus-visible, #settings-tool textarea:focus-visible,
+  #settings-tool .st-btn:focus-visible, #settings-tool .st-tab:focus-visible, #settings-tool .st-x:focus-visible, #settings-tool pre:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+  #settings-tool .st-paste { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-top: .3rem; }
+  #settings-tool .st-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: .6rem 0 .2rem; }
+  #settings-tool .st-keep { font-size: .85rem; color: var(--muted); }
+  #settings-tool .st-privacy { margin: .2rem 0 .6rem; color: var(--muted); font-size: .85rem; }
+  #settings-tool h3 { margin: 1.2rem 0 .5rem; font-size: .8rem; color: var(--purple); text-transform: uppercase; letter-spacing: .05em; }
+  #settings-tool h4 { margin: .8rem 0 .3rem; font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  #settings-tool h4:first-child { margin-top: 0; }
+  #settings-tool .st-findings { list-style: none; margin: 0; padding: 0; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+  #settings-tool .st-findings li { display: flex; flex-wrap: wrap; gap: .2rem .8rem; align-items: baseline; padding: .5rem .8rem; border-top: 1px solid var(--border); font-size: .85rem; }
+  #settings-tool .st-findings li:first-child { border-top: none; }
+  #settings-tool .st-findings li > .tag { flex: none; min-width: 6.5rem; text-align: center; white-space: nowrap; }
+  #settings-tool .st-findings .st-fixline { display: block; color: var(--muted); }
+  #settings-tool .st-findings .st-btn { margin-top: .3rem; }
+  #settings-tool .st-path { flex: 1 1 9rem; max-width: 13rem; font: inherit; font-size: .8rem; color: var(--cyan); background: none; border: none; padding: 0; cursor: pointer; text-align: left; overflow-wrap: anywhere; text-decoration: underline; }
+  #settings-tool .st-findings .st-msg { flex: 999 1 16rem; min-width: 0; overflow-wrap: anywhere; }
+  #settings-tool .st-map { border: 1px solid var(--border); border-radius: 8px; padding: .6rem .8rem; max-height: 36rem; overflow: auto; }
+  #settings-tool .st-tree { list-style: none; margin: 0; padding: 0; }
+  #settings-tool .st-node { padding: .15rem .3rem; border-radius: 4px; overflow-wrap: anywhere; font-size: .85rem; }
+  #settings-tool .st-node code, #settings-tool .st-col code { overflow-wrap: anywhere; }
+  #settings-tool .st-val { color: var(--muted); margin-left: .4rem; }
+  #settings-tool .st-sep { color: var(--muted); margin: 0 .3rem; }
+  #settings-tool .st-node .tag, #settings-tool .st-colhead .tag { margin-left: .3rem; }
+  #settings-tool .st-hint { margin: 0 0 .4rem; color: var(--muted); font-size: .8rem; }
+  #settings-tool .st-perms { display: grid; grid-template-columns: repeat(3, minmax(10rem, 1fr)); gap: .6rem; }
+  #settings-tool .st-col { min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: .4rem .5rem; }
+  #settings-tool .st-colhead { margin: 0 0 .3rem; font-weight: 700; font-size: .85rem; }
+  #settings-tool .st-hit { outline: 2px solid var(--amber); outline-offset: 1px; }
+  @media (max-width: 767px) {
+    #settings-tool .st-right { position: static; }
+    #settings-tool .st-copybar { position: sticky; bottom: 0; background: var(--bg); padding: .5rem 0; border-top: 1px solid var(--border); }
+  }
 </style>
 </head>
 <body id="top">
@@ -228,18 +324,20 @@
 
 <aside class="sidebar">
   <a class="brand" href="#top">Easy Kit - Supervisor</a>
-  <p class="brand-sub">supervisor kit &middot; v2.1.0</p>
+  <p class="brand-sub">supervisor kit &middot; v2.2.0</p>
   <button class="nav-toggle" type="button" aria-expanded="true" aria-controls="site-nav">Menu</button>
   <nav id="site-nav" class="nav-groups" aria-label="Site sections">
     <p class="nav-group-title">Overview</p>
     <ul>
       <li><a href="#quick-reference">Quick reference</a></li>
       <li><a href="#what-you-get">What you get</a></li>
+      <li><a href="#tracks">Minimal and extended tracks</a></li>
     </ul>
     <p class="nav-group-title">Getting started</p>
     <ul>
       <li><a href="#install">Install</a></li>
       <li><a href="#update-flow">Update flow</a></li>
+      <li><a href="#settings-tool">Settings tool</a></li>
       <li><a href="#install-variants">Install variants</a></li>
     </ul>
     <p class="nav-group-title">The team</p>
@@ -291,7 +389,7 @@
   <dt>Stages</dt>
   <dd>Phase 0 → 0.5 → 1 → 1.5 → 2 → 3 → 4 → 5</dd>
   <dt>Roster</dt>
-  <dd><a href="#agent-roles">4 spawnable roles</a> &middot; <a href="#skills">31 skills</a> &middot; <a href="#hooks">4 blocking hooks (of 9)</a></dd>
+  <dd><a href="#agent-roles">4 spawnable roles</a> &middot; <a href="#skills">31 skills</a> &middot; <a href="#hooks">5 blocking hooks (of 11)</a></dd>
 </dl>
 </div>
 </section>
@@ -303,7 +401,7 @@
 </p>
 <svg id="pipeline-diagram" class="pipeline" role="img" viewBox="0 0 320 558" xmlns="http://www.w3.org/2000/svg" aria-labelledby="pipeline-diagram-title pipeline-diagram-desc">
   <title id="pipeline-diagram-title">The Easy Kit pipeline</title>
-  <desc id="pipeline-diagram-desc">Eight steps in order, top to bottom: Phase 0 initiation, Stage 0.5 grilling and brainstorming, Stage 1 environment setup, Stage 1.5 sub-agent team, Stage 2 planning, Stage 3 parallel execution, Stage 4 review, Stage 5 integration. Each step hands its output to the next.</desc>
+  <desc id="pipeline-diagram-desc">Eight steps in order, top to bottom: Phase 0 initiation, Stage 0.5 grilling and brainstorming, Stage 1 environment setup, Stage 1.5 sub-agent team, Stage 2 planning, Stage 3 parallel execution, Stage 4 review, Stage 5 integration. These stages are the extended track. Each step hands its output to the next.</desc>
   <g class="node" data-stage="0">
     <rect x="10" y="2" width="300" height="50" rx="8"/>
     <text class="node-title" x="160" y="23" text-anchor="middle">Phase 0 · Initiation</text>
@@ -352,6 +450,49 @@
     <text class="node-out" x="160" y="545" text-anchor="middle">verify, merge, release plan</text>
   </g>
 </svg>
+</section>
+
+<section id="tracks">
+<h2>Minimal and extended tracks</h2>
+<p class="lead">
+  Small work runs on the minimal track. Big or risky work runs the full pipeline above, which is the
+  extended track. The Supervisor picks the track and says it in one line before it starts.
+</p>
+<ul>
+  <li><strong>The line</strong> is a statement, not a question: <code>Track: minimal — C0, Risk Low, one file</code>
+    or <code>Track: extended — C2, Risk Medium</code>.</li>
+  <li><strong>Extended track</strong> if any of these is true: Complexity C2 or above; Risk Medium or High;
+    a word such as <em>refactor</em> or <em>migrate</em>; a change that deletes, moves, renames or converts
+    user data (for example CSV to JSON); more than one session or agent; a UI component.</li>
+  <li><strong>Minimal track</strong> otherwise. The Supervisor writes the code itself: test first, change,
+    real run. It saves a Decision record in <code>tasks/MINIMAL_LOG.md</code> and adds a board row marked
+    <code>Track: minimal</code>. It commits on a new branch without asking. It writes no task guide and
+    starts no sub-agent.</li>
+  <li><strong>Your override:</strong> reply <code>full</code> or <code>minimal</code> at any time and the
+    Supervisor switches. It may move a task up to extended on its own. It never moves a task down.</li>
+</ul>
+<h3>Auto mode</h3>
+<p>
+  Put the exact tag <code>[auto]</code> in your request. The Supervisor runs either track up to the point where it waits for your review
+  and asks you no question. It pauses only for a few stops, such as a safety-hook block. It writes a final report that lists every decision and how it made each one.
+  The task Risk sets how it decides:
+</p>
+<ul>
+  <li><strong>Low:</strong> the Supervisor decides and logs the reason.</li>
+  <li><strong>Medium:</strong> a Debate with 2 Advocates.</li>
+  <li><strong>High:</strong> a Debate with 3 Advocates, and at least one decision is always debated.</li>
+</ul>
+<p>
+  In a Debate, read-only Advocate agents argue the options. <code>resolve-question</code> runs it in auto mode
+  only. The Supervisor decides and takes the safer option on a tie. It marks the line
+  <code>⚠ decided for you — please review</code>. A task has at most 3 Debates. The 4th question goes to you.
+</p>
+<p>
+  A Stop hook checks the final report before the run may end. For an extended-track task that waits for your review,
+  <strong>auto verify</strong> works like this: a second Stop hook starts a fresh headless <code>/verify</code> session and writes the <code>verify</code> row.
+  The Supervisor does not run <code>/verify</code>. Without <code>[auto]</code>, you type <code>/verify</code>.
+  Safety hooks still block. <strong>Merge, push and Done stay with you.</strong>
+</p>
 </section>
 
 <section id="install">
@@ -513,6 +654,1081 @@ Decided by: auto-approve (overwrite all)
 </details>
 </section>
 
+<section id="settings-tool">
+<h2>Settings tool</h2>
+<p class="lead">Pick the Claude Code settings you want and copy a ready <code>settings.json</code>, or paste yours to check it.
+  The kit installs no settings of its own. Everything stays in your browser.</p>
+<p class="st-nojs">This tool needs JavaScript. Without it, read the
+  <a href="https://code.claude.com/docs/en/settings-reference" target="_blank" rel="noopener noreferrer">official settings reference</a>.</p>
+<div id="st-app" class="st-app">
+  <div class="st-tabs" role="tablist" aria-label="Settings tool mode">
+    <button type="button" role="tab" class="st-tab" aria-selected="true" aria-controls="st-build-panel" id="st-tab-build">Build</button>
+    <button type="button" role="tab" class="st-tab" aria-selected="false" aria-controls="st-check-panel" id="st-tab-check" tabindex="-1">Check</button>
+  </div>
+  <div id="st-build-panel" role="tabpanel" aria-labelledby="st-tab-build">
+    <fieldset class="st-target">
+      <legend>Target file</legend>
+      <label><input type="radio" name="st-target" value="user" checked> User <code>~/.claude/settings.json</code></label>
+      <label><input type="radio" name="st-target" value="project"> Project <code>.claude/settings.json</code></label>
+      <label><input type="radio" name="st-target" value="local"> Local <code>.claude/settings.local.json</code></label>
+    </fieldset>
+    <div class="st-presetbar">
+      <span class="st-label">Start from</span>
+      <span id="st-presets" class="st-presets"></span>
+    </div>
+    <div id="st-confirm" class="st-confirm" role="group" aria-label="Confirm preset" hidden>
+      <span id="st-confirm-text"></span>
+      <button type="button" class="st-btn" id="st-confirm-yes">Replace</button>
+      <button type="button" class="st-btn" id="st-confirm-no">Keep mine</button>
+    </div>
+    <div class="st-cols">
+      <div class="st-left">
+        <input type="search" id="st-filter" class="st-filter" placeholder="Type to search keys" aria-label="Search settings keys">
+        <div id="st-catalog"></div>
+      </div>
+      <div class="st-right">
+        <p class="st-file"><strong id="st-file"></strong></p>
+        <pre class="install st-output" id="st-output" tabindex="0" aria-label="Generated settings JSON"></pre>
+        <p class="st-note" id="st-note" role="status"></p>
+        <p class="st-note" id="st-kept" role="status"></p>
+        <div class="st-copybar">
+          <button type="button" class="st-btn st-primary" id="st-copy">Copy</button>
+          <span id="st-status" class="st-status" role="status"></span>
+          <span id="st-copied" class="st-status" role="status"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="st-check-panel" role="tabpanel" aria-labelledby="st-tab-check" hidden>
+    <fieldset class="st-target">
+      <legend>This is my</legend>
+      <label><input type="radio" name="st-check-target" value="user" checked> User <code>~/.claude/settings.json</code></label>
+      <label><input type="radio" name="st-check-target" value="project"> Project <code>.claude/settings.json</code></label>
+      <label><input type="radio" name="st-check-target" value="local"> Local <code>.claude/settings.local.json</code></label>
+    </fieldset>
+    <label class="st-label" for="st-paste">Paste your settings.json</label>
+    <textarea id="st-paste" class="st-paste" rows="10" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder='{ "permissions": { "deny": ["Read(./.env)"] } }'></textarea>
+    <div class="st-actions">
+      <button type="button" class="st-btn" id="st-format">Format</button>
+      <button type="button" class="st-btn st-primary" id="st-check">Check</button>
+      <button type="button" class="st-btn" id="st-edit">Edit in Build</button>
+      <label class="st-keep"><input type="checkbox" id="st-keep"> Keep secret values</label>
+    </div>
+    <p class="st-privacy">Runs in your browser only. Nothing is sent or saved.</p>
+    <p class="st-note" id="st-check-msg" role="status"></p>
+    <div id="st-results" hidden>
+      <h3 id="st-findings-head">Findings</h3>
+      <ol id="st-findings" class="st-findings" aria-labelledby="st-findings-head"></ol>
+      <h3>Map</h3>
+      <div id="st-map" class="st-map" tabindex="0" aria-label="Settings map"></div>
+    </div>
+    <div id="st-formatted-box" hidden>
+      <h3>Formatted</h3>
+      <pre class="install st-output" id="st-formatted" tabindex="0" aria-label="Formatted settings JSON"></pre>
+    </div>
+  </div>
+</div>
+<script type="application/json" id="settings-catalog">
+{
+ "version": "2.1.311",
+ "categories": ["Safety & permissions", "Sandbox", "Worktrees", "Model & effort", "Memory & context", "Git & attribution", "Hooks & MCP", "Interface", "Updates & privacy"],
+ "settings": [
+  {"key": "permissions.deny", "category": "Safety & permissions", "type": "stringList", "scopes": ["user", "project", "local"], "suggest": ["Read(./.env)", "Read(./.env.*)", "Read(./**/*.pem)", "Read(./**/*.key)", "Read(~/.ssh/**)", "Read(~/.aws/**)", "Read(~/.config/gh/**)"], "why": "Rules Claude may never use. Block reads of secret files here."},
+  {"key": "permissions.ask", "category": "Safety & permissions", "type": "stringList", "scopes": ["user", "project", "local"], "suggest": ["Bash(git push --force *)", "Bash(git push -f *)", "Bash(git reset --hard *)", "Bash(rm -rf *)"], "why": "Rules that always stop and ask you first. Good for destructive commands."},
+  {"key": "permissions.allow", "category": "Safety & permissions", "type": "stringList", "scopes": ["user", "project", "local"], "lowersSafety": true, "why": "Rules that run without a prompt. Each rule removes one check."},
+  {"key": "permissions.defaultMode", "category": "Safety & permissions", "type": "enum", "scopes": ["user", "project", "local"], "default": "default", "values": ["default", "acceptEdits", "plan", "auto", "dontAsk", "bypassPermissions"], "userOnlyValues": ["auto", "bypassPermissions"], "lowersSafetyValues": ["bypassPermissions"], "why": "The permission mode a session starts in. Auto and bypass are read from the user file only."},
+  {"key": "permissions.additionalDirectories", "category": "Safety & permissions", "type": "stringList", "scopes": ["user", "project", "local"], "why": "Extra folders Claude may read and edit besides the project folder."},
+  {"key": "permissions.disableBypassPermissionsMode", "category": "Safety & permissions", "type": "enum", "scopes": ["user", "project", "local"], "values": ["disable"], "why": "Locks out bypass mode. Deny rules and hooks still apply in bypass mode, so this is a choice, not a gate."},
+  {"key": "permissions.blockReadsOutsideWorkingDirectories", "category": "Safety & permissions", "type": "bool", "scopes": ["user", "project", "local"], "since": "2.1.257", "why": "Blocks reads outside the working folder. It also blocks sibling worktrees (../wt-tNNN) and ~/.claude memory."},
+  {"key": "autoMode.soft_deny", "category": "Safety & permissions", "type": "stringList", "scopes": ["user"], "why": "Actions the auto-mode classifier blocks unless you allow them. User file only; \"$defaults\" keeps the built-in list."},
+  {"key": "autoMode.hard_deny", "category": "Safety & permissions", "type": "stringList", "scopes": ["user"], "why": "Actions the auto-mode classifier always blocks. User file only; \"$defaults\" keeps the built-in list."},
+  {"key": "autoMode.classifyAllShell", "category": "Safety & permissions", "type": "bool", "scopes": ["user"], "why": "Sends every shell command to the auto-mode classifier. User file only."},
+  {"key": "sandbox.enabled", "category": "Sandbox", "type": "bool", "scopes": ["user", "project", "local"], "why": "Runs shell commands in a sandbox. On Linux this needs bubblewrap and socat."},
+  {"key": "sandbox.failIfUnavailable", "category": "Sandbox", "type": "bool", "scopes": ["user", "project", "local"], "why": "Stops with an error when the sandbox cannot start. Without bubblewrap and socat on Linux it blocks every session."},
+  {"key": "sandbox.autoAllowBashIfSandboxed", "category": "Sandbox", "type": "bool", "scopes": ["user", "project", "local"], "default": true, "why": "Skips the prompt for shell commands that run inside the sandbox."},
+  {"key": "sandbox.allowUnsandboxedCommands", "category": "Sandbox", "type": "bool", "scopes": ["user", "project", "local"], "default": true, "why": "Lets a command run outside the sandbox when it needs to. Set false to keep every command inside."},
+  {"key": "sandbox.excludedCommands", "category": "Sandbox", "type": "stringList", "scopes": ["user", "project", "local"], "why": "Commands that always run outside the sandbox."},
+  {"key": "sandbox.filesystem.denyRead", "category": "Sandbox", "type": "stringList", "scopes": ["user", "project", "local"], "suggest": ["~/.ssh", "~/.aws"], "why": "Paths the sandbox cannot read."},
+  {"key": "sandbox.filesystem.allowWrite", "category": "Sandbox", "type": "stringList", "scopes": ["user", "project", "local"], "why": "Extra paths the sandbox may write to."},
+  {"key": "sandbox.network.allowedDomains", "category": "Sandbox", "type": "stringList", "scopes": ["user", "project", "local"], "why": "Domains the sandbox may reach."},
+  {"key": "sandbox.network.strictAllowlist", "category": "Sandbox", "type": "bool", "scopes": ["user"], "why": "Allows only the listed domains. User file only."},
+  {"key": "worktree.baseRef", "category": "Worktrees", "type": "enum", "scopes": ["user", "project", "local"], "default": "fresh", "values": ["fresh", "head"], "why": "Where a new worktree branches from. fresh uses origin/<default>; head uses your local HEAD, so unpushed commits are included."},
+  {"key": "worktree.symlinkDirectories", "category": "Worktrees", "type": "stringList", "scopes": ["user", "project", "local"], "suggest": ["node_modules", ".venv"], "why": "Folders a new worktree links from the main checkout instead of copying."},
+  {"key": "worktree.sparsePaths", "category": "Worktrees", "type": "stringList", "scopes": ["user", "project", "local"], "why": "Limits a new worktree to these paths (sparse checkout)."},
+  {"key": "model", "category": "Model & effort", "type": "string", "scopes": ["user", "project", "local"], "why": "The default model for new sessions."},
+  {"key": "effortLevel", "category": "Model & effort", "type": "enum", "scopes": ["user", "project", "local"], "values": ["low", "medium", "high", "xhigh"], "why": "How much effort the model puts into a reply."},
+  {"key": "maxEffortLevel", "category": "Model & effort", "type": "enum", "scopes": ["user", "project", "local"], "values": ["low", "medium", "high", "xhigh", "max"], "why": "The highest effort level the session may use. Adds max."},
+  {"key": "fallbackModel", "category": "Model & effort", "type": "stringList", "scopes": ["user", "project", "local"], "why": "Models to use when the main model is unavailable."},
+  {"key": "alwaysThinkingEnabled", "category": "Model & effort", "type": "bool", "scopes": ["user", "project", "local"], "why": "Turns extended thinking on for every session."},
+  {"key": "showThinkingSummaries", "category": "Model & effort", "type": "bool", "scopes": ["user", "project", "local"], "why": "Shows a summary of the model's thinking."},
+  {"key": "fastMode", "category": "Model & effort", "type": "bool", "scopes": ["user", "project", "local"], "why": "Turns fast mode on."},
+  {"key": "promptCacheTtl", "category": "Model & effort", "type": "enum", "scopes": ["user", "project", "local"], "values": ["5m", "1h"], "why": "How long the prompt cache lives for the main session."},
+  {"key": "subagentPromptCacheTtl", "category": "Model & effort", "type": "enum", "scopes": ["user", "project", "local"], "values": ["5m", "1h"], "why": "How long the prompt cache lives for sub-agents."},
+  {"key": "language", "category": "Model & effort", "type": "string", "scopes": ["user", "project", "local"], "why": "The language Claude replies in."},
+  {"key": "outputStyle", "category": "Model & effort", "type": "string", "scopes": ["user", "project", "local"], "why": "The name of the output style to use."},
+  {"key": "autoMemoryEnabled", "category": "Memory & context", "type": "bool", "scopes": ["user", "project", "local"], "default": true, "why": "Claude Code's own auto memory. It is a second store next to the kit's memory/ folder, so choose one on purpose."},
+  {"key": "autoMemoryDirectory", "category": "Memory & context", "type": "string", "scopes": ["user", "project", "local"], "why": "The folder where auto memory is stored."},
+  {"key": "autoCompactEnabled", "category": "Memory & context", "type": "bool", "scopes": ["user", "project", "local"], "why": "Compacts the conversation on its own when the context fills."},
+  {"key": "autoCompactWindow", "category": "Memory & context", "type": "number", "scopes": ["user", "project", "local"], "min": 100000, "max": 1000000, "integer": true, "why": "The context size, in tokens, at which auto compact runs. 100000 to 1000000."},
+  {"key": "idleCompaction", "category": "Memory & context", "type": "bool", "scopes": ["user", "project", "local"], "why": "Compacts the conversation when a session sits idle."},
+  {"key": "claudeMdExcludes", "category": "Memory & context", "type": "stringList", "scopes": ["user", "project", "local"], "why": "CLAUDE.md files to skip when loading context."},
+  {"key": "bashOutputMaxChars", "category": "Memory & context", "type": "number", "scopes": ["user", "project", "local"], "min": 4000, "max": 128000, "integer": true, "since": "2.1.261", "why": "The most characters of shell output kept per command. 4000 to 128000."},
+  {"key": "skillListingBudgetFraction", "category": "Memory & context", "type": "number", "scopes": ["user", "project", "local"], "min": 0, "minExclusive": true, "max": 1, "default": 0.01, "why": "The share of context used to list skill descriptions. Above 0, up to 1. Too small a value drops skill descriptions."},
+  {"key": "fileCheckpointingEnabled", "category": "Memory & context", "type": "bool", "scopes": ["user", "project", "local"], "why": "Saves file checkpoints so you can rewind edits."},
+  {"key": "plansDirectory", "category": "Memory & context", "type": "string", "scopes": ["user", "project", "local"], "why": "The folder for plan files, relative to the project root."},
+  {"key": "attribution.commit", "category": "Git & attribution", "type": "string", "scopes": ["user", "project", "local"], "allowEmpty": true, "why": "The text added to commit messages. An empty string hides it."},
+  {"key": "attribution.pr", "category": "Git & attribution", "type": "string", "scopes": ["user", "project", "local"], "allowEmpty": true, "why": "The text added to pull request descriptions. An empty string hides it."},
+  {"key": "attribution.sessionUrl", "category": "Git & attribution", "type": "bool", "scopes": ["user", "project", "local"], "why": "Adds the session link to commits and pull requests."},
+  {"key": "includeGitInstructions", "category": "Git & attribution", "type": "bool", "scopes": ["user", "project", "local"], "why": "Includes the built-in git instructions in the system prompt."},
+  {"key": "prUrlTemplate", "category": "Git & attribution", "type": "string", "scopes": ["user", "project", "local"], "why": "The URL pattern used to link pull requests."},
+  {"key": "disableAllHooks", "category": "Hooks & MCP", "type": "bool", "scopes": ["user", "project", "local"], "lowersSafety": true, "why": "Turns off every hook. This also turns off the kit's gates."},
+  {"key": "enableAllProjectMcpServers", "category": "Hooks & MCP", "type": "bool", "scopes": ["user", "project", "local"], "lowersSafety": true, "why": "Approves every MCP server in the project's .mcp.json without asking."},
+  {"key": "enabledMcpjsonServers", "category": "Hooks & MCP", "type": "stringList", "scopes": ["user", "project", "local"], "why": "Project MCP servers that are approved."},
+  {"key": "disabledMcpjsonServers", "category": "Hooks & MCP", "type": "stringList", "scopes": ["user", "project", "local"], "why": "Project MCP servers that are rejected."},
+  {"key": "allowedHttpHookUrls", "category": "Hooks & MCP", "type": "stringList", "scopes": ["user", "project", "local"], "why": "URLs that HTTP hooks may call."},
+  {"key": "statusLine", "category": "Interface", "type": "string", "scopes": ["user", "project", "local"], "asCommandObject": true, "why": "A command whose output fills the status line. Written as {\"type\":\"command\",\"command\":...}."},
+  {"key": "theme", "category": "Interface", "type": "string", "scopes": ["user", "project", "local"], "why": "The color theme name."},
+  {"key": "showTurnDuration", "category": "Interface", "type": "bool", "scopes": ["user", "project", "local"], "why": "Shows how long each turn took."},
+  {"key": "preferredNotifChannel", "category": "Interface", "type": "enum", "scopes": ["user", "project", "local"], "values": ["auto", "terminal_bell", "iterm2", "iterm2_with_bell", "kitty", "ghostty", "notifications_disabled"], "why": "How Claude Code notifies you when it needs you."},
+  {"key": "respectGitignore", "category": "Interface", "type": "bool", "scopes": ["user", "project", "local"], "why": "Hides files that .gitignore lists from file pickers and search."},
+  {"key": "autoUpdatesChannel", "category": "Updates & privacy", "type": "enum", "scopes": ["user", "project", "local"], "values": ["latest", "stable"], "why": "Which release channel auto-update follows. stable lags latest."},
+  {"key": "minimumVersion", "category": "Updates & privacy", "type": "string", "scopes": ["user", "project", "local"], "why": "Stops auto-update from going below this version. It does not stop an older CLI from starting."},
+  {"key": "cleanupPeriodDays", "category": "Updates & privacy", "type": "number", "scopes": ["user", "project", "local"], "min": 1, "integer": true, "default": 30, "why": "Days to keep old session files. A whole number, at least 1."},
+  {"key": "feedbackSurveyRate", "category": "Updates & privacy", "type": "number", "scopes": ["user", "project", "local"], "min": 0, "max": 1, "why": "How often the feedback survey shows. 0 to 1."},
+  {"key": "env", "category": "Updates & privacy", "type": "object", "scopes": ["user", "project", "local"], "placeholder": "NAME=value", "why": "Environment variables for every session. Values are plain text: never put tokens here."}
+ ],
+ "knownKeys": ["permissions.deny", "permissions.ask", "permissions.allow", "permissions.defaultMode", "permissions.additionalDirectories", "permissions.disableBypassPermissionsMode", "permissions.blockReadsOutsideWorkingDirectories", "autoMode.soft_deny", "autoMode.hard_deny", "autoMode.classifyAllShell", "sandbox.enabled", "sandbox.failIfUnavailable", "sandbox.autoAllowBashIfSandboxed", "sandbox.allowUnsandboxedCommands", "sandbox.excludedCommands", "sandbox.filesystem.denyRead", "sandbox.filesystem.allowWrite", "sandbox.network.allowedDomains", "sandbox.network.strictAllowlist", "worktree.baseRef", "worktree.symlinkDirectories", "worktree.sparsePaths", "model", "effortLevel", "maxEffortLevel", "fallbackModel", "alwaysThinkingEnabled", "showThinkingSummaries", "fastMode", "promptCacheTtl", "subagentPromptCacheTtl", "language", "outputStyle", "autoMemoryEnabled", "autoMemoryDirectory", "autoCompactEnabled", "autoCompactWindow", "idleCompaction", "claudeMdExcludes", "bashOutputMaxChars", "skillListingBudgetFraction", "fileCheckpointingEnabled", "plansDirectory", "attribution.commit", "attribution.pr", "attribution.sessionUrl", "includeGitInstructions", "prUrlTemplate", "disableAllHooks", "enableAllProjectMcpServers", "enabledMcpjsonServers", "disabledMcpjsonServers", "allowedHttpHookUrls", "statusLine", "theme", "showTurnDuration", "preferredNotifChannel", "respectGitignore", "autoUpdatesChannel", "minimumVersion", "cleanupPeriodDays", "feedbackSurveyRate", "env", "hooks", "permissions", "autoMode", "sandbox", "worktree", "attribution", "requiredMinimumVersion", "includeCoAuthoredBy", "disableArtifact", "enableArtifact", "taskOutputMaxChars", "keybindingFlavor", "autoConnectIde", "autoInstallIdeExtension", "copyFullResponse", "copyOnSelect", "defaultToAgentsView", "diffTool", "externalEditorContext", "leftArrowOpensAgents", "prStatusFooterEnabled", "claudeInChromeDefaultEnabled", "advisorModel", "agent", "agentPushNotifEnabled", "allowAllClaudeAiMcps", "allowClaudeInChromeWithManagedMcp", "allowedChannelPlugins", "allowedMcpServers", "allowedProviders", "allowManagedHooksOnly", "allowManagedMcpServersOnly", "allowManagedPermissionRulesOnly", "apiKeyHelper", "askUserQuestionTimeout", "appendPlugins", "autoContinueAtUsageLimit", "autoScrollEnabled", "availableModels", "availableModelsMatch", "awaySummaryEnabled", "awsAuthRefresh", "awsCredentialExport", "axScreenReader", "bashEditDiffEnabled", "blockedMarketplaces", "browserExternalPageTools", "channelsEnabled", "claudeMd", "companyAnnouncements", "crossSessionInbound", "defaultShell", "deniedMcpServers", "deniedModels", "desktopSessionCleanupPeriodDays", "dialogExpiry", "disableAgentView", "disableAutoMode", "disableBrowserExternalNavigation", "disableBundledSkills", "disableClaudeAiConnectors", "disableCommandPluginSources", "disableDeepLinkRegistration", "disableDesktopLocalSessions", "disableMobileSimulatorTools", "disableRemoteControl", "disableSideloadFlags", "disableSkillShellExecution", "disableWorkflows", "editorMode", "emojiCompletionEnabled", "enabledPlugins", "enableWorkflows", "enforceAvailableModels", "extraKnownMarketplaces", "fastModePerSessionOptIn", "feedbackDrafts", "fileSuggestion", "footerLinksRegexes", "forceLoginGatewayUrl", "forceLoginMethod", "forceLoginOrgUUID", "forceRemoteSettingsRefresh", "gatewayInternalNetworks", "gcpAuthRefresh", "httpHookAllowedEnvVars", "inputNeededNotifEnabled", "isolatePeerMachines", "managedMcpServers", "managedSourcesBehavior", "maxProseWidth", "modelOverrides", "modelPicker", "modelPricing", "modelSettings", "otelHeadersHelper", "parentSettingsBehavior", "permissionExplainerEnabled", "pluginConfigs", "pluginSuggestionMarketplaces", "pluginTrustMessage", "policyHelper", "policyHelper.path", "policyHelper.refreshIntervalMs", "policyHelper.timeoutMs", "prefersReducedMotion", "prependPlugins", "processWrapper", "promptSuggestionEnabled", "remote.defaultEnvironmentId", "remoteControlAtStartup", "requiredMaximumVersion", "respondToBashCommands", "sandbox.allowAppleEvents", "sandbox.allowNestedUserNamespaces", "sandbox.bwrapPath", "sandbox.credentials", "sandbox.credentials.allowPlaintextInject", "sandbox.credentials.awsPairs", "sandbox.credentials.envVars", "sandbox.credentials.files", "sandbox.credentials.sigv4", "sandbox.enableWeakerNestedSandbox", "sandbox.enableWeakerNetworkIsolation", "sandbox.filesystem", "sandbox.filesystem.allowManagedReadPathsOnly", "sandbox.filesystem.allowRead", "sandbox.filesystem.denyWrite", "sandbox.filesystem.disabled", "sandbox.ignoreViolations", "sandbox.network", "sandbox.network.allowAllUnixSockets", "sandbox.network.allowLocalBinding", "sandbox.network.allowMachLookup", "sandbox.network.allowManagedDomainsOnly", "sandbox.network.allowUnixSockets", "sandbox.network.deniedDomains", "sandbox.network.httpProxyPort", "sandbox.network.socksProxyPort", "sandbox.network.tlsTerminate", "sandbox.ripgrep", "sandbox.socatPath", "showClearContextOnPlanAccept", "skillListingMaxDescChars", "skillOverrides", "skipAutoPermissionPrompt", "skipDangerousModePermissionPrompt", "skipWebFetchPreflight", "spellcheck", "spinnerTipsEnabled", "spinnerTipsOverride", "spinnerVerbs", "sshConfigs", "sshHostAllowlist", "sshHostCommands", "strictKnownMarketplaces", "strictPluginOnlyCustomization", "strictPluginOnlyCustomization.agents", "strictPluginOnlyCustomization.hooks", "strictPluginOnlyCustomization.mcp", "strictPluginOnlyCustomization.skills", "subagentStatusLine", "switchModelsOnFlag", "syncClaudeAiPlugins", "syncClaudeAiSkills", "syntaxHighlightingDisabled", "teammateDefaultModel", "teammateMode", "terminalProgressBarEnabled", "terminalTitleFromRename", "timeFormat", "timeZone", "tui", "ultracode", "useAutoModeDuringPlan", "verbose", "viewMode", "vimInsertModeRemaps", "voice", "voiceEnabled", "wheelScrollAccelerationEnabled", "workflowKeywordTriggerEnabled", "workflowSizeGuideline", "worktree.bgIsolation", "worktree.location", "wslInheritsWindowsSettings", "permissions.disableAutoMode", "autoMode.environment", "autoMode.allow"],
+ "presets": [{"id": "safe-baseline", "label": "Safe baseline", "values": {"permissions.deny": "$suggest", "permissions.ask": "$suggest"}}, {"id": "solo-engineer", "label": "Solo engineer", "values": {"permissions.deny": "$suggest", "permissions.ask": "$suggest", "autoUpdatesChannel": "stable", "cleanupPeriodDays": 90}}, {"id": "team-project", "label": "Team project", "values": {"permissions.deny": "$suggest", "permissions.ask": "$suggest", "worktree.baseRef": "head", "worktree.symlinkDirectories": ["node_modules", ".venv"]}}, {"id": "empty", "label": "Empty", "values": {}}],
+ "deprecated": {"includeCoAuthoredBy": "attribution", "disableArtifact": "enableArtifact"},
+ "removed": ["taskOutputMaxChars", "keybindingFlavor", "permissionExplainerEnabled", "teammateDefaultModel"],
+ "globalConfigOnly": ["autoConnectIde", "autoInstallIdeExtension", "copyFullResponse", "copyOnSelect", "defaultToAgentsView", "diffTool", "externalEditorContext", "leftArrowOpensAgents", "prStatusFooterEnabled", "claudeInChromeDefaultEnabled", "permissionExplainerEnabled", "teammateDefaultModel"],
+ "managedOnly": ["requiredMinimumVersion", "allowAllClaudeAiMcps", "allowClaudeInChromeWithManagedMcp", "allowedChannelPlugins", "allowedProviders", "allowManagedHooksOnly", "allowManagedMcpServersOnly", "allowManagedPermissionRulesOnly", "availableModelsMatch", "blockedMarketplaces", "browserExternalPageTools", "channelsEnabled", "claudeMd", "deniedModels", "disableBrowserExternalNavigation", "disableCommandPluginSources", "disableDesktopLocalSessions", "disableMobileSimulatorTools", "disableSideloadFlags", "forceRemoteSettingsRefresh", "gatewayInternalNetworks", "managedMcpServers", "managedSourcesBehavior", "modelPricing", "parentSettingsBehavior", "pluginSuggestionMarketplaces", "pluginTrustMessage", "policyHelper", "policyHelper.path", "policyHelper.refreshIntervalMs", "policyHelper.timeoutMs", "requiredMaximumVersion", "sandbox.bwrapPath", "sandbox.filesystem.allowManagedReadPathsOnly", "sandbox.network.allowManagedDomainsOnly", "sandbox.socatPath", "sshHostAllowlist", "strictKnownMarketplaces", "strictPluginOnlyCustomization", "strictPluginOnlyCustomization.agents", "strictPluginOnlyCustomization.hooks", "strictPluginOnlyCustomization.mcp", "strictPluginOnlyCustomization.skills", "wslInheritsWindowsSettings"],
+ "userOnly": ["askUserQuestionTimeout", "appendPlugins", "autoContinueAtUsageLimit", "autoMode", "autoMode.classifyAllShell", "axScreenReader", "bashEditDiffEnabled", "desktopSessionCleanupPeriodDays", "dialogExpiry", "feedbackDrafts", "footerLinksRegexes", "forceLoginGatewayUrl", "modelPicker", "pluginConfigs", "prependPlugins", "processWrapper", "sandbox.allowAppleEvents", "sandbox.allowNestedUserNamespaces", "sandbox.credentials.allowPlaintextInject", "sandbox.credentials.awsPairs", "sandbox.credentials.sigv4", "sandbox.filesystem.disabled", "sandbox.network.strictAllowlist", "sandbox.network.tlsTerminate", "sandbox.ripgrep", "skipAutoPermissionPrompt", "spellcheck", "sshConfigs", "sshHostCommands", "vimInsertModeRemaps", "worktree.location"],
+ "userOrLocalOnly": ["skipDangerousModePermissionPrompt", "syncClaudeAiPlugins", "syncClaudeAiSkills", "useAutoModeDuringPlan"]
+}
+</script>
+<script id="settings-tool-core">
+// Pure functions only: no DOM, no network, no storage. Tested with node:vm.
+var SettingsCore = (function () {
+  var FILES = {
+    user: "~/.claude/settings.json",
+    project: ".claude/settings.json",
+    local: ".claude/settings.local.json"
+  };
+
+  function loadCatalog(text) { return JSON.parse(text); }
+
+  function find(catalog, key) {
+    for (var i = 0; i < catalog.settings.length; i++) {
+      if (catalog.settings[i].key === key) { return catalog.settings[i]; }
+    }
+    return null;
+  }
+
+  // Value a control starts with when the user ticks the key.
+  // A bool starts at the opposite of its default, so ticking changes something.
+  function initialValue(entry) {
+    switch (entry.type) {
+      case "bool": return entry.default === undefined ? true : !entry.default;
+      case "enum": return entry.default !== undefined ? entry.default : entry.values[0];
+      case "number": return entry.default !== undefined ? entry.default : entry.min;
+      case "stringList": return [];
+      case "object": return {};
+      default: return "";
+    }
+  }
+
+  function validateValue(entry, value) {
+    var i;
+    switch (entry.type) {
+      case "bool":
+        return typeof value === "boolean" ? { ok: true } : { ok: false, error: "Must be true or false." };
+      case "enum":
+        return entry.values.indexOf(value) >= 0 ? { ok: true } : { ok: false, error: "Pick one of: " + entry.values.join(", ") + "." };
+      case "number":
+        if (typeof value !== "number" || !isFinite(value)) { return { ok: false, error: "Enter a number." }; }
+        if (entry.integer && Math.floor(value) !== value) { return { ok: false, error: "Enter a whole number." }; }
+        if (entry.min !== undefined && (entry.minExclusive ? value <= entry.min : value < entry.min)) {
+          return { ok: false, error: "Must be " + (entry.minExclusive ? "above " : "at least ") + entry.min + "." };
+        }
+        if (entry.max !== undefined && value > entry.max) { return { ok: false, error: "Must be at most " + entry.max + "." }; }
+        return { ok: true };
+      case "string":
+        if (typeof value !== "string") { return { ok: false, error: "Enter text." }; }
+        if (value === "" && !entry.allowEmpty) { return { ok: false, error: "Enter a value, or untick the key." }; }
+        return { ok: true };
+      case "stringList":
+        if (!Array.isArray(value)) { return { ok: false, error: "Must be a list." }; }
+        for (i = 0; i < value.length; i++) {
+          if (typeof value[i] !== "string" || value[i] === "") { return { ok: false, error: "List items must be text." }; }
+        }
+        return { ok: true };
+      case "object":
+        if (value === null || typeof value !== "object" || Array.isArray(value)) { return { ok: false, error: "Must be a set of NAME=value pairs." }; }
+        for (var k in value) {
+          if (typeof value[k] !== "string") { return { ok: false, error: "Values must be text." }; }
+        }
+        return { ok: true };
+    }
+    return { ok: false, error: "Unknown type." };
+  }
+
+  function applyPreset(catalog, id) {
+    var sel = {};
+    for (var p = 0; p < catalog.presets.length; p++) {
+      if (catalog.presets[p].id !== id) { continue; }
+      var values = catalog.presets[p].values;
+      for (var key in values) {
+        var v = values[key];
+        if (v === "$suggest") {
+          var entry = find(catalog, key);
+          v = entry && entry.suggest ? entry.suggest.slice() : [];
+        }
+        sel[key] = v;
+      }
+    }
+    return sel;
+  }
+
+  function put(root, key, value) {
+    var parts = key.split("."), node = root;
+    for (var i = 0; i < parts.length - 1; i++) {
+      if (typeof node[parts[i]] !== "object" || node[parts[i]] === null) { node[parts[i]] = {}; }
+      node = node[parts[i]];
+    }
+    node[parts[parts.length - 1]] = value;
+  }
+
+  function honoured(entry, value, target) {
+    if (entry.scopes.indexOf(target) < 0) { return false; }
+    if (target !== "user" && entry.userOnlyValues && entry.userOnlyValues.indexOf(value) >= 0) { return false; }
+    return true;
+  }
+
+  // selection: { key: value }. Returns the JSON text plus what was dropped and why.
+  // passthrough: keys loaded from a pasted file that Build does not edit. They are emitted unchanged.
+  function generate(catalog, selection, target, passthrough) {
+    var root = passthrough ? clone(passthrough) : {}, removed = [], invalid = [], count = 0;
+    for (var i = 0; i < catalog.settings.length; i++) {
+      var entry = catalog.settings[i];
+      if (!Object.prototype.hasOwnProperty.call(selection, entry.key)) { continue; }
+      var value = selection[entry.key];
+      if (!honoured(entry, value, target)) { removed.push(entry.key); continue; }
+      if (!validateValue(entry, value).ok) { invalid.push(entry.key); continue; }
+      if (entry.type === "stringList" && value.length === 0) { continue; }
+      if (entry.type === "object" && Object.keys(value).length === 0) { continue; }
+      if (entry.asCommandObject) { value = { type: "command", command: value }; }
+      put(root, entry.key, value);
+      count++;
+    }
+    var note = removed.length
+      ? removed.length + (removed.length === 1 ? " key" : " keys") + " removed: not read from " + FILES[target]
+      : "";
+    return { json: JSON.stringify(root, null, 2), removed: removed, invalid: invalid, count: count, note: note };
+  }
+
+  /* ---- Check mode --------------------------------------------------------
+     Pasted text is untrusted. These functions only read it; they never run it,
+     and every string they hand back for display passes through maskText. */
+  var HIDDEN = "[secret hidden]";
+  var BROAD_ALLOW = ["Bash", "Bash(*)", "Bash(git *)", "Bash(bash *)", "Bash(sh *)", "Bash(python3 *)", "Bash(python *)", "Bash(node *)", "Bash(cat *)"];
+  var RULE_LISTS = ["deny", "ask", "allow"];   // precedence order: first match wins
+  var SEVERITY = { error: 0, warn: 1, tip: 2 };
+  var SECRET_START = /^(sk-|ghp_|gho_|github_pat_|xox|AKIA)/;
+  var SECRET_RUN = /[A-Za-z0-9+\/=_-]{32,}/;
+  // Inside free text (hook commands, rules): a known token prefix after a non-word character,
+  // or a 32+ run with a letter and a digit. "/" is left out of the run so file paths stay readable.
+  var TOKEN_IN_TEXT = /(^|[^A-Za-z0-9_])((?:sk-|ghp_|gho_|github_pat_|xox[a-z]-|AKIA)[A-Za-z0-9_\-]{3,})/g;
+  var RUN_IN_TEXT = /[A-Za-z0-9+=_-]{32,}/g;
+  var SUGGEST_LIMIT = 200;   // did-you-mean lookups per check; keeps a huge paste fast
+
+  function own(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
+  function isObj(v) { return v !== null && typeof v === "object" && !Array.isArray(v); }
+  // Own data property, even for a key named "__proto__": pasted keys never touch a prototype.
+  function setOwn(o, k, v) { Object.defineProperty(o, k, { value: v, enumerable: true, writable: true, configurable: true }); }
+  function clone(v) {
+    if (Array.isArray(v)) { return v.map(clone); }
+    if (isObj(v)) { var o = {}; Object.keys(v).forEach(function (k) { setOwn(o, k, clone(v[k])); }); return o; }
+    return v;
+  }
+  function getPath(root, key) {
+    var parts = key.split("."), node = root;
+    for (var i = 0; i < parts.length; i++) {
+      if (!isObj(node) || !own(node, parts[i])) { return undefined; }
+      node = node[parts[i]];
+    }
+    return node;
+  }
+  function deletePath(root, key) {
+    var parts = key.split("."), chain = [root], i;
+    for (i = 0; i < parts.length - 1; i++) { chain.push(chain[i][parts[i]]); }
+    delete chain[parts.length - 1][parts[parts.length - 1]];
+    for (i = parts.length - 2; i >= 0; i--) {     // drop parents this delete emptied
+      if (Object.keys(chain[i + 1]).length) { break; }
+      delete chain[i][parts[i]];
+    }
+  }
+
+  function looksSecret(v) { return typeof v === "string" && (SECRET_START.test(v.trim()) || SECRET_RUN.test(v)); }
+  function maskText(s, counter) {
+    var out = s.replace(TOKEN_IN_TEXT, function (m, pre) { if (counter) { counter.n++; } return pre + HIDDEN; });
+    return out.replace(RUN_IN_TEXT, function (m) {
+      if (!/[0-9]/.test(m) || !/[A-Za-z]/.test(m)) { return m; }
+      if (counter) { counter.n++; }
+      return HIDDEN;
+    });
+  }
+  // Deep copy with secrets hidden: a secret-looking env value is replaced whole (by envValue),
+  // and token-like parts of every other string are replaced by HIDDEN.
+  function maskDeep(v, path, envValue, counter) {
+    if (typeof v === "string") {
+      if (/^env\.[^.]+$/.test(path) && looksSecret(v)) { counter.n++; return envValue; }
+      return maskText(v, counter);
+    }
+    if (Array.isArray(v)) { return v.map(function (x, i) { return maskDeep(x, path + "[" + i + "]", envValue, counter); }); }
+    if (isObj(v)) {
+      var o = {};
+      Object.keys(v).forEach(function (k) { setOwn(o, k, maskDeep(v[k], path ? path + "." + k : k, envValue, counter)); });
+      return o;
+    }
+    return v;
+  }
+  function maskSecrets(v) { return maskDeep(v, "", HIDDEN, { n: 0 }); }
+
+  function finding(id, severity, path, problem, fix) {
+    return { id: id, severity: severity, path: path, problem: problem, fix: fix };
+  }
+  function short(s) { s = maskText(String(s)); return s.length > 80 ? s.slice(0, 77) + "..." : s; }
+  function preview(v) {
+    var s = typeof v === "string" ? v : JSON.stringify(v);
+    return s.length > 200 ? s.slice(0, 197) + "..." : s;
+  }
+
+  function lineCol(text, pos) {
+    var before = text.slice(0, pos), nl = before.lastIndexOf("\n");
+    return { line: before.split("\n").length, column: pos - nl };
+  }
+  // JSON.parse error messages differ between engines and may quote the text, so only
+  // the position is read out of them. The message itself is never shown.
+  function parseSettings(text) {
+    try { return { ok: true, value: JSON.parse(text) }; } catch (err) {
+      var msg = String(err && err.message), m, lc = null, pos = null;
+      if ((m = /position (\d+)/.exec(msg))) { pos = +m[1]; }
+      else if ((m = /line (\d+) column (\d+)/.exec(msg))) {
+        for (var i = 1, start = 0; i < +m[1]; i++) { start = text.indexOf("\n", start) + 1; }
+        pos = start + +m[2] - 1;
+      }
+      else if (text.charCodeAt(0) === 0xFEFF) { pos = 0; }
+      else if (/end of (JSON )?input|unexpected end/i.test(msg)) { pos = text.length; }
+      if (pos !== null) { lc = lineCol(text, pos); }
+      var where = lc ? "at line " + lc.line + ", column " + lc.column : "(line unknown)";
+      var problem = "Not valid JSON " + where + ".";
+      var fix = "Fix the text there. A missing comma, quote or bracket is the usual cause.";
+      if (text.charCodeAt(0) === 0xFEFF) {
+        problem = "The text starts with an invisible byte order mark (BOM), so it is not valid JSON.";
+        fix = "Save the file as UTF-8 without a BOM, or delete the first character.";
+      } else if (pos !== null && /^\/[\/*]/.test(text.substr(pos, 2))) {
+        problem = "Not valid JSON " + where + ". The text seems to hold comments, and settings.json cannot hold comments.";
+        fix = "Remove the // and /* */ comments.";
+      }
+      var f = finding("E1", "error", "", problem, fix);
+      if (lc) { f.line = lc.line; f.column = lc.column; }
+      return { ok: false, finding: f };
+    }
+  }
+
+  function editDistance(a, b) {
+    if (Math.abs(a.length - b.length) > 2) { return 3; }
+    var prev = [], cur, i, j;
+    for (j = 0; j <= b.length; j++) { prev[j] = j; }
+    for (i = 1; i <= a.length; i++) {
+      cur = [i];
+      for (j = 1; j <= b.length; j++) {
+        cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      }
+      prev = cur;
+    }
+    return prev[b.length];
+  }
+
+  function indexCatalog(catalog) {
+    // Prototype-free maps: a pasted key such as "__proto__" or "constructor" must not match anything built in.
+    var ix = { entry: Object.create(null), known: Object.create(null), parents: Object.create(null), container: Object.create(null) };
+    catalog.settings.forEach(function (e) {
+      ix.entry[e.key] = e;
+      var parts = e.key.split(".");
+      for (var i = 1; i < parts.length; i++) { ix.container[parts.slice(0, i).join(".")] = true; }
+    });
+    catalog.knownKeys.forEach(function (k) {
+      ix.known[k] = true;
+      var parts = k.split(".");
+      for (var i = 1; i < parts.length; i++) {
+        var p = parts.slice(0, i).join(".");
+        (ix.parents[p] = ix.parents[p] || []).push(k);
+      }
+    });
+    ix.top = catalog.knownKeys.filter(function (k) { return k.indexOf(".") < 0; })
+      .concat(Object.keys(ix.parents).filter(function (k) { return k.indexOf(".") < 0 && !ix.known[k]; }));
+    return ix;
+  }
+  function inList(list, k) { return (list || []).indexOf(k) >= 0; }
+
+  // E4, E5 (by key), W1, W2: walk the keys top-down; stop at the first finding for a key.
+  function checkKeys(catalog, ix, obj, prefix, target, out, budget) {
+    Object.keys(obj).forEach(function (k) {
+      var path = prefix ? prefix + "." + k : k, entry = ix.entry[path];
+      if (inList(catalog.removed, path)) {
+        out.push(finding("E4", "error", path, "This key was removed from Claude Code. It has no effect.", "Delete it."));
+      } else if (own(catalog.deprecated, path)) {
+        out.push(finding("W1", "warn", path, "This key is deprecated.", "Use " + catalog.deprecated[path] + " instead."));
+      } else if (inList(catalog.globalConfigOnly, path)) {
+        out.push(finding("E5", "error", path, "Claude Code ignores this key in a settings file.", "Move it to ~/.claude.json (the global config)."));
+      } else if (inList(catalog.managedOnly, path)) {
+        out.push(finding("E5", "error", path, "Only managed settings from your organization read this key.", "Delete it, or ask your admin to set it in managed settings."));
+      } else if (target !== "user" && (inList(catalog.userOnly, path) || (entry && entry.scopes.indexOf(target) < 0))) {
+        out.push(finding("E5", "error", path, "Ignored in a " + target + " file. Only the user file reads it.", "Move it to " + FILES.user + "."));
+      } else if (target === "project" && inList(catalog.userOrLocalOnly, path)) {
+        out.push(finding("E5", "error", path, "Ignored in a project file, so a repository cannot change it for you.", "Move it to " + FILES.local + " or " + FILES.user + "."));
+      } else if (!ix.known[path] && !ix.parents[path]) {
+        var siblings = prefix ? (ix.parents[prefix] || []).filter(function (s) { return s.split(".").length === path.split(".").length; }) : ix.top;
+        var best = null, bestD = 3;
+        if (budget.n-- > 0) {
+          siblings.forEach(function (s) { var d = editDistance(k, s.split(".").pop()); if (d < bestD) { bestD = d; best = s; } });
+        }
+        out.push(best
+          ? finding("W2", "warn", path, "Unknown key. Did you mean " + best + "?", "Rename it to " + best + ".")
+          : finding("W2", "warn", path, "Unknown key, kept as-is.", "Check the spelling against the settings reference, or delete it."));
+      } else if (ix.parents[path] && isObj(obj[k])) {
+        checkKeys(catalog, ix, obj[k], path, target, out, budget);
+      }
+    });
+  }
+
+  // E3, E5 (by value), W7, I2 for catalog keys that are present.
+  function checkValues(catalog, ix, data, target, out) {
+    Object.keys(ix.container).forEach(function (c) {
+      var v = getPath(data, c);
+      if (v !== undefined && !isObj(v) && !(c === "attribution" && v === false)) {
+        out.push(finding("E3", "error", c, "Must be an object, not " + (v === null ? "null" : Array.isArray(v) ? "a list" : typeof v) + ". The keys under it have no effect.", "Write it as { ... } with its keys inside, or delete it."));
+      }
+    });
+    catalog.settings.forEach(function (e) {
+      var v = getPath(data, e.key);
+      if (v === undefined) { return; }
+      var res;
+      if (e.asCommandObject) {
+        res = isObj(v) && v.type === "command" && typeof v.command === "string" && v.command !== ""
+          ? { ok: true } : { ok: false, error: "Must be {\"type\": \"command\", \"command\": \"...\"}." };
+      } else if (e.type === "string" && v === "") {
+        res = { ok: false, error: "Must not be empty." };
+      } else {
+        res = validateValue(e, v);
+      }
+      if (!res.ok) { out.push(finding("E3", "error", e.key, "Wrong value. " + res.error, "Change the value, or delete the key.")); return; }
+      if (e.scopes.indexOf(target) < 0) { return; }   // already E5 by key
+      if (!honoured(e, v, target)) {
+        out.push(finding("E5", "error", e.key, "The value " + JSON.stringify(v) + " is read from the user file only.", "Move it to " + FILES.user + ", or pick another value."));
+        return;
+      }
+      if ((e.lowersSafety && e.type === "bool" && v === true) || inList(e.lowersSafetyValues, v)) {
+        out.push(finding("W7", "warn", e.key, "This value lowers safety: " + e.why, "Delete it unless you need it on purpose."));
+      }
+      if (e.since) {
+        out.push(finding("I2", "tip", e.key, "Needs Claude Code " + e.since + " or later.", "Older versions ignore it. Check with claude --version."));
+      }
+    });
+  }
+
+  function ruleLists(data) {
+    var p = getPath(data, "permissions"), lists = {};
+    RULE_LISTS.forEach(function (n) {
+      var l = isObj(p) && Array.isArray(p[n]) ? p[n] : [];
+      lists[n] = l.map(function (r) { return typeof r === "string" ? r.trim() : null; });
+    });
+    return lists;
+  }
+
+  // W3, W4, I1 on the permission rule lists.
+  function checkRules(catalog, data, out) {
+    var lists = ruleLists(data);
+    RULE_LISTS.forEach(function (n) {
+      lists[n].forEach(function (r, i) {
+        if (r === null) { return; }
+        var path = "permissions." + n + "[" + i + "]";
+        if (n === "allow" && BROAD_ALLOW.indexOf(r) >= 0) {
+          out.push(finding("W3", "warn", path, "\"" + short(r) + "\" pre-approves nearly any command of that kind.", "Allow the exact commands you need, such as Bash(git status)."));
+        }
+        if (lists[n].indexOf(r) < i) {
+          out.push(finding("W4", "warn", path, "\"" + short(r) + "\" is already in this list.", "Delete the duplicate."));
+        } else if (n === "allow") {
+          var other = lists.deny.indexOf(r) >= 0 ? "deny" : lists.ask.indexOf(r) >= 0 ? "ask" : null;
+          if (other) {
+            out.push(finding("W4", "warn", path, "\"" + short(r) + "\" is also in " + other + ". Rules are checked deny → ask → allow and the first match wins, so this allow rule never applies.", "Delete it from allow, or from " + other + " if you meant to allow it."));
+          }
+        }
+      });
+    });
+    var deny = lists.deny.filter(function (r) { return r !== null; }).join("\n");
+    var missing = [];
+    if (deny.indexOf(".env") < 0) { missing.push(".env"); }
+    if (deny.indexOf(".ssh") < 0) { missing.push("~/.ssh"); }
+    if (missing.length) {
+      var entry = find(catalog, "permissions.deny");
+      var add = (entry.suggest || []).filter(function (s) { return lists.deny.indexOf(s) < 0; });
+      var f = finding("I1", "tip", "permissions.deny", "No deny rule blocks reading " + missing.join(" or ") + ".", "Add the suggested deny rules in Build.");
+      f.action = { label: "Add in Build", add: { "permissions.deny": add } };
+      out.push(f);
+    }
+  }
+
+  function eachHook(data, fn) {
+    var hooks = getPath(data, "hooks");
+    if (!isObj(hooks)) { return; }
+    Object.keys(hooks).forEach(function (ev) {
+      if (!Array.isArray(hooks[ev])) { return; }
+      hooks[ev].forEach(function (group, i) {
+        if (!isObj(group) || !Array.isArray(group.hooks)) { return; }
+        group.hooks.forEach(function (h, j) {
+          var cmd = isObj(h) && typeof h.command === "string" ? h.command : null;
+          fn("hooks." + ev + "[" + i + "].hooks[" + j + "].command", ev, typeof group.matcher === "string" && group.matcher ? group.matcher : "*", cmd, h);
+        });
+      });
+    });
+  }
+
+  // W5 on env values, W6 on hook commands.
+  function checkSecretsAndHooks(data, out) {
+    var env = getPath(data, "env");
+    if (isObj(env)) {
+      Object.keys(env).forEach(function (k) {
+        if (looksSecret(env[k])) {
+          out.push(finding("W5", "warn", "env." + k, "Looks like a secret (value hidden). Values in settings files are plain text.", "Delete it here. Use apiKeyHelper or set it in your shell instead."));
+        }
+      });
+    }
+    eachHook(data, function (path, ev, matcher, cmd) {
+      if (cmd !== null && /\btee\b[^|;&]*\s\/tmp\b|>>?\s*\/tmp\b/.test(cmd)) {
+        out.push(finding("W6", "warn", path, "This hook copies its input to /tmp, where other users on the machine can read it.", "Write to a private folder (for example under ~/.claude) or do not save the input."));
+      }
+    });
+  }
+
+  // Map data. Built from the masked copy, so it never holds a secret.
+  function buildTree(catalog, ix, data) {
+    var cats = {}, tree = { categories: [], permissions: null, hooks: [], other: [] };
+    function walk(obj, prefix) {
+      Object.keys(obj).forEach(function (k) {
+        var path = prefix ? prefix + "." + k : k, v = obj[k], m;
+        if (path === "hooks" && isObj(v)) { return; }
+        if ((m = /^permissions\.(deny|ask|allow)$/.exec(path)) && Array.isArray(v)) {
+          tree.permissions[m[1]] = v.map(function (r, i) { return { path: path + "[" + i + "]", rule: preview(r) }; });
+          return;
+        }
+        if (ix.entry[path]) {
+          var c = ix.entry[path].category;
+          (cats[c] = cats[c] || []).push({ path: path, value: preview(v) });
+          return;
+        }
+        if (ix.container[path] && isObj(v)) { walk(v, path); return; }
+        tree.other.push({ path: path, value: preview(v) });
+      });
+    }
+    if (isObj(data.permissions)) { tree.permissions = { deny: [], ask: [], allow: [] }; }
+    walk(data, "");
+    catalog.categories.forEach(function (c) { if (cats[c]) { tree.categories.push({ name: c, items: cats[c] }); } });
+    eachHook(data, function (path, ev, matcher, cmd, h) {
+      tree.hooks.push({ path: path, event: ev, matcher: matcher, command: cmd !== null ? preview(cmd) : "(" + (isObj(h) && typeof h.type === "string" ? h.type : "hook") + ")" });
+    });
+    return tree;
+  }
+
+  // text: pasted settings.json; target: "user" | "project" | "local".
+  function check(catalog, text, target) {
+    if (!String(text).trim()) { return { findings: [], tree: null, empty: true }; }
+    var parsed = parseSettings(text);
+    if (!parsed.ok) { return { findings: [parsed.finding], tree: null, empty: false }; }
+    var data = parsed.value;
+    if (!isObj(data)) {
+      return { findings: [finding("E2", "error", "", "The file must be one JSON object, written as { ... }.", "Wrap the settings in { } as key and value pairs.")], tree: null, empty: false };
+    }
+    var ix = indexCatalog(catalog), out = [];
+    checkKeys(catalog, ix, data, "", target, out, { n: SUGGEST_LIMIT });
+    checkValues(catalog, ix, data, target, out);
+    checkRules(catalog, data, out);
+    checkSecretsAndHooks(data, out);
+    var order = out.map(function (f, i) { return [SEVERITY[f.severity], i, f]; });
+    order.sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; });
+    return { findings: order.map(function (x) { return x[2]; }), tree: buildTree(catalog, ix, maskSecrets(data)), empty: false };
+  }
+
+  // Pretty-print, 2 spaces, the user's key order. Secrets hidden unless keepSecrets.
+  function format(text, keepSecrets) {
+    var parsed = parseSettings(text);
+    if (!parsed.ok) { return { ok: false, text: "", findings: [parsed.finding] }; }
+    return { ok: true, text: JSON.stringify(keepSecrets ? parsed.value : maskSecrets(parsed.value), null, 2), findings: [] };
+  }
+
+  // Split a parsed file into Build selection (catalog keys Build can edit) and passthrough
+  // (everything else, emitted unchanged), so a round trip loses nothing.
+  // Without keepSecrets: secret env values become "" and token-like text becomes HIDDEN; masked counts them.
+  function fromSettings(catalog, parsed, opts) {
+    var counter = { n: 0 };
+    var rest = opts && opts.keepSecrets ? clone(parsed) : maskDeep(parsed, "", "", counter);
+    var selection = {};
+    catalog.settings.forEach(function (e) {
+      var v = getPath(rest, e.key);
+      if (v === undefined) { return; }
+      if (e.asCommandObject) {
+        if (!isObj(v) || Object.keys(v).sort().join() !== "command,type" || v.type !== "command" || !validateValue(e, v.command).ok) { return; }
+        selection[e.key] = v.command;
+      } else {
+        if (!validateValue(e, v).ok) { return; }
+        if ((e.type === "stringList" && !v.length) || (e.type === "object" && !Object.keys(v).length)) { return; }
+        selection[e.key] = clone(v);
+      }
+      deletePath(rest, e.key);
+    });
+    return { selection: selection, passthrough: rest, masked: counter.n };
+  }
+
+  return {
+    FILES: FILES, loadCatalog: loadCatalog, find: find, initialValue: initialValue,
+    validateValue: validateValue, applyPreset: applyPreset, generate: generate,
+    check: check, format: format, fromSettings: fromSettings, maskSecrets: maskSecrets,
+    parseSettings: parseSettings, looksSecret: looksSecret
+  };
+})();
+</script>
+<script id="settings-tool-ui">
+// Page wiring only. Everything stays in the browser: nothing is sent, nothing is stored.
+(function () {
+  var core = SettingsCore;
+  var app = document.getElementById("st-app");
+  if (!app) { return; }
+  var catalog = core.loadCatalog(document.getElementById("settings-catalog").textContent);
+  var REF = "https://code.claude.com/docs/en/settings-reference";
+  var state = { target: "user", selection: {}, filter: "", pending: null, passthrough: null, loadNote: "" };
+  var rows = {};      // key -> { root, check, ctl, err, setControl }
+  var details = {};   // category -> { root, summary, list }
+
+  function el(tag, attrs, kids) {
+    var n = document.createElement(tag), k;
+    for (k in (attrs || {})) {
+      if (k === "text") { n.textContent = attrs[k]; } else { n.setAttribute(k, attrs[k]); }
+    }
+    (kids || []).forEach(function (c) { n.appendChild(c); });
+    return n;
+  }
+  function $(id) { return document.getElementById(id); }
+
+  /* ---- value controls ------------------------------------------------ */
+  function listLines(obj) {
+    return Object.keys(obj).map(function (k) { return k + "=" + obj[k]; }).join("\n");
+  }
+  function parseLines(text) {
+    var out = {}, bad = false;
+    text.split("\n").forEach(function (line) {
+      if (!line.trim()) { return; }
+      var i = line.indexOf("=");
+      if (i < 1) { bad = true; return; }
+      out[line.slice(0, i).trim()] = line.slice(i + 1);
+    });
+    return { value: out, bad: bad };
+  }
+
+  function buildControl(entry, onChange) {
+    var id = "st-c-" + entry.key.replace(/\./g, "-");
+    var input, wrap;
+    if (entry.type === "bool" || entry.type === "enum") {
+      var opts = entry.type === "bool" ? ["true", "false"] : entry.values;
+      input = el("select", { id: id, "aria-label": "Value for " + entry.key });
+      opts.forEach(function (o) { input.appendChild(el("option", { value: o, text: o })); });
+      input.addEventListener("change", function () {
+        onChange(entry.type === "bool" ? input.value === "true" : input.value);
+      });
+      return { node: input, set: function (v) { input.value = String(v); } };
+    }
+    if (entry.type === "number") {
+      input = el("input", { id: id, type: "number", step: entry.integer ? "1" : "any", "aria-label": "Value for " + entry.key });
+      if (entry.min !== undefined) { input.setAttribute("min", entry.min); }
+      if (entry.max !== undefined) { input.setAttribute("max", entry.max); }
+      input.addEventListener("input", function () { onChange(input.value === "" ? NaN : Number(input.value)); });
+      return { node: input, set: function (v) { input.value = isNaN(v) ? "" : String(v); } };
+    }
+    if (entry.type === "string") {
+      input = el("input", { id: id, type: "text", autocomplete: "off", spellcheck: "false", "aria-label": "Value for " + entry.key });
+      input.addEventListener("input", function () { onChange(input.value); });
+      return { node: input, set: function (v) { input.value = v; } };
+    }
+    if (entry.type === "object") {
+      input = el("textarea", { id: id, rows: "3", spellcheck: "false", "aria-label": "Value for " + entry.key, placeholder: entry.placeholder || "" });
+      input.addEventListener("input", function () {
+        var parsed = parseLines(input.value);
+        onChange(parsed.bad ? null : parsed.value);
+      });
+      return { node: input, set: function (v) { input.value = listLines(v); } };
+    }
+    // stringList: chips + add box + one-click suggestions
+    var current = [];
+    var chips = el("ul", { "class": "st-chips" });
+    var add = el("input", { type: "text", autocomplete: "off", spellcheck: "false", "aria-label": "Add item to " + entry.key });
+    var addBtn = el("button", { type: "button", "class": "st-btn", text: "Add" });
+    var sugg = el("div", { "class": "st-sugg" });
+    function commit(next) { current = next; paint(); onChange(current.slice()); }
+    function paint() {
+      chips.textContent = "";
+      current.forEach(function (item, idx) {
+        var rm = el("button", { type: "button", "class": "st-x", "aria-label": "Remove " + item, text: "×" });
+        rm.addEventListener("click", function () { commit(current.filter(function (_, j) { return j !== idx; })); });
+        chips.appendChild(el("li", { "class": "chip" }, [el("span", { text: item }), rm]));
+      });
+      sugg.textContent = "";
+      (entry.suggest || []).forEach(function (s) {
+        if (current.indexOf(s) >= 0) { return; }
+        var b = el("button", { type: "button", "class": "st-btn st-sug", text: "+ " + s });
+        b.addEventListener("click", function () { commit(current.concat([s])); });
+        sugg.appendChild(b);
+      });
+    }
+    function addTyped() {
+      var v = add.value.trim();
+      if (v && current.indexOf(v) < 0) { commit(current.concat([v])); }
+      add.value = "";
+    }
+    addBtn.addEventListener("click", addTyped);
+    add.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); addTyped(); } });
+    wrap = el("div", {}, [chips, el("div", { "class": "st-add" }, [add, addBtn]), sugg]);
+    return { node: wrap, set: function (v) { current = v.slice(); paint(); } };
+  }
+
+  /* ---- rows ---------------------------------------------------------- */
+  function buildRow(entry) {
+    var cid = "st-k-" + entry.key.replace(/\./g, "-");
+    var check = el("input", { type: "checkbox", id: cid });
+    var tags = [];
+    tags.push(el("span", { "class": "tag tag-inert", text: entry.scopes.length === 1 ? entry.scopes[0] + " file only" : "all files" }));
+    if (entry.lowersSafety) { tags.push(el("span", { "class": "tag tag-block", text: "lowers safety" })); }
+    if (entry.lowersSafetyValues) { tags.push(el("span", { "class": "tag tag-block", text: entry.lowersSafetyValues.join(", ") + " lowers safety" })); }
+    var link = el("a", {
+      href: REF + "#:~:text=" + encodeURIComponent(entry.key), target: "_blank",
+      rel: "noopener noreferrer", "aria-label": "Reference for " + entry.key, text: "ref"
+    });
+    var head = el("div", { "class": "st-head" }, [
+      el("label", { "for": cid }, [el("code", { text: entry.key })]), check
+    ].reverse().concat(tags, [link]));
+    var err = el("p", { "class": "st-err", role: "status" });
+    var ctl = buildControl(entry, function (v) {
+      state.selection[entry.key] = v;
+      refresh(entry.key);
+    });
+    var box = el("div", { "class": "st-ctl" }, [ctl.node]);
+    var bits = [head, el("p", { "class": "st-why", text: entry.why }), box, err];
+    var root = el("div", { "class": "st-row" }, bits);
+    check.addEventListener("change", function () {
+      if (check.checked) { state.selection[entry.key] = core.initialValue(entry); ctl.set(state.selection[entry.key]); }
+      else { delete state.selection[entry.key]; }
+      refresh(entry.key);
+    });
+    rows[entry.key] = { entry: entry, root: root, check: check, box: box, err: err, ctl: ctl };
+    return root;
+  }
+
+  function refreshRow(r) {
+    var entry = r.entry, key = entry.key, on = Object.prototype.hasOwnProperty.call(state.selection, key);
+    r.check.checked = on;
+    r.box.hidden = !on;
+    var msg = "";
+    if (on) {
+      var v = state.selection[key], res = core.validateValue(entry, v);
+      if (!res.ok) { msg = res.error + " Not written to the output."; }
+      else if (state.target !== "user" && entry.userOnlyValues && entry.userOnlyValues.indexOf(v) >= 0) {
+        msg = "This value is read from the user file only. It is removed from the output.";
+      }
+    }
+    r.err.textContent = msg;
+    var text = (entry.key + " " + entry.why).toLowerCase();
+    var show = entry.scopes.indexOf(state.target) >= 0 && (!state.filter || text.indexOf(state.filter) >= 0);
+    r.root.hidden = !show;
+  }
+
+  function refresh() {
+    var counts = {}, shown = {};
+    var out = core.generate(catalog, state.selection, state.target, state.passthrough);
+    Object.keys(rows).forEach(function (k) {
+      var r = rows[k];
+      refreshRow(r);
+      var c = r.entry.category;
+      if (!r.root.hidden) { shown[c] = (shown[c] || 0) + 1; }
+      // "on" counts only keys that reach the output file (not ones removed for this target).
+      if (r.check.checked && r.entry.scopes.indexOf(state.target) >= 0 && out.removed.indexOf(k) < 0) { counts[c] = (counts[c] || 0) + 1; }
+    });
+    catalog.categories.forEach(function (c) {
+      var d = details[c];
+      d.root.hidden = !shown[c];
+      d.summary.textContent = c + " (" + (counts[c] || 0) + " on)";
+      if (state.filter && shown[c]) { d.root.open = true; }
+    });
+    $("st-output").textContent = out.json;
+    $("st-file").textContent = core.FILES[state.target];
+    $("st-note").textContent = out.note;
+    var kept = state.passthrough ? Object.keys(state.passthrough) : [];
+    $("st-kept").textContent = (kept.length
+      ? "Kept as-is from your pasted file: " + kept.join(", ") + ". Pick a preset to start over. " : "") + state.loadNote;
+    var valid = true;
+    try { JSON.parse(out.json); } catch (e) { valid = false; }
+    $("st-status").textContent = out.count + (out.count === 1 ? " key" : " keys") +
+      (kept.length ? " + " + kept.length + " kept" : "") + " · " + (valid ? "valid" : "invalid");
+  }
+
+  function syncControls() {
+    Object.keys(rows).forEach(function (k) {
+      if (Object.prototype.hasOwnProperty.call(state.selection, k)) { rows[k].ctl.set(state.selection[k]); }
+    });
+  }
+
+  /* ---- build the page ------------------------------------------------ */
+  var catalogBox = $("st-catalog");
+  catalog.categories.forEach(function (c, i) {
+    var summary = el("summary", { text: c });
+    var list = el("div", {});
+    var root = el("details", {}, [summary, list]);
+    if (i === 0) { root.open = true; }
+    details[c] = { root: root, summary: summary, list: list };
+    catalogBox.appendChild(root);
+  });
+  catalog.settings.forEach(function (entry) { details[entry.category].list.appendChild(buildRow(entry)); });
+
+  var presetBox = $("st-presets"), confirmBox = $("st-confirm");
+  function applyNow(id) {
+    state.selection = core.applyPreset(catalog, id);
+    state.passthrough = null; state.loadNote = "";
+    state.pending = null; confirmBox.hidden = true;
+    syncControls(); refresh();
+  }
+  catalog.presets.forEach(function (p) {
+    var b = el("button", { type: "button", "class": "st-btn", text: p.label });
+    b.addEventListener("click", function () {
+      var n = Object.keys(state.selection).length + (state.passthrough ? Object.keys(state.passthrough).length : 0);
+      if (!n) { applyNow(p.id); return; }
+      state.pending = p.id;
+      $("st-confirm-text").textContent = "Replace your " + n + (n === 1 ? " pick" : " picks") + " with " + p.label + "?";
+      confirmBox.hidden = false;
+      $("st-confirm-yes").focus();
+    });
+    presetBox.appendChild(b);
+  });
+  $("st-confirm-yes").addEventListener("click", function () { if (state.pending) { applyNow(state.pending); } });
+  $("st-confirm-no").addEventListener("click", function () { state.pending = null; confirmBox.hidden = true; });
+
+  [].forEach.call(document.querySelectorAll('input[name="st-target"]'), function (r) {
+    r.addEventListener("change", function () { if (r.checked) { state.target = r.value; refresh(); } });
+  });
+  function setBuildTarget(t) {
+    state.target = t;
+    [].forEach.call(document.querySelectorAll('input[name="st-target"]'), function (r) { r.checked = r.value === t; });
+  }
+  $("st-filter").addEventListener("input", function (e) { state.filter = e.target.value.trim().toLowerCase(); refresh(); });
+
+  // Copy: clipboard when allowed, otherwise select the text so Ctrl+C works.
+  $("st-copy").addEventListener("click", function () {
+    var out = $("st-output"), msg = $("st-copied");
+    function fallback() {
+      var range = document.createRange();
+      range.selectNodeContents(out);
+      var sel = window.getSelection();
+      sel.removeAllRanges(); sel.addRange(range);
+      msg.textContent = "Text selected. Press Ctrl+C to copy.";
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(out.textContent).then(function () { msg.textContent = "Copied."; }, fallback);
+    } else { fallback(); }
+  });
+
+  /* ---- mode tabs ----------------------------------------------------- */
+  var tabs = [[$("st-tab-build"), $("st-build-panel")], [$("st-tab-check"), $("st-check-panel")]];
+  function selectTab(i, focus) {
+    tabs.forEach(function (t, j) {
+      t[0].setAttribute("aria-selected", i === j ? "true" : "false");
+      t[0].tabIndex = i === j ? 0 : -1;
+      t[1].hidden = i !== j;
+    });
+    if (focus) { tabs[i][0].focus(); }
+  }
+  tabs.forEach(function (t, i) {
+    t[0].addEventListener("click", function () { selectTab(i, false); });
+    t[0].addEventListener("keydown", function (e) {
+      var next = { ArrowRight: (i + 1) % tabs.length, ArrowLeft: (i + tabs.length - 1) % tabs.length, Home: 0, End: tabs.length - 1 }[e.key];
+      if (next !== undefined) { e.preventDefault(); selectTab(next, true); }
+    });
+  });
+
+  /* ---- Check mode ---------------------------------------------------- */
+  // Pasted text is untrusted: every value reaches the page through textContent (el's "text"),
+  // and the map and findings are built from a copy with secrets hidden.
+  var SHOW_MAX = 300;   // rows drawn per list; a huge paste stays responsive
+  var SEV = { error: ["tag tag-block", "\u25CF", "error"], warn: ["tag tag-inert", "\u25B2", "warn"], tip: ["tag tag-advise", "\u25CB", "tip"] };
+  var paste = $("st-paste"), keep = $("st-keep"), msgBox = $("st-check-msg");
+  var mapNodes = [];   // [{ path, node }] for finding -> node navigation
+
+  function checkTarget() {
+    var r = document.querySelector('input[name="st-check-target"]:checked');
+    return r ? r.value : "user";
+  }
+  function plural(n, one, many) { return n + " " + (n === 1 ? one : many); }
+  function sevTag(sev, label) {
+    var s = SEV[sev];
+    return el("span", { "class": s[0] }, [el("span", { "aria-hidden": "true", text: s[1] + " " }), el("span", { text: label || s[2] })]);
+  }
+
+  // Best map node for a finding path: itself, else its nearest ancestor, else its first descendant.
+  function nodeFor(path) {
+    var best = null, bestLen = -1, child = null;
+    mapNodes.forEach(function (m) {
+      if (m.path === path) { best = m; bestLen = Infinity; return; }
+      if (path && (path.indexOf(m.path + ".") === 0 || path.indexOf(m.path + "[") === 0) && m.path.length > bestLen) { best = m; bestLen = m.path.length; }
+      if (!child && path && (m.path.indexOf(path + ".") === 0 || m.path.indexOf(path + "[") === 0)) { child = m; }
+    });
+    return best || child;
+  }
+  function goTo(path) {
+    var m = nodeFor(path);
+    if (!m) { return; }
+    [].forEach.call($("st-map").querySelectorAll(".st-hit"), function (n) { n.classList.remove("st-hit"); });
+    m.node.classList.add("st-hit");
+    m.node.scrollIntoView({ block: "nearest" });
+    m.node.focus({ preventScroll: true });
+  }
+
+  function addNode(list, path, kids) {
+    var li = el("li", { "class": "st-node", "data-path": path, tabindex: "-1" }, kids);
+    mapNodes.push({ path: path, node: li });
+    list.appendChild(li);
+    return li;
+  }
+  function capped(items, list, draw) {
+    items.slice(0, SHOW_MAX).forEach(draw);
+    if (items.length > SHOW_MAX) { list.appendChild(el("li", { "class": "st-hint", text: (items.length - SHOW_MAX) + " more not shown." })); }
+  }
+
+  function renderMap(tree) {
+    var map = $("st-map");
+    map.textContent = ""; mapNodes = [];
+    if (tree.permissions) {
+      var perms = el("div", { "class": "st-perms" });
+      map.appendChild(el("h4", { text: "Permissions" }));
+      map.appendChild(el("p", { "class": "st-hint", text: "Checked in this order: deny, then ask, then allow. The first match wins." }));
+      ["deny", "ask", "allow"].forEach(function (n) {
+        var rules = tree.permissions[n], ul = el("ul", { "class": "st-tree" });
+        var col = el("div", { "class": "st-col", "data-path": "permissions." + n, tabindex: "-1" },
+          [el("p", { "class": "st-colhead" }, [el("code", { text: n }), el("span", { text: " " + rules.length })]), ul]);
+        mapNodes.push({ path: "permissions." + n, node: col });
+        capped(rules, ul, function (r) { addNode(ul, r.path, [el("code", { text: r.rule })]); });
+        perms.appendChild(col);
+      });
+      map.appendChild(perms);
+    }
+    if (tree.hooks.length) {
+      var hl = el("ul", { "class": "st-tree" });
+      map.appendChild(el("h4", { text: "Hooks (read-only)" }));
+      capped(tree.hooks, hl, function (h) {
+        addNode(hl, h.path, [el("span", { text: h.event }), el("span", { "class": "st-sep", "aria-hidden": "true", text: "\u25B8" }),
+          el("span", { text: h.matcher }), el("span", { "class": "st-sep", "aria-hidden": "true", text: "\u25B8" }), el("code", { text: h.command })]);
+      });
+      map.appendChild(hl);
+    }
+    function group(title, items) {
+      var ul = el("ul", { "class": "st-tree" });
+      map.appendChild(el("h4", { text: title }));
+      capped(items, ul, function (it) { addNode(ul, it.path, [el("code", { text: it.path }), el("span", { "class": "st-val", text: it.value })]); });
+      map.appendChild(ul);
+    }
+    tree.categories.forEach(function (c) { group(c.name, c.items); });
+    if (tree.other.length) { group("Other keys (kept as-is)", tree.other); }
+    if (!map.firstChild) { map.appendChild(el("p", { "class": "st-hint", text: "The file is an empty object." })); }
+  }
+
+  function renderFindings(findings) {
+    var list = $("st-findings"), n = { error: 0, warn: 0, tip: 0 };
+    list.textContent = "";
+    findings.forEach(function (f) { n[f.severity]++; });
+    $("st-findings-head").textContent = "Findings (" + plural(n.error, "error", "errors") + " \u00B7 " +
+      plural(n.warn, "warning", "warnings") + " \u00B7 " + plural(n.tip, "tip", "tips") + ")";
+    if (!findings.length) { list.appendChild(el("li", { text: "No problems found." })); }
+    capped(findings, list, function (f) {
+      var where = el("button", { type: "button", "class": "st-path", text: f.path || "whole file", "aria-label": f.id + " at " + (f.path || "whole file") + ": show in map" });
+      where.addEventListener("click", function () { goTo(f.path); });
+      var msg = el("div", { "class": "st-msg" }, [el("span", { text: f.problem }), el("span", { "class": "st-fixline", text: "Fix: " + f.fix })]);
+      if (f.action) {
+        var b = el("button", { type: "button", "class": "st-btn", text: f.action.label });
+        b.addEventListener("click", function () { loadIntoBuild(f.action.add); });
+        msg.appendChild(b);
+      }
+      list.appendChild(el("li", {}, [sevTag(f.severity, f.severity + " " + f.id), where, msg]));
+      var m = nodeFor(f.path);
+      if (m) { m.node.appendChild(sevTag(f.severity, f.id)); }
+    });
+  }
+
+  function showFormatted(text) {
+    $("st-formatted").textContent = text;
+    $("st-formatted-box").hidden = !text;
+  }
+  function runCheck() {
+    var res = core.check(catalog, paste.value, checkTarget());
+    if (res.empty) { msgBox.textContent = "Paste a settings.json first."; $("st-results").hidden = true; showFormatted(""); return res; }
+    msgBox.textContent = "";
+    // The formatted view always shows the text that was just checked, never an older paste.
+    if (!$("st-formatted-box").hidden) { showFormatted(core.format(paste.value, keep.checked).text); }
+    if (res.tree) { renderMap(res.tree); } else { $("st-map").textContent = ""; mapNodes = []; }
+    renderFindings(res.findings);
+    $("st-results").hidden = false;
+    return res;
+  }
+  // A paste deep enough to overflow the stack must not break the page.
+  function safely(fn) {
+    return function () {
+      try { fn.apply(null, arguments); } catch (e) { msgBox.textContent = "This text is too large or too deeply nested to check here."; }
+    };
+  }
+
+  function loadIntoBuild(add) {
+    var res = runCheck();
+    if (res.empty) { return; }
+    var parsed = core.parseSettings(paste.value);
+    if (!parsed.ok || parsed.value === null || typeof parsed.value !== "object" || Array.isArray(parsed.value)) {
+      msgBox.textContent = "Fix the errors above first. Only a valid settings object can be loaded into Build.";
+      return;
+    }
+    var loaded = core.fromSettings(catalog, parsed.value, { keepSecrets: keep.checked });
+    state.selection = loaded.selection;
+    state.passthrough = Object.keys(loaded.passthrough).length ? loaded.passthrough : null;
+    state.loadNote = loaded.masked
+      ? plural(loaded.masked, "secret value was", "secret values were") + " removed. Set them in your shell or with apiKeyHelper, or tick \u201CKeep secret values\u201D in Check." : "";
+    Object.keys(add || {}).forEach(function (k) {
+      var cur = state.selection[k] || [];
+      state.selection[k] = cur.concat(add[k].filter(function (x) { return cur.indexOf(x) < 0; }));
+    });
+    state.pending = null; confirmBox.hidden = true;
+    setBuildTarget(checkTarget());
+    syncControls(); refresh();
+    selectTab(0, true);
+  }
+
+  $("st-check").addEventListener("click", safely(runCheck));
+  $("st-format").addEventListener("click", safely(function () {
+    var out = core.format(paste.value, keep.checked);
+    if (!paste.value.trim()) { showFormatted(""); msgBox.textContent = "Paste a settings.json first."; return; }
+    showFormatted(out.text);
+    if (!out.ok) { runCheck(); }
+  }));
+  $("st-edit").addEventListener("click", safely(function () { loadIntoBuild(null); }));
+  keep.addEventListener("change", function () { if (!$("st-formatted-box").hidden) { showFormatted(core.format(paste.value, keep.checked).text); } });
+
+  refresh();
+})();
+</script>
+</section>
+
 <section id="install-variants">
 <h2>Install variants</h2>
 <p class="lead"><strong>Fork install</strong> — export your username first and swap it into the URL:</p>
@@ -534,37 +1750,41 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <h2>Agent roles</h2>
 <p class="lead">
   Four roles are directly spawnable via the <code>Agent</code> tool, each scoped to a single
-  <code>TASK_GUIDE</code>. A fifth file, <code>general-agent-template</code>, is <strong>not a
-  spawnable role</strong> — the shared base template they all inherit.
+  <code>TASK_GUIDE</code>. Their shared base, <code>general-agent-template</code>, is <strong>not a
+  spawnable role</strong>; it lives in <code>templates/</code>.
 </p>
 
 <div class="agent-card">
   <div class="name">backend-developer</div>
-  <div class="subtype"><code>subagent_type: backend-developer</code></div>
+  <div class="subtype"><code>subagent_type: backend-developer</code><span class="swatch" data-color="blue"></span>blue</div>
+  <p class="trigger">Use when a TASK_GUIDE assigns server-side work — a new API endpoint, a service or business-logic change, or a data-access fix.</p>
   <p>Core backend engineering role — server-side APIs, services, business logic, and data-access layers, built test-first.</p>
 </div>
 
 <div class="agent-card">
   <div class="name">common-infrastructure</div>
-  <div class="subtype"><code>subagent_type: common-infrastructure</code></div>
+  <div class="subtype"><code>subagent_type: common-infrastructure</code><span class="swatch" data-color="orange"></span>orange</div>
+  <p class="trigger">Use when a task needs worktree setup, dependency installs, migrations or shared config.</p>
   <p>Environment and shared-config specialist — worktree setup, migrations, shared services; always runs first before implementers start.</p>
 </div>
 
 <div class="agent-card">
   <div class="name">frontend-developer</div>
-  <div class="subtype"><code>subagent_type: frontend-developer</code></div>
+  <div class="subtype"><code>subagent_type: frontend-developer</code><span class="swatch" data-color="purple"></span>purple</div>
+  <p class="trigger">Use when a TASK_GUIDE assigns client-side work — a new UI component, a client-state or interaction change, or an accessibility fix.</p>
   <p>Core frontend engineering role — UI components, client-side state, interactions, and accessibility, built test-first.</p>
 </div>
 
 <div class="agent-card">
   <div class="name">qa-expert</div>
-  <div class="subtype"><code>subagent_type: qa-expert</code></div>
+  <div class="subtype"><code>subagent_type: qa-expert</code><span class="swatch" data-color="green"></span>green</div>
+  <p class="trigger">Use when a task needs independent verification — checking a finished task's Acceptance Criteria with evidence, extending the smoke suite, or a regression check before merge.</p>
   <p>Quality and evaluation role — owns the smoke suite, regression safety, and independent verification of acceptance criteria.</p>
 </div>
 
 <div class="agent-card">
   <div class="name">general-agent-template</div>
-  <div class="subtype">not directly spawnable — shared base only</div>
+  <div class="subtype">not directly spawnable — shared base only, in <code>templates/</code></div>
   <p>Base template inherited by all four roles above. Contains the universal Base Rules, engineering principles, and output requirements that are not restated per role. It has no <code>subagent_type</code> of its own and is never spawned directly.</p>
 </div>
 </section>
@@ -643,13 +1863,15 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <tbody>
 <tr><td data-label="Event">PreToolUse</td><td data-label="Matcher"><code>Agent</code></td><td data-label="Script"><code>pre_<wbr>agent_<wbr>validate_<wbr>guide.py</code></td><td data-label="Behavior"><span class="tag tag-block">blocks</span> spawn if the TASK_GUIDE is missing; otherwise only <span class="tag tag-advise">advises</span> (never blocks) <details><summary>When it advises</summary><ul><li>The spawn prompt has no memory slice or no <code>**Startup reads**</code> block</li><li>A <code>Depends on</code> task is not Done</li><li>A task's Demonstration BEFORE is still blank</li></ul></details></td></tr>
 <tr><td data-label="Event">PreToolUse</td><td data-label="Matcher"><code>Bash</code></td><td data-label="Script"><code>pre_<wbr>bash_<wbr>block_<wbr>unsafe_<wbr>merge.py</code></td><td data-label="Behavior"><span class="tag tag-block">blocks</span> git push/merge if pipeline gates are unsatisfied</td></tr>
-<tr><td data-label="Event">PreToolUse</td><td data-label="Matcher"><code>Edit|Write|Bash</code></td><td data-label="Script"><code>pre_<wbr>tool_<wbr>sensitive_<wbr>path.py</code></td><td data-label="Behavior"><span class="tag tag-block">asks</span> you to confirm before a call touches a path listed in <code>.claude/<wbr>sensitive-<wbr>paths.txt</code> — unless the active task's guide predicted that exact path <details><summary>What the list covers</summary><p><code>.env*</code>, secrets, production configs, infra.</p></details></td></tr>
+<tr><td data-label="Event">PreToolUse</td><td data-label="Matcher"><code>Edit|<wbr>Write|<wbr>Bash</code></td><td data-label="Script"><code>pre_<wbr>tool_<wbr>sensitive_<wbr>path.py</code></td><td data-label="Behavior"><span class="tag tag-block">asks</span> you to confirm before a call touches a path listed in <code>.claude/<wbr>sensitive-<wbr>paths.txt</code> — unless the active task's guide predicted that exact path <details><summary>What the list covers</summary><p><code>.env*</code>, secrets, production configs, infra.</p></details></td></tr>
 <tr><td data-label="Event">PreToolUse</td><td data-label="Matcher"><code>.*</code></td><td data-label="Script"><code>pre_<wbr>agent_<wbr>step_<wbr>limit.py</code></td><td data-label="Behavior"><span class="tag tag-block">blocks</span> a task's tool call once it exceeds the step limit (default <strong>90</strong>) — self-clearing on the very next call</td></tr>
 <tr><td data-label="Event">PostToolUse</td><td data-label="Matcher"><code>Write</code></td><td data-label="Script"><code>post_<wbr>write_<wbr>register_<wbr>task.py</code></td><td data-label="Behavior"><span class="tag tag-advise">advises</span> — auto-registers new TASK_GUIDE files on the board</td></tr>
 <tr><td data-label="Event">PostToolUse</td><td data-label="Matcher"><code>Agent</code></td><td data-label="Script"><code>post_<wbr>agent_<wbr>move_<wbr>to_<wbr>review.py</code></td><td data-label="Behavior"><span class="tag tag-inert">inert</span> — <strong>does not move anything and does not touch any step counter</strong>; it only prints a reminder to move the row by hand <details><summary>Why by hand</summary><p>The reminder is for the Supervisor. The hand move is deliberate, after two past defects made the automatic move actively harmful.</p></details></td></tr>
 <tr><td data-label="Event">PostToolUse</td><td data-label="Matcher"><code>Bash</code></td><td data-label="Script"><code>post_<wbr>bash_<wbr>memory_<wbr>update.py</code></td><td data-label="Behavior"><span class="tag tag-advise">advises</span> — prompts a diff-driven memory-update pass after git push/merge/pull</td></tr>
 <tr><td data-label="Event">PostToolUse</td><td data-label="Matcher"><code>.*</code></td><td data-label="Script"><code>post_tool_trace.py</code></td><td data-label="Behavior"><span class="tag tag-advise">advises</span> — appends every tool call to <code>memory/<wbr>event-<wbr>trace/<wbr>&lt;task&gt;.jsonl</code>; <code>scripts/<wbr>verify_<wbr>trace.py &lt;task&gt;</code> reports whether the trace still matches <details><summary>How an edit shows</summary><p>Each line is linked to the one before by a hash chain, with a copy of each line's hash kept outside the repo under <code>~/.claude/<wbr>harness-<wbr>anchors/</code>.</p></details></td></tr>
 <tr><td data-label="Event">Stop</td><td data-label="Matcher">—</td><td data-label="Script"><code>stop_<wbr>review_<wbr>reminder.py</code></td><td data-label="Behavior"><span class="tag tag-advise">advises</span> — reminds the Supervisor to run Stage 4 review for pending tasks</td></tr>
+<tr><td data-label="Event">Stop</td><td data-label="Matcher">—</td><td data-label="Script"><code>stop_<wbr>auto_<wbr>mode_<wbr>check.py</code></td><td data-label="Behavior"><span class="tag tag-block">blocks</span> the end of an <code>[auto]</code> run until its final report checks out — once; the second try stops <details><summary>What it checks</summary><ul><li>The report is in its file, marked <code>Mode: auto</code></li><li>Each Medium/High-risk choice was argued by 2 or 3 Advocates</li><li>Stage 4 review ran</li></ul></details></td></tr>
+<tr><td data-label="Event">Stop</td><td data-label="Matcher">—</td><td data-label="Script"><code>stop_<wbr>auto_<wbr>verify.py</code></td><td data-label="Behavior"><span class="tag tag-advise">advises</span> — starts one headless <code>/verify</code> run per commit for an <code>[auto]</code> task that waits for review <details><summary>What the run does</summary><ul><li>It writes the <code>verify</code> row and a run record</li><li>The merge gate accepts that row only with the record</li><li>The merge stays yours</li></ul></details></td></tr>
 </tbody>
 </table>
 </div>
@@ -797,7 +2019,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <section id="mcps">
 <h2>MCPs</h2>
 <p class="lead">
-  Two separate companion tools, not part of this kit: MCP servers you can run alongside it, each from its own repository.
+  Three separate companion tools, not part of this kit: MCP servers you can run alongside it, each from its own repository.
 </p>
 
 <div class="agent-card" id="verifier">
@@ -829,6 +2051,21 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 </ul>
 <p><a href="https://github.com/thunderkds/easy-ui-mcp" target="_blank" rel="noopener noreferrer">easy-ui-mcp on GitHub</a></p>
 </div>
+
+<div class="agent-card" id="easy-memory-mcp">
+<h3>easy-memory-mcp</h3>
+<p class="lead">
+  A separate companion tool, optional and not part of this kit: an MCP server that saves what a session found out and hands it to the next one.
+</p>
+<ul>
+  <li>Without it installed, the kit runs as before — it is optional and not needed</li>
+  <li>After a long answer it saves a local note; your next prompt gets a short index of matching notes</li>
+  <li>MCP tools <code>memory_search</code>, <code>memory_read</code>, <code>memory_list</code> and <code>memory_forget</code>, plus a per-repo on/off switch and a report of sessions with memory on against off</li>
+  <li>One file, standard library only; notes are saved in clear text with mode 0600, so only you can read them</li>
+  <li>A working prototype: about 28% fewer tokens in scripted tests (experiment 03), not yet measured on real work</li>
+</ul>
+<p><a href="https://github.com/thunderkds/easy-memory-mcp" target="_blank" rel="noopener noreferrer">easy-memory-mcp on GitHub</a></p>
+</div>
 </section>
 
 <section id="options">
@@ -844,7 +2081,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 </section>
 
 <footer>
-  personal-agentic-claude — v2.1.0 release. This page is generated content, drift-tested against the
+  personal-agentic-claude — v2.2.0 release. This page is generated content, drift-tested against the
   live <code>agents/</code> and <code>skills/</code> directories by <code>tests/test_site_content.py</code>.
 </footer>
 </main>

@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git *)",
+      "Bash(bash *)",
+      "Bash(npm test)",
+      "Read(./src/**)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "tee /tmp/claude-hook-input.json | python3 .claude/hooks/check.py" }
+        ]
+      }
+    ]
+  }
+}

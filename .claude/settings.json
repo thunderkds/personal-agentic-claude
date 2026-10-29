@@ -93,6 +93,24 @@
             "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stop_review_reminder.py"
           }
         ]
+      },
+      {
+        "description": "Auto mode (T180 D8): block the stop until the final report holds up — report file, Advocates per Risk, Stage 4",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stop_auto_mode_check.py"
+          }
+        ]
+      },
+      {
+        "description": "Auto verify (T182): for a Mode: auto task at Ready for Review, start one detached headless /verify run per head commit; the run writes the verify row and its record",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stop_auto_verify.py"
+          }
+        ]
       }
     ]
   },

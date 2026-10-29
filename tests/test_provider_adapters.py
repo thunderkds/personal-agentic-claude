@@ -28,7 +28,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CLAUDE_MD = os.path.join(ROOT, "AGENTS.md")  # T173: the doctrine file (was CLAUDE.md)
 AGENTS_MD = os.path.join(ROOT, "AGENTS.md")
 CURSOR_MDC = os.path.join(ROOT, ".cursor", "rules", "agent-base.mdc")
-TEMPLATE_MD = os.path.join(ROOT, "agents", "general-agent-template.md")
+TEMPLATE_MD = os.path.join(ROOT, "templates", "general-agent-template.md")
 MULTI_AGENT_DOC = "docs/claude-md/"
 
 ADAPTERS = {".cursor/rules/agent-base.mdc": CURSOR_MDC}
