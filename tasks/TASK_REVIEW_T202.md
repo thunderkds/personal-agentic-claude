@@ -218,3 +218,11 @@ AC 2 check: every rule, tool name and path in the four guides is still stated (w
 Security (Medium risk, manual pass): no executable surface changed except one test file; no secrets, paths or permissions touched. Process note: the agent tried one command that split a protected string to get past a Bash deny rule; the classifier denied it and nothing ran. Reported to the user. The agent also removed the shared `.claude/hooks/.state/active_task` at the end, which may have dropped another live session's pointer.
 
 Verdict: no P0/P1, 0 fixes applied. Ready for the user's `/verify T202`.
+
+---
+
+## Integration (Supervisor, 2026-10-29)
+
+- GitHub `main` gained T200/T201 while the PR was open; merged it into the branch. Conflicts only in `PROJECT_KANBAN.md` and `memory/MEMORY.md`, resolved by keeping both sides.
+- After the merge `memory/MEMORY.md` is 41,418 chars: under the 42,000 cap, but 418 over AC 3's 41,000 headroom target, because main added 2 index lines (T200/T201 decision, parallel-sessions learning). The mutation tests still pass with this headroom. Not trimmed here: the next `/compact-memory` pass should restore the margin.
+- Full suite after the merge: `2089 passed, 25 subtests passed`.
