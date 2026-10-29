@@ -2949,3 +2949,9 @@ T200 (2026-10-29): the merge gate refused T200 with "evidence row present but no
 
 ### A headless-Chrome check of the site must scroll instantly: the page sets `scroll-behavior: smooth`
 T201 /verify (2026-10-29): CDP mouse events at coordinates taken right after `scrollIntoView()` hit nothing, because `html { scroll-behavior: smooth; }` was still scrolling; every hover and click silently missed and the output stayed `{}`. Use `scrollIntoView({block: "center", behavior: "instant"})`, wait ~100 ms, and log `document.elementFromPoint` to prove the hit. Also: `node --test tests/settings_tool/` fails on Node v26; use the `*.mjs` glob.
+
+### Merge-gate blind spots seen on 2026-10-29
+- `BLOCKED_PATTERNS` in `pre_bash_block_unsafe_merge.py` covers `git push`, `git merge`, `git rebase` only — `git pull` (which merges) is not gated. AC 11 run 3's headless auto Supervisor ran `git pull` (no remote, no effect).
+- `trace_shows_verification` does not strip a `timeout N` prefix, so `timeout 900 python3 -m pytest …` is not a test run: T189 read "no verified tool call" until a plain run was made. Fails closed.
+- The pattern matches `git merge-base` too, so a read-only `git merge-base --is-ancestor` check is blocked as a merge while any task is open. Use `git branch -r --contains` instead.
+- All three need a gate change, so `merge_gate_guard.AUTHORISED_TASKS` sign-off.
