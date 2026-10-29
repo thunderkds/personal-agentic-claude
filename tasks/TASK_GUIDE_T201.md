@@ -77,7 +77,7 @@ User, 2026-10-29, verbatim: "for the settings support section from the page, cur
 ### Verification Command
 
 ```bash
-node --test tests/settings_tool/ && python3 -m pytest tests/test_site_content.py -q
+node --test tests/settings_tool/*.mjs && python3 -m pytest tests/test_site_content.py -q
 ```
 
 ### Evidence
