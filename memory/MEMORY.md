@@ -81,7 +81,7 @@
 - [T021/T022/T023: craft-spawn-prompt skill + hardened spawn-hook](decisions.md) — spawn-hook matches structural Txxx refs only
 - [T025: craft-agent skill (optional, supplemental)](decisions.md) — draft-only drafter for .claude/agents/*.md
 - [T027: DDR (Design Decision Record)](decisions.md) — 2-of-3 gate, docs/ddr/NNNN-title.md; ADR demoted to the rare 3-of-3 escalation
-- [Fidelity Gate: hallucination check in write-better-skill](decisions.md) — teach/craft-agent each gain a pre-Emit step: traceability to PRD/PROJECT_SPEC/user words, Skill()/Agent() ref resolution (unresolved →
+- [Fidelity Gate: hallucination check in write-better-skill](decisions.md) — teach/craft-agent trace each claim to PRD/spec/user words and resolve Skill()/Agent() refs before Emit
 - [Direct-to-repo install, no central clone → ADR-0001](decisions.md) — temp-clone-copy-discard replaces ~/.supervisor symlink model
 - [T031/T032/T033 merged: the direct-install trio](decisions.md) — shared lib/harness-fetch.sh + per-file harness-lock.json + hash-lock update
 - [T024/T026 merged: two merge-gate regex fixes](decisions.md) — agent-field extraction, and the template's own example verify row (2 compounding bugs)
@@ -121,7 +121,7 @@
 - [The default search tool skips dot-directories](learnings.md) — `.cursor/rules/agent-base.mdc` is invisible to it
 - [Canon at plain root, `.claude/` reaches it via relative symlinks](decisions.md) — `skills/`+`agents/` are the tracked canon
 - [Moving a conventionally-read path obliges every installer to bridge it](learnings.md) — `MANIFEST` moved the canon, `update.sh` never got the link.
-- [Untracked files in the main checkout never reach a worktree](learnings.md) — commit the TASK_GUIDE and every doc its Requirement Refs cite *before* spawning, or the agent files a false defect against its own
+- [Untracked files in the main checkout never reach a worktree](learnings.md) — commit the TASK_GUIDE and the docs it cites before spawning
 - [Stage 3 spawns must be detached with `setsid`](learnings.md) — `acceptEdits` covers file edits only, never Bash
 - [Packs are additive-only, core unchanged](decisions.md) — pack agents/skills symlink alongside core; never replace core resources
 - [Pack install: --pack=<name> flag or interactive prompt](decisions.md) — no packs in non-interactive mode by default; users opt in explicitly
@@ -171,7 +171,7 @@
 - [Never quote a `###` heading inside a KANBAN row](learnings.md) — `find_kanban_section`'s `(?=###|\Z)` truncates the section there
 - [A defect can reproduce itself during its own write-up](learnings.md) — T045's guide auto-registered a row whose title contained `###`, truncating Todo so T044/T040/T041 vanished
 - [security-review now actually runs](learnings.md) — fixed 2026-07-23 with user consent via `git remote add origin <same-url>` + `set-head origin main`
-- [CLAUDE.md gains Supervisor Communication Style section, 2026-08-03](decisions.md) — lives in the harness's master CLAUDE.md so setup.sh propagates to other repos (not machine-level `~/.claude/CLAUDE.md`, wrong
+- [CLAUDE.md gains Supervisor Communication Style section, 2026-08-03](decisions.md) — in the kit's CLAUDE.md so setup.sh propagates it, not `~/.claude/CLAUDE.md`
 - [CLAUDE.md gains context-overwhelm self-monitoring rule, 2026-08-03](decisions.md) — the Supervisor's own long-session accuracy, judged off
 - [New skill: compact-advisor, 2026-08-03](decisions.md) — operationalizes the self-monitoring rule above, dual-triggered (automatic + `/compact-advisor` manual)
 - [T049 merged: CLAUDE.md split 565→198 lines, 2026-08-04](decisions.md) — 5 docs/claude-md/ files
@@ -181,16 +181,16 @@
 - [An env var set inside a Bash tool call is invisible to hooks](learnings.md) — hooks are spawned by the harness as *siblings* of the tool call, so they inherit the harness env, not the command's subshell
 - [T048 done: hook suite isolated from ambient active-task state](decisions.md) — StateFileOverride at BOTH entry points
 - [An importlib-loaded module is a different object from the imported one](learnings.md) — `spec_from_file_location` bypasses `sys.modules`, so a conftest fixture patching a module-level constant patches a
-- [Nest isolation at the test-function level, not inside the shared helper](learnings.md) — wrapping the shared `resolve()` helper would clobber the explicitly-armed overrides that slot-2 tests depend on, deleting
+- [Nest isolation at the test-function level, not inside the shared helper](learnings.md) — wrapping `resolve()` clobbers the overrides slot-2 tests arm
 - [A feature whose suite only passes while the feature is unused](learnings.md) — armed: 9 failed / unarmed: 121 passed
-- [$CLAUDE_PROJECT_DIR: set for hooks, EMPTY in an agent's Bash tool call](learnings.md) — the hook side can resolve paths from it, the agent side cannot; embed a literal absolute path in the spawn prompt instead
-- [A "never raises" contract does not cover module import](learnings.md) — `int(os.environ...)` at import raised below the contract, and callers' fail-open `except Exception` around the import turned it into silent
+- [$CLAUDE_PROJECT_DIR: set for hooks, EMPTY in an agent's Bash tool call](learnings.md) — embed a literal absolute path in the spawn prompt
+- [A "never raises" contract does not cover module import](learnings.md) — an `int(os.environ...)` at import raised below the contract; callers' fail-open `except` hid it
 - [A test that shares a root can't detect a root-split defect](learnings.md) — T047's write/read paths collapse inside one worktree
 - ["It runs now" is not "it applies now"](learnings.md) — the built-in diffs the **checked-out** branch vs `origin/HEAD`
 - [Working-tree-vs-HEAD is a scope guard, not a repeatable test](learnings.md) — works exactly once, pre-commit
 - [post_agent_move_to_review.py fires at spawn, not completion](learnings.md) — PostToolUse/`Agent` fires when the async spawn is *issued*, so the board says Ready for Review before work exists
 - [`git diff --stat` can't verify a sub-agent's claim](learnings.md) — untracked files show nowhere in it; use `git status --short` + `git log --oneline`
-- ["Already covered" must mean reaches-the-context](learnings.md) — not "exists in the repo"; CLAUDE.md isn't in the sub-agent read list and `tdd` is invocation-triggered, so both "cover" things they never deliver
+- ["Already covered" must mean reaches-the-context](learnings.md) — not "exists in the repo": CLAUDE.md and `tdd` never reach a sub-agent unless sent
 - [Agent files must not tell sub-agents to write memory](learnings.md) — backend/frontend/qa.md + CLAUDE_LEGACY.md had "Update MEMORY.md"
 - [html-report findings use `<pre>`](learnings.md) — never manually HTML-escape finding text; wrap in `<pre>` to handle `<`, `>`, `&` safely
 - [Report filename: skill_branch_timestamp.html](learnings.md) — `reports/<skill>_<branch>_<YYYYMMDDTHHMMSS>.html`; sortable, collision-free
@@ -199,7 +199,7 @@
 - [Sub-agent "changed" ≠ committed](learnings.md) — always `git status --short` the worktree and check `git diff <base> --stat` against the TASK_GUIDE's predicted files before trusting a merge
 - [Ghostty spawn marker can silently fail](learnings.md) — T028/T046: sub-agent finished correct work but the `.done` marker was never written and the wait-loop reported nothing
 - [`git checkout -- <file>` is guardrail-blocked](learnings.md) — not just `checkout .`
-- [Kanban merge hygiene when both sides edit the board](learnings.md) — restore Supervisor-side PROJECT_KANBAN.md to the merge base BEFORE merging (only branch changed it → no conflict), merge, THEN move to Done
+- [Kanban merge hygiene when both sides edit the board](learnings.md) — restore the Supervisor-side board to the merge base, merge, THEN move to Done
 - [Install-era shell gotchas (T031–T033)](learnings.md) — temp-dir cleanup must expose a var not stdout (`$(fn)` registers the EXIT trap in a subshell)
 - [T064 merged: reviewer sections split out of the implementer's guide](decisions.md) — Demonstration + Evidence move to TASK_REVIEW_Txxx.md
 - [A hook that blocks via stdout JSON fails OPEN when it raises](learnings.md) — fail-closed must be actively emitted, never obtained by
@@ -243,7 +243,7 @@
 - [A naive metric can measure your own process instead of the thing](learnings.md) — "5 of 49 tasks read MEMORY.md" was measuring when the Supervisor's own pointer-arming step runs, not agent behaviour
 - [When a test pins prose, fix the prose around it, not the test](learnings.md) — T060's first P2 attempt reworded a payload field list a test asserted verbatim
 - [The register hook stubs a Kanban row you are about to write by hand](learnings.md) — `post_write_register_task.py` fires on the Write of a TASK_GUIDE and auto-registers a minimal Todo row
-- [A memory pass is uncommitted work like any other, and stashes hide it](learnings.md) — T046 shipped with a merged commit, passing tests and a closed row, yet `grep T046 memory/` was empty two weeks later: its
+- [A memory pass is uncommitted work like any other, and stashes hide it](learnings.md) — T046 merged with its memory pass left in a stash; commit the pass
 - [T073 merged: the memory hook now tells the truth about tracked files](decisions.md) — a sentence was the defect, not logic
 - [thinking-report: trigger, tags, table styling](learnings.md) — auto after Stage 0.5b direction approval + Stage 2 confirmation (`session=<type> task=<ID> branch=<branch>`)
 - [Pack gates, agent boundaries and install](learnings.md) — gates by domain: mobile→ui-accessibility, data→pipeline-safety, devops→infra-safety, ai-agent→eval-design, api→contract-review
@@ -333,5 +333,5 @@
 - [Report / Report Slot / Scoring Dimension / Report Session](glossary.md) — canonical terms for the html-report skill and Stage 4 reporting system
 - [Thinking Report / Trade-Off Matrix / Thinking Session](glossary.md) — canonical terms for the thinking-report skill and Stage 0.5–2 decision system
 - [Pack / Core framework / Pack agent](glossary.md) — canonical terms for the optional pack system
-- [T095: merge gate reads worktree evidence; heredoc bodies are data] — main checkout first, then live worktrees; `.claude/hooks/lib/shell_data.py` strips heredocs before push-matching. → decisions.md, learnings.md
+- [T095: merge gate reads worktree evidence; heredoc bodies are data] — main checkout first, then worktrees; `lib/shell_data.py` strips heredocs. → decisions.md, learnings.md
 - [T099: quoted spans are sometimes code] — naive quoted-span stripping would ALLOW `bash -c "git push"`. Needs wrapper-awareness. → tasks/TASK_GUIDE_T099.md
