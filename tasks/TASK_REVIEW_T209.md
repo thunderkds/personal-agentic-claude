@@ -67,8 +67,18 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured before any implementation commit, on the unchanged hook (`.claude/hooks/stop_auto_verify.py`, blob `1a28232`, HEAD `cd98cec`). Throwaway project with the kit's hooks, stub `claude` on PATH printing a report whose only verdict line is `**Verdict:** PASS | FAIL | BLOCKED | SKIP`; real `--start` path. The blank template line is recorded as a pass:
+
+```
+date: 2026-10-29T20:07:04+07:00
+hook sha1 source: 1a282329df95b706ef72bc0676341f3c82765757
+$ python3 .claude/hooks/stop_auto_verify.py --start T951
+T951: auto verify started for commit cea035562a03 — log .claude/verify-runs/T951-cea035562a03.log exit 0
+--- log T951-cea035562a03.log
+$ claude -p '/verify T951' --max-budget-usd 2 --output-format json
+verdict: pass
+verify row: ☑ pass | auto-run by hook, session bb6500c2-6ee9-4ce9-bc0e-ea2f246f2fd4, commit cea035562a03785c2356e1c9112338f9809287f2, log .claude/verify-runs/T951-cea035562a03.log — pass
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
