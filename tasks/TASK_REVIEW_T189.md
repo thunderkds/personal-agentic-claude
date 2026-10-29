@@ -119,6 +119,10 @@ implementing agent alone]
 
 ## AC 11 — paid live check (user go 2026-10-29 "go for T189"; cap $3)
 
+**Final result: PASS on run 3** (after option (a), check (7), `f5c1470`) — see `### AC 11 run 3` below. **Total spend, runs 1–3: $1.434 of $3** (run 1 $0.448; reruns $0.986 of the $1.5 rerun cap).
+
+### AC 11 run 1 (at `af75114`)
+
 **Result: FAIL — the row did NOT reach Done.** The verify verdict was pass, the run record is correct, and the report was complete. One close-out check stopped the move: `done not moved: Gate 5: no test run in memory/event-trace/T002.jsonl`. This is a finding. It was not worked around.
 
 **Cost: $0.448 total** — Supervisor session `$0.2643` (sonnet, `--max-budget-usd 1.8`, 12 turns) + auto verify run `$0.1839` (sonnet, `CLAUDE_AUTO_VERIFY_BUDGET_USD=0.9`, 7 turns).
@@ -206,6 +210,87 @@ remotes: []
   - (c) leave as is and treat the `Paused:` line as the correct outcome.
 
 **Not exercised by this run:** the `Closed:` line and the Done move on a live session (the unit and fixture tests cover them, AC 1/7). No second paid run was made: the cap allows one, but making it pass would mean working around the finding.
+
+### AC 11 run 2 (at `f5c1470`) — VOID: my fixture error
+
+- **Cost:** $0.487 (Supervisor $0.3098, auto verify $0.1775).
+- **Setup error:** I copied `src/`, `tests/` and `PROJECT_KANBAN.md` from run 1's project *after* run 1 had changed them. So `shout` already existed and the board already had the T002 row in Ready for Review. This was not the same setup as run 1.
+- **What it still shows:**
+  - Check (7) fired, and the Supervisor wrote `active_task.d/<session>` and reran pytest. `T002.jsonl` held the run.
+  - The close-out then stopped on a different reason: `report incomplete: auto verify slot`.
+  - The confused Supervisor wrote `**Not done:** merge (yours); /verify (yours)`. That is a legal template option, but it is user-written, so `write_slot` correctly left it alone, and D9 kept the row out of Done.
+  - Secondary finding for the Supervisor: an auto task whose slot says `/verify (yours)` can never close out. That is the intended D9 behaviour, recorded here so it is known.
+
+### AC 11 run 3 (at `f5c1470`, pristine fixture) — PASS
+
+- **Setup:** a new throwaway project in the scratchpad: the kit from `f5c1470`, and the app, board, spec and memory files from the run 1 fixture's *initial* commit `42e0b68`.
+- **Setup difference:** `.claude/settings.local.json` came out empty (it was not in `42e0b68`; the copy failed). The auto verify run therefore had no extra allow rules. It still passed.
+- **Caps:** Supervisor `--max-budget-usd 0.55`, auto verify `CLAUDE_AUTO_VERIFY_BUDGET_USD=0.30`. Same command, model and `--allowedTools` as run 1.
+- **Cost: $0.498** (Supervisor $0.3239, 18 turns, 0 permission denials; auto verify $0.1745).
+
+What happened, from the Supervisor's own final message:
+- At first it wrote the state file with only the task ID and no timestamp, so the hook did not accept it, and its first test run went to `_untagged.jsonl`.
+- The Stop hook's check (7) blocked the stop, with the `printf` form.
+- The Supervisor rewrote the file and reran `python3 -m pytest -q tests` (`2 passed`). That run landed in `T002.jsonl`.
+- The second stop was allowed. The auto verify run then passed, and the close-out moved the row.
+
+**Board before** (2026-10-29T10:57:11Z):
+```
+### Ready for Review
+
+### Done
+- [x] **T001** — Initial greet script | Supervisor | C0 | Risk: Low | P2 | Done 2026-10-28
+```
+**Board after** (2026-10-29T10:58:19Z):
+```
+**Last updated**: 2026-10-29
+### Ready for Review
+
+### Done
+- [x] **T002** — Add shout(name) to src/greet.py | Supervisor | C0 | Risk: Low | P2 | Track: minimal | Record: tasks/MINIMAL_LOG.md | Done 2026-10-29: auto verify pass (session aa2f1b73-b554-445e-b29c-5e5ecc2f152c, commit c3e0bd0d001f18a156901c683c2b077cd3be5e01)
+- [x] **T001** — Initial greet script | Supervisor | C0 | Risk: Low | P2 | Done 2026-10-28
+```
+
+**Final report** (Decision record, `tasks/MINIMAL_LOG.md`):
+```
+## T002 — add shout(name) to src/greet.py · minimal
+Mode: auto
+**Asked:** "add a function shout(name) to src/greet.py that returns the greeting from greet(name) in upper case [auto]"
+**Decisions:**
+1. Track minimal — RULE: `docs/claude-md/tracks.md` `## Track rule` (C0, Risk Low, one source file, no Gate-2 word, no user data, no UI)
+2. `shout` calls `greet(name).upper()` and does not change `greet` or the `__main__` block — RULE: `docs/claude-md/tracks.md` `## Minimal-track flow` step 4 (smallest change)
+**Checked:**
+- New test `test_shout` — failed before the change (ImportError: cannot import name 'shout'), passes after
+- Suite: `python3 -m pytest -q tests` — 2 passed in 0.01s
+- Real run: `cd src && python3 -c "from greet import shout; print(shout('Ann'))"` — printed `HELLO, ANN!` (auto-checked, not /verify)
+- verify: ☑ pass — auto-run by hook, session aa2f1b73-b554-445e-b29c-5e5ecc2f152c, commit c3e0bd0d001f18a156901c683c2b077cd3be5e01, log .claude/verify-runs/T002-c3e0bd0d001f.log
+**Files:** `src/greet.py`, `tests/test_greet.py`
+**Memory:** nothing new
+**Not done:** merge (yours); auto verify: ☑ pass (session aa2f1b73-b554-445e-b29c-5e5ecc2f152c, commit c3e0bd0d001f18a156901c683c2b077cd3be5e01, log .claude/verify-runs/T002-c3e0bd0d001f.log)
+Closed: row moved to Done 2026-10-29 — auto verify pass (session aa2f1b73-b554-445e-b29c-5e5ecc2f152c, commit c3e0bd0d001f18a156901c683c2b077cd3be5e01); Gates 5 and 6 checked
+```
+
+**Run log** `.claude/verify-runs/T002-c3e0bd0d001f.log` (close-out lines):
+```
+verdict: pass
+T002: moved to Done on <scratchpad>/ac11r3-Px4Q/proj/PROJECT_KANBAN.md
+```
+**Run record** (`<scratchpad>/ac11r3-anchors/.../verify-runs/T002-c3e0bd0d001f18a156901c683c2b077cd3be5e01.json`):
+```
+{"task": "T002", "commit": "c3e0bd0d001f18a156901c683c2b077cd3be5e01", "verdict": "pass", "session": "aa2f1b73-b554-445e-b29c-5e5ecc2f152c", "log": ".claude/verify-runs/T002-c3e0bd0d001f.log"}
+```
+
+**Trace — no merge, no push.**
+- `memory/event-trace/T002.jsonl`: 5 Bash records. They are the `active_task.d` write at 10:58:02, then pytest at 10:58:05, 10:58:15 and 10:58:15 (`git status`).
+- `_untagged.jsonl`: the calls before registration. Their git subcommands are `log`, `checkout` (`-b T002-shout`), `status`, `log`, `diff`, and one record whose text names `git pull`.
+- That record at 10:57:30 is: `cat tests/test_greet.py; cat PROJECT_KANBAN.md; tail -5 memory/decisions.md; ls .claude/hooks/.state 2>&1 | head; echo $CLAUDE_CODE_SESSION_ID; git pull 2>&1 | head -1`. The fixture has no remote, and the reflog shows no pull or merge.
+- The count of `git merge` / `git push` / `ship` is `0`.
+```
+remotes: []
+c3e0bd0 HEAD@{2026-10-29 17:57:50 +0700}: commit: T002: add shout(name) to src/greet.py
+292074c HEAD@{2026-10-29 17:57:34 +0700}: checkout: moving from main to T002-shout
+292074c HEAD@{2026-10-29 17:57:11 +0700}: commit (initial): fixture: greet + Easy Kit (T189 f5c1470), pristine
+```
 
 ---
 
