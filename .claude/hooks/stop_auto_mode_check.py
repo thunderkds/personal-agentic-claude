@@ -15,6 +15,11 @@ auto-mode task whose board row is In Progress or Ready for Review, it blocks the
       Skill call at Risk Medium/High.
   (5) at Risk High, no `DEBATED` line names 3 Advocates, or the trace holds fewer than 3 Advocate
       `Agent` calls (D10): at least one High-risk decision is always debated.
+  (6) the report has no `Memory:` line (T189 D5): the auto run does the diff-driven memory pass
+      before it stops and records it there — each entry it wrote, or `Memory: nothing new`.
+  (7) the task's own trace `memory/event-trace/<ID>.jsonl` holds no test run (T189, option (a) after
+      AC 11 run 1): the merge gate's `trace_shows_verification`, so the auto close-out's Gate 5
+      check and the merge can pass. The reason says how to register the task and rerun its tests.
 
 Which tasks (D9): board rows in In Progress or Ready for Review, plus — so a project with no
 `PROJECT_KANBAN.md` is still checked — every `tasks/TASK_REVIEW_*.md` carrying `## Auto decisions`
@@ -53,6 +58,7 @@ KANBAN = os.path.join(ROOT, "PROJECT_KANBAN.md")
 TRACE_DIR = os.path.join(ROOT, "memory", "event-trace")
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib"))
+import auto_closeout as ac  # noqa: E402
 import auto_mode as am  # noqa: E402
 
 PAUSE = "Paused: auto-mode check failed — "
@@ -173,6 +179,16 @@ def choice_reason(line, need):
     return None
 
 
+def traced_test_run(task_id):
+    """Check (7): the merge gate's own rule, never restated. Fails open (True) when the gate's
+    readers cannot be loaded — one stderr line, the stop is not blocked on a broken import."""
+    try:
+        return ac.load_gate().trace_shows_verification(task_id)
+    except Exception as exc:
+        warn(f"{task_id}: check (7) skipped — merge gate readers unavailable ({type(exc).__name__})")
+        return True
+
+
 def check_task(task, request_ts):
     """The reasons this task's report fails, or [] (also [] when the task is not auto mode)."""
     task_id, body = task.task_id, task.body
@@ -204,6 +220,17 @@ def check_task(task, request_ts):
     need_per_line = ADVOCATES_BY_RISK.get(risk)
     lines = [l.strip() for l in body.splitlines() if l.strip()]
     reasons = [] if task.strict else [missing]
+    if not ac.has_memory_line(body):
+        reasons.append("no `Memory:` line in the report — run the memory pass before you stop and "
+                       "record it there (each entry written, or `Memory: nothing new`)")
+    if not traced_test_run(task_id):
+        state = os.path.join(ROOT, ".claude", "hooks", ".state", "active_task.d")
+        reasons.append(
+            f"no test run in memory/event-trace/{task_id}.jsonl — write "
+            f"{state}/$CLAUDE_CODE_SESSION_ID with the task ID (minimal-track step 1): "
+            f"`mkdir -p {state} && printf '%s\\n%s\\n' \"{task_id}\" "
+            f"\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\" > {state}/$CLAUDE_CODE_SESSION_ID`, then rerun "
+            "the task's tests so the trace records them under the task, then stop")
 
     if need_per_line:
         for line in lines:

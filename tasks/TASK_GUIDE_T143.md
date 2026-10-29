@@ -36,9 +36,9 @@ From the user's improvement list, area 2: *"Require a machine-recheckable `### V
 
 ### Requirement Fidelity Gate (sign off BEFORE implementation)
 
-- [ ] Restated intent confirmed to match the user's request (by Supervisor / user — not the implementing agent)
+- [x] Restated intent confirmed to match the user's request (Supervisor, 2026-10-29: matches the 2026-10-16 grilling choice "CI re-runs the block")
 - [x] Domain terms align with `PROJECT_SPEC.md` glossary — "guide fields", not "task manifest" (`MANIFEST` is the install file)
-- [ ] Every Acceptance Criterion below traces to a line in the Requirement
+- [x] Every Acceptance Criterion below traces to a line in the Requirement (Supervisor, 2026-10-29: AC 1-6 each name their source line)
 - [x] Requirement Refs — N/A, no `PRD.md`; traced to the decisions entry above
 
 > An agent must NOT start implementing until this gate is checked. If anything here is unclear,

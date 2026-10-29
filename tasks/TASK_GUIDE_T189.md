@@ -53,7 +53,7 @@ Supervisor design decisions (defaults the user can overrule before the build):
 ### Requirement Fidelity Gate
 
 - [x] Restated intent confirmed (Supervisor, 2026-10-28; user chose "Everything except merge and push")
-- [ ] Domain terms: add **Auto close-out** to the `PROJECT_SPEC.md` glossary, with "not a merge" (agent)
+- [x] Domain terms: add **Auto close-out** to the `PROJECT_SPEC.md` glossary, with "not a merge" (agent, 2026-10-29)
 - [x] Every Acceptance Criterion traces to a decision above
 - [x] Requirement Refs covered (none)
 
