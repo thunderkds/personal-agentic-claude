@@ -15,8 +15,10 @@ keeps a second copy.
 
   * the **track**, from the board row: ``| Track: minimal`` means minimal, anything else extended;
   * the **report file** — ``tasks/TASK_REVIEW_<ID>.md`` (extended) or the task's own record inside
-    ``tasks/MINIMAL_LOG.md`` (minimal), resolved main checkout first and then each live worktree,
-    the way the merge gate already resolves Evidence;
+    ``tasks/MINIMAL_LOG.md`` (minimal). Since T203 a live worktree's copy wins over the main
+    checkout's (`find_for_task`): main may hold only the Stage 2 placeholder, and the task's code
+    and HEAD are in its worktree. The worktree is the one whose branch the board row names, never
+    picked by `git worktree list` order; `ambiguous` says no worktree could be told apart;
   * how the task is **marked**, kept as separate facts rather than one verdict, because the two
     hooks need different thresholds and both must read the same facts:
 
@@ -116,6 +118,79 @@ def find(name, dirs):
     return os.path.join(dirs[0], name)
 
 
+def branch_of(checkout):
+    """The branch checked out in `checkout`, or None (detached, git absent, any failure)."""
+    try:
+        done = subprocess.run(["git", "-C", checkout, "rev-parse", "--abbrev-ref", "HEAD"],
+                              capture_output=True, text=True, timeout=GIT_TIMEOUT_S)
+        name = done.stdout.strip() if done.returncode == 0 else ""
+        return name if name and name != "HEAD" else None
+    except Exception:
+        return None
+
+
+def names_task(branch, task_id):
+    """True when `branch` names `task_id`, case-insensitive and word-bounded: `feat/t951-x` names
+    T951, `feat/t9510` and `xt951` do not (the shape of T197's push-scope resolver)."""
+    return bool(branch and re.search(rf"(?<![A-Za-z0-9]){re.escape(task_id)}(?![0-9])", branch,
+                                     re.I))
+
+
+ROW_BRANCH = re.compile(r"\bbranch `([^`\s]+)`")
+ROW_WORKTREE_BRANCH = re.compile(r"\bworktree `[^`]+` \(`([^`\s]+)`\)")
+
+
+def row_branch(row):
+    """The task's branch as its main-checkout board row names it, or None. Read from the newest
+    `Started …` segment only (the Supervisor writes it at Stage 3): ``branch `<name>` `` or
+    ``worktree `../<dir>` (`<name>`)``."""
+    for seg in reversed([g for g in re.split(r"\s\|\s", row or "") if g.strip().startswith("Started")]):
+        hit = ROW_BRANCH.search(seg) or ROW_WORKTREE_BRANCH.search(seg)
+        if hit:
+            return hit.group(1)
+    return None
+
+
+def find_for_task(name, dirs, task_id, holds=None, branch=None):
+    """T203: the task's own copy of `name`, as `(path, ambiguous)`.
+
+    The Supervisor creates `tasks/TASK_REVIEW_<ID>.md` on main at Stage 2 as a placeholder, while the
+    task's real report, code and HEAD live in its worktree (Stage 4 P1). Which worktree is decided by
+    the trusted source, the main checkout's board row, never by `git worktree list` order (security
+    review: a decoy `git worktree add ../a-t951 -b fix/t951-x` would otherwise win):
+
+      * the row names a branch -> the live worktree with exactly that branch checked out, if its copy
+        exists (and passes `holds`); else no worktree copy — `find`'s main-first order;
+      * the row names none -> the one worktree whose branch names the task; zero or several among the
+        worktrees holding a copy -> `find`'s order and `ambiguous=True`, so no run starts;
+      * no worktree holds a copy -> `find`'s order, not ambiguous.
+    """
+    found = []
+    for d in dirs[1:]:
+        path = os.path.join(d, name)
+        if os.path.exists(path) and (holds is None or holds(path)):
+            found.append(d)
+    if branch:
+        exact = [d for d in found if branch_of(checkout_of(d)) == branch]
+        return (os.path.join(exact[0], name), False) if exact else (find(name, dirs), False)
+    if not found:
+        return find(name, dirs), False
+    named = [d for d in found if names_task(branch_of(checkout_of(d)), task_id)]
+    if len(named) == 1:
+        return os.path.join(named[0], name), False
+    return find(name, dirs), True
+
+
+def _holds_record(task_id):
+    def holds(path):
+        try:
+            text = read(path)
+        except Unreadable:
+            return False
+        return text is not None and record_block(COMMENT.sub("", text), task_id) is not None
+    return holds
+
+
 def comment_spans(text):
     return [(m.start(), m.end()) for m in COMMENT.finditer(text or "")]
 
@@ -194,7 +269,8 @@ def file_candidates(dirs, skip):
 
 
 _AutoTask = namedtuple("AutoTask", "task_id track report_path guide_path text body marker strict "
-                                   "auto_section tagged exists row")
+                                   "auto_section tagged exists row ambiguous",
+                       defaults=(False,))
 
 
 class AutoTask(_AutoTask):
@@ -239,7 +315,8 @@ def resolve(task_id, row, dirs):
     """
     row = row or ""
     if MINIMAL_ROW.search(row):
-        path = find(MINIMAL_LOG, dirs)
+        path, ambiguous = find_for_task(MINIMAL_LOG, dirs, task_id, _holds_record(task_id),
+                                        row_branch(row))
         text = read(path)
         block = record_block(COMMENT.sub("", text), task_id) if text is not None else None
         body = block[2] if block else ""
@@ -248,15 +325,16 @@ def resolve(task_id, row, dirs):
                         strict=first_line(body) == MARKER,
                         auto_section=False,
                         tagged=TAG in body,
-                        exists=block is not None, row=row)
-    path = find(f"{REVIEW_PREFIX}{task_id}.md", dirs)
+                        exists=block is not None, row=row, ambiguous=ambiguous)
+    branch = row_branch(row)
+    path, ambiguous = find_for_task(f"{REVIEW_PREFIX}{task_id}.md", dirs, task_id, branch=branch)
     text = read(path)
     clean = COMMENT.sub("", text or "")
     block = section(clean, AUTO_SECTION)
     body = block[2] if block else ""
-    return AutoTask(task_id, "extended", path, find(f"{GUIDE_PREFIX}{task_id}.md", dirs), text, body,
+    return AutoTask(task_id, "extended", path, find_for_task(f"{GUIDE_PREFIX}{task_id}.md", dirs, task_id, branch=branch)[0], text, body,
                     marker=MARKER in clean.splitlines(),
                     strict=bool(block) and first_line(body) == MARKER,
                     auto_section=bool(block),
                     tagged=False,
-                    exists=text is not None, row=row)
+                    exists=text is not None, row=row, ambiguous=ambiguous)
