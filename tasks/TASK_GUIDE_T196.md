@@ -57,7 +57,7 @@ Board row T196 (registered 2026-10-28, measured): `.claude/hooks/.state/active_t
 
 ### Requirement Fidelity Gate (sign off BEFORE implementation)
 
-- [ ] Restated intent + D1–D6 confirmed by the user (including adding T196 to `AUTHORISED_TASKS`)
+- [x] Restated intent + D1–D6 confirmed by the user, 2026-10-29 ("Approve all", including adding T196 to `AUTHORISED_TASKS` for the `ATTRIBUTION_REMEDY` text only)
 - [x] Terms: **spawn binding**, **per-session state file** (new, defined in D1); trace, attribution as in `task_context.py`
 - [x] Every AC traces to the Requirement
 - [x] Refs covered
@@ -171,7 +171,7 @@ Unit tests for every precedence slot and degrade path (AC 1–6), one incident-r
 
 ## Completion Checklist
 
-- [ ] User confirmed restated intent + D1–D6 (Supervisor)
+- [x] User confirmed restated intent + D1–D6 (Supervisor)
 - [ ] BEFORE captured before the first implementation commit (agent)
 - [ ] Implementation + tests (agent)
 - [ ] Live check AC 10 (agent; ≤ $0.50, cap the run with `--max-budget-usd`)
