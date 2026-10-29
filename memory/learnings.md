@@ -2955,3 +2955,7 @@ T201 /verify (2026-10-29): CDP mouse events at coordinates taken right after `sc
 - `trace_shows_verification` does not strip a `timeout N` prefix, so `timeout 900 python3 -m pytest …` is not a test run: T189 read "no verified tool call" until a plain run was made. Fails closed.
 - The pattern matches `git merge-base` too, so a read-only `git merge-base --is-ancestor` check is blocked as a merge while any task is open. Use `git branch -r --contains` instead.
 - All three need a gate change, so `merge_gate_guard.AUTHORISED_TASKS` sign-off.
+
+### Moving a task between board sections is how the whole-board merge gate lets one verified task through (2026-10-29)
+- The merge gate reads only `### In Progress` and `### Ready for Review`. When an unrelated task there has no verify pass, a merge of a verified task is refused. Move the other task only to the section that is TRUE (T189 was back In Progress for AC 11; T207 was Blocked by T208) and write the reason in its row; never move it to make the gate pass.
+- This session's `active_task.d/<session>` file kept naming T189 hours later, so `pre_agent_step_limit` counted unrelated Supervisor calls against T189 and killed a Write. Rewrite the state file when the Supervisor switches tasks.

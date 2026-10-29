@@ -25,6 +25,7 @@
      run; read them there. The enforced gate is the whole-file character budget above. -->
 
 ### Decisions
+- [T207/T208: visual-first site; auto verify reads `**Verdict: PASS …**`](decisions.md) — diagrams lead, prose in Details, ≤150 visible words/section; a blank-template verdict still reads as pass
 - [T143/T191/T189: CI re-runs a Done task's Verification Command; `score` skill; auto close-out](decisions.md) — `# ci: skip — <reason>`; score row optional; Stop check (7) needs a task test run
 - [T200/T201: settings profiles — `settings-setup` at Stage 1, High security default, add-only](decisions.md) — one source `profiles.json`; dry run first; Legacy = the kit's 2 anchor rules
 - [T199: site `#mcps` lists easy-memory-mcp as a third OPTIONAL companion card](decisions.md) — README facts only; Open: T194 + T199 both edit the `#mcps` lead, merge by hand
