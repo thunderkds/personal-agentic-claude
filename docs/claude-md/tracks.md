@@ -218,7 +218,7 @@ is logged `RULE`, `FACT` or `SAFER OPTION`, not `DEBATED`. At Risk Medium or Hig
 | 16 | Stage 4 pull moment 3 (board mode `online`): "review against the new version?" | Review against the new version. | `RULE` |
 | 17 | Stage 4 item 7: a finding whose fix needs a choice | Debate. | `DEBATED` ⚠ |
 | 18 | Stage 5 item 1: `/verify` (only the user can run it) | The Supervisor's own real-run check, written under `Checks:` as `auto-checked, not /verify`. The `verify` Evidence row stays unchecked: T182's hook fills it from a real `/verify` run, or the user does. | `Checks:` |
-| 19 | Stage 5 items 3–6: memory update, merge, Done, `ship` | Never in auto mode. The task ends at Ready for Review on its branch. | `Not done:` |
+| 19 | Stage 5 items 3–6: memory update, merge, Done, `ship` | Memory update: the Supervisor runs the diff-driven pass before it stops, and writes the `Memory:` line. Done: after an auto verify pass, the hook moves the row (`### Auto close-out`). Merge, push and `ship`: never in auto mode. The task waits in Ready for Review until the hook moves it. | `Memory:` / `Closed:` / `Not done:` |
 | 20 | `AGENTS.md` self-monitoring: "want me to compact before continuing?" | Do not ask. Near the session's context or usage limit, stop at a clean point (see Edge cases). | `Paused:` |
 | 21 | Minimal track: an unclear request (its one stop) | By `### Debate size by Risk`. At Risk Low (the minimal track's own level) the Supervisor decides the reading and logs why. | `RULE` / `SAFER OPTION` ⚠ |
 
@@ -251,8 +251,13 @@ the run ends, plus `security-review` at Risk Medium or High, because it is not a
   (it names no written rule, so it is a choice). Low risk is unchanged.
 - `Paused:` — a stop that stayed (below), and why. Only when one paused the task.
 - `Checks:` — the tests, the reviews, and the real run, labelled `auto-checked, not /verify`.
+- `Memory:` — the diff-driven memory pass (`docs/claude-md/memory-write-protocol.md`), which the
+  Supervisor runs before it stops. Name each entry it wrote, or write `Memory: nothing new`. The memory
+  writes stay the Supervisor's; no hook writes memory.
 - `Not done: merge (yours)`, plus the `/verify` state: `auto verify: running (T182)`, its result, or
   `/verify (yours)` when T182 is not built or its run was blocked.
+- `Closed:` — written by the hook, never by the Supervisor, when it moves the row to Done
+  (`### Auto close-out`). When a check stops the move, the hook writes `Paused: done not moved — <reason>`.
 
 The Supervisor's final chat message repeats the block. It is not the `delivery-report` HTML page, and it is
 not Evidence: the merge gate does not read it. A Debate also leaves its `DEBATE` line under the guide's
@@ -277,7 +282,9 @@ with a short reason when:
 4. on the extended track, the trace has no `code-review` Skill call, or no `security-review` Skill call at
    Risk Medium or High;
 5. at Risk High, no `DEBATED` line names 3 Advocates, or the trace holds fewer than 3 Advocate `Agent`
-   calls: `Risk High, but no decision was DEBATED with 3 Advocates`.
+   calls: `Risk High, but no decision was DEBATED with 3 Advocates`;
+6. the report has no `Memory:` line (T189): the memory pass is done before the stop, and recorded;
+7. the task's own trace `memory/event-trace/<ID>.jsonl` holds no test run (Gate 5): register the task (minimal-track step 1), rerun its tests, then stop.
 
 A board row counts as auto mode when its report carries `## Auto decisions` or a `Mode: auto` line, when its
 Decision record's request carries `[auto]`, or when this session's request carries `[auto]` and the task's
@@ -335,7 +342,44 @@ Only the `**Verdict:** PASS` or `FAIL` line of the skill's result sets the resul
 A blocked result never contains the word "pass". The hook never overwrites a row or a line you filled. The
 merge gate accepts an `auto-run by hook` row — or a minimal-track `verify:` line — only when its run record
 exists for that task and the head commit, and says pass; a hand-typed line in a Decision record counts for
-nothing. The merge stays yours. Without `[auto]`, nothing changes on either track: `/verify` stays yours.
+nothing. After a pass, the same run closes the task out (`### Auto close-out`). The merge stays yours. Without `[auto]`, nothing changes on either track: `/verify` stays yours.
+
+### Auto close-out
+
+After an auto verify **pass**, the same detached run closes the task out (T189,
+`.claude/hooks/lib/auto_closeout.py`). It moves the task's row from `### Ready for Review` to `### Done`.
+It is not a merge: the branch stays unmerged, and the merge, the push and `ship` stay yours. A `fail` or
+`blocked` result leaves the row where it is.
+
+The run moves the row only when all three checks hold:
+
+1. **The run record proves the pass.** The record for that task and the head commit exists and says pass,
+   for the session that ran. The merge gate's own rule accepts the result. A hand-typed `auto-run by hook`
+   result never moves a row.
+2. **Hard-Stop Gates 5 and 6 hold.** The tests row is `☑ pass` with pasted output (minimal track: a
+   `New test` line under `Checked:`), and the trace holds a real test run. Each of the three UI design
+   rows is `☑ pass` with evidence, or N/A with a written reason. A task with no UI writes `☐ N/A` and a
+   reason in all three. Auto mode never skips a Hard-Stop Gate.
+3. **The report is complete.** It holds `Mode: auto`, at least one numbered decision line, `Checks:`
+   (minimal: `**Checked:**`), `Memory:`, the `Not done:` auto verify slot with its result, and a
+   `Not done:` line that still names the merge. A field that still holds a template `<...>` placeholder
+   counts as missing. The report is the only account of a run that nobody watched, so it is a check,
+   not a summary.
+
+When all three hold, the run writes
+`Closed: row moved to Done <date> — auto verify pass (session <id>, commit <sha>); Gates 5 and 6 checked`
+into the report. It reads the report again, then moves the row: `- [ ]` becomes `- [x]`, the row goes to
+the top of `### Done`, and it gains `Done <date>: auto verify pass (session <id>, commit <sha>)`. Nothing
+else in the row changes. `**Last updated**` at the top of the board gets that date.
+
+When a check fails, the row stays in Ready for Review. The run log says `done not moved: <reason>` or
+`report incomplete: <field>`, and the report gains `Paused: done not moved — <reason>`, so the report
+names what still waits for you. A failed Gate 5 or 6 check also adds `done not moved: <reason>` to the
+end of the hook-written result.
+
+Each line is added once. A line you wrote is never changed. The board in the main checkout is the
+registry: the run reads it again just before the write and finds the row by its task ID. A row you
+already moved is left alone. The run issues no git command that writes, and it writes no memory file.
 
 ### Stops that stay
 
@@ -352,13 +396,23 @@ The pause also goes in the final report, on its `Paused:` line.
 
 ### Never in auto mode
 
-- merge or push;
-- the Supervisor running `/verify` or writing its `verify` Evidence row (only T182's hook writes it). The
-  merge gate cannot tell who wrote the row, so this rule is doctrine: the Supervisor's own check goes under
-  `Checks:`, never in the `verify` row. The one exception the gate can check is an `auto-run by hook` row:
-  it needs the hook's run record (`### Auto verify (Stop hook)`);
-- moving a task to Done;
-- moving a task down a track.
+These stay the user's, in every mode:
+
+- merge;
+- push;
+- `ship`.
+
+The memory pass and the move to Done are automatic: see `### Final report` (`Memory:`) and
+`### Auto close-out`.
+
+### The Supervisor never
+
+- runs `/verify` or writes its `verify` Evidence row (only T182's hook writes it). The merge gate cannot
+  tell who wrote the row, so this rule is doctrine: the Supervisor's own check goes under `Checks:`, never
+  in the `verify` row. The one exception the gate can check is an `auto-run by hook` row: it needs the
+  hook's run record (`### Auto verify (Stop hook)`);
+- moves a task to Done (only the hook does, `### Auto close-out`);
+- moves a task down a track.
 
 ### Edge cases
 

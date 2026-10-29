@@ -37,8 +37,14 @@ different verdicts, a non-success run (budget stop, error), output that is not J
 A row or line the user filled (a `☑` result that is not an `auto-run by hook` one) is never started
 over or overwritten, and neither is a `Not done:` slot the user wrote — that reason goes in the run
 log. The headless session's own Stop hooks see CLAUDE_AUTO_VERIFY_RUN=1 and do nothing. Without the
-marker nothing happens on either track: `/verify` stays the user's. Merge stays with the user.
-Fails open: any error is one stderr line, never a block.
+marker nothing happens on either track: `/verify` stays the user's.
+
+After a pass, and only then, the same run closes the task out (T189, `lib/auto_closeout.py`): when the
+run record proves the pass (D3), the task's evidence meets Hard-Stop Gates 5 and 6 (D2) and the report
+holds every required field (D9), it writes the report's `Closed:` line and moves the board row from
+Ready for Review to Done; otherwise it writes `Paused: done not moved — <reason>` and leaves the row.
+A `fail` or `blocked` verdict leaves the row untouched. Merge, push and `ship` stay with the user: the
+run issues no git command that writes. Fails open: any error is one stderr line, never a block.
 """
 import json
 import os
@@ -53,6 +59,7 @@ KANBAN = os.path.join(ROOT, "PROJECT_KANBAN.md")
 RUNS_REL = os.path.join(".claude", "verify-runs")
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib"))
+import auto_closeout as ac  # noqa: E402
 import auto_mode as am  # noqa: E402
 import verify_record as vr  # noqa: E402
 
@@ -325,6 +332,13 @@ def run():
     write_slot(report_path, task_id, minimal,
                f"auto verify: {vr.RESULT_CELL[verdict]} (session {session}, commit {head}, "
                f"log {log_rel})")
+    if verdict != "pass":
+        return  # T189 D1: only a pass closes the task out; the row stays where it is
+    try:
+        ac.close_out(ROOT, task_id, report_path, head, session, minimal,
+                     say=lambda line: print(line, flush=True))
+    except Exception as exc:  # fail closed (no move), never a crash
+        print(f"{ac.NOT_MOVED}close-out failed ({type(exc).__name__}: {exc})", flush=True)
 
 
 def main():
