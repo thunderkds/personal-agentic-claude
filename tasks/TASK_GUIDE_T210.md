@@ -48,7 +48,7 @@ User, 2026-10-29: "go" — to the Supervisor's offer to plan the merge-gate blin
 ### Requirement Fidelity Gate (sign off BEFORE implementation)
 
 - [x] Restated intent confirmed (Supervisor, 2026-10-29; user "go")
-- [ ] **User sign-off: add `T210` to `merge_gate_guard.AUTHORISED_TASKS`** (the gate file may not change without it) — PENDING
+- [x] **User sign-off: add `T210` to `merge_gate_guard.AUTHORISED_TASKS`** — given 2026-10-29: "Approve all four (Recommended)" (G1–G4)
 - [x] Every Acceptance Criterion traces to G1–G4 / D1–D4
 - [x] Requirement Refs — N/A, traced to the learnings above
 
