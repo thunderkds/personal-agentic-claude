@@ -44,7 +44,10 @@ GATE_REL = ".claude/hooks/pre_bash_block_unsafe_merge.py"
 #   T197 — D1-D4: a `git push` of one task's branch is judged by that task alone; every
 #          unresolved push, and every merge, still checks the whole board
 #          (`tasks/TASK_GUIDE_T197.md`). Authorised by the user, 2026-10-28.
-AUTHORISED_TASKS = ("T182", "T188", "T190", "T197")
+#   T196 — the attribution remedy text names the per-session state file; no gate logic change
+#          (`ATTRIBUTION_REMEDY` only, `tasks/TASK_GUIDE_T196.md` D6). Authorised by the user,
+#          2026-10-29.
+AUTHORISED_TASKS = ("T182", "T188", "T190", "T197", "T196")
 
 
 def _git(root, *args):

@@ -873,10 +873,13 @@ def pushed_task_ids(command, cwd, id_pattern=None):
 # reads. That was T047's own Stage 4 P1 finding.
 ATTRIBUTION_REMEDY = (
     "Note: if a task above is missing its trace record rather than its evidence "
-    "row, attribute your Bash calls by writing the active-task state file first: "
-    "`mkdir -p <main-checkout>/.claude/hooks/.state && printf '%s\\n%s\\n' "
-    "\"Txxx\" \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\" > "
-    "<main-checkout>/.claude/hooks/.state/active_task` — using the literal "
+    "row, attribute your Bash calls. A sub-agent whose spawn prompt carries "
+    "`Task ID: Txxx` or a `tasks/TASK_GUIDE_Txxx.md` path is attributed from its "
+    "own transcript and writes nothing. Otherwise write this session's state file "
+    "first: `mkdir -p <main-checkout>/.claude/hooks/.state/active_task.d && "
+    "printf '%s\\n%s\\n' \"Txxx\" \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\" > "
+    "<main-checkout>/.claude/hooks/.state/active_task.d/$CLAUDE_CODE_SESSION_ID` "
+    "— using the literal "
     "absolute path of the main checkout (not $CLAUDE_PROJECT_DIR, which is empty "
     "inside a Bash tool call, and not a relative path, which resolves into your "
     "worktree). Valid for CLAUDE_ACTIVE_TASK_STATE_MAX_AGE_S seconds (default "
