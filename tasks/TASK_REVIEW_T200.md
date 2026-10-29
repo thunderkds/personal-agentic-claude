@@ -41,16 +41,16 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | Implementer-run (common-infrastructure, 2026-10-29), reviewer to confirm. `tests/test_settings_setup.py` (new, 35 tests: AC 1-11). RED before code, 2026-10-29T05:1xZ: `35 failed in 0.51s`. After: `python3 -m pytest tests/test_settings_setup.py -q` → `35 passed in 1.10s`. Mutations M1-M4 each RED then green on revert (see `## Mutations` below). |
+| Verification command run | ☑ pass | Implementer-run. `python3 -m pytest tests/test_settings_setup.py -q && python3 -m pytest tests -q` → `35 passed in 1.10s` then `959 passed in 63.88s (0:01:03)` (at 0735407). |
+| Negative cases hold | ☑ pass | Implementer-run. Exit 2 + byte-identical + mtime unchanged + `apply_profile: ` reason for JSONC, invalid JSON, top-level array, `permissions` a list, `deny` a string, `ask` null, symlinked file, unknown id (lists the 5 ids); real-run JSONC: `apply_profile: j.json is not valid JSON, file left unchanged (...)` exit=2. |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| Full smoke suite still green (no regression) | ☑ pass | Implementer-run at 0735407: `tests` 959 passed; `.claude/hooks/tests` `15 failed, 1108 passed` — the 15 failures are byte-identical to the untouched baseline 0deff10 (`15 failed, 1102 passed`; test_agent_guide_dedup ac7 x4 + t069_ac9, test_memory_channel_and_budget x4, test_token_audit_format, test_verify_row_fill_detection ac6, test_vital_slice ac11 x4); `bash tests/test_readme_current.sh` → `test_readme_current: ALL PASS`; `sh scripts/validate.sh` → `validate.sh: PASS`; `scripts/test-claude-md-refs.sh` FAILED identically at 0deff10 (AC5/AC6 vs 99940b8, pre-existing). |
 | **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | Guide: copy-only roster chip (`settings-setup` in the Stage 1 step) and two count labels 31 → 32, existing markup; covered by `tests/test_site_content.py` roster/count tests. |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | Same justification: reuses `<span class="chip">`, no new style. |
+| **UI: Responsiveness at target viewports** | ☑ N/A | Same justification: one more chip in an existing wrapping `.chips` row. |
 
 ---
 
@@ -93,9 +93,111 @@ Prior content of the lines this task changes (verbatim):
   ```
 - `site/index.html` `#skills`: `<h2>Skills (31)</h2>`; Stage 1 chips `git-guardrails-claude-code`, `map-codebase`.
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**: implementer-run at `0735407`, in a scratch project whose `.claude/settings.json` is a copy of
+this repo's kit file (hooks + 2 anchor deny rules):
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```
+2026-10-29T05:23:51Z
+0735407
+$ apply_profile.py legacy --dry-run
+no change
+exit=0
+$ apply_profile.py high-security --dry-run
++ permissions.deny: Read(./.env)
++ permissions.deny: Read(./.env.*)
++ permissions.deny: Read(./**/*.pem)
++ permissions.deny: Read(./**/*.key)
++ permissions.deny: Read(~/.ssh/**)
++ permissions.deny: Read(~/.aws/**)
++ permissions.deny: Read(~/.config/gh/**)
++ permissions.ask: Bash(git push --force *)
++ permissions.ask: Bash(git push -f *)
++ permissions.ask: Bash(git reset --hard *)
++ permissions.ask: Bash(rm -rf *)
++ permissions.disableBypassPermissionsMode: "disable"
+dry run: nothing written
+exit=0
+$ apply_profile.py high-security
++ permissions.deny: Read(./.env)
++ permissions.deny: Read(./.env.*)
++ permissions.deny: Read(./**/*.pem)
++ permissions.deny: Read(./**/*.key)
++ permissions.deny: Read(~/.ssh/**)
++ permissions.deny: Read(~/.aws/**)
++ permissions.deny: Read(~/.config/gh/**)
++ permissions.ask: Bash(git push --force *)
++ permissions.ask: Bash(git push -f *)
++ permissions.ask: Bash(git reset --hard *)
++ permissions.ask: Bash(rm -rf *)
++ permissions.disableBypassPermissionsMode: "disable"
+wrote .claude/settings.json
+exit=0
+hooks unchanged: yes
+$ apply_profile.py high-security   (second run)
+no change
+exit=0
+{
+ "deny": [
+  "Edit(~/.claude/harness-anchors/**)",
+  "Bash(*harness-anchors*)",
+  "Read(./.env)",
+  "Read(./.env.*)",
+  "Read(./**/*.pem)",
+  "Read(./**/*.key)",
+  "Read(~/.ssh/**)",
+  "Read(~/.aws/**)",
+  "Read(~/.config/gh/**)"
+ ],
+ "ask": [
+  "Bash(git push --force *)",
+  "Bash(git push -f *)",
+  "Bash(git reset --hard *)",
+  "Bash(rm -rf *)"
+ ],
+ "disableBypassPermissionsMode": "disable"
+}
+$ apply_profile.py high-security --settings j.json   (JSONC)
+apply_profile: j.json is not valid JSON, file left unchanged (Expecting property name enclosed in double quotes: line 2 column 3 (char 4))
+exit=2
+```
+
+New lines: `AGENTS.md` ``1=`git-guardrails-claude-code`,`map-codebase`,`settings-setup` ``;
+`pipeline-stages.md` Stage 1 item 1 gains ``- `Skill({ skill: "settings-setup" })` — offers settings
+profiles for `.claude/settings.json`; High security when the user skips; add-only, writes after
+approval`` and the auto line "Run `settings-setup` as a dry run only: it writes nothing, and its
+recommendation goes under `Not done:` in the final report."; `site/index.html` `<h2>Skills (32)</h2>`.
+
+**DELTA**: At Stage 1 the Supervisor can now show a project the exact security rules it would add to `.claude/settings.json` (High security by default) and write them on approval, without removing any existing key, hook or rule.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/T200.jsonl`, never the
 implementing agent alone]
+
+---
+
+## Mutations (AC 12)
+
+Implementer-run 2026-10-29 at `0735407`, on `tests/test_settings_setup.py`; each mutation reverted with `git checkout --`.
+
+| ID | Mutation | Mutated | Reverted |
+|----|----------|---------|----------|
+| M1 | `apply_profile.py`: `node[leaf] = current + missing` → `node[leaf] = list(value)` (assign, no union) | `3 failed, 32 passed`: `test_ac5_high_security_on_kit_file_adds_7_deny_4_ask_1_scalar_and_keeps_the_rest`, `test_ac5_existing_list_order_kept_and_no_duplicates`, `test_ac5_user_rules_never_removed` | `35 passed` |
+| M2 | `apply_profile.py`: `elif leaf not in node:` → `elif True:` (set scalar even when present) | `3 failed, 32 passed`: `test_ac5_scalar_set_only_if_absent`, `test_ac7_dry_run_prints_adds_and_kept_writes_nothing`, `test_ac7_second_run_says_no_change_and_does_not_rewrite` | `35 passed` |
+| M3 | `profiles.json`: `"permissions.allow": ["Bash(*)"]` added to `high-security` | `4 failed, 31 passed`: `test_ac2_...`, `test_ac5_user_rules_never_removed`, `test_ac6_no_file_creates_it_with_the_profile_only`, `test_ac8_no_profile_lowers_safety[high-security]` | `35 passed` |
+| M3b | same, added to `empty` (shows AC 8 catches it apart from AC 2) | `2 failed, 33 passed`: `test_ac4_shared_profiles_equal_the_page_presets[empty]`, `test_ac8_no_profile_lowers_safety[empty]` | `35 passed` |
+| M4 | `profiles.json`: last rule popped from `legacy` `permissions.deny` | `1 failed, 34 passed`: `test_ac3_legacy_equals_the_kit_settings_deny_read_from_the_file` | `35 passed` |
+
+---
+
+## Decisions (implementer, run without stopping for questions)
+
+1. **Detection treats Legacy as the baseline, not as "already set up".** Restated intent says "if `.claude/settings.json` holds none of a profile's rules". Every kit-installed project holds Legacy's 2 anchor rules, so a literal reading would never offer the profiles to the main audience (P2). SKILL.md Step 1 stops only when `high-security`, `solo-engineer` or `team-project` dry-runs to `no change`; Legacy-only says so and goes on. Supervisor to confirm.
+2. **Question mapping (SKILL.md Step 3).** Q1 keep kit behavior → `legacy` only; Q2 solo/team → `solo-engineer`/`team-project`; Q3 secrets yes or skip → also `high-security`; empty list → `high-security`. Applied in order (Q2 profile, then high-security); add-only merge makes stacking safe.
+3. **`null` in a target list (`"ask": null`) → exit 2**, not "treat as empty". `merge-settings.py` treats null as `[]`; refusing is the safer choice (no write to a value the user set).
+4. **Output format** after a write: 2-space indent, `ensure_ascii=False`, trailing newline; original indent not kept. Documented in the script docstring and SKILL.md Step 5. A file is rewritten only when something is added.
+5. **Symlinked settings file → exit 2** (mirrors `merge-settings.py`). Parent `.claude/` being a symlink is not refused.
+6. **Real run with `--settings PATH` creates missing parent dirs**; `--dry-run` never creates anything.
+7. **CLAUDE_LEGACY.md mirrored** (skills list line) per the sync policy; this broke `tests/test_agents_md_primary.py::test_ac10_claude_legacy_md_unchanged`, whose comment says to repoint the pin. Added `CLAUDE_LEGACY_REF = "65fe3a8"`; `BASE_REF` stays for CLAUDE.md AC 1. The CLAUDE_LEGACY.md Stage 1 line ("Verify Multi-CLI commands, git status, etc.") was not changed.
+8. **Frozen AGENTS.md pins repointed, not deleted**: `test_agent_guide_dedup.T070_BASELINE_REF` `c8a9af9` → `65fe3a8`; one `REPLACED_SPANS` entry in `test_agents_md_primary.py`. Comment says "required by TASK_GUIDE_T200 AC 10, not separately user-approved".
+9. **Files outside the guide's table changed**: `tests/test_site_content.py` (`SKILL_FLOW_GROUPING["1"]` gains `settings-setup` — the roster test pins the grouping), `site/index.html` quick-reference `31 skills` → `32 skills` and heading `Skills (31)` → `(32)` (count tests), the two frozen-pin test files above, `CLAUDE_LEGACY.md`.
+10. **`docs/claude-md/tracks.md` `## Auto mode` row 5 not changed.** It still names only `fewer-permission-prompts` / `update-config` for Stage 1 item 1. Adding `settings-setup` there is a doctrine edit outside the guide's Files table; the auto rule lives in pipeline-stages.md item 1 and SKILL.md. Supervisor to decide whether row 5 should name it (`tests/test_auto_mode.py` pins one row per stop).
+11. **Script is 0644**, like `skills/wake/scripts/*.py`; SKILL.md calls it via `python3`.
