@@ -67,8 +67,41 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured 2026-10-29T11:53Z at `c00d0fe`, before any implementation commit):
+
+Command: `git show c00d0fe:site/index.html > before_index.html; python3 wc.py before_index.html` (an `html.parser` counter: words of text outside `details`, `pre`, `code`, `svg`, `script`, `style`; script at `/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-personal-agentic-claude/24c52e71-3f68-4a99-b4fe-2b45d25d5e60/scratchpad/t207/wc.py`). Output, verbatim:
+
+```
+# captured 2026-10-29T11:53:50Z at c00d0fe (git show c00d0fe:site/index.html)
+section              visible  total
+quick-reference           54     60
+what-you-get             103    221
+tracks                   365    398
+install                  211    296
+update-flow              450    711
+settings-tool            121   8708
+install-variants          65     88
+agent-roles              225    239
+skills                    93     93
+hooks                    235    486
+agent-focus              229    284
+packs                    105    130
+providers                205    258
+repository-layout        133    162
+memory-system             79    111
+mcps                     324    330
+options                   14     16
+PAGE (sections)         3011  12591
+MAIN visible words (incl hero, footer): 3124
+```
+
+Baseline for the page-budget test: 3124 visible words in `<main>` (60% = 1874).
+
+BEFORE screenshots, 1440 px, headless Chrome 155 (CDP, `Page.captureScreenshot` clip of the section), directory `/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-personal-agentic-claude/24c52e71-3f68-4a99-b4fe-2b45d25d5e60/scratchpad/t207/before/`:
+- `before-tracks-1440.png` (920x824)
+- `before-install-1440.png` (920x737)
+- `before-update-flow-1440.png` (920x1784)
+- `before-hooks-1440.png` (920x1360)
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
