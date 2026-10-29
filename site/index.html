@@ -4,135 +4,27 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Easy Kit</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230a0a12'/%3E%3Cpath d='M8 23 L16 9 L24 23' fill='none' stroke='%2300d4ff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23121413'/%3E%3Cpath d='M8 23 L16 9 L24 23' fill='none' stroke='%237EDDB0' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <script>document.documentElement.className = "js";</script>
+<link rel="stylesheet" href="theme.css">
 <style>
-  :root {
-    --bg:        #0a0a12;
-    --surface:   #111128;
-    --surface2:  #16162e;
-    --border:    #1e1e42;
-    --text:      #e2e2f0;
-    --muted:     #6b6b9a;
-    --cyan:      #00d4ff;
-    --green:     #00ff88;
-    --amber:     #ffb800;
-    --purple:    #a855f7;
-    --cyan-dim:  rgba(0,212,255,.12);
-    --green-dim: rgba(0,255,136,.12);
-    --amber-dim: rgba(255,184,0,.12);
-    --purple-dim: rgba(168,85,247,.12);
+  /* Page-specific rules. Every colour is a token from theme.css. */
+  .lead { color: var(--text); max-width: 72ch; }
+  .hero { margin-bottom: var(--s-8); }
+  .hero h1 { margin: 0 0 var(--s-4); }
+  .hero .lead { font-size: 17px; color: var(--text-2); max-width: 680px; }
+  .hero ul.lead { padding-left: 1.2em; }
+  .hero ul.lead li { margin-bottom: var(--s-1); }
+  .hero ul.lead code { font-size: 0.85em; }
 
-    --sidebar-w: 15rem;
-    --measure:   72ch;
-  }
+  h3 { margin: var(--s-6) 0 var(--s-2); }
+  .tag { font: 500 12px var(--font-mono); }
+  .tag-block  { color: var(--text-strong); }
+  .tag-advise { color: var(--text-muted); }
+  .tag-inert  { color: var(--text-dim); }
 
-  * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
-
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    margin: 0;
-    color: var(--text);
-    background: var(--bg);
-    line-height: 1.6;
-    overflow-x: hidden;
-  }
-
-  /* ---- shell ------------------------------------------------------- */
-  .layout {
-    display: grid;
-    grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
-    gap: 2.5rem;
-    max-width: 78rem;
-    margin: 0 auto;
-    padding: 0 1rem;
-  }
-  .content { min-width: 0; max-width: var(--measure); padding: 2rem 0 0; }
-
-  /* ---- sidebar ----------------------------------------------------- */
-  .sidebar {
-    position: sticky;
-    top: 0;
-    align-self: start;
-    max-height: 100vh;
-    overflow-y: auto;
-    padding: 2rem .5rem 2rem 0;
-  }
-  .sidebar .brand {
-    display: block; color: #fff; font-weight: 700; font-size: .95rem;
-    text-decoration: none; margin-bottom: .35rem; word-break: break-word;
-  }
-  .sidebar .brand-sub { color: var(--muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; margin: 0 0 1.25rem; }
-  .nav-group-title {
-    color: var(--muted); font-size: .68rem; text-transform: uppercase;
-    letter-spacing: .08em; font-weight: 700; margin: 1.1rem 0 .35rem;
-  }
-  .sidebar ul { list-style: none; margin: 0; padding: 0; }
-  .sidebar li { margin: 0; }
-  .sidebar a {
-    display: block; padding: .3rem .6rem; border-left: 2px solid var(--border);
-    color: var(--muted); text-decoration: none; font-size: .87rem; border-radius: 0 4px 4px 0;
-  }
-  .sidebar a:hover { color: var(--text); background: var(--surface); }
-  .sidebar a.active {
-    color: var(--cyan); background: var(--cyan-dim);
-    border-left-color: var(--cyan); font-weight: 600;
-  }
-  .nav-toggle {
-    display: none;
-    font: inherit; font-size: .85rem; font-weight: 600;
-    background: var(--surface); color: var(--text);
-    border: 1px solid var(--border); border-radius: 6px;
-    padding: .45rem .8rem; cursor: pointer;
-  }
-  .nav-toggle:hover { border-color: var(--cyan); color: var(--cyan); }
-
-  a:focus-visible, button:focus-visible {
-    outline: 2px solid var(--cyan); outline-offset: 2px;
-  }
-  .skip-link {
-    position: absolute; left: -9999px; top: 0;
-    background: var(--surface); color: var(--cyan);
-    padding: .6rem 1rem; border: 1px solid var(--cyan); border-radius: 0 0 6px 0; z-index: 10;
-  }
-  .skip-link:focus { left: 0; }
-
-  /* ---- content ----------------------------------------------------- */
-  h1 { font-size: 1.6rem; color: #fff; letter-spacing: .01em; margin: 0 0 .5rem; }
-  h2 {
-    font-size: 1.05rem; color: var(--cyan); margin: 0 0 1rem;
-    text-transform: uppercase; letter-spacing: .06em; font-weight: 700;
-    border-bottom: 1px solid var(--border); padding-bottom: .5rem;
-  }
-  p { color: var(--text); }
-  .lead { color: var(--muted); font-size: 1.05rem; }
-
-  .header {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-top: 2px solid var(--cyan);
-    border-radius: 10px;
-    padding: 2rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 0 24px rgba(0,212,255,.08), 0 4px 24px rgba(0,0,0,.5);
-  }
-
-  section { margin: 2.5rem 0; scroll-margin-top: 1rem; }
-  .table-wrap { border: 1px solid var(--border); border-radius: 8px; }
-  table { border-collapse: collapse; width: 100%; font-size: .9rem; }
-  th, td { text-align: left; padding: .6rem .8rem; border-bottom: 1px solid var(--border); }
-  th { background: var(--surface2); color: var(--muted); text-transform: uppercase; font-size: .75rem; letter-spacing: .05em; }
-  tr:last-child td { border-bottom: none; }
-  code { color: var(--cyan); background: var(--cyan-dim); padding: .1rem .4rem; border-radius: 4px; font-size: .85em; }
-  .tag { display: inline-block; padding: .1rem .5rem; border-radius: 999px; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
-  .tag-block  { background: var(--amber-dim); color: var(--amber); }
-  .tag-advise { background: var(--green-dim); color: var(--green); }
-  .tag-inert  { background: var(--purple-dim); color: var(--purple); }
-
-  .skill-flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2.6rem 2.6rem; }
-  .flow-step { position: relative; min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: .9rem 1.1rem; }
+  .skill-flow { list-style: none; margin: 0; padding: 0; max-width: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2.6rem 2.6rem; }
+  .flow-step { position: relative; min-width: 0; border: 1px solid var(--line); border-radius: var(--r-sm); padding: var(--s-4) var(--s-5); }
   /* snake on wide screens: 0.5 -> 1 / 2 <- 1.5 / 3 -> 4 / 5; DOM order stays 0.5..5 */
   .flow-step[data-stage="0.5"] { grid-area: 1 / 1; }
   .flow-step[data-stage="1"]   { grid-area: 1 / 2; }
@@ -143,55 +35,65 @@
   .flow-step[data-stage="5"]   { grid-area: 4 / 2; }
   .flow-step[data-next]::after {
     position: absolute; width: 2.6rem; height: 2.6rem; line-height: 2.6rem; text-align: center;
-    color: var(--cyan); font-size: 1.9rem; font-weight: 700;
+    color: var(--text-dim); font-size: 1.6rem;
   }
   .flow-step[data-next="right"]::after { content: "\2192" / ""; left: 100%; top: 50%; margin-top: -1.3rem; }
   .flow-step[data-next="left"]::after  { content: "\2190" / ""; right: 100%; top: 50%; margin-top: -1.3rem; }
   .flow-step[data-next="down"]::after  { content: "\2193" / ""; top: 100%; left: 50%; margin-left: -1.3rem; }
-  .flow-step h3, .skill-band h3 { margin: 0 0 .6rem; font-size: .8rem; color: var(--purple); text-transform: uppercase; letter-spacing: .05em; }
-  .chips { margin: 0; display: flex; flex-wrap: wrap; gap: .4rem; }
-  .chip { max-width: 100%; overflow-wrap: anywhere; background: var(--surface2); border: 1px solid var(--border); border-radius: 999px; padding: .15rem .65rem; font-size: .82rem; }
-  .skill-band { margin-top: 1.2rem; background: var(--surface); border: 1px dashed var(--border); border-radius: 8px; padding: .9rem 1.1rem; }
-  .agent-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: .9rem; }
-  .agent-card .name { color: var(--green); font-weight: 700; }
-  .agent-card a { color: var(--cyan); }
-  .agent-card h3 { margin: 0 0 .5rem; color: var(--green); font-size: 1rem; }
-  .agent-card .subtype { color: var(--muted); font-size: .85rem; }
-  .agent-card .trigger { color: var(--text); font-size: .9rem; margin: .4rem 0 0; }
-  .swatch { display: inline-block; width: .7rem; height: .7rem; border-radius: 50%; margin: 0 .25rem 0 .5rem; vertical-align: middle; }
-  .swatch[data-color="orange"] { background: #ff8c42; }
-  .swatch[data-color="blue"]   { background: #4d8dff; }
-  .swatch[data-color="purple"] { background: var(--purple); }
-  .swatch[data-color="green"]  { background: var(--green); }
+  .flow-step h3, .skill-band h3 { margin: 0 0 var(--s-3); font-size: 14px; }
+  .chips { margin: 0; max-width: none; display: flex; flex-wrap: wrap; gap: var(--s-2); }
+  .chip { max-width: 100%; overflow-wrap: anywhere; }
+  .skill-band { margin-top: var(--s-5); border: 1px dashed var(--line-strong); border-radius: var(--r-sm); padding: var(--s-4) var(--s-5); }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--s-3); margin: var(--s-4) 0; }
+  .agent-card .name { font: 500 13px var(--font-mono); color: var(--text-strong); }
+  .agent-card h3 { margin: 0; font: 500 13px var(--font-mono); color: var(--text-strong); }
+  .agent-card .subtype { color: var(--text-muted); font-size: 13.5px; overflow-wrap: anywhere; }
+  .agent-card .trigger { font-size: 14px; margin: var(--s-1) 0 0; }
+  .agent-card p { margin: 0; font-size: 14px; }
+  .agent-card .lead { font-size: 14px; color: var(--text-2); }
+  .agent-card ul { margin: 0; padding-left: 1.2em; font-size: 14px; }
+  .agent-card.agent-card-plain { padding: 0; border: 0; margin-top: var(--s-4); gap: var(--s-1); }
+  .mcp-cards { display: flex; flex-direction: column; gap: var(--s-4); margin: var(--s-4) 0; }
+  .swatch[data-color="orange"] { background: var(--role-infra); }
+  .swatch[data-color="blue"]   { background: var(--role-backend); }
+  .swatch[data-color="purple"] { background: var(--role-frontend); }
+  .swatch[data-color="green"]  { background: var(--role-qa); }
+  .swatch { margin: 0 var(--s-1) 0 var(--s-2); vertical-align: middle; }
 
   pre.install {
-    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
-    padding: 1rem; font-size: .85rem; color: var(--green);
+    margin: 0 0 var(--s-4); padding: 12px 20px; max-width: none;
+    background: var(--bg-sunken); border: 1px solid var(--line-strong); border-radius: var(--r-sm);
+    font: 400 14px/1.6 var(--font-mono); color: var(--text);
     white-space: pre-wrap; overflow-wrap: anywhere;
   }
+  .codebox { margin: 0 0 var(--s-4); }
 
   /* ---- quick reference + fold-outs --------------------------------- */
-  .quick-ref { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; }
-  .quick-ref dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: .6rem 1rem; margin: 0; align-items: baseline; }
-  .quick-ref dt { color: var(--muted); font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+  .quick-ref dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--s-4) var(--s-6); margin: 0; align-items: baseline; }
+  .quick-ref dt { font-size: 13px; font-weight: 600; color: var(--text-nav); }
   .quick-ref dd { margin: 0; min-width: 0; }
-  .quick-ref pre.install { margin: 0; }
-  .quick-ref a { color: var(--cyan); }
-  details { margin: .5rem 0 1rem; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); padding: .45rem .8rem; }
-  td details { margin: .4rem 0 0; background: var(--surface2); }
+  .quick-ref .codebox { margin: 0; }
+  .strip > li { padding: 0; }
+  .strip a { display: flex; flex-direction: column; gap: 6px; height: 100%; padding: 20px 22px; color: inherit; }
+  .strip a:hover { background: var(--bg-hover); color: inherit; text-decoration: none; }
+  .strip.steps > li { padding: 16px; }
+  .steps { margin-bottom: var(--s-4); }
+  details { margin: var(--s-2) 0 var(--s-4); border: 1px solid var(--line); border-radius: var(--r-sm); padding: var(--s-2) var(--s-3); }
+  td details { margin: var(--s-2) 0 0; background: var(--bg-sunken); }
   details > :last-child { margin-bottom: 0; }
-  summary { cursor: pointer; color: var(--cyan); font-size: .85rem; font-weight: 600; }
-  summary:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+  summary { cursor: pointer; color: var(--text-nav); font-size: 14px; font-weight: 500; }
+  summary:hover { color: var(--text-strong); }
 
   /* ---- pipeline diagram -------------------------------------------- */
-  svg.pipeline { display: block; width: 100%; max-width: 26rem; height: auto; margin: 1.25rem auto; }
-  svg.pipeline .node rect { fill: var(--surface); stroke: var(--cyan); stroke-width: 1.5; }
-  svg.pipeline .node-title { fill: var(--text); font-size: 13px; font-weight: 700; font-family: inherit; }
-  svg.pipeline .node-out { fill: var(--muted); font-size: 11px; font-family: inherit; }
-  svg.pipeline .arrow { stroke: var(--cyan); stroke-width: 1.5; fill: none; }
-  svg.pipeline .arrow-head { stroke: var(--cyan); stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  svg.pipeline { display: block; width: 100%; max-width: 26rem; height: auto; margin: var(--s-5) auto; }
+  svg.pipeline .node rect { fill: var(--bg-sunken); stroke: var(--line-strong); stroke-width: 1.5; }
+  svg.pipeline .node-title { fill: var(--text-strong); font-size: 13px; font-weight: 600; font-family: inherit; }
+  svg.pipeline .node-out { fill: var(--text-muted); font-size: 11px; font-family: inherit; }
+  svg.pipeline .arrow { stroke: var(--text-dim); stroke-width: 1.5; fill: none; }
+  svg.pipeline .arrow-head { stroke: var(--text-dim); stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
-  footer { color: var(--muted); font-size: .8rem; margin: 3rem 0 1.5rem; }
+  footer { color: var(--text-muted); font-size: 13.5px; margin: var(--s-10) 0 var(--s-6); }
 
   /* wide desktop: Event and Matcher take only their content width so Script and Behavior share the rest.
      Below 900px they must wrap, or the 4-column table is wider than the page */
@@ -206,113 +108,105 @@
 
   /* ---- mobile ------------------------------------------------------ */
   @media (max-width: 767px) {
-    .layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
-    .sidebar {
-      position: static; max-height: none; overflow: visible;
-      padding: 1rem 0 .5rem;
-      border-bottom: 1px solid var(--border);
-    }
-    .content { padding-top: 1.5rem; }
-    .js .nav-toggle { display: inline-block; }
-    .js .nav-groups[data-collapsed="true"] { display: none; }
-    .sidebar .brand-sub { margin-bottom: .75rem; }
     .skill-flow { grid-template-columns: minmax(0, 1fr); }
     .flow-step[data-stage] { grid-area: auto; }
     .flow-step[data-next]::after { content: "\2193" / ""; left: 50%; right: auto; top: 100%; margin: 0 0 0 -1.3rem; }
-    .header { padding: 1.25rem; }
-    .quick-ref dl { grid-template-columns: minmax(0, 1fr); gap: .2rem; }
-    .quick-ref dd { margin-bottom: .6rem; }
+    .quick-ref dl { grid-template-columns: minmax(0, 1fr); gap: var(--s-1); }
+    .quick-ref dd { margin-bottom: var(--s-3); }
     /* tables never scroll sideways: each row becomes a card, each cell labelled by its column */
     thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
     table, tbody, tr, td { display: block; }
-    tr { border-bottom: 1px solid var(--border); padding: .4rem 0; }
+    tr { border-bottom: 1px solid var(--line); padding: var(--s-2) 0; }
     tr:last-child { border-bottom: none; }
-    td { border-bottom: none; padding: .3rem .8rem; }
-    td::before { content: attr(data-label); display: block; color: var(--muted); text-transform: uppercase; font-size: .75rem; letter-spacing: .05em; }
+    td { border-bottom: none; padding: var(--s-1) var(--s-3); }
+    td::before { content: attr(data-label); display: block; color: var(--text-muted); font: 500 12px var(--font-mono); }
   }
 
   /* ---- settings tool (scoped) -------------------------------------- */
-  #settings-tool { width: min(58rem, 100%); }
-  @media (min-width: 768px) { #settings-tool { width: min(58rem, calc(100vw - var(--sidebar-w) - 5.5rem)); } }
   #settings-tool .st-app { display: none; }
   .js #settings-tool .st-app { display: block; }
   .js #settings-tool .st-nojs { display: none; }
-  #settings-tool a { color: var(--cyan); }
   #settings-tool [hidden] { display: none !important; }
-  #settings-tool .st-tabs { display: flex; gap: .4rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); }
-  #settings-tool .st-tab { font: inherit; color: var(--text); background: none; border: 1px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0; padding: .4rem .9rem; cursor: pointer; }
-  #settings-tool .st-tab[aria-selected="true"] { background: var(--surface); border-color: var(--border); color: var(--cyan); font-weight: 700; }
-  #settings-tool .st-tab:disabled { color: var(--muted); cursor: not-allowed; }
-  #settings-tool .st-target { border: 1px solid var(--border); border-radius: 8px; padding: .5rem .8rem; margin: 0 0 .8rem; display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; min-width: 0; }
-  #settings-tool .st-target legend { color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; padding: 0 .3rem; }
+  #settings-tool input[type="radio"], #settings-tool input[type="checkbox"] { accent-color: var(--accent); }
+  #settings-tool .st-tabs { display: flex; gap: var(--s-1); margin-bottom: var(--s-4); border-bottom: 1px solid var(--line); }
+  #settings-tool .st-tab { font: 500 14px var(--font-sans); color: var(--text-2); background: none; border: 1px solid transparent; border-bottom: none; border-radius: var(--r-sm) var(--r-sm) 0 0; padding: var(--s-2) var(--s-4); cursor: pointer; }
+  #settings-tool .st-tab[aria-selected="true"] { background: var(--bg-sunken); border-color: var(--line); color: var(--text-strong); }
+  #settings-tool .st-tab:disabled { color: var(--text-dim); cursor: not-allowed; }
+  #settings-tool .st-target { border: 1px solid var(--line); border-radius: var(--r-sm); padding: var(--s-2) var(--s-3); margin: 0 0 var(--s-3); display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-5); min-width: 0; }
+  #settings-tool .st-target legend { color: var(--text-muted); font: 400 12px var(--font-mono); padding: 0 var(--s-1); }
   #settings-tool .st-target label { overflow-wrap: anywhere; }
-  #settings-tool .st-presetbar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-bottom: .8rem; }
-  #settings-tool .st-presets { display: flex; flex-wrap: wrap; gap: .4rem; }
-  #settings-tool .st-label { color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; }
-  #settings-tool .st-btn { font: inherit; font-size: .85rem; color: var(--text); background: var(--surface2); border: 1px solid var(--border); border-radius: 999px; padding: .2rem .8rem; cursor: pointer; max-width: 100%; overflow-wrap: anywhere; text-align: left; }
-  #settings-tool .st-btn:hover { border-color: var(--cyan); }
-  #settings-tool .st-primary { background: var(--cyan-dim); color: var(--cyan); border-color: var(--cyan); font-weight: 700; }
-  #settings-tool .st-confirm { background: var(--amber-dim); border: 1px solid var(--amber); border-radius: 8px; padding: .5rem .8rem; margin-bottom: .8rem; display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
-  #settings-tool .st-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr)); gap: 1.2rem; align-items: start; }
+  #settings-tool .st-presetbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); margin-bottom: var(--s-3); }
+  #settings-tool .st-presets { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+  #settings-tool .st-label { color: var(--text-muted); font: 400 12px var(--font-mono); }
+  #settings-tool .st-btn { font: 500 13px var(--font-sans); color: var(--text); background: transparent; border: 1px solid var(--line-strong); border-radius: var(--r-sm); min-height: 36px; padding: 0 var(--s-4); cursor: pointer; max-width: 100%; overflow-wrap: anywhere; text-align: left; }
+  #settings-tool .st-btn:hover { background: var(--bg-hover); color: var(--text-strong); }
+  #settings-tool .st-primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+  #settings-tool .st-primary:hover { background: var(--accent-hover); color: var(--on-accent); }
+  #settings-tool .st-confirm { background: var(--bg-sunken); border: 1px solid var(--line-strong); border-radius: var(--r-sm); padding: var(--s-2) var(--s-3); margin-bottom: var(--s-3); display: flex; flex-wrap: wrap; gap: var(--s-2); align-items: center; }
+  #settings-tool .st-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr)); gap: var(--s-5); align-items: start; }
   #settings-tool .st-left, #settings-tool .st-right { min-width: 0; }
-  #settings-tool .st-right { position: sticky; top: 1rem; }
+  #settings-tool .st-right { position: sticky; top: calc(var(--header-h) + var(--s-4)); }
   #settings-tool .st-filter, #settings-tool input[type="text"], #settings-tool input[type="number"], #settings-tool select, #settings-tool textarea {
-    font: inherit; font-size: .85rem; color: var(--text); background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: .3rem .5rem; max-width: 100%; }
-  #settings-tool .st-filter { width: 100%; margin-bottom: .6rem; }
+    font: 400 14px var(--font-sans); color: var(--text); background: var(--bg-sunken); border: 1px solid var(--line-strong); border-radius: var(--r-sm); min-height: 40px; padding: var(--s-1) var(--s-3); max-width: 100%; }
+  #settings-tool .st-filter { width: 100%; margin-bottom: var(--s-3); }
   #settings-tool textarea { width: 100%; }
-  #settings-tool details { margin: 0 0 .6rem; }
-  #settings-tool .st-row { border-top: 1px solid var(--border); padding: .6rem 0; }
+  #settings-tool details { margin: 0 0 var(--s-3); }
+  #settings-tool .st-row { border-top: 1px solid var(--line); padding: var(--s-3) 0; }
   #settings-tool .st-row:first-child { border-top: none; }
-  #settings-tool .st-head { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .5rem; }
+  #settings-tool .st-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-1) var(--s-2); }
   #settings-tool .st-head label { overflow-wrap: anywhere; min-width: 0; }
-  #settings-tool .st-why { margin: .2rem 0 .3rem; color: var(--muted); font-size: .85rem; }
-  #settings-tool .st-ctl { margin: .3rem 0; }
-  #settings-tool .st-err { margin: .2rem 0 0; color: var(--amber); font-size: .8rem; min-height: 0; }
+  #settings-tool .st-why { margin: var(--s-1) 0 var(--s-2); color: var(--text-muted); font-size: 13.5px; }
+  #settings-tool .st-ctl { margin: var(--s-2) 0; }
+  #settings-tool .st-err { margin: var(--s-1) 0 0; color: var(--text-strong); font-size: 13px; min-height: 0; }
   #settings-tool .st-err:empty { display: none; }
-  #settings-tool .st-chips { list-style: none; margin: 0 0 .4rem; padding: 0; display: flex; flex-wrap: wrap; gap: .3rem; }
-  #settings-tool .st-chips .chip { display: inline-flex; gap: .3rem; align-items: center; }
-  #settings-tool .st-x { font: inherit; color: var(--muted); background: none; border: none; cursor: pointer; padding: 0 .2rem; }
-  #settings-tool .st-add { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: .4rem; }
-  #settings-tool .st-sugg { display: flex; flex-wrap: wrap; gap: .3rem; }
-  #settings-tool .st-sug { font-size: .75rem; color: var(--muted); }
-  #settings-tool .st-file { margin: 0 0 .4rem; color: var(--green); overflow-wrap: anywhere; }
+  #settings-tool .st-chips { list-style: none; margin: 0 0 var(--s-2); padding: 0; max-width: none; display: flex; flex-wrap: wrap; gap: var(--s-1); }
+  #settings-tool .st-chips .chip { display: inline-flex; gap: var(--s-1); align-items: center; }
+  #settings-tool .st-x { font: inherit; color: var(--text-muted); background: none; border: none; cursor: pointer; padding: 0 var(--s-1); }
+  #settings-tool .st-add { display: flex; gap: var(--s-2); flex-wrap: wrap; margin-bottom: var(--s-2); }
+  #settings-tool .st-sugg { display: flex; flex-wrap: wrap; gap: var(--s-1); }
+  #settings-tool .st-sug { font-size: 12px; color: var(--text-muted); }
+  #settings-tool .st-file { margin: 0 0 var(--s-2); color: var(--text-2); font-family: var(--font-mono); overflow-wrap: anywhere; }
   #settings-tool .st-output { margin: 0; max-height: 28rem; overflow: auto; }
-  #settings-tool .st-note { margin: .4rem 0 0; color: var(--amber); font-size: .85rem; }
+  #settings-tool .st-note { margin: var(--s-2) 0 0; color: var(--text-strong); font-size: 13.5px; }
   #settings-tool .st-note:empty { display: none; }
-  #settings-tool .st-copybar { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin-top: .6rem; }
-  #settings-tool .st-status { color: var(--muted); font-size: .85rem; }
-  #settings-tool input:focus-visible, #settings-tool select:focus-visible, #settings-tool textarea:focus-visible,
-  #settings-tool .st-btn:focus-visible, #settings-tool .st-tab:focus-visible, #settings-tool .st-x:focus-visible, #settings-tool pre:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
-  #settings-tool .st-paste { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-top: .3rem; }
-  #settings-tool .st-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: .6rem 0 .2rem; }
-  #settings-tool .st-keep { font-size: .85rem; color: var(--muted); }
-  #settings-tool .st-privacy { margin: .2rem 0 .6rem; color: var(--muted); font-size: .85rem; }
-  #settings-tool h3 { margin: 1.2rem 0 .5rem; font-size: .8rem; color: var(--purple); text-transform: uppercase; letter-spacing: .05em; }
-  #settings-tool h4 { margin: .8rem 0 .3rem; font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  #settings-tool .st-copybar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3); margin-top: var(--s-3); }
+  #settings-tool .st-status { color: var(--text-muted); font-size: 13.5px; }
+  #settings-tool .st-paste { font-family: var(--font-mono); margin-top: var(--s-1); }
+  #settings-tool .st-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); margin: var(--s-3) 0 var(--s-1); }
+  #settings-tool .st-keep { font-size: 13.5px; color: var(--text-muted); }
+  #settings-tool .st-privacy { margin: var(--s-1) 0 var(--s-3); color: var(--text-muted); font-size: 13.5px; }
+  #settings-tool h3 { margin: var(--s-5) 0 var(--s-2); }
+  #settings-tool h4 { margin: var(--s-3) 0 var(--s-1); font: 500 12px var(--font-mono); color: var(--text-muted); }
   #settings-tool h4:first-child { margin-top: 0; }
-  #settings-tool .st-findings { list-style: none; margin: 0; padding: 0; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
-  #settings-tool .st-findings li { display: flex; flex-wrap: wrap; gap: .2rem .8rem; align-items: baseline; padding: .5rem .8rem; border-top: 1px solid var(--border); font-size: .85rem; }
+  #settings-tool .st-findings { list-style: none; margin: 0; padding: 0; max-width: none; border: 1px solid var(--line); border-radius: var(--r-sm); }
+  #settings-tool .st-findings li { display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-3); align-items: baseline; padding: var(--s-2) var(--s-3); border-top: 1px solid var(--line); font-size: 13.5px; }
   #settings-tool .st-findings li:first-child { border-top: none; }
-  #settings-tool .st-findings li > .tag { flex: none; min-width: 6.5rem; text-align: center; white-space: nowrap; }
-  #settings-tool .st-findings .st-fixline { display: block; color: var(--muted); }
-  #settings-tool .st-findings .st-btn { margin-top: .3rem; }
-  #settings-tool .st-path { flex: 1 1 9rem; max-width: 13rem; font: inherit; font-size: .8rem; color: var(--cyan); background: none; border: none; padding: 0; cursor: pointer; text-align: left; overflow-wrap: anywhere; text-decoration: underline; }
+  #settings-tool .st-findings li > .tag { flex: none; min-width: 6.5rem; white-space: nowrap; }
+  #settings-tool .st-findings .st-fixline { display: block; color: var(--text-muted); }
+  #settings-tool .st-findings .st-btn { margin-top: var(--s-1); }
+  #settings-tool .st-path { flex: 1 1 9rem; max-width: 13rem; font: inherit; font-size: 13px; color: var(--accent); background: none; border: none; padding: 0; cursor: pointer; text-align: left; overflow-wrap: anywhere; text-decoration: underline; }
   #settings-tool .st-findings .st-msg { flex: 999 1 16rem; min-width: 0; overflow-wrap: anywhere; }
-  #settings-tool .st-map { border: 1px solid var(--border); border-radius: 8px; padding: .6rem .8rem; max-height: 36rem; overflow: auto; }
-  #settings-tool .st-tree { list-style: none; margin: 0; padding: 0; }
-  #settings-tool .st-node { padding: .15rem .3rem; border-radius: 4px; overflow-wrap: anywhere; font-size: .85rem; }
+  #settings-tool .st-map { border: 1px solid var(--line); border-radius: var(--r-sm); padding: var(--s-3); max-height: 36rem; overflow: auto; }
+  #settings-tool .st-tree { list-style: none; margin: 0; padding: 0; max-width: none; }
+  #settings-tool .st-node { padding: 2px var(--s-1); border-radius: var(--r-xs); overflow-wrap: anywhere; font-size: 13.5px; }
   #settings-tool .st-node code, #settings-tool .st-col code { overflow-wrap: anywhere; }
-  #settings-tool .st-val { color: var(--muted); margin-left: .4rem; }
-  #settings-tool .st-sep { color: var(--muted); margin: 0 .3rem; }
-  #settings-tool .st-node .tag, #settings-tool .st-colhead .tag { margin-left: .3rem; }
-  #settings-tool .st-hint { margin: 0 0 .4rem; color: var(--muted); font-size: .8rem; }
-  #settings-tool .st-perms { display: grid; grid-template-columns: repeat(3, minmax(10rem, 1fr)); gap: .6rem; }
-  #settings-tool .st-col { min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: .4rem .5rem; }
-  #settings-tool .st-colhead { margin: 0 0 .3rem; font-weight: 700; font-size: .85rem; }
-  #settings-tool .st-hit { outline: 2px solid var(--amber); outline-offset: 1px; }
+  #settings-tool .st-val { color: var(--text-muted); margin-left: var(--s-2); }
+  #settings-tool .st-sep { color: var(--text-muted); margin: 0 var(--s-1); }
+  #settings-tool .st-node .tag, #settings-tool .st-colhead .tag { margin-left: var(--s-1); }
+  #settings-tool .st-hint { margin: 0 0 var(--s-2); color: var(--text-muted); font-size: 13px; }
+  #settings-tool .st-perms { display: grid; grid-template-columns: repeat(3, minmax(10rem, 1fr)); gap: var(--s-3); }
+  #settings-tool .st-col { min-width: 0; border: 1px solid var(--line); border-radius: var(--r-sm); padding: var(--s-2); }
+  #settings-tool .st-colhead { margin: 0 0 var(--s-1); font-weight: 600; font-size: 13.5px; }
+  #settings-tool .st-hit { outline: 2px solid var(--accent); outline-offset: 1px; }
   @media (max-width: 767px) {
     #settings-tool .st-right { position: static; }
-    #settings-tool .st-copybar { position: sticky; bottom: 0; background: var(--bg); padding: .5rem 0; border-top: 1px solid var(--border); }
+    #settings-tool .st-copybar { position: sticky; bottom: 0; background: var(--bg); padding: var(--s-2) 0; border-top: 1px solid var(--line); }
+  }
+  @media (max-width: 719px) {
+    #settings-tool .st-btn, #settings-tool .st-tab, #settings-tool .st-path, #settings-tool input[type="text"], #settings-tool input[type="number"], #settings-tool select, #settings-tool .st-filter { min-height: 44px; }
+    #settings-tool .st-target label, #settings-tool .st-keep, #settings-tool .st-head label { display: inline-flex; align-items: center; min-height: 44px; gap: var(--s-2); }
+    summary { display: list-item; min-height: 44px; line-height: 28px; }
+    #settings-tool .st-perms { grid-template-columns: minmax(0, 1fr); }
   }
 </style>
 </head>
@@ -320,34 +214,62 @@
 
 <a class="skip-link" href="#main">Skip to content</a>
 
+<header class="site-header">
+<div class="site-header-inner">
+  <div class="brand-wrap">
+    <a class="brand" href="#top">
+      <svg viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <rect x="0.75" y="0.75" width="24.5" height="24.5" rx="5"/>
+        <circle cx="8" cy="8" r="2"/><circle cx="18" cy="9" r="2"/><circle cx="13" cy="19" r="2"/>
+        <path d="M9.9 8.2 L16.1 8.8 M9.2 9.8 L11.9 17.2 M16.9 10.8 L14.1 17.2"/>
+      </svg>
+      Easy Kit
+    </a>
+    <span class="tag-version">supervisor kit &middot; v2.2.0</span>
+  </div>
+  <div class="header-actions">
+    <nav class="family-nav" aria-label="Easy Kit family">
+    <a href="https://personal-agentic-claude.vercel.app/" aria-current="page"><span class="dot" aria-hidden="true"></span>Easy Kit</a>
+    <a href="https://easy-memory.vercel.app/"><span class="dot" aria-hidden="true"></span>Easy Memory</a>
+    <a href="https://easy-verifier.vercel.app/"><span class="dot" aria-hidden="true"></span>Easy Verifier</a>
+    <a class="btn btn-secondary" href="https://github.com/thunderkds/personal-agentic-claude">GitHub</a>
+    </nav>
+    <button class="nav-toggle" type="button" aria-expanded="true" aria-controls="sidebar">Menu</button>
+  </div>
+</div>
+</header>
+
 <div class="layout">
 
-<aside class="sidebar">
-  <a class="brand" href="#top">Easy Kit - Supervisor</a>
-  <p class="brand-sub">supervisor kit &middot; v2.2.0</p>
-  <button class="nav-toggle" type="button" aria-expanded="true" aria-controls="site-nav">Menu</button>
+<aside class="sidebar" id="sidebar">
+  <nav class="family-nav family-nav-drawer" aria-label="Easy Kit family (menu)">
+    <a href="https://personal-agentic-claude.vercel.app/" aria-current="page"><span class="dot" aria-hidden="true"></span>Easy Kit</a>
+    <a href="https://easy-memory.vercel.app/"><span class="dot" aria-hidden="true"></span>Easy Memory</a>
+    <a href="https://easy-verifier.vercel.app/"><span class="dot" aria-hidden="true"></span>Easy Verifier</a>
+    <a class="btn btn-secondary" href="https://github.com/thunderkds/personal-agentic-claude">GitHub</a>
+  </nav>
   <nav id="site-nav" class="nav-groups" aria-label="Site sections">
-    <p class="nav-group-title">Overview</p>
+    <p class="nav-group-title">// overview</p>
     <ul>
       <li><a href="#quick-reference">Quick reference</a></li>
       <li><a href="#what-you-get">What you get</a></li>
       <li><a href="#tracks">Minimal and extended tracks</a></li>
     </ul>
-    <p class="nav-group-title">Getting started</p>
+    <p class="nav-group-title">// getting started</p>
     <ul>
       <li><a href="#install">Install</a></li>
       <li><a href="#update-flow">Update flow</a></li>
       <li><a href="#settings-tool">Settings tool</a></li>
       <li><a href="#install-variants">Install variants</a></li>
     </ul>
-    <p class="nav-group-title">The team</p>
+    <p class="nav-group-title">// the team</p>
     <ul>
       <li><a href="#agent-roles">Agent roles</a></li>
       <li><a href="#skills">Skills</a></li>
       <li><a href="#hooks">Hooks</a></li>
       <li><a href="#agent-focus">Agent focus</a></li>
     </ul>
-    <p class="nav-group-title">Reference</p>
+    <p class="nav-group-title">// reference</p>
     <ul>
       <li><a href="#packs">Packs</a></li>
       <li><a href="#providers">Providers</a></li>
@@ -361,7 +283,8 @@
 
 <main id="main" class="content">
 
-<div class="header">
+<div class="hero">
+  <p class="eyebrow">&gt; multi-agent supervisor framework</p>
   <h1>Easy Kit</h1>
   <p class="lead">
     A multi-agent supervisor framework: one Supervisor session enforces a 5-stage pipeline through
@@ -383,13 +306,18 @@
 <div class="quick-ref">
 <dl>
   <dt>Install</dt>
-  <dd><pre class="install">curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh</pre></dd>
+  <dd><div class="codebox"><code><span class="prompt">$ </span>curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh</code><button type="button" class="btn btn-primary" aria-label="Copy install command">Copy</button></div></dd>
   <dt>Update</dt>
   <dd>Run the same command from your repo root and choose <strong>1) Update</strong> — see <a href="#update-flow">Update flow</a>.</dd>
   <dt>Stages</dt>
   <dd>Phase 0 → 0.5 → 1 → 1.5 → 2 → 3 → 4 → 5</dd>
   <dt>Roster</dt>
-  <dd><a href="#agent-roles">4 spawnable roles</a> &middot; <a href="#skills">33 skills</a> &middot; <a href="#hooks">5 blocking hooks (of 11)</a></dd>
+  <dd><ul class="strip">
+    <li><a href="#agent-roles"><span class="num">4</span><span class="label">spawnable roles</span></a></li>
+    <li><a href="#skills"><span class="num">33</span><span class="label">skills</span></a></li>
+    <li><a href="#hooks"><span class="num">5</span><span class="label">blocking hooks (of 11)</span></a></li>
+    <li><a href="#packs"><span class="num">5</span><span class="label">optional domain packs</span></a></li>
+  </ul></dd>
 </dl>
 </div>
 </section>
@@ -399,6 +327,50 @@
   Four spawnable sub-agent roles, skills for every pipeline stage, and enforcement hooks that gate
   merges and spawns — so "write a test first" and "update the board" are checked, not just written down.
 </p>
+<ol class="strip steps" aria-label="The Easy Kit pipeline, in order">
+  <li data-stage="0">
+    <span class="step-no">00</span>
+    <span class="step-title">Phase 0 · Initiation</span>
+    <span class="step-meta">PRD.md</span>
+  </li>
+  <li data-stage="0.5">
+    <span class="step-no">0.5</span>
+    <span class="step-title">Stage 0.5 · Grill + brainstorm</span>
+    <span class="step-meta">BRAINSTORMING_LOG.md</span>
+  </li>
+  <li data-stage="1">
+    <span class="step-no">01</span>
+    <span class="step-title">Stage 1 · Environment setup</span>
+    <span class="step-meta">codebase map, CLI table</span>
+  </li>
+  <li data-stage="1.5">
+    <span class="step-no">1.5</span>
+    <span class="step-title">Stage 1.5 · Sub-agent team</span>
+    <span class="step-meta">agent roster</span>
+  </li>
+  <li data-stage="2">
+    <span class="step-no">02</span>
+    <span class="step-title">Stage 2 · Plan</span>
+    <span class="step-meta">PROJECT_SPEC + TASK_GUIDEs</span>
+  </li>
+  <li data-stage="3">
+    <span class="step-no">03</span>
+    <span class="step-title">Stage 3 · Parallel execution</span>
+    <span class="step-meta">code in isolated worktrees</span>
+  </li>
+  <li data-stage="4">
+    <span class="step-no">04</span>
+    <span class="step-title">Stage 4 · Review</span>
+    <span class="step-meta">findings + Evidence</span>
+  </li>
+  <li data-stage="5">
+    <span class="step-no">05</span>
+    <span class="step-title">Stage 5 · Integrate</span>
+    <span class="step-meta">verify, merge, release plan</span>
+  </li>
+</ol>
+<details>
+<summary>Pipeline as a vertical diagram</summary>
 <svg id="pipeline-diagram" class="pipeline" role="img" viewBox="0 0 320 558" xmlns="http://www.w3.org/2000/svg" aria-labelledby="pipeline-diagram-title pipeline-diagram-desc">
   <title id="pipeline-diagram-title">The Easy Kit pipeline</title>
   <desc id="pipeline-diagram-desc">Eight steps in order, top to bottom: Phase 0 initiation, Stage 0.5 grilling and brainstorming, Stage 1 environment setup, Stage 1.5 sub-agent team, Stage 2 planning, Stage 3 parallel execution, Stage 4 review, Stage 5 integration. These stages are the extended track. Each step hands its output to the next.</desc>
@@ -450,6 +422,7 @@
     <text class="node-out" x="160" y="545" text-anchor="middle">verify, merge, release plan</text>
   </g>
 </svg>
+</details>
 </section>
 
 <section id="tracks">
@@ -501,7 +474,7 @@
   Prerequisites: an existing <strong>git repo</strong>, and <code>git</code>, <code>curl</code>,
   and a POSIX <code>sh</code> on your PATH.
 </p>
-<pre class="install">curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh</pre>
+<div class="codebox"><code><span class="prompt">$ </span>curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh</code><button type="button" class="btn btn-primary" aria-label="Copy install command">Copy</button></div>
 <p class="lead">
   <strong>Restart Claude Code</strong> after install so it picks up the new
   <code>.claude/agents/</code>, <code>.claude/skills/</code>, and <code>.claude/settings.json</code>.
@@ -1779,35 +1752,38 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
   spawnable role</strong>; it lives in <code>templates/</code>.
 </p>
 
-<div class="agent-card">
+<div class="cards">
+<div class="card agent-card">
   <div class="name">backend-developer</div>
-  <div class="subtype"><code>subagent_type: backend-developer</code><span class="swatch" data-color="blue"></span>blue</div>
+  <div class="subtype"><code>subagent_type: backend-developer</code><span class="dot swatch" data-color="blue"></span>blue</div>
   <p class="trigger">Use when a TASK_GUIDE assigns server-side work — a new API endpoint, a service or business-logic change, or a data-access fix.</p>
   <p>Core backend engineering role — server-side APIs, services, business logic, and data-access layers, built test-first.</p>
 </div>
 
-<div class="agent-card">
+<div class="card agent-card">
   <div class="name">common-infrastructure</div>
-  <div class="subtype"><code>subagent_type: common-infrastructure</code><span class="swatch" data-color="orange"></span>orange</div>
+  <div class="subtype"><code>subagent_type: common-infrastructure</code><span class="dot swatch" data-color="orange"></span>orange</div>
   <p class="trigger">Use when a task needs worktree setup, dependency installs, migrations or shared config.</p>
   <p>Environment and shared-config specialist — worktree setup, migrations, shared services; always runs first before implementers start.</p>
 </div>
 
-<div class="agent-card">
+<div class="card agent-card">
   <div class="name">frontend-developer</div>
-  <div class="subtype"><code>subagent_type: frontend-developer</code><span class="swatch" data-color="purple"></span>purple</div>
+  <div class="subtype"><code>subagent_type: frontend-developer</code><span class="dot swatch" data-color="purple"></span>purple</div>
   <p class="trigger">Use when a TASK_GUIDE assigns client-side work — a new UI component, a client-state or interaction change, or an accessibility fix.</p>
   <p>Core frontend engineering role — UI components, client-side state, interactions, and accessibility, built test-first.</p>
 </div>
 
-<div class="agent-card">
+<div class="card agent-card">
   <div class="name">qa-expert</div>
-  <div class="subtype"><code>subagent_type: qa-expert</code><span class="swatch" data-color="green"></span>green</div>
+  <div class="subtype"><code>subagent_type: qa-expert</code><span class="dot swatch" data-color="green"></span>green</div>
   <p class="trigger">Use when a task needs independent verification — checking a finished task's Acceptance Criteria with evidence, extending the smoke suite, or a regression check before merge.</p>
   <p>Quality and evaluation role — owns the smoke suite, regression safety, and independent verification of acceptance criteria.</p>
 </div>
 
-<div class="agent-card">
+</div>
+
+<div class="agent-card agent-card-plain">
   <div class="name">general-agent-template</div>
   <div class="subtype">not directly spawnable — shared base only, in <code>templates/</code></div>
   <p>Base template inherited by all four roles above. Contains the universal Base Rules, engineering principles, and output requirements that are not restated per role. It has no <code>subagent_type</code> of its own and is never spawned directly.</p>
@@ -2047,7 +2023,9 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
   Three separate companion tools, not part of this kit: MCP servers you can run alongside it, each from its own repository.
 </p>
 
-<div class="agent-card" id="verifier">
+<div class="mcp-cards">
+
+<div class="card agent-card" id="verifier">
 <h3>easy-verifier-mcp</h3>
 <p class="lead">
   A separate companion tool, not part of this kit: a no-LLM evidence engine you can run alongside Stage 4 review.
@@ -2062,7 +2040,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <p><a href="https://github.com/thunderkds/easy-verifier-mcp" target="_blank" rel="noopener noreferrer">easy-verifier-mcp on GitHub</a> &middot; <a href="https://easy-verifier.vercel.app/" target="_blank" rel="noopener noreferrer">Easy Verifier site</a></p>
 </div>
 
-<div class="agent-card" id="easy-ui-mcp">
+<div class="card agent-card" id="easy-ui-mcp">
 <h3>easy-ui-mcp</h3>
 <p class="lead">
   A separate companion tool, not part of this kit: a Dockerized MCP server for testing a web UI locally.
@@ -2077,7 +2055,7 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 <p><a href="https://github.com/thunderkds/easy-ui-mcp" target="_blank" rel="noopener noreferrer">easy-ui-mcp on GitHub</a></p>
 </div>
 
-<div class="agent-card" id="easy-memory-mcp">
+<div class="card agent-card" id="easy-memory-mcp">
 <h3>easy-memory-mcp</h3>
 <p class="lead">
   A separate companion tool, optional and not part of this kit: an MCP server that saves what a session found out and hands it to the next one.
@@ -2090,6 +2068,8 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
   <li>A working prototype: about 28% fewer tokens in scripted tests (experiment 03), not yet measured on real work</li>
 </ul>
 <p><a href="https://github.com/thunderkds/easy-memory-mcp" target="_blank" rel="noopener noreferrer">easy-memory-mcp on GitHub</a></p>
+</div>
+
 </div>
 </section>
 
@@ -2114,26 +2094,45 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 
 <script>
 (function () {
-  var nav = document.getElementById("site-nav");
+  var panel = document.getElementById("sidebar");
   var toggle = document.querySelector(".nav-toggle");
 
-  // Mobile menu. The nav is open in the markup so a JS-less page still shows
-  // the full link list; collapsing is applied here, and only below 768px by CSS.
-  if (nav && toggle) {
-    nav.setAttribute("data-collapsed", "true");
+  // Menu drawer. The sidebar is open in the markup so a JS-less page still shows
+  // the full link list; collapsing is applied here, and only below 1024px by CSS.
+  if (panel && toggle) {
+    panel.setAttribute("data-collapsed", "true");
     toggle.setAttribute("aria-expanded", "false");
     toggle.addEventListener("click", function () {
-      var collapsed = nav.getAttribute("data-collapsed") === "true";
-      nav.setAttribute("data-collapsed", collapsed ? "false" : "true");
+      var collapsed = panel.getAttribute("data-collapsed") === "true";
+      panel.setAttribute("data-collapsed", collapsed ? "false" : "true");
       toggle.setAttribute("aria-expanded", collapsed ? "true" : "false");
     });
-    nav.addEventListener("click", function (event) {
-      if (event.target.tagName === "A" && window.innerWidth < 768) {
-        nav.setAttribute("data-collapsed", "true");
+    panel.addEventListener("click", function (event) {
+      if (event.target.tagName === "A" && window.innerWidth < 1024) {
+        panel.setAttribute("data-collapsed", "true");
         toggle.setAttribute("aria-expanded", "false");
       }
     });
   }
+
+  // Copy buttons on the install command boxes. The "$ " prompt is not copied.
+  [].forEach.call(document.querySelectorAll(".codebox"), function (box) {
+    var button = box.querySelector("button");
+    var code = box.querySelector("code");
+    if (!button || !code) { return; }
+    button.addEventListener("click", function () {
+      var text = code.textContent.replace(/^\$\s+/, "");
+      function done(ok) {
+        button.textContent = ok ? "Copied" : "Select and copy";
+        setTimeout(function () { button.textContent = "Copy"; }, 2000);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+      } else {
+        done(false);
+      }
+    });
+  });
 
   // Scroll-spy. Deterministic: the active link is always the first section in
   // document order that is currently intersecting, so overlapping short
