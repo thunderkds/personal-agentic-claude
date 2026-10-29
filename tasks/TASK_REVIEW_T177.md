@@ -91,3 +91,12 @@ Verdict: no P0/P1, 0 fixes applied. Ready for the user's go on the paid batch.
 - RULE-2 validity checks 1–3: pass (full first trace 26 lines; isolation; 0 session-id mismatches over 10 follow-ups).
 - `git diff e3affd5 -- experiments/kit-arms/RULE.md | wc -l` = 0.
 
+
+---
+
+## Integration prep (Supervisor, 2026-10-29)
+
+- Merged `main` (226 commits) into the branch at `3f826ed`. Conflicts in `PROJECT_KANBAN.md` and `memory/learnings.md` only; both resolved by keeping both sides (main's stale T176 Todo row dropped).
+- `test_sc8_full_arm_is_the_installer_output` then failed: `assert 11 == 9`. Today's installer adds 2 auto-mode Stop hooks (T180/T182). Expected count changed to 11 with a comment; rounds 1-2 ran with the 9-hook kit, so results are unaffected.
+- Verification Command after the merge: `74 passed`; dry run `36 runs, spend $0.00, rule complete: True`; `RULE.md` diff vs `e3affd5`: `0`.
+- Full kit suite `.claude/hooks/tests/ tests/`: the same 15 failures as on `main` (pre-existing, `diff` of the FAILED lists empty), 0 new.

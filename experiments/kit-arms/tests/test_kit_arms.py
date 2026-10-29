@@ -258,7 +258,8 @@ def test_sc8_full_arm_is_the_installer_output(ra, built_arms):
                                 capture_output=True, text=True, check=True).stdout
     assert (full / "AGENTS.md").read_text() == kit_agents
     assert (full / ".claude" / "harness-lock.json").is_file()
-    assert len(hook_commands(full)) == 9
+    # 9 hooks when rounds 1-2 ran (2026-10-26); T180/T182 later added 2 auto-mode Stop hooks.
+    assert len(hook_commands(full)) == 11
 
 
 def test_sc8_minimal_arm_short_doctrine_two_hooks(ra, built_arms):
