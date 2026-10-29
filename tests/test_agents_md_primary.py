@@ -25,6 +25,9 @@ CURSOR_MDC = ROOT / ".cursor" / "rules" / "agent-base.mdc"
 # T173's branch base: `main` + T170 merged in (TASK_GUIDE_T173 "Depends on"). `CLAUDE.md` at this
 # commit is the doctrine T173 moves. Repoint `CLAUDE_LEGACY.md`'s pin when a later task edits it.
 BASE_REF = "c573bbf"
+# T200: `CLAUDE_LEGACY.md` gains the `settings-setup` skills-list line (CLAUDE_LEGACY.md sync policy),
+# so its pin moves off BASE_REF to T200's edit commit. BASE_REF stays for CLAUDE.md (AC 1).
+CLAUDE_LEGACY_REF = "65fe3a8"
 
 # AC 1 allowed edits (a) and (b): (base span, new span). Each span must hit exactly one base line.
 REPLACED_SPANS = [
@@ -43,6 +46,9 @@ REPLACED_SPANS = [
      "with no guide, and ends with a Decision record (`docs/claude-md/tracks.md`)."),
     ("Stage 4 (code-review) is mandatory for every task.",
      "Stage 4 (code-review) is mandatory for every extended-track task."),
+    # T200: the Stage 1 skill `settings-setup` joins the stage index.
+    ("1=`git-guardrails-claude-code`,`map-codebase` |",
+     "1=`git-guardrails-claude-code`,`map-codebase`,`settings-setup` |"),
 ]
 AC6_HEADING = re.compile(r"^## .*cannot enforce", re.IGNORECASE)
 # T178: the one later section allowed outside the opening block and the AC 6 section. Its
@@ -196,7 +202,7 @@ def test_ac9_no_shipped_text_points_at_a_claude_md_section():
 
 # ── AC 10 ─────────────────────────────────────────────────────────────────────
 def test_ac10_claude_legacy_md_unchanged():
-    assert (ROOT / "CLAUDE_LEGACY.md").read_bytes() == _git_show("CLAUDE_LEGACY.md", BASE_REF)
+    assert (ROOT / "CLAUDE_LEGACY.md").read_bytes() == _git_show("CLAUDE_LEGACY.md", CLAUDE_LEGACY_REF)
 
 
 OUT_OF_SCOPE = ("CLAUDE_LEGACY.md", "docs/ddr/", "docs/adr/", "RUNBOOK.md", "BRAINSTORMING_LOG",
