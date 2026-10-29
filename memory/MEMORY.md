@@ -25,14 +25,14 @@
      run; read them there. The enforced gate is the whole-file character budget above. -->
 
 ### Decisions
-- [T143/T191/T189 merged: CI re-runs a Done task's Verification Command; `score` skill; auto close-out](decisions.md) — `# ci: skip — <reason>` opt-out; score row optional, skill-only branches score low; Stop check (7) wants a test run under the task
-- [T200/T201: settings profiles — `settings-setup` skill at Stage 1, High security default, add-only; page shows the same five](decisions.md) — one source `skills/settings-setup/profiles.json`; `apply_profile.py --dry-run` first, write on approval; Legacy = kit's 2 anchor rules (baseline); drift tests tie page to file
+- [T143/T191/T189: CI re-runs a Done task's Verification Command; `score` skill; auto close-out](decisions.md) — `# ci: skip — <reason>`; score row optional; Stop check (7) needs a task test run
+- [T200/T201: settings profiles — `settings-setup` at Stage 1, High security default, add-only](decisions.md) — one source `profiles.json`; dry run first; Legacy = the kit's 2 anchor rules
 - [T199: site `#mcps` lists easy-memory-mcp as a third OPTIONAL companion card](decisions.md) — README facts only; Open: T194 + T199 both edit the `#mcps` lead, merge by hand
 - [T198: `wake` prints the Decisions + Learning Records entries with `memory_sections.py`, never reads all of MEMORY.md](decisions.md) — ~9k tokens less per session; **add new index lines at the TOP of a section (newest first) or the script misses them**
-- [T195: easy-memory installed; base sub-agents get memory_search/read and use the spawn slice, not all of MEMORY.md](decisions.md) — OPTIONAL: agents skip it if absent; `memory/` NOT replaced; decide after ~2 weeks of `easy_memory.py report`
+- [T195: easy-memory installed; base sub-agents get memory_search/read and use the spawn slice, not all of MEMORY.md](decisions.md) — OPTIONAL; `memory/` NOT replaced; review after ~2 weeks of `easy_memory.py report`
 - [T182: auto verify — Stop hook runs real `/verify` headless for `[auto]` tasks](decisions.md) — gate trusts the row only with the anchor-dir run record; $2 cap per commit
 - [T203: auto verify for every task — Supervisor runs `stop_auto_verify.py --start <ID>` at Ready for Review](decisions.md) — Stop hook backstop; `CLAUDE_AUTO_VERIFY=off` = `[auto]`-only; worktree from the board row's branch; open T205, T206
-- [T180: auto mode — `[auto]` runs either track to Ready for Review (T189: a passed auto verify moves it to Done); Debate size by Risk; auto-mode Stop hook](decisions.md) — Low decides, Medium 2 / High 3 Advocates, High always debates once; merge/verify stay the user's
+- [T180: auto mode — `[auto]` runs either track; Debate size by Risk; auto-mode Stop hook](decisions.md) — Low decides, Medium 2 / High 3 Advocates; merge/push stay the user's (T189: pass → Done)
 - [T179: Debate — 2–3 read-only Advocates argue a choice in auto mode](decisions.md) — safer option first, flagged `⚠ decided for you`, max 3 per task
 - [T178: two tracks — minimal (Supervisor codes, Decision record) vs extended (pipeline)](decisions.md) — track line is a statement
 - [T114: one command — menu, plan, confirm; Reinstall runs the removal pass](decisions.md) — prompts read /dev/tty before any write; any lock rewrite must run carry_over first
@@ -142,7 +142,7 @@
 
 ### Patterns & Gotchas
 - [Merge-gate blind spots](learnings.md) — `git pull` is ungated; `timeout N pytest` is not counted as a test run; `git merge-base` in any command blocks as a merge
-- [Parallel sessions overwrite the shared active-task file; headless checks must scroll instantly](learnings.md) — re-run the task's tests under its own state file before merging; the site's `scroll-behavior: smooth` makes CDP clicks miss
+- [Parallel sessions overwrite the shared active-task file; headless checks must scroll instantly](learnings.md) — rerun a task's tests under its own state file; `scroll-behavior: smooth` makes CDP clicks miss
 - [Task IDs: scan the whole board for the highest ID before registering](learnings.md) — `git log` and `tasks/` filenames miss Todo rows with no guide (T119 collision, 2026-09-23)
 - [Open T111/T115 follow-ups](learnings.md) — `.claude/hooks/` user entry silently dropped by the ownership rule; ~35 duplicated `merge_settings` lines in setup/update; un-pruned `pets/wt-*` worktrees
 - [A rule the agent can meet by labelling, it meets by labelling](learnings.md) — T180: only trace counts (Advocate calls, forced High Debate) changed behavior

@@ -471,6 +471,64 @@ def test_ac4_blocked_row_never_says_pass(tmp_path, case):
     assert "auto-run by hook" in notes and "blocked" in notes and "pass" not in notes.lower(), notes
 
 
+# ── T208 — the verdict line is read whether the label or the whole sentence is bold ──────
+FIXTURE_BOLD_SENTENCE = ROOT / "tests" / "fixtures" / "auto_verify" / "verify_pass_bold_sentence.json"
+VERDICT_SHAPES = ("**Verdict:** {w}", "**Verdict: {w}**", "**Verdict: {w}. All six things hold.**",
+                  "**Verdict**: {w}", "**Verdict:**{w}", "  **Verdict: {w}**")
+
+
+def _parse(stdout):
+    """`parse()` of the hook, loaded without running its `main()`."""
+    source = (HOOKS / HOOK).read_text(encoding="utf-8")
+    assert source.rstrip().endswith("\nmain()")
+    namespace = {"__file__": str(HOOKS / HOOK), "__name__": "stop_auto_verify_under_test"}
+    exec(compile(source.rstrip()[:-len("main()")], str(HOOKS / HOOK), "exec"), namespace)
+    return namespace["parse"](stdout)
+
+
+@pytest.mark.parametrize("word, expected", [("PASS", "pass"), ("FAIL", "fail")])
+@pytest.mark.parametrize("shape", VERDICT_SHAPES)
+def test_t208_ac1_the_verdict_is_read_in_every_bold_shape(shape, word, expected):
+    verdict, _, reason = _parse(_verdict_output(shape.format(w=word)))
+    assert (verdict, reason) == (expected, ""), shape
+
+
+def test_t208_ac2_the_saved_t207_output_parses_as_pass():
+    stdout = FIXTURE_BOLD_SENTENCE.read_text(encoding="utf-8")
+    assert "**Verdict: PASS. All six" in json.loads(stdout)["result"]
+    assert _parse(stdout)[0] == "pass"
+
+
+def test_t208_ac2_the_saved_t207_output_writes_a_pass_row(tmp_path):
+    project, checkout = _project(tmp_path)
+    stub_dir, _ = _stub(tmp_path, output=FIXTURE_BOLD_SENTENCE.read_text(encoding="utf-8"))
+    _stop(project, _env(tmp_path, project, stub_dir))
+    verdict, notes = _wait_row(checkout)
+    assert verdict == "☑ pass" and notes.endswith("— pass"), notes
+
+
+T208_BLOCKED = {
+    "no-verdict-line": _verdict_output("All checks held, so this is a pass."),
+    "pass-and-fail": _verdict_output("**Verdict: PASS**\n\n**Verdict:** FAIL"),
+    "pass-and-fail-bold-sentence": _verdict_output("**Verdict: PASS. fine.**\n\n**Verdict: FAIL. not.**"),
+    "blocked-word": _verdict_output("**Verdict: BLOCKED**"),
+    "skip-word": _verdict_output("**Verdict:** SKIP"),
+    "passed-is-not-pass": _verdict_output("**Verdict: PASSED**"),
+    "lower-case": _verdict_output("**Verdict: pass**"),
+    "mid-sentence": _verdict_output("The report ends here: **Verdict: PASS** and nothing else"),
+    "mid-sentence-label-only": _verdict_output("Result below, **Verdict:** PASS"),
+    "plain-prose": _verdict_output("My Verdict: PASS"),
+    "non-success-run": _verdict_output("**Verdict: PASS**", subtype="error_max_budget_usd"),
+    "is-error-run": _verdict_output("**Verdict: PASS**", is_error=True),
+}
+
+
+@pytest.mark.parametrize("case", sorted(T208_BLOCKED))
+def test_t208_ac3_still_blocked(case):
+    verdict, _, reason = _parse(T208_BLOCKED[case])
+    assert verdict == "blocked" and reason, (case, verdict)
+
+
 def test_ac4_timeout_is_blocked(tmp_path):
     project, checkout = _project(tmp_path)
     stub_dir, _ = _stub(tmp_path, sleep=30)
