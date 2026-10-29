@@ -323,7 +323,10 @@ There are two ways in, and they share one lock:
 
 Both read the main checkout's board only. Run from a linked worktree, they start nothing and say so in one
 line. A task's report is read from its worktree first, so the run uses the task's own code and head commit,
-never a placeholder copy on main.
+never a placeholder copy on main. The worktree is the one whose branch the task's board row names
+(`Started …: branch `<name>``). If the row names no branch, exactly one worktree whose branch names the task
+may be used. With none or several, nothing starts and one line says the checkout is ambiguous. The order of
+`git worktree list` never decides.
 
 `CLAUDE_AUTO_VERIFY=off` turns this back to the T182 rule. Then only a task whose report has the
 `Mode: auto` line runs, through the hook and through `--start`. Every other task's `/verify` stays yours.

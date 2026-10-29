@@ -20,7 +20,9 @@ Two ways in, one lock (D2):
     only when it started a run.
 Both read the main checkout's board only: run from a linked worktree, they start nothing (one
 line). The task's report is read from its worktree copy first (`auto_mode.find_for_task`), so the
-run's cwd and head commit are the task's own.
+run's cwd and head commit are the task's own. That worktree is the one whose branch the main board
+row names; with no branch in the row, the one worktree whose branch names the task; else the task
+is ambiguous and nothing starts (one line). `git worktree list` order never decides.
 
 `lib/auto_mode.py` is the one reader of which tasks those are, on which track, and which file holds
 each one's report — `tasks/TASK_REVIEW_<ID>.md` (extended) or the task's record in
@@ -195,6 +197,8 @@ def linked_worktree(root):
         return False
 
 
+AMBIGUOUS = ("its checkout is ambiguous — the board row names no branch (`Started …: branch `<name>``) "
+             "and not exactly one worktree's branch names the task — nothing started")
 WORKTREE_NOTE = ("this checkout is a linked worktree; auto verify starts only from the main "
                  "checkout's board — nothing started")
 
@@ -216,6 +220,9 @@ def stop_hook():
     for task_id, row in am.board_rows(kanban, ("Ready for Review",)):
         try:
             task = am.resolve(task_id, row, dirs)
+            if task.ambiguous:
+                warn(f"{task_id}: {AMBIGUOUS}")
+                continue
             if task.minimal and not task.exists:
                 # A minimal-track task always ends with a Decision record (T178 D5), so a row at
                 # Ready for Review without one is worth saying once.
@@ -261,6 +268,9 @@ def start_one(task_id):
         return 1
     try:
         task = am.resolve(task_id, rows[0], am.tasks_dirs(ROOT))
+        if task.ambiguous:
+            print(f"{task_id}: {AMBIGUOUS}")
+            return 1
         if task.minimal and not task.exists:
             print(f"{task_id}: no Decision record for it in {vr.MINIMAL_LOG_REL} — nothing started")
             return 1

@@ -870,7 +870,8 @@ def test_ac2_a_second_stop_on_the_same_commit_starts_nothing_on_the_minimal_trac
 
 
 def test_ac2_a_record_in_a_worktree_is_resolved_like_evidence(tmp_path):
-    project, checkout = _project(tmp_path, rows=(MIN_ROW,), review_file=False, worktree=True,
+    row = f"{MIN_ROW} | Started 2026-10-29: branch `feat/t951` in `../wt-t951`"  # T203 sec review
+    project, checkout = _project(tmp_path, rows=(row,), review_file=False, worktree=True,
                                  minimal_log=_log())
     stub_dir, calls = _stub(tmp_path)
     _stop(project, _env(tmp_path, project, stub_dir))
@@ -1010,8 +1011,14 @@ def test_ac4_a_minimal_log_copied_from_the_template_starts_no_run(tmp_path):
 
 
 # ── AC 5 — the merge gate reads a minimal line only with its run record ──────────────────
+# T203 security review: a worktree is chosen by the branch its board row names, so a worktree
+# fixture names `_project`'s branch (`feat/t951`) in the row.
+MIN_ROW_WT = f"{MIN_ROW} | Started 2026-10-29: branch `feat/t951` in `../wt-t951`"
+
+
 def _ran_minimal(tmp_path, output=None, worktree=False):
-    project, checkout = _project(tmp_path, rows=(MIN_ROW,), review_file=False, worktree=worktree,
+    project, checkout = _project(tmp_path, rows=(MIN_ROW_WT if worktree else MIN_ROW,),
+                                 review_file=False, worktree=worktree,
                                  minimal_log=_log())
     stub_dir, _ = _stub(tmp_path, output=output)
     env = _env(tmp_path, project, stub_dir)
@@ -2212,12 +2219,14 @@ def test_t203_p1_branch_names_the_task_word_bounded(branch, hit):
 
 
 def test_t203_p1_a_minimal_record_in_a_worktree_wins_over_main_without_it(tmp_path):
-    project, checkout = _project(tmp_path, rows=(MIN_ROW,), review_file=False, worktree=True,
+    # security review: the worktree is the one whose branch the row names (`feat/t951` here)
+    row = f"{MIN_ROW} | Started 2026-10-29: branch `feat/t951` in `../wt-t951`"
+    project, checkout = _project(tmp_path, rows=(row,), review_file=False, worktree=True,
                                  minimal_log=_log(_plain_record()))
     (project / "tasks" / "MINIMAL_LOG.md").write_text(_log(_record(task="T900", title="older")),
                                                       encoding="utf-8")
     am = _auto_mode()
-    task = am.resolve(MIN_TASK, MIN_ROW, am.tasks_dirs(str(project)))
+    task = am.resolve(MIN_TASK, row, am.tasks_dirs(str(project)))
     assert task.exists and Path(task.checkout).resolve() == checkout.resolve()
 
 
@@ -2236,3 +2245,88 @@ def test_t203_p2_the_hook_in_a_linked_worktree_starts_nothing(tmp_path, entry):
     assert "linked worktree" in out and "nothing started" in out, (done.stdout, done.stderr)
     assert done.returncode == (1 if entry == "start" else 0)
     assert _calls(calls) == [] and not (checkout / ".claude" / "verify-runs").exists()
+
+
+# ── Stage 4 security-review — the board row names the branch; worktree order never decides ─
+def _row_with_branch(branch, wt="../wt-t951", task=TASK):
+    return (f"- [ ] **{task}** — Move the data | Supervisor | C2 | Risk: Medium | P1 | "
+            f"Started 2026-10-29: branch `{branch}` in `{wt}`")
+
+
+def _decoy(project, tmp_path, branch, name="a-decoy", review=None):
+    path = tmp_path / name
+    _git(project, "worktree", "add", "-q", "-b", branch, str(path))
+    (path / "tasks").mkdir(exist_ok=True)
+    (path / "tasks" / f"TASK_REVIEW_{TASK}.md").write_text(review or _plain_review(), encoding="utf-8")
+    _git(path, "add", "-A")
+    _git(path, "commit", "-qm", "decoy", "--allow-empty")
+    return path
+
+
+@pytest.mark.parametrize("row_text,branch", [
+    ("Started 2026-10-29: branch `feat/t951` in `../wt-t951`", "feat/t951"),
+    ("Started 2026-10-29, worktree `../wt-t951` (`feat/t951`). Ready for Review later", "feat/t951"),
+    ("Started 2026-10-01: branch `old/t951` | Started 2026-10-29: branch `feat/t951` in `../wt`",
+     "feat/t951"),
+    ("Registered: user said branch `x` | no start yet", None),
+    ("", None),
+])
+def test_t203_sec_row_branch_reads_the_newest_started_segment(row_text, branch):
+    assert _auto_mode().row_branch(f"{RFR_ROW} | {row_text}") == branch
+
+
+def test_t203_sec_a_decoy_naming_the_task_and_sorting_first_loses_to_the_row_branch(tmp_path):
+    row = _row_with_branch("feat/t951")
+    project, checkout = _project(tmp_path, review=_plain_review(), worktree=True, rows=(row,))
+    decoy = _decoy(project, tmp_path, "fix/t951-x")
+    am = _auto_mode()
+    dirs = am.tasks_dirs(str(project))
+    assert Path(dirs[1]).parent.resolve() == decoy.resolve(), "the decoy must be listed first"
+    task = am.resolve(TASK, row, dirs)
+    assert Path(task.checkout).resolve() == checkout.resolve() and not task.ambiguous
+    stub_dir, calls = _stub(tmp_path)
+    _stop(project, _env(tmp_path, project, stub_dir))
+    assert _wait_row(checkout)[0] == "☑ pass"
+    assert [Path(c["cwd"]).resolve() for c in _calls(calls)] == [checkout.resolve()]
+    assert _row(decoy)[0].startswith("☐ pass")
+
+
+@pytest.mark.parametrize("entry", ["stop", "start"])
+def test_t203_sec_two_worktrees_naming_the_task_and_no_branch_in_the_row_start_nothing(tmp_path, entry):
+    project, checkout = _project(tmp_path, review=_plain_review(), worktree=True)  # RFR_ROW: no branch
+    _decoy(project, tmp_path, "fix/t951-x")
+    stub_dir, calls = _stub(tmp_path)
+    env = _env(tmp_path, project, stub_dir)
+    if entry == "stop":
+        result, _ = _stop(project, env)
+        lines = [l for l in result.stderr.splitlines() if "stop_auto_verify" in l]
+        assert len(lines) == 1 and "ambiguous" in lines[0] and "nothing started" in lines[0], result.stderr
+    else:
+        result, _ = _start(project, env)
+        assert result.returncode == 1 and len(result.stdout.splitlines()) == 1
+        assert "ambiguous" in result.stdout and "nothing started" in result.stdout
+    _settle()
+    assert _calls(calls) == [] and not (project / ".claude" / "verify-runs").exists()
+
+
+def test_t203_sec_a_row_branch_with_no_live_worktree_uses_no_worktree_copy(tmp_path):
+    row = _row_with_branch("feat/t951-gone")
+    project, checkout = _project(tmp_path, review=_plain_review(), worktree=True, rows=(row,))
+    _placeholder_in_main(project)
+    am = _auto_mode()
+    task = am.resolve(TASK, row, am.tasks_dirs(str(project)))
+    assert Path(task.checkout).resolve() == project.resolve() and not task.ambiguous
+
+
+def test_t203_sec_no_branch_in_the_row_and_exactly_one_worktree_naming_the_task_is_used(tmp_path):
+    project, checkout = _project(tmp_path, review=_plain_review(), worktree=True)
+    _placeholder_in_main(project)
+    task = _auto_mode().resolve(TASK, RFR_ROW, _auto_mode().tasks_dirs(str(project)))
+    assert Path(task.checkout).resolve() == checkout.resolve() and not task.ambiguous
+
+
+def test_t203_sec_no_branch_in_the_row_and_no_worktree_naming_the_task_is_ambiguous(tmp_path):
+    project, _ = _project(tmp_path, review=_plain_review())
+    _decoy(project, tmp_path, "chore/unrelated")
+    task = _auto_mode().resolve(TASK, RFR_ROW, _auto_mode().tasks_dirs(str(project)))
+    assert task.ambiguous and Path(task.checkout).resolve() == project.resolve()
