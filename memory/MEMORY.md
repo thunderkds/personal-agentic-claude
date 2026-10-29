@@ -25,6 +25,7 @@
      run; read them there. The enforced gate is the whole-file character budget above. -->
 
 ### Decisions
+- [T212: neon accent `#3CF5A8` + glow tokens; supersedes T204 no-glow](decisions.md) — glow only via `--glow-*`; links stay `#7EDDB0` (`--link`); `prefers-contrast: more` turns glow off
 - [T207–T209: visual-first site; verdict parser](decisions.md) — diagrams lead, prose in Details; `**Verdict: PASS …**` reads; a line listing choices is ignored
 - [T143/T191/T189: CI re-runs a Done task's Verification Command; `score` skill; auto close-out](decisions.md) — `# ci: skip — <reason>`; score row optional; Stop check (7) needs a task test run
 - [T200/T201: settings profiles — `settings-setup` at Stage 1, High security default, add-only](decisions.md) — one source `profiles.json`; dry run first; Legacy = the kit's 2 anchor rules
