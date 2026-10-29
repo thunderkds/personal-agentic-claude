@@ -85,6 +85,7 @@
 
 
 ### In Progress
+- [ ] **T208** — Auto verify reads a PASS written as `**Verdict: PASS …**` — a real pass is no longer recorded as blocked | common-infrastructure | C1 | Risk: Medium | P0 | Guide: `tasks/TASK_GUIDE_T208.md` | Depends on: T203 | Registered 2026-10-29: `--start T207` ran a real /verify that passed, but `parse()` logged `blocked (no single verdict line)` on `**Verdict: PASS. …**`; user: "if the verify do not run by automated, let fix the tasks" | Started 2026-10-29: branch `fix/t208-verdict-parse` in `../wt-t208`
 
 
 
