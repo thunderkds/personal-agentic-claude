@@ -61,8 +61,38 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured 2026-10-29T05:12:10Z at `2335e90`, before any implementation commit; Verification Command with the pytest tail widened to the FAILED lines; the two stray lines at the top are pytest source-context noise matched by the `failed` grep):
+
+```
+            f"control failed: the mutation must push past the old 200-line cap "
+        assert task_files, "corpus is empty — sanity check failed"
+FAILED .claude/hooks/tests/test_agent_guide_dedup.py::test_ac7_per_role_loaded_size_is_strictly_lower_than_baseline[backend]
+FAILED .claude/hooks/tests/test_agent_guide_dedup.py::test_ac7_per_role_loaded_size_is_strictly_lower_than_baseline[c-infra]
+FAILED .claude/hooks/tests/test_agent_guide_dedup.py::test_ac7_per_role_loaded_size_is_strictly_lower_than_baseline[frontend]
+FAILED .claude/hooks/tests/test_agent_guide_dedup.py::test_ac7_per_role_loaded_size_is_strictly_lower_than_baseline[qa]
+FAILED .claude/hooks/tests/test_agent_guide_dedup.py::test_t069_ac9_report_per_role_pair_size
+FAILED .claude/hooks/tests/test_memory_channel_and_budget.py::test_live_memory_md_is_within_budget_today
+FAILED .claude/hooks/tests/test_memory_channel_and_budget.py::test_ac10_growth_in_chars_without_growth_in_lines_turns_the_gate_red
+FAILED .claude/hooks/tests/test_memory_channel_and_budget.py::test_ac11_many_short_lines_past_200_stay_green_while_under_budget
+FAILED .claude/hooks/tests/test_memory_channel_and_budget.py::test_ac3_per_entry_report_is_advisory_and_never_fails
+FAILED .claude/hooks/tests/test_token_audit_format.py::test_memory_md_hot_tier_stays_within_char_budget
+FAILED .claude/hooks/tests/test_verify_row_fill_detection.py::test_ac6_old_vs_new_pattern_over_real_corpus_differs_only_on_placeholders
+FAILED .claude/hooks/tests/test_vital_slice.py::test_ac11_line_cap[agents/backend.md]
+FAILED .claude/hooks/tests/test_vital_slice.py::test_ac11_line_cap[agents/common-infrastructure.md]
+FAILED .claude/hooks/tests/test_vital_slice.py::test_ac11_line_cap[agents/frontend.md]
+FAILED .claude/hooks/tests/test_vital_slice.py::test_ac11_line_cap[agents/qa.md]
+15 failed, 2026 passed, 25 subtests passed in 101.32s (0:01:41)
+43019
+  150 agents/backend.md
+  143 agents/common-infrastructure.md
+  146 agents/frontend.md
+  135 agents/qa.md
+  574 total
+- [T199: site `#mcps` lists easy-memory-mcp as a third OPTIONAL companion card](decisions.md) — README facts only, 28% tied to scripted tests; PR #114 (merged on GitHub 2026-10-28) also fixes the 768-899 px `#hooks` overflow; T194 + T199 both edit the `#mcps` lead and the one-entry-per-server test (merge by hand)
+- [T198: `wake` prints the Decisions + Learning Records entries with `memory_sections.py`, never reads all of MEMORY.md](decisions.md) — ~9k tokens less per session; **add new index lines at the TOP of a section (newest first) or the script misses them**; `wake/SKILL.md` is 8,152 of 8,192 bytes
+- [T195: easy-memory installed; base sub-agents get memory_search/read and use the spawn slice, not all of MEMORY.md](decisions.md) — OPTIONAL: kit works the same without it, agents skip it if absent; `memory/` NOT replaced; decide after ~2 weeks of `easy_memory.py report`
+0
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
