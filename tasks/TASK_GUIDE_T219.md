@@ -27,7 +27,6 @@ PRD FR-009: "`AGENTS.md` and `docs/claude-md/pipeline-stages.md` gain only a poi
 > The Supervisor learns, from the pipeline doctrine, the two moments to spawn `tech-lead` — but only in a project where the pack is activated (`agents/tech-lead.md` exists). In every other project the pipeline reads and behaves exactly as before.
 
 **Out of scope**:
-- `AGENTS.md` (the stage index lists core skills only; a conditional pack pointer in `pipeline-stages.md` is enough — FR-009 says "only a pointer")
 - Any hook or script that detects watched paths automatically; the Supervisor does the match during the Stage 5 item 4 pass it already runs
 - Changes to `packs/tech-lead/` (T218)
 
@@ -56,8 +55,9 @@ PRD FR-009: "`AGENTS.md` and `docs/claude-md/pipeline-stages.md` gain only a poi
 | 1 | Stage 2 gains one numbered item or sub-bullet: if `agents/tech-lead.md` exists (tech-lead pack activated), after `PROJECT_SPEC.md` is locked the Supervisor spawns `tech-lead` to write the document map `docs/architecture/README.md` for user approval (auto mode: map only, listed in the final report) | FR-007a, FR-009 |
 | 2 | Stage 5 item 4 gains one sub-bullet: if `agents/tech-lead.md` and `docs/architecture/README.md` both exist, the Supervisor matches the item-4 `git diff HEAD~1 --name-only` list against the map's watched paths; on a match it spawns `tech-lead` in refresh mode for the matched documents only; no match → nothing | FR-007c, FR-009 |
 | 3 | Both additions are conditional on the file check, name the pack (`packs/tech-lead/PACK.md`), and add no other text; no existing line of `pipeline-stages.md` is reworded | FR-009 "only a pointer"; surgical |
+| 3b | `AGENTS.md` gains exactly ONE line in `## 5-Stage Agentic Pipeline` (after the Stage 5 bullet): if `agents/tech-lead.md` exists, spawn `tech-lead` at Stage 2 (document map) and at the Stage 5 item 4 refresh — detail in `pipeline-stages.md`. `tests/test_tracks.py` and `tests/test_claude_md_slim.py` AGENTS.md caps (≤200 lines, ≤32,768 bytes) still pass | FR-009; Debate 2026-10-30 (see TASK_REVIEW_T219 Auto decisions) |
 | 4 | A test (new `tests/test_tech_lead_pipeline_pointer.sh`, or an added case in an existing doctrine test if one covers `pipeline-stages.md`) asserts AC 1–2 text and the conditional, with a mutation control (the pointer without its `agents/tech-lead.md` condition fails the check) | Gate 5 |
-| 5 | Negative: `AGENTS.md`, `.claude/`, `skills/`, `agents/` unchanged | Out of scope |
+| 5 | Negative: `.claude/`, `skills/`, `agents/` unchanged; AGENTS.md changes by one line only | Out of scope |
 
 ---
 
@@ -84,7 +84,7 @@ bash tests/test_tech_lead_pipeline_pointer.sh
 **Pattern reference**: the existing conditional wording style in `docs/claude-md/pipeline-stages.md` (e.g. "Auto mode: …" sentences inside numbered items); `tests/test_pack_catalog.sh` for shell test + mutation control style.
 
 **Vital slice**: the two conditional sentences.
-**Cut list**: an `AGENTS.md` line; automatic watched-path matching in a hook.
+**Cut list**: automatic watched-path matching in a hook; any AGENTS.md text beyond one line.
 
 Keep each addition to 1–3 lines. Write the Stage 5 sub-bullet under item 4, after the `git diff HEAD~1 --name-only` bullet, so it reuses that list.
 
@@ -103,13 +103,13 @@ Keep each addition to 1–3 lines. Write the Stage 5 sub-bullet under item 4, af
 | File | Change |
 |------|--------|
 | `docs/claude-md/pipeline-stages.md` | two conditional pointers |
-| `tests/test_tech_lead_pipeline_pointer.sh` | new test |
+| `AGENTS.md` | one conditional line (AC 3b) |
+| `tests/test_tech_lead_pipeline_pointer.sh` | new test (also asserts the AGENTS.md line) |
 
 ## Files Must NOT Touch
 
 | File | Reason |
 |------|--------|
-| `AGENTS.md` | out of scope (FR-009 pointer lives in pipeline-stages.md) |
 | `packs/tech-lead/**` | T218 |
 | `PROJECT_KANBAN.md`, `PROJECT_SPEC.md`, `memory/` | Supervisor-only |
 
