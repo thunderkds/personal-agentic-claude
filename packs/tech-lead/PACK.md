@@ -92,7 +92,7 @@ All diagrams are Mermaid code blocks in Markdown. You need no rendering tool. Al
 
 1. The agent writes `README.md` only.
 2. You read the map, change any "needed" or "not needed" mark, and edit the watched paths.
-3. You tell the Supervisor the map is approved. The agent then drafts the needed documents.
+3. You tell the Supervisor the map is approved. The Supervisor fills the map's `Approved by:` line (your name and the date) and commits it, so every later refresh sees the approval. The agent then drafts the needed documents.
 4. In `[auto]` mode the agent stops after step 1 and the final report lists the map for your approval.
 
 ### 5. Example spawn

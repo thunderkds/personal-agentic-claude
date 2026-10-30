@@ -33,7 +33,7 @@ Skill({ skill: "architecture-docs" })
 
 ```markdown
 # Architecture documents
-Approved by: <name> on <date>   (blank until the user approves)
+Approved by: <name> on <date>   (blank until the user approves; the Supervisor fills it on approval)
 
 | # | Document | Needed? | Reason (one line) | File | Watched paths |
 |---|----------|---------|-------------------|------|---------------|
