@@ -29,7 +29,7 @@ User request, 2026-08-27:
 
 > "go with option B" … "generate plan for now, I will implement later"
 
-Selected in `BRAINSTORMING_LOG_harness-kit-portability.md`, decided in `DDR-0007`. This is **B1**,
+Selected in `docs/brainstorming/BRAINSTORMING_LOG_harness-kit-portability.md`, decided in `DDR-0007`. This is **B1**,
 the relocation half. B2 (`T097`) adds the per-harness projection and must not be started until B1 is
 green.
 
@@ -116,7 +116,7 @@ a changed count means the scope changed.
   files and rewrites path strings. If a skill's prose is wrong, that is a different task.
 - `packs/` and `install_pack()` — `ADR-0001` left them out of scope and `DDR-0007` defers them again.
 
-**Requirement Refs**: `DDR-0007` (Decision section) · `BRAINSTORMING_LOG_harness-kit-portability.md`
+**Requirement Refs**: `DDR-0007` (Decision section) · `docs/brainstorming/BRAINSTORMING_LOG_harness-kit-portability.md`
 (Option B, Surgical Scope)
 
 ### Requirement Fidelity Gate (sign off BEFORE implementation)

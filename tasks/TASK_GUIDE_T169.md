@@ -15,7 +15,7 @@
 Before writing any code:
 1. Read `PROJECT_SPEC.md`
 2. Read the memory slice in your spawn prompt (`<!-- memory-slice -->`). Read `memory/MEMORY.md` in full only if your work reaches a file, hook, skill or decision the slice does not cover
-3. Read this file completely, then `BRAINSTORMING_LOG_plain-output.md`
+3. Read this file completely, then `docs/brainstorming/BRAINSTORMING_LOG_plain-output.md`
 4. Read `agents/common-infrastructure.md`
 5. Note the **Complexity Level** above and apply the matching process from the Complexity matrix in `agents/common-infrastructure.md`
 
@@ -23,7 +23,7 @@ Before writing any code:
 
 ## Requirement (Pillar 1 — Adapt the requirement)
 
-Source: the user, 2026-10-20: "just met the problem that, the agent output is technically". The user cited a Medium post on Karpathy's suggestion to write AI output in the ASD-STE100 style. Then: "let refer to the rules (ASD-STE100) as 4 principal of karpathy the we followed, The output should comes after using, not the way I can decide for now". The user approved Option A of `BRAINSTORMING_LOG_plain-output.md` with "go with A".
+Source: the user, 2026-10-20: "just met the problem that, the agent output is technically". The user cited a Medium post on Karpathy's suggestion to write AI output in the ASD-STE100 style. Then: "let refer to the rules (ASD-STE100) as 4 principal of karpathy the we followed, The output should comes after using, not the way I can decide for now". The user approved Option A of `docs/brainstorming/BRAINSTORMING_LOG_plain-output.md` with "go with A".
 
 **Restated intent** (Supervisor's interpretation, in the project's domain language):
 > `CLAUDE.md` gets a "Writing Principles (ASD-STE100)" section with a 4-row table: One Term, One Meaning · Short Sentences · One Action, Active Voice · No Noun Stacks. It sits next to the Karpathy Engineering Principles and has the same weight. The rules apply **only to text a human reads**: the Supervisor's chat replies to the user, and HTML reports. Agent-to-agent text needs precision, not easy reading, so it is exempt: spawn prompts, TASK_GUIDEs, sub-agent reports, Kanban rows and commits. A technical term is never replaced by a paraphrase. Keep the key term exactly. Gloss it once, only if the reader may not know it. The rules never rewrite the verbatim list (code, exact error text, file paths, commands, security warnings).
@@ -42,7 +42,7 @@ Source: the user, 2026-10-20: "just met the problem that, the agent output is te
 - The STE approved-word dictionary
 - Rewriting existing Kanban rows, TASK_GUIDEs, commits or memory files
 
-**Requirement Refs**: `BRAINSTORMING_LOG_plain-output.md` § Proposed principle set, § Option A, § Edge Case Checklist
+**Requirement Refs**: `docs/brainstorming/BRAINSTORMING_LOG_plain-output.md` § Proposed principle set, § Option A, § Edge Case Checklist
 
 ### Requirement Fidelity Gate (sign off BEFORE implementation)
 
@@ -181,7 +181,7 @@ BEFORE for this extension: the current text of the four sections, quoted into `t
 | File | Reason |
 |---|---|
 | `PROJECT_KANBAN.md`, `memory/` | Supervisor-only |
-| `BRAINSTORMING_LOG_plain-output.md` | locked planning input |
+| `docs/brainstorming/BRAINSTORMING_LOG_plain-output.md` | locked planning input |
 | `docs/claude-md/token-economy.md` | verbatim list is unchanged by design |
 | `docs/adr/`, `docs/ddr/` | parked until the docs MCP lands (user decision) |
 

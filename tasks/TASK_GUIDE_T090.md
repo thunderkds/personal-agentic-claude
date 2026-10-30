@@ -17,7 +17,7 @@ Before writing any code:
 4. Read `.claude/agents/common-infrastructure.md`
 5. Note the **Complexity Level** above and apply the matching process from the Complexity matrix in your role guide
 6. C1 multi-file task — also read `docs/ddr/0006-provider-adapters-inline-non-negotiables.md` and
-   `BRAINSTORMING_LOG_multi-provider.md`. Skip `memory/codebase-map.md`; every file you touch is named below.
+   `docs/brainstorming/BRAINSTORMING_LOG_multi-provider.md`. Skip `memory/codebase-map.md`; every file you touch is named below.
 
 ---
 
@@ -159,7 +159,7 @@ auto-read channel today, and the test is what stops the whole thing rotting.
 - No change to `setup.sh`'s greenfield/brownfield prompt.
 - No runtime detection of which provider is running.
 
-**Reasoning**: converged in `BRAINSTORMING_LOG_multi-provider.md` (Path A + the 50% cut) and recorded in
+**Reasoning**: converged in `docs/brainstorming/BRAINSTORMING_LOG_multi-provider.md` (Path A + the 50% cut) and recorded in
 DDR-0006. The split-by-mandate rule is T069's shipped design applied one level out: content that is a
 Permanent Rule goes into every guaranteed channel; advisory content stays behind a pointer.
 

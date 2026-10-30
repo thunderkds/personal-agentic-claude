@@ -1749,7 +1749,7 @@ the manufacture-from-nothing case does not.)
 
 ## Untracked files in the main checkout do not reach a worktree (T096, 2026-08-28)
 
-The T096 sub-agent reported `docs/ddr/0007-*.md` and `BRAINSTORMING_LOG_harness-kit-portability.md`
+The T096 sub-agent reported `docs/ddr/0007-*.md` and `docs/brainstorming/BRAINSTORMING_LOG_harness-kit-portability.md`
 as nonexistent — "not in the worktree, and not on any local or remote branch" — and filed it as
 guide defect D1. Both files existed; they were **untracked** in the main checkout, so `git worktree
 add` never carried them. `tasks/TASK_GUIDE_T096.md` itself had the same problem and had to be

@@ -17,7 +17,7 @@ Before writing any code:
 3. Read this file completely
 4. Read `agents/common-infrastructure.md`
 5. Note the **Complexity Level** above and apply the matching process from its Complexity matrix
-6. Read `PRD_settings-profiles.md` (decisions D1–D5, FR-001..FR-008) and `BRAINSTORMING_LOG_settings-profiles.md` (Path A, Edge Case Checklist)
+6. Read `docs/prd/PRD_settings-profiles.md` (decisions D1–D5, FR-001..FR-008) and `docs/brainstorming/BRAINSTORMING_LOG_settings-profiles.md` (Path A, Edge Case Checklist)
 7. Read `lib/merge-settings.py` `merge_permission_denies()` — the add-only union rule this task follows (do not import or change it; `lib/` is not shipped to user projects)
 
 ---
@@ -35,7 +35,7 @@ User, 2026-10-29, verbatim: "if the users do not choose from the settings setup,
 - Writing `~/.claude/settings.json` or `.claude/settings.local.json` (D4).
 - The site's Build-tab profiles (T201). Only the `#skills` roster entry for the new skill is in scope here (the roster drift test in `tests/test_site_content.py:532` requires it).
 
-**Requirement Refs**: `PRD_settings-profiles.md` FR-002, FR-003, FR-004 (source half), FR-005, FR-006, FR-007, NFR-001, NFR-003.
+**Requirement Refs**: `docs/prd/PRD_settings-profiles.md` FR-002, FR-003, FR-004 (source half), FR-005, FR-006, FR-007, NFR-001, NFR-003.
 
 ### Requirement Fidelity Gate (sign off BEFORE implementation)
 
@@ -118,7 +118,7 @@ Writing: SKILL.md text the user reads follows AGENTS.md Writing Principles (ASD-
 
 ## Edge Case Checklist
 
-See `BRAINSTORMING_LOG_settings-profiles.md` → Edge Case Checklist. Plus:
+See `docs/brainstorming/BRAINSTORMING_LOG_settings-profiles.md` → Edge Case Checklist. Plus:
 - [ ] Write is atomic (temp file + rename), like `merge-settings.py write_atomic`
 - [ ] Existing file keeps its indentation style if cheap; otherwise 2-space indent, trailing newline — document which
 - [ ] Unknown profile id → exit 2 with the list of valid ids

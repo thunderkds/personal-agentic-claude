@@ -16,10 +16,10 @@ Generated: 2026-08-28 | Commit: 7060c13 | Branch: feat/t096-canon-plain-root
 ./agents/general-agent-template.md
 ./AGENTS.md
 ./agents/qa.md
-./BRAINSTORMING_LOG_direct-install.md
-./BRAINSTORMING_LOG_fidelity-gate.md
+./docs/brainstorming/BRAINSTORMING_LOG_direct-install.md
+./docs/brainstorming/BRAINSTORMING_LOG_fidelity-gate.md
 ./BRAINSTORMING_LOG.md
-./BRAINSTORMING_LOG_multi-provider.md
+./docs/brainstorming/BRAINSTORMING_LOG_multi-provider.md
 ./.claude
 ./.claude/agents
 ./.claude/hooks

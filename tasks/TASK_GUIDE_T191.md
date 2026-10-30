@@ -16,7 +16,7 @@
 Before writing any code:
 1. Read `PROJECT_SPEC.md`
 2. Read the memory slice in your spawn prompt. Read `memory/MEMORY.md` in full only if your work reaches a file, hook, skill or decision the slice does not cover
-3. Read this file completely, then `PRD_companion-scoring.md` (FR-002, FR-003, FR-005, FR-007, FR-008, FR-009, FR-015) and `BRAINSTORMING_LOG_companion-scoring.md`
+3. Read this file completely, then `docs/prd/PRD_companion-scoring.md` (FR-002, FR-003, FR-005, FR-007, FR-008, FR-009, FR-015) and `docs/brainstorming/BRAINSTORMING_LOG_companion-scoring.md`
 4. Read `agents/common-infrastructure.md`
 5. Note the **Complexity Level** above and apply the matching process from the Complexity matrix in your role guide
 6. Read `skills/write-better-skill/SKILL.md` — it is the authoritative craft reference for any `SKILL.md` in this kit
@@ -59,7 +59,7 @@ the normal flow, that all"*.
 - [x] Restated intent confirmed to match the user's request (Supervisor, from the quoted messages)
 - [x] Domain terms align with the glossary — **Companion score** is the kit's row; **evaluate gate** is the verifier's asking round. This skill *answers* the evaluate gate and *writes* the Companion score. Never swap the two names.
 - [x] Every Acceptance Criterion below traces to a line in the Requirement
-- [x] All Requirement Refs exist in `PRD_companion-scoring.md` and are covered by the Acceptance Criteria
+- [x] All Requirement Refs exist in `docs/prd/PRD_companion-scoring.md` and are covered by the Acceptance Criteria
 
 ---
 

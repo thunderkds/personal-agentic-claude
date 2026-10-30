@@ -15,7 +15,7 @@
 Before writing any code:
 1. Read `PROJECT_SPEC.md` — note the glossary terms **Citation**, **Fact question**, **Choice question**, **Scanner**, **Decision Log**, **Board cache**
 2. Read the memory slice in your spawn prompt (`<!-- memory-slice -->`). Read `memory/MEMORY.md` in full only if your work reaches a file, hook, skill or decision the slice does not cover
-3. Read this file completely, then `BRAINSTORMING_LOG_confusion-resolution.md`
+3. Read this file completely, then `docs/brainstorming/BRAINSTORMING_LOG_confusion-resolution.md`
 4. Read `agents/common-infrastructure.md`
 5. Note the **Complexity Level** above and apply the matching process from the Complexity matrix in `agents/common-infrastructure.md`
 
@@ -43,7 +43,7 @@ Source: the user, 2026-10-20: "when supervisor or agent got confused about the t
 - A new HTML template (reuse `templates/thinking_report_template.html`)
 - Back-filling `## Questions Log` into existing guides
 
-**Requirement Refs**: `BRAINSTORMING_LOG_confusion-resolution.md` § Questions for the User (Q1–Q3), § Option B, § Edge Case Checklist; `memory/decisions.md` § T170
+**Requirement Refs**: `docs/brainstorming/BRAINSTORMING_LOG_confusion-resolution.md` § Questions for the User (Q1–Q3), § Option B, § Edge Case Checklist; `memory/decisions.md` § T170
 
 ### Requirement Fidelity Gate (sign off BEFORE implementation)
 

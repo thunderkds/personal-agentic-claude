@@ -12,7 +12,7 @@
 
 1. Read `PROJECT_SPEC.md`
 2. Read the memory slice in your spawn prompt
-3. Read this file completely, then `PRD_companion-scoring.md` (FR-003, FR-013, FR-015)
+3. Read this file completely, then `docs/prd/PRD_companion-scoring.md` (FR-003, FR-013, FR-015)
 4. Read `agents/common-infrastructure.md`
 5. Read the **shipped** `skills/score/SKILL.md` and `skills/ui-test/SKILL.md` (T191, T192). This task documents what they actually do, not what the PRD planned — if the two differ, the shipped skill wins and you say so in your report
 6. Read `docs/claude-md/pipeline-stages.md` lines 185–225 (Stage 4) and 226+ (Stage 5)
@@ -46,7 +46,7 @@ normal flow, not required the mcp must run, or depend on that 100%"*.
 - [x] Restated intent confirmed to match the user's request (Supervisor)
 - [x] Domain terms align with `PROJECT_SPEC.md` glossary — this task *writes* the two terms
 - [x] Every Acceptance Criterion below traces to a line in the Requirement
-- [x] All Requirement Refs exist in `PRD_companion-scoring.md` and are covered by the Acceptance Criteria
+- [x] All Requirement Refs exist in `docs/prd/PRD_companion-scoring.md` and are covered by the Acceptance Criteria
 
 ---
 

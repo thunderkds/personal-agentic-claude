@@ -15,7 +15,7 @@
 Before writing any code:
 1. Read `PROJECT_SPEC.md` (glossary: board, board adapter, board mode, board cache, outbox, pull moment, Decision Log, my task)
 2. Read the memory slice in your spawn prompt (`<!-- memory-slice -->`). Read `memory/MEMORY.md` in full only if your work reaches a file, hook, skill or decision the slice does not cover
-3. Read this file completely, then `PRD_online-board.md` and `BRAINSTORMING_LOG_online-board.md`
+3. Read this file completely, then `docs/prd/PRD_online-board.md` and `docs/brainstorming/BRAINSTORMING_LOG_online-board.md`
 4. Read `agents/backend.md`
 5. Note the **Complexity Level** above and apply the matching process from the Complexity matrix in `agents/backend.md`
 
@@ -23,7 +23,7 @@ Before writing any code:
 
 ## Requirement (Pillar 1 — Adapt the requirement)
 
-Source: the user, 2026-10-19 — "use the online board to manage the task, decision related task, tasks log, maybe the agents can post the logs, the status to the tasks ..., not from the local. Start with the linear.app first, but keep the open wide with another application like GitHub board, Jira". Requirements locked in `PRD_online-board.md` (Stage 0.5 grilling, decisions D1–D9); path locked in `BRAINSTORMING_LOG_online-board.md`. Terms (board, board adapter, board mode, board cache, outbox, pull moment, Decision Log, my task) are defined in the `PROJECT_SPEC.md` glossary — use them exactly.
+Source: the user, 2026-10-19 — "use the online board to manage the task, decision related task, tasks log, maybe the agents can post the logs, the status to the tasks ..., not from the local. Start with the linear.app first, but keep the open wide with another application like GitHub board, Jira". Requirements locked in `docs/prd/PRD_online-board.md` (Stage 0.5 grilling, decisions D1–D9); path locked in `docs/brainstorming/BRAINSTORMING_LOG_online-board.md`. Terms (board, board adapter, board mode, board cache, outbox, pull moment, Decision Log, my task) are defined in the `PROJECT_SPEC.md` glossary — use them exactly.
 
 This task: T158 security-review P2: `memory_slice.py` pastes Decision Log entries linked to the task under `### From Decision Log` in every spawn prompt. The entries are escaped (they cannot forge a heading), but nothing tells the agent they are teammates' free text, which `docs/claude-md/untrusted-content-boundary.md` says must be treated as data (NFR-005).
 
@@ -34,7 +34,7 @@ This task: T158 security-review P2: `memory_slice.py` pastes Decision Log entrie
 - Changing which entries are selected or the cap
 - Labelling the local `### From decisions.md` block (local, Supervisor-written)
 
-**Requirement Refs** (from `PRD_online-board.md`):
+**Requirement Refs** (from `docs/prd/PRD_online-board.md`):
 - NFR-005
 
 ### Requirement Fidelity Gate (sign off BEFORE implementation)
@@ -42,7 +42,7 @@ This task: T158 security-review P2: `memory_slice.py` pastes Decision Log entrie
 - [x] Restated intent confirmed to match the user's request (Supervisor, 2026-10-19; registered from T158 Stage 4 security-review)
 - [x] Domain terms align with `PROJECT_SPEC.md` glossary
 - [x] Every Acceptance Criterion below traces to a line in the Requirement
-- [x] All Requirement Refs exist in `PRD_online-board.md` and are covered by the Acceptance Criteria
+- [x] All Requirement Refs exist in `docs/prd/PRD_online-board.md` and are covered by the Acceptance Criteria
 
 ---
 
@@ -123,7 +123,7 @@ Keep the line short; it is pasted into every spawn that has linked decisions.
 | File | Reason |
 |---|---|
 | `PROJECT_KANBAN.md`, `memory/` | Supervisor-only |
-| `PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md` | locked planning inputs |
+| `docs/prd/PRD_online-board.md`, `docs/brainstorming/BRAINSTORMING_LOG_online-board.md` | locked planning inputs |
 | `docs/adr/`, `docs/ddr/` | parked until the docs MCP lands (user decision) |
 
 ---
