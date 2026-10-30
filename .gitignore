@@ -53,6 +53,8 @@ reports/*
 memory/event-trace/
 # T182: auto verify run logs (one per task and commit)
 .claude/verify-runs/
+# T214: old background-spawn markers (.pid/.done/.exit/prompt), runtime only
+.claude/markers/
 
 # ============================================================
 # Section 7: Vercel CLI local auth/link state (T084)
