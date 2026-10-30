@@ -25,6 +25,7 @@
      run; read them there. The enforced gate is the whole-file character budget above. -->
 
 ### Decisions
+- [T216: plugin path (Option C) — Claude Code plugin works with prefixed names; setup.sh stays](decisions.md) — `easy-kit:<agent>` in plugin mode; plugin gates no-op outside a kit repo; Codex gate open
 - [T213: scroll-spy band starts below the header; click holds its link until a hand scroll](decisions.md) — test `node --test tests/site_scrollspy/*.mjs` (headless Chrome; bare dir fails on Node 26)
 - [T212: neon accent `#3CF5A8` + glow tokens; supersedes T204 no-glow](decisions.md) — glow only via `--glow-*`; links stay `#7EDDB0` (`--link`); `prefers-contrast: more` turns glow off
 - [T207–T209: visual-first site; verdict parser](decisions.md) — diagrams lead, prose in Details; `**Verdict: PASS …**` reads; a line listing choices is ignored
@@ -273,6 +274,7 @@
 
 ### Learning Records
 - [Sideways scroll: measure the table's minimum content width](learnings.md) — T199 addendum: `nowrap` was not the only floor; `Edit|Write|Bash` needed `<wbr>`
+- [Minimal-track test runs need the task state file before the gate counts them](learnings.md) — the classifier refuses the Supervisor writing it; ask the user for the `!` line at task start
 - [Merge gate reads evidence at hook time; `pkill -f` can kill its own shell](learnings.md) — commit the verify row in one Bash call, merge in the next; use a saved PID, not `pkill -f`
 - [easy-memory `switch off` leaves the MCP tools on](learnings.md) — an off-run can still call memory_search if the prompt says to check notes
 <!-- One-liner per active LR: - [LR-NNNN slug](memory/learning-records/LR-NNNN-slug.md) — summary -->
