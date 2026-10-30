@@ -85,6 +85,7 @@
 
 
 ### In Progress
+- [ ] **T217** — The kit works with easy-memory installed as a plugin: agents list the plugin tool names too; kit marketplace `.claude-plugin/marketplace.json` lists easy-memory (git-subdir `plugin`, ref `v0.2.0`) | Supervisor | C1 | Risk: Low | P1 | Branch `feat/t217-easy-memory-plugin-names` in `../wt-t217` | Started 2026-10-30 (user "start both tasks as parallel"); real install waits for easy-memory-mcp `v0.2.0` (its plugin task, own board) | Track: minimal | Record: tasks/MINIMAL_LOG.md
 
 
 
