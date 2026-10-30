@@ -1,0 +1,7 @@
+{
+  "name": "ekspike-market",
+  "owner": { "name": "thunderkds" },
+  "plugins": [
+    { "name": "ekspike", "source": "./ekspike", "description": "T216 throwaway spike: one skill, one agent, one blocking hook." }
+  ]
+}
