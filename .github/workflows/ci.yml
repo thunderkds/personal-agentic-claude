@@ -59,6 +59,9 @@ jobs:
       - name: Tech-lead pack test suite (T218)
         run: bash tests/test_tech_lead_pack.sh
 
+      - name: Tech-lead pipeline pointer test suite (T219)
+        run: bash tests/test_tech_lead_pipeline_pointer.sh
+
       - name: harness-fetch.sh test suite
         run: bash tests/test_harness_fetch.sh
 
