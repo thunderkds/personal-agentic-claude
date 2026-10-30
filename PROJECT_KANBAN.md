@@ -95,7 +95,7 @@
 
 
 ### Ready for Review
-- [ ] **T220** — Drop the stale `setup.sh --pack` install lines (5 PACK.md, `templates/PACK_template.md`, `docs/claude-md/folder-structure.md`): activation is the ADR-0002 approved copy (`select-packs`, T117); list `tech-lead` in folder-structure | Supervisor | C1 | Risk: Low | P2 | minimal track | Registered 2026-10-30 [auto] from T218 brainstorming (claim gate: `setup.sh` has no `--pack`) | Ready for Review 2026-10-30: branch `fix/t220-stale-pack-lines` in `../wt-t220`
+- [ ] **T220** — Drop the stale `setup.sh --pack` install lines (5 PACK.md, `templates/PACK_template.md`, `docs/claude-md/folder-structure.md`): activation is the ADR-0002 approved copy (`select-packs`, T117); list `tech-lead` in folder-structure | Supervisor | C1 | Risk: Low | P2 | Track: minimal | Registered 2026-10-30 [auto] from T218 brainstorming (claim gate: `setup.sh` has no `--pack`) | Ready for Review 2026-10-30: branch `fix/t220-stale-pack-lines` in `../wt-t220`
 - [ ] **T217** — The kit works with easy-memory installed as a plugin: agents list the plugin tool names too; kit marketplace `.claude-plugin/marketplace.json` lists easy-memory (git-subdir `plugin`, ref `v0.2.0`) | Supervisor | C1 | Risk: Low | P1 | Branch `feat/t217-easy-memory-plugin-names` in `../wt-t217` | Ready for Review 2026-10-30; auto verify BLOCKED (27f58eff) until easy-memory-mcp `v0.2.0`; v0.2.0 pushed, `install easy-memory@easy-kit` and agent memory_search pass 10:18Z; 3 new tests pass; suite 2545 passed, 5 failed (MEMORY.md budget, fail on main too); real `claude plugin install` waits for easy-memory-mcp `v0.2.0` | Track: minimal | Record: tasks/MINIMAL_LOG.md
 
 
