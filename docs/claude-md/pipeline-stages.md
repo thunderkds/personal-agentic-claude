@@ -136,6 +136,7 @@ When the user invokes `/plan`, the Supervisor must:
 3. Create (or update) `PROJECT_SPEC.md` as the single source of truth using `templates/PROJECT_SPEC_template.md`.
 4. Create (or update) `PROJECT_KANBAN.md` as the compact task board using `templates/PROJECT_KANBAN_template.md`.
 5. Assign each task three independent labels: **Complexity (C0–C3)**, **Risk (Low/Med/High)**, and **Priority (P0–P2)**. Split any task larger than C3 (an **Epic**) into smaller tasks before generating guides. (Complexity drives agent process; Risk gates `security-review`; Priority sets ordering — see the Complexity matrix in each role guide (`agents/<role>.md`).) When setting **Risk**, factor in whether the task touches a **hub file** — one many others depend on, so its code-dependency blast radius is large. In legacy mode this is recorded in `docs/legacy/risk-hotspots.md`; in greenfield it's a judgment call (optionally informed by a structural code-graph approach — see Stage 1). A hub touch raises Risk a level even when the edit itself is small.
+6. If `agents/tech-lead.md` exists (tech-lead pack activated, `packs/tech-lead/PACK.md`), once `PROJECT_SPEC.md` is locked, spawn `tech-lead` to write the document map `docs/architecture/README.md` for user approval. Auto mode: map only, listed in the final report.
 
 **Task State Management (Token-Efficient Design)**
 Use two files:
@@ -243,6 +244,7 @@ After all Stage 4 reviews pass:
 
 4. **Memory update** (diff-driven pass — run before `ship`):
    - `git diff HEAD~1 --name-only` — identify files changed in this merge
+   - If `agents/tech-lead.md` and `docs/architecture/README.md` both exist (tech-lead pack, `packs/tech-lead/PACK.md`), match this list against the map's watched paths: on a match, spawn `tech-lead` in refresh mode for the matched documents only; no match (or no watched-paths column), nothing.
    - Grep `memory/decisions.md`, `memory/glossary.md`, `memory/learnings.md` for references to those files
    - Update matched entries in place (fix stale facts, expand with new context)
    - Append any new decisions or learnings from this session to the appropriate cold file
