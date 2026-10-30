@@ -43,8 +43,33 @@ Mode: auto
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (verbatim prior content, captured 2026-10-30 before the first implementation commit; non-executable change plus one new test):
+
+`ls packs/`:
+```
+ai-agent
+api
+data
+devops
+mobile
+```
+`README.md:73` (pack list):
+```
+Repository layout, agent guides, packs (`mobile`/`data`/`devops`/`ai-agent`/`api`), the custom
+```
+`site/index.html:319` (hero count):
+```
+    <li><a href="#packs"><span class="num">5</span><span class="label">optional domain packs</span></a></li>
+```
+`site/index.html` `#packs` tbody: five rows, `mobile`, `data`, `devops`, `ai-agent`, `api`; the last one reads:
+```
+<tr><td data-label="Pack"><code>api</code></td><td data-label="Domain">REST/gRPC, OpenAPI, auth flows</td><td data-label="Agent"><code>api-designer</code></td><td data-label="Skills"><code>contract-review</code>, <code>auth-checklist</code></td></tr>
+```
+`tests/test_site_visual_first.py:245`:
+```
+    ("44b38a258e5f", '5optional domain packs'),
+```
+No `packs/tech-lead/` and no `tests/test_tech_lead_pack.sh` exist.
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
