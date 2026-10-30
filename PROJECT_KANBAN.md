@@ -93,11 +93,11 @@
 
 
 ### Ready for Review
-- [ ] **T216** — Plugin spike: one skill, one agent, one blocking hook as a Claude Code plugin; same folder tried in Codex | Supervisor | C1 | Risk: Low | P1 | Branch `spike/t216-plugin` in `../wt-t216` | Ready for Review 2026-10-30: Claude Code all pass (prefixed names required); Codex installs + loads skill, gate did not fire (hook trust, unconfirmed); auto verify pass at 79b59ad7 ($0.43), awaiting merge approval | Track: minimal | Record: tasks/MINIMAL_LOG.md
 
 
 ### Done
 > Rows here and under Closed are one-line summaries since T215 (2026-10-30). Each row's full original text is in `docs/archive/KANBAN_DONE_DETAIL.md`.
+- [x] **T216** — Plugin spike: one skill, one agent, one blocking hook as a Claude Code plugin; same folder tried in Codex | Supervisor | C1 | Risk: Low | P1 | Done 2026-10-30: merged to main (user "merge to main and push"); auto verify pass at 79b59ad7 ($0.43); Claude Code all pass (prefixed names required), Codex gate did not fire (hook trust, unconfirmed) | Track: minimal | Record: tasks/MINIMAL_LOG.md
 - [x] **T215** — Tidy the repo root (logs into `docs/`) and shorten Done/Closed rows to one line, full text in `docs/archive/KANBAN_DONE_DETAIL.md` | common-infrastructure | C2 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_T215.md` | Done 2026-10-30: merged to main (user "merge to main"); auto verify pass at b3f50a70; board 344 KB → 61 KB
 - [x] **T214** — Remove the old background-spawn markers (`.claude/markers/`, 88 files) from git and ignore the folder | Supervisor | C0 | Risk: Low | P2 | Done 2026-10-30: merged to main (user "merge to main"); auto verify pass at d9af8829 | Track: minimal | Record: tasks/MINIMAL_LOG.md
 - [x] **T213** — Sidebar scroll-spy highlights the item above the clicked one | frontend-developer | C1 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_T213.md` | Done 2026-10-29: fix `26b489e` merged to main (user "merge to main and push"); scrollspy 8/8, test_site_content 134 passed
