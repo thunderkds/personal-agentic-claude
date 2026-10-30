@@ -14,6 +14,7 @@
 
 Mode: auto
 1. Pointer placement: one conditional line in `AGENTS.md` `## 5-Stage Agentic Pipeline` plus the full pointer in `docs/claude-md/pipeline-stages.md` — DEBATED: AGENTS.md line + pipeline-stages pointer (Advocate 1: pipeline-stages.md only, AGENTS.md unchanged — dormant packs, 4 lines of cap headroom; Advocate 2: one AGENTS.md line too — only always-loaded stage text, matches FR-009) ⚠ decided for you — please review
+3. Decision 1 reversed after the build: the pointer lives in `docs/claude-md/pipeline-stages.md` only (Advocate 1's option); `AGENTS.md` is unchanged — RULE: `tests/test_auto_mode.py` `test_ac1_agents_md_gains_no_line_and_stays_under_the_byte_cap` (AGENTS.md may gain no line) and `.claude/hooks/tests/test_vital_slice.py` `test_ac11_line_cap[AGENTS.md]` (cap 196, "do not raise the cap (DDR-0005 §6)"); both Advocates and the guide had assumed a 200-line cap with 4 lines free ⚠ decided for you — please review
 2. Branch cut from `feat/t218-tech-lead-pack`, so merge T218 first — RULE: `tasks/TASK_GUIDE_T219.md` § Dependencies & Reachability "Depends on: T218"
 Paused: auto-mode check failed — no `Memory:` line in the report — run the memory pass before you stop and record it there (each entry written, or `Memory: nothing new`); extended track, but the trace has no `code-review` Skill call (Stage 4 runs in auto mode); Risk Medium, but the trace has no `security-review` Skill call
 
@@ -79,6 +80,6 @@ implementing agent alone]
 
 ---
 
-## Blocked (AC 3b)
+## Blocked (AC 3b) — resolved by the Supervisor: Auto decision 3 (pipeline-stages.md only)
 
 AC 3b (one conditional line in `AGENTS.md`) is not delivered. AGENTS.md has 0 lines of headroom: the guide's "cap 200" is wrong. A line added to it failed 4 existing tests: `.claude/hooks/tests/test_vital_slice.py::test_ac11_line_cap[AGENTS.md]` (197 > 196, "do not raise the cap (DDR-0005 §6)"), `tests/test_auto_mode.py::test_ac1_agents_md_gains_no_line_and_stays_under_the_byte_cap`, `tests/test_agents_md_primary.py::test_ac1_...` (adds lines outside the allowed blocks), and `scripts/validate.sh` (path `agents/tech-lead.md` in AGENTS.md does not resolve in the kit, which fails `test_agents_md_primary::test_ac8` and `test_companion_scoring_skills::test_ac1`). So the line was reverted. This leaves the pipeline-stages.md pointers only (Advocate 1's option).
