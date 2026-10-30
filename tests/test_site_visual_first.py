@@ -242,7 +242,7 @@ BASELINE_SENTENCES = [
     ("9741d6fdd3e3", '4spawnable roles'),
     ("c281ee27472b", '33skills'),
     ("d3c9027831fe", '5blocking hooks (of 11)'),
-    ("44b38a258e5f", '5optional domain packs'),
+    ("ad14bdffefcc", '6optional domain packs'),
     ("e6bc75bc7897", 'Four spawnable sub-agent roles, skills for every'),
     ("cdef968136ca", '00 Phase 0 · Initiation PRD.md'),
     ("30979276a6f0", '0.5 Stage 0.5 · Grill + brainstorm BRAINSTORMING'),

@@ -70,6 +70,6 @@ choose **Reinstall** and pick it. Fork installs, packs and the full Update flow:
 
 ## Learn more
 
-Repository layout, agent guides, packs (`mobile`/`data`/`devops`/`ai-agent`/`api`), the custom
+Repository layout, agent guides, packs (`mobile`/`data`/`devops`/`ai-agent`/`api`/`tech-lead`), the custom
 skills catalog, the pipeline enforcement hooks table, and the two-tier memory system are all
 documented on the [site](https://personal-agentic-claude.vercel.app/).
