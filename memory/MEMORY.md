@@ -142,8 +142,10 @@
 - [T146/T147: sensitive-path ask hook; sub-agent sandbox is CLI-only (b)](decisions.md) — predicted path ⇒ no decision (never `allow`); `Agent()` spawns not sandboxed
 - [T144/T145/T148/T149 merged: lane check, decisions.md slice, anchored trace, prod approval](decisions.md) — lane_check needs `base...HEAD`; trace anchors in `~/.claude/harness-anchors` behind deny-only rules
 - [T150: spawns are background `Agent()` by default; `wake` flags dirty In Progress worktrees](decisions.md) — CLI pane only on request / non-Claude CLI
+- [T215: Done rows are one-line; full text in docs/archive/KANBAN_DONE_DETAIL.md](decisions.md) — logs moved to docs/brainstorming, docs/prd; write new Done rows short
 
 ### Patterns & Gotchas
+- [Never switch the main checkout mid auto-verify run](learnings.md) — verdict write crashes; use a worktree; state file needs ID + timestamp lines
 - [Merge gate after T210/T211](learnings.md) — verify row committed on the branch; any `git <global opts> push|merge|pull|rebase` and `-c alias.` gated; open: `echo … | sh`
 - [Parallel sessions overwrite the shared active-task file; headless checks must scroll instantly](learnings.md) — rerun a task's tests under its own state file; `scroll-behavior: smooth` makes CDP clicks miss
 - [Task IDs: scan the whole board for the highest ID before registering](learnings.md) — `git log` and `tasks/` filenames miss Todo rows with no guide (T119 collision, 2026-09-23)
