@@ -101,9 +101,32 @@ $ grep -n '^- \[x\] \*\*T155\*\*' PROJECT_KANBAN.md   # sample Done row, 409 cha
 
 Done/Closed rows: 179 (174 Done + 5 Closed), all one line; 139 of them over 400 characters (longest 12,389, T090).
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**: captured 2026-10-30T03:31:27Z in `../wt-t215`, after the change (common-infrastructure):
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```
+$ ls BRAINSTORMING_LOG_*.md PRD_*.md
+(eval):1: no matches found: BRAINSTORMING_LOG_*.md
+$ ls docs/brainstorming docs/prd
+docs/brainstorming: (the 12 BRAINSTORMING_LOG_<topic>.md files above)
+docs/prd: PRD_companion-scoring.md PRD_online-board.md PRD_settings-profiles.md
+$ wc -c PROJECT_KANBAN.md docs/archive/KANBAN_DONE_DETAIL.md
+ 60557 PROJECT_KANBAN.md
+328044 docs/archive/KANBAN_DONE_DETAIL.md
+$ python3 counts.py
+Todo: 17 rows, 17 unique IDs
+In Progress: 1 rows, 1 unique IDs
+Ready for Review: 0 rows, 0 unique IDs
+Done: 174 rows, 174 unique IDs
+Closed (investigated, will not do): 6 rows, 6 unique IDs
+Blocked: 1 rows, 1 unique IDs
+(ordered ID list per section identical to tests/fixtures/t215/board_before.json: True for all six)
+$ grep -n '^- \[x\] \*\*T155\*\*' PROJECT_KANBAN.md
+143:- [x] **T155** — Init asks the four board questions and writes `.claude/board.json` | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T155.md` | Done 2026-10-19: verify PASS (round 2 after /dev/tty fix 9b5c55b); evidence `tasks/TASK_REVIEW_T155.md`
+```
+
+Every Done/Closed row is now one line of at most 400 characters (139 rewritten, 40 already short kept verbatim); the 179 original rows are in `docs/archive/KANBAN_DONE_DETAIL.md`, byte-verbatim (sha256 checked against the fixture).
+
+**DELTA**: The repo root holds only live entry files, and the board is 60,557 bytes instead of 344,246, so a reader can open and scan it; every original row is still one lookup away in the archive.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]

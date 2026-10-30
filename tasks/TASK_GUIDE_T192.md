@@ -17,7 +17,7 @@
 Before writing any code:
 1. Read `PROJECT_SPEC.md`
 2. Read the memory slice in your spawn prompt. Read `memory/MEMORY.md` in full only if your work reaches a file, hook, skill or decision the slice does not cover
-3. Read this file completely, then `PRD_companion-scoring.md` (FR-010, FR-011, FR-015) and `BRAINSTORMING_LOG_companion-scoring.md`
+3. Read this file completely, then `docs/prd/PRD_companion-scoring.md` (FR-010, FR-011, FR-015) and `docs/brainstorming/BRAINSTORMING_LOG_companion-scoring.md`
 4. Read `agents/common-infrastructure.md`
 5. Note the **Complexity Level** above and apply the matching process from the Complexity matrix in your role guide
 6. Read `skills/write-better-skill/SKILL.md` — the authoritative craft reference for any `SKILL.md` here
@@ -58,7 +58,7 @@ chose **a named option for the three UI rows** over making it required or keepin
 - [x] Restated intent confirmed to match the user's request (Supervisor, from the quoted messages and the recorded choice)
 - [x] Domain terms align with the glossary — these three rows are **UI design Evidence rows** (Hard-Stop Gate 6), not the **Companion score** row and not the verifier's **evaluate gate**
 - [x] Every Acceptance Criterion below traces to a line in the Requirement
-- [x] All Requirement Refs exist in `PRD_companion-scoring.md` and are covered by the Acceptance Criteria
+- [x] All Requirement Refs exist in `docs/prd/PRD_companion-scoring.md` and are covered by the Acceptance Criteria
 
 ---
 

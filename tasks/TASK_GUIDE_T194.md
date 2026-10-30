@@ -12,7 +12,7 @@
 
 1. Read `PROJECT_SPEC.md` and `PROJECT_SPEC_SITE.md`
 2. Read the memory slice in your spawn prompt
-3. Read this file completely, then `PRD_companion-scoring.md` (FR-012)
+3. Read this file completely, then `docs/prd/PRD_companion-scoring.md` (FR-012)
 4. Read `agents/frontend.md`
 5. Read `tasks/TASK_GUIDE_T168.md` (the `#mcps` section as built), `TASK_GUIDE_T135.md` and `TASK_GUIDE_T165.md` (the honesty constraint's history, and the mutation controls that enforce it)
 6. Read `tests/test_site_content.py` lines 759–855 — the T135/T165/T168 tests, `HONESTY_PHRASES` at line 820, and `test_mcps_section_says_separate_and_never_claims_kit_integration`
@@ -46,7 +46,7 @@ work on the normal flow, that all"*.
 - [x] Restated intent confirmed to match the user's request (Supervisor)
 - [x] Domain terms align with the glossary — **Companion score** and **evaluate gate** are defined in `PROJECT_SPEC.md` by T193; use them as written there
 - [x] Every Acceptance Criterion below traces to a line in the Requirement
-- [x] All Requirement Refs exist in `PRD_companion-scoring.md` and are covered by the Acceptance Criteria
+- [x] All Requirement Refs exist in `docs/prd/PRD_companion-scoring.md` and are covered by the Acceptance Criteria
 
 ---
 

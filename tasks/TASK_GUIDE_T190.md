@@ -16,7 +16,7 @@
 Before writing any code:
 1. Read `PROJECT_SPEC.md`
 2. Read the memory slice in your spawn prompt (`<!-- memory-slice -->`). Read `memory/MEMORY.md` in full only if your work reaches a file, hook, skill or decision the slice does not cover
-3. Read this file completely, then `PRD_companion-scoring.md` (FR-001, FR-004, FR-005, FR-006, FR-014) and `BRAINSTORMING_LOG_companion-scoring.md`
+3. Read this file completely, then `docs/prd/PRD_companion-scoring.md` (FR-001, FR-004, FR-005, FR-006, FR-014) and `docs/brainstorming/BRAINSTORMING_LOG_companion-scoring.md`
 4. Read `agents/common-infrastructure.md`
 5. Note the **Complexity Level** above and apply the matching process from the Complexity matrix in your role guide
 6. Read `memory/codebase-map.md` for directory layout and blast-radius hotspots
@@ -64,7 +64,7 @@ normal flow, that all"*.
 - [x] Restated intent confirmed to match the user's request (Supervisor, from the two quoted messages above)
 - [x] Domain terms align with `PROJECT_SPEC.md` glossary — **Companion score** is this row; **evaluate gate** is easy-verifier's own asking round and is NOT this gate (T193 adds both terms; use them as defined here)
 - [x] Every Acceptance Criterion below traces to a line in the Requirement
-- [x] All Requirement Refs exist in `PRD_companion-scoring.md` and are covered by the Acceptance Criteria
+- [x] All Requirement Refs exist in `docs/prd/PRD_companion-scoring.md` and are covered by the Acceptance Criteria
 
 ---
 

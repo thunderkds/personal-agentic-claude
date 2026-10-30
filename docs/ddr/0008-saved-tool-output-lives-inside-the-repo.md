@@ -9,7 +9,7 @@ measurement put its saving at ~1% of spend; see [DDR-0009](0009-measure-token-wo
 The decision stands if the hook is ever revived.
 **Date**: 2026-09-24
 **Deciders**: User (project owner), over the Supervisor's recommendation
-**Related**: T124 · `BRAINSTORMING_LOG_token-economy.md` · `tasks/TASK_GUIDE_T124.md` (D3, D5, D7; AC4, AC5, AC7, AC8)
+**Related**: T124 · `docs/brainstorming/BRAINSTORMING_LOG_token-economy.md` · `tasks/TASK_GUIDE_T124.md` (D3, D5, D7; AC4, AC5, AC7, AC8)
 
 ---
 

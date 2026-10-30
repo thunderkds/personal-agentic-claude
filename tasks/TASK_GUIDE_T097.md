@@ -109,7 +109,7 @@ from the deferred Option C.
 - Any change to `DDR-0006`'s adapter architecture. One factual sentence in `AGENTS.md` changes; the
   design does not.
 
-**Requirement Refs**: `DDR-0007` (Decision, Follow-up) · `BRAINSTORMING_LOG_harness-kit-portability.md`
+**Requirement Refs**: `DDR-0007` (Decision, Follow-up) · `docs/brainstorming/BRAINSTORMING_LOG_harness-kit-portability.md`
 (Option B / B2, Edge Case Checklist)
 
 ### Requirement Fidelity Gate (sign off BEFORE implementation)

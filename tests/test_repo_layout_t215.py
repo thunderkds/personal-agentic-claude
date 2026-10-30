@@ -4,8 +4,9 @@ T215 — repo root tidy + one-line Done/Closed board rows, same meaning.
 AC1: the 12 `BRAINSTORMING_LOG_<topic>.md` live in `docs/brainstorming/`, the 3 `PRD_<topic>.md`
      in `docs/prd/`, byte-identical; none remain at the root (root `BRAINSTORMING_LOG.md` stays).
 AC2: no tracked file names a moved file by its old root path.
-AC3: every row T215 shortened is one line, <= 400 chars, and keeps checkbox, ID, Complexity, the
-     Risk/Priority/Guide it had, and a closing outcome.
+AC3: every Done/Closed row is one line, <= 400 chars. A row T215 shortened keeps checkbox, ID,
+     Complexity, the Risk/Priority/Guide it had, and a closing outcome; a row that was already
+     <= 400 chars is kept verbatim (moved paths aside).
 AC4: `docs/archive/KANBAN_DONE_DETAIL.md` keeps each original Done/Closed row verbatim, in order,
      and the board points at it under `### Done`.
 AC5: the hooks' own parsers still find every task in its section.
@@ -84,7 +85,9 @@ def test_no_tracked_file_names_a_moved_file_by_its_old_root_path():
                            text=True).stdout.split("\0")
     stale = []
     for rel in files:
-        if not rel or rel in skip or not os.path.isfile(os.path.join(ROOT, rel)):
+        if not rel or rel in skip or rel.startswith(("docs/brainstorming/", "docs/prd/")):
+            continue  # the moved files stay byte-identical (AC1), so their own mentions stay too
+        if not os.path.isfile(os.path.join(ROOT, rel)):
             continue
         try:
             with open(os.path.join(ROOT, rel), encoding="utf-8") as f:
@@ -97,13 +100,21 @@ def test_no_tracked_file_names_a_moved_file_by_its_old_root_path():
 
 # --- AC3 -------------------------------------------------------------------------------------
 
+def _strip_new_dirs(text):
+    return text.replace("docs/brainstorming/", "").replace("docs/prd/", "")
+
+
 def test_every_shortened_row_is_one_short_line_with_its_fields():
     board = _board()
     current = {**_section_rows(board, DONE_TITLE), **_section_rows(board, "Closed")}
+    original = dict(_archive_entries())
     for row in _fixture()["done_closed_rows"]:
         tid, line = row["id"], current.get(row["id"])
         assert line is not None, f"{tid} has no Done/Closed row"
         assert len(line) <= 400, f"{tid} row is {len(line)} chars"
+        if len(original[tid]) <= 400:  # already short: kept verbatim, moved paths aside
+            assert _strip_new_dirs(line) == _strip_new_dirs(original[tid]), f"{tid} short row was edited"
+            continue
         assert re.match(rf"^- \[[x~]\] \*\*{tid}\*\* — \S", line), f"{tid}: checkbox/ID/title lost"
         assert re.search(r"\bC[0-3]\b", line), f"{tid}: Complexity lost"
         if row["guide"]:

@@ -17,7 +17,7 @@ Before writing any code:
 3. Read this file completely
 4. Read `agents/frontend.md`
 5. Note the **Complexity Level** above and apply the matching process from its Complexity matrix
-6. Read `PRD_settings-profiles.md` (D1, D3, D5, FR-001..FR-004, FR-008) and `tasks/TASK_GUIDE_T185.md` (Build tab design, `settings-tool-core` / node:vm test setup)
+6. Read `docs/prd/PRD_settings-profiles.md` (D1, D3, D5, FR-001..FR-004, FR-008) and `tasks/TASK_GUIDE_T185.md` (Build tab design, `settings-tool-core` / node:vm test setup)
 7. Read `skills/settings-setup/profiles.json` from T200 — the one source of profile values
 
 ---
@@ -31,7 +31,7 @@ User, 2026-10-29, verbatim: "for the settings support section from the page, cur
 
 **Out of scope**: a question wizard; new catalog keys; Check-tab rules (T187); `profiles.json` itself (T200).
 
-**Requirement Refs**: `PRD_settings-profiles.md` FR-001, FR-002, FR-003, FR-004 (page half), FR-008, NFR-001, NFR-002.
+**Requirement Refs**: `docs/prd/PRD_settings-profiles.md` FR-001, FR-002, FR-003, FR-004 (page half), FR-008, NFR-001, NFR-002.
 
 ### Requirement Fidelity Gate
 

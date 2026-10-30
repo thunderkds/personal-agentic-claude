@@ -3,7 +3,7 @@
 **Status**: Accepted
 **Date**: 2026-08-24
 **Deciders**: User (product owner), Supervisor
-**Related**: T090 · reverses part of T051 · applies the T069 split-by-mandate precedent · `BRAINSTORMING_LOG_multi-provider.md`
+**Related**: T090 · reverses part of T051 · applies the T069 split-by-mandate precedent · `docs/brainstorming/BRAINSTORMING_LOG_multi-provider.md`
 
 ---
 

@@ -23,7 +23,7 @@ Before writing any code:
 ## Requirement (Pillar 1 — Adapt the requirement)
 
 The user, 2026-10-17, after T144/T145/T148/T149 were spawned as background `Agent()` calls with no
-stated reason and T148 was left half-done when the session ended (`BRAINSTORMING_LOG_spawn-mode.md`):
+stated reason and T148 was left half-done when the session ended (`docs/brainstorming/BRAINSTORMING_LOG_spawn-mode.md`):
 asked "what is good for the subagent, new sandbox pane, cli or background jobs", then chose
 background agents — they do not need to watch sub-agents work; the final report and commits are
 enough — and said "yes, create this task guide" for the two-part change:
@@ -42,7 +42,7 @@ In Progress task's worktree.
 - Auto-committing, stashing or cleaning any worktree — `wake` stays read-only
 - Reporting worktrees of tasks that are not In Progress (the ~50 old `wt-t0xx`/`wt-t1xx` trees)
 
-**Requirement Refs**: none in `PRD.md` — harness process change from the user's 2026-10-17 decision (`BRAINSTORMING_LOG_spawn-mode.md`, Recommended Path).
+**Requirement Refs**: none in `PRD.md` — harness process change from the user's 2026-10-17 decision (`docs/brainstorming/BRAINSTORMING_LOG_spawn-mode.md`, Recommended Path).
 
 ### Requirement Fidelity Gate (sign off BEFORE implementation)
 

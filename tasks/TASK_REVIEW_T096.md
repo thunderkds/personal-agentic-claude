@@ -33,7 +33,7 @@ $ git log --all --oneline --diff-filter=A -- 'docs/ddr/0007*' 'BRAINSTORMING_LOG
 (no output)
 ```
 
-`BRAINSTORMING_LOG_harness-kit-portability.md`, cited in Requirement Refs, is likewise absent.
+`docs/brainstorming/BRAINSTORMING_LOG_harness-kit-portability.md`, cited in Requirement Refs, is likewise absent.
 
 **Why work proceeded anyway**: the guide restates the prohibition inline in full — the
 live/historical split, the `sed`/`xargs`/`find -exec` ban, the `memory/codebase-map.md`

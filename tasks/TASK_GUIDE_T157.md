@@ -15,7 +15,7 @@
 Before writing any code:
 1. Read `PROJECT_SPEC.md` (glossary: board, board adapter, board mode, board cache, outbox, pull moment, Decision Log, my task)
 2. Read the memory slice in your spawn prompt (`<!-- memory-slice -->`). Read `memory/MEMORY.md` in full only if your work reaches a file, hook, skill or decision the slice does not cover
-3. Read this file completely, then `PRD_online-board.md` and `BRAINSTORMING_LOG_online-board.md`
+3. Read this file completely, then `docs/prd/PRD_online-board.md` and `docs/brainstorming/BRAINSTORMING_LOG_online-board.md`
 4. Read `agents/common-infrastructure.md`
 5. Note the **Complexity Level** above and apply the matching process from the Complexity matrix in `agents/common-infrastructure.md`
 6. **C2/C3 or multi-file tasks only**: read `memory/codebase-map.md`
@@ -24,7 +24,7 @@ Before writing any code:
 
 ## Requirement (Pillar 1 — Adapt the requirement)
 
-Source: the user, 2026-10-19 — "use the online board to manage the task, decision related task, tasks log, maybe the agents can post the logs, the status to the tasks ..., not from the local. Start with the linear.app first, but keep the open wide with another application like GitHub board, Jira". Requirements locked in `PRD_online-board.md` (Stage 0.5 grilling, decisions D1–D9); path locked in `BRAINSTORMING_LOG_online-board.md` (Option A — cache projector + Linear's GitHub-integration shortcut + board portability rule). Terms (board, board adapter, board mode, board cache, outbox, pull moment, Decision Log, my task) are defined in the `PROJECT_SPEC.md` glossary — use them exactly. "Provider" means the agent runtime (DDR-0006), never the board.
+Source: the user, 2026-10-19 — "use the online board to manage the task, decision related task, tasks log, maybe the agents can post the logs, the status to the tasks ..., not from the local. Start with the linear.app first, but keep the open wide with another application like GitHub board, Jira". Requirements locked in `docs/prd/PRD_online-board.md` (Stage 0.5 grilling, decisions D1–D9); path locked in `docs/brainstorming/BRAINSTORMING_LOG_online-board.md` (Option A — cache projector + Linear's GitHub-integration shortcut + board portability rule). Terms (board, board adapter, board mode, board cache, outbox, pull moment, Decision Log, my task) are defined in the `PROJECT_SPEC.md` glossary — use them exactly. "Provider" means the agent runtime (DDR-0006), never the board.
 
 This task: Pull at exactly four moments: session start (`wake`), before spawning an agent, before Ready for Review, before merge (D8). If the guide changed while the agent worked, the pre-review pull flags it and asks (FR-009). Brainstorm finding: in online mode the board cache holds the whole team's In Progress tasks, so the merge gate must count only my tasks. Also closes deferred T142 (two machines grabbing one task) via assignee.
 
@@ -35,7 +35,7 @@ This task: Pull at exactly four moments: session start (`wake`), before spawning
 - Pulling mid-task
 - Changing local-mode gate behavior
 
-**Requirement Refs** (from `PRD_online-board.md`):
+**Requirement Refs** (from `docs/prd/PRD_online-board.md`):
 - FR-009
 - FR-010 (pull failure → cache)
 - FR-011 (my task)
@@ -46,7 +46,7 @@ This task: Pull at exactly four moments: session start (`wake`), before spawning
 - [x] Restated intent confirmed to match the user's request (Supervisor, 2026-10-19; breakdown approved by the user)
 - [x] Domain terms align with `PROJECT_SPEC.md` glossary (`grill-with-docs` terminology pass run 2026-10-19)
 - [x] Every Acceptance Criterion below traces to a line in the Requirement
-- [x] All Requirement Refs exist in `PRD_online-board.md` and are covered by the Acceptance Criteria
+- [x] All Requirement Refs exist in `docs/prd/PRD_online-board.md` and are covered by the Acceptance Criteria
 
 ---
 
@@ -146,7 +146,7 @@ Rendered rows (T154) carry `| @<assignee>` (Linear `displayName` reduced by `ren
 | File | Reason |
 |---|---|
 | `PROJECT_KANBAN.md`, `memory/` | Supervisor-only |
-| `PRD_online-board.md`, `BRAINSTORMING_LOG_online-board.md` | locked planning inputs |
+| `docs/prd/PRD_online-board.md`, `docs/brainstorming/BRAINSTORMING_LOG_online-board.md` | locked planning inputs |
 
 ---
 
