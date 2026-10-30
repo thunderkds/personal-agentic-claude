@@ -24,7 +24,7 @@ Do not create `PROJECT_SPEC.md`.
 
 ## Hard rules
 
-1. **Map first.** Your first output is `docs/architecture/README.md`, the document map. Write no other document until the user approves the map.
+1. **Map first.** Your first output is `docs/architecture/README.md`, the document map. Write no other document until the user approves the map. The map counts as approved only when your spawn prompt says so, or its `Approved by:` line is filled. A map you wrote in this run is never approved.
 2. **`[auto]` means map only.** In auto mode write the map and nothing else. List the map for approval in your final report.
 3. **Never edit `PRD.md`, `PROJECT_SPEC.md` or `PROJECT_KANBAN.md`.** The Supervisor owns them. You read them.
 4. **Never overwrite a file under `docs/architecture/` that the map does not list.** Link a user-written file from the map instead.

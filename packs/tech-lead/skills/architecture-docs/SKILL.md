@@ -17,7 +17,7 @@ Skill({ skill: "architecture-docs" })
 
 1. Write `docs/architecture/README.md` from the map template below. Decide each row from the project's files.
 2. Stop. The user edits and approves the map. In `[auto]` mode, list the map for approval in your final report and stop.
-3. Draft each document the approved map marks "needed", one section below per type.
+3. Draft each document the approved map marks "needed", one section below per type. The map is approved only when the spawn prompt says so, or its `Approved by:` line is filled; a map written in this run is not.
 4. On refresh, read the approved map, match `git diff HEAD~1 --name-only` against each document's watched paths, and update only the matched documents.
 
 ### Shared rules (apply to every document)
@@ -42,7 +42,7 @@ Approved by: <name> on <date>   (blank until the user approves)
 | 3 | Journey diagram, per core feature | needed / not needed | ... | journey-<feature>.md | `PRD.md` |
 | 4 | ER diagram | needed / not needed | ... | er-diagram.md | `**/migrations/**`, `**/schema*`, `**/models/**` |
 | 5 | Risk register | needed / not needed | ... | risk-register.md | `PROJECT_SPEC.md` (Known Risk Areas) |
-| 6 | Roadmap | needed / not needed | ... | roadmap.md | `PROJECT_KANBAN.md` |
+| 6 | Roadmap | needed / not needed | ... | roadmap.md | `PRD.md` |
 | 7 | Decisions (ADR) | link | existing | [docs/adr/](../adr/) | - |
 | 8 | Product requirements | link | existing | [PRD.md](../../PRD.md) | - |
 | 9 | Project spec | link | existing | [PROJECT_SPEC.md](../../PROJECT_SPEC.md) | - |
@@ -176,7 +176,7 @@ timeline
   Milestone two : Goal C
 ```
 ````
-**Watched paths**: `PROJECT_KANBAN.md`, `PRD.md`.
+**Watched paths**: `PRD.md`. Not `PROJECT_KANBAN.md`: the board changes on every merge, so watching it would refresh the roadmap after every task.
 
 ### Edge cases
 
