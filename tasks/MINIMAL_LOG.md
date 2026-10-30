@@ -14,6 +14,7 @@
 - New test `tests/test_no_spawn_markers.py` — 2 failed before the change, `2 passed in 0.02s` after
 - Suite: `python3 -m pytest -q tests .claude/hooks/tests` — `2535 passed, 25 subtests passed in 140.72s`
 - Real run: `bash scripts/validate.sh` — printed `validate.sh: PASS`; `git ls-files .claude/markers | wc -l` — printed `0`
+- verify: ☑ pass — auto-run by hook, session 43f193b7-9e5b-4be7-8d60-eb20f4e36552, commit d9af8829a55ef8dddf9c921a28c54d359c505ad7, log .claude/verify-runs/T214-d9af8829a55e.log
 **Files:** `.gitignore`, `tests/test_no_spawn_markers.py`, `.claude/markers/` (88 files removed)
 - Note: a first auto verify run at `e6a5e566` printed `verdict: pass` (log `.claude/verify-runs/T214-e6a5e566860b.log`) but could not write its line: the main checkout was switched to `main` mid-run, so this file was absent there.
 **Not done:** merge (yours); auto verify: running
