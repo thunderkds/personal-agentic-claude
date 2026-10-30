@@ -47,16 +47,16 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_repo_layout_t215.py` (7 tests, fixture `tests/fixtures/t215/board_before.json`); red first at `49aadf83` (6 failed, 1 passed), green after: `7 passed in 0.41s` (2026-10-30T03:46Z) |
+| Verification command run | ☑ pass | Supervisor re-run in `../wt-t215` 2026-10-30T03:46:40Z: `7 passed in 0.41s` · `2540 passed, 25 subtests passed in 140.67s` · `validate.sh: PASS` · `size ok: 60421` (was 344,246 bytes) |
+| Negative cases hold | ☑ pass | Supervisor check: all 180 original Done/Closed/Blocked-scanned rows from `5fd0bd00` — every Done/Closed row found verbatim in `docs/archive/KANBAN_DONE_DETAIL.md` (only T147, a Blocked row with a path edit, differs); no Done/Closed row > 400 chars; all 15 moves are `R100`; per-section IDs equal (Todo 17, In Progress 1, RfR 0, Done 174, Closed 6, Blocked 1) |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | code-review on `5fd0bd00..HEAD` (54 files) + board readers (`auto_mode.board_rows`, `pre_agent_validate_guide` section lookup): 0 P0/P1/P2, 3 P3 (lane EXCEEDS from path-only edits; T180/T094/T113 rows record no close-out, stated as such; path-only memory edits accepted). security-review: no findings (docs/test only; `docs/` not deployed nor in MANIFEST) |
+| Full smoke suite still green (no regression) | ☑ pass | `python3 -m pytest -q tests .claude/hooks/tests` → `2540 passed, 25 subtests passed` |
+| **Companion score (easy-verifier)** | ☑ N/A | not run — optional companion tool; docs/board-only change |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | no UI component — repo layout and board text only |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | no UI component — repo layout and board text only |
+| **UI: Responsiveness at target viewports** | ☑ N/A | no UI component — repo layout and board text only |
 
 ---
 

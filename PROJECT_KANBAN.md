@@ -86,7 +86,6 @@
 
 ### In Progress
 
-- [ ] **T215** — Tidy the repo root (move 12 BRAINSTORMING_LOG_* + 3 PRD_* into docs/) and shorten the board's Done/Closed rows to one line each, full text kept verbatim in `docs/archive/KANBAN_DONE_DETAIL.md` | common-infrastructure | C2 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_T215.md` | Depends on: none | Registered 2026-10-30; user: "shorten, summary, anything keep the repos clean but same meaning". Gate 2 word (restructure) → C2/Medium. | Started 2026-10-30, worktree `../wt-t215` (`chore/t215-root-tidy`).
 
 
 
@@ -95,6 +94,7 @@
 
 ### Ready for Review
 
+- [ ] **T215** — Tidy the repo root (move 12 BRAINSTORMING_LOG_* + 3 PRD_* into docs/) and shorten the board's Done/Closed rows to one line each, full text kept verbatim in `docs/archive/KANBAN_DONE_DETAIL.md` | common-infrastructure | C2 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_T215.md` | Depends on: none | Registered 2026-10-30; user: "shorten, summary, anything keep the repos clean but same meaning". Gate 2 word (restructure) → C2/Medium. | Started 2026-10-30, worktree `../wt-t215` (`chore/t215-root-tidy`). | Ready for Review 2026-10-30: 2 agent commits + duplicate Todo row dropped; board 344,246 → 60,421 bytes; new test 7 passed, suite 2540 passed, `validate.sh: PASS`; code-review 0 P0/P1/P2, 3 P3; security-review no findings; evidence `tasks/TASK_REVIEW_T215.md`. Awaiting auto verify, then merge approval (user).
 
 ### Done
 > Rows here and under Closed are one-line summaries since T215 (2026-10-30). Each row's full original text is in `docs/archive/KANBAN_DONE_DETAIL.md`.
