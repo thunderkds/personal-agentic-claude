@@ -72,7 +72,7 @@ Do not overwrite an existing `agents/tech-lead.md` or `skills/architecture-docs`
 | On demand | Existing repo; you ask for it | The map from the code, with cited files and `(inferred)` marks; documents after you approve |
 | Refresh | After a merge whose changed files match a watched path in the approved map | Only the matched documents change; no match means no change |
 
-The pointers that make the Supervisor spawn the agent at these triggers belong to the pipeline docs (task T219). Until then, ask for it by hand.
+When `docs/claude-md/pipeline-stages.md` names `tech-lead`, the Supervisor spawns it at Stage 2 and at refresh on its own. Otherwise, ask for it by hand.
 
 ### 3. What lands in `docs/architecture/`
 
