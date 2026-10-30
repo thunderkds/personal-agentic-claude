@@ -2975,3 +2975,9 @@ The merge gate needs a test-runner Bash call in `memory/event-trace/<ID>.jsonl`.
 **Learning**: A plan (and both Debate Advocates) assumed AGENTS.md had 4 free lines under a 200-line cap. The binding caps are 196: `tests/test_auto_mode.py` `test_ac1_agents_md_gains_no_line_and_stays_under_the_byte_cap` and `.claude/hooks/tests/test_vital_slice.py` `test_ac11_line_cap[AGENTS.md]` ("do not raise the cap (DDR-0005 §6)"); AGENTS.md is at 196. Also `scripts/validate.sh` §3 fails any backticked path in AGENTS.md that does not exist (so a dormant pack's `agents/<name>.md` cannot be named), and `tests/test_agents_md_primary.py` test_ac1 rejects edited base lines unless `REPLACED_SPANS` lists them.
 **How to apply**: Before planning any AGENTS.md edit, run those three checks; put pack- or feature-specific doctrine in `docs/claude-md/*.md` instead.
 **Files**: AGENTS.md, tests/test_auto_mode.py, .claude/hooks/tests/test_vital_slice.py, scripts/validate.sh, tests/test_agents_md_primary.py
+
+### 2026-10-30 — The kit marketplace points at a private repo: easy-memory installs only with the owner's GitHub login
+**Learning**: `.claude-plugin/marketplace.json` (T217) lists easy-memory from `https://github.com/thunderkds/easy-memory-mcp.git`, which is private: anonymous `git ls-remote` prints `could not read Username`. The 10:18Z install passed only because it ran with the owner's credentials; the headless auto verify (no login) got `fatal: unable to get password from user`. Any other user hits the same error.
+**How to apply**: Before shipping a marketplace entry, check anonymous access (`GIT_TERMINAL_PROMPT=0 git -c credential.helper= ls-remote <url>`). Either make the plugin repo public or document that access is required.
+**Files**: .claude-plugin/marketplace.json, tasks/MINIMAL_LOG.md
+
