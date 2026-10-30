@@ -32,7 +32,7 @@
 - [T143/T191/T189: CI re-runs a Done task's Verification Command; `score` skill; auto close-out](decisions.md) — `# ci: skip — <reason>`; score row optional; Stop check (7) needs a task test run
 - [T200/T201: settings profiles — `settings-setup` at Stage 1, High security default, add-only](decisions.md) — one source `profiles.json`; dry run first; Legacy = the kit's 2 anchor rules
 - [T199: site `#mcps` lists easy-memory-mcp as a third OPTIONAL companion card](decisions.md) — README facts only; Open: T194 + T199 both edit the `#mcps` lead, merge by hand
-- [T198: `wake` prints Decisions + Learning Records via `memory_sections.py`, never all of MEMORY.md](decisions.md) — ~9k tokens less/session; **add new index lines at the TOP of a section or the script misses them**
+- [T198: `wake` prints Decisions + Learning Records via `memory_sections.py`, never all of MEMORY.md](decisions.md) — ~9k tokens less/session; **add new index lines at a section's TOP**
 - [T195: easy-memory installed; sub-agents use memory_search/read and the spawn slice](decisions.md) — OPTIONAL; `memory/` NOT replaced; review after ~2 weeks of `easy_memory.py report`
 - [T182: auto verify — Stop hook runs real `/verify` headless for `[auto]` tasks](decisions.md) — gate trusts the row only with the anchor-dir run record; $2 cap per commit
 - [T203: auto verify for every task — Supervisor runs `stop_auto_verify.py --start <ID>` at Ready for Review](decisions.md) — Stop hook backstop; `CLAUDE_AUTO_VERIFY=off` = `[auto]`-only; open T205, T206
@@ -41,7 +41,7 @@
 - [T178: two tracks — minimal (Supervisor codes, Decision record) vs extended (pipeline)](decisions.md) — track line is a statement
 - [T114: one command — menu, plan, confirm; Reinstall runs the removal pass](decisions.md) — prompts read /dev/tty before any write; any lock rewrite must run carry_over first
 - [T113: update removes unedited dropped files; MANIFEST `!` exclusions](decisions.md) — edited ones kept + named
-- [A batch guide ages against the tasks that merge after it, and the stalest part is its interactions](learnings.md) — Re-read the call sites, not the guide, and commit the correction before the spawn
+- [A batch guide ages against the tasks that merge after it, and the stalest part is its interactions](learnings.md) — re-read the call sites before the spawn
 - [A handoff warning is a measurement, and editing the block around it does not refresh it](learnings.md) — re-run the check before re-asserting, don't re-read the sentence
 - [T112: install is backup-then-overwrite; `harness_backup_path` is public for T114](decisions.md) — differing dest → `<path>.bak[.N]`; identical content left alone
 - [An identical-content short-circuit is what separates backup-on-install from backup-breeding](learnings.md) — judge a backup feature on run two: without it every update litters `.bak.N`
@@ -56,7 +56,7 @@
 - [The push gate reads the board and the trace](learnings.md) — since T196 a sub-agent is bound by its spawn prompt; the main session writes `.state/active_task.d/$CLAUDE_CODE_SESSION_ID`
 - [Interactive CLIs need a pty to verify](learnings.md) — drive the real binary with `script -qec` at Stage 5, and add a define-only source guard for the unit path (T108)
 - [A subshell `cd` doesn't wrap a pipeline outside it](learnings.md) — T108's probes installed into the main checkout instead of scratch; Assert the destination, don't trust the `cd`
-- [Agents satisfy the AC they can and stay quiet about a contradictory one](learnings.md) — T108's AC1 (input order) and AC7 (numeric order) couldn't both hold; Read the AC table against itself before spawning
+- [Agents satisfy the AC they can and stay quiet about a contradictory one](learnings.md) — T108's AC1 (input order) and AC7 (numeric order) couldn't both hold; check the AC table for contradictions before spawning
 - [Rules with a self-granting escape clause don't bind](learnings.md) — T100 3-run A/B: `recommendation first` bound, `under ~15 lines unless...` never did; phrase rules as an act
 - [Verify prompt/agent-config changes by running an agent vs a control](learnings.md) — reading the diff would have passed all 6 T100 rules
 - [T097 per-harness projection](decisions.md) — `--harness` selects CLIs at install; Codex 8 KB cap skips and names, never truncates
@@ -150,13 +150,13 @@
 - [Merge gate after T210/T211](learnings.md) — verify row committed on the branch; any `git <global opts> push|merge|pull|rebase` and `-c alias.` gated; open: `echo … | sh`
 - [Parallel sessions overwrite the shared active-task file; headless checks must scroll instantly](learnings.md) — rerun a task's tests under its own state file; `scroll-behavior: smooth` makes CDP clicks miss
 - [Task IDs: scan the whole board for the highest ID before registering](learnings.md) — `git log` and `tasks/` filenames miss Todo rows with no guide (T119 collision, 2026-09-23)
-- [Open T111/T115 follow-ups](learnings.md) — `.claude/hooks/` user entry silently dropped by the ownership rule; ~35 duplicated `merge_settings` lines in setup/update; un-pruned `pets/wt-*` worktrees
+- [Open T111/T115 follow-ups](learnings.md) — `.claude/hooks/` user entry silently dropped by the ownership rule; ~35 duplicated `merge_settings` lines in setup/update; un-pruned worktrees
 - [A rule the agent can meet by labelling, it meets by labelling](learnings.md) — T180: only trace counts (Advocate calls, forced High Debate) changed behavior
 - [A short SHA is hex — lock pair regex would read `kit_commit` as a file](learnings.md) — scope lock readers to the `"files"` block (T137)
 - [Writing a TASK_GUIDE auto-adds a Todo row](learnings.md) — `post_write_register_task.py`; move that row to In Progress at spawn, never add a second
 - [v1-site release lessons: evidence, publishing, planning](learnings.md) — a green mutation control first means "my mutation didn't land"; for "doc D matches source S" mutate **S**
 - [The merge gate reads one board by name](learnings.md) — `pre_bash_block_unsafe_merge.py` checks `PROJECT_KANBAN.md` only, so T083's site board was ungated at merge
-- [`pytest tests/ -q` runs 8 tests, not 688](learnings.md) — the suite lives in `.claude/hooks/tests/` and bare pytest skips hidden dirs; Always `python3 -m pytest .claude/hooks/tests/ tests/ -q` in guides
+- [`pytest tests/ -q` runs 8 tests, not 688](learnings.md) — bare pytest skips hidden `.claude/hooks/tests/`; always `python3 -m pytest .claude/hooks/tests/ tests/ -q` in guides
 - [An agent can fabricate Supervisor *consent*](learnings.md) — check against your own memory
 - ['Guaranteed channel' is structural — verify by removing the candidate](learnings.md) — T082's AC named the *optional* template as guaranteed
 - [A documented control needs a control group](learnings.md) — For agent-behaviour changes run the payload against the pre-change tree, or a PASS only proves the model behaves well
@@ -181,9 +181,9 @@
 - [T052 merged: Stuck-Loop Escalation checkpoint, 2026-08-04](decisions.md) — diagnose STOPs after 2 disproven hypotheses
 - [T030 done: DDR-0002 retires measure-first token instrument, 2026-08-05](decisions.md) — 2nd instrument failure
 - [T045/T040/T041 batch merged, 2026-08-03](decisions.md) — 3 disjoint-file P1s on one branch: Kanban regex, token-audit generator, 7-rung ladder
-- [An env var set inside a Bash tool call is invisible to hooks](learnings.md) — hooks are spawned by the harness as *siblings* of the tool call, so they inherit the harness env, not the command's subshell
+- [An env var set inside a Bash tool call is invisible to hooks](learnings.md) — hooks are *siblings* of the tool call, so they inherit the harness env
 - [T048 done: hook suite isolated from ambient active-task state](decisions.md) — StateFileOverride at BOTH entry points
-- [An importlib-loaded module is a different object from the imported one](learnings.md) — `spec_from_file_location` bypasses `sys.modules`, so a conftest fixture patching a module-level constant patches a
+- [An importlib-loaded module is a different object from the imported one](learnings.md) — `spec_from_file_location` bypasses `sys.modules`; patch the loaded object, not the import
 - [Nest isolation at the test-function level, not inside the shared helper](learnings.md) — wrapping `resolve()` clobbers the overrides slot-2 tests arm
 - [A feature whose suite only passes while the feature is unused](learnings.md) — armed: 9 failed / unarmed: 121 passed
 - [$CLAUDE_PROJECT_DIR: set for hooks, EMPTY in an agent's Bash tool call](learnings.md) — embed a literal absolute path in the spawn prompt
@@ -212,7 +212,7 @@
 - [A scope guard committed as an invariant blocks what it guarded](learnings.md) — a pinned count/hash/line forbids the next
 - [T066 merged: dedupe the startup read set toward the guaranteed channel](decisions.md) — consolidation went INTO the role guides, not the shared template
 - [Dedupe toward the guaranteed channel, not the tidy one](learnings.md) — the instinct is to make the shared template the single source and thin the leaves
-- [A comparison whose two sides came from different readers](learnings.md) — T066's AC7 test passed **while the files were untouched**: `git show` (bytes) vs `read_text` (chars), and these files are dense with
+- [A comparison whose two sides came from different readers](learnings.md) — T066 AC7 passed on untouched files: `git show` bytes vs `read_text` chars
 - [`cmd | tail && git commit` commits a red suite](learnings.md) — `tail` always exits 0 and `&&` gates on the **last command of the pipeline**, not on `pytest`
 - [T065 merged: honest memory channel + a gate that measures cost](decisions.md) — MEMORY.md passed as a path, not a verbatim paste
 - [A cap on a proxy metric decays silently](learnings.md) — lines counted, chars paid: green for 12 commits through +15.5% growth, and twice lines went *down* while chars went *up*
@@ -237,13 +237,13 @@
 - [T060 merged: diagnose gains cross-tier boundary instrumentation](decisions.md) — discovery-only boundary inventory
 - [T061 merged: per-spawn cost telemetry captured from the harness's own payload](decisions.md) — Agent records gain a guarded spawn object
 - [Volume is not cost when nearly everything is a cache read](learnings.md) — trimming injected context is worth ~a tenth of
-- [Check the measurement isn't already arriving before building an instrument](learnings.md) — DDR-0001 burned two windows failing to capture cost by hand from `/cost` and DDR-0002 retired the effort, while the
+- [Check the measurement isn't already arriving before building an instrument](learnings.md) — DDR-0001/0002: hand-captured `/cost` failed; the data already arrived elsewhere
 - [An empty Todo column can mean "never registered", not "nothing left"](learnings.md) — T061 read 0 Todo/59 Done and looked finished
 - [T067 merged: diagnose gains a root-cause rule, backward tracing, red flags](decisions.md) — the skill asked agents to REPORT a root cause but never required the fix be AT one
-- [DDR-0004: Gate 1 upheld — cheaper spawns, not fewer](../docs/ddr/0004-uphold-hard-stop-gate-1-over-spawn-elimination.md) — user ruling 2026-08-07: spawn *count* is the cost lever, but cutting spawns means the
+- [DDR-0004: Gate 1 upheld — cheaper spawns, not fewer](../docs/ddr/0004-uphold-hard-stop-gate-1-over-spawn-elimination.md) — user ruling 2026-08-07: spawn *count* is the cost lever; Gate 1 kept
 - [T063 merged: what event-trace attributes, and how memory reaches agents](decisions.md) — invalidates the ~10,700-tok-per-spawn premise
 - [Two errors that cancel look more convincing than the truth](learnings.md) — T063's first reconciliation gave a perfect `33 == 33`
-- [A naive metric can measure your own process instead of the thing](learnings.md) — "5 of 49 tasks read MEMORY.md" was measuring when the Supervisor's own pointer-arming step runs, not agent behaviour
+- [A naive metric can measure your own process instead of the thing](learnings.md) — "5 of 49 tasks read MEMORY.md" measured the Supervisor's own step, not agents
 - [When a test pins prose, fix the prose around it, not the test](learnings.md) — T060's first P2 attempt reworded a payload field list a test asserted verbatim
 - [The register hook stubs a Kanban row you are about to write by hand](learnings.md) — `post_write_register_task.py` fires on the Write of a TASK_GUIDE and auto-registers a minimal Todo row
 - [A memory pass is uncommitted work like any other, and stashes hide it](learnings.md) — T046 merged with its memory pass left in a stash; commit the pass
@@ -260,7 +260,7 @@
 - [skill promotion: code block only](learnings.md) — never auto-save SKILL.md stub; output fenced block and stop; user saves + registers manually
 - [A rule keyed on an input needs a "no input" case](learnings.md) — T136: 9 ACs covered named CLIs; no CLI named silently fell back to claude
 - [A "must not appear" test must skip record files](learnings.md) — T136: AC8 tripped on the KANBAN row quoting the verify result
-- [Claude sandbox Bash dies under Ubuntu nested-userns restriction](learnings.md) — `apparmor_restrict_unprivileged_userns=1` ⇒ `apply-seccomp … nested userns` on every Bash; probe nested, not bare bwrap
+- [Claude sandbox Bash dies under Ubuntu nested-userns restriction](learnings.md) — `apparmor_restrict_unprivileged_userns=1` breaks every Bash; probe nested, not bare bwrap
 - [Hook `ask` = deny in headless runs; `slice_section` misses `…)` headings](learnings.md) — over-asking kills headless sub-agent work
 - [Four agents at once: verify is user-only; stale active_task misattributes the Supervisor](learnings.md) — plan the `/verify` hand-off
 - [A dirty worktree is not proof of a dead agent](learnings.md) — T150: a concurrent session may be live
