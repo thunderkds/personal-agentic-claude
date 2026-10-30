@@ -54,7 +54,7 @@ later"), BA diagrams and spec documents, technical risks, security — "and many
 - **FR-006** (D5) In `[auto]` mode the agent writes the map only, and the final report lists it for approval; no document is written without approval. (Supervisor default — same pattern as settings-setup FR-006.)
 - **FR-007** (D6) Triggers: (a) Stage 2 of a new project, after `PROJECT_SPEC.md` is locked; (b) on demand for an existing repo, drafting from the code (cited file paths), with anything inferred marked as inferred; (c) refresh after a merge that changes the architecture or data model — the agent updates only the documents the map says the change affects.
 - **FR-008** (D7) Documents live in `docs/architecture/` as Markdown; diagrams are Mermaid code blocks (`C4Context`/`C4Container`, `sequenceDiagram`, `journey`, `erDiagram`, `gantt` or `timeline`).
-- **FR-009** (D2) `AGENTS.md` and `docs/claude-md/pipeline-stages.md` gain only a pointer: when the pack is installed, the Supervisor spawns `tech-lead` at the FR-007 triggers.
+- **FR-009** (D2) `docs/claude-md/pipeline-stages.md` gains only a pointer: when the pack is installed, the Supervisor spawns `tech-lead` at the FR-007 triggers. `AGENTS.md` is unchanged — it may gain no line (`tests/test_auto_mode.py` `test_ac1_agents_md_gains_no_line_and_stays_under_the_byte_cap`, cap 196; T219 auto decision 3).
 
 ## Non-functional requirements
 
