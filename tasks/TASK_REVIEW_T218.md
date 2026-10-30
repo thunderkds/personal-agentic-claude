@@ -23,8 +23,8 @@ Mode: auto
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_tech_lead_pack.sh` (new, 12 checks incl. mutation controls M1-M3); `tests/test_site_visual_first.py` updated entry. Output: `12 passed, 0 failed` (AC1 files + frontmatter, AC2 sections, AC3 map template, AC4 agent rules, AC5 PACK.md, AC6 README, AC8 not activated, M1 never-edit rule removed -> AC4 check fails, M2 ER section renamed -> AC2 check fails, M3 `setup.sh --pack` line added -> AC5 check fails) |
+| Verification command run | ☑ pass | `bash tests/test_tech_lead_pack.sh && bash tests/test_pack_catalog.sh && python3 -m pytest tests/test_site_content.py tests/test_site_visual_first.py -q` -> rc 0: `12 passed, 0 failed`; `16 passed, 0 failed`; `149 passed in 0.47s`. Full suite `python3 -m pytest .claude/hooks/tests/ tests/ -q` -> `6 failed, 2544 passed`: 5 failures are memory-budget tests (`test_memory_channel_and_budget.py` x4, `test_token_audit_format.py` x1), the same 5 fail on main without this change; 1 failure is `tests/test_ci_wires_shell_suites.py::test_every_real_suite_is_wired_or_excluded` — it names `test_tech_lead_pack.sh`, which needs a `run:` step in `.github/workflows/ci.yml` (CI config, not changed by the implementer; Supervisor decision) |
 | Negative cases hold | ☐ pass / ☐ fail | |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
@@ -71,9 +71,23 @@ Repository layout, agent guides, packs (`mobile`/`data`/`devops`/`ai-agent`/`api
 ```
 No `packs/tech-lead/` and no `tests/test_tech_lead_pack.sh` exist.
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER** (verbatim new content):
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+`ls packs/`: `ai-agent api data devops mobile tech-lead`
+
+`README.md:73`: ``Repository layout, agent guides, packs (`mobile`/`data`/`devops`/`ai-agent`/`api`/`tech-lead`), the custom``
+
+`site/index.html:319`: `<li><a href="#packs"><span class="num">6</span><span class="label">optional domain packs</span></a></li>`
+
+`site/index.html` `#packs` new last row:
+```
+<tr><td data-label="Pack"><code>tech-lead</code></td><td data-label="Domain">Top project documents: C4, sequence, journey, ER, risks, roadmap</td><td data-label="Agent"><code>tech-lead</code></td><td data-label="Skills"><code>architecture-docs</code></td></tr>
+```
+`tests/test_site_visual_first.py:245`: `    ("ad14bdffefcc", '6optional domain packs'),`
+
+New files: `packs/tech-lead/PACK.md` (with `## User guide`), `packs/tech-lead/agents/tech-lead.md`, `packs/tech-lead/skills/architecture-docs/SKILL.md`, `tests/test_tech_lead_pack.sh`.
+
+**DELTA**: A user can activate an optional `tech-lead` agent that writes an approved document map and then the project's C4, sequence, journey, ER, risk and roadmap documents in `docs/architecture/`, and can read how to do so in `packs/tech-lead/PACK.md`, the README and the site.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
