@@ -2978,6 +2978,6 @@ The merge gate needs a test-runner Bash call in `memory/event-trace/<ID>.jsonl`.
 
 ### 2026-10-30 — The kit marketplace points at a private repo: easy-memory installs only with the owner's GitHub login
 **Learning**: `.claude-plugin/marketplace.json` (T217) lists easy-memory from `https://github.com/thunderkds/easy-memory-mcp.git`, which is private: anonymous `git ls-remote` prints `could not read Username`. The 10:18Z install passed only because it ran with the owner's credentials; the headless auto verify (no login) got `fatal: unable to get password from user`. Any other user hits the same error.
-**How to apply**: Before shipping a marketplace entry, check anonymous access (`GIT_TERMINAL_PROMPT=0 git -c credential.helper= ls-remote <url>`). Either make the plugin repo public or document that access is required.
+**How to apply**: Before shipping a marketplace entry, check anonymous access (`GIT_TERMINAL_PROMPT=0 git -c credential.helper= ls-remote <url>`). Either make the plugin repo public or document that access is required. 2026-10-30: the user keeps easy-memory-mcp private on purpose; T217 is deferred to Todo, its branch unmerged.
 **Files**: .claude-plugin/marketplace.json, tasks/MINIMAL_LOG.md
 
