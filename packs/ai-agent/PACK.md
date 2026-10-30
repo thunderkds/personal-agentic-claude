@@ -34,11 +34,18 @@ Select when the project builds on top of LLM APIs — chat interfaces, autonomou
 
 ---
 
-## Install
+## Activate
+
+This pack ships inactive in every project's `packs/` catalog: no CLI loads it (ADR-0002). Ask the
+Supervisor to activate it. After you approve, the Supervisor copies the pack's files into the
+project's agents and skills:
 
 ```sh
-sh ~/.supervisor/setup.sh --pack=ai-agent
+cp packs/ai-agent/agents/*.md agents/
+cp -R packs/ai-agent/skills/* skills/
 ```
+
+`setup.sh` takes no options; it never installs a pack.
 
 ---
 

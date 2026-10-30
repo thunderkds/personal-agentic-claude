@@ -19,6 +19,9 @@ LIVE_DOCS = [
     "RUNBOOK.md",
     "AGENTS.md",
     *sorted(str(p.relative_to(ROOT)) for p in (ROOT / "docs" / "claude-md").glob("*.md")),
+    # T220: a pack is activated by the ADR-0002 approved copy, never by an installer flag.
+    "templates/PACK_template.md",
+    *sorted(str(p.relative_to(ROOT)) for p in (ROOT / "packs").glob("*/PACK.md")),
 ]
 
 FORBIDDEN = [
@@ -31,9 +34,7 @@ FORBIDDEN = [
 # T117 rewrites pack doctrine (docs/claude-md/folder-structure.md is on T116's
 # Must-NOT-Touch list); test_owned_exemptions_are_still_needed fails the moment
 # that line is fixed, so the exemption is deleted with it rather than left open.
-OWNED_EXEMPTIONS = {
-    ("docs/claude-md/folder-structure.md", "--pack="): "T117",
-}
+OWNED_EXEMPTIONS = {}  # T220 fixed the folder-structure.md line T117 owned
 
 # RUNBOOK.md ends with a release log table: a historical record, never rewritten.
 RUNBOOK_HISTORY_HEADING = re.compile(r"^## Release Log", re.MULTILINE)

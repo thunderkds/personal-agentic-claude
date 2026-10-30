@@ -33,13 +33,18 @@ Select when the project delivers a native or cross-platform mobile application. 
 
 ---
 
-## Install
+## Activate
 
-Selected automatically during interactive `setup.sh`. To add to an existing install:
+This pack ships inactive in every project's `packs/` catalog: no CLI loads it (ADR-0002). Ask the
+Supervisor to activate it. After you approve, the Supervisor copies the pack's files into the
+project's agents and skills:
 
 ```sh
-sh ~/.supervisor/setup.sh --pack=mobile
+cp packs/mobile/agents/*.md agents/
+cp -R packs/mobile/skills/* skills/
 ```
+
+`setup.sh` takes no options; it never installs a pack.
 
 ---
 
