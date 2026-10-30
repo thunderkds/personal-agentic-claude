@@ -7,6 +7,7 @@ Decision context: `docs/brainstorming/BRAINSTORMING_LOG_distribution.md` (Option
 
 - `.claude-plugin/marketplace.json` — a one-plugin marketplace (`ekspike-market`)
 - `ekspike/` — the plugin: skill `hello` (runs a script by plugin path), agent `probe`, one `PreToolUse` hook (`hooks/gate.py`) that blocks `echo SPIKE_BLOCK_ME` only in a folder with `PROJECT_KANBAN.md`
+- `ekspike/plugin.json` is a copy of `ekspike/.claude-plugin/plugin.json`: the root copy is the portable manifest Codex and Cursor read; Codex installed the folder without needing it, so it can go
 - Test: `tests/test_plugin_spike.py`
 
 ## Results (2026-10-30, Claude Code 2.1.314, codex-cli 0.163.0)
@@ -30,6 +31,8 @@ Live cost: 5 headless Claude runs on haiku, $0.018 total; 1 Codex run, 3,127 tok
 - **Every bare name must change.** Spawns need `easy-kit:backend-developer`, so the `subagent_type` table in `AGENTS.md`, the role guides and `craft-spawn-prompt` must name the prefixed form in plugin mode. The agent hooks are not affected: `pre_agent_validate_guide.py` and `pre_agent_step_limit.py` find the task from the Task ID in the spawn prompt (`lib/task_context.py`), not from the agent name. `post_tool_trace.py` only records `agent_type`.
 - **Gate hooks must no-op outside a kit project.** The `PROJECT_KANBAN.md` check works, as rows 6 and 7 show.
 - **Codex: the folder installs and skills load, but the gate did not fire.** `codex features list` shows `hooks stable true` and `plugin_hooks removed false`. Codex documents that plugin hooks need trust through `/hooks`. The run that bypasses trust (`--dangerously-bypass-hook-trust`) was refused by this session's safety check, so the cause is unconfirmed. Until it is, Codex users keep `setup.sh` for the gates.
+- **A real gate must fail closed.** The spike gate exits 1 on input that is not JSON, and Claude Code then lets the command run (`/verify` finding). The kit's gates must choose this on purpose before they move into a plugin.
+- **The plugin directory needs a `LICENSE`** (`claude plugin validate --profile` reports `LICENSE_MISSING`); the repo has none today.
 
 ## Rerun
 

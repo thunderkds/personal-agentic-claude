@@ -17,9 +17,9 @@
 - Suite: `python3 -m pytest -q tests .claude/hooks/tests` — `2547 passed, 25 subtests passed in 145.88s`; `bash scripts/validate.sh` — `validate.sh: PASS`
 - Real run (Claude Code 2.1.314, 5 headless haiku runs, $0.018): kit folder `ekspike gate: 'SPIKE_BLOCK_ME' is blocked in a kit project`; plain folder ran; `ekspike:probe` → `PROBE_OK`; bare `probe` → `Agent type 'probe' not found. Available agents: claude, ekspike:probe, …`; skill script by `${CLAUDE_PLUGIN_ROOT}` and `${CLAUDE_SKILL_DIR}` both `HELLO_OK`; marketplace install `Successfully installed plugin: ekspike@ekspike-market (scope: user)`
 - Real run (codex-cli 0.163.0): same folder `Added plugin ekspike from marketplace ekspike-market`; skill listed as `ekspike:hello`; gate did NOT block (`SPIKE_BLOCK_ME` printed); `codex features list`: `plugin_hooks removed false`
-- verify: ☐ pending
+- verify: ☑ pass — auto-run by hook, session a68ce49f-fda6-4965-8821-25bc9240579b, commit 79b59ad75a7a53fe66cea87759a4fb07f6cb371b, log .claude/verify-runs/T216-79b59ad75a7a.log
 **Files:** `experiments/plugin-spike/` (new), `tests/test_plugin_spike.py` (new), `docs/brainstorming/BRAINSTORMING_LOG_distribution.md` (new), `tasks/MINIMAL_LOG.md`, `PROJECT_KANBAN.md`
-**Not done:** merge (yours); Codex gate cause (needs `/hooks` trust in an interactive Codex, or your OK for the bypass flag in the throwaway home); auto verify: running
+**Not done:** merge (yours); Codex gate cause (needs `/hooks` trust in an interactive Codex, or your OK for the bypass flag in the throwaway home)
 
 ## T214 — Remove the old background-spawn markers from git · minimal
 **Asked:** "currently, the repos is messy with the file and the old setup also, let recheck and update the repos for clean," — then, asked about `.claude/markers`: "Remove them (Recommended)"
