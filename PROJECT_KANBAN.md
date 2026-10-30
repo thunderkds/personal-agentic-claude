@@ -93,6 +93,7 @@
 
 
 ### Ready for Review
+- [ ] **T216** — Plugin spike: one skill, one agent, one blocking hook as a Claude Code plugin; same folder tried in Codex | Supervisor | C1 | Risk: Low | P1 | Branch `spike/t216-plugin` in `../wt-t216` | Ready for Review 2026-10-30: Claude Code all pass (prefixed names required); Codex installs + loads skill, gate did not fire (hook trust, unconfirmed) | Track: minimal | Record: tasks/MINIMAL_LOG.md
 
 
 ### Done
