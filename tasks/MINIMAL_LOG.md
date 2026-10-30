@@ -4,6 +4,22 @@
 > new record directly under this note. On first use, the Supervisor creates `tasks/MINIMAL_LOG.md` from
 > this template and deletes the example comment. The same block is the Supervisor's final chat message.
 
+## T220 — Drop the stale `setup.sh --pack` install lines · minimal
+Mode: auto
+**Asked:** "compose all the tasks related, run with [auto], remember to add the docs, guide for that."
+**Decisions:**
+1. Track minimal — C1, Risk Low, docs text in 7 files + one test list; no user data, no UI — RULE: `docs/claude-md/tracks.md` track rule
+2. Each PACK.md `## Install` section becomes `## Activate`: the pack ships inactive (ADR-0002); after approval the Supervisor runs two `cp` lines; `setup.sh` takes no options — FACT: `docs/adr/0002-one-confirmed-menu-driven-installer.md:83` "The installer copies all of `packs/` into the project as a **Pack catalog**"
+3. Took over the `docs/claude-md/folder-structure.md` `--pack=` line that `tests/test_docs_match_installer.py` exempted for T117, and deleted the exemption (the test's own rule: delete it the moment the line is fixed). T117 (`select-packs`) still owns the automation — RULE: `tests/test_docs_match_installer.py` `test_owned_exemptions_are_still_needed`
+4. Added `packs/tech-lead/` to the folder-structure pack list; merge T218 first so the line names a pack that exists ⚠ decided for you — please review
+**Checked:**
+- New test `test_live_docs_show_no_install_flags` (LIVE_DOCS now includes `packs/*/PACK.md` + `templates/PACK_template.md`) — failed before the change (11 hits: `--pack=` and `~/.supervisor` in 5 PACK.md + template), passes after
+- Suite: `python3 -m pytest .claude/hooks/tests/ tests/ -q` — `5 failed, 2542 passed`; the 5 are the hot-tier memory budget tests (`memory/MEMORY.md` 42,252 > 42,000), failing identically on `main` since `ad7f928c`, not from this change; `bash tests/test_pack_catalog.sh` — `16 passed, 0 failed`
+- Real run: `grep -rn -e "--pack" -e "supervisor/setup" packs templates/PACK_template.md docs/claude-md/folder-structure.md` — printed nothing (no stale line left)
+**Memory:** nothing new for T220 (the run's memory pass is recorded in `tasks/TASK_REVIEW_T218.md`)
+**Files:** `packs/{mobile,data,devops,ai-agent,api}/PACK.md`, `templates/PACK_template.md`, `docs/claude-md/folder-structure.md`, `tests/test_docs_match_installer.py`
+**Not done:** merge (yours); auto verify: running (T182)
+
 ## T216 — Plugin spike: can the kit ship as a Claude Code plugin, and does the folder work in Codex · minimal
 **Asked:** "go spike" — after "so what is your final solution" (Option C, step 1 of `docs/brainstorming/BRAINSTORMING_LOG_distribution.md`)
 **Decisions:**

@@ -34,11 +34,18 @@ Select when the project's primary deliverable is a public or internal API contra
 
 ---
 
-## Install
+## Activate
+
+This pack ships inactive in every project's `packs/` catalog: no CLI loads it (ADR-0002). Ask the
+Supervisor to activate it. After you approve, the Supervisor copies the pack's files into the
+project's agents and skills:
 
 ```sh
-sh ~/.supervisor/setup.sh --pack=api
+cp packs/api/agents/*.md agents/
+cp -R packs/api/skills/* skills/
 ```
+
+`setup.sh` takes no options; it never installs a pack.
 
 ---
 

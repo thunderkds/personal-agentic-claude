@@ -7,7 +7,7 @@
 
 ## When to use this pack
 
-[1–2 sentences: what type of project should select this pack at setup.sh time.]
+[1–2 sentences: what type of project should have the Supervisor activate this pack.]
 
 **Select this pack when your project involves:**
 - [signal 1]
@@ -32,19 +32,18 @@
 
 ---
 
-## Install
+## Activate
 
-Selected automatically during interactive `setup.sh`. To add to an existing install:
-
-```sh
-sh ~/.supervisor/setup.sh --pack [pack-name]
-```
-
-To install multiple packs:
+This pack ships inactive in every project's `packs/` catalog: no CLI loads it (ADR-0002). Ask the
+Supervisor to activate it. After you approve, the Supervisor copies the pack's files into the
+project's agents and skills:
 
 ```sh
-sh ~/.supervisor/setup.sh --pack [pack-name] --pack [other-pack]
+cp packs/[pack-name]/agents/*.md agents/
+cp -R packs/[pack-name]/skills/* skills/
 ```
+
+`setup.sh` takes no options; it never installs a pack.
 
 ---
 

@@ -38,7 +38,8 @@ The project root **must** contain these folders:
    - packs/devops/ — Terraform, K8s, CI/CD
    - packs/ai-agent/ — LLM apps, RAG, MCP servers
    - packs/api/ — REST/gRPC, OpenAPI, auth flows
-   *(Each pack contains agents/ + skills/ + PACK.md. Installed via `setup.sh --pack=<name>`.)*
+   - packs/tech-lead/ — top project documents: C4, sequence, journey, ER, risk register, roadmap
+   *(Each pack contains agents/ + skills/ + PACK.md. Packs ship inactive; the Supervisor activates one by copying its files into `agents/` and `skills/` after the user approves — ADR-0002.)*
 
 6. `memory/` folder containing:
    - memory/MEMORY.md (hot-tier index — ≤50,000 characters, referenced by path in every sub-agent spawn prompt and read by the agent)
