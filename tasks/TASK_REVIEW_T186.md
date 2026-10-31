@@ -67,8 +67,14 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured Sat Oct 31 03:44:16 PM UTC 2026 (UTC), branch `fix/t186-paused-skip` at `0048cfb2`, before any implementation commit. The guide's fixture `.spawn/live-checks/d9-high/tally` no longer exists, so a temp project was built with the test file's own helpers (`_project`, extended-track High task T951, report whose `## Auto decisions` holds a `⚠` FACT line and the line `Paused: auto-mode check failed — Risk High: decision 1 (`FACT`) is a choice — old reasons`; the current hook copied in). Run: `{"stop_hook_active": false}` on stdin.
+
+```
+exit 0
+{"decision": "block", "reason": "[hook:stop_auto_mode_check] Auto-mode final report check failed \u2014 fix it before you stop (docs/claude-md/tracks.md `## Auto mode`):\n  \u2022 T951: Risk High: decision 1 (`FACT`) is a choice \u2014 it is flagged \u26a0 \u2014 so it must be `DEBATED` with exactly 3 Advocates named\n  \u2022 T951: Risk High, but no decision was DEBATED with 3 Advocates"}
+```
+
+The hook blocks the first stop although the report already holds a `Paused:` line and has not changed.
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
