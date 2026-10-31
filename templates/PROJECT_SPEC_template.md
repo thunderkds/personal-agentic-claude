@@ -25,6 +25,27 @@
 
 ---
 
+## Readiness
+
+> The files that prove this project is ready to code. Each stage fills its lines: Phase 0 →
+> `Requirements` + `Approved by`; Stage 0.5 → `Direction`; Stage 1 → `Codebase map`, `Tech stack`;
+> Stage 2 → `Main flow` before the first spawn. Paths are relative to the project root. While a line
+> is empty, a `[...]` placeholder or a missing file, every spawn that names a task gets a
+> `⚠ HIGH RISK — project readiness incomplete:` warning (`.claude/hooks/pre_agent_validate_guide.py`).
+> `Approved by` is written only on the user's explicit confirmation, never in auto mode.
+
+- **Requirements**: [path, e.g. PRD.md or a stand-in like docs/SPEC.md]
+- **Direction**: [path to the approved brainstorming log]
+- **Codebase map**: [memory/codebase-map.md, or "none — blank scaffold"]
+- **Tech stack**: [languages, frameworks, storage, hosting]
+- **Main flow**: [path to a file that holds a Mermaid diagram of the main data/user flow]
+- **Approved by**: [user YYYY-MM-DD]
+- **Waived**: [user YYYY-MM-DD — reason]
+
+The optional `Waived` line is for the user only: a filled one (`user YYYY-MM-DD — reason`) turns the warning off instead of the six lines above, for example for a throwaway prototype.
+
+---
+
 ## Critical Constraints
 
 [Copy the most important do-not-touch rules here for agent reference. Examples:]

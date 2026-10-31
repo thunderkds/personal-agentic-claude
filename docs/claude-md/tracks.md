@@ -45,7 +45,9 @@ Track: extended — C2 (a new command across 3 files), Risk Medium
 
 Then it starts the work at once. The announcement is a statement, not a question: it does not wait for a
 reply. The Supervisor must never ask which track, never recommend a lower one. On the extended track it goes
-on with the pipeline at once, from the first stage not yet done.
+on with the pipeline at once, from the first stage not yet done; a stage is done only when its `## Readiness`
+lines in `PROJECT_SPEC.md` are filled (`docs/claude-md/pipeline-stages.md`, "Stage done"), so
+scaffold code or a spec file never makes a project "not new".
 
 ---
 
@@ -204,7 +206,7 @@ is logged `RULE`, `FACT` or `SAFER OPTION`, not `DEBATED`. At Risk Medium or Hig
 
 | # | Stop today (where) | Auto rule | Logged as |
 |---|---|---|---|
-| 1 | Phase 0 questions and the `PRD.md` confirmation, new project only (`docs/claude-md/phase0-project-initiation.md`) | Answer each question from the request and the repo, with Citations. A question they cannot answer is a Choice question: Debate. | `FACT` / `DEBATED` ⚠ |
+| 1 | Phase 0 questions and the `PRD.md` confirmation, while `Requirements` or `Approved by` is not filled (`PROJECT_SPEC.md` `## Readiness`; `docs/claude-md/phase0-project-initiation.md`) | Answer each question from the request and the repo, with Citations. A question they cannot answer is a Choice question: Debate. | `FACT` / `DEBATED` ⚠ |
 | 2 | Stage 0.5a `grill-with-docs`: "Resolve all flagged items with the user" | Answer from the docs and code with Citations. What they cannot answer is a Choice question: Debate. | `FACT` / `DEBATED` ⚠ |
 | 3 | `grill-with-docs`: an ADR-eligible decision ("ask the user whether to escalate") | Write the DDR; do not escalate to an ADR (the smaller change). | `SAFER OPTION` ⚠ |
 | 4 | Stage 0.5b `brainstorming`: the user approves one direction | Take the recommended direction and list the alternatives in the report. | `RULE` ⚠ (taste) |
@@ -227,6 +229,12 @@ is logged `RULE`, `FACT` or `SAFER OPTION`, not `DEBATED`. At Risk Medium or Hig
 | 21 | Minimal track: an unclear request (its one stop) | By `### Debate size by Risk`. At Risk Low (the minimal track's own level) the Supervisor decides the reading and logs why. | `RULE` / `SAFER OPTION` ⚠ |
 
 The skills these rows name keep their own stop text. In auto mode this table wins over it.
+
+**No stage skipped (T223).** Stage 0.5 and Stage 1 are never skipped as an auto decision: they run, with the
+auto rules of rows 1–10. A locked spec or a stand-in like `docs/SPEC.md` is not a reason to skip them;
+it is the input Stage 0.5a grills. `Approved by` is never filled by the Supervisor in auto mode: the line
+stays empty, so the readiness warning keeps firing until the user confirms. The rule everywhere:
+`Approved by` is written only on the user's explicit confirmation, never in auto mode.
 
 ### Final report
 
@@ -260,6 +268,8 @@ the run ends, plus `security-review` at Risk Medium or High, because it is not a
   writes stay the Supervisor's; no hook writes memory.
 - `Not done: merge (yours)`, plus the `/verify` state: `auto verify: running (T182)`, its result, or
   `/verify (yours)` when the hook is not installed, its run was blocked, or `CLAUDE_AUTO_VERIFY=off`.
+  When the spawn hook's `⚠ HIGH RISK — project readiness incomplete:` warning fired in the run, the
+  same `Not done:` line (never a second one) also names it: `readiness incomplete: <gaps> (yours)` (T223).
 - `Closed:` — written by the hook, never by the Supervisor, when it moves the row to Done
   (`### Auto close-out`). When a check stops the move, the hook writes `Paused: done not moved — <reason>`.
 
