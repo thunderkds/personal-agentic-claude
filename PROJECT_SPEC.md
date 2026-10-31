@@ -33,7 +33,7 @@ The supervisor repo (`per-agentic-claude`) is a general framework. A `MANIFEST` 
 - **Codebase map**: `memory/codebase-map.md`
 - **Tech stack**: POSIX `sh` installer (`setup.sh`, `lib/`); Python 3 stdlib hooks and scripts (`.claude/hooks/`, `scripts/`); Markdown doctrine, skills and agents; pytest; GitHub Actions CI; static site in `site/`
 - **Main flow**: `docs/main-flow.md`
-- **Approved by**:
+- **Approved by**: user 2026-10-31
 
 ---
 
