@@ -174,8 +174,10 @@ At Risk High, at least one decision is always debated by 3 Advocates: pick the d
 effect on the user's data or scope (for example, convert `recurring.csv` too, or leave it). Cited `RULE:`
 lines do not replace it; they stay valid for safety actions.
 
-Each Advocate `Agent` call's `description` starts with `Advocate` (for example
-`Advocate 1: convert recurring.csv?`), so the auto-mode check below can count them.
+Each Advocate `Agent` call's `description` is `Advocate <n>: <short question>` (for example
+`Advocate 1: convert recurring.csv?`) and its `prompt` starts with the template's first line
+(`Using the repo, answer alone:`), so the auto-mode check below can count them. A call with only one of the
+two is not counted.
 
 Every decision, at every Risk level, has its log line in the final report. This supersedes T179's count
 ("2, or 3 for 3+ options or High risk") in auto mode. Outside auto mode, `resolve-question` is unchanged.
@@ -279,8 +281,8 @@ with a short reason when:
 2. at Risk Medium or High, a choice is not `DEBATED` with exactly 2 or 3 Advocates named. A choice is a `⚠`
    line, a `SAFER OPTION`, or an uncited `RULE:` or `FACT:`: an uncited `RULE:` or `FACT:` counts as a choice.
    The reason gives the decision number and its label, for example decision 1 (`RULE`);
-3. the event trace holds fewer Advocate `Agent` calls (description starting `Advocate`) than 2 or 3 per
-   `DEBATED` line;
+3. the event trace holds fewer Advocate `Agent` calls (description `Advocate <n>:` and a prompt starting
+   `Using the repo, answer alone:`) than 2 or 3 per `DEBATED` line;
 4. on the extended track, the trace has no `code-review` Skill call, or no `security-review` Skill call at
    Risk Medium or High;
 5. at Risk High, no `DEBATED` line names 3 Advocates, or the trace holds fewer than 3 Advocate `Agent`

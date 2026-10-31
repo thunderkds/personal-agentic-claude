@@ -706,13 +706,17 @@ def test_d8_advocate_spawn_description_starts_with_advocate():
     # T221 supersedes `<option>`: an Advocate gets the question only, so the description names it.
     assert re.search(r'description: "Advocate <n>: <short question>"', _read(SKILL))
     size = _norm(_subsection(_auto(), "Debate size by Risk"))
-    assert re.search(r"`description` starts with `Advocate`", size), size
+    # T222: the description is `Advocate <n>:` and the prompt starts with the template's first line.
+    assert re.search(r"`description` is `Advocate <n>: <short question>`", size), size
+    assert "`Using the repo, answer alone:`" in size, size
 
 
 def test_d8_tracks_md_documents_the_stop_hook():
     sub = _norm(_subsection(_auto(), "Auto-mode check (Stop hook)"))
     assert "`.claude/hooks/stop_auto_mode_check.py`" in sub
-    for needle in ("`## Auto decisions`", "exactly 2 or 3 Advocates named", "description starting `Advocate`",
+    # T222: the Advocate count keys on the description form and the template's first prompt line.
+    advocate_rule = "description `Advocate <n>:` and a prompt starting `Using the repo, answer alone:`"
+    for needle in ("`## Auto decisions`", "exactly 2 or 3 Advocates named", advocate_rule,
                    "`code-review`", "`security-review`", "`stop_hook_active`",
                    "`Paused: auto-mode check failed — <reasons>`", "`_untagged.jsonl`", "fail open"):
         assert needle in sub, needle
