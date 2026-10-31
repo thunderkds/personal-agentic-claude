@@ -233,7 +233,8 @@ The skills these rows name keep their own stop text. In auto mode this table win
 **No stage skipped (T223).** Stage 0.5 and Stage 1 are never skipped as an auto decision: they run, with the
 auto rules of rows 1–10. A locked spec or a stand-in like `docs/SPEC.md` is not a reason to skip them;
 it is the input Stage 0.5a grills. `Approved by` is never filled by the Supervisor in auto mode: the line
-stays empty, so the readiness warning keeps firing until the user fills it.
+stays empty, so the readiness warning keeps firing until the user confirms. The rule everywhere:
+`Approved by` is written only on the user's explicit confirmation, never in auto mode.
 
 ### Final report
 

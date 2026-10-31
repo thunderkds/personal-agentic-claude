@@ -32,7 +32,7 @@
 > Stage 2 → `Main flow` before the first spawn. Paths are relative to the project root. While a line
 > is empty, a `[...]` placeholder or a missing file, every spawn that names a task gets a
 > `⚠ HIGH RISK — project readiness incomplete:` warning (`.claude/hooks/pre_agent_validate_guide.py`).
-> Only the user fills `Approved by`.
+> `Approved by` is written only on the user's explicit confirmation, never in auto mode.
 
 - **Requirements**: [path, e.g. PRD.md or a stand-in like docs/SPEC.md]
 - **Direction**: [path to the approved brainstorming log]

@@ -822,3 +822,23 @@ def test_t223_ac7_auto_mode_never_skips_stage_0_5_or_stage_1():
 def test_t223_ac8_glossary_readiness_section():
     row = _glossary_row("Readiness section")
     assert "`## Readiness`" in row and "warn" in row.lower()
+
+
+APPROVED_BY_RULE = "`Approved by` is written only on the user's explicit confirmation, never in auto mode"
+
+
+@pytest.mark.parametrize("path", [PHASE0_MD, SPEC_TEMPLATE, SPEC, TRACKS_MD], ids=lambda p: p.name)
+def test_t223_c2_approved_by_has_one_meaning_everywhere(path):
+    """Stage 4 C2: one rule for `Approved by` in every doc that names it; none says the user
+    alone fills it, and none tells the Supervisor to write it unconditionally."""
+    text = _norm(_read(path))
+    assert APPROVED_BY_RULE in text, path.name
+    assert "Only the user fills `Approved by`" not in text
+    assert "filled by the user only" not in text
+
+
+def test_t223_c2_phase0_step2_writes_requirements_and_approved_by_only_on_confirmation():
+    step2 = _norm(_read(PHASE0_MD).split("### Step 2", 1)[1])
+    bullet = next(b for b in step2.split("- ") if "`## Readiness`" in b)
+    assert re.search(r"[Ww]rite the `## Readiness` line `Requirements`", bullet), bullet
+    assert APPROVED_BY_RULE in bullet, bullet

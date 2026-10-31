@@ -321,8 +321,10 @@ READINESS_HEAD = "⚠ HIGH RISK — project readiness incomplete:"
 APPROVED_RE = re.compile(r"user \d{4}-\d{2}-\d{2}\b")
 WAIVED_RE = re.compile(r"user \d{4}-\d{2}-\d{2}\s*[—–-]+\s*\S")
 BLANK_SCAFFOLD_RE = re.compile(r"none\s*[—–-]+\s*blank scaffold", re.IGNORECASE)
-MERMAID_RE = re.compile(r"^\s*```\s*mermaid\b")
+MERMAID_RE = re.compile(r"^[ \t]*```[ \t]*mermaid\b", re.MULTILINE)
 MERMAID_SCAN_BYTES = 1_000_000  # read only enough of a large file to find the block
+SPEC_READ_BYTES = 1_000_000  # only the first 1 MB of PROJECT_SPEC.md is read
+SHOWN_PATH_CHARS = 80  # a spec path echoed into the warning is cut to this length
 
 
 def _readiness_values(spec_text):
@@ -332,7 +334,7 @@ def _readiness_values(spec_text):
     if not sect:
         return None
     values = {}
-    for label, value in re.findall(r"^\s*[-*]\s+\*\*([^*]+)\*\*\s*:[ \t]*(.*)$", sect.group(1), re.MULTILINE):
+    for label, value in re.findall(r"^[ \t]*[-*][ \t]+\*\*([^*]+)\*\*[ \t]*:[ \t]*(.*)$", sect.group(1), re.MULTILINE):
         values.setdefault(label.strip(), value.strip())
     return values
 
@@ -344,19 +346,19 @@ def _is_blank(value):
 def _path_of(value):
     """The first backtick span, else the first word: `docs/SPEC.md` (stand-in) -> docs/SPEC.md."""
     span = re.search(r"`([^`]+)`", value)
-    return (span.group(1) if span else value.split()[0]).strip()
+    return span.group(1).strip() if span else value.split()[0].rstrip(",;.:")
+
+
+def _shown(path):
+    """A spec path as it may appear in the warning: only `[\\w./-]` characters, at most
+    80 characters (cut ones end with `…`). Spec text never reaches the context verbatim."""
+    safe = re.sub(r"[^\w./-]", "", path)
+    return safe if len(safe) <= SHOWN_PATH_CHARS else safe[:SHOWN_PATH_CHARS - 1] + "…"
 
 
 def _has_mermaid(path):
-    read = 0
     with open(path, encoding="utf-8", errors="replace") as f:
-        for line in f:
-            if MERMAID_RE.match(line):
-                return True
-            read += len(line)
-            if read > MERMAID_SCAN_BYTES:
-                return False
-    return False
+        return MERMAID_RE.search(f.read(MERMAID_SCAN_BYTES)) is not None
 
 
 def readiness_gaps(root):
@@ -367,7 +369,7 @@ def readiness_gaps(root):
     if not os.path.isfile(spec_path):
         return ["no `PROJECT_SPEC.md` at the project root"]
     with open(spec_path, encoding="utf-8", errors="replace") as f:
-        values = _readiness_values(f.read())
+        values = _readiness_values(f.read(SPEC_READ_BYTES))
     if values is None:
         return ["`PROJECT_SPEC.md` has no `## Readiness` section"]
     waived = values.get("Waived", "")
@@ -391,13 +393,14 @@ def readiness_gaps(root):
                 gaps.append("`Approved by` is not `user YYYY-MM-DD`")
         elif label in READINESS_PATH_LINES:
             rel = _path_of(value)
+            shown = _shown(rel)
             full = os.path.realpath(os.path.join(real_root, rel))
             if os.path.isabs(rel) or not full.startswith(real_root + os.sep):
-                gaps.append(f"`{label}` path `{rel}` is outside the project root")
+                gaps.append(f"`{label}` path `{shown}` is outside the project root")
             elif not os.path.isfile(full):
-                gaps.append(f"`{label}` file `{rel}` does not exist")
+                gaps.append(f"`{label}` file `{shown}` does not exist")
             elif label == "Main flow" and not _has_mermaid(full):
-                gaps.append(f"`Main flow` file `{rel}` has no ```mermaid block")
+                gaps.append(f"`Main flow` file `{shown}` has no ```mermaid block")
     return gaps
 
 
@@ -412,6 +415,17 @@ def check_readiness_warning(root):
         "`## Readiness` (run Phase 0 / Stage 0.5 / Stage 1), or ask the user for a `Waived` "
         "line (`- **Waived**: user YYYY-MM-DD — reason`). The spawn goes ahead (warning only)."
     ]
+
+
+def emit_readiness(readiness):
+    """Print the readiness warning alone (stderr + additionalContext): the path
+    `main()` takes when another advisory check crashed."""
+    if not readiness:
+        return
+    for warning in readiness:
+        print(warning, file=sys.stderr)
+    print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse",
+                                             "additionalContext": "\n\n".join(readiness)}}))
 
 
 def main():
@@ -464,6 +478,11 @@ def main():
         sys.exit(0)
 
     try:
+        readiness = check_readiness_warning(ROOT)
+    except Exception:
+        readiness = []  # fail open: a broken readiness check gives no warning
+
+    try:
         warnings = check_dependency_warnings(task_ids)
         warnings += check_demonstration_warnings(task_ids)
         slice_warnings = check_memory_slice_warning(prompt)
@@ -471,13 +490,10 @@ def main():
         reads_warnings = check_startup_reads_warning(prompt)
         warnings += reads_warnings
     except Exception:
-        # Fail-open: an advisory path must never block a spawn.
+        # Fail-open: an advisory path must never block a spawn. The readiness
+        # warning was computed on its own, so it is still shown.
+        emit_readiness(readiness)
         sys.exit(0)
-
-    try:
-        readiness = check_readiness_warning(ROOT)
-    except Exception:
-        readiness = []  # fail open: a broken readiness check gives no warning
 
     for warning in readiness:
         print(warning, file=sys.stderr)
