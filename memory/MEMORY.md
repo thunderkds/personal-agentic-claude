@@ -39,6 +39,7 @@
 - [T203: auto verify for every task — Supervisor runs `stop_auto_verify.py --start <ID>` at Ready for Review](decisions.md) — Stop hook backstop; `CLAUDE_AUTO_VERIFY=off` = `[auto]`-only; open T205, T206
 - [T180: auto mode — `[auto]` runs either track; Debate size by Risk; auto-mode Stop hook](decisions.md) — Low decides, Medium 2 / High 3 Advocates; merge/push stay the user's (T189: pass → Done)
 - [T221-2: Advocates frame What/Why/How; strict count](decisions.md)
+- [T223: PROJECT_SPEC `## Readiness`; spawn warns HIGH RISK while incomplete](decisions.md)
 - [T179: Debate — 2–3 read-only Advocates argue a choice in auto mode](decisions.md) — safer option first, flagged `⚠ decided for you`, max 3 per task
 - [T178: two tracks — minimal (Supervisor codes, Decision record) vs extended (pipeline)](decisions.md) — track line is a statement
 - [T114: one command — menu, plan, confirm; Reinstall runs the removal pass](decisions.md) — prompts read /dev/tty before any write; any lock rewrite must run carry_over first
@@ -58,7 +59,7 @@
 - [The push gate reads the board and the trace](learnings.md) — since T196 a sub-agent is bound by its spawn prompt; the main session writes `.state/active_task.d/$CLAUDE_CODE_SESSION_ID`
 - [Interactive CLIs need a pty to verify](learnings.md) — drive the real binary with `script -qec` at Stage 5, and add a define-only source guard for the unit path (T108)
 - [A subshell `cd` doesn't wrap a pipeline outside it](learnings.md) — T108's probes installed into the main checkout instead of scratch; Assert the destination, don't trust the `cd`
-- [Agents satisfy the AC they can and stay quiet about a contradictory one](learnings.md) — T108's AC1 (input order) and AC7 (numeric order) couldn't both hold; check the AC table for contradictions before spawning
+- [Agents satisfy the AC they can and stay quiet about a contradictory one](learnings.md) — check the AC table for contradictions before spawning
 - [Rules with a self-granting escape clause don't bind](learnings.md) — T100 3-run A/B: `recommendation first` bound, `under ~15 lines unless...` never did; phrase rules as an act
 - [Verify prompt/agent-config changes by running an agent vs a control](learnings.md) — reading the diff would have passed all 6 T100 rules
 - [T097 per-harness projection](decisions.md) — `--harness` selects CLIs at install; Codex 8 KB cap skips and names, never truncates
@@ -113,7 +114,7 @@
 
 - [T088 merged: PACK.md flag form + agreement test](decisions.md) — five docs told users `--pack <name>`
 
-- [T092 merged: the cache finding reaches the spawn assembler](decisions.md) — DDR-0004's "size is ~free, count is the lever" lived in a hook, a DDR and two cold files, never in `craft-spawn-prompt`
+- [T092 merged: the cache finding reaches the spawn assembler](decisions.md) — DDR-0004's "size is ~free, count is the lever" now reaches `craft-spawn-prompt`
 - [T093 merged: bold cross-refs no longer shadow the board resolver](decisions.md) — anchored to a row's own ID
 - [T091 merged: the Staleness Guard describes the channel it guards](decisions.md) — names `CLAUDE.md` + both adapters + the conformance test
 - [A green suite is not evidence when both tests look away](learnings.md) — one asserted the safe direction on a fixture missing the hazard
