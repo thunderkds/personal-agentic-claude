@@ -85,7 +85,6 @@
 
 
 ### In Progress
-- [ ] **T186** — Auto-mode check follow-up: a paused task stops re-blocking every later stop, new pause reasons are written, and `tracks.md` documents the T180 limits (no-remote security-review, the accepted temporary `origin/HEAD` ref, shared untagged trace, verify-row skip, loosely cited RULE at High) | common-infrastructure | C1 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_T186.md` | Depends on: T180 | Registered 2026-10-27 from T180 Stage 4 round 2 (3 P2) and `/verify T180` findings; user: "yes, accept it and continue". Branch `plan/t178-t180-tracks` in `../wt-t178`. | Started 2026-10-31 by the easy-memory-mcp Supervisor session (user: "fix the hook"; the stop hook re-blocked every turn on paused HUN-135/139/140): branch `fix/t186-paused-skip` in `../wt-t186` | In Progress 2026-10-31: set up by the easy-memory-mcp session (field report: paused HUN-135/139/140 re-blocked every stop for hours), handed to this kit session; branch `fix/t186-paused-skip` in `../wt-t186`
 
 
 
@@ -94,6 +93,7 @@
 
 
 ### Ready for Review
+- [ ] **T186** — Auto-mode check follow-up: a paused task stops re-blocking every later stop, new pause reasons are written, and `tracks.md` documents the T180 limits (no-remote security-review, the accepted temporary `origin/HEAD` ref, shared untagged trace, verify-row skip, loosely cited RULE at High) | common-infrastructure | C1 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_T186.md` | Depends on: T180 | Registered 2026-10-27 from T180 Stage 4 round 2 (3 P2) and `/verify T180` findings; user: "yes, accept it and continue". Branch `plan/t178-t180-tracks` in `../wt-t178`. | Started 2026-10-31 by the easy-memory-mcp Supervisor session (user: "fix the hook"; the stop hook re-blocked every turn on paused HUN-135/139/140): branch `fix/t186-paused-skip` in `../wt-t186` | In Progress 2026-10-31: set up by the easy-memory-mcp session (field report: paused HUN-135/139/140 re-blocked every stop for hours), handed to this kit session; branch `fix/t186-paused-skip` in `../wt-t186` | Ready for Review 2026-10-31: code-review P1×1 P2×2 P3×1, security-review Low×2, fixed (60cae331); branch suite only failure = T224 guide (fixed by T225)
 
 
 ### Done
