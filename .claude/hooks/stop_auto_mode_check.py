@@ -270,7 +270,8 @@ def check_task(task, request_ts):
         need = (need_per_line or 2) * len(debated)
         if have < need:
             reasons.append(f"{len(debated)} `DEBATED` line(s) need ≥{need} Advocate `Agent` calls "
-                           f"(description starting `Advocate`); the trace has {have}")
+                           f"(description `Advocate <n>:` and a prompt starting "
+                           f"`{ADVOCATE_PROMPT_PREFIX}`); the trace has {have}")
 
     if not task.minimal:
         skills = {field(r.get("summary"), "skill").strip() for r in records

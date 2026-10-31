@@ -281,8 +281,8 @@ with a short reason when:
 2. at Risk Medium or High, a choice is not `DEBATED` with exactly 2 or 3 Advocates named. A choice is a `⚠`
    line, a `SAFER OPTION`, or an uncited `RULE:` or `FACT:`: an uncited `RULE:` or `FACT:` counts as a choice.
    The reason gives the decision number and its label, for example decision 1 (`RULE`);
-3. the event trace holds fewer Advocate `Agent` calls (description starting `Advocate`) than 2 or 3 per
-   `DEBATED` line;
+3. the event trace holds fewer Advocate `Agent` calls (description `Advocate <n>:` and a prompt starting
+   `Using the repo, answer alone:`) than 2 or 3 per `DEBATED` line;
 4. on the extended track, the trace has no `code-review` Skill call, or no `security-review` Skill call at
    Risk Medium or High;
 5. at Risk High, no `DEBATED` line names 3 Advocates, or the trace holds fewer than 3 Advocate `Agent`

@@ -680,6 +680,7 @@ def test_t222_ac3_a_call_off_the_pattern_does_not_count(tmp_path, description, p
     _, out = _run(project)
     assert _blocked(out), out
     assert "Advocate `Agent` calls" in out["reason"] and "has 2" in out["reason"], out["reason"]
+    assert f"a prompt starting `{_template_prefix()}`" in out["reason"], out["reason"]  # T222: remedy text
 
 
 def test_t222_ac3_check5_at_high_risk_blocks_when_one_of_three_lacks_the_prefix(tmp_path):
