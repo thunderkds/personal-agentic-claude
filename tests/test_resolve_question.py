@@ -394,7 +394,7 @@ def test_t221_ac7_neighbour_files_say_propose():
         assert "Advocate 1: <its option>" not in text, t
     site = (ROOT / "site/index.html").read_text(encoding="utf-8")
     assert "Advocate agents argue the options" not in site
-    assert "Advocate agents propose" in site
+    assert "propose their own option" in site
 
 
 # T221 AC 8 mutation control

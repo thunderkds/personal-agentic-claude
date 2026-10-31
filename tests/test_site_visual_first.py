@@ -399,6 +399,8 @@ DUPLICATES_OF_A_VISUAL_LABEL = {
     # "Merge, push and Done stay with you." It is replaced by three paragraphs that follow
     # docs/claude-md/tracks.md `### Auto verify (Stop hook)` and `### Auto close-out`.
     "02fcd665c525": "stale since T203/T189 (Supervisor decision)",
+    # T221 AC 7: an Advocate now frames the problem and proposes its own option, so "argue the options" is reworded.
+    "059208c43012": "reworded by T221 AC 7 (Advocates propose, not argue)",
 }
 
 

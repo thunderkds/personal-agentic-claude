@@ -310,7 +310,7 @@ D4_LINES = (
     MODE_MARKER,
     "— RULE: <the rule>",
     '— FACT: <path>:<line> "<quoted text>"',
-    f"— DEBATED: <option> (Advocate 1: <its option>; Advocate 2: <its option>) {FLAG}",
+    f"— DEBATED: <option> (Advocate 1: <its proposal>; Advocate 2: <its proposal>) {FLAG}",
     f"— SAFER OPTION: <why> {FLAG}",
     "Paused:",
     "auto verify: running (T182)",
@@ -703,7 +703,8 @@ def test_d8_stop_table_legend_every_flag_is_a_debate_at_medium_or_high():
 
 
 def test_d8_advocate_spawn_description_starts_with_advocate():
-    assert re.search(r'description: "Advocate <n>: <option>"', _read(SKILL))
+    # T221 supersedes `<option>`: an Advocate gets the question only, so the description names it.
+    assert re.search(r'description: "Advocate <n>: <short question>"', _read(SKILL))
     size = _norm(_subsection(_auto(), "Debate size by Risk"))
     assert re.search(r"`description` starts with `Advocate`", size), size
 

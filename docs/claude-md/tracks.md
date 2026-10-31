@@ -167,15 +167,15 @@ The task's **Risk** label sets how every decision that would have been a questio
 | Risk | Who decides | Advocates |
 |---|---|---|
 | Low | The Supervisor decides alone and logs `RULE`, `FACT` or `SAFER OPTION` with the reason | none: no Debate |
-| Medium | A Debate (`resolve-question`): the Advocates argue, the Supervisor decides by its rules | exactly 2, required |
-| High | A Debate (`resolve-question`): the Advocates argue, the Supervisor decides by its rules | exactly 3, required; the third argues the smallest safe thing |
+| Medium | A Debate (`resolve-question`): the Advocates propose, the Supervisor decides by its rules | exactly 2, required |
+| High | A Debate (`resolve-question`): the Advocates propose, the Supervisor decides by its rules | exactly 3, required; the third favours the smallest safe thing |
 
 At Risk High, at least one decision is always debated by 3 Advocates: pick the decision with the biggest
 effect on the user's data or scope (for example, convert `recurring.csv` too, or leave it). Cited `RULE:`
 lines do not replace it; they stay valid for safety actions.
 
 Each Advocate `Agent` call's `description` starts with `Advocate` (for example
-`Advocate 1: keep recurring.csv`), so the auto-mode check below can count them.
+`Advocate 1: convert recurring.csv?`), so the auto-mode check below can count them.
 
 Every decision, at every Risk level, has its log line in the final report. This supersedes T179's count
 ("2, or 3 for 3+ options or High risk") in auto mode. Outside auto mode, `resolve-question` is unchanged.
@@ -236,7 +236,7 @@ the run ends, plus `security-review` at Risk Medium or High, because it is not a
 `templates/MINIMAL_LOG_template.md`:
 
 - `Mode: auto`, then one numbered line per decision: what was decided, then how — `RULE: …`,
-  `FACT: <Citation>`, `DEBATED: <option> (Advocate 1: <its option>; Advocate 2: <its option>)` or
+  `FACT: <Citation>`, `DEBATED: <option> (Advocate 1: <its proposal>; Advocate 2: <its proposal>)` or
   `SAFER OPTION: …`. Every Debate, safer-option and taste decision ends with
   `⚠ decided for you — please review`.
 - Write `DEBATED` only when ≥2 Advocate `Agent` calls ran for that question, naming each Advocate's
