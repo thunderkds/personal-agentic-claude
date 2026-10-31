@@ -24,6 +24,19 @@ The supervisor repo (`per-agentic-claude`) is a general framework. A `MANIFEST` 
 
 ---
 
+## Readiness
+
+> The files that prove this project is ready to code (T223). `Approved by` is written only on the user's explicit confirmation, never in auto mode.
+
+- **Requirements**: `README.md` (stand-in: the kit has per-feature PRDs in `docs/prd/`, no single PRD)
+- **Direction**: `docs/adr/0002-one-confirmed-menu-driven-installer.md` (stand-in: per-feature logs live in `docs/brainstorming/`)
+- **Codebase map**: `memory/codebase-map.md`
+- **Tech stack**: POSIX `sh` installer (`setup.sh`, `lib/`); Python 3 stdlib hooks and scripts (`.claude/hooks/`, `scripts/`); Markdown doctrine, skills and agents; pytest; GitHub Actions CI; static site in `site/`
+- **Main flow**: `docs/main-flow.md`
+- **Approved by**:
+
+---
+
 ## Glossary
 
 | Term | Definition |
