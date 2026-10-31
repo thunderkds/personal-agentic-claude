@@ -308,7 +308,12 @@ row, else Low; a Decision record is Risk Low unless it says otherwise. The trace
 their calls land in `_untagged.jsonl` unless the active-task state file is set.
 
 It never loops: on the second fire (`stop_hook_active`) it allows the stop and appends
-`Paused: auto-mode check failed — <reasons>` to the report. Unreadable files fail open, with one line on
+`Paused: auto-mode check failed — <reasons>` to the report, ending in a stamp, `[report <stamp>]`. The
+stamp is a hash of the report block, not counting its `Paused:`, `Closed:`, `Not done:` and `- verify:` lines. A task whose last
+`Paused:` line carries the stamp of the report as it is now, or carries no stamp (a line from before
+T186), is paused: the first fire does not block it again. After you edit the report, the task is checked
+again. A second fire adds a new `Paused:` line only when its reasons differ from the last line's. With the
+same reasons it only refreshes that line's stamp. Unreadable files fail open, with one line on
 stderr. It does not read or write Evidence: the merge gate is unchanged.
 
 ### Auto verify (Stop hook)
@@ -468,3 +473,25 @@ The memory pass and the move to Done are automatic: see `### Final report` (`Mem
 - A sub-agent reports `Status: blocked` with a Choice question: a Debate settles it, not the user.
 - The session nears its usage limit: stop at a clean point, write the final report so far, and say what is left.
 - Two `[auto]` tasks in one session: each task has its own report and its own Debate count.
+
+### Known limits
+
+Read these before you rely on `[auto]`. T180 left them open, on purpose. T186 records them.
+
+- **A repo with no git remote.** The `security-review` skill needs an `origin/HEAD` ref. In a repo with
+  no git remote, the Supervisor may add a temporary `refs/remotes/origin/HEAD` so the skill can start. It
+  removes the ref afterwards and logs both steps in the final report. Without that ref, the skill cannot
+  start, and the auto-mode check pauses a Medium or High risk task (you accepted this on 2026-10-27).
+- **Two auto tasks in one session can share evidence.** The auto-mode check counts the Advocate and
+  Skill calls in `memory/event-trace/_untagged.jsonl` from the last 6 hours for every task. Advocate
+  prompts carry no task ID. A second task can be credited with the first task's Advocates or reviews.
+- **A hand-typed `☑ pass` in the `verify` row ends the check.** The auto-mode check skips a review file
+  whose `verify` row says `☑ pass`, so an agent that types that row ends the run unchecked. The merge
+  gate still blocks a hand-typed row at merge: it accepts only a row with an `auto-run by hook` run
+  record.
+- **At Risk High, one Debate is enough.** The check forces at least one Debate with 3 Advocates, not
+  one Debate per choice. A decision can still hide behind a loosely related cited `RULE:`, as long as one
+  other decision is debated. Read the `RULE:` lines of a High risk report yourself.
+- **A paused task is not checked again until its report changes.** If the report block does not change,
+  the check does not block the task a second time, even when a later trace would give different
+  reasons. Edit the report to have the task checked again.

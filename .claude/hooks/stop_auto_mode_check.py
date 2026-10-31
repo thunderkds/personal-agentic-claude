@@ -39,14 +39,21 @@ its label. Risk comes from the guide's `**Risk Level**`, else the review file, e
 row, else Low; a Decision record is Low unless it says otherwise.
 
 Never loops: on the second fire (`stop_hook_active`) it allows the stop and appends
-`Paused: auto-mode check failed — <reasons>` to the report. Fails open: an unreadable file skips
-that task with one stderr line. It never reads or writes the merge gate's Evidence.
+`Paused: auto-mode check failed — <reasons> [report <stamp>]` to the report (T186 D1). The stamp is a
+hash of the report block without its `Paused:`, `Closed:`, `Not done:` and `- verify:` lines. A task
+whose last `Paused:` line carries the stamp of the block as it is now — or carries no stamp, a line
+from before T186 — is skipped: it was paused and nothing changed, so the first fire does not block
+again. After an edit the task is checked again. A second fire writes a new `Paused:` line only when
+its reasons differ from the last one's; with the same reasons it only refreshes that line's stamp.
+Fails open: an unreadable file skips that task with one stderr line. It never reads or writes the
+merge gate's Evidence.
 
 Trace: `memory/event-trace/<ID>.jsonl` (all records) plus `memory/event-trace/_untagged.jsonl`
 records from the last CLAUDE_AUTO_CHECK_WINDOW_S seconds (default 6h). Advocate and Scanner
 prompts carry no task ID, so their calls land in `_untagged.jsonl` unless the active-task state
 file is set.
 """
+import hashlib
 import json
 import os
 import re
@@ -62,6 +69,9 @@ import auto_closeout as ac  # noqa: E402
 import auto_mode as am  # noqa: E402
 
 PAUSE = "Paused: auto-mode check failed — "
+STAMP = re.compile(r"\s\[report ([0-9a-f]{12})\]\s*$")
+# T186: lines no check reads, and lines other hooks write; an edit of them is not a report change.
+STAMP_SKIPS = ("Paused:", "Closed:", "Not done:", "**Not done:**", "- verify:")
 ADVOCATES_BY_RISK = {"Medium": 2, "High": 3}
 # T222: the first line of the Advocate template (`skills/resolve-question/references/advocate.md`),
 # up to the colon. A test ties this constant to the template.
@@ -169,6 +179,39 @@ def is_advocate_call(record):
     summary = record.get("summary")
     return bool(ADVOCATE_DESCRIPTION.match(field(summary, "description"))
                 and field(summary, "prompt").startswith(ADVOCATE_PROMPT_PREFIX))
+
+
+def report_stamp(body):
+    """T186: a hash of the report block as the checks read it."""
+    lines = [l.strip() for l in am.COMMENT.sub("", body).splitlines()]
+    kept = [l for l in lines if l and not l.startswith(STAMP_SKIPS)]
+    return hashlib.sha1("\n".join(kept).encode("utf-8")).hexdigest()[:12]
+
+
+def pause_line_index(lines):
+    """Index of the last `Paused: auto-mode check failed — …` line, or None."""
+    found = None
+    for i, line in enumerate(lines):
+        if line.strip().startswith(PAUSE):
+            found = i
+    return found
+
+
+def split_pause(line):
+    """(reasons, stamp or None) of a pause line."""
+    text = line.strip()[len(PAUSE):]
+    m = STAMP.search(text)
+    return (STAMP.sub("", text).strip(), m.group(1)) if m else (text.strip(), None)
+
+
+def paused_unchanged(body):
+    """T186 D1: the last pause line is stamped with this very block, or is from before the stamp."""
+    lines = body.splitlines()
+    i = pause_line_index(lines)
+    if i is None:
+        return False
+    stamp = split_pause(lines[i])[1]
+    return stamp is None or stamp == report_stamp(body)
 
 
 def choice_reason(line, need):
@@ -282,11 +325,15 @@ def check_task(task, request_ts):
         if need_per_line and "security-review" not in skills:
             reasons.append(f"Risk {risk}, but the trace has no `security-review` Skill call")
 
+    if reasons and paused_unchanged(body):
+        warn(f"{task_id}: already paused, report unchanged since — not blocking again")
+        return []
     return [(task.report_path, task.minimal, reason) for reason in reasons]
 
 
 def record_pause(report_path, minimal, task_id, reasons):
-    """Append the pause line inside the task's report block; never twice."""
+    """Write the pause inside the task's report block (T186 D1): a new line for new reasons, only a
+    fresh stamp for the same reasons — never the same line twice."""
     text = am.read(report_path, ROOT)
     if text is None:
         warn(f"{task_id}: no report file to record the pause in")
@@ -296,10 +343,17 @@ def record_pause(report_path, minimal, task_id, reasons):
         warn(f"{task_id}: no report section to record the pause in")
         return
     start, end, body = block
-    if PAUSE in body:
+    reasons_text = "; ".join(reasons)
+    new_line = f"{PAUSE}{reasons_text} [report {report_stamp(body)}]"
+    lines = body.rstrip("\n").split("\n")
+    i = pause_line_index(lines)
+    if i is None or split_pause(lines[i])[0] != reasons_text:
+        lines.append(new_line)  # no pause yet, or new reasons: a new line, the old one stays
+    elif lines[i].strip() == new_line:
         return
-    line = PAUSE + "; ".join(reasons)
-    new_body = body.rstrip("\n") + "\n" + line + "\n" + ("\n" if end < len(text) else "")
+    else:
+        lines[i] = new_line  # the same reasons: no new line, only the stamp follows the report
+    new_body = "\n".join(lines) + "\n" + ("\n" if end < len(text) else "")
     with open(report_path, "w", encoding="utf-8") as f:
         f.write(text[:start] + new_body + text[end:])
 
