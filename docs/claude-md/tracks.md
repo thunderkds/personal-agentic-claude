@@ -311,8 +311,8 @@ It never loops: on the second fire (`stop_hook_active`) it allows the stop and a
 `Paused: auto-mode check failed — <reasons>` to the report, ending in a stamp, `[report <stamp>]`. The
 stamp is a hash of the report block, not counting its `Paused:`, `Closed:`, `Not done:` and `- verify:` lines. A task whose last
 `Paused:` line carries the stamp of the report as it is now, or carries no stamp (a line from before
-T186), is paused: the first fire does not block it again. After you edit the report, the task is checked
-again. A second fire adds a new `Paused:` line only when its reasons differ from the last line's. With the
+T186; the hook stamps it once, on first sight), is paused: the first fire does not block it again. After you edit the report, the task is checked
+again. The hook reads and writes `Paused:` lines only outside HTML comments. A second fire adds a new `Paused:` line only when its reasons differ from the last line's. With the
 same reasons it only refreshes that line's stamp. Unreadable files fail open, with one line on
 stderr. It does not read or write Evidence: the merge gate is unchanged.
 

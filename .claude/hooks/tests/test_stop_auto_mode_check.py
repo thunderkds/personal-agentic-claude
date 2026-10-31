@@ -846,3 +846,86 @@ def test_t186_a_task_that_passes_is_not_touched(tmp_path):
     assert _run(project)[1] == {}
     assert _run(project, active=True)[1] == {}
     assert _review(project).read_text(encoding="utf-8") == before
+
+
+# ── T186 Stage 4 fixes — the pause is written and read outside HTML comments ───────────────
+TEMPLATE_COMMENT = None
+
+
+def _template_comment():
+    tpl = (ROOT / "templates" / "TASK_REVIEW_template.md").read_text(encoding="utf-8")
+    return tpl[tpl.index("<!-- Optional"):tpl.index("-->") + 3]
+
+
+def _with_template_comment(project):
+    """The shape of the 26 real review files: the real block above, the template's commented copy
+    of `## Auto decisions` between it and `## Evidence`."""
+    head, rest = _review(project).read_text(encoding="utf-8").split("## Evidence", 1)
+    _review(project).write_text(head + _template_comment() + "\n\n## Evidence" + rest, encoding="utf-8")
+
+
+def _outside_comments(text):
+    return re.sub(r"<!--.*?-->", "", text, flags=re.S)
+
+
+def test_t186_r1_with_the_template_comment_the_pause_lands_outside_it_and_holds(tmp_path):
+    project = _t186_project(tmp_path)
+    _with_template_comment(project)
+    assert _blocked(_run(project)[1])
+    _run(project, active=True)
+    text = _review(project).read_text(encoding="utf-8")
+    assert len(_pause_lines(_outside_comments(text))) == 1, "the pause line must be outside the comment"
+    assert PAUSE_PREFIX not in re.search(r"<!--.*?-->", text, re.S).group(0)
+    for _ in range(2):
+        assert _run(project)[1] == {}, "a paused task must not block on later turns"
+    assert text == _review(project).read_text(encoding="utf-8"), "allowed stops write nothing"
+
+
+def test_t186_r1_with_the_template_comment_an_edit_is_still_checked_again(tmp_path):
+    project = _t186_project(tmp_path)
+    _with_template_comment(project)
+    _pause_via_two_fires(project)
+    text = _review(project).read_text(encoding="utf-8")
+    _review(project).write_text(text.replace("kept recurring.csv", "kept recurring.csv as is"),
+                                encoding="utf-8")
+    assert _blocked(_run(project)[1])
+
+
+def test_t186_r2_a_pause_line_forged_inside_a_comment_does_not_skip_the_task(tmp_path):
+    project = _t186_project(tmp_path)
+    text = _review(project).read_text(encoding="utf-8")
+    forged = f"<!--\n{PAUSE_PREFIX}x\n-->\n"
+    _review(project).write_text(text.replace("Checks:", forged + "Checks:"), encoding="utf-8")
+    assert _blocked(_run(project)[1])
+    _run(project, active=True)
+    assert len(_pause_lines(_outside_comments(_review(project).read_text(encoding="utf-8")))) == 1
+    assert _run(project)[1] == {}
+
+
+def test_t186_r3_an_unstamped_pause_line_gets_a_stamp_on_first_sight_then_edits_count(tmp_path):
+    project = _t186_project(tmp_path)
+    old = _review(project).read_text(encoding="utf-8")
+    _review(project).write_text(
+        old.replace("Memory: nothing new\n", f"Memory: nothing new\n{PAUSE_PREFIX}{NO_SKILLS}\n"),
+        encoding="utf-8")
+    assert _run(project)[1] == {}
+    line = _pause_lines(_review(project).read_text(encoding="utf-8"))
+    assert len(line) == 1 and re.search(r" \[report [0-9a-f]{12}\]$", line[0]), line
+    assert line[0].startswith(PAUSE_PREFIX + NO_SKILLS)
+    after = _review(project).read_text(encoding="utf-8")
+    assert _run(project)[1] == {} and _review(project).read_text(encoding="utf-8") == after
+    _review(project).write_text(after.replace("kept recurring.csv", "kept recurring.csv as is"),
+                                encoding="utf-8")
+    assert _blocked(_run(project)[1])
+
+
+def test_t186_r4_the_lines_other_hooks_write_are_not_a_report_change(tmp_path):
+    project = _t186_project(tmp_path)
+    paused = _pause_via_two_fires(project)
+    slot = "auto verify: ☑ pass (session s1, commit abc1234, log .claude/verify-runs/x.log)"
+    edited = paused.replace("/verify (yours)", slot).replace(
+        "Not done:", "Closed: row moved to Done 2026-10-31 — checks held\n- verify: ☑ pass — auto-run by hook\n"
+        "Not done:", 1)
+    assert edited != paused
+    _review(project).write_text(edited, encoding="utf-8")
+    assert _run(project)[1] == {}

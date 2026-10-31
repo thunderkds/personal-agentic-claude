@@ -42,8 +42,9 @@ Never loops: on the second fire (`stop_hook_active`) it allows the stop and appe
 `Paused: auto-mode check failed — <reasons> [report <stamp>]` to the report (T186 D1). The stamp is a
 hash of the report block without its `Paused:`, `Closed:`, `Not done:` and `- verify:` lines. A task
 whose last `Paused:` line carries the stamp of the block as it is now — or carries no stamp, a line
-from before T186 — is skipped: it was paused and nothing changed, so the first fire does not block
-again. After an edit the task is checked again. A second fire writes a new `Paused:` line only when
+from before T186, which the hook stamps once on first sight — is skipped: it was paused and nothing
+changed, so the first fire does not block again. The pause line is read and written only outside HTML
+comments. After an edit the task is checked again. A second fire writes a new `Paused:` line only when
 its reasons differ from the last one's; with the same reasons it only refreshes that line's stamp.
 Fails open: an unreadable file skips that task with one stderr line. It never reads or writes the
 merge gate's Evidence.
@@ -188,13 +189,13 @@ def report_stamp(body):
     return hashlib.sha1("\n".join(kept).encode("utf-8")).hexdigest()[:12]
 
 
-def pause_line_index(lines):
-    """Index of the last `Paused: auto-mode check failed — …` line, or None."""
-    found = None
-    for i, line in enumerate(lines):
-        if line.strip().startswith(PAUSE):
-            found = i
-    return found
+PAUSE_LINE = re.compile(rf"^[ \t]*{re.escape(PAUSE)}.*$", re.M)
+
+
+def mask_comments(text):
+    """`text` with every HTML comment blanked to spaces, newlines kept: offsets stay valid in `text`,
+    and nothing inside a comment is ever read as the report (T186 Stage 4)."""
+    return am.COMMENT.sub(lambda m: re.sub(r"[^\n]", " ", m.group(0)), text)
 
 
 def split_pause(line):
@@ -204,14 +205,10 @@ def split_pause(line):
     return (STAMP.sub("", text).strip(), m.group(1)) if m else (text.strip(), None)
 
 
-def paused_unchanged(body):
-    """T186 D1: the last pause line is stamped with this very block, or is from before the stamp."""
-    lines = body.splitlines()
-    i = pause_line_index(lines)
-    if i is None:
-        return False
-    stamp = split_pause(lines[i])[1]
-    return stamp is None or stamp == report_stamp(body)
+def last_pause(body):
+    """(reasons, stamp or None) of the last pause line outside HTML comments, or None."""
+    found = PAUSE_LINE.findall(mask_comments(body))
+    return split_pause(found[-1]) if found else None
 
 
 def choice_reason(line, need):
@@ -325,37 +322,52 @@ def check_task(task, request_ts):
         if need_per_line and "security-review" not in skills:
             reasons.append(f"Risk {risk}, but the trace has no `security-review` Skill call")
 
-    if reasons and paused_unchanged(body):
+    stamp = report_stamp(body)
+    pause = last_pause(body) if reasons else None
+    if pause and pause[1] in (None, stamp):
+        if pause[1] is None:  # R3: a line from before T186 gets its stamp once, so edits count later
+            try:
+                record_pause(task.report_path, task.minimal, task_id, None, stamp)
+            except Exception as exc:
+                warn(f"{task_id}: could not stamp the old pause line ({type(exc).__name__})")
         warn(f"{task_id}: already paused, report unchanged since — not blocking again")
         return []
-    return [(task.report_path, task.minimal, reason) for reason in reasons]
+    return [(task.report_path, task.minimal, reason, stamp) for reason in reasons]
 
 
-def record_pause(report_path, minimal, task_id, reasons):
+def record_pause(report_path, minimal, task_id, reasons, stamp):
     """Write the pause inside the task's report block (T186 D1): a new line for new reasons, only a
-    fresh stamp for the same reasons — never the same line twice."""
+    fresh stamp for the same reasons — never the same line twice. `reasons` None keeps the last
+    line's reasons and only stamps it. `stamp` is the one `check_task` computed from `task.body`;
+    the block is found in the text with comments blanked, so the line never lands in a comment."""
     text = am.read(report_path, ROOT)
     if text is None:
         warn(f"{task_id}: no report file to record the pause in")
         return
-    block = (am.record_block(text, task_id) if minimal else am.section(text, am.AUTO_SECTION))
+    masked = mask_comments(text)
+    block = (am.record_block(masked, task_id) if minimal else am.section(masked, am.AUTO_SECTION))
     if not block:
         warn(f"{task_id}: no report section to record the pause in")
         return
     start, end, body = block
-    reasons_text = "; ".join(reasons)
-    new_line = f"{PAUSE}{reasons_text} [report {report_stamp(body)}]"
-    lines = body.rstrip("\n").split("\n")
-    i = pause_line_index(lines)
-    if i is None or split_pause(lines[i])[0] != reasons_text:
-        lines.append(new_line)  # no pause yet, or new reasons: a new line, the old one stays
-    elif lines[i].strip() == new_line:
+    found = list(PAUSE_LINE.finditer(body))
+    last = found[-1] if found else None
+    if reasons is None:
+        if last is None:
+            return
+        reasons_text = split_pause(last.group())[0]
+    else:
+        reasons_text = "; ".join(reasons)
+    new_line = f"{PAUSE}{reasons_text} [report {stamp}]"
+    if last is None or split_pause(last.group())[0] != reasons_text:
+        at = start + len(body.rstrip())  # after the block's last line outside a comment
+        new_text = text[:at] + "\n" + new_line + text[at:]
+    elif last.group().strip() == new_line:
         return
     else:
-        lines[i] = new_line  # the same reasons: no new line, only the stamp follows the report
-    new_body = "\n".join(lines) + "\n" + ("\n" if end < len(text) else "")
+        new_text = text[:start + last.start()] + new_line + text[start + last.end():]
     with open(report_path, "w", encoding="utf-8") as f:
-        f.write(text[:start] + new_body + text[end:])
+        f.write(new_text)
 
 
 def main():
@@ -390,8 +402,8 @@ def main():
     for task_id, row in tasks:
         try:
             task = am.resolve(task_id, row, dirs)
-            for report_path, minimal, reason in check_task(task, request_ts):
-                failures.setdefault(task_id, (report_path, minimal, []))[2].append(reason)
+            for report_path, minimal, reason, stamp in check_task(task, request_ts):
+                failures.setdefault(task_id, (report_path, minimal, [], stamp))[2].append(reason)
         except am.Unreadable as exc:
             warn(f"{exc} — auto-mode check skipped for {task_id}")
         except Exception as exc:  # fail open: a bug here must never trap the session
@@ -400,15 +412,15 @@ def main():
         sys.exit(0)
 
     if event.get("stop_hook_active"):
-        for task_id, (report_path, minimal, reasons) in failures.items():
+        for task_id, (report_path, minimal, reasons, stamp) in failures.items():
             try:
-                record_pause(report_path, minimal, task_id, reasons)
+                record_pause(report_path, minimal, task_id, reasons, stamp)
             except Exception as exc:
                 warn(f"{task_id}: could not record the pause ({type(exc).__name__})")
             warn(f"{task_id}: stop allowed on the second fire; {PAUSE}{'; '.join(reasons)}")
         sys.exit(0)
 
-    lines = [f"{tid}: {reason}" for tid, (_, _, reasons) in failures.items() for reason in reasons]
+    lines = [f"{tid}: {reason}" for tid, (_, _, reasons, _) in failures.items() for reason in reasons]
     print(json.dumps({"decision": "block", "reason": (
         "[hook:stop_auto_mode_check] Auto-mode final report check failed — fix it before you stop "
         "(docs/claude-md/tracks.md `## Auto mode`):\n  • " + "\n  • ".join(lines))}))
