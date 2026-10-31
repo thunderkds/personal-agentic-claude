@@ -86,7 +86,6 @@
 
 
 ### In Progress
-- [ ] **T222** — The auto-mode Stop hook counts an `Agent` call as an Advocate only when its `description` matches `^Advocate \d+:` (today `.startswith("Advocate")` at `.claude/hooks/stop_auto_mode_check.py:248-249`, so `Advocates summary` or any loosely named call counts and can pass a stop the hook should block); decide whether to also require the T221 template's first line `Using the repo, answer alone:` in the prompt | common-infrastructure | C1 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T222.md` | Related: T186 (shared untagged 6h trace, documentation only) | Registered 2026-10-31 from the T221 auto verify run: both live Advocates found it on their own (AND vs OR on the prompt-prefix check is the open choice) | Forced choice 2026-10-31: "Name + prompt line" (AND) | In Progress 2026-10-31: branch `feat/t222-advocate-count` in `../wt-t222`; spawned common-infrastructure (sonnet, background)
 
 
 
@@ -95,6 +94,7 @@
 
 
 ### Ready for Review
+- [ ] **T222** — The auto-mode Stop hook counts an `Agent` call as an Advocate only when its `description` matches `^Advocate \d+:` (today `.startswith("Advocate")` at `.claude/hooks/stop_auto_mode_check.py:248-249`, so `Advocates summary` or any loosely named call counts and can pass a stop the hook should block); decide whether to also require the T221 template's first line `Using the repo, answer alone:` in the prompt | common-infrastructure | C1 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T222.md` | Related: T186 (shared untagged 6h trace, documentation only) | Registered 2026-10-31 from the T221 auto verify run: both live Advocates found it on their own (AND vs OR on the prompt-prefix check is the open choice) | Forced choice 2026-10-31: "Name + prompt line" (AND) | In Progress 2026-10-31: branch `feat/t222-advocate-count` in `../wt-t222`; spawned common-infrastructure (sonnet, background) | Ready for Review 2026-10-31: code-review 1 P1 fixed (cad92b26), security-review no findings; branch suite 2567 passed + 5 known budget failures fixed on main (cfd8cc94)
 
 
 ### Done
