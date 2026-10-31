@@ -19,6 +19,7 @@
 
 
 ## Ready for Review
+- [ ] **T224** — **Landing page lists all five Easy Kit family members.** Header + drawer family nav: Easy Kit, Easy Verifier, Easy UI, Easy Memory, Easy Personal (user's order); new `easy-personal-mcp` card in `#mcps` (four companions); family nav moves into the drawer below 900px so five links do not overlap the brand | Frontend-Implementer (done by Supervisor — no agent available in session) | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T224.md` | Registered 2026-10-31 by the user. Ready for Review 2026-10-31: branch `feat/t224-family-members`, worktree `../wt-t224`; site tests 154 passed; code-review not run; merge and /verify wait for the user
 
 ## Done
 - [x] **T181** — **README and site describe the two tracks, the Debate step and `[auto]`.** Registered 2026-10-27 by the user: no T178–T180 task updates the README or the site (T178 cuts "a site page"); user: "yes, register new one". New `#tracks` section (track rule, `Track: minimal/extended` lines, `full`/`minimal` override, `[auto]` + final report, auto verify by a hook (T182), Debate cap + review flag), one-line "extended track" note at the stages, ≤3 README lines (README stays ≤75) | Frontend-Implementer | C1 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_T181.md` | Depends on: T178, T179, T180, T182 (merged) — Supervisor re-checks the guide's facts against the merged docs before spawn

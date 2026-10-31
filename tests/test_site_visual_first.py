@@ -401,6 +401,8 @@ DUPLICATES_OF_A_VISUAL_LABEL = {
     "02fcd665c525": "stale since T203/T189 (Supervisor decision)",
     # T221 AC 7: an Advocate now frames the problem and proposes its own option, so "argue the options" is reworded.
     "059208c43012": "reworded by T221 AC 7 (Advocates propose, not argue)",
+    # T224: easy-personal-mcp joins the MCPs section, so "Three separate companion tools" now says four.
+    "d618329ebba1": "reworded by T224 (four companion tools)",
 }
 
 
