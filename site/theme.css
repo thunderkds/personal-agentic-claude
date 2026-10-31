@@ -253,8 +253,9 @@ section { margin: var(--s-8) 0; scroll-margin-top: calc(var(--header-h) + var(--
   .content { padding: var(--s-7); }
 }
 
-/* Under 720px: the family nav moves to the top of the drawer; the header keeps glyph, name and Menu. */
-@media (max-width: 719px) {
+/* Under 900px: the family nav (5 sites since T224) no longer fits the header, so it moves to the
+   top of the drawer; the header keeps glyph, name and Menu. */
+@media (max-width: 899px) {
   .site-header .family-nav { display: none; }
   .family-nav-drawer {
     display: flex; flex-direction: column; align-items: stretch; gap: 0;
@@ -262,6 +263,10 @@ section { margin: var(--s-8) 0; scroll-margin-top: calc(var(--header-h) + var(--
   }
   .family-nav-drawer a:not(.btn) { padding: 0 12px; }
   .family-nav-drawer .btn { margin-top: var(--s-2); justify-content: center; }
+}
+
+/* Under 720px: phone padding and type. */
+@media (max-width: 719px) {
   .content { padding: var(--s-6) var(--s-4); }
   h1 { font-size: 32px; }
   .strip { --cols: 2; }

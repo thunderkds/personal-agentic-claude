@@ -798,9 +798,9 @@ def test_mcps_section_is_linked_from_the_reference_nav_group():
 
 def test_mcps_section_has_one_named_entry_per_server():
     body = _mcps_section_body()
-    for name in ("easy-verifier-mcp", "easy-ui-mcp", "easy-memory-mcp"):
+    for name in ("easy-verifier-mcp", "easy-ui-mcp", "easy-memory-mcp", "easy-personal-mcp"):
         assert re.search(rf"<h3>[^<]*{name}[^<]*</h3>", body), f"no <h3> naming {name}"
-    assert len(re.findall(r'<div class="card agent-card"', body)) == 3, "expected exactly three entries"
+    assert len(re.findall(r'<div class="card agent-card"', body)) == 4, "expected exactly four entries"
     assert 'id="verifier"' in body, 'verifier entry lost id="verifier"; old #verifier links break'
 
 
@@ -870,15 +870,15 @@ def _memory_mcp_entry_body():
     return _mcp_entry_body("easy-memory-mcp")
 
 
-def test_mcps_section_lead_counts_three_companions():
+def test_mcps_section_lead_counts_four_companions():
     lead = re.search(r'<p class="lead">(.*?)</p>', _mcps_section_body(), re.DOTALL).group(1).lower()
-    assert "three" in lead and "two" not in lead, "section lead must say three companion tools, not two"
+    assert "four" in lead and "three" not in lead, "section lead must say four companion tools (T224)"
 
 
 def test_memory_mcp_card_is_the_third_card_and_says_optional():
     body = _mcps_section_body()
     ids = re.findall(r'<div class="card agent-card" id="([^"]+)"', body)
-    assert ids == ["verifier", "easy-ui-mcp", "easy-memory-mcp"], f"card order is {ids}"
+    assert ids == ["verifier", "easy-ui-mcp", "easy-memory-mcp", "easy-personal-mcp"], f"card order is {ids}"
     card = _memory_mcp_entry_body()
     assert re.search(r"<h3>[^<]*easy-memory-mcp[^<]*</h3>", card), "h3 must name easy-memory-mcp"
     lead = re.search(r'<p class="lead">(.*?)</p>', card, re.DOTALL)
@@ -922,6 +922,42 @@ def test_memory_mcp_card_links_the_repo_safely_and_invents_no_site():
     ), "easy-memory-mcp card must link its repo with target=_blank rel=noopener noreferrer"
     hrefs = re.findall(r'href="([^"]+)"', card)
     assert hrefs == [MEMORY_MCP_REPO_URL], f"easy-memory-mcp card must carry only its repo link, found {hrefs}"
+
+
+# ---------------------------------------------------------------------------
+# T224 — easy-personal-mcp as the fourth, optional companion card. Claims only
+# what the easy-personal-mcp README states (v0.2.0).
+# ---------------------------------------------------------------------------
+
+PERSONAL_MCP_REPO_URL = "https://github.com/thunderkds/easy-personal-mcp"
+PERSONAL_SITE_URL = "https://easy-personal.vercel.app/"
+
+
+def test_personal_mcp_card_is_last_says_optional_and_has_four_to_five_highlights():
+    card = _mcp_entry_body("easy-personal-mcp")
+    assert re.search(r"<h3>[^<]*easy-personal-mcp[^<]*</h3>", card), "h3 must name easy-personal-mcp"
+    lead = re.search(r'<p class="lead">(.*?)</p>', card, re.DOTALL)
+    assert lead, "easy-personal-mcp card has no lead paragraph"
+    for word in ("separate", "companion", "optional"):
+        assert word in lead.group(1).lower(), f"card lead must contain {word!r}"
+    items = re.findall(r"<li>(.*?)</li>", card, re.DOTALL)
+    assert 4 <= len(items) <= 5, f"expected 4-5 highlights, found {len(items)}"
+    assert all("\n" not in i.strip() for i in items), "each highlight must sit on one line"
+
+
+def test_personal_mcp_card_states_cost_as_api_equivalent_not_a_bill():
+    items = [i.lower() for i in re.findall(r"<li>(.*?)</li>", _mcp_entry_body("easy-personal-mcp"), re.DOTALL)]
+    cost = [i for i in items if "cost" in i]
+    assert len(cost) == 1 and "api-equivalent" in cost[0] and "subscription" in cost[0], (
+        "cost highlight must say API-equivalent and that it is not what the subscription charges"
+    )
+
+
+def test_personal_mcp_card_links_repo_and_site_safely():
+    card = _mcp_entry_body("easy-personal-mcp")
+    for url in (PERSONAL_MCP_REPO_URL, PERSONAL_SITE_URL):
+        assert f'href="{url}" target="_blank" rel="noopener noreferrer"' in card, f"card must link {url} safely"
+    assert re.findall(r'href="([^"]+)"', card) == [PERSONAL_MCP_REPO_URL, PERSONAL_SITE_URL]
 
 
 # ---------------------------------------------------------------------------
@@ -1847,10 +1883,13 @@ def _header():
     return m.group(0)
 
 
+# T224: the five family members, in the order the user set: the heart first.
 FAMILY_NAV = [
     ("Easy Kit", "https://personal-agentic-claude.vercel.app/"),
-    ("Easy Memory", "https://easy-memory.vercel.app/"),
     ("Easy Verifier", "https://easy-verifier.vercel.app/"),
+    ("Easy UI", "https://easy-ui-mcp.vercel.app/"),
+    ("Easy Memory", "https://easy-memory.vercel.app/"),
+    ("Easy Personal", "https://easy-personal.vercel.app/"),
     ("GitHub", CANONICAL_REPO_URL),
 ]
 
@@ -1874,17 +1913,26 @@ def test_header_has_glyph_name_and_versioned_tag():
     assert any("height: var(--header-h)" in b for b in _rule_bodies(_theme_text(), ".site-header"))
 
 
-def test_family_nav_lists_the_three_sites_then_github_with_the_current_page_marked():
+def test_family_nav_lists_the_five_sites_then_github_with_the_current_page_marked():
     nav = _family_nav(_header())
     links = re.findall(r"<a\b([^>]*)>(.*?)</a>", nav, re.DOTALL)
     assert [(" ".join(_words(t)), re.search(r'href="([^"]*)"', a).group(1)) for a, t in links] == FAMILY_NAV
     current = [" ".join(_words(t)) for a, t in links if 'aria-current="page"' in a]
     assert current == ["Easy Kit"], f"aria-current must mark Easy Kit only: {current}"
-    for attrs, text in links[:3]:
+    for attrs, text in links[:5]:
         assert re.search(r'<span class="dot"[^>]*aria-hidden="true"></span>', text), "family link needs a leading .dot"
     css = _theme_text()
     assert any("var(--accent)" in b for b in _rule_bodies(css, '.family-nav a[aria-current="page"] .dot'))
     assert any("var(--dot-idle)" in b for b in _rule_bodies(css, ".family-nav .dot"))
+
+
+def test_drawer_family_nav_lists_the_same_five_sites_as_the_header():
+    page = _page_text()
+    drawer = re.search(r'<nav\b[^>]*class="family-nav family-nav-drawer"[^>]*>(.*?)</nav>', page, re.DOTALL)
+    assert drawer, "no drawer family nav"
+    links = re.findall(r"<a\b([^>]*)>(.*?)</a>", drawer.group(1), re.DOTALL)
+    got = [(" ".join(_words(t)), re.search(r'href="([^"]*)"', a).group(1)) for a, t in links]
+    assert got[:5] == FAMILY_NAV[:5], f"drawer family nav is {got}"
 
 
 # ---- AC 6: sidebar groups ----
@@ -2004,7 +2052,7 @@ def test_pipeline_step_grid_has_one_numbered_cell_per_stage_in_diagram_order():
     assert [n for n in numbers if re.fullmatch(r"0\d", n)] == ["00", "01", "02", "03", "04", "05"]
 
 
-def test_agent_roles_are_cards_with_role_dots_and_mcps_are_three_cards():
+def test_agent_roles_are_cards_with_role_dots_and_mcps_are_four_cards():
     roles = re.search(r'<section id="agent-roles">(.*?)</section>', _raw_page_text(), re.DOTALL).group(1)
     assert len(re.findall(r'<div class="card agent-card">', roles)) == 4
     assert len(re.findall(r'<span class="dot swatch" data-color="[a-z]+"></span>', roles)) == 4
@@ -2012,7 +2060,7 @@ def test_agent_roles_are_cards_with_role_dots_and_mcps_are_three_cards():
     for colour, token in (("blue", "backend"), ("orange", "infra"), ("purple", "frontend"), ("green", "qa")):
         assert any(f"var(--role-{token})" in b for b in _rule_bodies(css, f'.swatch[data-color="{colour}"]')), colour
     mcps = re.search(r'<section id="mcps">(.*?)</section>', _raw_page_text(), re.DOTALL).group(1)
-    assert len(re.findall(r'<div class="card agent-card"', mcps)) == 3
+    assert len(re.findall(r'<div class="card agent-card"', mcps)) == 4  # T224: easy-personal-mcp added
 
 
 def test_every_table_sits_in_a_table_wrap():
@@ -2049,3 +2097,17 @@ def test_scrolling_sidebar_and_drawer_use_token_scrollbars():
     assert "scrollbar-color: var(--line-strong) transparent" in body and "scrollbar-width: thin" in body
     webkit = " ".join(_rule_bodies(css, ".sidebar::-webkit-scrollbar-thumb"))
     assert "var(--line-strong)" in webkit
+
+
+def test_five_site_family_nav_moves_to_the_drawer_below_900px():
+    """T224: five family links overlap the brand at 720px, so they leave the header below 900px."""
+    css = re.sub(r"/\*.*?\*/", "", _theme_text(), flags=re.DOTALL)
+    m = re.search(r"@media \(max-width: 899px\)\s*\{", css)
+    assert m, "no (max-width: 899px) block"
+    depth, i = 1, m.end()
+    while depth:
+        depth += {"{": 1, "}": -1}.get(css[i], 0)
+        i += 1
+    block = css[m.end():i - 1]
+    assert any("display: none" in b for b in _rule_bodies(block, ".site-header .family-nav"))
+    assert any("display: flex" in b for b in _rule_bodies(block, ".family-nav-drawer"))
