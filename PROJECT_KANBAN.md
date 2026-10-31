@@ -86,7 +86,6 @@
 
 
 ### In Progress
-- [ ] **T221** — Debate Advocates frame the problem (WHAT / WHY / HOW, cited) and each proposes its own option alone; the Supervisor assigns none and decides by the unchanged rules; Risk sizes, cap, log shapes and Stop hook unchanged | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T221.md` | Registered 2026-10-31 from user request ("the debate agent should make question What? Why? How? to identify the problem, and contribute the idea to make final decision seperately"); forced choice: "Frame, then own idea" | In Progress 2026-10-31: branch `feat/t221-debate-framing` in `../wt-t221`; spawned common-infrastructure (sonnet, background)
 
 
 
@@ -95,6 +94,7 @@
 
 
 ### Ready for Review
+- [ ] **T221** — Debate Advocates frame the problem (WHAT / WHY / HOW, cited) and each proposes its own option alone; the Supervisor assigns none and decides by the unchanged rules; Risk sizes, cap, log shapes and Stop hook unchanged | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T221.md` | Registered 2026-10-31 from user request ("the debate agent should make question What? Why? How? to identify the problem, and contribute the idea to make final decision seperately"); forced choice: "Frame, then own idea" | In Progress 2026-10-31: branch `feat/t221-debate-framing` in `../wt-t221`; spawned common-infrastructure (sonnet, background) | Ready for Review 2026-10-31: head `478685be`; code-review 0 P0/P1 (P2+P3 fixed in 4cf1ecf1), security-review no findings; suite 2559 passed
 
 
 ### Done
