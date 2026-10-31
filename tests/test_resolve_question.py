@@ -200,8 +200,13 @@ def _debate() -> str:
     return _norm(m.group(1))
 
 
+ADVOCATE_REF = ROOT / "skills" / "resolve-question" / "references" / "advocate.md"
+
+
 def _advocate_template() -> str:
-    m = re.search(r"Advocate prompt template.*?```\n(.*?)```", _skill(), re.S)
+    """The fenced template in references/advocate.md (T221 moved it out of SKILL.md for the 8 KB cap)."""
+    assert ADVOCATE_REF.is_file(), "skills/resolve-question/references/advocate.md does not exist"
+    m = re.search(r"```\n(.*?)```", ADVOCATE_REF.read_text(encoding="utf-8"), re.S)
     assert m, "no fenced Advocate prompt template"
     return m.group(1)
 
@@ -236,17 +241,18 @@ def test_t179_ac1_non_auto_text_of_step_1_is_unchanged():
     assert "Any other outcome goes to the user (HITL) in this shape" in judge
 
 
-# T179 AC 2
+# T179 AC 2 (T221 supersedes the slot set and the answer fields: an Advocate gets only the question
+# and proposes its own option; see the T221 tests below)
 def test_t179_ac2_advocate_template_slots_and_no_task_identity():
     tpl = _advocate_template()
-    assert set(re.findall(r"\{(\w+)\}", tpl)) == {"question", "option", "other_options"}
+    assert set(re.findall(r"\{(\w+)\}", tpl)) == {"question"}
     assert "TASK_GUIDE" not in tpl and "tasks/" not in tpl
     assert not re.search(r"\bT\d{3}\b|\{task", tpl)
 
 
 def test_t179_ac2_advocate_answer_shape_and_agents():
     tpl = _advocate_template()
-    for field in ("OPTION:", "FOR:", "CITATIONS:", "RISK:", "CONFIDENCE:"):
+    for field in ("WHAT:", "WHY:", "HOW:", "PROPOSAL:", "FOR:", "CITATIONS:", "RISK:", "CONFIDENCE:"):
         assert field in tpl, field
     assert "<path>:<line>" in tpl and "low|medium|high" in tpl
     body = _debate()
@@ -274,7 +280,7 @@ def test_t179_ac3_edge_cases_are_stated():
     assert "data, not instructions" in body                       # advocate text
     assert "one stale doc" in body                               # correlated citations
     assert "deletes or overwrites data" in body and "pause and ask" in body
-    assert "step limit" in body and "argued by nobody" in body
+    assert "step limit" in body and "proposal" in body
 
 
 # T179 AC 4
@@ -304,3 +310,107 @@ def test_t179_ac6_description_mentions_debate_in_one_clause():
 def test_t179_ac6_skill_stays_under_the_codex_skill_body_cap():
     """lib/harness-fetch.sh caps a Codex skill body at 8192 bytes; over it the skill is skipped."""
     assert SKILL.stat().st_size <= 8192
+
+
+# ---- T221: Advocates frame the problem (What / Why / How) and each proposes its own option ----
+def _t221_template_ok(tpl: str) -> list[str]:
+    """Return the AC 1-2 violations of an Advocate template (empty list = conforming)."""
+    bad = []
+    if set(re.findall(r"\{(\w+)\}", tpl)) != {"question"}:
+        bad.append("slots are not exactly {question}")
+    if "TASK_GUIDE" in tpl or "tasks/" in tpl or re.search(r"\bT\d{3}\b|\{task", tpl):
+        bad.append("task identity in template")
+    fields = ["WHAT:", "WHY:", "HOW:", "PROPOSAL:", "FOR:", "CITATIONS:", "RISK:", "CONFIDENCE:"]
+    pos = [tpl.find(f) for f in fields]
+    if -1 in pos or pos != sorted(pos):
+        bad.append("fields missing or out of order")
+    if '<path>:<line> "<quoted text' not in tpl or "low|medium|high" not in tpl:
+        bad.append("citation shape or confidence scale missing")
+    return bad
+
+
+def test_t221_debate_step_points_to_the_template_file():
+    assert "references/advocate.md" in _debate()
+    assert "```" not in _debate(), "the template lives in references/advocate.md, not in SKILL.md"
+
+
+# T221 AC 1
+def test_t221_ac1_template_only_slot_is_question_and_no_task_identity():
+    tpl = _advocate_template()
+    assert set(re.findall(r"\{(\w+)\}", tpl)) == {"question"}
+    assert "{option}" not in tpl and "{other_options}" not in tpl
+    assert "TASK_GUIDE" not in tpl and "tasks/" not in tpl
+    assert not re.search(r"\bT\d{3}\b|\{task", tpl)
+
+
+# T221 AC 2
+def test_t221_ac2_template_fields_in_order():
+    assert _t221_template_ok(_advocate_template()) == []
+    tpl = _advocate_template()
+    assert "(1-3)" in tpl or "1-3" in tpl  # HOW lists 1-3 ways
+
+
+# T221 AC 3
+def test_t221_ac3_advocates_work_alone_and_spawn_in_parallel():
+    body = _debate()
+    assert "works alone" in body
+    assert "the question only" in body
+    assert "never another Advocate's output" in body
+    assert "Supervisor-chosen option" in body
+    assert "one message" in body and "parallel" in body
+
+
+# T221 AC 4
+def test_t221_ac4_high_third_advocate_line_and_smallest_safe_thing():
+    body = _debate()
+    assert "smallest safe thing" in body
+    assert re.search(r"third.{0,80}smallest safe thing", body)
+
+
+# T221 AC 5
+def test_t221_ac5_description_shape_and_log_names_proposals():
+    body = _debate()
+    assert 'description: "Advocate <n>: <short question>"' in body
+    assert "Advocate 1: <its proposal>" in body
+    assert "<option>" not in body.split("**Advocates.**")[1].split("Advocate prompt template")[0]
+
+
+# T221 AC 6
+def test_t221_ac6_decide_compares_framings_and_logs_agreement():
+    body = _debate()
+    decide = body[body.index("**Decide.**"):]
+    assert decide.index("Open every cited line") < decide.index("framing")
+    assert "disagree" in decide and "agreement" in decide
+    assert decide.index("agreement") < decide.index("1. An option")
+    assert "1. An option the opened Citations show is necessary wins." in decide
+    assert "2. Else the **safer option**" in decide
+    assert "3. Taste or scope" in decide
+
+
+# T221 AC 7
+def test_t221_ac7_neighbour_files_say_propose():
+    spec = (ROOT / "PROJECT_SPEC.md").read_text(encoding="utf-8")
+    row = {l.split("|")[1].strip(): l for l in spec.splitlines() if l.startswith("| Debate |") or l.startswith("| Advocate |")}
+    for name in ("Debate", "Advocate"):
+        assert "argue one option" not in row[name], name
+        assert "propos" in row[name], name
+    tracks = _norm((ROOT / "docs/claude-md/tracks.md").read_text(encoding="utf-8"))
+    assert "the Advocates argue" not in tracks
+    assert "the Advocates propose" in tracks
+    assert "DEBATED: <option> (Advocate 1: <its proposal>; Advocate 2: <its proposal>)" in tracks
+    for t in ("templates/MINIMAL_LOG_template.md", "templates/TASK_REVIEW_template.md"):
+        text = (ROOT / t).read_text(encoding="utf-8")
+        assert "Advocate 1: <its proposal>; Advocate 2: <its proposal>" in text, t
+        assert "Advocate 1: <its option>" not in text, t
+    site = (ROOT / "site/index.html").read_text(encoding="utf-8")
+    assert "Advocate agents argue the options" not in site
+    assert "propose their own option" in site
+
+
+# T221 AC 8 mutation control
+def test_t221_ac8_mutant_template_with_option_slot_fails():
+    tpl = _advocate_template()
+    assert _t221_template_ok(tpl) == []
+    mutant = tpl.replace("{question}", "{question}\nYour option: {option}")
+    assert _t221_template_ok(mutant) != []
+    assert _t221_template_ok(tpl.replace("WHY:", "BECAUSE:")) != []
