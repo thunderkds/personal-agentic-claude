@@ -67,8 +67,18 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured 2026-10-31T08:20:33Z, before any T223 implementation commit (HEAD `662479a5`). Temp project shaped like idea-radar (scaffold `src/main.py`, `docs/SPEC.md`, `PROJECT_SPEC.md` with no `## Readiness`, a complete `tasks/TASK_GUIDE_T001.md`, hooks copied from this worktree), built by a scratch script; command run from the temp project root:
+
+```
+$ date -u +%Y-%m-%dT%H:%M:%SZ; printf '%s' '{"tool_name":"Agent","tool_input":{"prompt":"Task ID: T001\nGuide: tasks/TASK_GUIDE_T001.md"}}' | python3 .claude/hooks/pre_agent_validate_guide.py; echo "exit=$?"
+2026-10-31T08:20:33Z
+[hook:pre_agent] memory-slice missing: Spawn prompt names a TASK_GUIDE but has no `<!-- memory-slice:` marker, so the agent gets none of the memory lines its task touches. Run `python3 skills/craft-spawn-prompt/scripts/memory_slice.py <guide>` and paste its output verbatim (craft-spawn-prompt element 4).
+[hook:pre_agent] startup-reads missing: Spawn prompt names a TASK_GUIDE but has no `**Startup reads**` block, so the agent is not told to read PROJECT_SPEC.md, its guide and its role guide first (craft-spawn-prompt element 8).
+{"hookSpecificOutput": {"hookEventName": "PreToolUse", "additionalContext": "[hook:pre_agent] Advisory warning (not blocking):\n  \u2022 T001's Demonstration BEFORE field is blank. Capture it BEFORE your first implementation commit \u2014 a BEFORE taken after the change is not a BEFORE, and there is no N/A path.\n  \u2022 Spawn prompt names a TASK_GUIDE but has no `<!-- memory-slice:` marker, so the agent gets none of the memory lines its task touches. Run `python3 skills/craft-spawn-prompt/scripts/memory_slice.py <guide>` and paste its output verbatim (craft-spawn-prompt element 4).\n  \u2022 Spawn prompt names a TASK_GUIDE but has no `**Startup reads**` block, so the agent is not told to read PROJECT_SPEC.md, its guide and its role guide first (craft-spawn-prompt element 8)."}}
+exit=0
+```
+
+No `⚠ HIGH RISK — project readiness incomplete:` line anywhere: the spawn goes ahead with no word about the missing architecture, flow or tech stack.
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 

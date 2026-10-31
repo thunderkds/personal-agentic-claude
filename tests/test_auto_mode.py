@@ -769,3 +769,56 @@ def test_d10_tracks_md_says_high_risk_always_debates_one_decision():
     assert re.search(r"[Cc]ited `RULE:` lines do not replace it", text), text
     hook = _norm(_subsection(_auto(), "Auto-mode check (Stop hook)"))
     assert "`Risk High, but no decision was DEBATED with 3 Advocates`" in hook, hook
+
+
+# ── T223 — project readiness: the stage-done rule and no stage skipped as an auto decision ──
+PHASE0_MD = ROOT / "docs" / "claude-md" / "phase0-project-initiation.md"
+SPEC_TEMPLATE = ROOT / "templates" / "PROJECT_SPEC_template.md"
+READINESS_LINES = [
+    "- **Requirements**: [path, e.g. PRD.md or a stand-in like docs/SPEC.md]",
+    "- **Direction**: [path to the approved brainstorming log]",
+    '- **Codebase map**: [memory/codebase-map.md, or "none — blank scaffold"]',
+    "- **Tech stack**: [languages, frameworks, storage, hosting]",
+    "- **Main flow**: [path to a file that holds a Mermaid diagram of the main data/user flow]",
+    "- **Approved by**: [user YYYY-MM-DD]",
+    "- **Waived**: [user YYYY-MM-DD — reason]",
+]
+
+
+def test_t223_ac1_template_has_the_readiness_lines_in_order():
+    body = _section(_read(SPEC_TEMPLATE), "Readiness")
+    lines = [l for l in body.splitlines() if l.startswith("- **")]
+    assert lines == READINESS_LINES, lines
+    assert re.search(r"`Waived`[^.]*instead of", _norm(body)), "one sentence must explain Waived"
+
+
+def test_t223_ac6_phase0_and_pipeline_define_stage_done_by_readiness():
+    phase0 = _norm(_read(PHASE0_MD))
+    assert re.search(r"Phase 0 counts as done only when[^.]*`Requirements`[^.]*`Approved by`", phase0), phase0
+    assert re.search(r"[Ss]caffold code or an existing spec file does not make Phase 0 done", phase0)
+    assert re.search(r"stand-in spec is named on the `Requirements` line[^.]*Stage 0\.5a", phase0)
+    pipeline = _norm(_read(PIPELINE_MD))
+    for stage, lines in (("Stage 0.5", r"`Direction`"), ("Stage 1", r"`Codebase map`[^.]*`Tech stack`"),
+                         ("Stage 2", r"`Main flow`[^.]*before the first spawn")):
+        assert re.search(rf"{re.escape(stage)} counts as done only when[^.]*{lines}", pipeline), stage
+
+
+def test_t223_ac6_tracks_first_stage_not_done_points_at_readiness():
+    ann = _norm(_section(_read(TRACKS_MD), "Announcement"))
+    assert re.search(r"first stage not yet done[^.]*`## Readiness`", ann), ann
+    row1 = " ".join(_row("phase0"))
+    assert "new project only" not in row1
+    assert "while `Requirements` or `Approved by` is not filled" in row1
+
+
+def test_t223_ac7_auto_mode_never_skips_stage_0_5_or_stage_1():
+    text = _norm(_auto())
+    assert re.search(r"Stage 0\.5 and Stage 1 are never skipped as an auto decision[^.]*rows 1–10", text), text
+    assert re.search(r"`Approved by` is never filled by the Supervisor in auto mode", text), text
+    report = _norm(_subsection(_auto(), "Final report"))
+    assert "`readiness incomplete: <gaps> (yours)`" in report, report
+
+
+def test_t223_ac8_glossary_readiness_section():
+    row = _glossary_row("Readiness section")
+    assert "`## Readiness`" in row and "warn" in row.lower()
