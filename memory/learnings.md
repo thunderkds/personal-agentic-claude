@@ -2981,3 +2981,9 @@ The merge gate needs a test-runner Bash call in `memory/event-trace/<ID>.jsonl`.
 **How to apply**: Before shipping a marketplace entry, check anonymous access (`GIT_TERMINAL_PROMPT=0 git -c credential.helper= ls-remote <url>`). Either make the plugin repo public or document that access is required. 2026-10-30: the user keeps easy-memory-mcp private on purpose; T217 is deferred to Todo, its branch unmerged.
 **Files**: .claude-plugin/marketplace.json, tasks/MINIMAL_LOG.md
 
+
+## A memory pass can break the hot-tier budget tests; run the full suite on main after it (2026-10-31)
+
+**Learning**: the T221 memory pass added one index line and pushed `memory/MEMORY.md` from 41,882 to 42,114 characters, over `HOT_TIER_CHAR_BUDGET` 42,000 (a ratchet: never raise it). The Supervisor checked with `pytest tests/ -k "memory or budget"`, which skips `.claude/hooks/tests/test_memory_channel_and_budget.py` and `test_token_audit_format.py`, so main was pushed with 5 failures; the T222 agent found them. `test_ac11_many_short_lines_past_200_stay_green_while_under_budget` also needs ~45 characters of headroom.
+**How to apply**: after any MEMORY.md edit, run `python3 -m pytest -q .claude/hooks/tests/test_memory_channel_and_budget.py .claude/hooks/tests/test_token_audit_format.py` before committing; keep a new index line short, or shorten another to pay for it.
+**Files**: memory/MEMORY.md, .claude/hooks/tests/test_memory_channel_and_budget.py, .claude/hooks/tests/test_token_audit_format.py
