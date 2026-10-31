@@ -38,7 +38,8 @@
 - [T182: auto verify — Stop hook runs real `/verify` headless for `[auto]` tasks](decisions.md) — gate trusts the row only with the anchor-dir run record; $2 cap per commit
 - [T203: auto verify for every task — Supervisor runs `stop_auto_verify.py --start <ID>` at Ready for Review](decisions.md) — Stop hook backstop; `CLAUDE_AUTO_VERIFY=off` = `[auto]`-only; open T205, T206
 - [T180: auto mode — `[auto]` runs either track; Debate size by Risk; auto-mode Stop hook](decisions.md) — Low decides, Medium 2 / High 3 Advocates; merge/push stay the user's (T189: pass → Done)
-- [T179: Debate — 2–3 read-only Advocates argue a choice in auto mode](decisions.md) — safer option first, flagged `⚠ decided for you`, max 3 per task
+- [T221: Debate Advocates frame What/Why/How alone and propose their own option](decisions.md) — no option assigned; template in `skills/resolve-question/references/advocate.md` (SKILL.md at the 8192-byte Codex cap)
+- [T179: Debate — 2–3 read-only Advocates argue a choice (T221: propose) in auto mode](decisions.md) — safer option first, flagged `⚠ decided for you`, max 3 per task
 - [T178: two tracks — minimal (Supervisor codes, Decision record) vs extended (pipeline)](decisions.md) — track line is a statement
 - [T114: one command — menu, plan, confirm; Reinstall runs the removal pass](decisions.md) — prompts read /dev/tty before any write; any lock rewrite must run carry_over first
 - [T113: update removes unedited dropped files; MANIFEST `!` exclusions](decisions.md) — edited ones kept + named
