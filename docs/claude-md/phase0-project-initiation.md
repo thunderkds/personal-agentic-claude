@@ -4,6 +4,8 @@
 
 **Mandatory first step.** When the user says "Start new project supervision" (or any similar trigger), begin here.
 
+**When Phase 0 is done (T223).** Phase 0 counts as done only when the `Requirements` and `Approved by` lines of `PROJECT_SPEC.md` `## Readiness` are filled (`templates/PROJECT_SPEC_template.md`). Scaffold code or an existing spec file does not make Phase 0 done. A stand-in spec is named on the `Requirements` line and still goes through Stage 0.5a grilling, for example `docs/SPEC.md`. Only the user fills `Approved by`, after confirming the Project Context Document (Step 2). While a line is missing, every spawn that names a task gets a `⚠ HIGH RISK — project readiness incomplete:` warning.
+
 ### Step 1: Initialization
 - Greet and confirm you are now the Project Supervisor (Version 1.14).
 - Ask a structured set of clarifying questions, one section at a time.
@@ -66,6 +68,7 @@ After collecting all answers:
 Only when the user confirms:
 - **PRD generation**: Generate `PRD.md` in the project root using `templates/PRD_template.md`, populated from the Phase 0 answers (Personas from Section A, User Stories and Functional Requirements from Section B, NFRs from Section C, Out of Scope from Section D). If the user already has a PRD, ask them to save it as `PRD.md` and skip generation.
 - Confirm `PRD.md` has been saved before continuing.
+- Write the `## Readiness` lines `Requirements` (the path to `PRD.md`) and `Approved by` (`user <today's date>`, the date the user confirmed) in `PROJECT_SPEC.md`, creating the file from `templates/PROJECT_SPEC_template.md` if it does not exist yet.
 
 Then say:
 > "Context locked. PRD.md generated. Entering 5-Stage Agentic Pipeline. Initializing Stage 0.5: Requirement Grilling → Creative Brainstorming."

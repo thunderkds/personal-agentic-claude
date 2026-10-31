@@ -173,7 +173,9 @@ def test_t125_sc5_guide_with_slice_marker_is_silent_about_it():
               + SLICE_MARKER + "\nmemory/MEMORY.md — 0 of 1\n<!-- /memory-slice -->")
     result = _run_hook(prompt)
     assert result.returncode == 0
-    assert result.stderr == ""
+    # T223: this repo's real PROJECT_SPEC.md has no `## Readiness` yet, so stderr now carries the
+    # readiness warning; this test still pins that the slice and startup-reads checks stay quiet.
+    assert "memory-slice" not in result.stderr and "startup-reads" not in result.stderr
     assert "memory-slice" not in result.stdout
     assert '"decision"' not in result.stdout
 
@@ -374,8 +376,9 @@ def test_t223_approved_by_must_name_user_and_date(tmp_path, value):
     assert len(gaps) == 1 and gaps[0].startswith("`Approved by`"), gaps
 
 
-def test_t223_blank_scaffold_codebase_map_is_valid(tmp_path):
-    assert _gaps(tmp_path, spec=_readiness(**{"Codebase map": "none — blank scaffold"})) == []
+@pytest.mark.parametrize("value", ["none — blank scaffold", '"none — blank scaffold"', "`none - blank scaffold`"])
+def test_t223_blank_scaffold_codebase_map_is_valid(tmp_path, value):
+    assert _gaps(tmp_path, spec=_readiness(**{"Codebase map": value})) == []
 
 
 def test_t223_sc4_waived_line_gives_no_warning(tmp_path):

@@ -160,6 +160,6 @@ Red first: add the AC 9 tests, run them against the unchanged hook, paste the fa
 
 ## Completion Checklist
 
-- [ ] Implementation done
-- [ ] Tests written AND pass — output pasted into `tasks/TASK_REVIEW_T223.md`'s Evidence table (Hard-Stop Gate 5)
+- [x] Implementation done
+- [x] Tests written AND pass — output pasted into `tasks/TASK_REVIEW_T223.md`'s Evidence table (Hard-Stop Gate 5)
 - [ ] Supervisor notified: task ready for Stage 4 review (code-review + security-review, Risk High)

@@ -11,10 +11,18 @@ applies to the minimal track, through the Decision record's `Checked:` field. In
 
 Strictly follow this order. Never skip or reorder stages.
 
+**Stage done (T223).** A stage counts as done only when its lines in `PROJECT_SPEC.md` `## Readiness`
+are filled (`templates/PROJECT_SPEC_template.md`): Phase 0 → `Requirements` + `Approved by`
+(`docs/claude-md/phase0-project-initiation.md`); Stage 0.5 → `Direction`; Stage 1 → `Codebase map`,
+`Tech stack`; Stage 2 → `Main flow` before the first spawn. Scaffold code or an existing spec file never
+makes a stage done. While a line is missing, `pre_agent_validate_guide.py` gives every spawn that names a
+task a `⚠ HIGH RISK — project readiness incomplete:` warning; it warns and never blocks.
+
 ---
 
 ## Stage 0.5: Requirement Grilling → Creative Brainstorming (The First Mind)
 **Runs immediately after Phase 0 is confirmed. Must complete before Stage 1.**
+Stage 0.5 counts as done only when the `Direction` line of `PROJECT_SPEC.md` `## Readiness` names the approved brainstorming log. A stand-in spec (named on the `Requirements` line) still goes through Step 0.5a.
 
 ### Step 0.5a — Requirement Grilling (PRD gate)
 
@@ -39,7 +47,7 @@ Only after the user selects a direction (auto mode: the recommended one), invoke
 ```
 Skill({ skill: "thinking-report", args: "session=brainstorming task=— branch=<branch>" })
 ```
-Save the emitted HTML to `reports/thinking-report_<branch>_<YYYYMMDDTHHMMSS>.html`, then announce:
+Write the log's path on the `## Readiness` `Direction` line. Save the emitted HTML to `reports/thinking-report_<branch>_<YYYYMMDDTHHMMSS>.html`, then announce:
 > "Stage 0.5: Requirement grilling passed. Brainstorming complete. Direction locked. Moving to Stage 1: Environment & Provider Setup."
 
 ---
@@ -94,9 +102,13 @@ Guide the user through this checklist step by step. Auto mode: the Supervisor do
    This writes `memory/codebase-map.md` — directory tree, entry points, blast-radius hotspots.
    C2/C3 sub-agents will read it for structural orientation; C0/C1 agents skip it.
    Re-run via `/map-codebase` after any major refactor.
+   Write its path on the `## Readiness` `Codebase map` line, or `none — blank scaffold` when there is no code yet.
+   Write the languages, frameworks, storage and hosting on the `Tech stack` line.
 
 8. **Core Domain Models**
    Scan the codebase for domain model and interface files (`Glob` for `models/`, `entities/`, `types/`, `schemas/`, `interfaces/`). Present the findings: "These look like core domain models: [list]. Are they correct? Any missing or excluded?" Record the confirmed models in `memory/glossary.md` under the `## Domain Models` section. Auto mode: record the models the scan found, with their paths (flagged).
+
+Stage 1 counts as done only when the `Codebase map` and `Tech stack` lines of `PROJECT_SPEC.md` `## Readiness` are filled.
 
 After all items are confirmed:
 > "Stage 1: Environment & Provider Setup completed successfully. Moving to Stage 1.5: Sub-Agent Architecture."
@@ -149,6 +161,8 @@ Use two files:
 - **Board mode `online`** (`.claude/board.json` exists): draft each guide to a scratch file and run `python3 scripts/board_sync.py create --guide <draft.md>` per task instead — the board assigns the ID, the guide becomes the issue description, and `tasks/TASK_GUIDE_<ID>.md` is written as its cache; later edits go back with `board_sync.py update --guide <ID>`.
 - In each TASK_GUIDE file, explicitly instruct the sub-agent to read the relevant guide from `agents/`.
 - Fill each guide's `## Dependencies & Reachability` section: `Depends on:` names another Task ID this one needs as a precondition (or `None`); `Entry point:` names the literal, grep-able identifier (route, button label, function/consumer name) that reaches this task's output, or `Standalone — N/A` with a one-line reason. This is **advisory, not a Hard-Stop Gate** — `Depends on` is checked (non-blocking warning) by `pre_agent_validate_guide.py` at spawn time; `Entry point` is checked (non-blocking finding) by `code-review` Phase 0.5. It is distinct from `PROJECT_KANBAN.md`'s `## Blocked` table, which remains a manual escape hatch for non-task blockers (external people/APIs/decisions) that can't be checked automatically.
+
+Stage 2 counts as done only when the `Main flow` line names a file with a ```` ```mermaid ```` diagram of the main data/user flow, before the first spawn (`## Readiness` in `PROJECT_SPEC.md`).
 
 Ask the user to confirm the tasks/ folder has been populated. Auto mode: the Supervisor lists `tasks/` itself.
 
