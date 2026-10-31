@@ -5,8 +5,8 @@ For each auto-mode task whose board row is In Progress or Ready for Review, it b
   (1) the report file has no `## Auto decisions` section starting with `Mode: auto` (or, for an
       `[auto]` request, there is no report file at all);
   (2) at Risk Medium/High, a `⚠` line is not `DEBATED` with exactly 2 / 3 Advocates named;
-  (3) the event trace holds fewer Advocate `Agent` calls (description starting `Advocate`) than
-      2 / 3 per `DEBATED` line;
+  (3) the event trace holds fewer Advocate `Agent` calls (description `Advocate <n>:` and a prompt
+      starting with the template's first line, T222) than 2 / 3 per `DEBATED` line;
   (4) on the extended track, the trace has no `code-review` Skill call, or no `security-review`
       Skill call at Medium/High.
 On the second fire (`stop_hook_active`) it never blocks again: it allows the stop and appends
@@ -18,6 +18,7 @@ Run with: python3 -m pytest .claude/hooks/tests/test_stop_auto_mode_check.py -v
 """
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -67,8 +68,26 @@ def _rec(tool, payload, offset_s=0, is_error=False):
             "is_error": is_error}
 
 
+ADVOCATE_TEMPLATE = ROOT / "skills" / "resolve-question" / "references" / "advocate.md"
+
+
+def _template_block():
+    return ADVOCATE_TEMPLATE.read_text(encoding="utf-8").split("```")[1].strip("\n")
+
+
+def _template_prefix():
+    """The template's first line up to and including the colon (T222: what the Stop hook keys on)."""
+    first = _template_block().splitlines()[0]
+    return first[:first.index(":") + 1]
+
+
+def _advocate_prompt(question="argue option"):
+    return _template_block().replace("{question}", question)
+
+
 def _agent(i, offset_s=0):
-    return _rec("Agent", {"description": f"Advocate {i}: argue option {i}", "prompt": "Using the repo…",
+    return _rec("Agent", {"description": f"Advocate {i}: argue option {i}",
+                          "prompt": _advocate_prompt(f"argue option {i}"),
                           "subagent_type": "Explore"}, offset_s)
 
 
@@ -627,3 +646,80 @@ def test_t189_check7_second_fire_allows_the_stop_and_records_the_pause(tmp_path)
     assert result.returncode == 0 and out == {}, out
     text = (project / "tasks" / "MINIMAL_LOG.md").read_text(encoding="utf-8")
     assert f"Paused: auto-mode check failed — {TRACE_REASON}T952.jsonl" in text
+
+
+# ── T222 — an Advocate call is counted only by its name pattern AND the template's first line ──
+HOOK_SOURCE = (HOOKS / HOOK).read_text(encoding="utf-8")
+DEBATE3 = _report(_good_decisions(3))
+
+
+def _call(description, prompt, offset_s=0):
+    return _rec("Agent", {"description": description, "prompt": prompt, "subagent_type": "Explore"},
+                offset_s)
+
+
+def test_t222_ac2_the_hook_prefix_constant_equals_the_templates_first_line():
+    found = re.search(r'^ADVOCATE_PROMPT_PREFIX = "([^"\n]+)"$', HOOK_SOURCE, re.M)
+    assert found, "the hook must define the ADVOCATE_PROMPT_PREFIX constant"
+    assert found.group(1) == _template_prefix() == "Using the repo, answer alone:"
+
+
+@pytest.mark.parametrize("description,prompt", [
+    ("Advocates summary", None),
+    ("Advocate 1 keep x", None),
+    ("advocate 1: x", None),
+    ("Advocate 1: x", "Argue for keeping it. Using the repo, answer alone: x"),
+    ("Advocate 1: x", "Using the repo, answer: x"),
+    ("Advocate 1: x", " " + "Using the repo, answer alone: x"),  # leading whitespace: not counted
+    ("Advocate 1: x", ""),
+])
+def test_t222_ac3_a_call_off_the_pattern_does_not_count(tmp_path, description, prompt):
+    prompt = _advocate_prompt("x") if prompt is None else prompt
+    project = _project(tmp_path, [EXT_ROW], review=DEBATE3,
+                       untagged=[_agent(1), _agent(2), _call(description, prompt)] + _trace(0))
+    _, out = _run(project)
+    assert _blocked(out), out
+    assert "Advocate `Agent` calls" in out["reason"] and "has 2" in out["reason"], out["reason"]
+
+
+def test_t222_ac3_check5_at_high_risk_blocks_when_one_of_three_lacks_the_prefix(tmp_path):
+    project = _project(tmp_path, [EXT_ROW], review=DEBATE3,
+                       untagged=[_agent(1), _agent(2), _call("Advocate 3: x", "do the work")] + _trace(0))
+    _, out = _run(project)
+    assert _blocked(out) and D10_REASON in out["reason"], out
+
+
+def test_t222_ac3_medium_with_one_good_and_a_summary_agent_blocks_with_has_1(tmp_path):
+    project = _project(tmp_path, [EXT_ROW.replace("High", "Medium")], risk="Medium",
+                       review=_report(_good_decisions(2)),
+                       untagged=[_agent(1), _call("Advocates summary", _advocate_prompt())] + _trace(0))
+    _, out = _run(project)
+    assert _blocked(out) and "has 1" in out["reason"], out
+
+
+def test_t222_ac4_a_well_formed_call_counts_and_the_real_summary_is_truncated():
+    record = _agent(1)
+    with pytest.raises(ValueError):
+        json.loads(record["summary"])  # the template prompt is longer than MAX_SUMMARY_LEN
+    assert _template_prefix() in record["summary"]
+
+
+def test_t222_ac4_a_json_escaped_newline_after_the_prefix_still_counts(tmp_path):
+    project = _project(tmp_path, [EXT_ROW], review=DEBATE3,
+                       untagged=[_agent(1), _agent(2), _call("Advocate 3: x", _advocate_prompt("x"))]
+                       + _trace(0))
+    assert "\\n" in project.joinpath("memory/event-trace/_untagged.jsonl").read_text()
+    _, out = _run(project)
+    assert out == {}, out
+
+
+def test_t222_ac5_a_summary_cut_inside_the_prefix_is_not_counted(tmp_path):
+    cut = _template_prefix()[:-8]
+    head, tail = '{"description": "', '", "prompt": "'
+    description = "Advocate 3: " + "x" * (300 - len(cut) - len(head) - len(tail) - len("Advocate 3: "))
+    record = _call(description, _advocate_prompt("x"))
+    assert record["summary"].endswith(cut), record["summary"][-40:]
+    project = _project(tmp_path, [EXT_ROW], review=DEBATE3,
+                       untagged=[_agent(1), _agent(2), record] + _trace(0))
+    _, out = _run(project)
+    assert _blocked(out) and "Advocate `Agent` calls" in out["reason"] and "has 2" in out["reason"], out

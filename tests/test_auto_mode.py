@@ -706,7 +706,9 @@ def test_d8_advocate_spawn_description_starts_with_advocate():
     # T221 supersedes `<option>`: an Advocate gets the question only, so the description names it.
     assert re.search(r'description: "Advocate <n>: <short question>"', _read(SKILL))
     size = _norm(_subsection(_auto(), "Debate size by Risk"))
-    assert re.search(r"`description` starts with `Advocate`", size), size
+    # T222: the description is `Advocate <n>:` and the prompt starts with the template's first line.
+    assert re.search(r"`description` is `Advocate <n>: <short question>`", size), size
+    assert "`Using the repo, answer alone:`" in size, size
 
 
 def test_d8_tracks_md_documents_the_stop_hook():

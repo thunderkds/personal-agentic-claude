@@ -47,12 +47,12 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_stop_auto_mode_check.py` (`test_t222_ac2…`, `ac3…` x9, `ac4…` x2, `ac5…`); `tests/test_auto_mode.py::test_d8_advocate_spawn_description_starts_with_advocate` updated for the new tracks.md sentence. 2026-10-31T04:28Z |
+| Verification command run | ☑ pass | `python3 -m pytest -q .claude/hooks/tests/test_stop_auto_mode_check.py tests/test_auto_mode.py tests/test_resolve_question.py` (2026-10-31T04:28:23Z) -> `216 passed in 5.18s` |
+| Negative cases hold | ☑ pass | AC 3 (7 params + check-5 + Medium `has 1`) and AC 5 pass. AC 8 mutation control (2026-10-31T04:28:09Z): hook helper replaced by `field(summary, "description").startswith("Advocate")` -> `9 failed, 60 passed` (all AC 3/5 tests); hook restored, `69 passed` |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| Full smoke suite still green (no regression) | ☑ pass | `python3 -m pytest .claude/hooks/tests/ tests/ -q` -> `5 failed, 2567 passed, 25 subtests passed in 144.20s`. The 5 failures are `test_memory_channel_and_budget.py` x4 and `test_token_audit_format.py::test_memory_md_hot_tier_stays_within_char_budget` (memory/MEMORY.md char budget); they fail the same on clean main in the main checkout (`5 failed, 13 passed`), not touched by T222 |
 | **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
@@ -67,8 +67,25 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured 2026-10-31T04:27:31Z at HEAD `52925352` (only the new tests added to
+`.claude/hooks/tests/test_stop_auto_mode_check.py`; `.claude/hooks/stop_auto_mode_check.py` unchanged,
+still `.startswith("Advocate")`). Command: `python3 -m pytest -q .claude/hooks/tests/test_stop_auto_mode_check.py -k t222`
+
+```
+FAILED ...::test_t222_ac2_the_hook_prefix_constant_equals_the_templates_first_line
+FAILED ...::test_t222_ac3_a_call_off_the_pattern_does_not_count[Advocates summary-None]
+FAILED ...::test_t222_ac3_a_call_off_the_pattern_does_not_count[Advocate 1 keep x-None]
+FAILED ...::test_t222_ac3_a_call_off_the_pattern_does_not_count[Advocate 1: x-Argue for keeping it. Using the repo, answer alone: x]
+FAILED ...::test_t222_ac3_a_call_off_the_pattern_does_not_count[Advocate 1: x-Using the repo, answer: x]
+FAILED ...::test_t222_ac3_a_call_off_the_pattern_does_not_count[Advocate 1: x- Using the repo, answer alone: x]
+FAILED ...::test_t222_ac3_a_call_off_the_pattern_does_not_count[Advocate 1: x-]
+FAILED ...::test_t222_ac3_check5_at_high_risk_blocks_when_one_of_three_lacks_the_prefix
+FAILED ...::test_t222_ac3_medium_with_one_good_and_a_summary_agent_blocks_with_has_1
+FAILED ...::test_t222_ac5_a_summary_cut_inside_the_prefix_is_not_counted
+10 failed, 3 passed, 56 deselected in 0.91s
+```
+
+(The 3 that pass already: `advocate 1: x` lower case, and the two AC 4 tests. The old hook let an `[auto]` run stop with `{}` in the failed cases, e.g. AC 5: `AssertionError: {}`.)
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 

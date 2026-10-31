@@ -174,8 +174,10 @@ At Risk High, at least one decision is always debated by 3 Advocates: pick the d
 effect on the user's data or scope (for example, convert `recurring.csv` too, or leave it). Cited `RULE:`
 lines do not replace it; they stay valid for safety actions.
 
-Each Advocate `Agent` call's `description` starts with `Advocate` (for example
-`Advocate 1: convert recurring.csv?`), so the auto-mode check below can count them.
+Each Advocate `Agent` call's `description` is `Advocate <n>: <short question>` (for example
+`Advocate 1: convert recurring.csv?`) and its `prompt` starts with the template's first line
+(`Using the repo, answer alone:`), so the auto-mode check below can count them. A call with only one of the
+two is not counted.
 
 Every decision, at every Risk level, has its log line in the final report. This supersedes T179's count
 ("2, or 3 for 3+ options or High risk") in auto mode. Outside auto mode, `resolve-question` is unchanged.

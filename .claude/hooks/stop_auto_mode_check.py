@@ -9,8 +9,8 @@ auto-mode task whose board row is In Progress or Ready for Review, it blocks the
   (1) the report has no `## Auto decisions` section whose first line is `Mode: auto` (extended), or
       the Decision record does not start with `Mode: auto` (minimal), or there is no report file;
   (2) at Risk Medium/High, a `⚠` line is not `DEBATED` with exactly 2 / 3 Advocates named;
-  (3) the event trace holds fewer Advocate `Agent` calls (description starting `Advocate`) than
-      2 / 3 per `DEBATED` line (2 at Risk Low);
+  (3) the event trace holds fewer Advocate `Agent` calls (T222: description `Advocate <n>:` and a
+      prompt starting with the template's first line) than 2 / 3 per `DEBATED` line (2 at Risk Low);
   (4) on the extended track, the trace has no `code-review` Skill call, or no `security-review`
       Skill call at Risk Medium/High.
   (5) at Risk High, no `DEBATED` line names 3 Advocates, or the trace holds fewer than 3 Advocate
@@ -63,6 +63,10 @@ import auto_mode as am  # noqa: E402
 
 PAUSE = "Paused: auto-mode check failed — "
 ADVOCATES_BY_RISK = {"Medium": 2, "High": 3}
+# T222: the first line of the Advocate template (`skills/resolve-question/references/advocate.md`),
+# up to the colon. A test ties this constant to the template.
+ADVOCATE_PROMPT_PREFIX = "Using the repo, answer alone:"
+ADVOCATE_DESCRIPTION = re.compile(r"Advocate \d+:")
 D10_REASON = "Risk High, but no decision was DEBATED with 3 Advocates"
 WINDOW_DEFAULT_S = 6 * 3600
 
@@ -157,6 +161,16 @@ def field(summary, key):
         return m.group(1) if m else ""
 
 
+def is_advocate_call(record):
+    """T222: the one place that decides a trace record is an Advocate `Agent` call. Fails closed: a
+    summary cut before the prefix is complete does not count."""
+    if record.get("tool_name") != "Agent":
+        return False
+    summary = record.get("summary")
+    return bool(ADVOCATE_DESCRIPTION.match(field(summary, "description"))
+                and field(summary, "prompt").startswith(ADVOCATE_PROMPT_PREFIX))
+
+
 def choice_reason(line, need):
     """Why a report line at Risk Medium/High is an unsettled choice, or None (D8, D9)."""
     if not re.match(r"\d+\.\s", line) and "⚠" not in line:
@@ -245,8 +259,7 @@ def check_task(task, request_ts):
 
     records = trace_records(task_id)
     debated = [l for l in lines if "DEBATED:" in l]
-    have = sum(1 for r in records if r.get("tool_name") == "Agent"
-               and field(r.get("summary"), "description").startswith("Advocate"))
+    have = sum(1 for r in records if is_advocate_call(r))
     if risk == "High":
         # D10: at Risk High at least one decision is always debated by 3 Advocates; cited RULE
         # lines do not replace it ("This is force for the high risk", D7).

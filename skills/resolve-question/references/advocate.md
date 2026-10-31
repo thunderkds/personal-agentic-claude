@@ -1,6 +1,6 @@
 # Advocate prompt template
 
-The Advocate prompt template for the Debate step in `SKILL.md`. Fill `{question}` only.
+The Advocate prompt template for the Debate step in `SKILL.md`. Fill `{question}` only. The Stop hook counts an Advocate by the first line, so do not change it.
 
 ```
 Using the repo, answer alone: {question}
