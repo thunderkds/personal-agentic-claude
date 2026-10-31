@@ -86,7 +86,6 @@
 
 
 ### In Progress
-- [ ] **T223** — Project readiness: `PROJECT_SPEC.md` `## Readiness` section (requirements, direction, codebase map, tech stack, main flow with Mermaid, user approval); spawn hook warns `⚠ HIGH RISK` while incomplete (never blocks); stage-done defined by it; auto mode never skips Stage 0.5/1 | common-infrastructure | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T223.md` | Registered 2026-10-31 from the idea-radar investigation (session 38a748fd: kit installed, T001 spawned in 5 min, Stage 0.5/1 skipped as auto decision 4; gap analysis found A1 after coding) | Forced choice 2026-10-31: warn not block; Readiness section; check existing projects too | In Progress 2026-10-31: branch `feat/t223-readiness` in `../wt-t223`
 
 
 
@@ -95,6 +94,7 @@
 
 
 ### Ready for Review
+- [ ] **T223** — Project readiness: `PROJECT_SPEC.md` `## Readiness` section (requirements, direction, codebase map, tech stack, main flow with Mermaid, user approval); spawn hook warns `⚠ HIGH RISK` while incomplete (never blocks); stage-done defined by it; auto mode never skips Stage 0.5/1 | common-infrastructure | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T223.md` | Registered 2026-10-31 from the idea-radar investigation (session 38a748fd: kit installed, T001 spawned in 5 min, Stage 0.5/1 skipped as auto decision 4; gap analysis found A1 after coding) | Forced choice 2026-10-31: warn not block; Readiness section; check existing projects too | In Progress 2026-10-31: branch `feat/t223-readiness` in `../wt-t223` | Ready for Review 2026-10-31: code-review P2×2 P3×3, security-review Medium×1 Low×1, all fixed (819c1520); branch suite 2624 passed
 
 
 ### Done
