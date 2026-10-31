@@ -200,8 +200,13 @@ def _debate() -> str:
     return _norm(m.group(1))
 
 
+ADVOCATE_REF = ROOT / "skills" / "resolve-question" / "references" / "advocate.md"
+
+
 def _advocate_template() -> str:
-    m = re.search(r"Advocate prompt template.*?```\n(.*?)```", _skill(), re.S)
+    """The fenced template in references/advocate.md (T221 moved it out of SKILL.md for the 8 KB cap)."""
+    assert ADVOCATE_REF.is_file(), "skills/resolve-question/references/advocate.md does not exist"
+    m = re.search(r"```\n(.*?)```", ADVOCATE_REF.read_text(encoding="utf-8"), re.S)
     assert m, "no fenced Advocate prompt template"
     return m.group(1)
 
@@ -322,6 +327,11 @@ def _t221_template_ok(tpl: str) -> list[str]:
     if '<path>:<line> "<quoted text' not in tpl or "low|medium|high" not in tpl:
         bad.append("citation shape or confidence scale missing")
     return bad
+
+
+def test_t221_debate_step_points_to_the_template_file():
+    assert "references/advocate.md" in _debate()
+    assert "```" not in _debate(), "the template lives in references/advocate.md, not in SKILL.md"
 
 
 # T221 AC 1
