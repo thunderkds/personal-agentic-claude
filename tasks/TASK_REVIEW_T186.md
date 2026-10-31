@@ -47,12 +47,12 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_stop_auto_mode_check.py` (9 `test_t186_*`: AC 1 paused-unchanged allow, field case with an unstamped pause line, edited-after-pause blocks again, minimal record; AC 2 new reasons -> new line, same reasons -> no new line, compare with the last line only) and `tests/test_auto_mode.py` (2 `test_t186_ac3_*` doc pins). Red first, run before the hook change: `8 failed, 1 passed, 69 deselected` (`-k t186`). Green after: 9 passed. |
+| Verification command run | ☑ pass | 2026-10-31 15:53 UTC, worktree `wt-t186`: `python3 -m pytest -q .claude/hooks/tests/test_stop_auto_mode_check.py tests/test_auto_mode.py` -> `197 passed in 9.49s`. Then `python3 -m pytest -q tests .claude/hooks/tests` -> `1 failed, 2639 passed, 25 subtests passed in 161.86s`; the 1 failure is `tests/test_board_triage.py::test_every_not_done_repo_guide_is_complete` (`guides that would now block a spawn: ['T224']`), which fails the same way on the unmodified branch (checked with `git stash`) and touches no file of this task. `sh scripts/validate.sh` -> `validate.sh: PASS`. |
 | Negative cases hold | ☐ pass / ☐ fail | |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| Full smoke suite still green (no regression) | ☐ pass / ☑ fail | Only the pre-existing T224 guide failure above (not caused by T186). `sh scripts/validate.sh: PASS`. |
 | **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
@@ -76,9 +76,9 @@ exit 0
 
 The hook blocks the first stop although the report already holds a `Paused:` line and has not changed.
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**: same fixture and command, Sat Oct 31 04:26:25 PM UTC 2026, with the changed hook: `exit 0`, nothing on stdout (the stop is allowed), stderr: `[hook:stop_auto_mode_check] T951: already paused, report unchanged since — not blocking again`. Tests also cover the stamped line, an edit after the pause (blocks again), and a new-reason pause (a second `Paused:` line).
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+**DELTA**: A session whose auto task is already paused is no longer blocked again on every stop, and the report keeps the newest pause reasons.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/T186.jsonl`, never the
 implementing agent alone]
