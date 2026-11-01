@@ -8,6 +8,7 @@
 ## Board
 
 ### Todo
+- [ ] **T229** — `stop_auto_mode_check.py` false positive: any task touched after an `[auto]` request in the same session counts as an auto task (lines 266-268; T228 flagged because of T226's request). Also: `post_write_register_task.py` adds a Todo row when a guide is written, so a hand-added In Progress row duplicates it and breaks `test_find_kanban_section_on_real_current_board` | common-infrastructure | C1 | Risk: Low | P1
 - [ ] **T217** — The kit works with easy-memory installed as a plugin: agents list the plugin tool names too; kit marketplace `.claude-plugin/marketplace.json` lists easy-memory (git-subdir `plugin`, ref `v0.2.0`) | Supervisor | C1 | Risk: Low | P1 | Branch `feat/t217-easy-memory-plugin-names` in `../wt-t217` | Deferred to Todo 2026-10-30 by the user: easy-memory-mcp stays private on purpose, so the marketplace install fails for non-owners (verify FAIL 2026-10-30); branch kept unmerged. Was Ready for Review 2026-10-30; auto verify BLOCKED (27f58eff) until easy-memory-mcp `v0.2.0`; v0.2.0 pushed, `install easy-memory@easy-kit` and agent memory_search pass 10:18Z; 3 new tests pass; suite 2545 passed, 5 failed (MEMORY.md budget, fail on main too); real `claude plugin install` waits for easy-memory-mcp `v0.2.0` | Track: minimal | Record: tasks/MINIMAL_LOG.md
 - [ ] **T206** — `stop_auto_verify.py --start` with no task ID falls through to `stop_hook()` and starts a paid run for every due task; make a bare or extra-arg `--start` exit 2 with a usage line | common-infrastructure | C0 | Risk: Medium | P1 | Guide: to write at Stage 2 | Depends on: T203 | Registered 2026-10-29 from T203 /verify finding (`main()` matches `--start` only when `len(sys.argv) == 3`)
 - [ ] **T205** — The merge gate binds an `auto-run by hook` verify row to the branch being merged or pushed: the run record carries the branch (and worktree), and `pre_bash_block_unsafe_merge.py` accepts the row only when the record's commit is the head of that branch — not the head of whichever checkout holds the row; a decoy worktree's genuine pass no longer clears another branch's merge | common-infrastructure | C2 | Risk: High | P1 | Guide: to write at Stage 2 | Depends on: T203 | Registered 2026-10-29 from T203 security-review (Medium, confidence 8/10): gate reads main first then each worktree, first filled row wins, record checked against that checkout's head
@@ -85,7 +86,6 @@
 
 
 ### In Progress
-- [ ] **T228** — `dotfiles` skill keeps agent config in one source (`plan`/`apply`/`status`, add-only) | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T228.md` | Started 2026-11-01: branch `feat/t228-dotfiles` in `../wt-t228`
 
 
 
@@ -94,6 +94,7 @@
 
 
 ### Ready for Review
+- [ ] **T228** — `dotfiles` skill keeps agent config in one source (`plan`/`apply`/`status`, add-only) | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T228.md` | Started 2026-11-01: branch `feat/t228-dotfiles` in `../wt-t228` | Ready for Review 2026-11-01: code-review P2×1 P3×1 open, security-review no findings; suite 2695 passed; rebase on T226 needed (site count, CLAUDE_LEGACY_REF pin)
 
 
 ### Done
