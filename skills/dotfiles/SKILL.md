@@ -54,7 +54,8 @@ python3 skills/dotfiles/scripts/dotfiles.py plan --source <dir> --claude-dir <di
 
 - `+ permissions.deny: <rule>` or `+ permissions.ask: <rule>` is a rule the script will add.
 - `+ link <name> -> <path>` is a link the script will make.
-- `conflict <name>` is a path that exists and is not our link. The script leaves it unchanged.
+- `conflict <name>` is a path that exists and is not our link, or our link to a source part that
+  is gone (`broken link`). The script leaves it unchanged.
 - `refused` means the script writes nothing in that folder, for example on invalid JSON or a
   read-only `settings.json`. Exit 2.
 - `skipped` means the folder does not exist.
@@ -70,9 +71,10 @@ python3 skills/dotfiles/scripts/dotfiles.py apply --source <dir> --claude-dir <d
 ```
 
 Before it changes `settings.json`, it writes `settings.json.bak-<timestamp>` beside it. To undo,
-copy that file back. A second run prints `no change`. The write uses 2-space JSON, so tell the
-user the file's indentation and number spelling may change (`1.10` to `1.1`). The value does not
-change, and no value is removed. If the user says no, write nothing.
+copy that file back. A second run prints `no change`. The script rewrites the file through JSON
+with 2-space indent, so tell the user the indentation and number spelling may change
+(`1.10` to `1.1`). A number a float cannot hold exactly can change, and the backup keeps the original. No key
+or rule is removed. If the user says no, write nothing.
 
 A `refused` line after the `+` lines means those changes were not made. The run goes on to the
 next folder and ends with exit 2. A write can fail part way, so run `status` to see what is left.
@@ -99,3 +101,9 @@ folder list that `plan` printed.
 - The user approved and `apply` printed `no change` or its changes, or
 - The user said no, or the source is missing, and you told the user why, or
 - In auto mode, the `Not done:` line is in the final report.
+
+## Known limits
+
+- `apply` exits 0 when a folder is skipped or a conflict stays, so run `status` after it.
+- A FIFO at the source file makes the script hang.
+- A stdout that cannot encode a rule makes the script fail with a traceback.

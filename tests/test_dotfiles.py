@@ -143,6 +143,18 @@ def test_empty_path_is_rejected_with_no_write(home, tmp_path, flag, command):
     assert tree_hash(tmp_path) == before
 
 
+@pytest.mark.parametrize("key", ["deny", "ask"])
+@pytest.mark.parametrize("rule", ["", "Bash(ls)\nBash(rm *)", "a\tb", "a\rb", "a\x7fb", "a\x1b[2Kb"])
+def test_source_rule_that_prints_differently_is_refused(home, key, rule):
+    source = make_source(home, base={"permissions": {key: ["ok", rule]}})
+    target = make_claude(home, settings={})
+    before = tree_hash(home)
+    result = run(home, "apply", "--source", str(source), "--claude-dir", str(target))
+    assert result.returncode == 2
+    assert "refused source" in result.stderr
+    assert tree_hash(home) == before
+
+
 def test_dangling_source_base_link_is_refused(home):
     source = make_source(home, agents="rules")
     (source / "settings.base.json").symlink_to(home / "gone.json")
@@ -583,6 +595,21 @@ def test_missing_target_folder_codes(home):
     assert run(home, "status", "--source", str(source), "--claude-dir", str(good)).returncode == 0
 
 
+@pytest.mark.parametrize("command", ["plan", "apply", "status"])
+@pytest.mark.parametrize("flag", ["--claude-dir", "--codex-dir"])
+def test_target_equal_to_source_is_refused_and_the_next_goes_on(home, command, flag):
+    source = make_source(home, base={"permissions": {"deny": ["a"]}}, agents="rules", skills=["one"])
+    alias = home / "alias"
+    alias.symlink_to(source)
+    good = make_claude(home, settings={})
+    before = tree_hash(source)
+    result = run(home, command, "--source", str(source), flag, str(alias), "--claude-dir", str(good))
+    assert result.returncode == 2
+    assert "refused" in result.stdout
+    assert tree_hash(source) == before
+    assert str(good) in result.stdout
+
+
 def test_status_exit_codes(home):
     source = make_source(home, base={"permissions": {"deny": ["a"]}}, agents="rules")
     target = make_claude(home, settings={})
@@ -593,6 +620,69 @@ def test_status_exit_codes(home):
     assert run(home, "apply", *args).returncode == 0
     in_sync = run(home, "status", *args)
     assert in_sync.returncode == 0 and "in sync" in in_sync.stdout
+
+
+@pytest.mark.parametrize("gone", ["AGENTS.md", "skills/one", "skills/two"])
+@pytest.mark.parametrize("flag", ["--claude-dir", "--codex-dir"])
+def test_link_left_broken_by_the_source_is_a_conflict(home, gone, flag):
+    source = make_source(home, agents="rules", skills=["one", "two"])
+    target = home / "target"
+    target.mkdir()
+    args = ("--source", str(source), flag, str(target))
+    assert run(home, "apply", *args).returncode == 0
+    assert run(home, "status", *args).returncode == 0
+    origin = source / gone
+    if origin.is_dir():
+        (origin / "SKILL.md").unlink()
+        origin.rmdir()
+    else:
+        origin.unlink()
+    name = {"AGENTS.md": "CLAUDE.md" if flag == "--claude-dir" else "AGENTS.md"}.get(gone, gone)
+    before = tree_hash(target)
+    status = run(home, "status", *args)
+    assert status.returncode == 1
+    assert f"conflict {name}: broken link, not changed" in status.stdout
+    applied = run(home, "apply", *args)
+    assert applied.returncode == 0
+    assert applied.stdout.count("broken link") == 1
+    assert tree_hash(target) == before  # apply never removes it
+
+
+def test_broken_link_is_reported_once_when_the_source_part_exists(home):
+    source = make_source(home, agents="rules")
+    target = make_claude(home)
+    (target / "CLAUDE.md").symlink_to(source / "OLD.md")
+    result = run(home, "status", "--source", str(source), "--claude-dir", str(target))
+    assert result.returncode == 1
+    assert result.stdout.count("conflict") == 1
+    assert "conflict CLAUDE.md: broken link, not changed" in result.stdout
+
+
+def test_broken_link_outside_the_source_is_left_alone(home):
+    source = make_source(home)
+    target = make_claude(home)
+    (target / "skills").mkdir()
+    (target / "skills" / "mine").symlink_to(home / "gone")
+    (target / "AGENTS.md").symlink_to(str(source) + "-other/AGENTS.md")
+    result = run(home, "status", "--source", str(source), "--claude-dir", str(target))
+    assert result.returncode == 0
+    assert "broken link" not in result.stdout
+
+
+def test_relative_broken_link_into_the_source_is_found(home):
+    source = make_source(home)
+    target = make_claude(home)
+    (target / "CLAUDE.md").symlink_to(os.path.join("..", source.name, "AGENTS.md"))
+    assert run(home, "status", "--source", str(source), "--claude-dir", str(target)).returncode == 1
+
+
+def test_broken_link_found_through_a_linked_source_path(home):
+    source = make_source(home)
+    alias = home / "alias"
+    alias.symlink_to(source)
+    target = make_claude(home)
+    (target / "CLAUDE.md").symlink_to(source / "AGENTS.md")
+    assert run(home, "status", "--source", str(alias), "--claude-dir", str(target)).returncode == 1
 
 
 def test_status_is_drift_on_a_conflict(home):
@@ -623,6 +713,8 @@ def test_only_settings_json_is_opened_in_a_target(home, monkeypatch, capsys):
     (target / ".credentials.json").write_text(json.dumps({"token": SECRET}))
     (target / "history.jsonl").write_text(SECRET)
     (target / "CLAUDE.md").write_text(SECRET)
+    (target / "skills").mkdir()
+    (target / "skills" / "gone").symlink_to(source / "skills" / "gone")
     for name in ("projects", "sessions"):
         (target / name).mkdir()
         (target / name / "x").write_text(SECRET)
@@ -656,7 +748,7 @@ def test_only_settings_json_is_opened_in_a_target(home, monkeypatch, capsys):
     assert inside, "the spy saw no open in the target"
     allowed = re.compile(re.escape(str(target)) + r"/(\.?settings\.json.*)$")
     assert all(allowed.fullmatch(p) for p in inside), inside
-    assert not [p for p in listed if p.startswith(str(target))]
+    assert [p for p in listed if p.startswith(str(target))] == [str(target / "skills")]
 
 
 def test_script_names_no_private_path():
@@ -699,6 +791,13 @@ def test_skill_states_the_safety_rules():
     assert "folder list" in auto.group(0)
     step3 = re.search(r"### Step 3.*?(?=\n### )", text, re.DOTALL).group(0)
     assert "`1.10` to `1.1`" in step3
+    assert "The value does not" not in step3
+    assert "the backup keeps the original" in step3
+    limits = re.search(r"^## Known limits\n(.*?)(?=\n#|\Z)", text, re.DOTALL | re.MULTILINE)
+    assert limits, "no Known limits section"
+    assert len(limits.group(1).strip().splitlines()) <= 5
+    for phrase in ("run `status`", "FIFO", "traceback"):
+        assert phrase in limits.group(1)
     assert "`refused`" in step3 and "were not made" in step3
 
 

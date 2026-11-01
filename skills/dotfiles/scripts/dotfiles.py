@@ -71,6 +71,8 @@ def load_source(root):
         json.dumps(data, ensure_ascii=False).encode("utf-8")  # text with no UTF-8 form is refused
         for key in RULE_KEYS:
             source.rules[key] = list(dict.fromkeys(permissions.get(key, [])))
+            if not all(rule and rule.isprintable() for rule in source.rules[key]):
+                raise ValueError("permissions.%s has an empty or unprintable rule" % key)
         source.ignored = sorted("permissions." + k for k in permissions if k not in RULE_KEYS)
         source.ignored += sorted(k for k in data if k != "permissions")
     agents = os.path.join(root, "AGENTS.md")
@@ -111,12 +113,38 @@ def inspect_settings(target, rules, found):
         found.refused = "settings.json: %s" % exc
 
 
+def broken_links(target, root):
+    """Links at our paths that point inside the source at something gone. Opens nothing."""
+    names = ["CLAUDE.md", "AGENTS.md"]
+    skills = os.path.join(target, "skills")
+    if os.path.isdir(skills) and not os.path.islink(skills):
+        names += ["skills/" + name for name in sorted(os.listdir(skills))]
+    roots = (root + os.sep, os.path.realpath(root) + os.sep)
+    broken = []
+    for name in names:
+        path = os.path.join(target, name)
+        if os.path.islink(path) and not os.path.exists(path):
+            stored = os.path.join(os.path.dirname(path), os.readlink(path))
+            if os.path.normpath(stored).startswith(roots):
+                broken.append(name)
+    return broken
+
+
 def inspect_target(target, kind, source):
     found = SimpleNamespace(changes=[], conflicts=[], links=[], refused=None, merged=None, raw=None)
+    if os.path.realpath(target) == os.path.realpath(source.root):
+        found.refused = "target is the source folder"
+        return found
     if kind == "claude" and any(source.rules.values()):
         inspect_settings(target, source.rules, found)
     if found.refused:
         return found
+    try:
+        broken = broken_links(target, source.root)
+    except OSError as exc:
+        found.refused = "skills: %s" % exc
+        return found
+    found.conflicts += ["%s: broken link" % name for name in broken]
     pairs = []
     if source.agents:
         pairs.append((source.agents, "CLAUDE.md" if kind == "claude" else "AGENTS.md"))
@@ -128,6 +156,8 @@ def inspect_target(target, kind, source):
         pairs += [(os.path.join(source.root, "skills", n), "skills/" + n) for n in source.skills]
     for origin, name in pairs:
         dest = os.path.join(target, name)
+        if name in broken:
+            continue
         if not os.path.lexists(dest):
             found.links.append((origin, dest))
             found.changes.append("+ link %s -> %s" % (name, origin))
