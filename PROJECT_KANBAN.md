@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-10-31
+**Last updated**: 2026-11-01
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -85,6 +85,7 @@
 
 
 ### In Progress
+- [ ] **T226** — Stage 1 offers the optional companion MCP servers | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T226.md` | Started 2026-11-01 [auto]: branch `feat/t226-companion-setup` in `../wt-t226`
 
 
 
