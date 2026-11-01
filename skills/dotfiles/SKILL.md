@@ -55,7 +55,8 @@ python3 skills/dotfiles/scripts/dotfiles.py plan --source <dir> --claude-dir <di
 - `+ permissions.deny: <rule>` or `+ permissions.ask: <rule>` is a rule the script will add.
 - `+ link <name> -> <path>` is a link the script will make.
 - `conflict <name>` is a path that exists and is not our link. The script leaves it unchanged.
-- `refused` means the script writes nothing in that folder, for example on invalid JSON. Exit 2.
+- `refused` means the script writes nothing in that folder, for example on invalid JSON or a
+  read-only `settings.json`. Exit 2.
 - `skipped` means the folder does not exist.
 
 Ask: "Apply this plan to these folders?"
@@ -70,8 +71,8 @@ python3 skills/dotfiles/scripts/dotfiles.py apply --source <dir> --claude-dir <d
 
 Before it changes `settings.json`, it writes `settings.json.bak-<timestamp>` beside it. To undo,
 copy that file back. A second run prints `no change`. The write uses 2-space JSON, so tell the
-user the file's indentation may change, and that no value is removed. If the user says no, write
-nothing.
+user the file's indentation and number spelling may change (`1.10` to `1.1`). The value does not
+change, and no value is removed. If the user says no, write nothing.
 
 A `refused` line after the `+` lines means those changes were not made. The run goes on to the
 next folder and ends with exit 2. A write can fail part way, so run `status` to see what is left.
@@ -85,7 +86,7 @@ python3 skills/dotfiles/scripts/dotfiles.py status --source <dir> --claude-dir <
 ```
 
 Exit 0 means in sync. Exit 1 means drift or a conflict. Exit 2 means a folder was refused, or the
-source is missing. A rule that exists only in the target is not drift.
+source or a chosen folder is missing. A rule that exists only in the target is not drift.
 
 ### Auto mode (`[auto]`)
 

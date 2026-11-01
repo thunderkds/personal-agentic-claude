@@ -10,7 +10,7 @@ does: an allow would widen what an agent may do (lib/merge-settings.py, T148). C
 skills and instructions only. settings.json is the one file opened in a target folder.
 
 Exit: 0 done or in sync; 1 status found drift or a conflict; 2 a target or the source was refused,
-an empty path, or status on a target with no source.
+an empty path, or status on a missing source or a missing target.
 """
 import argparse
 import glob
@@ -36,9 +36,19 @@ def unique_keys(pairs):
     return dict(pairs)
 
 
+def not_json(name):
+    raise ValueError("%s is not JSON" % name)
+
+
+def finite_float(text):
+    value = float(text)
+    return not_json(text) if abs(value) == float("inf") else value
+
+
 def parse_settings(raw):
     """(data, permissions) from JSON bytes. ValueError on bad JSON or a wrong type."""
-    data = json.loads(raw, object_pairs_hook=unique_keys)
+    data = json.loads(raw, object_pairs_hook=unique_keys, parse_constant=not_json,
+                      parse_float=finite_float)
     if not isinstance(data, dict):
         raise ValueError("not a JSON object")
     permissions = data.get("permissions", {})
@@ -92,6 +102,8 @@ def inspect_settings(target, rules, found):
                 permissions[key] = current + missing
                 found.changes += ["+ permissions.%s: %s" % (key, rule) for rule in missing]
         if found.changes:
+            if found.raw is not None and not os.access(path, os.W_OK):
+                raise ValueError("file is read-only")  # a rename would get past the lock
             data["permissions"] = permissions
             text = json.dumps(data, indent=2, ensure_ascii=False) + "\n"
             found.merged = text.encode("utf-8")  # here, so plan and apply refuse alike
@@ -186,6 +198,7 @@ def run_targets(command, source, targets):
     for kind, target in targets:
         if not os.path.isdir(target):
             print("skipped %s: folder not found" % target)
+            code = 2 if command == "status" else code
             continue
         print("%s (%s)" % (target, kind))
         found = inspect_target(target, kind, source)

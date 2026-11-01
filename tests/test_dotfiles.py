@@ -477,6 +477,77 @@ def test_unwritable_target_is_refused_before_any_backup(home, command, bad):
         assert json.loads((good / "settings.json").read_text())["permissions"]["deny"] == ["a"]
 
 
+@pytest.mark.parametrize("command", ["plan", "apply"])
+@pytest.mark.parametrize("bad", ['{"w": NaN}', '{"w": Infinity}', '{"w": -Infinity}',
+                                 '{"t": 1e400}', '{"t": -1e400}'])
+def test_non_finite_number_in_target_is_refused(home, command, bad):
+    """Strict JSON has none of these, and a rewrite would turn 1e400 into `Infinity`."""
+    source = make_source(home, base={"permissions": {"deny": ["a"]}})
+    broken = make_claude(home, ".claude-a", bad)
+    good = make_claude(home, ".claude-b", {})
+    before = tree_hash(broken)
+    result = run(home, command, "--source", str(source), "--claude-dir", str(broken),
+                 "--claude-dir", str(good))
+    assert result.returncode == 2, result.stderr
+    assert "refused" in result.stdout
+    assert tree_hash(broken) == before
+    assert backups(broken) == []
+    assert str(good) in result.stdout
+    if command == "apply":
+        assert json.loads((good / "settings.json").read_text())["permissions"]["deny"] == ["a"]
+
+
+def test_ordinary_float_is_kept(home):
+    source = make_source(home, base={"permissions": {"deny": ["a"]}})
+    target = make_claude(home, settings='{"t": 0.5, "big": 1e300}')
+    assert run(home, "apply", "--source", str(source), "--claude-dir", str(target)).returncode == 0
+    after = json.loads((target / "settings.json").read_text())
+    assert after["t"] == 0.5 and after["big"] == 1e300
+
+
+@pytest.mark.parametrize("bad", ['{"w": NaN}', '{"t": 1e400}'])
+def test_non_finite_number_in_source_is_refused(home, bad):
+    source = make_source(home)
+    (source / "settings.base.json").write_text(bad)
+    target = make_claude(home, settings={})
+    before = tree_hash(home)
+    result = run(home, "apply", "--source", str(source), "--claude-dir", str(target))
+    assert result.returncode == 2
+    assert "refused source" in result.stderr
+    assert tree_hash(home) == before
+
+
+# The kernel lets root write a 444 file, so os.access says yes: these two need a non-root user.
+needs_non_root = pytest.mark.skipif(os.geteuid() == 0, reason="needs a non-root user")
+
+
+@needs_non_root
+@pytest.mark.parametrize("command", ["plan", "apply", "status"])
+def test_read_only_settings_is_refused_and_the_lock_holds(home, command):
+    source = make_source(home, base={"permissions": {"deny": ["a"]}})
+    locked = make_claude(home, ".claude-a", {"old": 1})
+    good = make_claude(home, ".claude-b", {})
+    (locked / "settings.json").chmod(0o444)
+    before = tree_hash(locked)
+    result = run(home, command, "--source", str(source), "--claude-dir", str(locked),
+                 "--claude-dir", str(good))
+    assert result.returncode == 2
+    assert "refused" in result.stdout
+    assert tree_hash(locked) == before
+    assert stat.S_IMODE((locked / "settings.json").stat().st_mode) == 0o444
+    assert backups(locked) == []
+    if command == "apply":
+        assert json.loads((good / "settings.json").read_text())["permissions"]["deny"] == ["a"]
+
+
+@needs_non_root
+def test_read_only_settings_with_nothing_to_add_is_in_sync(home):
+    source = make_source(home, base={"permissions": {"deny": ["a"]}})
+    target = make_claude(home, settings={"permissions": {"deny": ["a"]}})
+    (target / "settings.json").chmod(0o444)
+    assert run(home, "status", "--source", str(source), "--claude-dir", str(target)).returncode == 0
+
+
 def test_write_failure_is_refused_and_the_next_goes_on(home, monkeypatch, capsys):
     """A crash at the rename leaves the old file and no temp file."""
     source = make_source(home, base={"permissions": {"deny": ["a"]}})
@@ -497,6 +568,19 @@ def test_write_failure_is_refused_and_the_next_goes_on(home, monkeypatch, capsys
     assert not [p for p in first.iterdir() if p.name.startswith(".settings.json")]
     assert json.loads((second / "settings.json").read_text())["permissions"]["deny"] == ["a"]
     assert "disk full" in capsys.readouterr().out
+
+
+def test_missing_target_folder_codes(home):
+    source = make_source(home, agents="rules")
+    good = make_claude(home)
+    args = ("--source", str(source), "--claude-dir", str(home / ".claude-gone"))
+    status = run(home, "status", *args)
+    assert status.returncode == 2
+    assert "skipped" in status.stdout
+    assert run(home, "plan", *args).returncode == 0
+    assert run(home, "apply", *args, "--claude-dir", str(good)).returncode == 0
+    assert run(home, "status", *args, "--claude-dir", str(good)).returncode == 2
+    assert run(home, "status", "--source", str(source), "--claude-dir", str(good)).returncode == 0
 
 
 def test_status_exit_codes(home):
@@ -614,6 +698,7 @@ def test_skill_states_the_safety_rules():
     assert "the `plan` lines" not in auto.group(0)
     assert "folder list" in auto.group(0)
     step3 = re.search(r"### Step 3.*?(?=\n### )", text, re.DOTALL).group(0)
+    assert "`1.10` to `1.1`" in step3
     assert "`refused`" in step3 and "were not made" in step3
 
 
