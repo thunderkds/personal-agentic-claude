@@ -40,6 +40,7 @@
 - [T180: auto mode — `[auto]` runs either track; Debate size by Risk; auto-mode Stop hook](decisions.md) — Low decides, Medium 2 / High 3 Advocates; merge/push stay the user's (T189: pass → Done; T186: pause sticks)
 - [T221-2: Advocates frame What/Why/How; strict count](decisions.md)
 - [T223: PROJECT_SPEC `## Readiness`; spawn warns HIGH RISK while incomplete](decisions.md)
+- [T226: Stage 1 offers companion MCPs; the kit never installs one](decisions.md) — static list; only strangers' installable servers are choices
 - [T179: Debate — 2–3 read-only Advocates argue a choice in auto mode](decisions.md) — safer option first, flagged `⚠ decided for you`, max 3 per task
 - [T178: two tracks — minimal (Supervisor codes, Decision record) vs extended (pipeline)](decisions.md) — track line is a statement
 - [T114: one command — menu, plan, confirm; Reinstall runs the removal pass](decisions.md) — prompts read /dev/tty before any write; any lock rewrite must run carry_over first

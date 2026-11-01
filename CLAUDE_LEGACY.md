@@ -99,7 +99,7 @@ Run these **one by one**. After each session, summarize findings, ask for user c
    - Define final acceptance criteria only after the brainstorming log is reviewed.
 
 3. **Stage 1: Environment Check**  
-   Verify Multi-CLI commands, git status, etc.
+   Verify Multi-CLI commands, git status, etc. Then run `Skill({ skill: "companion-setup" })`: it shows the optional companion MCP servers; skip is the default; the kit never installs one.
 
 4. **Stage 1.5: Sub-Agent Design**  
    Dynamically design team. Always include these base agents (templates in `agents/`):
@@ -222,6 +222,7 @@ Run these **one by one**. After each session, summarize findings, ask for user c
   - `write-better-skill/SKILL.md` — craft reference consulted by `teach`; audits existing SKILL.md files
   - `map-codebase/SKILL.md` — generates `memory/codebase-map.md` (tree, entry points, hotspots); re-run via `/map-codebase` after major refactors
   - `settings-setup/SKILL.md` — Stage 1: offers settings profiles for `.claude/settings.json`; High security when the user skips; add-only, writes only after approval (dry run only in `[auto]` mode)
+  - `companion-setup/SKILL.md` — Stage 1: shows the optional companion MCP servers (installed, what each adds, what it needs); skip is the default; the kit never installs one (Step 1 only in `[auto]` mode)
   - `compact-memory/SKILL.md` — compact and prune memory when hot/cold files are bloated or stale
   - `bugfix/SKILL.md` — Supervisor-level bug fix entry point; triage intake → TASK_GUIDE (bug template) → diagnose → Stage 4 review → integrate; invoke as `/bugfix`
   - `slim-skills/SKILL.md` — audit and prune bloated SKILL.md files (>150 lines); checksum gate preserves behavioral assertions; human approval before any write

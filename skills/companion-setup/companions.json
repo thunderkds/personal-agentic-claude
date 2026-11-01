@@ -1,0 +1,32 @@
+{
+  "companions": [
+    {
+      "id": "easy-verifier",
+      "adds": "Scores a change with no-LLM evidence at Stage 4 review (the score skill uses it).",
+      "tools": ["docker"],
+      "link": "https://easy-verifier.vercel.app/",
+      "access": "public"
+    },
+    {
+      "id": "easy-ui",
+      "adds": "Tests a web UI in a real browser and returns a report with screenshots.",
+      "tools": ["docker"],
+      "link": "https://github.com/thunderkds/easy-ui-mcp",
+      "access": "public"
+    },
+    {
+      "id": "easy-memory",
+      "adds": "Saves what a session found out and hands a short index of it to the next session.",
+      "tools": ["python3"],
+      "link": "",
+      "access": "private"
+    },
+    {
+      "id": "easy-personal",
+      "adds": "Turns your local Claude Code activity into usage numbers and an improvement plan.",
+      "tools": ["python3", "uv", "node"],
+      "link": "",
+      "access": "private"
+    }
+  ]
+}

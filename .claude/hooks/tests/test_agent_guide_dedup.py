@@ -136,7 +136,8 @@ T069_BASELINE_REF = "8d6d56b"
 # REPOINTED AGAIN by the v2.2.0 release (`9e0bb48` -> `c8a9af9`, the release commit; user approved the version bump 2026-10-27): AGENTS.md line 2 `**Version:** 1.17` -> `1.18`. One label; nothing collapsed. Repointed, NOT deleted.
 # REPOINTED AGAIN by T200 (`c8a9af9` -> `65fe3a8`, T200's edit commit; required by TASK_GUIDE_T200 AC 10, not separately user-approved): the AGENTS.md stage index `1=` list gains `settings-setup`. One token on one line; nothing collapsed. Repointed, NOT deleted.
 # REPOINTED AGAIN by T203 (`65fe3a8` -> `2616322`, T203's edit commit; required by TASK_GUIDE_T203 D4 / AC 6, not separately user-approved): the `## Tracks` paragraph says the Supervisor never runs `/verify` in its own session and starts the headless auto verify run (`--start <ID>`) on every task. Same line, still 196 lines; nothing collapsed. Repointed, NOT deleted.
-T070_BASELINE_REF = "2616322"  # T203 (was 65fe3a8, T200)
+# REPOINTED AGAIN by T226 (`2616322` -> `6697668`, T226's edit commit; the Stage index gains `companion-setup`, not separately user-approved).
+T070_BASELINE_REF = "6697668"  # T226 (was 2616322, T203)
 
 # T082's own edit commit (same commit as the repoint above). T082 adds a mandatory Base Rule bullet
 # to `general-agent-template.md` too (the same untrusted-content pointer) — a legitimate, required

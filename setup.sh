@@ -875,6 +875,7 @@ main() {
   # packs/ arrives through MANIFEST as a dormant catalog (ADR-0002): nothing
   # links or projects it, so no CLI loads a pack until the Supervisor activates it.
   log_info "Pack catalog: every pack is in packs/, inactive. Your Supervisor recommends packs for this project."
+  log_info "Companion MCP servers (optional): your Supervisor shows them at Stage 1. Skip is the default; the kit never installs one."
 
   # The hook merge is the only step allowed to fail without aborting the install
   # (the rest of the kit is still worth having). Report it in the exit code so a

@@ -27,7 +27,7 @@ CURSOR_MDC = ROOT / ".cursor" / "rules" / "agent-base.mdc"
 BASE_REF = "c573bbf"
 # T200: `CLAUDE_LEGACY.md` gains the `settings-setup` skills-list line (CLAUDE_LEGACY.md sync policy),
 # so its pin moves off BASE_REF to T200's edit commit. BASE_REF stays for CLAUDE.md (AC 1).
-CLAUDE_LEGACY_REF = "65fe3a8"
+CLAUDE_LEGACY_REF = "89117f1"
 
 # AC 1 allowed edits (a) and (b): (base span, new span). Each span must hit exactly one base line.
 REPLACED_SPANS = [
@@ -49,6 +49,9 @@ REPLACED_SPANS = [
     # T200: the Stage 1 skill `settings-setup` joins the stage index.
     ("1=`git-guardrails-claude-code`,`map-codebase` |",
      "1=`git-guardrails-claude-code`,`map-codebase`,`settings-setup` |"),
+    # T226: the Stage 1 skill `companion-setup` joins the stage index.
+    ("`map-codebase`,`settings-setup` |",
+     "`map-codebase`,`settings-setup`,`companion-setup` |"),
 ]
 AC6_HEADING = re.compile(r"^## .*cannot enforce", re.IGNORECASE)
 # T178: the one later section allowed outside the opening block and the AC 6 section. Its
