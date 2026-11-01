@@ -47,16 +47,16 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass / ☐ fail | `tests/test_dotfiles.py` (written first, 36 red before the script): `python3 -m pytest tests/test_dotfiles.py -q` part of `188 passed in 1.84s` below. Temp HOME only After the verify fail: `tests/test_dotfiles.py` has 63 tests (20 red first, then `63 passed in 2.15s`), covering lone surrogate, duplicate keys, empty paths, dangling source link, `status` with no source. Mutation `object_pairs_hook=dict` → `5 failed, 58 passed`. After the second verify fail: 81 tests (17 red first, then `81 passed in 2.90s`), adding non-finite numbers, `status` on a missing folder, read-only `settings.json` (needs a non-root user; run as uid 1000). After the third verify fail: 109 tests (29 red first, then `109 passed in 4.48s`), adding broken links into the source, target equal to source, empty or control-character source rules, Known limits. |
+| Verification command run | ☑ pass / ☐ fail | `python3 -m pytest tests/test_dotfiles.py tests/test_site_content.py tests/test_readme_slim.py -q` → `188 passed in 1.84s`. `plan --source /nonexistent` under a temp HOME → prints `source not found: /nonexistent` and the expected layout, exit=0 |
+| Negative cases hold | ☑ pass / ☐ fail | Tests: invalid or wrong-type target settings refused and next folder goes on; invalid source refused with no write; real file, empty `CLAUDE.md`, dangling link, link elsewhere, `skills` link and symlinked `settings.json` are conflicts left unchanged; `.credentials.json` content never opened or printed; rename failure leaves the old file. Mutation: adding `allow` to `RULE_KEYS` → `1 failed, 43 passed` |
+| verify | ☑ pass | auto-run by hook, session 8e1881f5-5762-42e4-b326-91b021ecc43f, commit b323b07afd81ebb325c9493f8d88f72b79f20e96, log .claude/verify-runs/T228-b323b07afd81.log — pass |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass / ☐ fail | Reviewed `feat/t228-dotfiles` diff against main: script, SKILL.md, tests, two pins, docs lines. Skipped the rest of the repo: the script has no callers. code-review: P0 0, P1 0, P2 1 (lane: 889 lines > 500, of which 543 are tests; left as is), P3 1 (the no-target list shows backup folders such as `~/.claude-hung2.bak-20261029112328`; suggestion only). Security review read the whole script on the branch, inline with no sub-tasks: no findings. lane_check: `lane: C2, 8 files, 889 lines, EXCEEDS (lines 889 > 500); unpredicted: tests/test_site_visual_first.py`. |
+| Full smoke suite still green (no regression) | ☑ pass / ☐ fail | After the board fix: `python3 -m pytest tests/ .claude/hooks/tests/ -q` → `2695 passed, 25 subtests passed in 143.46s`; `bash scripts/validate.sh` → `validate.sh: PASS`. Real run on a COPY of `~/.claude-personal/settings.json`: plan listed 7 deny, 4 ask, 2 links and `ignored in settings.base.json: permissions.allow, env`; apply wrote a backup; second apply `no change`; status `in sync`, exit 0; top-level keys, allow and hooks unchanged; mode 600 kept. Real files not touched (mtimes 2026-10-29). After the verify fail: `python3 -m pytest tests/ .claude/hooks/tests/ -q` → `2714 passed, 25 subtests passed in 140.91s`; `bash scripts/validate.sh` → `validate.sh: PASS`. After the second verify fail: `python3 -m pytest tests/ .claude/hooks/tests/ -q` → `2732 passed, 25 subtests passed in 140.11s`; `bash scripts/validate.sh` → `validate.sh: PASS`. After the third verify fail: `python3 -m pytest tests/ .claude/hooks/tests/ -q` → `2760 passed, 25 subtests passed in 141.68s`; `bash scripts/validate.sh` → `validate.sh: PASS`. |
+| **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☑ N/A | Neither companion tool was run. |
+| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☑ N/A | No layout change: site edit is a count (33 to 34) and one text chip in an existing list. `tests/test_site_content.py` and `tests/test_site_visual_first.py` pass. |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☑ N/A | Same reason: no new style. |
+| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☑ N/A | Same reason: no new element type. |
 
 ---
 
@@ -67,12 +67,97 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured 2026-11-01T10:43:07Z at `ff45291b`, before any implementation commit:
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+```
+$ python3 skills/dotfiles/scripts/dotfiles.py plan --source /nonexistent
+python3: can't open file '/home/hungnguyenhuu/workspace/pets/wt-t228/skills/dotfiles/scripts/dotfiles.py': [Errno 2] No such file or directory
+exit=2
+```
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+**AFTER**: run under a temp HOME, 2026-11-01T10:50:16Z:
+
+```
+$ python3 skills/dotfiles/scripts/dotfiles.py plan --source /nonexistent
+source not found: /nonexistent
+expected source layout (each part is optional):
+  settings.base.json   permissions.deny and permissions.ask are added to Claude folders
+  AGENTS.md            linked as CLAUDE.md (Claude folders) and AGENTS.md (Codex folders)
+  skills/<name>/       linked as skills/<name> in each folder
+no target folder chosen, nothing changed. Found:
+  <tmp>/home/.claude-a
+  <tmp>/home/.codex
+choose with --claude-dir <dir> or --codex-dir <dir>
+exit=0
+```
+
+Full cycle on temp folders (source has 1 deny, 1 allow, `env`):
+
+```
+2026-11-01T10:52:51Z
+$ plan
+ignored in settings.base.json: permissions.allow, env
+<tmp>/home/.claude-a (claude)
+  + permissions.deny: Read(./.env)
+  + link CLAUDE.md -> <tmp>/src/AGENTS.md
+  + link skills/demo -> <tmp>/src/skills/demo
+<tmp>/home/.codex (codex)
+  + link AGENTS.md -> <tmp>/src/AGENTS.md
+  + link skills/demo -> <tmp>/src/skills/demo
+exit=0
+$ status
+ignored in settings.base.json: permissions.allow, env
+<tmp>/home/.claude-a (claude)
+  + permissions.deny: Read(./.env)
+  + link CLAUDE.md -> <tmp>/src/AGENTS.md
+  + link skills/demo -> <tmp>/src/skills/demo
+  drift
+<tmp>/home/.codex (codex)
+  + link AGENTS.md -> <tmp>/src/AGENTS.md
+  + link skills/demo -> <tmp>/src/skills/demo
+  drift
+exit=1
+$ apply
+ignored in settings.base.json: permissions.allow, env
+<tmp>/home/.claude-a (claude)
+  + permissions.deny: Read(./.env)
+  + link CLAUDE.md -> <tmp>/src/AGENTS.md
+  + link skills/demo -> <tmp>/src/skills/demo
+  backup <tmp>/home/.claude-a/settings.json.bak-20261101T105251Z
+  wrote <tmp>/home/.claude-a/settings.json
+<tmp>/home/.codex (codex)
+  + link AGENTS.md -> <tmp>/src/AGENTS.md
+  + link skills/demo -> <tmp>/src/skills/demo
+exit=0
+$ apply
+ignored in settings.base.json: permissions.allow, env
+<tmp>/home/.claude-a (claude)
+  no change
+<tmp>/home/.codex (codex)
+  no change
+exit=0
+$ status
+ignored in settings.base.json: permissions.allow, env
+<tmp>/home/.claude-a (claude)
+  in sync
+<tmp>/home/.codex (codex)
+  in sync
+exit=0
+lrwxrwxrwx <tmp>/src/AGENTS.md
+-rw------- settings.json
+-rw------- settings.json.bak-20261101T105251Z
+drwxrwxr-x skills
+{
+  "model": "opus",
+  "permissions": {
+    "deny": [
+      "Read(./.env)"
+    ]
+  }
+}
+```
+
+**DELTA**: A user can keep shared agent config in one folder of their own repo, see what would change in each chosen CLI folder, apply it on request, and check drift, with add-only changes.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]

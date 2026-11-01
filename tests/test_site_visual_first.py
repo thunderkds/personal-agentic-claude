@@ -407,6 +407,8 @@ DUPLICATES_OF_A_VISUAL_LABEL = {
     "c281ee27472b": "count changed by T226 (34 skills)",
     "4b7804edc105": "Stage 1 chips gain companion-setup (T226)",
     "0d64e298bb52": "Stage 1 flow step gains companion-setup (T226)",
+    # T228: the `dotfiles` skill joins the Any stage chips (count now 35).
+    "9d5bff6dc560": "Any stage chip list changed by T228 (dotfiles)",
 }
 
 
