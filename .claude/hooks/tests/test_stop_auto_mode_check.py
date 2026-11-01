@@ -724,3 +724,208 @@ def test_t222_ac5_a_summary_cut_inside_the_prefix_is_not_counted(tmp_path):
                        untagged=[_agent(1), _agent(2), record] + _trace(0))
     _, out = _run(project)
     assert _blocked(out) and "Advocate `Agent` calls" in out["reason"] and "has 2" in out["reason"], out
+
+
+# ── T186 D1 — a paused task stops re-blocking; a new pause reason is written ──────────────
+PAUSE_PREFIX = "Paused: auto-mode check failed — "
+NO_SKILLS = "Risk High, but the trace has no `security-review` Skill call"
+
+
+def _t186_report(extra=()):
+    """A High report that passes every check but the missing Skill calls (the field case)."""
+    return _report(_good_decisions(3) + list(extra))
+
+
+def _t186_project(tmp_path, **kw):
+    return _project(tmp_path, [EXT_ROW], review=_t186_report(), untagged=_trace(3, skills=("code-review",)), **kw)
+
+
+def _review(project):
+    return (project / "tasks" / "TASK_REVIEW_T951.md")
+
+
+def _pause_lines(text):
+    return [l for l in text.splitlines() if l.startswith(PAUSE_PREFIX)]
+
+
+def _pause_via_two_fires(project):
+    assert _blocked(_run(project)[1])
+    result, second = _run(project, active=True)
+    assert result.returncode == 0 and second == {}
+    return _review(project).read_text(encoding="utf-8")
+
+
+def test_t186_ac1_a_paused_task_with_an_unchanged_report_does_not_block_the_first_fire(tmp_path):
+    project = _t186_project(tmp_path)
+    assert len(_pause_lines(_pause_via_two_fires(project))) == 1
+    before = _review(project).read_text(encoding="utf-8")
+    result, out = _run(project)
+    assert result.returncode == 0 and out == {}, out
+    assert _review(project).read_text(encoding="utf-8") == before, "an allowed stop writes nothing"
+
+
+def test_t186_ac1_field_case_a_pause_line_without_a_stamp_is_not_re_blocked(tmp_path):
+    """easy-memory-mcp, 2026-10-31: the report held `Paused:` lines, yet a stop was blocked every
+    time with the same reasons because the Skill calls had aged out of the untagged window."""
+    project = _t186_project(tmp_path)
+    old = _review(project).read_text(encoding="utf-8")
+    _review(project).write_text(
+        old.replace("Memory: nothing new\n",
+                    f"Memory: nothing new\n{PAUSE_PREFIX}{NO_SKILLS}\n"), encoding="utf-8")
+    result, out = _run(project)
+    assert result.returncode == 0 and out == {}, out
+
+
+def test_t186_ac1_a_report_edited_after_the_pause_is_checked_again(tmp_path):
+    project = _t186_project(tmp_path)
+    paused = _pause_via_two_fires(project)
+    assert _run(project)[1] == {}
+    _review(project).write_text(paused.replace("Memory: nothing new\n", "Memory: wrote one entry\n"),
+                                encoding="utf-8")
+    _, out = _run(project)
+    assert _blocked(out) and "security-review" in out["reason"], out
+
+
+def test_t186_ac1_an_edit_of_the_pause_line_itself_is_not_a_change(tmp_path):
+    """An edit that only touches the `Paused:` line itself does not count as a change."""
+    project = _t186_project(tmp_path)
+    paused = _pause_via_two_fires(project)
+    _review(project).write_text(paused.replace(NO_SKILLS, NO_SKILLS + " (edited)"), encoding="utf-8")
+    assert _run(project)[1] == {}
+
+
+def test_t186_ac1_a_minimal_record_with_a_pause_line_is_not_re_blocked(tmp_path):
+    log = ("# Minimal-track Decision records\n\n## T952 — Sort the names · minimal\n"
+           "Risk: High (track set by the user)\n**Asked:** \"sort [auto]\"\n**Decisions:**\n"
+           f"1. sort A–Z — SAFER OPTION: literal {FLAG}\n**Not done:** merge (yours)\n")
+    project = _project(tmp_path, [MIN_ROW], guide=False, minimal_log=log,
+                       transcript=[_user("sort the names [auto]")])
+    assert _blocked(_run(project)[1])
+    _run(project, active=True)
+    assert _run(project)[1] == {}
+    path = project / "tasks" / "MINIMAL_LOG.md"
+    path.write_text(path.read_text(encoding="utf-8").replace("sort A–Z", "sort Z–A"), encoding="utf-8")
+    assert _blocked(_run(project)[1])
+
+
+def test_t186_ac2_a_second_fire_with_new_reasons_writes_a_new_pause_line(tmp_path):
+    project = _t186_project(tmp_path)
+    paused = _pause_via_two_fires(project)
+    first_line = _pause_lines(paused)[0]
+    _review(project).write_text(paused.replace("Memory: nothing new\n", ""), encoding="utf-8")
+    text = _pause_via_two_fires(project)
+    lines = _pause_lines(text)
+    assert len(lines) == 2 and lines[0] == first_line, lines
+    assert "no `Memory:` line" in lines[1] and NO_SKILLS in lines[1], lines[1]
+    assert "no `Memory:` line" not in lines[0]
+
+
+def test_t186_ac2_a_second_fire_with_the_same_reasons_writes_no_new_line(tmp_path):
+    project = _t186_project(tmp_path)
+    paused = _pause_via_two_fires(project)
+    _review(project).write_text(paused.replace("kept recurring.csv", "kept recurring.csv as is"),
+                                encoding="utf-8")
+    text = _pause_via_two_fires(project)
+    assert len(_pause_lines(text)) == 1, _pause_lines(text)
+    assert _run(project)[1] == {}, "the stamp follows the edited report, so the next stop is not blocked"
+
+
+def test_t186_ac2_the_new_reasons_are_compared_with_the_last_pause_line_only(tmp_path):
+    project = _t186_project(tmp_path)
+    paused = _pause_via_two_fires(project)  # line 1: the Skill reason
+    _review(project).write_text(paused.replace("Memory: nothing new\n", ""), encoding="utf-8")
+    paused = _pause_via_two_fires(project)  # line 2: the Skill and Memory reasons
+    _review(project).write_text(paused.replace("Checks:", "Memory: nothing new\nChecks:"), encoding="utf-8")
+    text = _pause_via_two_fires(project)  # the reasons equal line 1, not the last line 2
+    assert len(_pause_lines(text)) == 3, _pause_lines(text)
+
+
+def test_t186_a_task_that_passes_is_not_touched(tmp_path):
+    project = _project(tmp_path, [EXT_ROW], review=_t186_report(), untagged=_trace(3))
+    before = _review(project).read_text(encoding="utf-8")
+    assert _run(project)[1] == {}
+    assert _run(project, active=True)[1] == {}
+    assert _review(project).read_text(encoding="utf-8") == before
+
+
+# ── T186 Stage 4 fixes — the pause is written and read outside HTML comments ───────────────
+TEMPLATE_COMMENT = None
+
+
+def _template_comment():
+    tpl = (ROOT / "templates" / "TASK_REVIEW_template.md").read_text(encoding="utf-8")
+    return tpl[tpl.index("<!-- Optional"):tpl.index("-->") + 3]
+
+
+def _with_template_comment(project):
+    """The shape of the 26 real review files: the real block above, the template's commented copy
+    of `## Auto decisions` between it and `## Evidence`."""
+    head, rest = _review(project).read_text(encoding="utf-8").split("## Evidence", 1)
+    _review(project).write_text(head + _template_comment() + "\n\n## Evidence" + rest, encoding="utf-8")
+
+
+def _outside_comments(text):
+    return re.sub(r"<!--.*?-->", "", text, flags=re.S)
+
+
+def test_t186_r1_with_the_template_comment_the_pause_lands_outside_it_and_holds(tmp_path):
+    project = _t186_project(tmp_path)
+    _with_template_comment(project)
+    assert _blocked(_run(project)[1])
+    _run(project, active=True)
+    text = _review(project).read_text(encoding="utf-8")
+    assert len(_pause_lines(_outside_comments(text))) == 1, "the pause line must be outside the comment"
+    assert PAUSE_PREFIX not in re.search(r"<!--.*?-->", text, re.S).group(0)
+    for _ in range(2):
+        assert _run(project)[1] == {}, "a paused task must not block on later turns"
+    assert text == _review(project).read_text(encoding="utf-8"), "allowed stops write nothing"
+
+
+def test_t186_r1_with_the_template_comment_an_edit_is_still_checked_again(tmp_path):
+    project = _t186_project(tmp_path)
+    _with_template_comment(project)
+    _pause_via_two_fires(project)
+    text = _review(project).read_text(encoding="utf-8")
+    _review(project).write_text(text.replace("kept recurring.csv", "kept recurring.csv as is"),
+                                encoding="utf-8")
+    assert _blocked(_run(project)[1])
+
+
+def test_t186_r2_a_pause_line_forged_inside_a_comment_does_not_skip_the_task(tmp_path):
+    project = _t186_project(tmp_path)
+    text = _review(project).read_text(encoding="utf-8")
+    forged = f"<!--\n{PAUSE_PREFIX}x\n-->\n"
+    _review(project).write_text(text.replace("Checks:", forged + "Checks:"), encoding="utf-8")
+    assert _blocked(_run(project)[1])
+    _run(project, active=True)
+    assert len(_pause_lines(_outside_comments(_review(project).read_text(encoding="utf-8")))) == 1
+    assert _run(project)[1] == {}
+
+
+def test_t186_r3_an_unstamped_pause_line_gets_a_stamp_on_first_sight_then_edits_count(tmp_path):
+    project = _t186_project(tmp_path)
+    old = _review(project).read_text(encoding="utf-8")
+    _review(project).write_text(
+        old.replace("Memory: nothing new\n", f"Memory: nothing new\n{PAUSE_PREFIX}{NO_SKILLS}\n"),
+        encoding="utf-8")
+    assert _run(project)[1] == {}
+    line = _pause_lines(_review(project).read_text(encoding="utf-8"))
+    assert len(line) == 1 and re.search(r" \[report [0-9a-f]{12}\]$", line[0]), line
+    assert line[0].startswith(PAUSE_PREFIX + NO_SKILLS)
+    after = _review(project).read_text(encoding="utf-8")
+    assert _run(project)[1] == {} and _review(project).read_text(encoding="utf-8") == after
+    _review(project).write_text(after.replace("kept recurring.csv", "kept recurring.csv as is"),
+                                encoding="utf-8")
+    assert _blocked(_run(project)[1])
+
+
+def test_t186_r4_the_lines_other_hooks_write_are_not_a_report_change(tmp_path):
+    project = _t186_project(tmp_path)
+    paused = _pause_via_two_fires(project)
+    slot = "auto verify: ☑ pass (session s1, commit abc1234, log .claude/verify-runs/x.log)"
+    edited = paused.replace("/verify (yours)", slot).replace(
+        "Not done:", "Closed: row moved to Done 2026-10-31 — checks held\n- verify: ☑ pass — auto-run by hook\n"
+        "Not done:", 1)
+    assert edited != paused
+    _review(project).write_text(edited, encoding="utf-8")
+    assert _run(project)[1] == {}

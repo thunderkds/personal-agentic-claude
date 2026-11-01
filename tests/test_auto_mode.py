@@ -842,3 +842,30 @@ def test_t223_c2_phase0_step2_writes_requirements_and_approved_by_only_on_confir
     bullet = next(b for b in step2.split("- ") if "`## Readiness`" in b)
     assert re.search(r"[Ww]rite the `## Readiness` line `Requirements`", bullet), bullet
     assert APPROVED_BY_RULE in bullet, bullet
+
+
+# ── T186 D1–D3 — a paused task stops re-blocking; the T180 limits are stated ──────────────
+def test_t186_ac3_known_limits_state_d2_and_d3_in_plain_words():
+    limits = _norm(_subsection(_auto(), "Known limits"))
+    # D2: the temporary ref, its removal and the log
+    assert re.search(r"In a repo with no git remote[^.]*temporary `refs/remotes/origin/HEAD`", limits), limits
+    assert re.search(r"removes the ref afterwards and logs both steps in the final report", limits), limits
+    # D3 (a): without the ref the skill cannot start and a Medium or High task is paused
+    assert re.search(r"cannot start, and the auto-mode check pauses a Medium or High risk task", limits), limits
+    # D3 (b): shared untagged evidence
+    assert re.search(r"_untagged\.jsonl` from the last 6 hours for every task", limits), limits
+    assert "Advocate prompts carry no task ID" in limits, limits
+    # D3 (c): a hand-typed verify row
+    assert re.search(r"hand-typed `☑ pass`[^.]*ends the check", limits), limits
+    assert re.search(r"merge gate still blocks a hand-typed row at merge", limits), limits
+    # D3 (d): one Debate at High risk
+    assert re.search(r"at least one Debate with 3 Advocates, not one Debate per choice", limits), limits
+    assert re.search(r"hide behind a loosely related cited `RULE:`", limits), limits
+
+
+def test_t186_ac3_the_check_section_states_the_paused_rule():
+    check = _norm(_subsection(_auto(), "Auto-mode check (Stop hook)"))
+    assert "[report <stamp>]" in check, check
+    assert re.search(r"the first fire does not block it again", check), check
+    assert re.search(r"After you edit the report, the task is checked again", check), check
+    assert re.search(r"adds a new `Paused:` line only when its reasons differ from the last line's", check), check
