@@ -9,7 +9,8 @@ Only `permissions.deny` and `permissions.ask` leave settings.base.json. `permiss
 does: an allow would widen what an agent may do (lib/merge-settings.py, T148). Codex folders get
 skills and instructions only. settings.json is the one file opened in a target folder.
 
-Exit: 0 done or in sync; 1 status found drift or a conflict; 2 a target or the source was refused.
+Exit: 0 done or in sync; 1 status found drift or a conflict; 2 a target or the source was refused,
+an empty path, or status on a target with no source.
 """
 import argparse
 import glob
@@ -28,9 +29,16 @@ LAYOUT = """expected source layout (each part is optional):
   skills/<name>/       linked as skills/<name> in each folder"""
 
 
+def unique_keys(pairs):
+    """A rewrite would lose the value of a duplicate key, so refuse it."""
+    if len({key for key, _ in pairs}) != len(pairs):
+        raise ValueError("duplicate JSON key")
+    return dict(pairs)
+
+
 def parse_settings(raw):
     """(data, permissions) from JSON bytes. ValueError on bad JSON or a wrong type."""
-    data = json.loads(raw)
+    data = json.loads(raw, object_pairs_hook=unique_keys)
     if not isinstance(data, dict):
         raise ValueError("not a JSON object")
     permissions = data.get("permissions", {})
@@ -47,9 +55,10 @@ def load_source(root):
     """What the source offers. ValueError or OSError when it cannot be read safely."""
     source = SimpleNamespace(root=root, rules={key: [] for key in RULE_KEYS}, ignored=[])
     base = os.path.join(root, "settings.base.json")
-    if os.path.exists(base):
+    if os.path.lexists(base):
         with open(base, "rb") as handle:
             data, permissions = parse_settings(handle.read())
+        json.dumps(data, ensure_ascii=False).encode("utf-8")  # text with no UTF-8 form is refused
         for key in RULE_KEYS:
             source.rules[key] = list(dict.fromkeys(permissions.get(key, [])))
         source.ignored = sorted("permissions." + k for k in permissions if k not in RULE_KEYS)
@@ -76,17 +85,18 @@ def inspect_settings(target, rules, found):
             with open(path, "rb") as handle:
                 found.raw = handle.read()
         data, permissions = parse_settings(b"{}" if found.raw is None else found.raw)
+        for key in RULE_KEYS:
+            current = permissions.get(key, [])
+            missing = [rule for rule in rules[key] if rule not in current]
+            if missing:
+                permissions[key] = current + missing
+                found.changes += ["+ permissions.%s: %s" % (key, rule) for rule in missing]
+        if found.changes:
+            data["permissions"] = permissions
+            text = json.dumps(data, indent=2, ensure_ascii=False) + "\n"
+            found.merged = text.encode("utf-8")  # here, so plan and apply refuse alike
     except (OSError, ValueError, RecursionError) as exc:
         found.refused = "settings.json: %s" % exc
-        return
-    for key in RULE_KEYS:
-        current = permissions.get(key, [])
-        missing = [rule for rule in rules[key] if rule not in current]
-        if missing:
-            permissions[key] = current + missing
-            found.changes += ["+ permissions.%s: %s" % (key, rule) for rule in missing]
-            data["permissions"] = permissions
-            found.merged = data
 
 
 def inspect_target(target, kind, source):
@@ -140,9 +150,8 @@ def write_settings(target, found):
         print("  backup %s" % write_backup(path, found.raw, mode))
     handle, temp = tempfile.mkstemp(dir=target, prefix=".settings.json.")
     try:
-        with os.fdopen(handle, "w", encoding="utf-8") as out:
-            json.dump(found.merged, out, indent=2, ensure_ascii=False)
-            out.write("\n")
+        with os.fdopen(handle, "wb") as out:
+            out.write(found.merged)
             out.flush()
             os.fsync(out.fileno())
             os.fchmod(out.fileno(), mode)
@@ -209,12 +218,16 @@ def main(argv=None):
     parser.add_argument("--claude-dir", action="append", default=[])
     parser.add_argument("--codex-dir", action="append", default=[])
     args = parser.parse_args(argv)
+    if "" in [args.source] + args.claude_dir + args.codex_dir:
+        parser.error("--source, --claude-dir and --codex-dir must not be empty")
     full = lambda path: os.path.abspath(os.path.expanduser(path))
     root = full(args.source)
     targets = [("claude", full(p)) for p in args.claude_dir]
     targets += [("codex", full(p)) for p in args.codex_dir]
     if not os.path.isdir(root):
         print("source not found: %s\n%s" % (root, LAYOUT))
+        if args.command == "status" and targets:
+            return 2  # a script reads 0 as in sync
     elif targets:
         try:
             source = load_source(root)

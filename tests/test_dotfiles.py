@@ -112,11 +112,67 @@ def test_source_defaults_to_dotfiles_agents_under_home(home):
 def test_missing_source_prints_layout_exits_zero_no_write(home):
     target = make_claude(home, settings={})
     before = tree_hash(home)
-    for command in ("plan", "apply", "status"):
+    for command, code in (("plan", 0), ("apply", 0), ("status", 2)):
         result = run(home, command, "--source", str(home / "nope"), "--claude-dir", str(target))
-        assert result.returncode == 0
+        assert result.returncode == code, command
         for part in ("settings.base.json", "AGENTS.md", "skills/<name>/"):
             assert part in result.stdout
+    assert tree_hash(home) == before
+
+
+def test_status_with_missing_source_and_no_target_exits_zero(home):
+    assert run(home, "status", "--source", str(home / "nope")).returncode == 0
+
+
+@pytest.mark.parametrize("command", ["plan", "apply", "status"])
+@pytest.mark.parametrize("flag", ["--source", "--claude-dir", "--codex-dir"])
+def test_empty_path_is_rejected_with_no_write(home, tmp_path, flag, command):
+    """abspath('') is the current folder, so an empty value must never reach it."""
+    source = make_source(home, agents="rules", skills=["one"])
+    cwd = tmp_path / "cwd"
+    cwd.mkdir()
+    args = {"--source": str(source), "--claude-dir": str(make_claude(home))}
+    args[flag] = ""
+    flat = [item for pair in args.items() for item in pair]
+    env = dict(os.environ, HOME=str(home))
+    before = tree_hash(tmp_path)
+    result = subprocess.run([sys.executable, str(SCRIPT), command, *flat], env=env, cwd=cwd,
+                            capture_output=True, text=True, timeout=30)
+    assert result.returncode == 2
+    assert "must not be empty" in result.stderr
+    assert tree_hash(tmp_path) == before
+
+
+def test_dangling_source_base_link_is_refused(home):
+    source = make_source(home, agents="rules")
+    (source / "settings.base.json").symlink_to(home / "gone.json")
+    target = make_claude(home, settings={})
+    before = tree_hash(home)
+    result = run(home, "apply", "--source", str(source), "--claude-dir", str(target))
+    assert result.returncode == 2
+    assert "refused source" in result.stderr
+    assert tree_hash(home) == before
+
+
+def test_duplicate_key_in_source_is_refused(home):
+    source = make_source(home)
+    (source / "settings.base.json").write_text(
+        '{"permissions": {"deny": ["a"], "deny": ["b"]}}')
+    target = make_claude(home, settings={})
+    before = tree_hash(home)
+    assert run(home, "apply", "--source", str(source), "--claude-dir", str(target)).returncode == 2
+    assert tree_hash(home) == before
+
+
+def test_source_that_cannot_be_written_as_utf8_is_refused(home):
+    source = make_source(home)
+    (source / "settings.base.json").write_text('{"permissions": {"deny": ["\\ud800"]}, "\\ud800": 1}')
+    target = make_claude(home, settings={})
+    before = tree_hash(home)
+    result = run(home, "apply", "--source", str(source), "--claude-dir", str(target))
+    assert result.returncode == 2
+    assert "refused source" in result.stderr
+    assert "Traceback" not in result.stderr
     assert tree_hash(home) == before
 
 
@@ -400,6 +456,27 @@ def test_bad_target_is_refused_and_the_next_goes_on(home, bad):
     assert "refused" in result.stdout + result.stderr
 
 
+@pytest.mark.parametrize("command", ["plan", "apply"])
+@pytest.mark.parametrize("bad", ['{"a": "\\ud800"}',  # no UTF-8 form, so it cannot be rewritten
+                                 '{"a": 1, "a": 2}',  # a rewrite would lose a value
+                                 '{"nested": {"b": 1, "b": 2}}'])
+def test_unwritable_target_is_refused_before_any_backup(home, command, bad):
+    source = make_source(home, base={"permissions": {"deny": ["a"]}}, agents="rules")
+    broken = make_claude(home, ".claude-a", bad)
+    good = make_claude(home, ".claude-b", {})
+    before = tree_hash(broken)
+    result = run(home, command, "--source", str(source), "--claude-dir", str(broken),
+                 "--claude-dir", str(good))
+    assert result.returncode == 2, result.stderr
+    assert "Traceback" not in result.stderr
+    assert "refused" in result.stdout
+    assert tree_hash(broken) == before
+    assert backups(broken) == []
+    assert str(good) in result.stdout
+    if command == "apply":
+        assert json.loads((good / "settings.json").read_text())["permissions"]["deny"] == ["a"]
+
+
 def test_write_failure_is_refused_and_the_next_goes_on(home, monkeypatch, capsys):
     """A crash at the rename leaves the old file and no temp file."""
     source = make_source(home, base={"permissions": {"deny": ["a"]}})
@@ -534,6 +611,10 @@ def test_skill_states_the_safety_rules():
     assert auto, "no Auto mode section"
     assert "`plan`" in auto.group(0) and "Not done:" in auto.group(0)
     assert "dotfiles.py apply" not in auto.group(0)
+    assert "the `plan` lines" not in auto.group(0)
+    assert "folder list" in auto.group(0)
+    step3 = re.search(r"### Step 3.*?(?=\n### )", text, re.DOTALL).group(0)
+    assert "`refused`" in step3 and "were not made" in step3
 
 
 # --- AC11: docs -------------------------------------------------------------------------------

@@ -73,6 +73,9 @@ copy that file back. A second run prints `no change`. The write uses 2-space JSO
 user the file's indentation may change, and that no value is removed. If the user says no, write
 nothing.
 
+A `refused` line after the `+` lines means those changes were not made. The run goes on to the
+next folder and ends with exit 2. A write can fail part way, so run `status` to see what is left.
+
 ### Step 4 — Check drift
 
 Any time later:
@@ -81,14 +84,14 @@ Any time later:
 python3 skills/dotfiles/scripts/dotfiles.py status --source <dir> --claude-dir <dir> --codex-dir <dir>
 ```
 
-Exit 0 means in sync. Exit 1 means drift or a conflict. Exit 2 means a folder was refused. A rule
-that exists only in the target is not drift.
+Exit 0 means in sync. Exit 1 means drift or a conflict. Exit 2 means a folder was refused, or the
+source is missing. A rule that exists only in the target is not drift.
 
 ### Auto mode (`[auto]`)
 
 Ask no question. Run `plan` with no target folder, and write nothing. Name no folder for the user.
-In the final report put one line: `Not done: dotfiles apply — yours to approve`, then the `plan`
-lines.
+In the final report put one line: `Not done: dotfiles apply — yours to approve`, then the
+folder list that `plan` printed.
 
 ### Done when
 
