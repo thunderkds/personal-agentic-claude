@@ -210,7 +210,7 @@ is logged `RULE`, `FACT` or `SAFER OPTION`, not `DEBATED`. At Risk Medium or Hig
 | 2 | Stage 0.5a `grill-with-docs`: "Resolve all flagged items with the user" | Answer from the docs and code with Citations. What they cannot answer is a Choice question: Debate. | `FACT` / `DEBATED` ⚠ |
 | 3 | `grill-with-docs`: an ADR-eligible decision ("ask the user whether to escalate") | Write the DDR; do not escalate to an ADR (the smaller change). | `SAFER OPTION` ⚠ |
 | 4 | Stage 0.5b `brainstorming`: the user approves one direction | Take the recommended direction and list the alternatives in the report. | `RULE` ⚠ (taste) |
-| 5 | Stage 1 item 1: one-time setup (`fewer-permission-prompts`, `update-config`) | Skip both: they change the user's permission settings and hooks. Name them under `Not done:`. | `RULE` |
+| 5 | Stage 1 item 1: one-time setup (`fewer-permission-prompts`, `update-config`, `companion-setup`) | Skip the first two: they change the user's permission settings and hooks. Name them under `Not done:`. `companion-setup` asks nothing and installs nothing: one line under `Not done:`. | `RULE` |
 | 6 | Stage 1 item 2 and `AGENTS.md` `## Multi-CLI Configuration`: the user lists the CLIs and their models | Read the `## CLI Model Table` in `PROJECT_SPEC.md`. No row or an empty cell: row 14. | `FACT` |
 | 7 | Stage 1 item 3: a missing agent guide ("ask the user to save it") | The Supervisor writes it from `templates/` on the task branch. | `RULE` |
 | 8 | Stage 1 item 4: "run `git status` … and paste the output" | The Supervisor runs it itself. | `RULE` |

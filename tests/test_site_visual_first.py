@@ -403,6 +403,10 @@ DUPLICATES_OF_A_VISUAL_LABEL = {
     "059208c43012": "reworded by T221 AC 7 (Advocates propose, not argue)",
     # T224: easy-personal-mcp joins the MCPs section, so "Three separate companion tools" now says four.
     "d618329ebba1": "reworded by T224 (four companion tools)",
+    # T226: the skill count 33 -> 34 and the Stage 1 chip row gains `companion-setup`.
+    "c281ee27472b": "count changed by T226 (34 skills)",
+    "4b7804edc105": "Stage 1 chips gain companion-setup (T226)",
+    "0d64e298bb52": "Stage 1 flow step gains companion-setup (T226)",
 }
 
 

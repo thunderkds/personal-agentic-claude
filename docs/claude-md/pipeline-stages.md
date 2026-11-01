@@ -61,8 +61,9 @@ Guide the user through this checklist step by step. Auto mode: the Supervisor do
    - `Skill({ skill: "fewer-permission-prompts" })` — scans transcripts and whitelists common read/bash operations
    - `Skill({ skill: "update-config" })` — configure any automated hooks (e.g. "always run brainstorming before /plan")
    - `Skill({ skill: "settings-setup" })` — offers settings profiles for `.claude/settings.json`; High security when the user skips; add-only, writes after approval
+   - `Skill({ skill: "companion-setup" })` — shows the optional companion MCP servers (installed, what each adds, what it needs); skip is the default; the kit never installs one
 
-   Auto mode: skip `fewer-permission-prompts` and `update-config` (they change the user's permission settings and hooks) and name them under `Not done:`. Run `settings-setup` as a dry run only: it writes nothing, and its recommendation goes under `Not done:` in the final report.
+   Auto mode: skip `fewer-permission-prompts` and `update-config` (they change the user's permission settings and hooks) and name them under `Not done:`. Run `settings-setup` as a dry run only: it writes nothing, and its recommendation goes under `Not done:` in the final report. Run `companion-setup` Step 1 only: it asks nothing, installs nothing, and one line goes under `Not done:`.
 
 2. **Multi-CLI Authentication**
    Please list every agentic CLI you have authenticated, the exact command to run it, and which
