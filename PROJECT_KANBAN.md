@@ -8,6 +8,7 @@
 ## Board
 
 ### Todo
+- [ ] **T228** — dotfiles skill keeps agent config in one source | common-infrastructure | C2 | Risk: Medium | P1
 - [ ] **T217** — The kit works with easy-memory installed as a plugin: agents list the plugin tool names too; kit marketplace `.claude-plugin/marketplace.json` lists easy-memory (git-subdir `plugin`, ref `v0.2.0`) | Supervisor | C1 | Risk: Low | P1 | Branch `feat/t217-easy-memory-plugin-names` in `../wt-t217` | Deferred to Todo 2026-10-30 by the user: easy-memory-mcp stays private on purpose, so the marketplace install fails for non-owners (verify FAIL 2026-10-30); branch kept unmerged. Was Ready for Review 2026-10-30; auto verify BLOCKED (27f58eff) until easy-memory-mcp `v0.2.0`; v0.2.0 pushed, `install easy-memory@easy-kit` and agent memory_search pass 10:18Z; 3 new tests pass; suite 2545 passed, 5 failed (MEMORY.md budget, fail on main too); real `claude plugin install` waits for easy-memory-mcp `v0.2.0` | Track: minimal | Record: tasks/MINIMAL_LOG.md
 - [ ] **T206** — `stop_auto_verify.py --start` with no task ID falls through to `stop_hook()` and starts a paid run for every due task; make a bare or extra-arg `--start` exit 2 with a usage line | common-infrastructure | C0 | Risk: Medium | P1 | Guide: to write at Stage 2 | Depends on: T203 | Registered 2026-10-29 from T203 /verify finding (`main()` matches `--start` only when `len(sys.argv) == 3`)
 - [ ] **T205** — The merge gate binds an `auto-run by hook` verify row to the branch being merged or pushed: the run record carries the branch (and worktree), and `pre_bash_block_unsafe_merge.py` accepts the row only when the record's commit is the head of that branch — not the head of whichever checkout holds the row; a decoy worktree's genuine pass no longer clears another branch's merge | common-infrastructure | C2 | Risk: High | P1 | Guide: to write at Stage 2 | Depends on: T203 | Registered 2026-10-29 from T203 security-review (Medium, confidence 8/10): gate reads main first then each worktree, first filled row wins, record checked against that checkout's head
@@ -85,6 +86,7 @@
 
 
 ### In Progress
+- [ ] **T228** — `dotfiles` skill keeps agent config in one source (`plan`/`apply`/`status`, add-only) | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T228.md` | Started 2026-11-01: branch `feat/t228-dotfiles` in `../wt-t228`
 
 
 
