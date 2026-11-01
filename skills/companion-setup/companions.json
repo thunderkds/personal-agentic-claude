@@ -4,7 +4,7 @@
       "id": "easy-verifier",
       "adds": "Scores a change with no-LLM evidence at Stage 4 review (the score skill uses it).",
       "tools": ["docker"],
-      "link": "https://hub.docker.com/r/temvar/easy-verifier-mcp",
+      "link": "https://easy-verifier.vercel.app/",
       "access": "public"
     },
     {

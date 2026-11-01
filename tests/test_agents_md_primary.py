@@ -49,6 +49,9 @@ REPLACED_SPANS = [
     # T200: the Stage 1 skill `settings-setup` joins the stage index.
     ("1=`git-guardrails-claude-code`,`map-codebase` |",
      "1=`git-guardrails-claude-code`,`map-codebase`,`settings-setup` |"),
+    # T226: the Stage 1 skill `companion-setup` joins the stage index.
+    ("`map-codebase`,`settings-setup` |",
+     "`map-codebase`,`settings-setup`,`companion-setup` |"),
 ]
 AC6_HEADING = re.compile(r"^## .*cannot enforce", re.IGNORECASE)
 # T178: the one later section allowed outside the opening block and the AC 6 section. Its
