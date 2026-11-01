@@ -2648,3 +2648,11 @@ The log refuses a symlink/non-file path, writes via `mktemp` in `.claude/` + `mv
 **Open**: this kit repo's `## Readiness` was filled and approved by the user 2026-10-31 (`cf6451fb`; main flow in `docs/main-flow.md`; Requirements and Direction are stand-ins); idea-radar still needs its own section; an unreadable `PROJECT_SPEC.md` gives no warning (fail open by design).
 **Files**: .claude/hooks/pre_agent_validate_guide.py, .claude/hooks/tests/test_pre_agent_validate_guide.py, templates/PROJECT_SPEC_template.md, docs/claude-md/phase0-project-initiation.md, docs/claude-md/pipeline-stages.md, docs/claude-md/tracks.md, PROJECT_SPEC.md, tests/test_auto_mode.py
 **Verified**: main suite `2624 passed, 25 subtests passed`; auto verify pass at `cc30ea22` (13 live hook scenarios); mutation control: `readiness_gaps` returning `[]` fails 22 tests.
+
+## T186: A paused auto task stays paused until its report changes (2026-11-01)
+
+**Decision** (user: "fix the hook"): `stop_auto_mode_check.py` ends each `Paused:` line with a `[report <stamp>]` hash of the report block, not counting its `Paused:`, `Closed:`, `Not done:` and `- verify:` lines. A task whose last `Paused:` line carries the current stamp, or no stamp (older line, stamped once on first sight), is not blocked again. A second fire adds a line only when the reasons differ. `tracks.md` `### Known limits` records the five T180 limits.
+**Why**: the easy-memory-mcp field report: paused HUN-135/139/140 re-blocked every stop for hours.
+**Open**: a fix that changes only the trace does not lift a pause; the task is checked again only after the report changes (documented in Known limits; the /verify run flagged it as a possible follow-up). `Paused:` history grows one line per reason change.
+**Files**: .claude/hooks/stop_auto_mode_check.py, .claude/hooks/tests/test_stop_auto_mode_check.py, docs/claude-md/tracks.md, tests/test_auto_mode.py
+**Verified**: auto verify pass at `84e3bc30`; merged in `0174f6d7`; main suite after the merge had 2 failures unrelated to T186 (T224 guide lacked `### Verification Command`; T180 row 404 > 400 chars after `2abf74e9`), both fixed in the same board update.

@@ -22,6 +22,9 @@ Found: the header and drawer family nav listed 3 sites (Kit, Memory, Verifier); 
 
 Cut list: no site link added to the easy-ui-mcp / easy-memory-mcp cards (existing tests pin "repo link only"); other members' own family navs not changed (separate repos).
 
+### Verification Command
+`python3 -m pytest tests/test_site_content.py -q`
+
 ## Evidence
 | Row | Result | Notes |
 |---|---|---|
