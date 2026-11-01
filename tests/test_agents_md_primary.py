@@ -27,7 +27,7 @@ CURSOR_MDC = ROOT / ".cursor" / "rules" / "agent-base.mdc"
 BASE_REF = "c573bbf"
 # T200: `CLAUDE_LEGACY.md` gains the `settings-setup` skills-list line (CLAUDE_LEGACY.md sync policy),
 # so its pin moves off BASE_REF to T200's edit commit. BASE_REF stays for CLAUDE.md (AC 1).
-CLAUDE_LEGACY_REF = "65fe3a8"
+CLAUDE_LEGACY_REF = "89117f1"
 
 # AC 1 allowed edits (a) and (b): (base span, new span). Each span must hit exactly one base line.
 REPLACED_SPANS = [
