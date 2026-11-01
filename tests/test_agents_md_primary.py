@@ -53,6 +53,9 @@ REPLACED_SPANS = [
     # T226: the Stage 1 skill `companion-setup` joins the stage index.
     ("`map-codebase`,`settings-setup` |",
      "`map-codebase`,`settings-setup`,`companion-setup` |"),
+    # T228: the optional `dotfiles` skill joins the cross-cutting list.
+    ("`resolve-question` (a confused Supervisor",
+     "`dotfiles` (shared agent config, optional), `resolve-question` (a confused Supervisor"),
 ]
 AC6_HEADING = re.compile(r"^## .*cannot enforce", re.IGNORECASE)
 # T178: the one later section allowed outside the opening block and the AC 6 section. Its
