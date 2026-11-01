@@ -47,12 +47,12 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass / ☐ fail | `tests/test_dotfiles.py` (written first, 36 red before the script): `python3 -m pytest tests/test_dotfiles.py -q` part of `188 passed in 1.84s` below. Temp HOME only |
+| Verification command run | ☑ pass / ☐ fail | `python3 -m pytest tests/test_dotfiles.py tests/test_site_content.py tests/test_readme_slim.py -q` → `188 passed in 1.84s`. `plan --source /nonexistent` under a temp HOME → prints `source not found: /nonexistent` and the expected layout, exit=0 |
+| Negative cases hold | ☑ pass / ☐ fail | Tests: invalid or wrong-type target settings refused and next folder goes on; invalid source refused with no write; real file, empty `CLAUDE.md`, dangling link, link elsewhere, `skills` link and symlinked `settings.json` are conflicts left unchanged; `.credentials.json` content never opened or printed; rename failure leaves the old file. Mutation: adding `allow` to `RULE_KEYS` → `1 failed, 43 passed` |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| Full smoke suite still green (no regression) | ☐ pass / ☑ fail | `python3 -m pytest tests/ .claude/hooks/tests/ -q` → `1 failed, 2694 passed, 25 subtests passed in 140.25s`. The one failure, `test_find_kanban_section_on_real_current_board`, also fails at base `ff45291b`: `PROJECT_KANBAN.md` holds T228 under both Todo (line 11) and In Progress (line 89). Not caused by this code; the board is outside this task. `bash scripts/validate.sh` → `validate.sh: PASS` |
 | **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
@@ -75,9 +75,89 @@ python3: can't open file '/home/hungnguyenhuu/workspace/pets/wt-t228/skills/dotf
 exit=2
 ```
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**: run under a temp HOME, 2026-11-01T10:50:16Z:
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```
+$ python3 skills/dotfiles/scripts/dotfiles.py plan --source /nonexistent
+source not found: /nonexistent
+expected source layout (each part is optional):
+  settings.base.json   permissions.deny and permissions.ask are added to Claude folders
+  AGENTS.md            linked as CLAUDE.md (Claude folders) and AGENTS.md (Codex folders)
+  skills/<name>/       linked as skills/<name> in each folder
+no target folder chosen, nothing changed. Found:
+  <tmp>/home/.claude-a
+  <tmp>/home/.codex
+choose with --claude-dir <dir> or --codex-dir <dir>
+exit=0
+```
+
+Full cycle on temp folders (source has 1 deny, 1 allow, `env`):
+
+```
+2026-11-01T10:52:51Z
+$ plan
+ignored in settings.base.json: permissions.allow, env
+<tmp>/home/.claude-a (claude)
+  + permissions.deny: Read(./.env)
+  + link CLAUDE.md -> <tmp>/src/AGENTS.md
+  + link skills/demo -> <tmp>/src/skills/demo
+<tmp>/home/.codex (codex)
+  + link AGENTS.md -> <tmp>/src/AGENTS.md
+  + link skills/demo -> <tmp>/src/skills/demo
+exit=0
+$ status
+ignored in settings.base.json: permissions.allow, env
+<tmp>/home/.claude-a (claude)
+  + permissions.deny: Read(./.env)
+  + link CLAUDE.md -> <tmp>/src/AGENTS.md
+  + link skills/demo -> <tmp>/src/skills/demo
+  drift
+<tmp>/home/.codex (codex)
+  + link AGENTS.md -> <tmp>/src/AGENTS.md
+  + link skills/demo -> <tmp>/src/skills/demo
+  drift
+exit=1
+$ apply
+ignored in settings.base.json: permissions.allow, env
+<tmp>/home/.claude-a (claude)
+  + permissions.deny: Read(./.env)
+  + link CLAUDE.md -> <tmp>/src/AGENTS.md
+  + link skills/demo -> <tmp>/src/skills/demo
+  backup <tmp>/home/.claude-a/settings.json.bak-20261101T105251Z
+  wrote <tmp>/home/.claude-a/settings.json
+<tmp>/home/.codex (codex)
+  + link AGENTS.md -> <tmp>/src/AGENTS.md
+  + link skills/demo -> <tmp>/src/skills/demo
+exit=0
+$ apply
+ignored in settings.base.json: permissions.allow, env
+<tmp>/home/.claude-a (claude)
+  no change
+<tmp>/home/.codex (codex)
+  no change
+exit=0
+$ status
+ignored in settings.base.json: permissions.allow, env
+<tmp>/home/.claude-a (claude)
+  in sync
+<tmp>/home/.codex (codex)
+  in sync
+exit=0
+lrwxrwxrwx <tmp>/src/AGENTS.md
+-rw------- settings.json
+-rw------- settings.json.bak-20261101T105251Z
+drwxrwxr-x skills
+{
+  "model": "opus",
+  "permissions": {
+    "deny": [
+      "Read(./.env)"
+    ]
+  }
+}
+```
+
+**DELTA**: A user can keep shared agent config in one folder of their own repo, see what would change in each chosen CLI folder, apply it on request, and check drift, with add-only changes.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]

@@ -403,6 +403,9 @@ DUPLICATES_OF_A_VISUAL_LABEL = {
     "059208c43012": "reworded by T221 AC 7 (Advocates propose, not argue)",
     # T224: easy-personal-mcp joins the MCPs section, so "Three separate companion tools" now says four.
     "d618329ebba1": "reworded by T224 (four companion tools)",
+    # T228: the `dotfiles` skill changes the skill count and joins the Any stage chips.
+    "c281ee27472b": "skill count changed by T228 (dotfiles)",
+    "9d5bff6dc560": "Any stage chip list changed by T228 (dotfiles)",
 }
 
 
