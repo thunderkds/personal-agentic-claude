@@ -67,8 +67,13 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured 2026-11-01T10:43:07Z at `ff45291b`, before any implementation commit:
+
+```
+$ python3 skills/dotfiles/scripts/dotfiles.py plan --source /nonexistent
+python3: can't open file '/home/hungnguyenhuu/workspace/pets/wt-t228/skills/dotfiles/scripts/dotfiles.py': [Errno 2] No such file or directory
+exit=2
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 

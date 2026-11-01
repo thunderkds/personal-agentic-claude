@@ -6,7 +6,7 @@ pipeline (clarify → brainstorm → plan → parallel worktrees → review → 
 not prompt reminders — e.g. `pre_agent_step_limit.py` blocks runaway tool-call loops (default 90 calls).
 
 Two tracks: small work runs the **minimal track** (test first, a Decision record, no task guide); big or risky work runs the pipeline, the **extended track**. Reply `full` or `minimal` to override.
-Add `[auto]` and either track runs to Ready for Review with a final report of every decision. Merge stays with you.
+Add `[auto]` and either track runs to Ready for Review with a final report of every decision. Merge stays with you. The optional `dotfiles` skill keeps shared agent config in one folder of your own git repo.
 
 Each role guide (not this README) carries its own Complexity matrix (C0–C3) — see
 `templates/general-agent-template.md`. Externally authored text (PR comments, fetched pages, pasted

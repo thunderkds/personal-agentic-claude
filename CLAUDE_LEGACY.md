@@ -222,6 +222,7 @@ Run these **one by one**. After each session, summarize findings, ask for user c
   - `write-better-skill/SKILL.md` — craft reference consulted by `teach`; audits existing SKILL.md files
   - `map-codebase/SKILL.md` — generates `memory/codebase-map.md` (tree, entry points, hotspots); re-run via `/map-codebase` after major refactors
   - `settings-setup/SKILL.md` — Stage 1: offers settings profiles for `.claude/settings.json`; High security when the user skips; add-only, writes only after approval (dry run only in `[auto]` mode)
+  - `dotfiles/SKILL.md` — optional: keeps shared agent config in one folder of the user's git repo; `plan` first, `apply` only after approval, `status` reports drift; add-only, never copies `permissions.allow` (`plan` only in `[auto]` mode)
   - `compact-memory/SKILL.md` — compact and prune memory when hot/cold files are bloated or stale
   - `bugfix/SKILL.md` — Supervisor-level bug fix entry point; triage intake → TASK_GUIDE (bug template) → diagnose → Stage 4 review → integrate; invoke as `/bugfix`
   - `slim-skills/SKILL.md` — audit and prune bloated SKILL.md files (>150 lines); checksum gate preserves behavioral assertions; human approval before any write
