@@ -85,7 +85,6 @@
 
 
 ### In Progress
-- [ ] **T226** — Stage 1 offers the optional companion MCP servers | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T226.md` | Started 2026-11-01 [auto]: branch `feat/t226-companion-setup` in `../wt-t226`
 
 
 
@@ -94,6 +93,7 @@
 
 
 ### Ready for Review
+- [ ] **T226** — Stage 1 offers the optional companion MCP servers | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T226.md` | Started 2026-11-01 [auto]: branch `feat/t226-companion-setup` in `../wt-t226` | Ready for Review 2026-11-01: code-review P2×2 fixed, P3×1 open, security-review no findings; suite 2673 passed; merge without squash (two test pins name branch commits)
 
 
 ### Done
