@@ -90,7 +90,6 @@
 - [T031/T032/T033 merged: the direct-install trio](decisions.md) — shared lib/harness-fetch.sh + per-file harness-lock.json + hash-lock update
 - [T024/T026 merged: two merge-gate regex fixes](decisions.md) — agent-field extraction, and the template's own example verify row (2 compounding bugs)
 - [T034/T035/T036 merged: install-era QA, README, and the silently-red CI](decisions.md) — smoke-install.sh had been red for 3 days across 5+ merged PRs
-- [Stage 2 planning T039-T042, 2026-07-21](decisions.md) — CLAUDE.md `## Skills vs Agents` dedup (T039, the harness already auto-injects both rosters)
 - [T039 merged: CLAUDE.md Skills-vs-Agents dedup](decisions.md) — 580→536 lines; kept only what the harness does not already auto-inject
 - [T043 merged: structural task attribution](decisions.md) — lib/task_context.py:resolve_task_id()
 - [T046 merged: `Pattern reference` advisory field](decisions.md) — one TASK_GUIDE field naming an existing file to imitate
@@ -120,7 +119,6 @@
 - [A green suite is not evidence when both tests look away](learnings.md) — one asserted the safe direction on a fixture missing the hazard
 - [Pin the real code, not a copy of it](learnings.md) — AST-extract the closure
 - [Verify a doc change at the agent, and run the unwired control](learnings.md) — wired kept every element
-- [Closing a terminal window loses the completion marker](learnings.md) — SIGHUP kills bash before `touch`; trap + `.exit` + pidfile
 - [A doc pointer that names a check still doesn't get the check run](learnings.md) — the wired agent read "run the test" and hand-grepped anyway
 - [The default search tool skips dot-directories](learnings.md) — `.cursor/rules/agent-base.mdc` is invisible to it
 - [Canon at plain root, `.claude/` reaches it via relative symlinks](decisions.md) — `skills/`+`agents/` are the tracked canon
@@ -203,7 +201,6 @@
 - [html-report scoring rubric + slot format](learnings.md) — Risk 0–30=green, 31–65=yellow, 66–100=red
 - [verify Evidence-row gate regex](learnings.md) — Check cell must be exactly `verify` immediately before the `|`
 - [Sub-agent "changed" ≠ committed](learnings.md) — always `git status --short` the worktree and check `git diff <base> --stat` against the TASK_GUIDE's predicted files before trusting a merge
-- [Ghostty spawn marker can silently fail](learnings.md) — T028/T046: sub-agent finished correct work but the `.done` marker was never written and the wait-loop reported nothing
 - [`git checkout -- <file>` is guardrail-blocked](learnings.md) — not just `checkout .`
 - [Kanban merge hygiene when both sides edit the board](learnings.md) — restore the Supervisor-side board to the merge base, merge, THEN move to Done
 - [Install-era shell gotchas (T031–T033)](learnings.md) — temp-dir cleanup must expose a var not stdout (`$(fn)` registers the EXIT trap in a subshell)
@@ -327,7 +324,6 @@
 - [A menu answer that word-splits also globs](learnings.md) — unquoted `$(...)` into a `for` loop consults the filesystem
 - [Check `main` before filing a Stage 5 defect](learnings.md) — "found while verifying X" ≠ "caused by X"
 
-- [The next free task ID isn't derivable from git log or tasks/](learnings.md) — scan the whole board for the highest **Txxx**
 
 - [T122 merged: CI is green again](decisions.md) — validate.sh read MANIFEST `!` exclusions as paths; red since 2026-09-22. 0 Stage-4 findings.
 - [T116 merged: packs ship as a dormant catalog](decisions.md) — `packs` in MANIFEST with no dest pair; install_pack/SUPERVISOR_PATH gone, 130 lines removed; activation is T117's.

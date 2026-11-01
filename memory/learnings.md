@@ -1663,22 +1663,6 @@ argument. The control's failure mode is a confident wrong inference, not lazines
 **How to apply:** always run the unwired arm. Without it you cannot tell a rule that works from a rule
 that was never needed — and the answer differs task to task.
 
-## Closing a terminal window loses the completion marker (2026-08-24, Stage 3 spawn tracking)
-
-`ghostty -e bash -c "claude ...; touch marker; exec bash"` silently never writes the marker: closing the
-window sends **SIGHUP to the process group** and bash dies before reaching `touch`. Measured side by side
-under a group SIGHUP — naive form MISSING, `trap ... EXIT INT TERM HUP` form WRITTEN with `exit=129`.
-
-**Why:** it broke completion tracking for the parallel T092/T093 spawn while the work itself was fine.
-The `.exit` file is the substantive half: it separates "agent finished" (0) from "window closed mid-run"
-(129) from "agent errored".
-
-**How to apply:** trap-based marker plus an `.exit` file; the wait-loop must also exit on process death
-(SIGKILL runs no trap). Read the PID from a pidfile the launcher writes — **never `pgrep -f`**, which
-matched the Supervisor's own shell and killed its own Bash call twice while this was being fixed.
-
----
-
 ### 2026-08-24 — A doc pointer that names a check still does not get the check run
 
 T091's Staleness Guard ends with "`tests/test_provider_adapters.py` enforces this mechanically at
@@ -2270,7 +2254,7 @@ Supervisor reported "waiting for the agent to finish" for **3h20m** while the wo
 3h). The CPU-flat warning in the watcher was phrased "likely waiting on a permission prompt" — the other reading,
 "done and idle", was the true one. **Rule**: when a watcher reports flat CPU, check `git log` / `git status --short` in
 the worktree before waiting further; a clean tree whose last commit fills the review file is finished work. Stop the
-idle session via its pidfile (SIGTERM its `claude` child → marker `exit=143`). Files: `.claude/markers/launch_T109r2.sh`.
+idle session via its pidfile (SIGTERM its `claude` child → marker `exit=143`).
 
 ## Verify a CI-workflow change by replaying its `run:` steps in a fresh container — and know the replay's blind spots (T109, 2026-09-12)
 
