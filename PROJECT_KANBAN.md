@@ -8,6 +8,7 @@
 ## Board
 
 ### Todo
+- [ ] **T240** — Rename the repo from personal-agentic-claude to easy-kit | common-infrastructure | C2 | Risk: Medium | P1
 - [ ] **T237** — Online board: with `.claude/board.json`, no `PROJECT_KANBAN.md` and a failed pull, the merge gate exits 0 silently in a kit project (found in T232 review, unchanged behaviour); also an exception in a gate `main()` on well-formed input exits 1 and passes; and find the intermittent full-suite failure seen on T232 (`test_t203_ac2` suspected); `test_ac4_blocked_row_never_says_pass[pass-and-fail]` also failed once under load on T234; `scripts/token_meter.py` is not in `MANIFEST`, so `compact-advisor` has no script in a `setup.sh` install (found in T234, older than it) | common-infrastructure | C1 | Risk: Medium | P2
 - [ ] **T236** — Real plugin install proven, then published on the README and site | frontend-developer | C2 | Risk: Medium | P1
 - [ ] **T235** — /easy-kit:init sets up a project, and plugin hooks stand down beside in-repo hooks | common-infrastructure | C2 | Risk: Medium | P1
@@ -90,6 +91,7 @@
 
 
 ### In Progress
+- [ ] **T239** — Pipeline becomes Stage 0–5 with no half numbers | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T239.md` | Started 2026-11-02: branch `feat/t239-stage-names`, worktree `../wt-t239`
 
 
 

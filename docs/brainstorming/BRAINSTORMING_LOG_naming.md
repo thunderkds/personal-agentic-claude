@@ -116,7 +116,7 @@ Rename only the labels and edit no gate logic. The stage work is text. For the n
 **Conditions on Path A:**
 1. Stage 0 keeps three named steps in order, Requirements, Grilling, Direction, each with its stop.
 2. "Stage done" stays per Readiness line. No Readiness line, hook or auto-mode rule changes.
-3. The team stop fires only when `craft-agent` proposes a new role. This is a behaviour change, for the user to approve.
+3. The team stop fires only when `craft-agent` proposes a new role. User approved this behaviour change, 2026-11-02 ("go").
 
 **Found, not part of this work:** `map-codebase` runs in Stage 1, after brainstorming, so on an existing repo the direction is chosen before the map exists.
 
