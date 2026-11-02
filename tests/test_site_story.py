@@ -316,14 +316,19 @@ def _stop_pairs():
     return out
 
 
-def test_two_stops_say_exactly_what_their_hooks_do():
-    """Round 3: auto verify found two claims wider than the hooks. pre_agent_validate_guide.py blocks only a
-    spawn that names a task whose guide is missing or incomplete (a spawn with no task ID passes).
-    pre_tool_sensitive_path.py does not fire on Read, and a guide that predicts the path exempts it."""
+def test_every_stop_says_exactly_what_its_hook_does():
+    """Auto verify audited each pair against its hook.
+    pre_agent_validate_guide.py blocks only a spawn that names a task whose guide is missing or incomplete
+    (a spawn with no task ID passes). pre_bash_block_unsafe_merge.py acts only on tasks In Progress or Ready
+    for Review. pre_tool_sensitive_path.py does not fire on Read, and a guide that predicts the path exempts it.
+    pre_agent_step_limit.py counts per task."""
     pairs = {hook: rest for hook, *rest in _stop_pairs()}
-    assert pairs["pre_agent_validate_guide.py"] == ["A task has no written plan", "blocked", "Its agent does not start"]
-    assert pairs["pre_tool_sensitive_path.py"] == [
-        "A secrets file is about to change, outside the plan", "asks you", "You confirm first"]
+    assert pairs == {
+        "pre_agent_validate_guide.py": ["A task has no written plan", "blocked", "Its agent does not start"],
+        "pre_bash_block_unsafe_merge.py": ["An open task has no check on record", "blocked", "No push, no merge"],
+        "pre_tool_sensitive_path.py": ["A secrets file is about to change, outside the plan", "asks you", "You confirm first"],
+        "pre_agent_step_limit.py": ["A task runs too many steps", "blocked", "That call stops"],
+    }
 
 
 def test_the_any_stage_group_title_links_to_the_docs_skills_section():

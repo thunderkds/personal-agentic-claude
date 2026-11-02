@@ -148,5 +148,12 @@ The Stops claims, each read in the hook before it was written: `pre_agent_valida
 - Red first: two new tests in `tests/test_site_story.py` (`test_two_stops_say_exactly_what_their_hooks_do`, `test_the_any_stage_group_title_links_to_the_docs_skills_section`): `2 failed, 48 passed`. After the edit: `50 passed`.
 - Verification command: `204 passed`; `node --test tests/settings_tool/*.mjs` pass 59 fail 0; `node --test tests/site_scrollspy/*.mjs` pass 8 fail 0; `pytest tests` `1450 passed in 115.86s`; `pytest .claude/hooks/tests` `1388 passed, 25 subtests passed`. Headless Chrome: `scrollWidth == clientWidth` at 1440, 1024, 768, 375 on both pages (index heights 2711, 3308, 4482, 5265 px). Screenshot: `/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-personal-agentic-claude/91713a2d-c4ca-4ba6-9c19-2b966a122175/scratchpad/shots/r3_index_1440.png`.
 
+**AFTER, round 4 (auto verify found a third `stops` claim wider than its hook, 2026-11-02)**:
+
+- `#stops` pair 2: "No test and check are on record" now reads "An open task has no check on record"; "No push, no merge" stays (`pre_bash_block_unsafe_merge.py` acts only on tasks In Progress or Ready for Review). Pair 4: "A job runs too many steps" now reads "A task runs too many steps"; "That call stops" stays (`pre_agent_step_limit.py` counts per task). No other copy changed.
+- `<main>` words: **298** (cap 300; round 3 was 297, pair 2 gained one word).
+- Red first: `test_two_stops_say_exactly_what_their_hooks_do` became `test_every_stop_says_exactly_what_its_hook_does` and pins the exact text of all four pairs, keyed by hook comment: `1 failed, 49 passed` before the edit, `50 passed` after.
+- Verification command: `204 passed`; `node --test tests/settings_tool/*.mjs` pass 59 fail 0; `node --test tests/site_scrollspy/*.mjs` pass 8 fail 0; `pytest tests` `1450 passed in 117.88s`; `pytest .claude/hooks/tests` `1388 passed, 25 subtests passed`. Headless Chrome: `scrollWidth == clientWidth` at 1440, 1024, 768, 375 on both pages (index heights 2711, 3308, 4482, 5265 px, same as round 3).
+
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
