@@ -67,8 +67,26 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured 2026-11-02, before any implementation commit; script `before.sh` run in the worktree, with the sample hook event described in the last section):
+
+```
+2026-11-02T14:25:46Z
+--- stage headings of docs/claude-md/pipeline-stages.md
+1:# 5-Stage Agentic Pipeline
+23:## Stage 0.5: Requirement Grilling → Creative Brainstorming (The First Mind)
+55:## Stage 1: Environment & Provider Setup
+119:## Stage 1.5: Sub-Agent Architecture (Dynamic Team Design)
+142:## Stage 2: Intent Transformation (Planning) — `/plan`
+179:## Stage 3: Parallel Execution via Isolation
+202:## Stage 4: Review
+245:## Stage 5: Integration & Verification
+--- live-file line counts per pattern (git grep, excluding tasks memory docs/brainstorming docs/prd docs/adr reports experiments docs/archive PROJECT_KANBAN.md tests/fixtures)
+Stage 0\.5: lines=37 files=18
+Stage 1\.5: lines=17 files=11
+Phase 0: lines=58 files=29
+--- hook readiness warning, sample event (empty Readiness)
+⚠ HIGH RISK — project readiness incomplete: `Requirements` line missing; `Direction` line missing; `Codebase map` line missing; `Tech stack` line missing; `Main flow` line missing; `Approved by` line missing. Risk: agents will code on a design nobody checked, and architecture gaps found later cost rework. To fix: fill `PROJECT_SPEC.md` `## Readiness` (run Phase 0 / Stage 0.5 / Stage 1), or ask the user for a `Waived` line (`- **Waived**: user YYYY-MM-DD — reason`). The spawn goes ahead (warning only).
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
