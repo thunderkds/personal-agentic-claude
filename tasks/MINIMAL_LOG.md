@@ -14,8 +14,9 @@
 - New test `test_no_tracked_names_clash_on_windows_or_macos` — failed before the rename, passes after: 8 passed in 0.96s
 - Suite: `python3 -m pytest tests -q` — 1570 passed in 151.22s (0:02:31); `python3 -m pytest .claude/hooks/tests -q` — 1389 passed, 25 subtests passed in 46.44s; `python3 -m pytest experiments/kit-arms/tests -q` — 74 passed in 350.17s (0:05:50)
 - Real run: `claude plugin validate . --profile directory` — printed `✔ Validation passed with warnings`. The upload check itself was not rerun: only the user's upload runs it.
+- verify: ☑ pass — auto-run by hook, session 1610b4b1-a2dd-4aee-8d00-42e554a0765e, commit b81f49dedbe3ad0b302a20d470e0e8584e0d6989, log .claude/verify-runs/T238-b81f49dedbe3.log
 **Files:** `experiments/kit-arms/results/ANALYSIS.md`, `experiments/kit-arms/RULE-2.md`, `memory/learnings.md`, `tests/test_plugin_package.py`
-**Not done:** merge (the user decides); auto verify: running (T182)
+**Not done:** merge (the user decides); auto verify: ☑ pass (session 1610b4b1-a2dd-4aee-8d00-42e554a0765e, commit b81f49dedbe3ad0b302a20d470e0e8584e0d6989, log .claude/verify-runs/T238-b81f49dedbe3.log)
 
 ## T220 — Drop the stale `setup.sh --pack` install lines · minimal
 Mode: auto
