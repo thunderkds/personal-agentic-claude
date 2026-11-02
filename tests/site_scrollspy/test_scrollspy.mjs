@@ -1,4 +1,4 @@
-// T213: headless-Chrome check of the sidebar scroll-spy on site/index.html.
+// T213: headless-Chrome check of the sidebar scroll-spy on site/docs.html.
 // Zero dependencies: node:test, node:http and raw CDP over Node's built-in WebSocket.
 // Skips with a clear message when no Chrome binary is found (set CHROME to point at one).
 import { test, before, after } from "node:test";
@@ -39,7 +39,7 @@ async function evaluate(expression) {
 async function open(width, height) {
   await send("Emulation.setDeviceMetricsOverride",
     { width, height, deviceScaleFactor: 1, mobile: false });
-  await send("Page.navigate", { url: baseUrl + "/index.html" });
+  await send("Page.navigate", { url: baseUrl + "/docs.html" });
   for (let i = 0; i < 100; i++) {
     if (await evaluate("document.readyState === 'complete'")) { break; }
     await sleep(50);

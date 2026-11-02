@@ -17,7 +17,7 @@ SKILL_DIR = os.path.join(ROOT, "skills", "companion-setup")
 SCRIPT = os.path.join(SKILL_DIR, "scripts", "check_companions.py")
 DATA = os.path.join(SKILL_DIR, "companions.json")
 SKILL_MD = os.path.join(SKILL_DIR, "SKILL.md")
-SITE = os.path.join(ROOT, "site", "index.html")
+SITE = os.path.join(ROOT, "site", "docs.html")  # T231: the reference moved from index.html
 
 IDS = ["easy-verifier", "easy-ui", "easy-memory", "easy-personal"]
 PRIVATE_OR_UNPUBLISHED_REPOS = ("easy-verifier-mcp", "easy-memory-mcp", "easy-personal-mcp")
@@ -77,7 +77,7 @@ def test_data_file_required_tools_and_access():
 
 
 def test_every_site_card_has_an_entry_and_public_links_never_point_at_a_private_repo():
-    body = re.search(r'<section id="mcps">(.*?)</section>', _read("site", "index.html"), re.DOTALL).group(1)
+    body = re.search(r'<section id="mcps">(.*?)</section>', _read("site", "docs.html"), re.DOTALL).group(1)
     names = re.findall(r"<h3>([^<]*)</h3>", body)
     assert sorted(names) == sorted(i + "-mcp" for i in IDS)
     by_id = {e["id"]: e for e in _data()}
@@ -250,7 +250,7 @@ def test_readme_names_the_offer_within_its_cap():
 
 
 def test_site_mcps_section_says_the_supervisor_offers_them_at_stage_1():
-    body = re.search(r'<section id="mcps">(.*?)</section>', _read("site", "index.html"), re.DOTALL).group(1)
+    body = re.search(r'<section id="mcps">(.*?)</section>', _read("site", "docs.html"), re.DOTALL).group(1)
     assert re.search(r"Stage 1", body) and "Supervisor" in body
     assert re.search(r"skip", body, re.IGNORECASE)
-    assert "companion-setup" in _read("site", "index.html")
+    assert "companion-setup" in _read("site", "docs.html")

@@ -15,7 +15,7 @@ import re
 from html.parser import HTMLParser
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PAGE = os.path.join(ROOT, "site", "index.html")
+PAGE = os.path.join(ROOT, "site", "docs.html")  # T231: the reference moved from index.html
 THEME = os.path.join(ROOT, "site", "theme.css")
 
 VISUAL_SECTIONS = ["tracks", "install", "update-flow", "hooks", "agent-roles", "memory-system"]

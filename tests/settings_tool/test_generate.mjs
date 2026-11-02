@@ -1,5 +1,5 @@
 // T185: logic tests for the Settings tool core. Zero dependencies (node:test).
-// The core block is read out of site/index.html and run in node:vm, so the
+// The core block is read out of site/docs.html and run in node:vm, so the
 // page stays one file with no build step.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const html = readFileSync(join(here, "..", "..", "site", "index.html"), "utf8");
+const html = readFileSync(join(here, "..", "..", "site", "docs.html"), "utf8");
 
 function block(id) {
   const m = html.match(new RegExp('<script[^>]*id="' + id + '"[^>]*>([\\s\\S]*?)</script>'));

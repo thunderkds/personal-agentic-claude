@@ -402,7 +402,7 @@ def test_t221_ac7_neighbour_files_say_propose():
         text = (ROOT / t).read_text(encoding="utf-8")
         assert "Advocate 1: <its proposal>; Advocate 2: <its proposal>" in text, t
         assert "Advocate 1: <its option>" not in text, t
-    site = (ROOT / "site/index.html").read_text(encoding="utf-8")
+    site = (ROOT / "site/docs.html").read_text(encoding="utf-8")
     assert "Advocate agents argue the options" not in site
     assert "propose their own option" in site
 

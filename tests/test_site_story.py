@@ -478,13 +478,25 @@ def test_the_story_page_carries_no_style_block_of_its_own():
     assert "<style" not in index_html(), "shared and story rules belong in theme.css (D1)"
 
 
-def test_story_flows_stack_at_768px():
+def _media_bodies(css, query):
+    out = []
+    for m in re.finditer(re.escape(query) + r"\s*\{", css):
+        depth, i = 1, m.end()
+        while depth:
+            depth += {"{": 1, "}": -1}.get(css[i], 0)
+            i += 1
+        out.append(css[m.end():i - 1])
+    return "\n".join(out)
+
+
+def test_every_layout_class_of_the_story_page_stacks_at_768px():
+    """D7: flows stack at 768px and below. Each multi-column class that index.html uses is restacked."""
     css = re.sub(r"/\*.*?\*/", "", theme_css(), flags=re.DOTALL)
-    m = re.search(r"@media \(max-width: 768px\)\s*\{", css)
-    depth, i = 1, m.end()
-    while depth:
-        depth += {"{": 1, "}": -1}.get(css[i], 0)
-        i += 1
-    phone = css[m.end():i - 1]
-    for selector in (".story-stops", ".story-cards"):
-        assert selector in phone, f"{selector} is not restacked at 768px"
+    phone = _media_bodies(css, "@media (max-width: 768px)")
+    used = set(re.findall(r'class="([^"]*)"', index_html()))
+    used = {c for classes in used for c in classes.split()}
+    layout = [c for c in ("flow-row", "flow-branches", "flow-map", "story-cards") if c in used]
+    assert layout == ["flow-row", "flow-branches", "flow-map", "story-cards"], f"fixture broken: {layout}"
+    for cls in layout:
+        assert f".{cls}" in phone, f".{cls} is not restacked at 768px"
+    assert ".flow-row.is-long" in _media_bodies(css, "@media (max-width: 1100px)"), "the five-step journey stacks at 1100px"

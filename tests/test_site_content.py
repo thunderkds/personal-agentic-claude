@@ -17,7 +17,7 @@ import re
 import pytest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SITE_PAGE = os.path.join(ROOT, "site", "index.html")
+SITE_PAGE = os.path.join(ROOT, "site", "docs.html")  # T231: the reference moved from index.html
 AGENTS_DIR = os.path.join(ROOT, "agents")
 SKILLS_DIR = os.path.join(ROOT, "skills")
 SETTINGS_PATH = os.path.join(ROOT, ".claude", "settings.json")
@@ -1014,7 +1014,7 @@ def test_pipeline_diagram_uses_tokens_and_no_script_or_external_ref():
     svg = _pipeline_svg()
     assert "<script" not in svg and not re.search(r'(?:href|src)\s*=', svg)
     assert not re.search(r"#[0-9a-fA-F]{3,8}\b", svg)
-    css = re.search(r"svg\.pipeline.*?(?=footer \{)", _page_text(), re.DOTALL).group(0)
+    css = re.search(r"svg\.pipeline.*?(?=</style>)", _page_text(), re.DOTALL).group(0)  # T231: the footer rule that ended this span moved to theme.css; the span now runs to the end of <style>
     assert not re.search(r"#[0-9a-fA-F]{3,8}\b", css)
 
 

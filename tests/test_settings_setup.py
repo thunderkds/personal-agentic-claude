@@ -20,7 +20,7 @@ PROFILES = os.path.join(SKILL_DIR, "profiles.json")
 SCRIPT = os.path.join(SKILL_DIR, "scripts", "apply_profile.py")
 SKILL_MD = os.path.join(SKILL_DIR, "SKILL.md")
 KIT_SETTINGS = os.path.join(ROOT, ".claude", "settings.json")
-PAGE = os.path.join(ROOT, "site", "index.html")
+PAGE = os.path.join(ROOT, "site", "docs.html")  # T231: the reference moved from index.html
 
 PROFILE_IDS = {"high-security", "legacy", "solo-engineer", "team-project", "empty"}
 

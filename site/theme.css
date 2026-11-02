@@ -208,6 +208,24 @@ tbody tr:hover td { background: var(--bg-hover); }
 .family-nav .btn { height: auto; padding: 8px 14px; }
 .family-nav-drawer { display: none; }
 
+/* Page nav (T231): Home and Docs, on both pages. Mint underline marks the current page. */
+.page-nav { display: flex; align-items: center; gap: var(--s-4); padding-right: var(--s-4);
+  border-right: 1px solid var(--line-header); font-size: 14px; }
+.page-nav a { color: var(--text-2); white-space: nowrap; }
+.page-nav a:hover { color: var(--text-strong); text-decoration: none; }
+.page-nav a[aria-current="page"] { color: var(--text-strong); font-weight: 500; text-decoration: underline;
+  text-decoration-color: var(--accent); text-decoration-thickness: 2px; text-underline-offset: 6px; }
+/* Two nav groups and the version tag do not fit one header below 1200px: the tag goes first. */
+@media (max-width: 1199px) { .tag-version { display: none; } }
+/* 900-1099px: the page nav, the five family links and the Menu button share one header, so tighten them. */
+@media (min-width: 900px) and (max-width: 1099px) {
+  .header-actions { gap: var(--s-3); }
+  .page-nav { gap: var(--s-3); padding-right: var(--s-3); }
+  .family-nav { gap: var(--s-3); font-size: 13px; }
+  .family-nav a:not(.btn) { gap: 6px; }
+  .family-nav .btn { padding: 6px 10px; }
+}
+
 .nav-toggle { display: none; align-items: center; height: 40px; padding: 0 var(--s-4);
   font: 500 14px var(--font-sans); color: var(--text); background: transparent;
   border: 1px solid var(--line-strong); border-radius: var(--r-sm); cursor: pointer; }
@@ -281,6 +299,7 @@ section { margin: var(--s-8) 0; scroll-margin-top: calc(var(--header-h) + var(--
   .nav-toggle { min-height: 44px; }
   .sidebar a { min-height: 44px; display: flex; align-items: center; }
   .family-nav a { min-height: 44px; }
+  .page-nav a { display: inline-flex; align-items: center; min-height: 44px; }
   .brand { min-height: 44px; }
 }
 
@@ -397,6 +416,53 @@ details.more { margin: var(--s-4) 0 0; }
   .flow-roles > li[data-role="hub"]::after { content: "\2193" / ""; position: absolute; top: 100%; left: 0; right: 0;
     height: 32px; text-align: center; font-size: 18px; line-height: 32px; color: var(--text-muted); }
 }
+
+/* ---- story page (T231) -------------------------------------------------------
+   index.html is five short screens: hero, journey, paths, stops, deeper. It reuses the flow
+   classes above. A step's title is its link; the link stretches over the whole node so the
+   node is the click target. Mint stays on the final node of the journey. */
+.story { max-width: var(--page-max); margin: 0 auto; }
+.story > * { max-width: none; }
+.story section { margin: var(--s-9) 0; }
+.story .hero { margin-top: var(--s-4); }
+.story .hero .lead, .story .hero .codebox, .story-actions { max-width: 56rem; }
+.story-actions { margin: var(--s-5) 0 0; }
+.story-note { margin: var(--s-5) 0 0; max-width: none; color: var(--text-2); font-size: 14px; }
+.flow-desc { font-size: 14px; line-height: 1.5; color: var(--text-2); }
+.flow-node.is-yours { border-color: var(--text-muted); }
+.flow-node.is-link:hover { background: var(--bg-hover); }
+.flow-node.is-link:focus-within { border-color: var(--accent); }
+.story .flow-title a { color: inherit; text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 4px; }
+.story .flow-title a:hover { color: var(--link-hover); text-decoration-color: currentColor; }
+.story .flow-title a::after { content: ""; position: absolute; inset: 0; }
+.story-stops { max-width: 60rem; }
+.story-cards { list-style: none; margin: 0; padding: 0; max-width: none; display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s-4); }
+.story-cards .card { position: relative; }
+.story-cards h3 { margin: 0; }
+.story-cards h3 a { color: var(--text-strong); }
+.story-cards h3 a::after { content: ""; position: absolute; inset: 0; }
+.story-cards p { margin: 0; font-size: 14px; color: var(--text-2); }
+.story-cards p a { position: relative; z-index: 1; }
+.story-footer { max-width: var(--page-max); margin: 0 auto; padding: 0 var(--s-4) var(--s-6); }
+.story-footer .family-nav-drawer { margin: 0; padding: 0; border-bottom: 0; }
+@media (max-width: 1100px) {
+  .story-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 768px) {
+  .story-cards { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---- rules both pages need (T231, moved from the docs page's <style>) ------- */
+.lead { color: var(--text); max-width: 72ch; }
+.hero { margin-bottom: var(--s-8); }
+.hero h1 { margin: 0 0 var(--s-4); }
+.hero .lead { font-size: 17px; color: var(--text-2); max-width: 680px; }
+.hero ul.lead { padding-left: 1.2em; }
+.hero ul.lead li { margin-bottom: var(--s-1); }
+.hero ul.lead code { font-size: 0.85em; }
+.codebox { margin: 0 0 var(--s-4); }
+footer { color: var(--text-muted); font-size: 13.5px; margin: var(--s-10) 0 var(--s-6); }
 
 /* Glow is decoration: with more contrast requested, every glow goes off and no information is lost. */
 @media (prefers-contrast: more) {
