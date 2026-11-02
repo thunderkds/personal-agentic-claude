@@ -67,8 +67,32 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured 2026-11-02T02:48:58Z on branch `feat/t231-story-page` at `97763d7a`; `site/index.html` is byte-identical to `09d2544c`, checked with `git show 09d2544c:site/index.html | cmp - site/index.html`; no implementation commit exists yet):
+
+Word counts of `site/index.html` `<main>`, per top-level section, counted with `_Visible` from `tests/test_site_visual_first.py` (visible = outside `<details>`, `<pre>`, `<code>`, `<svg>`, `<script>`, `<style>`) and with a second pass that also counts the folds (`<details>`; script and style still skipped):
+
+| Section | Visible | With folds |
+|---|---|---|
+| quick-reference | 54 | 60 |
+| what-you-get | 103 | 221 |
+| tracks | 129 | 548 |
+| install | 69 | 336 |
+| update-flow | 87 | 798 |
+| settings-tool | 121 | 128 |
+| install-variants | 65 | 88 |
+| agent-roles | 55 | 265 |
+| skills | 95 | 95 |
+| hooks | 119 | 575 |
+| agent-focus | 32 | 285 |
+| packs | 114 | 142 |
+| providers | 26 | 259 |
+| repository-layout | 133 | 162 |
+| memory-system | 53 | 147 |
+| mcps | 146 | 439 |
+| options | 14 | 16 |
+| **Total (17 sections)** | **1528** | **4564** |
+
+Screenshot of the page as it is now (headless Chrome, `file://` URL, 1440x900 viewport): `/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-personal-agentic-claude/91713a2d-c4ca-4ba6-9c19-2b966a122175/scratchpad/shots/before_index_1440x900.png`. A 1440x16000 tall capture, still not the whole page, is in the same folder: `before_index_1440_tall.png`. Copy of the old page: `.../scratchpad/before_index.html`.
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
