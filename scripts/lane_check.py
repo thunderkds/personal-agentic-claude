@@ -28,7 +28,7 @@ GATE2 = re.compile(r"refactor|restructure|migrate to pattern|clean architecture|
 
 
 def _table_paths(text):
-    here = os.path.dirname(os.path.abspath(__file__))
+    here = os.path.dirname(os.path.realpath(__file__))  # T234: through the .claude/skills symlink too
     path = os.path.join(here, "..", "skills", "craft-spawn-prompt", "scripts", "memory_slice.py")
     spec = importlib.util.spec_from_file_location("memory_slice", path)
     mod = importlib.util.module_from_spec(spec)

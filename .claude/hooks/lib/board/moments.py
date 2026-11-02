@@ -26,7 +26,7 @@ PULL_TIMEOUT_S = 10
 # the project (a `setup.sh` install) <kit> is the project root; in a plugin it is the plugin cache,
 # which holds no project data (T234 D5). The project root still arrives as `root`.
 BOARD_SYNC = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
-    os.path.dirname(os.path.abspath(__file__)))))), "scripts", "board_sync.py")
+    os.path.dirname(os.path.realpath(__file__)))))), "scripts", "board_sync.py")
 STATE_DIR = os.path.join(".claude", "hooks", ".state")
 # Printed by render.HEADER on every pulled PROJECT_KANBAN.md.
 BOARD_CACHE_MARKER = "Board cache, pulled from the board by"

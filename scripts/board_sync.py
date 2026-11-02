@@ -70,7 +70,9 @@ from datetime import date, datetime, timezone
 
 # Two roots (T234): this file's folder is code, the project is data. Run from a plugin, the code
 # is in the plugin cache and the board, `tasks/` and `.claude/` are the project's.
-CODE_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# `realpath`, not `abspath`: a `setup.sh` install runs this as `.claude/skills/<name>/../../scripts/...`,
+# and `abspath` would drop `..` without following the `.claude/skills` symlink (T234).
+CODE_ROOT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.insert(0, os.path.join(CODE_ROOT, ".claude", "hooks", "lib"))
 from project_root import script_project_root  # noqa: E402
 from board import outbox, render  # noqa: E402

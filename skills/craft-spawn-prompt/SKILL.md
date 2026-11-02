@@ -15,7 +15,7 @@ The single source of truth for turning a `tasks/TASK_GUIDE_Txxx.md` into a ready
 ### Workflow
 
 #### 1. Read inputs
-First run `python3 ${CLAUDE_SKILL_DIR}/../../scripts/pull_moment.py spawn <ID>` (pull moment 2, FR-009: in board mode `online` it refreshes the board cache and records the guide's hash for the Ready-for-Review check; no-op in `local`; on `board unreachable — using cache (N unsynced)` carry that line into the output and continue). Then read the TASK_GUIDE at the given path, the `agents/*.md` file named in its `**Agent guide**` field, and `memory/MEMORY.md`. If any is missing, stop and report to the Supervisor.
+First run `python3 "${CLAUDE_SKILL_DIR}/../../scripts/pull_moment.py" spawn <ID>` (pull moment 2, FR-009: in board mode `online` it refreshes the board cache and records the guide's hash for the Ready-for-Review check; no-op in `local`; on `board unreachable — using cache (N unsynced)` carry that line into the output and continue). Then read the TASK_GUIDE at the given path, the `agents/*.md` file named in its `**Agent guide**` field, and `memory/MEMORY.md`. If any is missing, stop and report to the Supervisor.
 
 #### 2. Detect guide flavor
 Search the guide for a `### Mental Model` (or `## Mental Model`) heading.
@@ -30,7 +30,7 @@ Both shapes reuse the same checklist proven in `bugfix` Step 4; only element 2 a
 | 1 | Guide pointer | `tasks/TASK_GUIDE_Txxx.md` path | same |
 | 2 | Orienting content | Guide's Restated Intent / Requirement section, verbatim | Confirmed Mental Model section, verbatim |
 | 3 | First-action skill invocation | Only if the task explicitly requires one (e.g. `migration-safety` for schema work) — otherwise omit | `Skill({ skill: "diagnose" })` as the first action — always present |
-| 4 | Memory slice | Run `python3 ${CLAUDE_SKILL_DIR}/scripts/memory_slice.py <guide-path>` and paste its output **verbatim** (the `<!-- memory-slice:Txxx -->` block: index lines naming the guide's Files-table paths, `Depends on` tasks or ID, plus under `### From decisions.md` the title of each `memory/decisions.md` entry whose `**Files**:` line names those paths — T145; T069: paste what must arrive), then this line verbatim: *Read `memory/MEMORY.md` in full only if your work reaches a file, hook, skill or decision the slice does not cover.* The **path** `memory/MEMORY.md` stays that fallback. Do **not** paste its contents | same |
+| 4 | Memory slice | Run `python3 "${CLAUDE_SKILL_DIR}/scripts/memory_slice.py" <guide-path>` and paste its output **verbatim** (the `<!-- memory-slice:Txxx -->` block: index lines naming the guide's Files-table paths, `Depends on` tasks or ID, plus under `### From decisions.md` the title of each `memory/decisions.md` entry whose `**Files**:` line names those paths — T145; T069: paste what must arrive), then this line verbatim: *Read `memory/MEMORY.md` in full only if your work reaches a file, hook, skill or decision the slice does not cover.* The **path** `memory/MEMORY.md` stays that fallback. Do **not** paste its contents | same |
 | 5 | Agent-guide pointer | `agents/<role>.md` from the guide's `**Agent guide**` field | same |
 | 6 | Trace-attribution instruction | The trace-attribution line below, verbatim | same |
 | 7 | Demonstration BEFORE-capture instruction | The BEFORE-capture line below, verbatim | same — for a bugfix guide, this is naturally satisfied by the Phase 1 repro loop the `diagnose` first action already builds; the instruction still restates the rule so the agent doesn't skip it under time pressure |

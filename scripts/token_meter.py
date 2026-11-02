@@ -105,7 +105,7 @@ import re
 import statistics
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                 os.pardir, ".claude", "hooks", "lib"))
 from shell_data import strip_heredoc_bodies, strip_quoted_spans  # noqa: E402
 from board.config import task_id_pattern  # noqa: E402

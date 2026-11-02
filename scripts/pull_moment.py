@@ -31,7 +31,7 @@ import sys
 
 # Two roots (T234): this file's folder is code, the project is data. Run from a plugin, the code
 # is in the plugin cache and the board, `tasks/` and `.claude/` are the project's.
-CODE_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CODE_ROOT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))  # realpath: see board_sync.py
 sys.path.insert(0, os.path.join(CODE_ROOT, ".claude", "hooks", "lib"))
 from board import moments  # noqa: E402
 from board.config import load_config  # noqa: E402

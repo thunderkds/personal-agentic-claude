@@ -417,3 +417,94 @@ def test_pull_moment_unsynced_message_quotes_a_plugin_path_with_a_space(tmp_path
     result = run([plugin / "scripts" / "pull_moment.py", "wake"], project)
     sync = shlex.quote(str(plugin / "scripts" / "board_sync.py"))
     assert f"run python3 {sync} flush" in result.stdout, result.stdout
+
+
+# --- the commands run, in both layouts, in a folder with a space ------------------------------
+# T234 round 3: `${CLAUDE_SKILL_DIR}` is `<project>/.claude/skills/<name>` in a `setup.sh` install, and
+# `.claude/skills` is a symlink. A script that finds its code by `abspath(__file__)` then lands in
+# `<project>/.claude`, not the kit. These tests run every command the skills write.
+
+SKILL_CMD = re.compile(r'python3 (?P<quote>"?)\$\{CLAUDE_SKILL_DIR\}(?P<tail>/[^"\s`]*)')
+GUIDE_FOR_RUNS = ("# TASK_GUIDE — T900: x\n**Complexity Level**: C1\n**Risk Level**: Low\n"
+                  "## Files to Change (Predicted)\n\n| File | Change |\n|---|---|\n| `src/a.py` | x |\n")
+# Per script: the harmless arguments the test passes instead of the ones the skill shows. Every script
+# a `${CLAUDE_SKILL_DIR}` command reaches has an entry; the test fails on a script with none.
+SAFE_ARGS = {
+    "pull_moment.py": ["wake"],                      # board mode local: a no-op, exit 0
+    "board_sync.py": ["status"],                     # prints the unsynced count
+    "lane_check.py": ["tasks/TASK_GUIDE_T900.md", "HEAD...HEAD"],
+    "token_meter.py": ["--help"],                    # the real run reads the user's transcripts
+    "memory_slice.py": ["tasks/TASK_GUIDE_T900.md"],
+    "memory_sections.py": [],
+    "dirty_worktrees.py": [],
+    "check_companions.py": [],
+    "render.py": ["T900", "tasks/TASK_GUIDE_T900.md", "feat-x", "{out}"],
+    "apply_profile.py": ["--help"],                  # the real run writes .claude/settings.json
+    "dotfiles.py": ["--help"],                       # the real run writes the user's home folders
+}
+CRASH_MARKERS = ("Traceback", "No such file", "ModuleNotFoundError", "can't open file")
+
+
+def skill_commands():
+    """(markdown file, skill name, quote, tail) for each `python3 ${CLAUDE_SKILL_DIR}...` command."""
+    found = []
+    for path in prompt_files():
+        if rel(path) in RULE_EXAMPLES:
+            continue
+        for m in SKILL_CMD.finditer(path.read_text(encoding="utf-8")):
+            name = path.relative_to(SKILLS).parts[0]
+            found.append((path, name, m.group("quote"), m.group("tail")))
+    return found
+
+
+def test_every_skill_dir_command_quotes_the_variable():
+    unquoted = [f"{rel(p)}: {t}" for p, _, q, t in skill_commands() if not q]
+    assert not unquoted, "quote it: python3 \"${CLAUDE_SKILL_DIR}/...\"\n" + "\n".join(unquoted)
+    assert skill_commands(), "no command found: the pattern is broken"
+
+
+def build_layout(tmp_path, layout):
+    """Return (skill dir parent, project) for the layout. Both folder names hold a space."""
+    project = tmp_path / "my project"
+    (project / "tasks").mkdir(parents=True)
+    (project / "src").mkdir()
+    (project / "PROJECT_KANBAN.md").write_text("# Board\n")
+    (project / "tasks" / "TASK_GUIDE_T900.md").write_text(GUIDE_FOR_RUNS)
+    for cmd in (["init", "-q"], ["add", "-A"], ["-c", "user.name=t", "-c", "user.email=t@e", "commit", "-qm", "x"]):
+        subprocess.run(["git", *cmd], cwd=project, check=True, capture_output=True)
+    if layout == "install":
+        kit = project
+        (kit / ".claude").mkdir(exist_ok=True)
+    else:
+        kit = tmp_path / "my plugin"
+        (kit / ".claude").mkdir(parents=True)
+    shutil.copytree(REPO / ".claude" / "hooks", kit / ".claude" / "hooks",
+                    ignore=shutil.ignore_patterns("tests", "__pycache__", ".state"))
+    shutil.copytree(SKILLS, kit / "skills", ignore=shutil.ignore_patterns("__pycache__"))
+    shutil.copytree(REPO / "scripts", kit / "scripts", ignore=shutil.ignore_patterns("__pycache__"))
+    shutil.copytree(REPO / "templates", kit / "templates")
+    if layout == "install":
+        (kit / ".claude" / "skills").symlink_to("../skills")
+        return kit / ".claude" / "skills", project
+    return kit / "skills", project
+
+
+@pytest.mark.parametrize("layout", ["install", "plugin"])
+def test_every_skill_dir_command_runs(tmp_path, layout):
+    skills_parent, project = build_layout(tmp_path, layout)
+    ran = set()
+    for path, name, _, tail in skill_commands():
+        script = skills_parent / name / tail.lstrip("/")
+        base = os.path.basename(tail)
+        assert base in SAFE_ARGS, f"{rel(path)}: no safe arguments for {base}"
+        args = [a.replace("{out}", str(tmp_path / "out")) for a in SAFE_ARGS[base]]
+        result = run([script, *args], project)
+        label = f"{layout}: {rel(path)}: {base} {args}\n{result.stdout}\n{result.stderr}"
+        assert result.returncode == 0, label
+        assert not any(m in result.stdout + result.stderr for m in CRASH_MARKERS), label
+        if base == "lane_check.py":
+            assert "UNKNOWN" not in result.stdout, label
+        if base == "memory_slice.py":
+            assert "memory-slice:T900" in result.stdout, label
+        ran.add(base)
+    assert ran == set(SAFE_ARGS), set(SAFE_ARGS) - ran
