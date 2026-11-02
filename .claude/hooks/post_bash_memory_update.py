@@ -36,6 +36,8 @@ import sys
 # over-prompts, which is the pre-fix nuisance, not a lost push.
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib"))
 try:
+    from project_root import exit_outside_kit_project  # noqa: E402
+    exit_outside_kit_project()  # T232: first, so a broken lib stays silent in a non-kit project
     from shell_data import strip_heredoc_bodies, strip_quoted_spans  # noqa: E402
 except Exception:  # pragma: no cover - exercised via subprocess test
     def strip_heredoc_bodies(command):

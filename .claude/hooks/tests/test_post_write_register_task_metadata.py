@@ -56,6 +56,10 @@ class HookSandbox:
         os.makedirs(os.path.join(self.root, "tasks"))
         self.hook_path = os.path.join(hooks_dir, "post_write_register_task.py")
         shutil.copy(HOOK_SRC, self.hook_path)
+        # T232: the hook takes its project root from the helper.
+        os.makedirs(os.path.join(hooks_dir, "lib"))
+        shutil.copy(os.path.join(os.path.dirname(HOOK_SRC), "lib", "project_root.py"),
+                    os.path.join(hooks_dir, "lib", "project_root.py"))
         self.kanban_path = os.path.join(self.root, "PROJECT_KANBAN.md")
         with open(self.kanban_path, "w") as f:
             f.write(KANBAN_STUB)

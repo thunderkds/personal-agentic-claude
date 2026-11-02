@@ -55,7 +55,10 @@ GATE_REL = ".claude/hooks/pre_bash_block_unsafe_merge.py"
 #          merge, pull or rebase; a merge resolves its branches whatever its options, an octopus
 #          merge needs each task's row committed on its branch; `-c alias.<x>=…` is gated as a
 #          merge (`tasks/TASK_GUIDE_T211.md`). Authorised by the user, 2026-10-29.
-AUTHORISED_TASKS = ("T182", "T188", "T190", "T197", "T196", "T210", "T211")
+#   T232 — D1, D2, D4: the project root comes from `lib/project_root.py`; from a plugin the gate
+#          stands down in a non-kit project; input it cannot read is a block, never a pass
+#          (`tasks/TASK_GUIDE_T232.md`). User-approved task text, 2026-11-02.
+AUTHORISED_TASKS = ("T182", "T188", "T190", "T197", "T196", "T210", "T211", "T232")
 
 
 def _git(root, *args):

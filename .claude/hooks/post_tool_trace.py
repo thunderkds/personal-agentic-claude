@@ -28,14 +28,19 @@ import sys
 from datetime import datetime, timezone
 
 HOOKS_DIR = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(os.path.dirname(HOOKS_DIR))
-TRACE_DIR = os.path.join(ROOT, "memory", "event-trace")
 MAX_SUMMARY_LEN = 300
 
 # Hooks run as standalone scripts from an arbitrary cwd, so the shared lib is
 # imported off __file__, not off the import path. Fail open: a broken import
 # must degrade to "unattributed", never crash a tool call.
 sys.path.insert(0, os.path.join(HOOKS_DIR, "lib"))
+try:
+    from project_root import exit_outside_kit_project, project_root
+except Exception:  # T232: no helper, no known project to write the trace in
+    sys.exit(0)
+exit_outside_kit_project()
+ROOT = project_root()
+TRACE_DIR = os.path.join(ROOT, "memory", "event-trace")
 try:
     from task_context import resolve_task_id
 except Exception:

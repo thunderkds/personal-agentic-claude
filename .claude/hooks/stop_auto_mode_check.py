@@ -49,6 +49,12 @@ its reasons differ from the last one's; with the same reasons it only refreshes 
 Fails open: an unreadable file skips that task with one stderr line. It never reads or writes the
 merge gate's Evidence.
 
+T232: the project comes from `lib/project_root.py`, and from a plugin the hook stands down in a
+non-kit project. Inside one, two failures no longer pass silently, and neither can loop. Stdin it
+cannot read: the checks still run. A failing task gets its `Paused:` line first and then the block,
+so the next fire finds it paused and skips it; with no failing task there is one stderr line. A
+broken import: it blocks the first stop, and allows a second fire with one stderr line.
+
 Trace: `memory/event-trace/<ID>.jsonl` (all records) plus `memory/event-trace/_untagged.jsonl`
 records from the last CLAUDE_AUTO_CHECK_WINDOW_S seconds (default 6h). Advocate and Scanner
 prompts carry no task ID, so their calls land in `_untagged.jsonl` unless the active-task state
@@ -61,13 +67,38 @@ import re
 import sys
 from datetime import datetime, timedelta, timezone
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib"))
+
+
+def stop_on_broken_import(exc):
+    """T232 D4: with its modules gone this hook cannot tell which tasks are in auto mode. It blocks
+    the first stop, so the failure is seen. It allows a second fire, and stdin it cannot read, which
+    may be one: "Never loops" holds here too."""
+    if os.environ.get("CLAUDE_AUTO_VERIFY_RUN"):
+        sys.exit(0)
+    message = (f"[hook:stop_auto_mode_check] Auto-mode check unavailable ({type(exc).__name__}: "
+               f"{exc}). Restore .claude/hooks/lib/.")
+    try:
+        first_fire = not json.load(sys.stdin).get("stop_hook_active")
+    except Exception:
+        first_fire = False
+    if first_fire:
+        print(json.dumps({"decision": "block", "reason": message}))
+    else:
+        print(message, file=sys.stderr)
+    sys.exit(0)
+
+
+try:
+    from project_root import exit_outside_kit_project, project_root  # noqa: E402
+    exit_outside_kit_project()  # first, so a broken lib stays silent in a non-kit project
+    ROOT = project_root()
+    import auto_closeout as ac  # noqa: E402
+    import auto_mode as am  # noqa: E402
+except Exception as import_error:  # pragma: no cover - exercised via subprocess test
+    stop_on_broken_import(import_error)
 KANBAN = os.path.join(ROOT, "PROJECT_KANBAN.md")
 TRACE_DIR = os.path.join(ROOT, "memory", "event-trace")
-
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib"))
-import auto_closeout as ac  # noqa: E402
-import auto_mode as am  # noqa: E402
 
 PAUSE = "Paused: auto-mode check failed — "
 STAMP = re.compile(r"\s\[report ([0-9a-f]{12})\]\s*$")
@@ -339,16 +370,17 @@ def record_pause(report_path, minimal, task_id, reasons, stamp):
     """Write the pause inside the task's report block (T186 D1): a new line for new reasons, only a
     fresh stamp for the same reasons — never the same line twice. `reasons` None keeps the last
     line's reasons and only stamps it. `stamp` is the one `check_task` computed from `task.body`;
-    the block is found in the text with comments blanked, so the line never lands in a comment."""
+    the block is found in the text with comments blanked, so the line never lands in a comment.
+    Returns False when there is nowhere to record it."""
     text = am.read(report_path, ROOT)
     if text is None:
         warn(f"{task_id}: no report file to record the pause in")
-        return
+        return False
     masked = mask_comments(text)
     block = (am.record_block(masked, task_id) if minimal else am.section(masked, am.AUTO_SECTION))
     if not block:
         warn(f"{task_id}: no report section to record the pause in")
-        return
+        return False
     start, end, body = block
     found = list(PAUSE_LINE.finditer(body))
     last = found[-1] if found else None
@@ -378,9 +410,11 @@ def main():
     try:
         event = json.load(sys.stdin)
     except Exception:
-        sys.exit(0)
-    if not isinstance(event, dict):
-        sys.exit(0)
+        event = None
+    unreadable = not isinstance(event, dict)  # T232 D4: stop_hook_active is unknown, see main's end
+    if unreadable:
+        warn("hook input unreadable — checks still run, and a failing task is paused before the block")
+        event = {}
     try:
         kanban = am.read(KANBAN, ROOT)
     except am.Unreadable as exc:
@@ -411,14 +445,21 @@ def main():
     if not failures:
         sys.exit(0)
 
-    if event.get("stop_hook_active"):
+    if event.get("stop_hook_active") or unreadable:
+        all_paused = True
         for task_id, (report_path, minimal, reasons, stamp) in failures.items():
             try:
-                record_pause(report_path, minimal, task_id, reasons, stamp)
+                all_paused = record_pause(report_path, minimal, task_id, reasons, stamp) is not False \
+                    and all_paused
             except Exception as exc:
+                all_paused = False
                 warn(f"{task_id}: could not record the pause ({type(exc).__name__})")
-            warn(f"{task_id}: stop allowed on the second fire; {PAUSE}{'; '.join(reasons)}")
-        sys.exit(0)
+            if not unreadable:
+                warn(f"{task_id}: stop allowed on the second fire; {PAUSE}{'; '.join(reasons)}")
+        # T232 D4: with stdin unreadable this may be a second fire. The block stands only when each
+        # task is paused, because a paused task is skipped on the next fire: "Never loops" holds.
+        if not unreadable or not all_paused:
+            sys.exit(0)
 
     lines = [f"{tid}: {reason}" for tid, (_, _, reasons, _) in failures.items() for reason in reasons]
     print(json.dumps({"decision": "block", "reason": (

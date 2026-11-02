@@ -62,6 +62,10 @@ class SensitivePathHookTest(unittest.TestCase):
         os.makedirs(os.path.join(self.project, ".claude"))
         os.makedirs(os.path.join(self.project, "tasks"))
         shutil.copy(SHIPPED_PATTERNS, os.path.join(self.project, ".claude", "sensitive-paths.txt"))
+        # T232: the hook runs from this repo against a temp project, as a plugin hook does, so the
+        # project must be a kit project or the hook stands down.
+        with open(os.path.join(self.project, "PROJECT_KANBAN.md"), "w") as f:
+            f.write("### Todo\n")
 
     def tearDown(self):
         shutil.rmtree(self.project, ignore_errors=True)

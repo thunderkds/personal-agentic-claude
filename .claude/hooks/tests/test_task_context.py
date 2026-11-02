@@ -824,6 +824,8 @@ def test_state_file_resolves_off_claude_project_dir_not_the_executing_copy():
         copy_lib_dir = os.path.join(executing_copy_dir, ".claude", "hooks", "lib")
         os.makedirs(copy_lib_dir)
         shutil.copy(LIB_PATH, os.path.join(copy_lib_dir, "task_context.py"))
+        shutil.copy(os.path.join(os.path.dirname(LIB_PATH), "project_root.py"),  # T232
+                    os.path.join(copy_lib_dir, "project_root.py"))
 
         # The state file exists only under main_checkout_root — where the
         # corrected craft-spawn-prompt instruction actually writes it.

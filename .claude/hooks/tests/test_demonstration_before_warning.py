@@ -122,13 +122,14 @@ def test_hook_never_blocks_on_a_blank_before():
         assert "decision" not in payload, "advisory path must never block"
 
 
-def test_hook_fails_open_on_malformed_input():
+def test_hook_blocks_on_malformed_input():
+    """T232 D4: this test pinned a pass. A spawn the hook cannot read may have no guide."""
     proc = subprocess.run(
         [sys.executable, HOOK], input="not json at all",
         capture_output=True, text=True,
     )
     assert proc.returncode == 0
-    assert "decision" not in proc.stdout
+    assert json.loads(proc.stdout)["decision"] == "block"
 
 
 def test_existing_field_extraction_is_unaffected_by_the_new_section():

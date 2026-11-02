@@ -50,7 +50,17 @@ import sys
 import time
 
 HOOKS_DIR = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(os.path.dirname(HOOKS_DIR))
+
+# T232: the helper comes first, so this hook stands down in a non-kit project before
+# anything else runs. It fails open like the task_context import below: blocking every
+# tool call on a broken lib would leave a session unable to repair it.
+sys.path.insert(0, os.path.join(HOOKS_DIR, "lib"))
+try:
+    from project_root import exit_outside_kit_project, project_root
+except Exception:
+    sys.exit(0)
+exit_outside_kit_project()
+ROOT = project_root()
 STATE_DIR = os.path.join(ROOT, ".claude", "hooks", ".state")
 
 # Raised from 40 (T057). Evidence: T054 legitimately consumed 42 calls,
@@ -124,7 +134,6 @@ def _parse_counter_contents(raw):
 # Hooks run as standalone scripts from an arbitrary cwd, so the shared lib is
 # imported off __file__, not off the import path. Fail open: a broken import
 # must degrade to "unattributed", never block a tool call.
-sys.path.insert(0, os.path.join(HOOKS_DIR, "lib"))
 try:
     from task_context import resolve_task_id
 except Exception:
