@@ -101,7 +101,7 @@ Run these **one by one**. After each session, summarize findings, ask for user c
 3. **Stage 1: Environment Check**  
    Verify Multi-CLI commands, git status, etc. Then run `Skill({ skill: "companion-setup" })`: it shows the optional companion MCP servers; skip is the default; the kit never installs one.
 
-4. **Stage 1.5: Sub-Agent Design**  
+4. **Stage 1, step Agent team: Sub-Agent Design**  
    Dynamically design team. Always include these base agents (templates in `agents/`):
    - `common-infrastructure.md` — env setup, shared config, migrations
    - `backend-implementer.md` — Java/Spring Boot changes
@@ -228,12 +228,12 @@ Run these **one by one**. After each session, summarize findings, ask for user c
   - `bugfix/SKILL.md` — Supervisor-level bug fix entry point; triage intake → TASK_GUIDE (bug template) → diagnose → Stage 4 review → integrate; invoke as `/bugfix`
   - `slim-skills/SKILL.md` — audit and prune bloated SKILL.md files (>150 lines); checksum gate preserves behavioral assertions; human approval before any write
   - `html-report/SKILL.md` — render Stage 4 review findings as self-contained HTML
-  - `thinking-report/SKILL.md` — render Stage 0.5–2 decision reasoning as HTML
+  - `thinking-report/SKILL.md` — render Stage 0–2 decision reasoning as HTML
   - `ship/SKILL.md` — post-merge deployment plan, rollback plan, and release notes
   - `blast-radius/SKILL.md` — data-breach impact analysis (PII/PHI, regulatory/financial estimate)
   - `migration-safety/SKILL.md` — go/no-go gate for DB schema/migration changes
-  - `strategy/SKILL.md` — create/update STRATEGY.md (product north star); use at Phase 0 before brainstorming
-  - `ideate/SKILL.md` — pre-brainstorm divergent filter; 25–50 ideas → adversarial critique → 5–7 survivors; use at Stage 0.5a
+  - `strategy/SKILL.md` — create/update STRATEGY.md (product north star); use in Stage 0 before brainstorming
+  - `ideate/SKILL.md` — pre-brainstorm divergent filter; 25–50 ideas → adversarial critique → 5–7 survivors; use in Stage 0 before step Direction
   - `code-review/SKILL.md` — project override of built-in; adds P0–P3 severity, confidence anchors, conditional personas, dedup+promotion
   - `resolve-pr-feedback/SKILL.md` — post-Stage-4 PR thread resolution; triage → fix → commit → reply
   - `compound/SKILL.md` — post-Stage-5 problem→solution capture to `docs/solutions/`; complements `learn`

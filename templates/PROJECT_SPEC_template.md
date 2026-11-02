@@ -27,8 +27,8 @@
 
 ## Readiness
 
-> The files that prove this project is ready to code. Each stage fills its lines: Phase 0 →
-> `Requirements` + `Approved by`; Stage 0.5 → `Direction`; Stage 1 → `Codebase map`, `Tech stack`;
+> The files that prove this project is ready to code. Each stage fills its lines: Stage 0 step Requirements →
+> `Requirements` + `Approved by`; step Direction → `Direction`; Stage 1 → `Codebase map`, `Tech stack`;
 > Stage 2 → `Main flow` before the first spawn. Paths are relative to the project root. While a line
 > is empty, a `[...]` placeholder or a missing file, every spawn that names a task gets a
 > `⚠ HIGH RISK — project readiness incomplete:` warning (`.claude/hooks/pre_agent_validate_guide.py`).

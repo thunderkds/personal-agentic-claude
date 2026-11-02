@@ -1,8 +1,8 @@
-# 5-Stage Agentic Pipeline
+# Stage 0–5 Agentic Pipeline
 
-> Extracted from `AGENTS.md` — full detail for Stage 0.5 through Stage 5. See `AGENTS.md` for the pointer back to this file and the Mandatory Session Startup / Hard-Stop Gates, which remain inline there.
+> Extracted from `AGENTS.md` — full detail for Stage 0 through Stage 5. See `AGENTS.md` for the pointer back to this file and the Mandatory Session Startup / Hard-Stop Gates, which remain inline there.
 
-These 5 stages are the **extended track** (`docs/claude-md/tracks.md`). The track rule sends big, risky or
+These stages (Stage 0 to Stage 5) are the **extended track** (`docs/claude-md/tracks.md`). The track rule sends big, risky or
 multi-session work here, and small low-risk work to the minimal track. Hard-Stop Gate 1 applies to the
 extended track only. Gates 2–6 still apply to it unchanged. Gate 5 (a new test with its pasted output) also
 applies to the minimal track, through the Decision record's `Checked:` field. In **auto mode** (the user's
@@ -11,36 +11,44 @@ applies to the minimal track, through the Decision record's `Checked:` field. In
 
 Strictly follow this order. Never skip or reorder stages.
 
+**Old names.** Older tasks, reports and logs use the old names: Phase 0 is Stage 0 step Requirements; Stage 0.5a is step Grilling; Stage 0.5b is step Direction; Stage 1.5 is Stage 1 step Agent team. A step has a name, not a number.
+
 **Stage done (T223).** A stage counts as done only when its lines in `PROJECT_SPEC.md` `## Readiness`
-are filled (`templates/PROJECT_SPEC_template.md`): Phase 0 → `Requirements` + `Approved by`
-(`docs/claude-md/phase0-project-initiation.md`); Stage 0.5 → `Direction`; Stage 1 → `Codebase map`,
+are filled (`templates/PROJECT_SPEC_template.md`): Stage 0 step Requirements → `Requirements` + `Approved by`
+(`docs/claude-md/stage0-define.md`); step Direction → `Direction`; Stage 1 → `Codebase map`,
 `Tech stack`; Stage 2 → `Main flow` before the first spawn. Scaffold code or an existing spec file never
 makes a stage done. While a line is missing, `pre_agent_validate_guide.py` gives every spawn that names a
 task a `⚠ HIGH RISK — project readiness incomplete:` warning; it warns and never blocks.
 
 ---
 
-## Stage 0.5: Requirement Grilling → Creative Brainstorming (The First Mind)
-**Runs immediately after Phase 0 is confirmed. Must complete before Stage 1.**
-Stage 0.5 counts as done only when the `Direction` line of `PROJECT_SPEC.md` `## Readiness` names the approved brainstorming log. A stand-in spec (named on the `Requirements` line) still goes through Step 0.5a.
+## Stage 0: Define (Requirements → Grilling → Direction)
+**Runs first. It has three steps, in this order, and each step has its own stop: the user confirms the requirements, the PRD gate passes, the user picks a direction. Do not merge the three stops into one. Stage 0 must complete before Stage 1.**
 
-### Step 0.5a — Requirement Grilling (PRD gate)
+### Step Requirements — Project Initiation & Context Gathering
+**Stop: the user confirms the Project Context Document.** The questions, the Ambiguity Resolution Protocol and the Project Context Document are in `docs/claude-md/stage0-define.md`. Ask the clarifying questions, resolve ambiguity, summarize the answers, then generate `PRD.md`. Step Requirements counts as done only when the `Requirements` and `Approved by` lines of `PROJECT_SPEC.md` `## Readiness` are filled. Auto mode: row 1 of the `## Auto mode` table in `docs/claude-md/tracks.md`; `Approved by` stays empty.
+When the step is done, announce:
+> "Stage 0, step Requirements: context locked, PRD.md generated. Moving to step Grilling."
+
+### Step Grilling — Requirement Grilling (PRD gate)
+**Stop: `grill-with-docs` reports PRD gate: PASS.** A stand-in spec (named on the `Requirements` line) still goes through this step.
 
 Confirm `PRD.md` exists. Then invoke `grill-with-docs` in requirement mode:
 ```
 Skill({ skill: "grill-with-docs", args: "mode=requirement" })
 ```
 
-The skill validates `PRD.md` against the Phase 0 answers: FR traceability, NFR completeness, scope clarity, and ambiguity. Resolve all flagged items with the user. Do NOT proceed to brainstorming until the skill reports **PRD gate: PASS**. Auto mode: answer them from the docs and code with Citations; a Choice question goes to a Debate.
+The skill validates `PRD.md` against the step-Requirements answers: FR traceability, NFR completeness, scope clarity, and ambiguity. Resolve all flagged items with the user. Do NOT proceed to step Direction until the skill reports **PRD gate: PASS**. Auto mode: answer them from the docs and code with Citations; a Choice question goes to a Debate.
 
-### Step 0.5b — Creative Brainstorming
+### Step Direction — Creative Brainstorming
+**Stop: the user picks one brainstormed direction (auto mode: the recommended one).** Step Direction counts as done only when the `Direction` line of `PROJECT_SPEC.md` `## Readiness` names the approved brainstorming log.
 
 Invoke the `brainstorming` skill:
 ```
 Skill({ skill: "brainstorming" })
 ```
 
-1. **Divergent Exploration**: The skill analyzes the Phase 0 Context and `PRD.md`, then generates a `BRAINSTORMING_LOG.md` using the template at `templates/BRAINSTORMING_LOG_template.md`.
+1. **Divergent Exploration**: The skill analyzes the step-Requirements context and `PRD.md`, then generates a `BRAINSTORMING_LOG.md` using the template at `templates/BRAINSTORMING_LOG_template.md`.
 2. **User Review**: The user must approve one of the brainstormed directions before proceeding. Auto mode: the Supervisor takes the recommended direction and logs the alternatives (flagged).
 
 Only after the user selects a direction (auto mode: the recommended one), invoke:
@@ -48,11 +56,14 @@ Only after the user selects a direction (auto mode: the recommended one), invoke
 Skill({ skill: "thinking-report", args: "session=brainstorming task=— branch=<branch>" })
 ```
 Write the log's path on the `## Readiness` `Direction` line. Save the emitted HTML to `reports/thinking-report_<branch>_<YYYYMMDDTHHMMSS>.html`, then announce:
-> "Stage 0.5: Requirement grilling passed. Brainstorming complete. Direction locked. Moving to Stage 1: Environment & Provider Setup."
+> "Stage 0: Requirements confirmed. Requirement grilling passed. Brainstorming complete. Direction locked. Moving to Stage 1: Set up."
 
 ---
 
-## Stage 1: Environment & Provider Setup
+## Stage 1: Set up (Environment → Agent team)
+**Two steps, in this order: step Environment, then step Agent team.**
+
+### Step Environment — Environment & Provider Setup
 Guide the user through this checklist step by step. Auto mode: the Supervisor does each item itself, by rows 5–10 of the `## Auto mode` table in `docs/claude-md/tracks.md`.
 
 **Checklist**
@@ -87,8 +98,8 @@ Guide the user through this checklist step by step. Auto mode: the Supervisor do
    Please run `git status` in your terminal and paste the output here. Auto mode: the Supervisor runs it itself.
 
 5. **`PRD.md` File**
-   - Confirm `PRD.md` exists in the project root (generated at end of Phase 0 Step 2).
-   - If missing, generate it now using `templates/PRD_template.md` from the Phase 0 answers.
+   - Confirm `PRD.md` exists in the project root (generated at the end of step Requirements).
+   - If missing, generate it now using `templates/PRD_template.md` from the step-Requirements answers.
 
 6. **Master `PROJECT_SPEC.md` File**
    - If the file does not exist yet, use `templates/PROJECT_SPEC_template.md` and fill in the Project Context Document.
@@ -112,11 +123,11 @@ Guide the user through this checklist step by step. Auto mode: the Supervisor do
 Stage 1 counts as done only when the `Codebase map` and `Tech stack` lines of `PROJECT_SPEC.md` `## Readiness` are filled.
 
 After all items are confirmed:
-> "Stage 1: Environment & Provider Setup completed successfully. Moving to Stage 1.5: Sub-Agent Architecture."
+> "Stage 1, step Environment completed successfully. Moving to step Agent team."
 
----
+### Step Agent team — Sub-Agent Architecture (Dynamic Team Design)
+This step has no `## Readiness` line of its own.
 
-## Stage 1.5: Sub-Agent Architecture (Dynamic Team Design)
 Using the locked Project Context Document:
 - Reference the **General Agent Template** (`templates/general-agent-template.md`).
 - Reference the files in the `agents/` folder.
@@ -130,12 +141,10 @@ Using the locked Project Context Document:
   - **CLI & exact spawn command**
   - Reference to its guide in the `agents/` folder
 
-Output in a clear Markdown table, then ask:
-"Here is the proposed sub-agent team (with exact CLI commands and references to agents/ folder). Approve or request any modifications?"
-Auto mode: no question; the base team (plus `craft-agent` only for an uncovered role) is locked and logged.
+Output in a clear Markdown table, and state the team in one line: "Base team: Common-Infrastructure, Backend, Frontend, QA." **Stop, only when `craft-agent` proposes a role beyond the base team:** then ask: "Here is the proposed sub-agent team (with exact CLI commands and references to agents/ folder). Approve or request any modifications?" With the base team alone, ask nothing and go on. Auto mode: no question; the base team (plus `craft-agent` only for an uncovered role) is locked and logged.
 
-Only after explicit user approval (auto mode: at once), announce:
-> "Sub-agent architecture locked. Moving to Stage 2: Intent Transformation (Planning)."
+After the user approves the proposed team (when `craft-agent` proposed no role: at once; auto mode: at once), announce:
+> "Stage 1: Set up complete. Sub-agent team locked. Moving to Stage 2: Intent Transformation (Planning)."
 
 ---
 
@@ -144,7 +153,7 @@ Only after explicit user approval (auto mode: at once), announce:
 **This stage maps to `/plan` in Claude Code.**
 
 When the user invokes `/plan`, the Supervisor must:
-1. Confirm Stage 0.5 (brainstorming) has been completed and a direction approved. If not, run it first.
+1. Confirm Stage 0 (the step Direction brainstorming) has been completed and a direction approved. If not, run it first.
 2. Take the approved Project Context Document and brainstorming direction.
 3. Create (or update) `PROJECT_SPEC.md` as the single source of truth using `templates/PROJECT_SPEC_template.md`.
 4. Create (or update) `PROJECT_KANBAN.md` as the compact task board using `templates/PROJECT_KANBAN_template.md`.

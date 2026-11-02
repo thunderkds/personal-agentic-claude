@@ -16,12 +16,12 @@ You interview the user relentlessly about every aspect of a plan until you reach
 
 This skill operates in two modes. The active mode is passed via `args: "mode=<mode>"`.
 
-**Requirement mode** (`mode=requirement`) — runs after Phase 0, before brainstorming (Stage 0 → 0.5):
-- Read `PRD.md` and the Phase 0 Project Context Document.
+**Requirement mode** (`mode=requirement`) — runs in Stage 0 after step Requirements, before step Direction (brainstorming):
+- Read `PRD.md` and the Stage 0 Project Context Document.
 - Validate: each FR traces to a User Story; each User Story is clearly scoped; Out of Scope is explicit; no FR is ambiguous (would two engineers implement it differently?).
-- Challenge missing NFRs (performance, security, scale) implied by Phase 0 Q&A Section C answers.
+- Challenge missing NFRs (performance, security, scale) implied by Stage 0 Q&A Section C answers.
 - Flag every Open Question that lacks an owner or due date.
-- **Re-test the Assumptions list** from Phase 0 Step 1.5: any FR/NFR derived from a supervisor
+- **Re-test the Assumptions list** from the Stage 0 Ambiguity Resolution Protocol: any FR/NFR derived from a supervisor
   default or a `"you decide"` deferral is treated as *unconfirmed* — resolve it via the Ambiguity
   Resolution Protocol (forced choice for material, bounded, user-facing ambiguity) before it can
   drive a task. A requirement that traces only to a guess does **not** pass the gate.

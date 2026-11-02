@@ -10,7 +10,7 @@ the harness itself (Hard-Stop Gate 4: different deployment target — Vercel). H
 
 A single public page that answers, for someone who has never seen this repo:
 
-1. **What is this?** — a multi-agent supervisor framework for Claude Code that enforces a 5-stage
+1. **What is this?** — a multi-agent supervisor framework for Claude Code that enforces a Stage 0–5
    pipeline with deterministic hooks, installed into any git repo with one command.
 2. **What do I get?** — the agent roster, the skill roster, the enforcement hooks.
 3. **How do I install it?** — the copy-pasteable install and update commands.

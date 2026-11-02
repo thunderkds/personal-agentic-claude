@@ -7,7 +7,7 @@ alwaysApply: true
 
 This is a thin adapter for Cursor, auto-read from `.cursor/rules/`. `AGENTS.md` and
 `agents/` remain canonical; if anything here conflicts with those, they win.
-See `docs/claude-md/` for full pipeline, Phase 0, folder, naming, and memory detail.
+See `docs/claude-md/` for full pipeline, Stage 0, folder, naming, and memory detail.
 
 Before any work:
 - Read `PROJECT_SPEC.md`, your `tasks/TASK_GUIDE_Txxx.md`, and these base rules.

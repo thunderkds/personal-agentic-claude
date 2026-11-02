@@ -57,7 +57,7 @@ SHIPPING_FILES = [
     "docs/claude-md/memory-write-protocol.md",
     "docs/claude-md/folder-structure.md",
     "docs/claude-md/code-naming-conventions.md",
-    "docs/claude-md/phase0-project-initiation.md",
+    "docs/claude-md/stage0-define.md",
     "memory/MEMORY.md",
     "skills/craft-spawn-prompt/SKILL.md",
     "skills/compact-memory/SKILL.md",

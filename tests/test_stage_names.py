@@ -41,11 +41,14 @@ OLD_RE = re.compile("|".join(OLD_NAMES))
 # the root `BRAINSTORMING_LOG.md` is an old brainstorming log.
 HISTORY = ("tasks/", "memory/", "docs/archive/", "docs/brainstorming/", "docs/prd/", "docs/adr/",
            "docs/ddr/", "reports/", "experiments/", "PROJECT_KANBAN", "BRAINSTORMING_LOG.md",
-           "tests/test_stage_names.py")
+           "tests/test_stage_names.py", "tests/fixtures/site_story_baseline.json",
+           "tests/test_agents_md_primary.py")  # its REPLACED_SPANS hold the pre-T239 wording of AGENTS.md on purpose
 
 # A skill may number the phases of its own workflow (`#### Phase 0 — Determine Scope`); that is not a
 # pipeline stage. A heading with this shape is skipped, and so are the listed lines.
 OWN_PHASE_HEADING = re.compile(r"^#{2,5} Phase 0 ")
+# `tests/test_site_visual_first.py` keeps a baseline of the page text before T239: a record, not a claim.
+BASELINE_RECORD = re.compile(r'^\s*\("[0-9a-f]{12}", ')
 OWN_PHASE_LINES = {
     ("skills/compound/SKILL.md", "If a high-overlap doc was found in Phase 0:"):
         "points at the `compound` skill's own Phase 0 (Classify the Problem)",
@@ -79,7 +82,7 @@ def _hits(rel, text):
     for n, line in enumerate(text.splitlines(), 1):
         if n in skip or not OLD_RE.search(line):
             continue
-        if OWN_PHASE_HEADING.match(line):
+        if OWN_PHASE_HEADING.match(line) or (rel == "tests/test_site_visual_first.py" and BASELINE_RECORD.match(line)):
             continue
         if any(rel == p and frag in line for (p, frag) in OWN_PHASE_LINES):
             continue
@@ -155,7 +158,7 @@ def test_ac2_stage_0_keeps_three_steps_in_order_each_with_its_stop():
     assert 'skill: "grill-with-docs"' in grill and "PRD gate: PASS" in grill
     direction = parts[2]
     assert 'skill: "brainstorming"' in direction and "approve" in direction.lower()
-    assert "Do not merge the stops" in sec or "Do not flatten" in sec
+    assert "Do not merge the three stops" in sec
 
 
 def test_ac2_stage_1_has_the_steps_environment_then_agent_team():

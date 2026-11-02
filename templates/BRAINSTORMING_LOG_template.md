@@ -1,6 +1,6 @@
 # BRAINSTORMING_LOG.md
 **Generated**: [YYYY-MM-DD]
-**Task / Context**: [Phase 0 summary or Task ID]
+**Task / Context**: [Stage 0 summary or Task ID]
 **Skill**: `Skill({ skill: "brainstorming" })`
 
 ---

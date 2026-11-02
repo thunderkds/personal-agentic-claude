@@ -36,9 +36,8 @@
 
 | Stage | Status |
 |-------|--------|
-| 0.5 Brainstorming | ✅ Done / 🔄 In Progress / ⬜ Not Started |
-| 1 Environment Setup | ✅ Done / 🔄 In Progress / ⬜ Not Started |
-| 1.5 Sub-Agent Architecture | ✅ Done / 🔄 In Progress / ⬜ Not Started |
+| 0 Define | ✅ Done / 🔄 In Progress / ⬜ Not Started |
+| 1 Set up | ✅ Done / 🔄 In Progress / ⬜ Not Started |
 | 2 Planning (/plan) | ✅ Done / 🔄 In Progress / ⬜ Not Started |
 | 3 Execution | ✅ Done / 🔄 In Progress / ⬜ Not Started |
 | 4 Review | ✅ Done / 🔄 In Progress / ⬜ Not Started |

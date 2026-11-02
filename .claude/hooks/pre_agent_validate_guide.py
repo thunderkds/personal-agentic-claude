@@ -436,7 +436,7 @@ def check_readiness_warning(root):
     return [
         f"{READINESS_HEAD} {'; '.join(gaps)}. Risk: agents will code on a design nobody "
         "checked, and architecture gaps found later cost rework. To fix: fill `PROJECT_SPEC.md` "
-        "`## Readiness` (run Phase 0 / Stage 0.5 / Stage 1), or ask the user for a `Waived` "
+        "`## Readiness` (run Stage 0 / Stage 1), or ask the user for a `Waived` "
         "line (`- **Waived**: user YYYY-MM-DD — reason`). The spawn goes ahead (warning only)."
     ]
 

@@ -7,7 +7,7 @@ description: "Render the Supervisor's reasoning from a completed session (brains
 
 You transform the reasoning that just occurred in the current session into a self-contained HTML report showing *how* the decision was reached — the problem, the options compared, the chosen path, and the assumptions tracked along the way.
 
-This is the companion to `html-report` (which covers Stage 4 review output). `thinking-report` covers Stage 0.5–2 decision output.
+This is the companion to `html-report` (which covers Stage 4 review output). `thinking-report` covers Stage 0–2 decision output.
 
 ### Activation
 

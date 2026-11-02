@@ -31,13 +31,13 @@ WINDOW_DATE = "2026-07-21"
 # Skill -> Token Audit Log `event` tag, per AGENTS.md's `## Skills vs Agents`
 # stage index. `wake` is handled separately as the literal `cold-start` event.
 STAGE_MAP = {
-    "brainstorming": "stage-0.5",
-    "ideate": "stage-0.5",
+    "brainstorming": "stage-0",
+    "ideate": "stage-0",
     "git-guardrails-claude-code": "stage-1",
     "map-codebase": "stage-1",
     "fewer-permission-prompts": "stage-1",
     "update-config": "stage-1",
-    "craft-agent": "stage-1.5",
+    "craft-agent": "stage-1",
     "grill-with-docs": "stage-2",
     "to-issues": "stage-2",
     "tdd": "stage-3",
@@ -221,7 +221,7 @@ the window closes, start a new file
 | Field | Vocabulary |
 |---|---|
 | `date` | `YYYY-MM-DD` (UTC) |
-| `event` | `cold-start` \\| `stage-N` (N = 0.5–5) \\| `spawn` |
+| `event` | `cold-start` \\| `stage-N` (N = 0–5; logs written before T239 may carry `stage-0.5` and `stage-1.5`) \\| `spawn` |
 | `task-tag` | `Txxx` (structurally attributed, see `lib/task_context.py`) or `overhead` (unattributed) |
 | `cache` | `hit` \\| `miss` — heuristic only: first occurrence of a task-tag in this file is scored `miss`, repeats are `hit`. Not a real cache-hit measurement — do not over-trust it. |
 | `model-tier` | `haiku` \\| `sonnet` \\| `opus` \\| `?` — `?` when the trace record does not carry a model field. Never guessed. |
