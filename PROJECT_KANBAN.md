@@ -87,7 +87,6 @@
 
 
 ### In Progress
-- [ ] **T231** — Story landing page — one visual flow on index.html, reference moves to docs.html | frontend-developer | C2 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T231.md` | Started 2026-11-02: branch `feat/t231-story-page`, worktree `../wt-t231`
 
 
 
@@ -96,6 +95,7 @@
 
 
 ### Ready for Review
+- [ ] **T231** — Story landing page — one visual flow on index.html, reference moves to docs.html | frontend-developer | C2 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T231.md` | Started 2026-11-02: branch `feat/t231-story-page`, worktree `../wt-t231`
 
 
 ### Done
