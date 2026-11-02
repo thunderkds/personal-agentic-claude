@@ -4,6 +4,19 @@
 > new record directly under this note. On first use, the Supervisor creates `tasks/MINIMAL_LOG.md` from
 > this template and deletes the example comment. The same block is the Supervisor's final chat message.
 
+## T238 — Rename a report file that clashed on Windows and macOS · minimal
+**Asked:** "got this one when upload the pluggin Two file or folder names would clash on Windows or macOS Two files or folders in or beside the plugin folder differ only by letter case, Unicode form, a trailing dot, or a Windows short name (such as PROGRA~1), so a checkout on Windows or macOS would merge them. Rename one, then validate again."
+**Decisions:**
+- Renamed `experiments/kit-arms/results/REPORT.md` (the written analysis) to `ANALYSIS.md`, not `report.md` — `run_arms.py` writes `report.md`, so renaming that one would bring the clash back on a rerun.
+- Left `tasks/` guides and reviews naming the old path — they are the audit trail of T176/T177.
+- Assumed: this is the only clash — the new test scans every tracked path for case, Unicode form and trailing dots.
+**Checked:**
+- New test `test_no_tracked_names_clash_on_windows_or_macos` — failed before the rename, passes after: 8 passed in 0.96s
+- Suite: `python3 -m pytest tests -q` — 1570 passed in 151.22s (0:02:31); `python3 -m pytest .claude/hooks/tests -q` — 1389 passed, 25 subtests passed in 46.44s; `python3 -m pytest experiments/kit-arms/tests -q` — 74 passed in 350.17s (0:05:50)
+- Real run: `claude plugin validate . --profile directory` — printed `✔ Validation passed with warnings`. The upload check itself was not rerun: only the user's upload runs it.
+**Files:** `experiments/kit-arms/results/ANALYSIS.md`, `experiments/kit-arms/RULE-2.md`, `memory/learnings.md`, `tests/test_plugin_package.py`
+**Not done:** merge (the user decides); auto verify: running (T182)
+
 ## T220 — Drop the stale `setup.sh --pack` install lines · minimal
 Mode: auto
 **Asked:** "compose all the tasks related, run with [auto], remember to add the docs, guide for that."
