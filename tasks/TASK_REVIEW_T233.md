@@ -67,8 +67,30 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured 2026-11-02T07:37:17Z, `/home/hungnguyenhuu/workspace/pets/wt-t233`, unchanged code, no implementation commit):
+
+```
+$ claude plugin validate .
+Validating components in: /home/hungnguyenhuu/workspace/pets/wt-t233
+
+Validating skill: .../wt-t233/.claude/skills
+⚠ Found 1 warning:
+  ❯ directory: This directory is a symlink and nothing in it was read — component directories are read without following symlinks. ...
+
+Validating agent: .../wt-t233/.claude/agents
+⚠ Found 1 warning:
+  ❯ directory: This directory is a symlink and nothing in it was read — ...
+
+Plugin directory checks for /home/hungnguyenhuu/workspace/pets/wt-t233. ...
+
+✘ Found 1 problem the plugin directory refuses a submission for:
+  ❯ LICENSE: License missing (LICENSE_MISSING). This plugin has no LICENSE file and plugin.json has no `license`. The directory requires one of them.
+
+$ ls LICENSE .claude-plugin hooks
+ls: cannot access 'LICENSE': No such file or directory
+ls: cannot access '.claude-plugin': No such file or directory
+ls: cannot access 'hooks': No such file or directory
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
