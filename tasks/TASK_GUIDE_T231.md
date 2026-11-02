@@ -62,6 +62,13 @@ docs.html  (reference)
 - **D8 — Design system only.** Tokens from `theme.css`. No hex outside it. Mint only on the outcome nodes.
 - **D9 — Tests follow the content.** Tests pin the same facts in their new home. `test_site_content.py`, `tests/settings_tool/*.mjs` and `tests/site_scrollspy/` read `docs.html`, or both pages joined where a fact now lives on either. T207's budget constants apply to `docs.html` sections unchanged. No test is deleted and no assertion weakened. A test that must change says why in its commit.
 
+**Amendment A1 (user, 2026-11-02, after opening the preview, verbatim: "it good now, but the flow stage with skill included should appear also")**, binding, overrides D2, D3 and D4 only as written here:
+- **New screen `stages`**, between `journey` and `paths`: the stage flow from `docs.html#skills`, in the same order, each stage with its skills as chips, plus the "Any stage" group. It reuses the existing `#skills` flow markup and CSS. Each stage links to its docs section. The skill names must stay equal to the `#skills` section of `docs.html`; a test enforces it.
+- **D2/AC 1:** the page now holds six sections: `hero`, `journey`, `stages`, `paths`, `stops`, `deeper`.
+- **D3:** the 300-word cap and the no-`<details>` rule stay. Skill chips are `<code>`, so they do not count. The length cap stays.
+- **D4:** the word `Stage` is allowed inside `#stages` only. Other banned terms stay banned everywhere on the page, and `Stage` stays banned outside `#stages`.
+- **New mutation M6:** delete one skill chip from `#stages`: a new test turns RED, then green on revert.
+
 **Out of scope**:
 - Changing any fact, number or claim; rewriting reference text on `docs.html`
 - Settings tool logic and `settings-catalog`
