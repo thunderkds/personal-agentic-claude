@@ -74,7 +74,7 @@ from datetime import date, datetime, timezone
 # and `abspath` would drop `..` without following the `.claude/skills` symlink (T234).
 CODE_ROOT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.insert(0, os.path.join(CODE_ROOT, ".claude", "hooks", "lib"))
-from project_root import script_project_root  # noqa: E402
+from project_root import NO_PROJECT, script_project_root  # noqa: E402
 from board import outbox, render  # noqa: E402
 from board.base import BoardAuthError, BoardError, BoardUnavailable, Decision, Task  # noqa: E402
 from board.config import board_id_pattern, config_path, load_config, normalize_task_id, task_id_pattern  # noqa: E402
@@ -635,6 +635,9 @@ def init(root, ask, make_adapter, env, out, err):
 
 def main(argv=None, root=None):
     root = root or ROOT
+    if root is None:  # T234 D7: run from a plugin, in no project
+        print(NO_PROJECT, file=sys.stderr)
+        return 2
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("pull")

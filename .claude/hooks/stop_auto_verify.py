@@ -77,7 +77,7 @@ import sys
 RUNS_REL = os.path.join(".claude", "verify-runs")
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib"))
-from project_root import exit_outside_kit_project, project_root, script_project_root  # noqa: E402
+from project_root import NO_PROJECT, exit_outside_kit_project, project_root, script_project_root  # noqa: E402
 
 # T232: `--start` is a command, not a hook: exit 0 there means "a run started", so it keeps its
 # one-line answer and only the Stop entry stands down. The detached `--run` gets
@@ -89,6 +89,9 @@ if sys.argv[1:2] != ["--start"]:
 # `--start` runs in a `Bash` tool call, where $CLAUDE_PROJECT_DIR is empty (T234 D5): it finds the
 # project from the cwd. The Stop hook gets the variable from the harness.
 ROOT = script_project_root() if sys.argv[1:2] == ["--start"] else project_root()
+if ROOT is None:  # T234 D7: `--start` from a plugin, in no project: never read the plugin's board
+    print(f"{sys.argv[2] if len(sys.argv) > 2 else '--start'}: {NO_PROJECT} — nothing started")
+    sys.exit(1)
 KANBAN = os.path.join(ROOT, "PROJECT_KANBAN.md")
 
 import auto_closeout as ac  # noqa: E402

@@ -35,7 +35,7 @@ CODE_ROOT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))  # real
 sys.path.insert(0, os.path.join(CODE_ROOT, ".claude", "hooks", "lib"))
 from board import moments  # noqa: E402
 from board.config import load_config  # noqa: E402
-from project_root import script_project_root  # noqa: E402
+from project_root import NO_PROJECT, script_project_root  # noqa: E402
 
 ROOT = script_project_root()
 
@@ -54,6 +54,9 @@ def triage_lines(root):
 
 def main(argv=None, root=None):
     root = root or ROOT
+    if root is None:  # T234 D7: run from a plugin, in no project
+        print(NO_PROJECT)
+        return 0
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("moment", choices=["wake", "spawn", "review"])
     parser.add_argument("task_id", nargs="?")

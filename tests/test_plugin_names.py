@@ -154,6 +154,7 @@ def make_plugin(tmp_path):
     shutil.copytree(REPO / "scripts", plugin / "scripts", ignore=shutil.ignore_patterns("__pycache__"))
     shutil.copytree(SKILLS, plugin / "skills", ignore=shutil.ignore_patterns("__pycache__"))
     shutil.copytree(REPO / "templates", plugin / "templates")
+    shutil.copytree(REPO / ".claude-plugin", plugin / ".claude-plugin")
     return plugin
 
 
@@ -243,7 +244,9 @@ def test_script_project_root_prefers_the_env_then_the_cwd_then_the_file(tmp_path
     assert pr.script_project_root() == str(other), "the env var still wins"
     monkeypatch.delenv("CLAUDE_PROJECT_DIR")
     monkeypatch.chdir(other)
-    assert pr.script_project_root() == pr._FILE_ROOT, "no board above the cwd: the path above the file"
+    # D7: this checkout holds `.claude-plugin/plugin.json`, so it is a plugin folder: no board above the
+    # cwd means no project, never the folder the code sits in.
+    assert pr.script_project_root() is None
 
 
 # --- D3 / AC4: both agent names ------------------------------------------------------------------
@@ -508,3 +511,179 @@ def test_every_skill_dir_command_runs(tmp_path, layout):
             assert "memory-slice:T900" in result.stdout, label
         ran.add(base)
     assert ran == set(SAFE_ARGS), set(SAFE_ARGS) - ran
+
+
+# --- D7: from a plugin, with no project, say so -------------------------------------------------
+
+NO_PROJECT_TEXT = "no project found"
+
+
+def test_a_plugin_run_from_an_empty_folder_says_no_project_and_writes_nothing(tmp_path):
+    plugin = make_plugin(tmp_path)
+    empty = tmp_path / "empty folder"
+    empty.mkdir()
+    before = tree(plugin)
+    pull = run([plugin / "scripts" / "pull_moment.py", "wake"], empty)
+    assert pull.returncode == 0 and NO_PROJECT_TEXT in pull.stdout, (pull.stdout, pull.stderr)
+    sync = run([plugin / "scripts" / "board_sync.py", "pull"], empty)
+    assert sync.returncode == 2 and NO_PROJECT_TEXT in sync.stderr, (sync.stdout, sync.stderr)
+    render = run([plugin / "skills" / "delivery-report" / "render.py", "T900", "g.md", "b"], empty)
+    assert render.returncode == 2 and NO_PROJECT_TEXT in render.stderr, (render.stdout, render.stderr)
+    start = run([plugin / ".claude" / "hooks" / "stop_auto_verify.py", "--start", "T900"], empty)
+    assert start.returncode == 1, (start.stdout, start.stderr)
+    assert f"T900: {NO_PROJECT_TEXT}" in start.stdout and "nothing started" in start.stdout, start.stdout
+    assert "PROJECT_KANBAN" not in start.stdout.replace("PROJECT_KANBAN.md or", ""), "never the plugin's board"
+    assert tree(plugin) == before and tree(empty) == []
+
+
+def test_a_setup_install_run_from_an_empty_folder_keeps_its_own_project(tmp_path):
+    """No `.claude-plugin/plugin.json` in an install, so the code's own project is still the answer."""
+    install = make_plugin(tmp_path)
+    shutil.rmtree(install / ".claude-plugin")
+    (install / "PROJECT_KANBAN.md").write_text("# Board\n\n### In Progress\n- [~] **T900** — x | a | C1 | Risk: Low | P1\n")
+    empty = tmp_path / "empty folder"
+    empty.mkdir()
+    start = run([install / ".claude" / "hooks" / "stop_auto_verify.py", "--start", "T900"], empty)
+    assert NO_PROJECT_TEXT not in start.stdout, start.stdout
+    assert "T900: not at Ready for Review on PROJECT_KANBAN.md" in start.stdout, start.stdout
+
+
+# --- D6: the Codex projection, and the real installer ---------------------------------------------
+
+def hide_real_clis():
+    """PATH without a folder that holds `claude` or `codex`: the CLI menu pre-selects what is on PATH."""
+    dirs = [d for d in os.environ.get("PATH", "").split(os.pathsep)
+            if not (os.access(os.path.join(d, "claude"), os.X_OK) or os.access(os.path.join(d, "codex"), os.X_OK))]
+    return os.pathsep.join(dirs)
+
+
+@pytest.fixture(scope="module")
+def kit_snapshot(tmp_path_factory):
+    """The working tree as a git repo of its own, so `setup.sh` clones what this checkout holds now,
+    not the last commit (an install can run green over a tree that lacks the change)."""
+    if not (shutil.which("script") and shutil.which("setsid") and shutil.which("git")):
+        pytest.skip("needs script, setsid and git")
+    snap = tmp_path_factory.mktemp("snap")
+    names = subprocess.run(["git", "ls-files", "-z", "-c", "-o", "--exclude-standard"], cwd=REPO,
+                           capture_output=True, check=True).stdout.split(b"\0")
+    for raw in filter(None, names):
+        name = raw.decode()
+        if (REPO / name).is_file() or (REPO / name).is_symlink():
+            dest = snap / name
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(REPO / name, dest, follow_symlinks=False)
+    for cmd in (["init", "-q"], ["add", "-A"], ["-c", "user.name=t", "-c", "user.email=t@e", "commit", "-qm", "snap"]):
+        subprocess.run(["git", *cmd], cwd=snap, check=True, capture_output=True)
+    return snap
+
+
+def real_install(tmp_path, snap, answers, name):
+    """Run the real `setup.sh` in a terminal (a pty) and answer its menus. Folder name holds a space."""
+    project = tmp_path / name
+    project.mkdir()
+    for cmd in (["init", "-q"], ["-c", "user.name=t", "-c", "user.email=t@e", "commit", "-q", "--allow-empty", "-m", "init"]):
+        subprocess.run(["git", *cmd], cwd=project, check=True, capture_output=True)
+    env = clean_env()
+    env.update(PATH=hide_real_clis(), SUPERVISOR_REPO=f"file://{snap}", SHELL="/bin/sh")
+    done = subprocess.run(["script", "-qec", f"sh '{snap / 'setup.sh'}'", "/dev/null"], input=answers,
+                          capture_output=True, text=True, cwd=project, env=env, timeout=180)
+    assert done.returncode == 0, done.stdout + done.stderr
+    (project / "PROJECT_KANBAN.md").write_text("# Board\n")
+    (project / "tasks").mkdir(exist_ok=True)
+    (project / "tasks" / "TASK_GUIDE_T900.md").write_text(GUIDE_FOR_RUNS)
+    return project, done.stdout
+
+
+def real_update(project, snap):
+    env = clean_env()
+    env.update(PATH=hide_real_clis(), SUPERVISOR_REPO=f"file://{snap}")
+    return subprocess.run(["setsid", "-w", "sh", str(snap / "setup.sh")], stdin=subprocess.DEVNULL,
+                          capture_output=True, text=True, cwd=project, env=env, timeout=180)
+
+
+CODEX_ANSWERS = "\n2\n\n\n\n"    # Install, CLI menu: 2 = Codex, new project, packs, proceed
+CLAUDE_ANSWERS = "\n1\n\n\n\n"   # same, CLI menu: 1 = Claude Code
+# Not in MANIFEST, so no install holds it (a gap that predates T234: before it, the same call was
+# `python3 scripts/token_meter.py`). The test fails if MANIFEST ever ships it, so the entry goes then.
+NOT_SHIPPED = {"token_meter.py": "scripts/token_meter.py is not listed in MANIFEST"}
+
+
+def codex_commands(project):
+    """(file, script path as the Codex copy writes it) for each quoted python3 command in `.codex/skills`."""
+    found = []
+    for path in sorted((project / ".codex" / "skills").rglob("*")):
+        if path.is_file() and path.suffix == ".md":
+            for m in re.finditer(r'python3 "([^"\s$]+)"', path.read_text(encoding="utf-8")):
+                found.append((path, m.group(1)))
+    return found
+
+
+def check_script(script, base, project, tmp_path, label):
+    assert base in SAFE_ARGS, f"{label}: no safe arguments for {base}"
+    args = [a.replace("{out}", str(tmp_path / "out")) for a in SAFE_ARGS[base]]
+    result = run([script, *args], project)
+    text = f"{label}: {base} {args}\n{result.stdout}\n{result.stderr}"
+    assert result.returncode == 0, text
+    assert not any(m in result.stdout + result.stderr for m in CRASH_MARKERS), text
+    if base == "lane_check.py":
+        assert "UNKNOWN" not in result.stdout, text
+    if base == "memory_slice.py":
+        assert "memory-slice:T900" in result.stdout, text
+
+
+def test_codex_only_install_rewrites_the_variable_and_every_command_runs(tmp_path, kit_snapshot):
+    project, out = real_install(tmp_path, kit_snapshot, CODEX_ANSWERS, "my codex project")
+    assert not (project / ".claude" / "skills").exists(), "a Codex-only install makes no Claude Code link"
+    assert (project / "skills").is_dir() and (project / "scripts").is_dir()
+    codex = project / ".codex" / "skills"
+    # no copy keeps the variable; the source tree does
+    left = [str(p.relative_to(project)) for p in codex.rglob("*")
+            if p.is_file() and b"${CLAUDE_SKILL_DIR}" in p.read_bytes()]
+    assert not left, left
+    assert b"${CLAUDE_SKILL_DIR}" in (project / "skills" / "wake" / "SKILL.md").read_bytes()
+    # references too, not only SKILL.md
+    assert 'python3 "scripts/pull_moment.py" wake' in (codex / "wake" / "references" / "triage.md").read_text()
+    # no skill is newly skipped by the cap: only the four that are over it in the source
+    assert sorted(p.name for p in (SKILLS).iterdir() if (p / "SKILL.md").exists()
+                  and not (codex / p.name).exists()) == ["bugfix", "craft-spawn-prompt", "diagnose", "write-better-skill"]
+    cmds = codex_commands(project)
+    assert {os.path.basename(c) for _, c in cmds} >= {"pull_moment.py", "board_sync.py", "lane_check.py",
+                                                       "memory_sections.py", "render.py"}
+    ran = set()
+    for path, command in cmds:
+        base = os.path.basename(command)
+        if base in NOT_SHIPPED:
+            assert not (project / "scripts" / base).exists(), f"{base} is shipped now: drop its exemption"
+            continue
+        check_script(project / command, base, project, tmp_path, f"codex: {path.relative_to(project)}: {command}")
+        ran.add(base)
+    assert ran, "no command ran"
+
+
+def test_claude_install_runs_every_command_by_the_dot_claude_path(tmp_path, kit_snapshot):
+    project, out = real_install(tmp_path, kit_snapshot, CLAUDE_ANSWERS, "my claude project")
+    assert (project / ".claude" / "skills").is_symlink() and not (project / ".codex").exists()
+    for path, name, _, tail in skill_commands():
+        base = os.path.basename(tail)
+        if base in NOT_SHIPPED:
+            assert not (project / "scripts" / base).exists(), f"{base} is shipped now: drop its exemption"
+            continue
+        script = project / ".claude" / "skills" / name / tail.lstrip("/")
+        check_script(script, base, project, tmp_path, f"claude: {rel(path)}: {tail}")
+
+
+def test_update_rewrites_the_codex_copies_again_and_reports_nothing_edited(tmp_path, kit_snapshot):
+    project, _ = real_install(tmp_path, kit_snapshot, CODEX_ANSWERS, "my codex project")
+
+    def codex_files():
+        return {str(p.relative_to(project)): p.read_bytes()
+                for p in (project / ".codex" / "skills").rglob("*") if p.is_file()}
+    before = codex_files()
+    done = real_update(project, kit_snapshot)
+    assert done.returncode == 0, done.stdout + done.stderr
+    text = re.sub(r"\x1b\[[0-9;]*m", "", done.stdout)
+    assert "You edited these" in text
+    assert re.search(r"kept as they are:\s*\n\s*\(none\)", text), text
+    assert "Update complete" in text
+    assert codex_files() == before, "a second run must change no Codex copy"
+    assert not any(b"${CLAUDE_SKILL_DIR}" in data for data in before.values())
