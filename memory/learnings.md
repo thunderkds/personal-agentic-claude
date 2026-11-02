@@ -2984,3 +2984,8 @@ The merge gate needs a test-runner Bash call in `memory/event-trace/<ID>.jsonl`.
 
 **Learning**: `importlib` loads of a copied hook reuse the `project_root` module already in `sys.modules`, so its `__file__` fallback points at the first copy. A test that loads a copied hook must set `CLAUDE_PROJECT_DIR`.
 **Files**: .claude/hooks/lib/project_root.py, tests/test_hooks_from_plugin.py, tests/test_board_sync_pull.py
+
+## A cross-install change needs each command run in every install layout (2026-11-02)
+
+**Learning**: T234 passed tests on `skills/...` paths three times while breaking real installs. A model shortened a command in the live run, hiding the `abspath` crash; an implementer's "limit" note on Codex was a regression the Supervisor did not read as one. Run every command as written, in plugin, `setup.sh` and Codex-only layouts, from day one, and read a report's cut list for regressions.
+**Files**: tests/test_plugin_names.py, lib/harness-fetch.sh

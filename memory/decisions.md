@@ -2696,3 +2696,18 @@ The log refuses a symlink/non-file path, writes via `mktemp` in `.claude/` + `mv
 **Open**: pushed before T234, so the plugin is installable but skills and agents fail under `easy-kit:` until then; not advertised until T236. Hooks fire twice with both install modes (T235 D4). Local install is 18 MB (T236 D5). Install from `<owner>/<repo>` is untested.
 **Files**: .claude-plugin/plugin.json, .claude-plugin/marketplace.json, hooks/hooks.json, LICENSE, .claude/hooks/pre_tool_sensitive_path.py, tests/test_plugin_package.py, tests/test_hooks_from_plugin.py
 **Verified**: 1 auto verify fail, pass at `f58dd149`; merged `576dcff2`.
+
+## T234: skills and agents work under `easy-kit:`; Codex copies are rewritten at install (2026-11-02)
+
+**Decision** (user chose "Installer rewrites it", overriding "setup.sh unchanged" for the Codex projection only): skills call scripts by `python3 "${CLAUDE_SKILL_DIR}/..."`, shared scripts by `/../../scripts/`, and scripts find code with `realpath`, never `abspath`, because `.claude/skills` is a symlink. `lib/harness-fetch.sh` rewrites the variable in `.codex/skills` copies, install and Update, and measures the 8 KB cap after the rewrite. `script_project_root()`: variable, else nearest board at or above the cwd; from a plugin with none it answers "no project found", never the plugin's own board.
+**Why**: `/easy-kit:wake` failed on every script before this. 3 auto verify fails, each a different install type: `--run` root was only found in review; `setup.sh` broke by `abspath`; Codex copies kept the literal variable.
+**Open**: T235 D6-D8. T237. Untested by anyone: Claude-plus-Codex install, Reinstall, interactive Update, real Codex CLI, real `claude` under `--start`. Codex paths work only from the project root.
+**Files**: lib/harness-fetch.sh, .claude/hooks/lib/project_root.py, .claude/hooks/lib/board/moments.py, .claude/hooks/stop_auto_verify.py, scripts/pull_moment.py, scripts/board_sync.py, skills/write-better-skill/SKILL.md, AGENTS.md, tests/test_plugin_names.py
+**Verified**: auto verify pass at `1df50e35`; merged at user request. Merge without squashing: `T070_BASELINE_REF` names `fb3ff0f`.
+
+## T238: no tracked names may clash on Windows or macOS (2026-11-02)
+
+**Decision** (user: plugin upload error): renamed `experiments/kit-arms/results/REPORT.md` to `ANALYSIS.md`, because `run_arms.py` writes `report.md`. `tests/test_plugin_package.py` scans all tracked paths for case, Unicode form and trailing dots. Windows short names are not covered.
+**Why**: `claude plugin validate` does not check this; only the upload does.
+**Files**: experiments/kit-arms/results/ANALYSIS.md, experiments/kit-arms/RULE-2.md, tests/test_plugin_package.py
+**Verified**: auto verify pass at `b81f49de`; the upload itself not yet confirmed by the user.

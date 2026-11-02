@@ -98,11 +98,11 @@
 
 
 ### Ready for Review
-- [ ] **T234** — Skills and agents work under the easy-kit prefix | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T234.md` | Started 2026-11-02: branch `feat/t234-plugin-names`, worktree `../wt-t234`
-- [ ] **T238** — Rename a kit-arms report so no tracked names clash on Windows or macOS (plugin upload refused them) | Supervisor | C1 | Risk: Low | P0 | Started 2026-11-02: branch `fix/t238-name-clash`, worktree `../wt-t238` | Track: minimal | Record: tasks/MINIMAL_LOG.md
 
 
 ### Done
+- [x] **T238** — Rename a kit-arms report so no tracked names clash on Windows or macOS (plugin upload refused them) | Supervisor | C1 | Risk: Low | P0 | Started 2026-11-02: branch `fix/t238-name-clash`, worktree `../wt-t238` | Track: minimal | Record: tasks/MINIMAL_LOG.md | Done 2026-11-02: auto verify pass at `b81f49de`, merged at user request; upload result not yet confirmed
+- [x] **T234** — Skills and agents work under the easy-kit prefix | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T234.md` | Started 2026-11-02: branch `feat/t234-plugin-names`, worktree `../wt-t234` | Done 2026-11-02: auto verify pass at `1df50e35`, merged at user request
 - [x] **T233** — Plugin package and MIT LICENSE at the repo root | common-infrastructure | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T233.md` | Started 2026-11-02: branch `feat/t233-plugin-package`, worktree `../wt-t233` | Done 2026-11-02: auto verify pass at `f58dd149`, merged `576dcff2` at user request
 - [x] **T232** — Hooks find the real project when they run from a plugin | common-infrastructure | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T232.md` | Started 2026-11-02: branch `feat/t232-hooks-project-root`, worktree `../wt-t232` | Done 2026-11-02: auto verify pass at `321323c5`, merged `1b3aa7ed` at user request
 - [x] **T231** — Story landing page — one visual flow on index.html, reference moves to docs.html | frontend-developer | C2 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T231.md` | Started 2026-11-02: branch `feat/t231-story-page`, worktree `../wt-t231` | Done 2026-11-02: auto verify pass at `6f0ff115`, session dd56a996, merged `217c7c7a` at user request
