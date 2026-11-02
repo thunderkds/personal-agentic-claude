@@ -81,7 +81,7 @@
     <li class="flow-node is-yours is-link">
       <span class="flow-key">Your step</span>
       <span class="flow-title"><a href="docs.html#quick-reference">You ask</a></span>
-      <span class="flow-desc">Say what you want, in plain words.</span>
+      <span class="flow-desc">Say what you want.</span>
     </li>
     <li class="flow-node is-link">
       <span class="flow-key">Easy Kit</span>
@@ -96,7 +96,7 @@
     <li class="flow-node is-link">
       <span class="flow-key">Easy Kit</span>
       <span class="flow-title"><a href="docs.html#hooks">It checks</a></span>
-      <span class="flow-desc">Tests and a review run before anything ships.</span>
+      <span class="flow-desc">Tests and review run before shipping.</span>
     </li>
     <li class="flow-node is-yours is-link is-outcome">
       <span class="flow-key">Your step</span>
@@ -140,7 +140,7 @@
   </li>
 </ol>
 <div class="skill-band">
-  <h3>Any stage</h3>
+  <h3><a href="docs.html#skills">Any stage</a></h3>
   <p class="chips"><code class="chip">compact-advisor</code><code class="chip">compact-memory</code><code class="chip">compound</code><code class="chip">compound-refresh</code><code class="chip">dotfiles</code><code class="chip">learn</code><code class="chip">optimize</code><code class="chip">resolve-pr-feedback</code><code class="chip">resolve-question</code><code class="chip">slim-skills</code><code class="chip">strategy</code><code class="chip">teach</code><code class="chip">thinking-report</code><code class="chip">wake</code><code class="chip">write-better-skill</code></p>
 </div>
 <p class="story-note"><span aria-hidden="true">★</span> marks the key skill of each stage.</p>
@@ -171,9 +171,9 @@
   <ul class="flow-map story-stops" aria-label="What Easy Kit stops, and when">
     <!-- hook: pre_agent_validate_guide.py -->
     <li>
-      <div class="flow-node is-plain"><span class="flow-key">if</span><span class="flow-title">There is no written plan</span></div>
+      <div class="flow-node is-plain"><span class="flow-key">if</span><span class="flow-title">A task has no written plan</span></div>
       <span class="flow-arrow" aria-hidden="true"></span>
-      <div class="flow-node"><span class="flow-key">blocked</span><span class="flow-title">No agent starts</span></div>
+      <div class="flow-node"><span class="flow-key">blocked</span><span class="flow-title">Its agent does not start</span></div>
     </li>
     <!-- hook: pre_bash_block_unsafe_merge.py -->
     <li>
@@ -183,7 +183,7 @@
     </li>
     <!-- hook: pre_tool_sensitive_path.py -->
     <li>
-      <div class="flow-node is-plain"><span class="flow-key">if</span><span class="flow-title">A secrets file is touched</span></div>
+      <div class="flow-node is-plain"><span class="flow-key">if</span><span class="flow-title">A secrets file is about to change, outside the plan</span></div>
       <span class="flow-arrow" aria-hidden="true"></span>
       <div class="flow-node"><span class="flow-key">asks you</span><span class="flow-title">You confirm first</span></div>
     </li>
@@ -203,7 +203,7 @@
 <ul class="story-cards">
   <li class="card"><h3><a href="docs.html#agent-roles">Agents</a></h3><p>Backend, frontend, infrastructure and QA roles.</p></li>
   <li class="card"><h3><a href="docs.html#skills">Skills</a></h3><p>Ready-made steps for each part of the journey.</p></li>
-  <li class="card"><h3><a href="docs.html#memory-system">Memory</a></h3><p>Notes that carry decisions into the next session.</p></li>
+  <li class="card"><h3><a href="docs.html#memory-system">Memory</a></h3><p>Notes that carry decisions forward.</p></li>
   <li class="card"><h3><a href="docs.html#packs">Add-ons</a></h3><p>Optional domain packs and <a href="docs.html#mcps">MCP tools</a>.</p></li>
 </ul>
 <p class="story-note">Want your own Claude Code settings? <a href="docs.html#settings-tool">Try the Settings tool</a>.</p>

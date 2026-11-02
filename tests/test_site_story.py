@@ -304,6 +304,34 @@ def test_stops_says_the_checks_run_on_claude_code_only():
     assert "Codex" in text and "Cursor" in text
 
 
+def _stop_pairs():
+    """[(hook file, if text, then label, then text)] of the stops list, whitespace-normalised."""
+    body = section(index_html(), "stops")
+    out = []
+    for hook, li in re.findall(r"<!--\s*hook:\s*(\S+?)\s*-->\s*<li\b[^>]*>(.*?)</li>", body, re.DOTALL):
+        nodes = re.findall(r'<div class="flow-node[^"]*">(.*?)</div>', li, re.DOTALL)
+        assert len(nodes) == 2, nodes
+        parts = [re.findall(r'<span class="flow-(?:key|title)">(.*?)</span>', n, re.DOTALL) for n in nodes]
+        out.append((hook, parts[0][1], parts[1][0], parts[1][1]))
+    return out
+
+
+def test_two_stops_say_exactly_what_their_hooks_do():
+    """Round 3: auto verify found two claims wider than the hooks. pre_agent_validate_guide.py blocks only a
+    spawn that names a task whose guide is missing or incomplete (a spawn with no task ID passes).
+    pre_tool_sensitive_path.py does not fire on Read, and a guide that predicts the path exempts it."""
+    pairs = {hook: rest for hook, *rest in _stop_pairs()}
+    assert pairs["pre_agent_validate_guide.py"] == ["A task has no written plan", "blocked", "Its agent does not start"]
+    assert pairs["pre_tool_sensitive_path.py"] == [
+        "A secrets file is about to change, outside the plan", "asks you", "You confirm first"]
+
+
+def test_the_any_stage_group_title_links_to_the_docs_skills_section():
+    band = re.search(r'<div class="skill-band">(.*?)</div>', section(index_html(), "stages"), re.DOTALL).group(1)
+    h3 = re.search(r"<h3\b[^>]*>(.*?)</h3>", band, re.DOTALL).group(1)
+    assert 'href="docs.html#skills"' in h3 and " ".join(visible_words(h3)) == "Any stage", h3
+
+
 # ---- the other screens ---------------------------------------------------------------
 
 def test_hero_has_the_install_command_a_copy_button_and_one_docs_link():

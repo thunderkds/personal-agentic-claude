@@ -141,5 +141,12 @@ The Stops claims, each read in the hook before it was written: `pre_agent_valida
 - Headless Chrome (`cdp_check.mjs`): `scrollWidth == clientWidth` on both pages at 1440, 1024, 768, 375 (index heights 2711, 3287, 4482, 5266 px); redirects as in round 1.
 - Screenshots in `/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-personal-agentic-claude/91713a2d-c4ca-4ba6-9c19-2b966a122175/scratchpad/shots/`: `r2_index_1440x900.png`, `r2_index_1440_full.png`, `r2_index_1024.png`, `r2_index_768.png`, `r2_index_375.png`, `r2_docs_1440x900.png`, `r2_docs_skills_375.png`.
 
+**AFTER, round 3 (auto verify found two `stops` claims wider than their hooks, 2026-11-02)**:
+
+- `#stops`, first pair: "There is no written plan / No agent starts" now reads "A task has no written plan / Its agent does not start" (`pre_agent_validate_guide.py` blocks only a spawn that names a task whose guide is missing or incomplete; a spawn with no task ID passes). Third pair: "A secrets file is touched" now reads "A secrets file is about to change, outside the plan"; "You confirm first" stays (`pre_tool_sensitive_path.py` does not fire on `Read`, and a guide that predicts the path exempts it). The second and fourth pairs are unchanged. The "Any stage" group title in `#stages` now links to `docs.html#skills`, as the seven stage titles do.
+- Word cap: the longer claims added 8 words, so three descriptions were shortened (journey step 1 "Say what you want.", step 4 "Tests and review run before shipping.", Memory card "Notes that carry decisions forward."). `<main>` still has **297** words (cap 300).
+- Red first: two new tests in `tests/test_site_story.py` (`test_two_stops_say_exactly_what_their_hooks_do`, `test_the_any_stage_group_title_links_to_the_docs_skills_section`): `2 failed, 48 passed`. After the edit: `50 passed`.
+- Verification command: `204 passed`; `node --test tests/settings_tool/*.mjs` pass 59 fail 0; `node --test tests/site_scrollspy/*.mjs` pass 8 fail 0; `pytest tests` `1450 passed in 115.86s`; `pytest .claude/hooks/tests` `1388 passed, 25 subtests passed`. Headless Chrome: `scrollWidth == clientWidth` at 1440, 1024, 768, 375 on both pages (index heights 2711, 3308, 4482, 5265 px). Screenshot: `/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-personal-agentic-claude/91713a2d-c4ca-4ba6-9c19-2b966a122175/scratchpad/shots/r3_index_1440.png`.
+
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
