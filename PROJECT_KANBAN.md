@@ -91,7 +91,6 @@
 
 
 ### In Progress
-- [ ] **T233** — Plugin package and MIT LICENSE at the repo root | common-infrastructure | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T233.md` | Started 2026-11-02: branch `feat/t233-plugin-package`, worktree `../wt-t233`
 
 
 
@@ -100,6 +99,7 @@
 
 
 ### Ready for Review
+- [ ] **T233** — Plugin package and MIT LICENSE at the repo root | common-infrastructure | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T233.md` | Started 2026-11-02: branch `feat/t233-plugin-package`, worktree `../wt-t233`
 
 
 ### Done

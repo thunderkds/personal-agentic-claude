@@ -36,7 +36,7 @@ User, 2026-11-02: chose the five-task split ("T234 Skills + agents work when pre
 - **D3 — Agent names.** `AGENTS.md`'s role table gains the plugin form. `craft-spawn-prompt` reports the right name for the mode. Any hook logic reading `subagent_type` accepts both forms.
 - **D4 — Scripts outside a skill.** A skill that calls a shared `scripts/*.py` finds it in both modes by one documented rule.
 
-- **D5 — Carried from T232's review.** (a) `stop_auto_verify.py --start` run from a plugin path finds no project, because `$CLAUDE_PROJECT_DIR` is empty in a Bash tool call: give it a way to find the project. (b) `lib/board/moments.py:51-53` runs `<root>/scripts/board_sync.py`, which from a plugin is a project file: resolve it from the code's own location.
+- **D5 — Carried from T232's review.** (a) `stop_auto_verify.py --start` run from a plugin path finds no project, because `$CLAUDE_PROJECT_DIR` is empty in a Bash tool call: give it a way to find the project. (b) `lib/board/moments.py:51-53` runs `<root>/scripts/board_sync.py`, which from a plugin is a project file: resolve it from the code's own location. `board_sync.py` takes its root from its own location, so it must also take the project root, or it would write into the plugin cache (T233 sweep).
 
 **Out of scope**: `init` (T235), Codex, `setup.sh`.
 
