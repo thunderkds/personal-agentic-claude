@@ -47,16 +47,16 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_site_story.py` (43 tests, new in this task), fixture `tests/fixtures/site_story_baseline.json`. Supervisor rerun: 197 passed across the three site test files. |
+| Verification command run | ☑ pass | Supervisor rerun in the worktree: `197 passed in 0.62s`; settings tool `pass 59, fail 0`; scroll-spy `pass 8, fail 0`. |
+| Negative cases hold | ☑ pass | M1–M5 each went RED then green (implementer table below). Supervisor checked redirect code: only ids on the list redirect; every `docs.html#` link on index.html resolves; no duplicate ids in docs.html. |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | code-review run inline on `main..HEAD` plus direct readers of the moved page. P0 0, P1 0, P2 2 fixed here (`PROJECT_SPEC_SITE.md:73` and `RUNBOOK.md:156` still named index.html alone), P3 1 left (hero eyebrow "multi-agent supervisor framework" is not plain, not on the D4 list). lane: `C2, 16 files, 6875 lines, EXCEEDS`: moved text and a fixture, label kept. Startup-reads line complete. |
+| Full smoke suite still green (no regression) | ☑ pass | Supervisor rerun: `pytest tests` 1443 passed; `pytest .claude/hooks/tests` 1388 passed, 25 subtests passed. |
+| **Companion score (easy-verifier)** | ☐ N/A | Optional tool, not run for this task. |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ pass | Supervisor viewed `/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-personal-agentic-claude/91713a2d-c4ca-4ba6-9c19-2b966a122175/scratchpad/shots/idx_1440_crop.png` and `/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-personal-agentic-claude/91713a2d-c4ca-4ba6-9c19-2b966a122175/scratchpad/shots/after_index_375.png`: five sections, one flow, no fold. Implementer: docs.html same sections as old page (`/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-personal-agentic-claude/91713a2d-c4ca-4ba6-9c19-2b966a122175/scratchpad/shots/after_docs_1440x900.png`). |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ pass | AC 9 test: no hex outside theme.css, no third-party assets. Computed fonts IBM Plex Sans and IBM Plex Mono (implementer, headless Chrome). Mint on final journey node, Copy button, links. |
+| **UI: Responsiveness at target viewports** | ☑ pass | `scrollWidth == clientWidth` on both pages at 1440, 1024, 768, 375 (implementer, headless Chrome). Supervisor viewed 375 px: flows stacked. |
 
 ---
 

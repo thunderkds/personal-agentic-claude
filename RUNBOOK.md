@@ -153,7 +153,7 @@ page) to Vercel. Config lives in `vercel.json` at the repo root; it declares `si
 **output directory only** and sets no build/install/framework command — this is a static-file
 deploy, not a framework build.
 
-**Scope of what gets published**: only the contents of `site/` (currently `site/index.html`) are
+**Scope of what gets published**: only the contents of `site/` (currently `site/index.html`, `site/docs.html` and `site/theme.css`) are
 served. `vercel.json`'s `outputDirectory` is the one thing standing between this deploy and
 publishing the whole repo root — `memory/`, `tasks/`, `PROJECT_KANBAN*.md` and every other
 project-management file stay off the public URL because they are outside `site/`, not because
