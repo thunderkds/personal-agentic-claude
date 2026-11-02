@@ -79,6 +79,21 @@ QUOTED_REDIRECT_TARGET_PATTERN = re.compile(r"""(?:&|\d*)>[>|]?\s*(?:"([^"]*)"|'
 
 # --- Pattern file ------------------------------------------------------------
 
+def pattern_file_path(root):
+    """The project's list; the plugin's own copy only when the project has none (T233).
+
+    A hook run from a plugin cache sits at `<plugin>/.claude/hooks`, so the copy shipped with the
+    plugin is `<plugin>/.claude/sensitive-paths.txt`. In the `setup.sh` install the two paths are
+    the same file, so nothing changes there. A project file that exists but cannot be read is
+    still returned, so the caller asks; it never falls back.
+    """
+    project_file = os.path.join(root, PATTERNS_RELPATH)
+    if os.path.lexists(project_file):
+        return project_file
+    plugin_file = os.path.join(os.path.dirname(HOOKS_DIR), "sensitive-paths.txt")
+    return plugin_file if os.path.lexists(plugin_file) else project_file
+
+
 def expand_braces(pattern):
     """`prod*.{yml,json}` -> [`prod*.yml`, `prod*.json`]. Nested groups recurse."""
     match = re.search(r"\{([^{}]*)\}", pattern)
@@ -298,7 +313,7 @@ def main():
         sys.exit(0)
 
     root = project_dir()
-    patterns_file = os.path.join(root, PATTERNS_RELPATH)
+    patterns_file = pattern_file_path(root)
     try:
         patterns = load_patterns(patterns_file)
     except Exception as exc:
