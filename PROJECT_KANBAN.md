@@ -8,6 +8,7 @@
 ## Board
 
 ### Todo
+- [ ] **T237** — Online board: with `.claude/board.json`, no `PROJECT_KANBAN.md` and a failed pull, the merge gate exits 0 silently in a kit project (found in T232 review, unchanged behaviour); also an exception in a gate `main()` on well-formed input exits 1 and passes; and find the intermittent full-suite failure seen on T232 (`test_t203_ac2` suspected) | common-infrastructure | C1 | Risk: Medium | P2
 - [ ] **T236** — Real plugin install proven, then published on the README and site | frontend-developer | C2 | Risk: Medium | P1
 - [ ] **T235** — /easy-kit:init sets up a project, and plugin hooks stand down beside in-repo hooks | common-infrastructure | C2 | Risk: Medium | P1
 - [ ] **T234** — Skills and agents work under the easy-kit prefix | common-infrastructure | C2 | Risk: Medium | P1
@@ -91,7 +92,6 @@
 
 
 ### In Progress
-- [ ] **T232** — Hooks find the real project when they run from a plugin | common-infrastructure | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T232.md` | Started 2026-11-02: branch `feat/t232-hooks-project-root`, worktree `../wt-t232`
 
 
 
@@ -100,6 +100,7 @@
 
 
 ### Ready for Review
+- [ ] **T232** — Hooks find the real project when they run from a plugin | common-infrastructure | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T232.md` | Started 2026-11-02: branch `feat/t232-hooks-project-root`, worktree `../wt-t232`
 
 
 ### Done
