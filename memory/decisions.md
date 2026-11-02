@@ -2672,3 +2672,11 @@ The log refuses a symlink/non-file path, writes via `mktemp` in `.claude/` + `mv
 **Open**: T230 (target inside the source, skill names with unprintable text, wrong source shape). The script is 290 lines against a 150-200 target, from verify fixes. The agent flow in SKILL.md was read, not fully run. No Claude Code session has loaded a linked skill.
 **Files**: skills/dotfiles/SKILL.md, skills/dotfiles/scripts/dotfiles.py, tests/test_dotfiles.py, CLAUDE_LEGACY.md, README.md, site/index.html, AGENTS.md, docs/brainstorming/BRAINSTORMING_LOG_dotfiles.md
 **Verified**: 3 auto verify fails fixed, pass on the 4th at `b323b07a` ($3.40 total); merged with T226 at `1226c97`; suite 2788 passed.
+
+## T231: landing page splits into a story (`index.html`) and a reference (`docs.html`) (2026-11-02)
+
+**Decision** (user: "the content of index page still got the complex idea, any way to convert them as the flow", picked "One story, docs moved"; then "the flow stage with skill included should appear also", "and some of highlight also"): `site/index.html` is six sections (`hero`, `journey`, `stages`, `paths`, `stops`, `deeper`), no `<details>`, no sidebar, at most 300 words, internal terms banned (`Stage` allowed inside `#stages` only). `site/docs.html` holds the 17 reference sections, the sidebar and the Settings tool. An inline script redirects old `index.html#<id>` links to `docs.html` on load only.
+**Why**: T207 added diagrams but the page stayed a manual: 17 sections, 4,564 words counting folds, diagrams in internal terms.
+**Open**: the word count is exactly 300, so new copy needs a cut. A new skill must go on both `docs.html#skills` and `index.html#stages`. Page is 6.6 viewports at 375 px. `docs.html` has no meta description. The seven key skills (star) were the agent's pick. Not deployed: Vercel stays operator-run.
+**Files**: site/index.html, site/docs.html, site/theme.css, tests/test_site_story.py, tests/fixtures/site_story_baseline.json, tests/test_site_content.py, tests/test_site_visual_first.py, tests/settings_tool/test_generate.mjs, tests/settings_tool/test_check.mjs, tests/site_scrollspy/test_scrollspy.mjs, PROJECT_SPEC_SITE.md, RUNBOOK.md
+**Verified**: 3 auto verify fails on overstated claims, pass on the 5th run at `6f0ff115`; merged at `217c7c7a`; suites 1451 and 1388 passed on main.

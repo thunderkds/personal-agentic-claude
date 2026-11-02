@@ -2974,3 +2974,8 @@ The merge gate needs a test-runner Bash call in `memory/event-trace/<ID>.jsonl`.
 
 **Learning**: writing a TASK_GUIDE fires `post_write_register_task.py`, which adds a Todo row, so a hand-added In Progress row duplicates it and fails `test_find_kanban_section_on_real_current_board` (T228). Move the row instead of adding one. Merging two skill tasks: both raise the site count to the same number, so git merges it clean and wrong; set it by hand. `CLAUDE_LEGACY_REF` and `T070_BASELINE_REF` need a second commit, because the pin must name the commit that edits the file. Merge, do not rebase, or the pinned hash dies. T229 tracks the auto-check false positive.
 **Files**: .claude/hooks/post_write_register_task.py, tests/test_agents_md_primary.py, .claude/hooks/tests/test_agent_guide_dedup.py, site/index.html
+
+## A public claim fails verify one line at a time; audit every claim in one pass (2026-11-02)
+
+**Learning**: T231's verify failed three times, each on a different sentence that claimed more than the code does ("No agent starts", "No test ... on record", "Easy Kit never does"). Fixing only the line named cost a full run each (up to $2). On the first fail, read every visible claim against the code, fix all of them in one round, and pin the text with a test. A guide rule "every claim must be true of a real hook" needs this audit at Stage 4, not at verify.
+**Files**: site/index.html, tests/test_site_story.py, .claude/hooks/pre_bash_block_unsafe_merge.py

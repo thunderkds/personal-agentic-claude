@@ -25,6 +25,7 @@
      run; read them there. The enforced gate is the whole-file character budget above. -->
 
 ### Decisions
+- [T231: story `index.html`, reference `docs.html`](decisions.md) — 300-word cap; new skill goes on both pages
 - [T218–T220: tech-lead pack — map-first agent, dormant; pipeline pointers; packs activate by approved copy](decisions.md)
 - [T216: plugin path (Option C) — Claude Code plugin works with prefixed names; setup.sh stays](decisions.md) — `easy-kit:<agent>` in plugin mode; Codex gate open
 - [T213: scroll-spy band starts below the header; click holds its link until a hand scroll](decisions.md) — test `node --test tests/site_scrollspy/*.mjs` (headless Chrome; bare dir fails on Node 26)
@@ -275,6 +276,7 @@
 - [Parallel tasks merge together; 401 ≠ permanent](learnings.md) — T156/T157: gate serialises merges
 
 ### Learning Records
+- [Audit every public claim in one pass](learnings.md) — T231: verify failed 3 times, one sentence each
 - [Sideways scroll: measure the table's minimum content width](learnings.md) — T199 addendum: `nowrap` was not the only floor; `Edit|Write|Bash` needed `<wbr>`
 - [Minimal-track test runs need the task state file before the gate counts them](learnings.md) — the classifier refuses the Supervisor writing it; ask the user for the `!` line at task start
 - [Merge gate reads evidence at hook time; `pkill -f` can kill its own shell](learnings.md) — commit the verify row in one Bash call, merge in the next; use a saved PID, not `pkill -f`
