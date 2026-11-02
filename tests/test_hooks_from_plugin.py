@@ -203,6 +203,13 @@ def test_a_broken_gate_module_stays_silent_outside_a_kit_project(cache, plain, h
     assert (result.returncode, result.stdout, result.stderr) == (0, "", "")
 
 
+def test_a_broken_helper_fails_closed_outside_a_kit_project_too(cache, plain):
+    """Known limit, listed in the review file: with the helper itself broken no hook can tell a kit
+    project from any other, so the gates keep their fail-closed result."""
+    break_module(cache, "project_root")
+    assert decision(run_hook(cache, "pre_bash_block_unsafe_merge.py", BASH_PUSH, plain)) == "block"
+
+
 def test_missing_project_dir_stays_silent_from_the_plugin_cache(cache, tmp_path):
     env = {"CLAUDE_PROJECT_DIR": str(tmp_path / "gone")}
     result = run_hook(cache, "pre_bash_block_unsafe_merge.py", BASH_PUSH, **env)
@@ -446,9 +453,10 @@ def test_d4_auto_check_blocks_once_on_bad_stdin_with_a_failing_task(cache, kit):
 
 
 @pytest.mark.parametrize("module", ["project_root", "auto_mode"])
-def test_d4_auto_check_blocks_the_first_stop_on_a_broken_import(cache, kit, module):
+@pytest.mark.parametrize("event", [{"stop_hook_active": False}, {}], ids=["flag-false", "no-flag"])
+def test_d4_auto_check_blocks_the_first_stop_on_a_broken_import(cache, kit, module, event):
     break_module(cache, module)
-    result = run_hook(cache, "stop_auto_mode_check.py", {"stop_hook_active": False}, kit)
+    result = run_hook(cache, "stop_auto_mode_check.py", event, kit)
     assert (result.returncode, decision(result)) == (0, "block")
 
 

@@ -79,7 +79,7 @@ def stop_on_broken_import(exc):
     message = (f"[hook:stop_auto_mode_check] Auto-mode check unavailable ({type(exc).__name__}: "
                f"{exc}). Restore .claude/hooks/lib/.")
     try:
-        first_fire = json.load(sys.stdin).get("stop_hook_active") is False
+        first_fire = not json.load(sys.stdin).get("stop_hook_active")
     except Exception:
         first_fire = False
     if first_fire:

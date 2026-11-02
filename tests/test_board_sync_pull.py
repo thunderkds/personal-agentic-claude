@@ -145,8 +145,11 @@ def test_dirty_worktrees_reads_rendered_in_progress(tmp_path):
     assert ids == set(SECTIONS["In Progress"])
 
 
-def test_spawn_validator_finds_every_row_in_its_section(tmp_path):
+def test_spawn_validator_finds_every_row_in_its_section(tmp_path, monkeypatch):
     project, _ = pulled(tmp_path)
+    # T232: this loads the copied hook in-process, where `project_root` may already be imported from
+    # the repo, so the project is named the way the harness names it.
+    monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(project))
     spec = importlib.util.spec_from_file_location(
         "validator_under_test", project / ".claude" / "hooks" / "pre_agent_validate_guide.py")
     validator = importlib.util.module_from_spec(spec)
@@ -482,7 +485,8 @@ def test_board_package_and_cli_import_only_stdlib():
                 continue
             for name in names:
                 top = name.split(".")[0]
-                assert top in sys.stdlib_module_names or top in ("board", "guide_sections"), \
+                assert top in sys.stdlib_module_names or top in ("board", "guide_sections",
+                                                                 "project_root"), \
                     f"{path.name}: {name}"
 
 
