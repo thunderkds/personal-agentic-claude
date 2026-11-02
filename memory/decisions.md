@@ -2688,3 +2688,11 @@ The log refuses a symlink/non-file path, writes via `mktemp` in `.claude/` + `mv
 **Open**: T235 D6 (unset env var from a plugin falls back to the plugin folder; a broken helper blocks in unrelated repos). T234 D5 (`--start` from a plugin; `lib/board/moments.py` runs a project script). T237 (online board silent pass; exception in a gate `main()`; intermittent full-suite failure).
 **Files**: .claude/hooks/lib/project_root.py, .claude/hooks/lib/task_context.py, .claude/hooks/lib/board/config.py, .claude/hooks/pre_bash_block_unsafe_merge.py, .claude/hooks/pre_agent_validate_guide.py, .claude/hooks/pre_agent_step_limit.py, .claude/hooks/pre_tool_sensitive_path.py, .claude/hooks/stop_auto_mode_check.py, .claude/hooks/stop_auto_verify.py, .claude/hooks/tests/merge_gate_guard.py, tests/test_hooks_from_plugin.py
 **Verified**: auto verify pass at `321323c5`; merged `1b3aa7ed`.
+
+## T233: the repo is the `easy-kit` plugin and its own marketplace; MIT license (2026-11-02)
+
+**Decision** (user chose MIT and the five-task split): `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` (source `./`, no easy-memory entry), `hooks/hooks.json` (11 hooks, a test keeps it equal to `.claude/settings.json`), `LICENSE`. `pre_tool_sensitive_path.py` uses the plugin's own `sensitive-paths.txt` when the project has none; a project list wins, and an unreadable project list still asks.
+**Why**: first verify failed: a project with a board and no list got `ask` on every Bash call. A sweep found no other kit file read from the project.
+**Open**: pushed before T234, so the plugin is installable but skills and agents fail under `easy-kit:` until then; not advertised until T236. Hooks fire twice with both install modes (T235 D4). Local install is 18 MB (T236 D5). Install from `<owner>/<repo>` is untested.
+**Files**: .claude-plugin/plugin.json, .claude-plugin/marketplace.json, hooks/hooks.json, LICENSE, .claude/hooks/pre_tool_sensitive_path.py, tests/test_plugin_package.py, tests/test_hooks_from_plugin.py
+**Verified**: 1 auto verify fail, pass at `f58dd149`; merged `576dcff2`.

@@ -99,10 +99,10 @@
 
 
 ### Ready for Review
-- [ ] **T233** — Plugin package and MIT LICENSE at the repo root | common-infrastructure | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T233.md` | Started 2026-11-02: branch `feat/t233-plugin-package`, worktree `../wt-t233`
 
 
 ### Done
+- [x] **T233** — Plugin package and MIT LICENSE at the repo root | common-infrastructure | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T233.md` | Started 2026-11-02: branch `feat/t233-plugin-package`, worktree `../wt-t233` | Done 2026-11-02: auto verify pass at `f58dd149`, merged `576dcff2` at user request
 - [x] **T232** — Hooks find the real project when they run from a plugin | common-infrastructure | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T232.md` | Started 2026-11-02: branch `feat/t232-hooks-project-root`, worktree `../wt-t232` | Done 2026-11-02: auto verify pass at `321323c5`, merged `1b3aa7ed` at user request
 - [x] **T231** — Story landing page — one visual flow on index.html, reference moves to docs.html | frontend-developer | C2 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T231.md` | Started 2026-11-02: branch `feat/t231-story-page`, worktree `../wt-t231` | Done 2026-11-02: auto verify pass at `6f0ff115`, session dd56a996, merged `217c7c7a` at user request
 - [x] **T228** — `dotfiles` skill keeps agent config in one source (`plan`/`apply`/`status`, add-only) | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T228.md` | Merged 2026-11-01 (no squash) | Started 2026-11-01: branch `feat/t228-dotfiles` in `../wt-t228` | Ready for Review 2026-11-01: code-review P2×1 P3×1 open, security-review no findings; suite 2695 passed; rebase on T226 needed (site count, CLAUDE_LEGACY_REF pin) | Auto verify pass 2026-11-01 on `b323b07a`, fourth run ($3.40 total): three earlier fails fixed; suite 2760 passed; awaiting user merge | Done 2026-11-01
