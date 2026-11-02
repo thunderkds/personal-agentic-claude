@@ -35,6 +35,8 @@ User, 2026-11-02: chose the five-task split ("T235 /easy-kit:init. Writes CLAUDE
 - **D4 — Stand-down.** A hook running from a plugin exits 0 silently when `<project>/.claude/settings.json` wires in-repo kit hooks. Exactly one set of gates runs. The in-repo set wins because the project chose it.
 - **D5 — Gate warning.** A kit project with `enabledPlugins` naming `easy-kit` but no plugin installed has no gates. `init`'s report tells the user that each teammate must install the plugin.
 
+- **D6 — Carried from T232's verify.** (a) From a plugin, with `CLAUDE_PROJECT_DIR` unset, `project_root()` falls back to the plugin folder, so a gate sees no kit project and passes with no warning: fall back to the working directory or warn. (b) With `lib/project_root.py` broken, gates block outside a kit project too, so one bad plugin update would stop pushes in unrelated repos: decide and pin the behaviour.
+
 **Out of scope**: `setup.sh` changes, auto-migrating a `setup.sh` project to the plugin, Codex.
 
 **Requirement Refs**: `docs/brainstorming/BRAINSTORMING_LOG_distribution.md` `## Edge Case Checklist for TASK_GUIDE`.
