@@ -38,6 +38,9 @@ User, 2026-11-02: chose the five-task split ("T234 Skills + agents work when pre
 
 - **D5 — Carried from T232's review.** (a) `stop_auto_verify.py --start` run from a plugin path finds no project, because `$CLAUDE_PROJECT_DIR` is empty in a Bash tool call: give it a way to find the project. (b) `lib/board/moments.py:51-53` runs `<root>/scripts/board_sync.py`, which from a plugin is a project file: resolve it from the code's own location. `board_sync.py` takes its root from its own location, so it must also take the project root, or it would write into the plugin cache (T233 sweep).
 
+- **D6 — Amendment (user, 2026-11-02, chose "Installer rewrites it").** When the installer projects skills to Codex, it rewrites `${CLAUDE_SKILL_DIR}` to the project path of that skill, on install and on Update. This overrides `Files Must NOT Touch` for `lib/harness-*.sh`, for the Codex projection only. Claude Code copies and source files stay as they are.
+- **D7 — From T234 verify.** A plugin ships the kit's own `PROJECT_KANBAN.md`, so `script_project_root()` must never answer with the plugin folder when run from a plugin: with no project found it says so.
+
 **Out of scope**: `init` (T235), Codex, `setup.sh`.
 
 **Requirement Refs**: T216 spike findings.
