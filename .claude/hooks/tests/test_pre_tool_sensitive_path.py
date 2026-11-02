@@ -221,8 +221,18 @@ class SensitivePathHookTest(unittest.TestCase):
     # --- SC7 / AC5: fail toward the human -----------------------------------
 
     def test_sc7_missing_pattern_file_asks(self):
+        # T233: a project without a list falls back to the list beside the hook's own folder, so
+        # "missing" means missing in both places: run a hook copy that has no sibling list.
         os.remove(os.path.join(self.project, ".claude", "sensitive-paths.txt"))
-        self.assert_ask(self.write("README.md"), "unreadable")
+        sandbox = tempfile.mkdtemp(prefix="t146-nolist-")
+        try:
+            hooks_copy = os.path.join(sandbox, "hooks")
+            shutil.copytree(HOOKS_DIR, hooks_copy,
+                            ignore=shutil.ignore_patterns("tests", "__pycache__", ".state"))
+            hook_copy = os.path.join(hooks_copy, "pre_tool_sensitive_path.py")
+            self.assert_ask(self.write("README.md", hook=hook_copy), "unreadable")
+        finally:
+            shutil.rmtree(sandbox, ignore_errors=True)
 
     def test_malformed_stdin_asks(self):
         self.assert_ask(run_hook(None, self.project, raw_stdin="not json{"), "Malformed")

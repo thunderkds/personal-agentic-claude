@@ -494,3 +494,52 @@ def test_library_roots_come_from_the_helper(path):
     source = (HOOKS_SRC / path).read_text(encoding="utf-8")
     assert "project_root" in source
     assert "_FILE_ROOT" not in source
+
+
+# --- T233 round 2 — the sensitive-path list ships with the plugin ----------------------------------
+# A kit project made by a plugin holds no `.claude/sensitive-paths.txt`. The hook then reads the
+# plugin's own copy, one level above its hooks folder (`<plugin>/.claude/sensitive-paths.txt`).
+
+HARMLESS_BASH = {"tool_name": "Bash", "tool_input": {"command": "ls -la"}, "session_id": "s1"}
+SENSITIVE_WRITE = EVENTS["pre_tool_sensitive_path.py"]
+SENSITIVE_HOOK = "pre_tool_sensitive_path.py"
+PLUGIN_LIST = "# plugin copy\n.env\n.env.*\n"
+
+
+@pytest.fixture
+def plugin_list(cache):
+    path = cache.parent / "sensitive-paths.txt"
+    path.write_text(PLUGIN_LIST, encoding="utf-8")
+    return path
+
+
+def test_plugin_list_lets_a_harmless_bash_call_through(cache, kit, plugin_list):
+    result = run_hook(cache, SENSITIVE_HOOK, HARMLESS_BASH, kit)
+    assert (result.returncode, result.stdout) == (0, "")
+
+
+def test_plugin_list_still_asks_for_a_sensitive_path(cache, kit, plugin_list):
+    assert decision(run_hook(cache, SENSITIVE_HOOK, SENSITIVE_WRITE, kit)) == "ask"
+
+
+def test_project_list_wins_over_the_plugin_list(cache, kit, plugin_list):
+    (kit / ".claude").mkdir()
+    (kit / ".claude" / "sensitive-paths.txt").write_text("secret.txt\n", encoding="utf-8")
+    assert run_hook(cache, SENSITIVE_HOOK, SENSITIVE_WRITE, kit).stdout == ""
+    event = {"tool_name": "Write", "tool_input": {"file_path": "secret.txt"}}
+    assert decision(run_hook(cache, SENSITIVE_HOOK, event, kit)) == "ask"
+
+
+def test_no_list_anywhere_still_asks(cache, kit):
+    assert decision(run_hook(cache, SENSITIVE_HOOK, HARMLESS_BASH, kit)) == "ask"
+
+
+def test_unreadable_plugin_list_still_asks(cache, kit, plugin_list):
+    plugin_list.unlink()
+    plugin_list.mkdir()  # exists, but cannot be read as a file
+    assert decision(run_hook(cache, SENSITIVE_HOOK, HARMLESS_BASH, kit)) == "ask"
+
+
+def test_unreadable_project_list_asks_and_does_not_fall_back(cache, kit, plugin_list):
+    (kit / ".claude" / "sensitive-paths.txt").mkdir(parents=True)
+    assert decision(run_hook(cache, SENSITIVE_HOOK, HARMLESS_BASH, kit)) == "ask"

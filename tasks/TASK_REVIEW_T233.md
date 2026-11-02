@@ -111,6 +111,45 @@ The push was blocked, and I haven't pushed anything.
 A pre-push hook rejected the push because task T900 is still In Progress. ...
 ```
 
+**AFTER, round 2** (auto verify found: a plugin kit project with no `.claude/sensitive-paths.txt` got `ask` on every Bash call; `pre_tool_sensitive_path.py` read the list from the project only).
+
+Fix: `pattern_file_path(root)` in `.claude/hooks/pre_tool_sensitive_path.py` returns the project list when that path exists (even if unreadable, so the hook asks and never falls back), else the plugin's copy `<hooks folder>/../sensitive-paths.txt`, else the project path (so missing in both places still asks). In the `setup.sh` install both paths are the same file: no change.
+
+Tests, `tests/test_hooks_from_plugin.py` (kit project holding only `PROJECT_KANBAN.md`, hooks in a fake plugin cache), RED before the fix:
+```
+FAILED tests/test_hooks_from_plugin.py::test_plugin_list_lets_a_harmless_bash_call_through
+  ... "permissionDecision": "ask" ... "Sensitive-path list unreadable (.../kit-project/.claude/sensitive-paths.txt: FileNotFoundError)"
+1 failed, 11 passed
+```
+Green after: `111 passed in 9.47s` (whole file). Mutations (each reverted, then `111 passed`):
+```
+M1 no fallback              -> FAILED test_plugin_list_lets_a_harmless_bash_call_through
+M2 plugin copy beats project -> FAILED test_project_list_wins_over_the_plugin_list, test_unreadable_project_list_asks_and_does_not_fall_back
+M3 unreadable project file falls back -> FAILED test_unreadable_project_list_asks_and_does_not_fall_back
+M4 missing in both = empty list -> FAILED test_no_list_anywhere_still_asks
+M5 plugin copy ignored (empty list) -> FAILED test_plugin_list_still_asks_for_a_sensitive_path, test_unreadable_plugin_list_still_asks
+```
+Also: `.claude/hooks/tests/test_pre_tool_sensitive_path.py::test_sc7_missing_pattern_file_asks` ran the repo's real hook against a project with no list, so it now found the repo's list. Its intent (missing everywhere asks) is kept: it runs a hook copy with no sibling list. The merge-gate test file is untouched.
+
+Sweep result (kit-shipped file read from the project root, absent in a plugin-made kit project). Checked all of: `.claude/hooks/` post_agent_move_to_review, post_bash_memory_update, post_tool_trace, post_write_register_task, pre_agent_step_limit, pre_agent_validate_guide, pre_bash_block_unsafe_merge, pre_tool_sensitive_path, stop_auto_mode_check, stop_auto_verify, stop_review_reminder; `.claude/hooks/lib/` auto_closeout, auto_mode, guide_sections, project_root, shell_data, task_context, trace_chain, verify_record; `lib/board/` __init__, base, config, fake, linear, moments, outbox, render. Method: grep for open/read/path joins against `.claude`, templates, skills, agents, settings, MANIFEST, scripts, docs, json/txt/md names.
+- FIXED: `pre_tool_sensitive_path.py` (`.claude/sensitive-paths.txt`). The only kit-shipped list, config or template read from the project.
+- REPORTED, not fixed: `lib/board/moments.py:51` `pull_cache` runs `<project>/scripts/board_sync.py pull`. In a plugin project that script is absent, so an online-board project gets the warning `board unreachable — using cache (N unsynced)` and the gate uses the cached board. It blocks nothing extra. A fix needs `scripts/board_sync.py` to take the project root (it derives `ROOT` from its own location, so running the plugin's copy would write into the plugin cache), and `pull_cache` is called from the merge gate (`pre_bash_block_unsafe_merge.py:1180`). Left for a follow-up task.
+- Project-owned (not kit-shipped), no change: `PROJECT_KANBAN.md`, `tasks/`, `memory/`, `PROJECT_SPEC.md` (`pre_agent_validate_guide.py:388`), `.claude/board.json` (`lib/board/config.py`, `moments.py`, `project_root.py`), `.claude/hooks/.state`, `.claude/verify-runs`.
+- Mentions only (messages and docstrings, never read): `skills/craft-spawn-prompt/scripts/memory_slice.py`, `docs/claude-md/*`, `scripts/verify_trace.py`.
+
+Live run 2 (2026-11-02T07:52:03Z, script `.../scratchpad/bin/live2.sh`, haiku, $0.50 cap each): project holds only `.git` and `PROJECT_KANBAN.md` (T900 In Progress), `origin` is a temp bare repo.
+```
+=== run 1: harmless call
+The command printed `HARMLESS_OK`.
+=== run 2: real push
+The push did not go through. A pre-push hook blocked it:
+  Pipeline gate failed — cannot push/merge:
+    • Tasks still In Progress: T900
+  Complete Stage 4 review and Stage 5 verify first.
+=== remote refs after run 2:      (none: nothing was pushed)
+```
+Reruns: `claude plugin validate . --profile directory` -> `✔ Validation passed with warnings`; `python3 -m pytest tests/test_plugin_package.py -q` -> `7 passed in 0.78s`; `python3 -m pytest tests -q` -> `1569 passed in 142.69s`; `python3 -m pytest .claude/hooks/tests -q` -> `1389 passed, 25 subtests passed in 43.31s`; `sh scripts/smoke-install.sh` -> `smoke-install.sh: PASS`.
+
 **DELTA**: A user can load the repo as the `easy-kit` plugin or add it as a marketplace, and its guard hooks fire from the plugin.
 
 **WITNESS**: [reviewer fills from `memory/event-trace/T233.jsonl`]
