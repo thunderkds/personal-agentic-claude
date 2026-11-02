@@ -90,6 +90,7 @@
 
 
 ### In Progress
+- [ ] **T234** — Skills and agents work under the easy-kit prefix | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T234.md` | Started 2026-11-02: branch `feat/t234-plugin-names`, worktree `../wt-t234`
 
 
 
@@ -98,7 +99,6 @@
 
 
 ### Ready for Review
-- [ ] **T234** — Skills and agents work under the easy-kit prefix | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T234.md` | Started 2026-11-02: branch `feat/t234-plugin-names`, worktree `../wt-t234`
 - [ ] **T238** — Rename a kit-arms report so no tracked names clash on Windows or macOS (plugin upload refused them) | Supervisor | C1 | Risk: Low | P0 | Started 2026-11-02: branch `fix/t238-name-clash`, worktree `../wt-t238` | Track: minimal | Record: tasks/MINIMAL_LOG.md
 
 
