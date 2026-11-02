@@ -51,12 +51,12 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 | Verification command run | ☑ pass | `claude plugin validate . --profile directory` -> `✔ Validation passed with warnings` (warnings: ICON_MISSING, README install line, symlinked .claude dirs; no LICENSE_MISSING); `python3 -m pytest tests -q` -> `1563 passed in 132.81s`; `python3 -m pytest .claude/hooks/tests -q` -> `1389 passed, 25 subtests passed in 38.01s`; `sh scripts/smoke-install.sh` -> `smoke-install.sh: PASS` |
 | Negative cases hold | ☐ pass / ☐ fail | |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☑ pass | `smoke-install.sh: PASS`; `experiments/plugin-spike` still `✔ Validation passed with warnings` |
-| **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | code-review inline on `main...HEAD`: P0 0, P1 0, P2 0, P3 0. Supervisor reran `claude plugin validate . --profile directory`: `Validation passed with warnings`. lane: `C1, 5 files, 234 lines, FITS`; `LICENSE` unpredicted by the checker though the guide names it. Risk Low, so no security-review. Startup-reads line complete. |
+| Full smoke suite still green (no regression) | ☑ pass | Supervisor rerun: `pytest tests` 1563 passed; `.claude/hooks/tests` 1389 passed, 25 subtests passed; `smoke-install.sh: PASS`. |
+| **Companion score (easy-verifier)** | ☐ N/A | Optional tool, not run for this task. |
+| **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | No UI in this task. |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ N/A | No UI in this task. |
+| **UI: Responsiveness at target viewports** | ☐ N/A | No UI in this task. |
 
 ---
 
