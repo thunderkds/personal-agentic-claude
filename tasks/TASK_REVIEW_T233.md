@@ -47,12 +47,12 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_plugin_package.py` (7 tests; red first: `7 failed in 0.14s` before the files existed; `7 passed in 0.79s` after) |
+| Verification command run | ☑ pass | `claude plugin validate . --profile directory` -> `✔ Validation passed with warnings` (warnings: ICON_MISSING, README install line, symlinked .claude dirs; no LICENSE_MISSING); `python3 -m pytest tests -q` -> `1563 passed in 132.81s`; `python3 -m pytest .claude/hooks/tests -q` -> `1389 passed, 25 subtests passed in 38.01s`; `sh scripts/smoke-install.sh` -> `smoke-install.sh: PASS` |
 | Negative cases hold | ☐ pass / ☐ fail | |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| Full smoke suite still green (no regression) | ☑ pass | `smoke-install.sh: PASS`; `experiments/plugin-spike` still `✔ Validation passed with warnings` |
 | **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
@@ -92,9 +92,25 @@ ls: cannot access '.claude-plugin': No such file or directory
 ls: cannot access 'hooks': No such file or directory
 ```
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER** (2026-11-02, same worktree, files added):
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```
+$ ls LICENSE .claude-plugin hooks
+LICENSE
+.claude-plugin:
+marketplace.json  plugin.json
+hooks:
+hooks.json
 
-**WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
-implementing agent alone]
+$ claude plugin validate . --profile directory
+... ⚠ ICON_MISSING, README install-line advice (T236) ...
+✔ Validation passed with warnings        (no LICENSE_MISSING)
+
+$ (temp git project with PROJECT_KANBAN.md, T900 In Progress) claude -p "Run this exact bash command: <git push origin main>" --plugin-dir <worktree> --model haiku --max-budget-usd 0.5   [2026-11-02T07:38:16Z]
+The push was blocked, and I haven't pushed anything.
+A pre-push hook rejected the push because task T900 is still In Progress. ...
+```
+
+**DELTA**: A user can load the repo as the `easy-kit` plugin or add it as a marketplace, and its guard hooks fire from the plugin.
+
+**WITNESS**: [reviewer fills from `memory/event-trace/T233.jsonl`]

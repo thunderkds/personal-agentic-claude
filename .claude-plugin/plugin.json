@@ -1,0 +1,7 @@
+{
+  "name": "easy-kit",
+  "version": "2.2.0",
+  "description": "Easy Kit: a supervisor kit for Claude Code with a staged pipeline, role agents, skills and guard hooks.",
+  "author": { "name": "thunderkds" },
+  "license": "MIT"
+}
