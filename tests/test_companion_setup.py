@@ -174,7 +174,7 @@ def _skill():
 def test_skill_frontmatter_and_script_run():
     text = _skill()
     assert re.match(r"---\nname: companion-setup\ndescription: \".+\"\n---\n", text)
-    assert "python3 skills/companion-setup/scripts/check_companions.py" in text
+    assert "python3 ${CLAUDE_SKILL_DIR}/scripts/check_companions.py" in text
     assert "--installed" in text
 
 

@@ -16,7 +16,7 @@ Installs a `PreToolUse` hook that intercepts and blocks destructive git commands
 Install for **this project only** (`.claude/settings.json`) or **all projects** (`~/.claude/settings.json`)?
 
 #### 2. Place the hook script
-The bundled script lives at `skills/git-guardrails-claude-code/scripts/block-dangerous-git.sh`. Copy it to:
+The bundled script lives at `${CLAUDE_SKILL_DIR}/scripts/block-dangerous-git.sh`. Copy it to:
 - **Project**: `.claude/hooks/block-dangerous-git.sh`
 - **Global**: `~/.claude/hooks/block-dangerous-git.sh`
 

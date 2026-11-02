@@ -7,7 +7,7 @@ SKILL = " ".join((Path(__file__).resolve().parent.parent / "skills" / "compact-a
 
 
 def test_sc6_names_the_measuring_command():
-    assert "python3 scripts/token_meter.py --current --json" in SKILL
+    assert "python3 ${CLAUDE_SKILL_DIR}/../../scripts/token_meter.py --current --json" in SKILL
     assert "context_now" in SKILL
 
 

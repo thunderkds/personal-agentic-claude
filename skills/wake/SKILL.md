@@ -22,7 +22,7 @@ This skill is strictly read-only. It never writes, edits, or creates any file.
 
 #### Step 0 — Pull (board mode `online`)
 
-Run `python3 scripts/pull_moment.py wake` first (FR-009; no-op in `local` mode). Show any line it prints (unreachable board, unsynced board writes) atop the briefing and continue.
+Run `python3 ${CLAUDE_SKILL_DIR}/../../scripts/pull_moment.py wake` first (FR-009; no-op in `local`). Show any line it prints (unreachable board, unsynced board writes) atop the briefing and continue.
 Tasks to triage: follow `references/triage.md`.
 
 #### Step 1 — Source Reads (attempt all five before composing output)
@@ -33,8 +33,8 @@ Read all five sources in parallel. If any source fails or is missing, record the
 |---|---|---|
 | Git history | Run `git log --oneline -10` via Bash tool | `"No git history found."` (if no commits) or `"Not a git repository."` (if git fails) |
 | `PROJECT_KANBAN.md` | Read full file, then filter to rows with status `In Progress` or `🔄` | `"No KANBAN found — project may be new or not yet planned."` |
-| `memory/MEMORY.md` | Run `python3 skills/wake/scripts/memory_sections.py` via Bash (read-only; prints the Decisions and Learning Records entries only). Never read the whole file | Script prints `"No MEMORY.md found."`; any failure = missing |
-| Uncommitted work in In Progress worktrees | Run `python3 skills/wake/scripts/dirty_worktrees.py` via Bash (read-only; prints one `Txxx <worktree> N modified, M untracked` line per In Progress task whose worktree has uncommitted changes, nothing otherwise) | No output = nothing to report; any failure is treated the same, never halt |
+| `memory/MEMORY.md` | Run `python3 ${CLAUDE_SKILL_DIR}/scripts/memory_sections.py` via Bash (read-only; prints the Decisions and Learning Records entries only). Never read the whole file | Script prints `"No MEMORY.md found."`; any failure = missing |
+| Uncommitted work in In Progress worktrees | Run `python3 ${CLAUDE_SKILL_DIR}/scripts/dirty_worktrees.py` via Bash (read-only; prints one `Txxx <worktree> N modified, M untracked` line per In Progress task whose worktree has uncommitted changes, nothing otherwise) | No output = nothing to report; any failure is treated the same, never halt |
 | `memory/learning-records/LR-*.md` | Read all `.md` files; keep only those with `status: active` in frontmatter; sort by filename descending; take top 3 | `"No active Learning Records yet."` (same note if folder does not exist) |
 
 If this skill is invoked when the conversation already has substantial context (not a cold start), prepend a one-line note at the very top of the briefing:

@@ -30,7 +30,7 @@ flavor-specific branch. If you find yourself about to special-case a flavor here
 the two block shapes have drifted apart, and it's a Supervisor decision, not a workaround.
 
 ```bash
-python3 skills/delivery-report/render.py <TASK_ID> <guide-path> <branch>
+python3 ${CLAUDE_SKILL_DIR}/render.py <TASK_ID> <guide-path> <branch>
 ```
 
 This prints the complete rendered HTML to stdout and the save path (`reports/delivery-report_<branch>_<timestamp>.html`)

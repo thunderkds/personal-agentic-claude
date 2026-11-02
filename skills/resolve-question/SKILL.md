@@ -103,17 +103,16 @@ Done when: the answer is accepted with opened Citations, or the HITL message is 
 
 Log every answer (Citation, Scanners or user).
 
-- **Board mode `online`**: `python3 scripts/board_sync.py push comment <ID> question "<text>"` with
+- **Board mode `online`**: `python3 ${CLAUDE_SKILL_DIR}/../../scripts/board_sync.py push comment <ID> question "<text>"` with
   the question, the answer, its Citations and who answered. When the answer settles a choice, also
-  `python3 scripts/board_sync.py decide <ID> "<text>"` (Decision Log).
+  `python3 ${CLAUDE_SKILL_DIR}/../../scripts/board_sync.py decide <ID> "<text>"` (Decision Log).
 - **Board mode `local`**: `Skill({ skill: "thinking-report", args: "session=resolution
   task=<ID|none> branch=<branch>" })`, saved to `reports/question_<task-or-none>_<YYYYMMDDTHHMMSS>.html`.
 
 Then append one line under the guide's `## Questions Log` (add the heading on first use):
 `- <YYYY-MM-DD> <question> → <answer> (<Linear comment or reports/question_….html>)`. Online, the
 guide is Board cache: after the edit, run
-`python3 scripts/board_sync.py update --guide <ID>`. A question with no task has no guide and no
-Linear issue: log the HTML page only.
+`python3 ${CLAUDE_SKILL_DIR}/../../scripts/board_sync.py update --guide <ID>`. A question with no task: log the HTML page only.
 
 Done when: the comment (online) or HTML page (local) exists, and, for a task, the guide line is
 appended.

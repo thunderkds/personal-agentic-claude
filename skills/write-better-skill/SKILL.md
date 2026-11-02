@@ -63,6 +63,8 @@ This framework's skills implement the open [Agent Skills specification](https://
 
 **File references** use relative paths from the skill root (`references/REFERENCE.md`, `scripts/extract.py`) and stay **one level deep**. Avoid deeply nested reference chains.
 
+**Script calls** name the script by `${CLAUDE_SKILL_DIR}`, never by a repo-relative path: the user's project holds none of the kit's files when the kit runs as a plugin (T234). One rule serves the plugin and a `setup.sh` install. A skill's own script: `python3 ${CLAUDE_SKILL_DIR}/scripts/x.py`. A shared script in the kit's `scripts/`: `python3 ${CLAUDE_SKILL_DIR}/../../scripts/x.py`. Claude Code fills the variable in `SKILL.md`; in a `references/` file read it as the skill's base directory. A script finds the project by the working directory (`script_project_root()` in `.claude/hooks/lib/project_root.py`), not by its own location. `tests/test_plugin_names.py` fails on a repo-relative call.
+
 ---
 
 ## Leading Words

@@ -27,6 +27,29 @@ def project_root():
     return os.path.abspath(env_root) if os.path.isdir(env_root) else _FILE_ROOT
 
 
+def script_project_root():
+    """The project for a script that a skill runs in a `Bash` tool call (T234 D5).
+
+    `$CLAUDE_PROJECT_DIR` is empty there, and the path above this file is the plugin cache when the
+    kit runs as a plugin. So: the variable if it is set, else the nearest folder at or above the cwd
+    that holds a board, else the path above this file. `project_root()` stays as it was: a hook gets
+    the variable from the harness, and a hook of a `setup.sh` install answers with its own project."""
+    env_root = os.environ.get("CLAUDE_PROJECT_DIR", "").strip()
+    if os.path.isdir(env_root):
+        return os.path.abspath(env_root)
+    try:
+        here = os.path.abspath(os.getcwd())
+    except OSError:  # the cwd was deleted
+        return _FILE_ROOT
+    while True:
+        if is_kit_project(here):
+            return here
+        parent = os.path.dirname(here)
+        if parent == here:
+            return _FILE_ROOT
+        here = parent
+
+
 def is_kit_project(root):
     """True when `root` holds a local board, or the config of an online board."""
     return (os.path.exists(os.path.join(root, "PROJECT_KANBAN.md"))

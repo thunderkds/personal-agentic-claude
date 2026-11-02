@@ -41,6 +41,9 @@ import re
 import sys
 
 HOOKS_DIR = os.path.dirname(os.path.abspath(__file__))
+# The kit's own folder (the project in a `setup.sh` install, the plugin cache in a plugin). A script
+# a message tells the agent to run lives here, not in the project (T234).
+KIT_DIR = os.path.dirname(os.path.dirname(HOOKS_DIR))
 
 sys.path.insert(0, os.path.join(HOOKS_DIR, "lib"))
 
@@ -312,8 +315,8 @@ def check_memory_slice_warning(prompt):
     return [
         "Spawn prompt names a TASK_GUIDE but has no `<!-- memory-slice:` marker, so "
         "the agent gets none of the memory lines its task touches. Run "
-        "`python3 skills/craft-spawn-prompt/scripts/memory_slice.py <guide>` and paste "
-        "its output verbatim (craft-spawn-prompt element 4)."
+        f"`python3 {os.path.join(KIT_DIR, 'skills', 'craft-spawn-prompt', 'scripts', 'memory_slice.py')} "
+        "<guide>` and paste its output verbatim (craft-spawn-prompt element 4)."
     ]
 
 
@@ -505,7 +508,7 @@ def main():
             "reason": (
                 f"[hook:pre_agent] Cannot spawn agent — incomplete TASK_GUIDE for: "
                 f"{'; '.join(incomplete)}. Fill those sections first (Stage 2); in board "
-                f"mode push them with `python3 scripts/board_sync.py update --guide <ID>`."
+                f"mode push them with `python3 {os.path.join(KIT_DIR, 'scripts', 'board_sync.py')} update --guide <ID>`."
             )
         }))
         sys.exit(0)

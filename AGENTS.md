@@ -51,14 +51,14 @@ descriptions here; that just re-grows this section. Keep only what the harness d
 "..." })` runs isolated in its own sub-process/context. `subagent_type` is the agent's `name:` field,
 not the filename or definition path -- the harness never supplies that path mapping. Because Claude
 Code auto-loads the matching `agents/<name>.md` as the agent's system prompt, the spawn
-`prompt` only needs the task pointer (Task ID + guide refs) -- do **not** re-paste the guide.
+`prompt` only needs the task pointer (Task ID + guide refs) -- do **not** re-paste the guide. In the Claude Code plugin, use the right-hand form: a bare name fails with `Agent type '...' not found`.
 
-| Role | `subagent_type` | Definition |
-|---|---|---|
-| Common-Infrastructure-Agent | `common-infrastructure` | `agents/common-infrastructure.md` |
-| Backend-Implementer | `backend-developer` | `agents/backend.md` |
-| Frontend-Implementer | `frontend-developer` | `agents/frontend.md` |
-| QA-Automation-Agent | `qa-expert` | `agents/qa.md` |
+| Role | `subagent_type` | Definition | Plugin `subagent_type` |
+|---|---|---|---|
+| Common-Infrastructure-Agent | `common-infrastructure` | `agents/common-infrastructure.md` | `easy-kit:common-infrastructure` |
+| Backend-Implementer | `backend-developer` | `agents/backend.md` | `easy-kit:backend-developer` |
+| Frontend-Implementer | `frontend-developer` | `agents/frontend.md` | `easy-kit:frontend-developer` |
+| QA-Automation-Agent | `qa-expert` | `agents/qa.md` | `easy-kit:qa-expert` |
 
 > `general-agent-template` is shared base rules, not a directly spawned sub-agent. Pack skills
 > symlink into `skills/` alongside these when a pack is installed.

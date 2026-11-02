@@ -56,6 +56,20 @@ REPLACED_SPANS = [
     # T228: the optional `dotfiles` skill joins the cross-cutting list.
     ("`resolve-question` (a confused Supervisor",
      "`dotfiles` (shared agent config, optional), `resolve-question` (a confused Supervisor"),
+    # T234: the role table gains a column with the plugin form of each agent name, and one
+    # sentence says when to use it.
+    ("`prompt` only needs the task pointer (Task ID + guide refs) -- do **not** re-paste the guide.",
+     "`prompt` only needs the task pointer (Task ID + guide refs) -- do **not** re-paste the guide. "
+     "In the Claude Code plugin, use the right-hand form: a bare name fails with `Agent type '...' not found`."),
+    ("| Role | `subagent_type` | Definition |", "| Role | `subagent_type` | Definition | Plugin `subagent_type` |"),
+    ("|---|---|---|", "|---|---|---|---|"),
+    ("| `common-infrastructure` | `agents/common-infrastructure.md` |",
+     "| `common-infrastructure` | `agents/common-infrastructure.md` | `easy-kit:common-infrastructure` |"),
+    ("| `backend-developer` | `agents/backend.md` |",
+     "| `backend-developer` | `agents/backend.md` | `easy-kit:backend-developer` |"),
+    ("| `frontend-developer` | `agents/frontend.md` |",
+     "| `frontend-developer` | `agents/frontend.md` | `easy-kit:frontend-developer` |"),
+    ("| `qa-expert` | `agents/qa.md` |", "| `qa-expert` | `agents/qa.md` | `easy-kit:qa-expert` |"),
 ]
 AC6_HEADING = re.compile(r"^## .*cannot enforce", re.IGNORECASE)
 # T178: the one later section allowed outside the opening block and the AC 6 section. Its
