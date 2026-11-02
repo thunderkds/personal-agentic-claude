@@ -99,6 +99,7 @@
 
 
 ### Ready for Review
+- [ ] **T238** — Rename a kit-arms report so no tracked names clash on Windows or macOS (plugin upload refused them) | Supervisor | C1 | Risk: Low | P0 | Started 2026-11-02: branch `fix/t238-name-clash`, worktree `../wt-t238` | Track: minimal | Record: tasks/MINIMAL_LOG.md
 
 
 ### Done
