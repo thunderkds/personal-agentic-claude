@@ -47,16 +47,16 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_plugin_names.py` (19 tests; AC1 `test_no_repo_relative_script_call_left_in_skills_or_agents` + two layout tests, AC4 `test_register_hook_keeps_the_whole_agent_name`, `test_spawn_hook_decides_the_same_for_both_forms`, `test_trace_hook_records_either_agent_type`, D3/D5 tests): `python3 -m pytest tests/test_plugin_names.py -q` -> `19 passed in 1.09s` |
-| Verification command run | ☑ pass | `python3 -m pytest tests/test_plugin_names.py -q` -> `19 passed`; `sh scripts/smoke-install.sh` -> `smoke-install.sh: PASS` |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_plugin_names.py` (21 tests), `tests/test_auto_verify.py::test_t234_start_from_a_plugin_cache_runs_in_the_project_not_the_cache`. Supervisor rerun of both files: 275 passed. |
+| Verification command run | ☑ pass | Supervisor rerun after round 2: `tests/test_plugin_names.py` within 275 passed; `smoke-install.sh: PASS`. |
+| Negative cases hold | ☑ pass | Round 2 mutation: `CLAUDE_PROJECT_DIR` removed from the child env gave 1 failed, then 1 passed on restore (implementer). No repo-relative script call left, with an anti-vacuity check. |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☑ pass | `python3 -m pytest tests -q` -> `1588 passed in 149.09s`; `python3 -m pytest .claude/hooks/tests -q` -> `1389 passed, 25 subtests passed in 70.70s` |
-| **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | code-review inline on `main...HEAD`: P0 0, P1 1 fixed in round 2 (`--run` used the plugin folder as root), P2 0 open, P3 0. security-review on the branch diff: no finding at or above confidence 8. Merge gate file unchanged. `test_agents_md_primary.py` and `T070_BASELINE_REF` edits follow the T226/T228 pattern: merge without squashing, because the baseline names `fb3ff0f`. `scripts/test-claude-md-refs.sh` AC5/AC6 fail the same way on `main`. Open items moved to T235 D7. lane: `C2, 29 files, 571 lines, EXCEEDS`, label kept: most are one-line path changes. Startup-reads line complete. |
+| Full smoke suite still green (no regression) | ☑ pass | Supervisor rerun after round 2: `pytest tests` 1591 passed; `.claude/hooks/tests` 1389 passed; `smoke-install.sh: PASS`. |
+| **Companion score (easy-verifier)** | ☐ N/A | Optional tool, not run for this task. |
+| **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | No UI in this task. |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ N/A | No UI in this task. |
+| **UI: Responsiveness at target viewports** | ☐ N/A | No UI in this task. |
 
 ---
 
