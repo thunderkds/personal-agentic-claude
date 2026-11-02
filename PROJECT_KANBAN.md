@@ -8,7 +8,7 @@
 ## Board
 
 ### Todo
-- [ ] **T237** — Online board: with `.claude/board.json`, no `PROJECT_KANBAN.md` and a failed pull, the merge gate exits 0 silently in a kit project (found in T232 review, unchanged behaviour); also an exception in a gate `main()` on well-formed input exits 1 and passes; and find the intermittent full-suite failure seen on T232 (`test_t203_ac2` suspected) | common-infrastructure | C1 | Risk: Medium | P2
+- [ ] **T237** — Online board: with `.claude/board.json`, no `PROJECT_KANBAN.md` and a failed pull, the merge gate exits 0 silently in a kit project (found in T232 review, unchanged behaviour); also an exception in a gate `main()` on well-formed input exits 1 and passes; and find the intermittent full-suite failure seen on T232 (`test_t203_ac2` suspected); `test_ac4_blocked_row_never_says_pass[pass-and-fail]` also failed once under load on T234 | common-infrastructure | C1 | Risk: Medium | P2
 - [ ] **T236** — Real plugin install proven, then published on the README and site | frontend-developer | C2 | Risk: Medium | P1
 - [ ] **T235** — /easy-kit:init sets up a project, and plugin hooks stand down beside in-repo hooks | common-infrastructure | C2 | Risk: Medium | P1
 - [ ] **T230** — `dotfiles` follow-up, Depends on: T228: refuse a target inside the source (only an exact match is refused today); refuse skill folder names with unprintable text (a newline can fake a `plan` line); report a wrong source shape (`AGENTS.md` as a folder, `skills` as a file) | common-infrastructure | C1 | Risk: Low | P2
@@ -90,7 +90,6 @@
 
 
 ### In Progress
-- [ ] **T234** — Skills and agents work under the easy-kit prefix | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T234.md` | Started 2026-11-02: branch `feat/t234-plugin-names`, worktree `../wt-t234`
 
 
 
@@ -99,6 +98,7 @@
 
 
 ### Ready for Review
+- [ ] **T234** — Skills and agents work under the easy-kit prefix | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T234.md` | Started 2026-11-02: branch `feat/t234-plugin-names`, worktree `../wt-t234`
 - [ ] **T238** — Rename a kit-arms report so no tracked names clash on Windows or macOS (plugin upload refused them) | Supervisor | C1 | Risk: Low | P0 | Started 2026-11-02: branch `fix/t238-name-clash`, worktree `../wt-t238` | Track: minimal | Record: tasks/MINIMAL_LOG.md
 
 
