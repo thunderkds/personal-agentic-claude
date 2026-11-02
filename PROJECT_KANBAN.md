@@ -91,7 +91,6 @@
 
 
 ### In Progress
-- [ ] **T239** — Pipeline becomes Stage 0–5 with no half numbers | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T239.md` | Started 2026-11-02: branch `feat/t239-stage-names`, worktree `../wt-t239`
 
 
 
@@ -100,6 +99,7 @@
 
 
 ### Ready for Review
+- [ ] **T239** — Pipeline becomes Stage 0–5 with no half numbers | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T239.md` | Started 2026-11-02: branch `feat/t239-stage-names`, worktree `../wt-t239`
 
 
 ### Done
