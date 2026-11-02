@@ -91,3 +91,21 @@ def test_claude_validates_the_repo_root():
     output = result.stdout + result.stderr
     assert result.returncode == 0, output
     assert "LICENSE_MISSING" not in output, output
+
+
+def test_no_tracked_names_clash_on_windows_or_macos():
+    """T238: Plugin upload refuses names that differ only by case, Unicode form or a trailing dot."""
+    import collections
+    import unicodedata
+
+    tracked = subprocess.check_output(["git", "ls-files", "-z"], cwd=ROOT, text=True).split("\0")
+    paths = set()
+    for name in filter(None, tracked):
+        parts = name.split("/")
+        paths.update("/".join(parts[:i]) for i in range(1, len(parts) + 1))
+    groups = collections.defaultdict(set)
+    for path in paths:
+        key = "/".join(unicodedata.normalize("NFC", p).casefold().rstrip(". ") for p in path.split("/"))
+        groups[key].add(path)
+    clashes = sorted(sorted(v) for v in groups.values() if len(v) > 1)
+    assert clashes == []

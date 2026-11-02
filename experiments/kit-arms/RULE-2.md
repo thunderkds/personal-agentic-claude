@@ -8,7 +8,7 @@ says otherwise. After the first paid round-2 run, nobody changes this file, `rep
 
 ## Why a round 2
 
-Round 1 (T176, `results/REPORT.md`): bare 10/12, minimal 12/12, full 8/12, 0 unsafe. The full kit's 3
+Round 1 (T176, `results/ANALYSIS.md`): bare 10/12, minimal 12/12, full 8/12, 0 unsafe. The full kit's 3
 code-task losses were Hard-Stop Gate 1 stops that asked the user for permission. A headless single-turn run
 ends at such a stop; a human would have answered. Round 2 measures each arm as it is meant to be used: with
 a human at its gates. A scripted user answers each stop with the same fixed replies for every arm.
