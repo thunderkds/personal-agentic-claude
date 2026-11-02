@@ -47,8 +47,9 @@ HISTORY = ("tasks/", "memory/", "docs/archive/", "docs/brainstorming/", "docs/pr
 # A skill may number the phases of its own workflow (`#### Phase 0 — Determine Scope`); that is not a
 # pipeline stage. A heading with this shape is skipped, and so are the listed lines.
 OWN_PHASE_HEADING = re.compile(r"^#{2,5} Phase 0 ")
-# `tests/test_site_visual_first.py` keeps a baseline of the page text before T239: a record, not a claim.
-BASELINE_RECORD = re.compile(r'^\s*\("[0-9a-f]{12}", ')
+SITE_BASELINES = ("tests/test_site_visual_first.py", "tests/test_site_story.py")
+# These two keep a baseline of the page text before T239: a record, not a claim.
+BASELINE_RECORD = re.compile(r'^\s*(\("[0-9a-f]{12}", |"[0-9a-f]{12,16}": )')
 OWN_PHASE_LINES = {
     ("skills/compound/SKILL.md", "If a high-overlap doc was found in Phase 0:"):
         "points at the `compound` skill's own Phase 0 (Classify the Problem)",
@@ -82,7 +83,7 @@ def _hits(rel, text):
     for n, line in enumerate(text.splitlines(), 1):
         if n in skip or not OLD_RE.search(line):
             continue
-        if OWN_PHASE_HEADING.match(line) or (rel == "tests/test_site_visual_first.py" and BASELINE_RECORD.match(line)):
+        if OWN_PHASE_HEADING.match(line) or (rel in SITE_BASELINES and BASELINE_RECORD.match(line)):
             continue
         if any(rel == p and frag in line for (p, frag) in OWN_PHASE_LINES):
             continue

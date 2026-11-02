@@ -409,7 +409,7 @@ DUPLICATES_OF_A_VISUAL_LABEL = {
     "0d64e298bb52": "Stage 1 flow step gains companion-setup (T226)",
     # T228: the `dotfiles` skill joins the Any stage chips (count now 35).
     "9d5bff6dc560": "Any stage chip list changed by T228 (dotfiles)",
-    # T239: the half-number stages were merged (Stage 0.5 into Stage 0, Stage 1.5 into Stage 1).
+    # T239: the half-number stages were merged into Stage 0 and Stage 1.
     "a4d2005f8409": "the lead says Stage 0–5 pipeline, not 5-stage (T239)",
     "cdef968136ca": "overview step Phase 0 is now Stage 0 · Define (T239)",
     "30979276a6f0": "overview step Stage 0.5 is now Stage 0 · Define (T239)",

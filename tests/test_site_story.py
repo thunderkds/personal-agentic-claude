@@ -496,7 +496,7 @@ def test_settings_tool_script_blocks_are_byte_identical_to_the_old_page(script_i
 
 # ---- AC 6: no sentence is lost --------------------------------------------------------
 
-# T239: the half-number stages were merged (Stage 0.5 into Stage 0, Stage 1.5 into Stage 1). A text listed here was reworded or moved; each is in the baseline and must be absent from docs.html
+# T239: the half-number stages were merged into Stage 0 and Stage 1. A text listed here was reworded or moved; each is in the baseline and must be absent from docs.html
 # only because of this reason. Nothing else may be lost.
 CHANGED_BY_T239 = {
     "a956b5ce5b9021a4": "overview step Stage 0.5 is now Stage 0 · Define",
