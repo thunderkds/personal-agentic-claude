@@ -26,7 +26,7 @@ List the companion servers you can see in this session (for example MCP tools na
 `mcp__easy-memory__...`). Pass their ids, comma separated. If you are not sure, pass none.
 
 ```
-python3 skills/companion-setup/scripts/check_companions.py --installed <ids>
+python3 "${CLAUDE_SKILL_DIR}/scripts/check_companions.py" --installed <ids>
 ```
 
 ### Step 2 — Show the offer

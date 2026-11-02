@@ -37,7 +37,7 @@ Read `profiles.json`. Each profile has an `id`, a `label`, a `for` line (who it 
 Run a dry run for each profile:
 
 ```
-python3 skills/settings-setup/scripts/apply_profile.py <id> --dry-run
+python3 "${CLAUDE_SKILL_DIR}/scripts/apply_profile.py" <id> --dry-run
 ```
 
 - Exit 2: the script cannot read the file safely (for example JSONC comments). It changed
@@ -72,7 +72,7 @@ The result is the list of profiles to apply, in this order: the question 2 profi
 For each chosen profile, run the dry run and show its output unchanged:
 
 ```
-python3 skills/settings-setup/scripts/apply_profile.py <id> --dry-run
+python3 "${CLAUDE_SKILL_DIR}/scripts/apply_profile.py" <id> --dry-run
 ```
 
 - `+ <key>: <value>` is a rule or key the script will add.
@@ -86,7 +86,7 @@ Ask: "Write these changes to `.claude/settings.json`?"
 Only after the user says yes, run each chosen profile without `--dry-run`:
 
 ```
-python3 skills/settings-setup/scripts/apply_profile.py <id>
+python3 "${CLAUDE_SKILL_DIR}/scripts/apply_profile.py" <id>
 ```
 
 It prints the lines it added and `wrote .claude/settings.json`. A second run prints `no change`.

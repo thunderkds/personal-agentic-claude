@@ -31,7 +31,7 @@ import stat
 import sys
 import tempfile
 
-PROFILES = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "profiles.json")
+PROFILES = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "profiles.json")
 DEFAULT_SETTINGS = os.path.join(".claude", "settings.json")
 
 

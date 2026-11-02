@@ -154,13 +154,13 @@ def test_ac5_edge_cases_route_to_not_found_or_hitl(phrase):
 # AC 6 -------------------------------------------------------------------------------------
 def test_ac6_log_step_for_both_board_modes():
     body = _step("Log")
-    assert 'python3 scripts/board_sync.py push comment <ID> question "<text>"' in body
-    assert 'python3 scripts/board_sync.py decide <ID> "<text>"' in body
+    assert 'python3 "${CLAUDE_SKILL_DIR}/../../scripts/board_sync.py" push comment <ID> question "<text>"' in body
+    assert 'python3 "${CLAUDE_SKILL_DIR}/../../scripts/board_sync.py" decide <ID> "<text>"' in body
     assert "settles a choice" in body
     assert 'Skill({ skill: "thinking-report", args: "session=resolution' in body
     assert "## Questions Log" in body and "first use" in body
     assert "no task" in body and "HTML page only" in body
-    assert "python3 scripts/board_sync.py update --guide <ID>" in body
+    assert 'python3 "${CLAUDE_SKILL_DIR}/../../scripts/board_sync.py" update --guide <ID>' in body
 
 
 # AC 7 -------------------------------------------------------------------------------------

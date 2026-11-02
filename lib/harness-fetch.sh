@@ -372,6 +372,38 @@ _harness_file_size() {
   wc -c < "$1" | tr -d ' '
 }
 
+# _harness_rewrite_skill_dir <copied skill dir> <skill name> <target dir>   (T234 D6)
+# Claude Code fills ${CLAUDE_SKILL_DIR} in a skill; Codex does not, so a projected copy would keep the
+# literal text and every command in it would fail. Rewrite it, in every text file of the copy (not
+# only SKILL.md: references/*.md carry commands too), to a path that resolves in a Codex-only
+# install, from the project root:
+#   ${CLAUDE_SKILL_DIR}/../../x  ->  x               (the skill's `../..` is the project root; only
+#                                                      when the project holds `scripts/`)
+#   ${CLAUDE_SKILL_DIR}          ->  skills/<name>   (the plain-root canon every install holds, with
+#                                                      or without Claude Code; checked to exist)
+# The first form is also shorter, so a rewritten skill never grows past the 8192-byte cap on its
+# account. Only the copy changes: the source tree and the Claude Code files keep the variable. No
+# canon folder -> the copy's own path, with a warning.
+_harness_rewrite_skill_dir() {
+  _rw_dir="$1"; _rw_name="$2"; _rw_target="$3"
+  if [ -d "$_rw_target/skills/$_rw_name" ]; then
+    _rw_path="skills/$_rw_name"
+  else
+    _rw_path=".codex/skills/$_rw_name"
+    _harness_log_warn "codex: no skills/$_rw_name in the project, so $_rw_name keeps its own folder as the skill path; a shared script it calls may not be found."
+  fi
+  if [ -d "$_rw_target/scripts" ]; then _rw_up=""; else _rw_up="$_rw_path/../../"; fi
+  # shellcheck disable=SC2016  # the literal ${...} is the text to find, not a shell expansion
+  find "$_rw_dir" -type f -exec grep -lF '${CLAUDE_SKILL_DIR}' {} + 2>/dev/null |
+  while IFS= read -r _rw_file; do
+    # shellcheck disable=SC2016
+    sed -e 's|\${CLAUDE_SKILL_DIR}/\.\./\.\./|'"$_rw_up"'|g' \
+        -e 's|\${CLAUDE_SKILL_DIR}|'"$_rw_path"'|g' "$_rw_file" > "$_rw_file.rewrite" &&
+      cat "$_rw_file.rewrite" > "$_rw_file"
+    rm -f "$_rw_file.rewrite"
+  done
+}
+
 # harness_project_manifest <src_dir> <target_dir> <manifest_path> <harness>
 # For every MANIFEST line carrying a `<harness>=<dest>` pair, copy field 1 from
 # <src_dir> to <dest> under <target_dir> as REAL file copies (ADR-0001 — never
@@ -446,15 +478,21 @@ harness_project_manifest() {
     for _entry in "$_src"/*; do
       [ -e "$_entry" ] || continue
       _name=$(basename "$_entry")
-      if [ "$_cap" -gt 0 ] && [ -f "$_entry/SKILL.md" ]; then
-        _size=$(_harness_file_size "$_entry/SKILL.md")
+      cp -r "$_entry" "$_dst/"
+      # T234 D6: rewrite first, measure after. The cap applies to the file Codex will read, and the
+      # rewrite changes its size. A skill over the cap is removed again, never left half-copied.
+      if [ "$_harness" = "codex" ]; then
+        _harness_rewrite_skill_dir "$_dst/$_name" "$_name" "$_target_dir"
+      fi
+      if [ "$_cap" -gt 0 ] && [ -f "$_dst/$_name/SKILL.md" ]; then
+        _size=$(_harness_file_size "$_dst/$_name/SKILL.md")
         if [ "$_size" -gt "$_cap" ]; then
+          rm -rf "${_dst:?}/${_name:?}"
           _harness_log_warn "$_harness: skill '$_name' has a ${_size}-byte body, over the ${_cap}-byte $_harness cap — SKIPPED, not truncated. Shorten or split $_rel/$_name/SKILL.md, then re-run."
           HARNESS_PROJECT_SKIPPED=$((HARNESS_PROJECT_SKIPPED + 1))
           continue
         fi
       fi
-      cp -r "$_entry" "$_dst/"
       _projected=$((_projected + 1))
     done
   done < "$_manifest_path"

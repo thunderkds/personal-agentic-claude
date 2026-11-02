@@ -196,8 +196,8 @@ def test_local_guide_prediction_still_exempts(tmp_path):
 
 def test_each_moment_is_wired_where_it_happens():
     wiring = {
-        "skills/wake/SKILL.md": "python3 scripts/pull_moment.py wake",
-        "skills/craft-spawn-prompt/SKILL.md": "python3 scripts/pull_moment.py spawn",
+        "skills/wake/SKILL.md": 'python3 "${CLAUDE_SKILL_DIR}/../../scripts/pull_moment.py" wake',
+        "skills/craft-spawn-prompt/SKILL.md": 'python3 "${CLAUDE_SKILL_DIR}/../../scripts/pull_moment.py" spawn',
         "docs/claude-md/pipeline-stages.md": "python3 scripts/pull_moment.py review",
     }
     for path, command in wiring.items():

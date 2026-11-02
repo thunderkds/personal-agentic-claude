@@ -780,13 +780,13 @@ def test_skill_states_the_safety_rules():
     assert re.search(r"^name: dotfiles$", text, re.MULTILINE)
     lowered = text.lower()
     assert "optional" in lowered
-    assert text.index("dotfiles.py plan") < text.index("dotfiles.py apply")
+    assert text.index('dotfiles.py" plan') < text.index('dotfiles.py" apply')
     assert "only after the user approves" in lowered
     assert "never pick a folder" in lowered
     auto = re.search(r"### Auto mode.*?(?=\n### |\Z)", text, re.DOTALL)
     assert auto, "no Auto mode section"
     assert "`plan`" in auto.group(0) and "Not done:" in auto.group(0)
-    assert "dotfiles.py apply" not in auto.group(0)
+    assert 'dotfiles.py" apply' not in auto.group(0)
     assert "the `plan` lines" not in auto.group(0)
     assert "folder list" in auto.group(0)
     step3 = re.search(r"### Step 3.*?(?=\n### )", text, re.DOTALL).group(0)

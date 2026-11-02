@@ -47,16 +47,16 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_plugin_names.py` (30 tests after round 4: every skill command in install, plugin and Codex-only layouts), `tests/test_auto_verify.py::test_t234_start_from_a_plugin_cache_runs_in_the_project_not_the_cache`. Supervisor rerun at `4ce311e2`: `pytest tests` 1600 passed. |
+| Verification command run | ☑ pass | Supervisor rerun at `4ce311e2`: `tests/test_plugin_names.py` within 1600 passed; `smoke-install.sh: PASS`. |
+| Negative cases hold | ☑ pass | Rounds 2-4 mutations RED then green (implementer): child env, `abspath` back, D6 rewrite skipped (2 failed), D7 fallback to the plugin folder (2 failed). |
+| verify | ☑ pass | auto-run by hook, session ea95f224-dc64-45b7-b3e1-77f22a3ca1ab, commit 1df50e35359cdd59191732183a7a2a231442ad22, log .claude/verify-runs/T234-1df50e35359c.log — pass |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | code-review inline on `main...HEAD`: P0 0, P1 1 fixed in round 2 (`--run` used the plugin folder as root), P2 0 open, P3 0. security-review on the branch diff: no finding at or above confidence 8. Merge gate file unchanged. `test_agents_md_primary.py` and `T070_BASELINE_REF` edits follow the T226/T228 pattern: merge without squashing, because the baseline names `fb3ff0f`. `scripts/test-claude-md-refs.sh` AC5/AC6 fail the same way on `main`. Open items moved to T235 D7. lane: `C2, 29 files, 571 lines, EXCEEDS`, label kept: most are one-line path changes. Startup-reads line complete. Round 3 (`8aa7cd1f..c08fc9fc`): auto verify found the `setup.sh` regression that this review missed; realpath and quoting fix read by the Supervisor, P0 0, P1 0. Round 4 (`2b8f75d5..4ce311e2`): Supervisor read the `lib/harness-fetch.sh` diff: Codex copies only, cap measured after the rewrite; `MANIFEST` and `setup.sh` unchanged. P0 0, P1 0. Not run by anyone: a Claude-plus-Codex install, Reinstall, interactive Update, the Codex CLI reading the text. |
+| Full smoke suite still green (no regression) | ☑ pass | Supervisor rerun at `4ce311e2` on an idle machine: `pytest tests` 1600 passed; `.claude/hooks/tests` 1389 passed, 25 subtests passed; `smoke-install.sh: PASS`. |
+| **Companion score (easy-verifier)** | ☐ N/A | Optional tool, not run for this task. |
+| **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | No UI in this task. |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ N/A | No UI in this task. |
+| **UI: Responsiveness at target viewports** | ☐ N/A | No UI in this task. |
 
 ---
 
@@ -67,12 +67,74 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured 2026-11-02T08:22:02Z, unchanged code at commit `17691294`, before any T234 commit; Claude Code 2.1.316, model haiku, cost $0.011, 8 turns):
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+Command (`$SP` = a scratchpad folder; the temp project holds only `PROJECT_KANBAN.md` after `git init`, no kit files):
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```
+cd <temp project> && claude -p "/easy-kit:wake" --plugin-dir /home/hungnguyenhuu/workspace/pets/wt-t234 \
+  --model haiku --max-budget-usd 0.5 --allowedTools Bash Read Skill Agent --output-format stream-json --verbose
+```
+
+Every script call the skill names fails from the temp project (tool results, verbatim):
+
+```
+python3: can't open file '<temp project>/scripts/pull_moment.py': [Errno 2] No such file or directory
+python3: can't open file '<temp project>/skills/wake/scripts/memory_sections.py': [Errno 2] No such file or directory
+python3: can't open file '<temp project>/skills/wake/scripts/dirty_worktrees.py': [Errno 2] No such file or directory
+```
+
+The model then said "The working directory is a scratchpad, not the project. The skill's scripts live under `/home/hungnguyenhuu/workspace/pets/wt-t234`, so I'll run the steps from there" and `cd`-ed into the plugin folder. So the briefing printed only because the model improvised and read the kit's own repo; it ran against the plugin folder, not the user's project.
+
+**AFTER** (captured 2026-11-02T08:42:29Z on branch `feat/t234-plugin-names` at `fb3ff0f`; same command, same kind of temp project, `--plugin-dir` the worktree, haiku, cost $0.0067, 7 turns). Every script the skill names ran from the plugin folder and exited 0, with no "can't open file":
+
+```
+python3 /home/hungnguyenhuu/workspace/pets/wt-t234/scripts/pull_moment.py wake            -> exit=0
+python3 /home/hungnguyenhuu/workspace/pets/wt-t234/skills/wake/scripts/memory_sections.py -> No MEMORY.md found.
+python3 /home/hungnguyenhuu/workspace/pets/wt-t234/skills/wake/scripts/dirty_worktrees.py -> exit=0
+```
+
+Spawn and a craft-spawn-prompt script, plugin run (2026-11-02T08:43:04Z, $0.028):
+
+```
+Skill easy-kit:craft-spawn-prompt          -> Launching skill
+python3 .../skills/craft-spawn-prompt/scripts/memory_slice.py tasks/TASK_GUIDE_T900.md
+                                           -> <!-- memory-slice:T900 --> ... <!-- /memory-slice -->
+Agent subagent_type=easy-kit:qa-expert     -> Async agent launched successfully ... reply "QA_OK"
+```
+
+Same two skills after a `setup.sh` install (`SUPERVISOR_REPO=file://<worktree>`, 2026-11-02T08:43:38Z and 08:44:07Z): `/wake` scripts exit 0 (`.claude/skills/wake/scripts/...`); `craft-spawn-prompt` ran `.claude/skills/craft-spawn-prompt/scripts/memory_slice.py` and returned a slice block; `Agent subagent_type=qa-expert` replied `QA_OK`.
+
+Round 2 (D5a): `stop_auto_verify.py --start` now passes the project it resolved to the detached `--run` as `CLAUDE_PROJECT_DIR`. Test `tests/test_auto_verify.py::test_t234_start_from_a_plugin_cache_runs_in_the_project_not_the_cache` (fake plugin cache, variable unset, cwd in a temp kit project, fake `claude`). RED before the fix: `AssertionError: (None, [.../anchors/cache-noremote, ...cache-noremote/verify-runs/T951-<sha>.json])` (the run record was keyed to the cache). Green after: `1 passed`. Mutation (drop `"CLAUDE_PROJECT_DIR": ROOT` from the child env): `1 failed` with the same assertion; restored: `1 passed`. Paths in the two `pre_agent_validate_guide.py` messages and in `pull_moment.py`'s unsynced message are now `shlex.quote`d (tests `test_hook_messages_quote_a_plugin_path_with_a_space`, `test_pull_moment_unsynced_message_quotes_a_plugin_path_with_a_space`; RED before: `2 failed`, green after: `21 passed` in `tests/test_plugin_names.py`).
+
+Round 3 (auto verify fail: in a `setup.sh` install `${CLAUDE_SKILL_DIR}` is `<project>/.claude/skills/<name>`, a symlinked path, and `abspath(__file__)` dropped `../..` without following it).
+- **Scripts checked** for `abspath(__file__)` used to find code, every script a `${CLAUDE_SKILL_DIR}` command reaches. Changed to `realpath`: `scripts/pull_moment.py`, `scripts/board_sync.py`, `scripts/lane_check.py`, `scripts/token_meter.py`, `skills/settings-setup/scripts/apply_profile.py`, and `.claude/hooks/lib/board/moments.py` (consistency). Already safe: `skills/delivery-report/render.py` (`realpath`), `skills/craft-spawn-prompt/scripts/memory_slice.py` (`realpath`), `skills/wake/scripts/dirty_worktrees.py` (`realpath`), `skills/companion-setup/scripts/check_companions.py` (`Path.resolve`). No location lookup: `skills/wake/scripts/memory_sections.py`, `skills/dotfiles/scripts/dotfiles.py`. Not reachable from a skill command, left alone: `scripts/token_audit.py`, `ci_verify_done_tasks.py`, `memory_usage_report.py`, `gen_sandbox_profile.py`, `verify_trace.py`, `measure_agent_guide_tokens.py`.
+- **Quoting:** every `${CLAUDE_SKILL_DIR}` command in the skills is now `python3 "${CLAUDE_SKILL_DIR}/..."`; the rule in `skills/write-better-skill/SKILL.md` says so. `wake` 8183, `code-review` 8163, `resolve-question` 8184 bytes (limit 8192).
+- **Test:** `tests/test_plugin_names.py::test_every_skill_dir_command_runs[install|plugin]` builds each layout in folders named `my project` / `my plugin`, expands each command to the `.claude/skills/<name>` (install) or `<plugin>/skills/<name>` path, runs it with harmless arguments, and fails on a crash, a non-zero exit or `UNKNOWN` from `lane_check.py`. Exempt from the skill's own arguments (a harmless argument replaces them): `token_meter.py`, `apply_profile.py`, `dotfiles.py` run `--help` (the real run reads transcripts or writes settings or home folders). RED before the fix: `install: skills/code-review/SKILL.md: lane_check.py ... UNKNOWN ([Errno 2] No such file or directory: '.../my project/.claude/scripts/../skills/craft-spawn-prompt/scripts/mem...` Green after: `24 passed`. Mutation (`abspath` back in `scripts/pull_moment.py`): `install: skills/craft-spawn-prompt/SKILL.md: pull_moment.py ['wake'] ... ModuleNotFoundError: No module named 'board'`; restored: `24 passed`.
+- **Real `setup.sh` install** (`SUPERVISOR_REPO=file://<worktree>`, folder `my proj`, 2026-11-02T09:16:10Z), `wake`'s three commands as the skill writes them, with `CLAUDE_SKILL_DIR=<proj>/.claude/skills/wake`:
+
+```
+python3 "${CLAUDE_SKILL_DIR}/../../scripts/pull_moment.py" wake   -> (no output)  pull_moment rc=0
+python3 "${CLAUDE_SKILL_DIR}/scripts/memory_sections.py"          -> <!-- Format: ... -->  memory_sections rc=0
+python3 "${CLAUDE_SKILL_DIR}/scripts/dirty_worktrees.py"          -> (no output)  dirty_worktrees rc=0
+```
+
+Round 4 (D6 Codex rewrite, D7 no project from a plugin).
+- **D6:** `_harness_rewrite_skill_dir` in `lib/harness-fetch.sh`, called by `harness_project_manifest` for the `codex` projection only (so on install and on Update, which call the same function). In every text file of a projected skill, `${CLAUDE_SKILL_DIR}/../../x` becomes `x` (project root, only when the project holds `scripts/`) and `${CLAUDE_SKILL_DIR}` becomes `skills/<name>` (only when that folder exists in the project; else the copy's own `.codex/skills/<name>` and a warning). In a Codex-only install `skills/` and `scripts/` exist (core MANIFEST copy) and `.claude/skills` does not. Source files and Claude Code copies keep the variable. The cap is now measured on the rewritten copy, which is shorter; a copy over the cap is removed again. The skipped set is unchanged: `bugfix`, `craft-spawn-prompt`, `diagnose`, `write-better-skill` (over the cap in the source). The hash lock does not track `.codex/skills` (the projection is deleted and rebuilt each run), so Update cannot call a copy customized: the Update plan prints `You edited these; with no terminal they are kept as they are: (none)` and the second run leaves every Codex file byte-identical.
+- **D7:** `script_project_root()` returns `None` when it runs from a plugin folder (`.claude-plugin/plugin.json` beside the code) and no folder at or above the cwd holds a board. `pull_moment.py` prints `no project found: ...` and exits 0, `board_sync.py` and `render.py` print it to stderr and exit 2, `stop_auto_verify.py --start` prints `T900: no project found: ... — nothing started` and exits 1. A `setup.sh` install has no `.claude-plugin/`, so it keeps answering with its own project.
+- **Tests (`tests/test_plugin_names.py`, now 29):** `test_codex_only_install_rewrites_the_variable_and_every_command_runs` (real `setup.sh` in a pty, menu answer 2, folder `my codex project`, every `python3 "..."` command in `.codex/skills` run), `test_claude_install_runs_every_command_by_the_dot_claude_path` (real install, menu answer 1), `test_update_rewrites_the_codex_copies_again_and_reports_nothing_edited`, `test_a_plugin_run_from_an_empty_folder_says_no_project_and_writes_nothing`, `test_a_setup_install_run_from_an_empty_folder_keeps_its_own_project`. The installer tests clone a snapshot of the working tree (a temp git repo), not the last commit. RED with the implementation reverted: `13 failed, 16 passed`, among them `test_codex_only_install_rewrites_the_variable_and_every_command_runs` (`.codex/skills/wake/SKILL.md ... keep ${CLAUDE_SKILL_DIR}`). Mutation D6 (skip the rewrite call): `2 failed` (`test_codex_only_install_...`, `test_update_rewrites_...`). Mutation D7 (fallback back to the plugin folder): `2 failed` (`test_script_project_root_...`, `test_a_plugin_run_from_an_empty_folder_...`). Restored: `29 passed`.
+- **Exempt:** `scripts/token_meter.py` (`compact-advisor`) is not in MANIFEST, so no install holds it; this predates T234 (the old call was `python3 scripts/token_meter.py`). The install tests assert it is absent and skip it; they fail when MANIFEST ships it. `craft-spawn-prompt` is over the Codex cap, so its commands have no Codex copy.
+- **Real Codex-only run** (2026-11-02T10:08:48Z): `setup.sh` from a snapshot of this working tree (`SUPERVISOR_REPO=file://<snapshot>`, never GitHub, so the change is in the tree), folder `my codex proj`, menu answers Enter, `2`, Enter, Enter, Enter; `CLIs: Codex`, no `.claude/skills`. The commands as written in `.codex/skills/wake/SKILL.md`, run from the project root:
+
+```
+$ python3 "scripts/pull_moment.py" wake                       (no output)  rc=0
+$ python3 "skills/wake/scripts/memory_sections.py"            <!-- Format: ... -->  rc=0
+$ python3 "skills/wake/scripts/dirty_worktrees.py"            (no output)  rc=0
+```
+
+D1 (before any skill edit, 2026-11-02T08:23Z): `${CLAUDE_SKILL_DIR}` expands in both modes. Plugin: `SKILLDIR=<plugin>/skills/dirprobe`, then `python3 ${CLAUDE_SKILL_DIR}/../../scripts/root_marker.py` printed `ROOT_SCRIPT_OK`. `setup.sh` install: `SKILLDIR=<project>/.claude/skills/dirprobe`, same script printed `ROOT_SCRIPT_OK`. Both ran in a project holding only `PROJECT_KANBAN.md` (plugin) or the installed kit (install).
+
+**DELTA**: A plugin user can run `/easy-kit:wake` and spawn `easy-kit:qa-expert` in their own project, and every script a skill calls is found, with the same skill files unchanged in a `setup.sh` install.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]

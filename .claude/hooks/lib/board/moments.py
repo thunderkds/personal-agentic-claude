@@ -22,6 +22,11 @@ from board import outbox, render
 from board.config import config_path, load_config, normalize_task_id, PATH_SAFE_ID
 
 PULL_TIMEOUT_S = 10
+# The script is code, so it comes from where this file lives: `<kit>/.claude/hooks/lib/board/`. In
+# the project (a `setup.sh` install) <kit> is the project root; in a plugin it is the plugin cache,
+# which holds no project data (T234 D5). The project root still arrives as `root`.
+BOARD_SYNC = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
+    os.path.dirname(os.path.realpath(__file__)))))), "scripts", "board_sync.py")
 STATE_DIR = os.path.join(".claude", "hooks", ".state")
 # Printed by render.HEADER on every pulled PROJECT_KANBAN.md.
 BOARD_CACHE_MARKER = "Board cache, pulled from the board by"
@@ -48,9 +53,8 @@ def pull_cache(root, timeout=PULL_TIMEOUT_S):
 
     Output is captured, never echoed: a hook's stdout is its decision channel, and
     board_sync's own messages are for a human running it by hand."""
-    script = os.path.join(root, "scripts", "board_sync.py")
     try:
-        done = subprocess.run([sys.executable, script, "pull"], cwd=root,
+        done = subprocess.run([sys.executable, BOARD_SYNC, "pull"], cwd=root,
                               stdin=subprocess.DEVNULL, capture_output=True, timeout=timeout)
         if done.returncode == 0:
             return None

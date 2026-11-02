@@ -25,16 +25,22 @@ import re
 import sys
 from datetime import datetime, timezone
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
-TEMPLATE_PATH = os.path.join(ROOT, "templates", "delivery_report_template.html")
-TASKS_DIR = os.path.join(ROOT, "tasks")
+# Two roots (T234). CODE_ROOT is the kit this file belongs to (the template, the hooks' lib):
+# `realpath` so the path through `.claude/skills/<name>` finds the same folder as `skills/<name>`.
+# ROOT is the project (the tasks, the event trace, `reports/`): from a plugin they are not the kit's.
+HERE = os.path.dirname(os.path.realpath(__file__))
+CODE_ROOT = os.path.dirname(os.path.dirname(HERE))
+TEMPLATE_PATH = os.path.join(CODE_ROOT, "templates", "delivery_report_template.html")
 
 # Both sections may live in the guide or in the sibling TASK_REVIEW file
 # (T064) — one resolver, shared with the two hooks, so this file does not
 # become a third independent copy of the same fallback.
-sys.path.insert(0, os.path.join(ROOT, ".claude", "hooks", "lib"))
+sys.path.insert(0, os.path.join(CODE_ROOT, ".claude", "hooks", "lib"))
 from guide_sections import read_review_text, resolve_section  # noqa: E402
+from project_root import NO_PROJECT, script_project_root  # noqa: E402
+
+ROOT = script_project_root()
+TASKS_DIR = os.path.join(ROOT or os.curdir, "tasks")
 
 DEMO_SECTION_RE = re.compile(r"^##\s*Demonstration\s*$(.*?)(?=^##\s|\Z)", re.M | re.S)
 FIELD_RE = re.compile(
@@ -230,6 +236,9 @@ def build_slots(task_id, branch, guide_text, root=ROOT, tasks_dir=None):
 
 
 def main():
+    if ROOT is None:  # T234 D7: run from a plugin, in no project
+        print(NO_PROJECT, file=sys.stderr)
+        sys.exit(2)
     if len(sys.argv) < 4:
         print("usage: render.py <TASK_ID> <guide_path> <branch> [out_dir]", file=sys.stderr)
         sys.exit(2)

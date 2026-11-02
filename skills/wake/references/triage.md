@@ -1,6 +1,6 @@
 # Triage my board tasks (FR-011)
 
-`python3 scripts/pull_moment.py wake` prints, after a good pull, a header
+`python3 "${CLAUDE_SKILL_DIR}/../../scripts/pull_moment.py" wake` prints, after a good pull, a header
 `N of your board tasks to triage` and one line per task:
 
 ```
@@ -23,7 +23,7 @@ For each listed task, one at a time:
 4. **Judge readiness**, then do one of two things:
    - **Ready** (clear enough to plan): write the full guide from
      `templates/TASK_GUIDE_template.md` into `tasks/TASK_GUIDE_<ID>.md`, then push it to the
-     issue with `python3 scripts/board_sync.py update --guide <ID>`.
+     issue with `python3 "${CLAUDE_SKILL_DIR}/../../scripts/board_sync.py" update --guide <ID>`.
    - **Investigate first** (too vague): run `Skill({ skill: "grill-with-docs" })` or
      `Skill({ skill: "brainstorming" })` with the user, then write the guide as above.
 

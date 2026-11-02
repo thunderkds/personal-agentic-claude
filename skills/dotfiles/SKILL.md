@@ -37,7 +37,7 @@ Codex folders get skills and instructions only, never settings.
 ### Step 1 — Find the folders
 
 ```
-python3 skills/dotfiles/scripts/dotfiles.py plan --source <dir>
+python3 "${CLAUDE_SKILL_DIR}/scripts/dotfiles.py" plan --source <dir>
 ```
 
 With no target folder the script changes nothing. It lists each `~/.claude*` folder with a
@@ -49,7 +49,7 @@ to the user and stop.
 Ask which folders to include. Then run `plan` with those folders and show the output:
 
 ```
-python3 skills/dotfiles/scripts/dotfiles.py plan --source <dir> --claude-dir <dir> --codex-dir <dir>
+python3 "${CLAUDE_SKILL_DIR}/scripts/dotfiles.py" plan --source <dir> --claude-dir <dir> --codex-dir <dir>
 ```
 
 - `+ permissions.deny: <rule>` or `+ permissions.ask: <rule>` is a rule the script will add.
@@ -67,7 +67,7 @@ Ask: "Apply this plan to these folders?"
 Only after the user approves that plan, run the same command with `apply`:
 
 ```
-python3 skills/dotfiles/scripts/dotfiles.py apply --source <dir> --claude-dir <dir> --codex-dir <dir>
+python3 "${CLAUDE_SKILL_DIR}/scripts/dotfiles.py" apply --source <dir> --claude-dir <dir> --codex-dir <dir>
 ```
 
 Before it changes `settings.json`, it writes `settings.json.bak-<timestamp>` beside it. To undo,
@@ -84,7 +84,7 @@ next folder and ends with exit 2. A write can fail part way, so run `status` to 
 Any time later:
 
 ```
-python3 skills/dotfiles/scripts/dotfiles.py status --source <dir> --claude-dir <dir> --codex-dir <dir>
+python3 "${CLAUDE_SKILL_DIR}/scripts/dotfiles.py" status --source <dir> --claude-dir <dir> --codex-dir <dir>
 ```
 
 Exit 0 means in sync. Exit 1 means drift or a conflict. Exit 2 means a folder was refused, or the

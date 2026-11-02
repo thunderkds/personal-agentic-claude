@@ -25,18 +25,24 @@ Exit 0 always — a pull moment never blocks work — except 2 for bad arguments
 """
 import argparse
 import os
+import shlex
 import subprocess
 import sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(ROOT, ".claude", "hooks", "lib"))
+# Two roots (T234): this file's folder is code, the project is data. Run from a plugin, the code
+# is in the plugin cache and the board, `tasks/` and `.claude/` are the project's.
+CODE_ROOT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))  # realpath: see board_sync.py
+sys.path.insert(0, os.path.join(CODE_ROOT, ".claude", "hooks", "lib"))
 from board import moments  # noqa: E402
 from board.config import load_config  # noqa: E402
+from project_root import NO_PROJECT, script_project_root  # noqa: E402
+
+ROOT = script_project_root()
 
 
 def triage_lines(root):
     """`board_sync.py triage --mark` output lines; [] on any failure (never blocks a wake)."""
-    script = os.path.join(root, "scripts", "board_sync.py")
+    script = os.path.join(CODE_ROOT, "scripts", "board_sync.py")
     try:
         done = subprocess.run([sys.executable, script, "triage", "--mark"], cwd=root,
                               stdin=subprocess.DEVNULL, capture_output=True, text=True,
@@ -46,7 +52,11 @@ def triage_lines(root):
     return done.stdout.splitlines() if done.returncode == 0 else []
 
 
-def main(argv=None, root=ROOT):
+def main(argv=None, root=None):
+    root = root or ROOT
+    if root is None:  # T234 D7: run from a plugin, in no project
+        print(NO_PROJECT)
+        return 0
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("moment", choices=["wake", "spawn", "review"])
     parser.add_argument("task_id", nargs="?")
@@ -65,8 +75,11 @@ def main(argv=None, root=ROOT):
     if warning:
         print(warning)
     elif args.moment == "wake" and moments.unsynced_count(root):
+        # In the project the short path works; from a plugin it names the plugin's own copy.
+        sync = ("scripts/board_sync.py" if os.path.realpath(CODE_ROOT) == os.path.realpath(root)
+                else shlex.quote(os.path.join(CODE_ROOT, "scripts", "board_sync.py")))
         print(f"⚠ {moments.unsynced_count(root)} unsynced board writes — run "
-              f"python3 scripts/board_sync.py flush")
+              f"python3 {sync} flush")
 
     if args.moment == "wake":
         decisions_line = moments.new_decisions_line(root, (load_config(root) or {}).get("me"))

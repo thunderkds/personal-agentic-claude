@@ -38,7 +38,7 @@ form the user can invoke directly instead of waiting for you to notice.
 These are different mechanisms with different scope. Answer both, independently:
 
 **a. Live conversation context** (`/compact` territory — user-invoked only):
-- **Measure first**: run `python3 scripts/token_meter.py --current --json` and quote `context_now`
+- **Measure first**: run `python3 "${CLAUDE_SKILL_DIR}/../../scripts/token_meter.py" --current --json` and quote `context_now`
   and the top entry of `top_content_kinds` (e.g. "180k tokens, 40% Bash output"). If the command
   fails, say so in one line and fall back to the judgment signals below. 150k is a **reference
   point** — a third of past Supervisor calls ran above it — not a trigger: a large number with no

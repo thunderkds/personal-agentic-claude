@@ -12,7 +12,7 @@ This skill is strictly read-only. It never writes, edits, or creates any file.
 ### Karpathy Operational Commands
 
 - **Ask vs. Guess**: Never infer project state — read the actual sources. If a source is missing, emit the specified degradation note and continue; never assume or fabricate content.
-- **Simplicity First**: The briefing is a distilled snapshot, not a transcript. Show IDs and one-liners only. Do not reproduce full file contents.
+- **Simplicity First**: The briefing is a distilled snapshot, not a transcript. Show IDs and one-liners only. Never paste whole files.
 - **Surgical Changes**: Read only the five designated sources. Do not modify MEMORY.md, LR files, KANBAN, or any other file — this skill has no Write or Edit steps.
 - **Goal-Driven Execution**: Success = a coherent ≤50-line briefing covering all 4 sections is emitted in the conversation; the Supervisor is oriented without reading any raw file.
 
@@ -22,7 +22,7 @@ This skill is strictly read-only. It never writes, edits, or creates any file.
 
 #### Step 0 — Pull (board mode `online`)
 
-Run `python3 scripts/pull_moment.py wake` first (FR-009; no-op in `local` mode). Show any line it prints (unreachable board, unsynced board writes) atop the briefing and continue.
+Run `python3 "${CLAUDE_SKILL_DIR}/../../scripts/pull_moment.py" wake` first (FR-009; no-op in `local`). Show any line it prints (unreachable board, unsynced board writes) atop the briefing and continue.
 Tasks to triage: follow `references/triage.md`.
 
 #### Step 1 — Source Reads (attempt all five before composing output)
@@ -33,8 +33,8 @@ Read all five sources in parallel. If any source fails or is missing, record the
 |---|---|---|
 | Git history | Run `git log --oneline -10` via Bash tool | `"No git history found."` (if no commits) or `"Not a git repository."` (if git fails) |
 | `PROJECT_KANBAN.md` | Read full file, then filter to rows with status `In Progress` or `🔄` | `"No KANBAN found — project may be new or not yet planned."` |
-| `memory/MEMORY.md` | Run `python3 skills/wake/scripts/memory_sections.py` via Bash (read-only; prints the Decisions and Learning Records entries only). Never read the whole file | Script prints `"No MEMORY.md found."`; any failure = missing |
-| Uncommitted work in In Progress worktrees | Run `python3 skills/wake/scripts/dirty_worktrees.py` via Bash (read-only; prints one `Txxx <worktree> N modified, M untracked` line per In Progress task whose worktree has uncommitted changes, nothing otherwise) | No output = nothing to report; any failure is treated the same, never halt |
+| `memory/MEMORY.md` | Run `python3 "${CLAUDE_SKILL_DIR}/scripts/memory_sections.py"` via Bash (read-only; prints the Decisions and Learning Records entries only). Never read the whole file | Script prints `"No MEMORY.md found."`; any failure = missing |
+| Uncommitted work in In Progress worktrees | Run `python3 "${CLAUDE_SKILL_DIR}/scripts/dirty_worktrees.py"` via Bash (read-only; prints one `Txxx <worktree> N modified, M untracked` line per In Progress task whose worktree has uncommitted changes, nothing otherwise) | No output = nothing to report; any failure is treated the same, never halt |
 | `memory/learning-records/LR-*.md` | Read all `.md` files; keep only those with `status: active` in frontmatter; sort by filename descending; take top 3 | `"No active Learning Records yet."` (same note if folder does not exist) |
 
 If this skill is invoked when the conversation already has substantial context (not a cold start), prepend a one-line note at the very top of the briefing:

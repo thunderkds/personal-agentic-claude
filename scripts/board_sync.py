@@ -68,14 +68,21 @@ import sys
 import tempfile
 from datetime import date, datetime, timezone
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(ROOT, ".claude", "hooks", "lib"))
+# Two roots (T234): this file's folder is code, the project is data. Run from a plugin, the code
+# is in the plugin cache and the board, `tasks/` and `.claude/` are the project's.
+# `realpath`, not `abspath`: a `setup.sh` install runs this as `.claude/skills/<name>/../../scripts/...`,
+# and `abspath` would drop `..` without following the `.claude/skills` symlink (T234).
+CODE_ROOT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+sys.path.insert(0, os.path.join(CODE_ROOT, ".claude", "hooks", "lib"))
+from project_root import NO_PROJECT, script_project_root  # noqa: E402
 from board import outbox, render  # noqa: E402
 from board.base import BoardAuthError, BoardError, BoardUnavailable, Decision, Task  # noqa: E402
 from board.config import board_id_pattern, config_path, load_config, normalize_task_id, task_id_pattern  # noqa: E402
 from board.fake import FakeBoard  # noqa: E402
 from board.linear import LinearBoard  # noqa: E402
 from guide_sections import missing_guide_sections  # noqa: E402
+
+ROOT = script_project_root()
 
 KANBAN = "PROJECT_KANBAN.md"
 MILESTONES = ("started", "red", "green", "review", "verify", "merged", "blocked", "question")
@@ -626,7 +633,8 @@ def init(root, ask, make_adapter, env, out, err):
     return 0
 
 
-def main(argv=None, root=ROOT):
+def main(argv=None, root=None):
+    root = root or ROOT
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("pull")
@@ -649,6 +657,12 @@ def main(argv=None, root=ROOT):
     p_push.add_argument("value", help="status slug, or comment milestone")
     p_push.add_argument("text", nargs="*", help="comment text")
     args = parser.parse_args(argv)
+
+    if root is None and args.command == "init":
+        root = os.getcwd()  # `init` makes the board config, so a folder with none yet is its project
+    if root is None:  # T234 D7: run from a plugin, in no project
+        print(NO_PROJECT, file=sys.stderr)
+        return 2
 
     if args.command == "init":
         return init(root, tty_ask, lambda key: LinearBoard(key, ""), os.environ,

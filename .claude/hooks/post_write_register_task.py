@@ -61,8 +61,9 @@ def main():
         m = re.search(pattern, guide, re.IGNORECASE | re.MULTILINE)
         return m.group(1).strip() if m else default
 
+    # T234: a plugin agent is `easy-kit:backend-developer`; keep the prefix with the name.
     title    = extract(rf"^#\s+TASK_GUIDE[_\s—-]+(?:{id_pattern})[:\s—-]+(.+)$", "untitled")
-    agent    = extract(r"Assigned\s+Agent\*{0,2}[:\s]+([a-z\-]+)", "backend-developer")
+    agent    = extract(r"Assigned\s+Agent\*{0,2}[:\s]+([a-z\-]+(?::[a-z\-]+)?)", "backend-developer")
     cx       = extract(r"Complexity(?:\s+Level)?\*{0,2}[:\s]+\*{0,2}(C[0-3])", "?")
     risk     = extract(r"Risk(?:\s+Level)?\*{0,2}[:\s]+\*{0,2}(Low|Med(?:ium)?|High)", "?")
     priority = extract(r"Priority\*{0,2}[:\s]+\*{0,2}(P[0-2])", "?")

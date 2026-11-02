@@ -182,10 +182,13 @@ def test_failed_pull_warns_and_gate_uses_cache(tmp_path):
     assert (project / "PROJECT_KANBAN.md").read_text() == cache
 
 
-def test_hanging_pull_times_out_and_never_stalls_the_hook(tmp_path):
+def test_hanging_pull_times_out_and_never_stalls_the_hook(tmp_path, monkeypatch):
     from board import moments
     project = make_project(tmp_path)
     (project / "scripts" / "board_sync.py").write_text("import time\ntime.sleep(30)\n")
+    # T234 D5: the script is code, found from where `moments.py` lives; this run uses the repo's copy
+    # of `moments.py`, so point it at the stub.
+    monkeypatch.setattr(moments, "BOARD_SYNC", str(project / "scripts" / "board_sync.py"))
     started = time.monotonic()
     warning = moments.pull_cache(str(project), timeout=1)
     assert time.monotonic() - started < 10
