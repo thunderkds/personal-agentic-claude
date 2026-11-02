@@ -34,6 +34,8 @@ User, 2026-11-02: chose the five-task split ("T236 Real install, then publish. I
 - **D3 — Honest limits.** Docs state: Claude Code only; run `/easy-kit:init` once; each teammate installs the plugin; a plugin cannot set permissions.
 - **D4 — Claims audit.** List every new sentence with what proves it in `tasks/TASK_REVIEW_T236.md` (T231 learning).
 
+- **D5 — Carried from T233's verify.** Measure what a git-sourced install copies. A local install was 18 MB, with `tests/`, `tasks/`, `experiments/` and `memory/`. Report the size, and whether a smaller plugin source is worth a follow-up.
+
 **Out of scope**: easy-memory in the marketplace (T217 stays deferred), Codex.
 
 **Requirement Refs**: `docs/brainstorming/BRAINSTORMING_LOG_distribution.md` Option C.
