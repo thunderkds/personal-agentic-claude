@@ -1262,7 +1262,7 @@ def test_skills_flow_snakes_with_an_arrow_between_every_consecutive_pair():
     assert all(dirs[:-1]), "every step except the last needs data-next=right|left|down"
     assert dirs[-1] is None, "the last step has no next step"
     assert [d.group(1) for d in dirs[:-1]] == ["right", "down", "left", "down", "right", "down"]
-    css = _page_text()
+    css = _style_block()  # T231: the flow-step rules moved from the page's <style> to theme.css
     for d in ("right", "left", "down"):
         assert re.search(rf'\.flow-step\[data-next="{d}"\]::after', css), f"no CSS arrow rule for {d}"
 

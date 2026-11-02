@@ -66,6 +66,12 @@
   <p class="lead">You ask for a change. Easy Kit plans it, builds it, checks it, and leaves the merge to you.</p>
   <div class="codebox"><code><span class="prompt">$ </span>curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh</code><button type="button" class="btn btn-primary" aria-label="Copy install command">Copy</button></div>
   <p class="story-actions"><a class="btn btn-secondary" href="docs.html">Read the docs</a></p>
+  <ul class="strip" aria-label="Easy Kit in numbers">
+    <li><a href="docs.html#agent-roles"><span class="num">4</span><span class="label">spawnable roles</span></a></li>
+    <li><a href="docs.html#skills"><span class="num">35</span><span class="label">skills</span></a></li>
+    <li><a href="docs.html#hooks"><span class="num">5</span><span class="label">blocking hooks (of 11)</span></a></li>
+    <li><a href="docs.html#packs"><span class="num">6</span><span class="label">optional domain packs</span></a></li>
+  </ul>
 </section>
 
 <section id="journey">
@@ -85,7 +91,7 @@
     <li class="flow-node is-link">
       <span class="flow-key">Easy Kit</span>
       <span class="flow-title"><a href="docs.html#agent-roles">Agents build</a></span>
-      <span class="flow-desc">Each agent works in its own copy of the code.</span>
+      <span class="flow-desc">Agents work in separate copies.</span>
     </li>
     <li class="flow-node is-link">
       <span class="flow-key">Easy Kit</span>
@@ -95,10 +101,49 @@
     <li class="flow-node is-yours is-link is-outcome">
       <span class="flow-key">Your step</span>
       <span class="flow-title"><a href="docs.html#tracks">You merge</a></span>
-      <span class="flow-desc">You read the result and merge it. Easy Kit never merges for you.</span>
+      <span class="flow-desc">You review and merge. Easy Kit never does.</span>
     </li>
   </ol>
 </div>
+</section>
+
+<section id="stages">
+<h2>Skills by stage</h2>
+<ol class="skill-flow" aria-label="Skills grouped by stage, in order">
+  <li class="flow-step" data-stage="0.5" data-next="right">
+    <h3><a href="docs.html#skills">Stage 0.5: Brainstorm</a></h3>
+    <p class="chips"><code class="chip is-key"><span aria-hidden="true">★</span> brainstorming <span class="visually-hidden">key skill</span></code><code class="chip">ideate</code></p>
+  </li>
+  <li class="flow-step" data-stage="1" data-next="down">
+    <h3><a href="docs.html#skills">Stage 1: Set up</a></h3>
+    <p class="chips"><code class="chip">git-guardrails-claude-code</code><code class="chip is-key"><span aria-hidden="true">★</span> map-codebase <span class="visually-hidden">key skill</span></code><code class="chip">settings-setup</code><code class="chip">companion-setup</code></p>
+  </li>
+  <li class="flow-step" data-stage="1.5" data-next="left">
+    <h3><a href="docs.html#skills">Stage 1.5: Agent team</a></h3>
+    <p class="chips"><code class="chip is-key"><span aria-hidden="true">★</span> craft-agent <span class="visually-hidden">key skill</span></code></p>
+  </li>
+  <li class="flow-step" data-stage="2" data-next="down">
+    <h3><a href="docs.html#skills">Stage 2: Plan</a></h3>
+    <p class="chips"><code class="chip is-key"><span aria-hidden="true">★</span> grill-with-docs <span class="visually-hidden">key skill</span></code><code class="chip">to-issues</code></p>
+  </li>
+  <li class="flow-step" data-stage="3" data-next="right">
+    <h3><a href="docs.html#skills">Stage 3: Build</a></h3>
+    <p class="chips"><code class="chip is-key"><span aria-hidden="true">★</span> tdd <span class="visually-hidden">key skill</span></code><code class="chip">bugfix</code><code class="chip">diagnose</code><code class="chip">craft-spawn-prompt</code><code class="chip">migration-safety</code></p>
+  </li>
+  <li class="flow-step" data-stage="4" data-next="down">
+    <h3><a href="docs.html#skills">Stage 4: Review</a></h3>
+    <p class="chips"><code class="chip">blast-radius</code><code class="chip is-key"><span aria-hidden="true">★</span> code-review <span class="visually-hidden">key skill</span></code><code class="chip">html-report</code><code class="chip">score</code></p>
+  </li>
+  <li class="flow-step" data-stage="5">
+    <h3><a href="docs.html#skills">Stage 5: Ship</a></h3>
+    <p class="chips"><code class="chip is-key"><span aria-hidden="true">★</span> ship <span class="visually-hidden">key skill</span></code><code class="chip">delivery-report</code></p>
+  </li>
+</ol>
+<div class="skill-band">
+  <h3>Any stage</h3>
+  <p class="chips"><code class="chip">compact-advisor</code><code class="chip">compact-memory</code><code class="chip">compound</code><code class="chip">compound-refresh</code><code class="chip">dotfiles</code><code class="chip">learn</code><code class="chip">optimize</code><code class="chip">resolve-pr-feedback</code><code class="chip">resolve-question</code><code class="chip">slim-skills</code><code class="chip">strategy</code><code class="chip">teach</code><code class="chip">thinking-report</code><code class="chip">wake</code><code class="chip">write-better-skill</code></p>
+</div>
+<p class="story-note"><span aria-hidden="true">★</span> marks the key skill of each stage.</p>
 </section>
 
 <section id="paths">
@@ -111,8 +156,8 @@
     </li>
     <li class="flow-split">
       <ul class="flow-branches">
-        <li><span class="flow-edge">small</span><div class="flow-node"><span class="flow-key">minimal track</span><span class="flow-title">Fast path</span><span class="flow-desc">Easy Kit does the work itself, test first, and ends with a short note. Example: fix a typo.</span></div></li>
-        <li><span class="flow-edge">big</span><div class="flow-node"><span class="flow-key">extended track</span><span class="flow-title">Full path</span><span class="flow-desc">A full plan, agents that build, full checks, then you merge. Example: add a login page.</span></div></li>
+        <li><span class="flow-edge">small</span><div class="flow-node"><span class="flow-key">minimal track</span><span class="flow-title">Fast path</span><span class="flow-desc">Test first, then a short note. Example: fix a typo.</span></div></li>
+        <li><span class="flow-edge">big</span><div class="flow-node"><span class="flow-key">extended track</span><span class="flow-title">Full path</span><span class="flow-desc">Full plan, agents build, full checks. Example: add a login page.</span></div></li>
       </ul>
     </li>
   </ol>

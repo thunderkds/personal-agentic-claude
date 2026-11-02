@@ -427,6 +427,7 @@ details.more { margin: var(--s-4) 0 0; }
 .story .hero { margin-top: var(--s-4); }
 .story .hero .lead, .story .hero .codebox, .story-actions { max-width: 56rem; }
 .story-actions { margin: var(--s-5) 0 0; }
+.story .hero .strip { max-width: 56rem; margin-top: var(--s-6); }
 .story-note { margin: var(--s-5) 0 0; max-width: none; color: var(--text-2); font-size: 14px; }
 .flow-desc { font-size: 14px; line-height: 1.5; color: var(--text-2); }
 .flow-node.is-yours { border-color: var(--text-muted); }
@@ -451,6 +452,47 @@ details.more { margin: var(--s-4) 0 0; }
 }
 @media (max-width: 768px) {
   .story-cards { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---- skill flow and strip links (T231: moved from the docs page's <style>; both pages use them) ---- */
+.skill-flow { list-style: none; margin: 0; padding: 0; max-width: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2.6rem 2.6rem; }
+.flow-step { position: relative; min-width: 0; border: 1px solid var(--line); border-radius: var(--r-sm); padding: var(--s-4) var(--s-5); }
+/* snake on wide screens: 0.5 -> 1 / 2 <- 1.5 / 3 -> 4 / 5; DOM order stays 0.5..5 */
+.flow-step[data-stage="0.5"] { grid-area: 1 / 1; }
+.flow-step[data-stage="1"]   { grid-area: 1 / 2; }
+.flow-step[data-stage="1.5"] { grid-area: 2 / 2; }
+.flow-step[data-stage="2"]   { grid-area: 2 / 1; }
+.flow-step[data-stage="3"]   { grid-area: 3 / 1; }
+.flow-step[data-stage="4"]   { grid-area: 3 / 2; }
+.flow-step[data-stage="5"]   { grid-area: 4 / 2; }
+.flow-step[data-next]::after {
+  position: absolute; width: 2.6rem; height: 2.6rem; line-height: 2.6rem; text-align: center;
+  color: var(--text-dim); font-size: 1.6rem;
+}
+.flow-step[data-next="right"]::after { content: "\2192" / ""; left: 100%; top: 50%; margin-top: -1.3rem; }
+.flow-step[data-next="left"]::after  { content: "\2190" / ""; right: 100%; top: 50%; margin-top: -1.3rem; }
+.flow-step[data-next="down"]::after  { content: "\2193" / ""; top: 100%; left: 50%; margin-left: -1.3rem; }
+.flow-step h3, .skill-band h3 { margin: 0 0 var(--s-3); font-size: 14px; }
+.chips { margin: 0; max-width: none; display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.chip { max-width: 100%; overflow-wrap: anywhere; }
+.skill-band { margin-top: var(--s-5); border: 1px dashed var(--line-strong); border-radius: var(--r-sm); padding: var(--s-4) var(--s-5); }
+.strip > li { padding: 0; }
+.strip a { display: flex; flex-direction: column; gap: 6px; height: 100%; padding: 20px 22px; color: inherit; }
+.strip a:hover { background: var(--bg-hover); color: inherit; text-decoration: none; }
+.chip.is-key { border-color: var(--accent-line); background: var(--accent-soft); color: var(--text-strong); font-weight: 500; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.story .flow-step h3 a { color: var(--text-strong); }
+.story .skill-flow { margin-top: var(--s-5); }
+/* The docs page stacked the skill flow below 768px; 767.98px keeps that exact width. The story page stacks at 768px with the other flows. */
+@media (max-width: 767.98px) {
+  .skill-flow { grid-template-columns: minmax(0, 1fr); }
+  .flow-step[data-stage] { grid-area: auto; }
+  .flow-step[data-next]::after { content: "\2193" / ""; left: 50%; right: auto; top: 100%; margin: 0 0 0 -1.3rem; }
+}
+@media (max-width: 768px) {
+  .story .skill-flow { grid-template-columns: minmax(0, 1fr); }
+  .story .flow-step[data-stage] { grid-area: auto; }
+  .story .flow-step[data-next]::after { content: "\2193" / ""; left: 50%; right: auto; top: 100%; margin: 0 0 0 -1.3rem; }
 }
 
 /* ---- rules both pages need (T231, moved from the docs page's <style>) ------- */

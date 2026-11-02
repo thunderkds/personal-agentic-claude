@@ -34,13 +34,13 @@ SETTINGS_JSON = os.path.join(ROOT, ".claude", "settings.json")
 RUNBOOK = os.path.join(ROOT, "RUNBOOK.md")
 BASELINE_PATH = os.path.join(ROOT, "tests", "fixtures", "site_story_baseline.json")
 
-STORY_SECTIONS = ["hero", "journey", "paths", "stops", "deeper"]
+STORY_SECTIONS = ["hero", "journey", "stages", "paths", "stops", "deeper"]  # A1 added "stages"
 WORD_CAP = 300  # D3: visible words in <main> of index.html
 SCRIPT_IDS = ("settings-catalog", "settings-tool-core", "settings-tool-ui")
 ONE_LINE_INSTALL = (
     "curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh"
 )
-# D4: none of these may appear in text a reader sees or hears on index.html.
+# D4: none of these may appear in text a reader sees or hears on index.html. A1: "Stage" is allowed inside #stages only.
 BANNED_TERMS = [
     r"C[0-3]", r"Risk", r"Gate", r"Stage", r"Phase", r"PreToolUse", r"PostToolUse", r"TASK_GUIDE",
     r"worktree", r"sub-agent", r"doctrine", r"harness", r"Evidence",
@@ -200,7 +200,7 @@ def baseline_of(old_html):
 
 # ---- AC 1: the five sections, no fold -------------------------------------------
 
-def test_index_holds_the_five_story_sections_in_order_and_no_details():
+def test_index_holds_the_story_sections_in_order_and_no_details():
     html = index_html()
     assert [sid for sid, _ in top_level_sections(html)] == STORY_SECTIONS
     assert "<details" not in html, "the story page opens no fold"
@@ -249,7 +249,10 @@ def test_main_holds_at_most_300_words():
 
 @pytest.mark.parametrize("term", BANNED_TERMS)
 def test_no_internal_term_on_the_story_page(term):
-    heard = heard_text(index_html())
+    html = index_html()
+    if term == "Stage":  # A1: the stage flow names its stages
+        html = re.sub(r'<section id="stages">.*?</section>', "", html, flags=re.DOTALL)
+    heard = heard_text(html)
     hit = re.search(rf"(?<![\w-]){term}(?![\w-])", heard, re.IGNORECASE)
     assert not hit, f"index.html shows the internal term {hit.group(0)!r} (D4)"
 
@@ -339,7 +342,7 @@ def test_deeper_has_four_cards_that_link_into_the_docs_and_one_settings_tool_lin
 
 def test_every_flow_on_the_story_page_is_a_list():
     html = index_html()
-    for sid in ("journey", "paths", "stops", "deeper"):
+    for sid in ("journey", "stages", "paths", "stops", "deeper"):
         assert re.search(r"<(?:ol|ul)\b", section(html, sid)), f"#{sid} holds no list"
         assert not re.search(r"<table\b", section(html, sid)), f"#{sid} lays out a flow in a table"
 
@@ -349,6 +352,87 @@ def test_story_page_names_the_shipping_version():
         log = re.search(r"## Release Log(.*?)(?=\n## |\Z)", f.read(), re.DOTALL).group(1)
     version = re.findall(r"^\|\s*(v\d+\.\d+\.\d+)\s*\|", log, re.MULTILINE)[-1]
     assert f"supervisor kit &middot; {version}" in index_html()
+
+
+# ---- A1: the stage flow with skill chips, equal to docs.html#skills -------------------
+
+def _chip_names(fragment):
+    """Skill names of every chip, markers (spans inside a chip) dropped."""
+    out = []
+    chips = re.findall(r'<span class="chip[^"]*"[^>]*>(.*?)</span>', fragment, re.DOTALL)
+    chips += re.findall(r'<code class="chip[^"]*"[^>]*>(.*?)</code>', fragment, re.DOTALL)
+    for chip in chips:
+        out.append(" ".join(re.sub(r"<span\b.*?</span>", "", chip, flags=re.DOTALL).split()))
+    return out
+
+
+def _stage_flow(html, scope):
+    """({stage number: [skill names]}, [Any-stage skill names]) of the skill flow in section #scope."""
+    skills = section(html, scope)
+    steps = re.findall(r'<li\b[^>]*class="flow-step"[^>]*data-stage="([^"]+)"[^>]*>(.*?)</li>', skills, re.DOTALL)
+    band = re.search(r'<div class="skill-band">(.*?)</div>', skills, re.DOTALL)
+    assert steps and band, "no stage flow or no Any-stage band"
+    return {n: _chip_names(b) for n, b in steps}, _chip_names(band.group(1))
+
+
+def test_stages_screen_skill_chips_equal_the_docs_skills_section():
+    story_flow, story_band = _stage_flow(index_html(), "stages")
+    docs_flow, docs_band = _stage_flow(docs_html(), "skills")
+    assert list(story_flow) == list(docs_flow), "stages are not the docs stages in the docs order"
+    assert story_flow == docs_flow, {k: (story_flow[k], docs_flow[k]) for k in docs_flow if story_flow.get(k) != docs_flow[k]}
+    assert story_band == docs_band, "the Any-stage group differs from docs.html"
+    assert "Any stage" in " ".join(visible_words(section(index_html(), "stages")))
+
+
+def test_stage_chips_are_code_so_they_stay_out_of_the_word_count():
+    body = section(index_html(), "stages")
+    assert len(re.findall(r'class="chip[ "]', body)) == len(re.findall(r'<code class="chip[ "]', body)) > 0
+
+
+def test_every_stage_links_to_its_docs_section_and_names_its_stage_number():
+    body = section(index_html(), "stages")
+    known = set(_doc_ids(docs_html()))
+    for number, step in re.findall(r'<li\b[^>]*class="flow-step"[^>]*data-stage="([^"]+)"[^>]*>(.*?)</li>', body, re.DOTALL):
+        h3 = re.search(r"<h3\b[^>]*>(.*?)</h3>", step, re.DOTALL).group(1)
+        assert " ".join(visible_words(h3)).startswith(f"Stage {number}"), h3
+        links = re.findall(r'href="docs\.html#([^"]+)"', h3)
+        assert links and all(link in known for link in links), f"stage {number} links {links}"
+
+
+# ---- A2: highlights strip and one key skill per stage -----------------------------------
+
+def _strip_cells(html, scope):
+    body = section(html, scope)
+    strip = re.search(r'<ul class="strip"[^>]*>(.*?)</ul>', body, re.DOTALL)
+    assert strip, f"#{scope} has no .strip"
+    return [(re.search(r'href="(?:docs\.html)?#([^"]+)"', a).group(1), " ".join(visible_words(n)), " ".join(visible_words(l)))
+            for a, n, l in re.findall(r'<a\b([^>]*)>\s*<span class="num">(.*?)</span>\s*<span class="label">(.*?)</span>\s*</a>',
+                                       strip.group(1), re.DOTALL)]
+
+
+def test_hero_strip_shows_the_docs_numbers_and_links_each_to_its_docs_section():
+    story = _strip_cells(index_html(), "hero")
+    docs = _strip_cells(docs_html(), "quick-reference")
+    assert len(story) == 4
+    assert story == docs, f"hero strip {story} differs from docs quick reference {docs}"
+    body = section(index_html(), "hero")
+    assert re.findall(r'href="docs\.html#([^"]+)"', re.search(r'<ul class="strip"[^>]*>(.*?)</ul>', body, re.DOTALL).group(1)) == [c[0] for c in docs]
+
+
+def test_each_stage_marks_exactly_one_key_skill_with_a_shape_and_a_text_cue():
+    body = section(index_html(), "stages")
+    steps = re.findall(r'<li\b[^>]*class="flow-step"[^>]*data-stage="([^"]+)"[^>]*>(.*?)</li>', body, re.DOTALL)
+    assert len(steps) == 7
+    for number, step in steps:
+        keys = re.findall(r'<code class="chip[^"]*\bis-key\b[^"]*"[^>]*>(.*?)</code>', step, re.DOTALL)
+        assert len(keys) == 1, f"stage {number} marks {len(keys)} key skills"
+        assert re.search(r'<span aria-hidden="true">\u2605</span>', keys[0]), "key skill has no star (shape cue)"
+        assert re.search(r'<span class="visually-hidden">key skill</span>', keys[0]), "key skill has no text cue"
+    assert "is-key" not in re.search(r'<div class="skill-band">.*?</div>', body, re.DOTALL).group(0), "the Any-stage group has no key skill"
+    assert "key skill" in " ".join(visible_words(body)), "the screen never says what the star means"
+    css = re.sub(r"/\*.*?\*/", "", theme_css(), flags=re.DOTALL)
+    assert re.search(r"\.chip\.is-key\s*\{[^}]*var\(--accent", css), "no highlight style for a key skill"
+    assert re.search(r"\.visually-hidden\s*\{", css), "no visually-hidden rule"
 
 
 # ---- AC 5: docs.html holds every section and the three Settings tool scripts ---------
@@ -495,8 +579,8 @@ def test_every_layout_class_of_the_story_page_stacks_at_768px():
     phone = _media_bodies(css, "@media (max-width: 768px)")
     used = set(re.findall(r'class="([^"]*)"', index_html()))
     used = {c for classes in used for c in classes.split()}
-    layout = [c for c in ("flow-row", "flow-branches", "flow-map", "story-cards") if c in used]
-    assert layout == ["flow-row", "flow-branches", "flow-map", "story-cards"], f"fixture broken: {layout}"
+    layout = [c for c in ("flow-row", "flow-branches", "flow-map", "story-cards", "skill-flow") if c in used]
+    assert layout == ["flow-row", "flow-branches", "flow-map", "story-cards", "skill-flow"], f"fixture broken: {layout}"
     for cls in layout:
         assert f".{cls}" in phone, f".{cls} is not restacked at 768px"
     assert ".flow-row.is-long" in _media_bodies(css, "@media (max-width: 1100px)"), "the five-step journey stacks at 1100px"
