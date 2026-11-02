@@ -37,6 +37,8 @@ User, 2026-11-02: chose the five-task split ("T235 /easy-kit:init. Writes CLAUDE
 
 - **D6 — Carried from T232's verify.** (a) From a plugin, with `CLAUDE_PROJECT_DIR` unset, `project_root()` falls back to the plugin folder, so a gate sees no kit project and passes with no warning: fall back to the working directory or warn. (b) With `lib/project_root.py` broken, gates block outside a kit project too, so one bad plugin update would stop pushes in unrelated repos: decide and pin the behaviour.
 
+- **D7 — Carried from T234's review.** A plugin project holds none of the kit's docs. (a) `AGENTS.md`, `docs/claude-md/pipeline-stages.md` and `docs/claude-md/tracks.md` tell the Supervisor to run repo-relative commands (`python3 .claude/hooks/stop_auto_verify.py --start <ID>`, `python3 scripts/pull_moment.py review`). (b) About 30 references in skills and spawn startup reads name `templates/*`, `docs/claude-md/*` and `agents/<role>.md`, which resolve only inside the kit. Decide how a plugin project gets these, and prove it. (c) `board_sync.py init` in a folder with no board falls back to the plugin folder, and with a board in a parent folder it writes there: `init` must write to the project.
+
 **Out of scope**: `setup.sh` changes, auto-migrating a `setup.sh` project to the plugin, Codex.
 
 **Requirement Refs**: `docs/brainstorming/BRAINSTORMING_LOG_distribution.md` `## Edge Case Checklist for TASK_GUIDE`.
