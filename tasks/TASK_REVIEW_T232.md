@@ -67,8 +67,17 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: `pre_bash_block_unsafe_merge.py` copied to a temp folder (a fake plugin cache), run on a `git push origin main` event with `CLAUDE_PROJECT_DIR` set to a temp kit project holding an In Progress task, on unchanged `main` code. Exit 0 with empty stdout: the gate passes the push silently.
+
+```
+timestamp: 2026-11-02T04:54:55.429352+00:00
+git head : 53517c89
+hook     : /tmp/t232-demo-4ewpaiiv/plugin-cache/easy-kit/hooks/pre_bash_block_unsafe_merge.py
+project  : /tmp/t232-demo-4ewpaiiv/project (holds In Progress T900)
+exit     : 0
+stdout   : ''
+stderr   : ''
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
