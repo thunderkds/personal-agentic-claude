@@ -69,6 +69,11 @@ docs.html  (reference)
 - **D4:** the word `Stage` is allowed inside `#stages` only. Other banned terms stay banned everywhere on the page, and `Stage` stays banned outside `#stages`.
 - **New mutation M6:** delete one skill chip from `#stages`: a new test turns RED, then green on revert.
 
+**Amendment A2 (user, 2026-11-02, verbatim: "and some of highlight also")**, binding. Supervisor's reading, stated to the user:
+- **Highlights strip:** the `hero` section also shows the existing `.strip` of numbers from `#quick-reference` (spawnable roles, skills, blocking hooks, optional domain packs), each linking to its docs section. Plain labels. Numbers must equal those in `docs.html`; a test enforces it.
+- **Key skills:** in `#stages`, one key skill per stage carries a highlight style from existing tokens, and a text or shape cue, never color alone.
+- The 300-word cap stays.
+
 **Out of scope**:
 - Changing any fact, number or claim; rewriting reference text on `docs.html`
 - Settings tool logic and `settings-catalog`
