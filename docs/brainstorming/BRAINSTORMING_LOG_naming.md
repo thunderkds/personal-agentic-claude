@@ -95,6 +95,33 @@ Rename only the labels and edit no gate logic. The stage work is text. For the n
 
 ---
 
+## Design Review of the Merge (user: "if we merge, it good about the UI, but is it good about the design", 2026-11-02)
+
+**Why the half numbers exist.** `5ca3c1a5` (2026-04-16) already had Phase 0, Stage 1 and Stage 1.5. `fb361179` (2026-05-11) added Stage 0.5 as 5 lines under the fixed "5-Stage" title. Nothing recorded a design reason for the numbers: `docs/adr` and `docs/ddr` never name them. The half number is how a step was inserted without renumbering.
+
+**What does carry design weight: the stops.**
+
+| Today | Purpose | Stop | Proof it is done |
+|---|---|---|---|
+| Phase 0 | Fix what is wanted | User confirms the PRD | `Requirements`, `Approved by` |
+| 0.5a | Test the requirement | PRD gate: PASS | none of its own |
+| 0.5b | Explore options | User picks a direction | `Direction` |
+| Stage 1 | Prepare the repo | Checklist | `Codebase map`, `Tech stack` |
+| 1.5 | Pick agents | User approves the team | none |
+
+**Stage 0 merge is safe only with its 3 stops kept, in order.** Phase 0 converges and 0.5b diverges, so they are different work. T223's idea-radar case shows the cost of skipping them: a spawn 5 minutes after install, with architecture holes found after coding started. The hook checks Readiness lines, not stage numbers, so a label change cannot weaken it. A doc rewrite that flattens the steps could.
+
+**Stage 1 merge improves the design.** The base team is unconditional, so the 1.5 stop asks the user to approve a fixed answer unless a new role is needed. `craft-agent` is already optional.
+
+**Conditions on Path A:**
+1. Stage 0 keeps three named steps in order, Requirements, Grilling, Direction, each with its stop.
+2. "Stage done" stays per Readiness line. No Readiness line, hook or auto-mode rule changes.
+3. The team stop fires only when `craft-agent` proposes a new role. This is a behaviour change, for the user to approve.
+
+**Found, not part of this work:** `map-codebase` runs in Stage 1, after brainstorming, so on an existing repo the direction is chosen before the map exists.
+
+---
+
 ## Next Actions
 
 **Direction approved by the user, 2026-11-02: Path A, Stage 0–5, repo `easy-kit`.** Stage 2 writes the tasks: stage labels first, before T235 so `init` ships the new docs; repo rename after that, before T236. The rename on GitHub is the user's go-ahead.
