@@ -67,8 +67,24 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured 2026-11-02T08:22:02Z, unchanged code at commit `17691294`, before any T234 commit; Claude Code 2.1.316, model haiku, cost $0.011, 8 turns):
+
+Command (`$SP` = a scratchpad folder; the temp project holds only `PROJECT_KANBAN.md` after `git init`, no kit files):
+
+```
+cd <temp project> && claude -p "/easy-kit:wake" --plugin-dir /home/hungnguyenhuu/workspace/pets/wt-t234 \
+  --model haiku --max-budget-usd 0.5 --allowedTools Bash Read Skill Agent --output-format stream-json --verbose
+```
+
+Every script call the skill names fails from the temp project (tool results, verbatim):
+
+```
+python3: can't open file '<temp project>/scripts/pull_moment.py': [Errno 2] No such file or directory
+python3: can't open file '<temp project>/skills/wake/scripts/memory_sections.py': [Errno 2] No such file or directory
+python3: can't open file '<temp project>/skills/wake/scripts/dirty_worktrees.py': [Errno 2] No such file or directory
+```
+
+The model then said "The working directory is a scratchpad, not the project. The skill's scripts live under `/home/hungnguyenhuu/workspace/pets/wt-t234`, so I'll run the steps from there" and `cd`-ed into the plugin folder. So the briefing printed only because the model improvised and read the kit's own repo; it ran against the plugin folder, not the user's project.
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
