@@ -112,10 +112,10 @@ python3 -m pytest tests/test_hooks_from_plugin.py .claude/hooks/tests -q
 
 ## Edge Case Checklist
 
-- [ ] `CLAUDE_PROJECT_DIR` is set but the path does not exist
-- [ ] A sub-agent in a linked worktree: state stays in the main checkout, as today
-- [ ] `stop_auto_verify.py:354` strips `CLAUDE_PROJECT_DIR` from the headless run's environment: the hook still finds the project
-- [ ] Board mode `online`: `.claude/board.json` with no `PROJECT_KANBAN.md`
+- [x] `CLAUDE_PROJECT_DIR` is set but the path does not exist
+- [x] A sub-agent in a linked worktree: state stays in the main checkout, as today
+- [x] `stop_auto_verify.py:354` strips `CLAUDE_PROJECT_DIR` from the headless run's environment: the hook still finds the project
+- [x] Board mode `online`: `.claude/board.json` with no `PROJECT_KANBAN.md`
 
 ---
 
@@ -147,7 +147,7 @@ Red first: `tests/test_hooks_from_plugin.py`, AC 1–3, and see it fail on `main
 
 ## Completion Checklist
 
-- [ ] Implementation done
-- [ ] Tests written AND pass — output pasted into `tasks/TASK_REVIEW_T232.md` (Hard-Stop Gate 5)
-- [ ] UI Evidence rows marked N/A: no UI
+- [x] Implementation done
+- [x] Tests written AND pass — output pasted into `tasks/TASK_REVIEW_T232.md` (Hard-Stop Gate 5)
+- [x] UI Evidence rows marked N/A: no UI
 - [ ] Supervisor notified: task ready for Stage 4 review (`code-review`, `security-review`)
