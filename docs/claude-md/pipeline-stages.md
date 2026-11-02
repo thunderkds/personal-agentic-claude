@@ -38,7 +38,7 @@ Confirm `PRD.md` exists. Then invoke `grill-with-docs` in requirement mode:
 Skill({ skill: "grill-with-docs", args: "mode=requirement" })
 ```
 
-The skill validates `PRD.md` against the step-Requirements answers: FR traceability, NFR completeness, scope clarity, and ambiguity. Resolve all flagged items with the user. Do NOT proceed to step Direction until the skill reports **PRD gate: PASS**. Auto mode: answer them from the docs and code with Citations; a Choice question goes to a Debate.
+The skill validates `PRD.md` against the answers of step Requirements: FR traceability, NFR completeness, scope clarity, and ambiguity. Resolve all flagged items with the user. Do NOT proceed to step Direction until the skill reports **PRD gate: PASS**. Auto mode: answer them from the docs and code with Citations; a Choice question goes to a Debate.
 
 ### Step Direction — Creative Brainstorming
 **Stop: the user picks one brainstormed direction (auto mode: the recommended one).** Step Direction counts as done only when the `Direction` line of `PROJECT_SPEC.md` `## Readiness` names the approved brainstorming log.
@@ -48,7 +48,7 @@ Invoke the `brainstorming` skill:
 Skill({ skill: "brainstorming" })
 ```
 
-1. **Divergent Exploration**: The skill analyzes the step-Requirements context and `PRD.md`, then generates a `BRAINSTORMING_LOG.md` using the template at `templates/BRAINSTORMING_LOG_template.md`.
+1. **Divergent Exploration**: The skill analyzes the context of step Requirements and `PRD.md`, then generates a `BRAINSTORMING_LOG.md` using the template at `templates/BRAINSTORMING_LOG_template.md`.
 2. **User Review**: The user must approve one of the brainstormed directions before proceeding. Auto mode: the Supervisor takes the recommended direction and logs the alternatives (flagged).
 
 Only after the user selects a direction (auto mode: the recommended one), invoke:
@@ -99,7 +99,7 @@ Guide the user through this checklist step by step. Auto mode: the Supervisor do
 
 5. **`PRD.md` File**
    - Confirm `PRD.md` exists in the project root (generated at the end of step Requirements).
-   - If missing, generate it now using `templates/PRD_template.md` from the step-Requirements answers.
+   - If missing, generate it now using `templates/PRD_template.md` from the answers of step Requirements.
 
 6. **Master `PROJECT_SPEC.md` File**
    - If the file does not exist yet, use `templates/PROJECT_SPEC_template.md` and fill in the Project Context Document.
@@ -153,7 +153,7 @@ After the user approves the proposed team (when `craft-agent` proposed no role: 
 **This stage maps to `/plan` in Claude Code.**
 
 When the user invokes `/plan`, the Supervisor must:
-1. Confirm Stage 0 (the step Direction brainstorming) has been completed and a direction approved. If not, run it first.
+1. Confirm Stage 0 is done (step Direction: brainstorming) and a direction is approved. If not, run it first.
 2. Take the approved Project Context Document and brainstorming direction.
 3. Create (or update) `PROJECT_SPEC.md` as the single source of truth using `templates/PROJECT_SPEC_template.md`.
 4. Create (or update) `PROJECT_KANBAN.md` as the compact task board using `templates/PROJECT_KANBAN_template.md`.

@@ -66,7 +66,7 @@ After collecting all answers:
   Assumptions correct? Any corrections?"
 
 Only when the user confirms:
-- **PRD generation**: Generate `PRD.md` in the project root using `templates/PRD_template.md`, populated from the step-Requirements answers (Personas from Section A, User Stories and Functional Requirements from Section B, NFRs from Section C, Out of Scope from Section D). If the user already has a PRD, ask them to save it as `PRD.md` and skip generation.
+- **PRD generation**: Generate `PRD.md` in the project root using `templates/PRD_template.md`, populated from the answers of step Requirements (Personas from Section A, User Stories and Functional Requirements from Section B, NFRs from Section C, Out of Scope from Section D). If the user already has a PRD, ask them to save it as `PRD.md` and skip generation.
 - Confirm `PRD.md` has been saved before continuing.
 - Write the `## Readiness` line `Requirements` (the path to `PRD.md`) in `PROJECT_SPEC.md`, creating the file from `templates/PROJECT_SPEC_template.md` if it does not exist yet. `Approved by` is written only on the user's explicit confirmation, never in auto mode: write `user <date>` (the date the user confirmed) only after the user's explicit confirmation above.
 
