@@ -94,9 +94,40 @@ Word counts of `site/index.html` `<main>`, per top-level section, counted with `
 
 Screenshot of the page as it is now (headless Chrome, `file://` URL, 1440x900 viewport): `/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-personal-agentic-claude/91713a2d-c4ca-4ba6-9c19-2b966a122175/scratchpad/shots/before_index_1440x900.png`. A 1440x16000 tall capture, still not the whole page, is in the same folder: `before_index_1440_tall.png`. Copy of the old page: `.../scratchpad/before_index.html`.
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER** (implementation commits `0f1d67be` red tests, `71ed455f` story + docs, then a header fix; branch `feat/t231-story-page`, 2026-11-02):
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+`site/index.html` `<main>`, same counter as BEFORE (`_visible` rules, `<details>` none): **270 words** in five sections: hero 29, journey 65, paths 60, stops 70, deeper 46 (cap 300; BEFORE 1528 visible, 4564 with folds). Page height at 1440 px: 1774 px (cap 5 x 900 = 4500; BEFORE 17 sections). No `<details>`. `site/docs.html` holds the 17 sections and the hero unchanged: all 367 baseline `<p>/<li>/<td>/<dd>` texts found, three Settings tool scripts byte-identical (sha256).
+
+Verification command, run after the change:
+
+```
+$ python3 -m pytest tests/test_site_content.py tests/test_site_visual_first.py tests/test_site_story.py -q
+197 passed in 0.59s
+$ node --test tests/settings_tool/*.mjs   -> tests 59, pass 59, fail 0
+$ node --test tests/site_scrollspy/*.mjs  -> tests 8, pass 8, fail 0   (now loads /docs.html)
+$ python3 -m pytest tests -q              -> 1443 passed in 118.91s
+$ python3 -m pytest .claude/hooks/tests -q -> 1388 passed, 25 subtests passed
+```
+
+Red first: `tests/test_site_story.py` at `0f1d67be` ran `38 failed, 5 passed` before `docs.html` existed. After: 43 passed.
+
+Mutations (each new test RED, then green on revert; `pytest tests/test_site_story.py`):
+
+| Mutation | RED | Green on revert |
+|---|---|---|
+| M1 delete the "It plans" step | 2 failed (`test_journey_is_an_ordered_list_of_five_steps...`, `test_journey_marks_the_users_two_steps...`) | 43 passed |
+| M2 add `PreToolUse` to the `paths` heading | 1 failed (`test_no_internal_term_on_the_story_page[PreToolUse]`) | 43 passed |
+| M3 delete the "Medium: a Debate with 2 Advocates." item from `docs.html` | 1 failed (`test_every_paragraph_item_cell_and_definition_of_the_old_page_is_on_docs`) | 43 passed |
+| M4 remove `quick-reference` from the redirect id list | 1 failed (`test_redirect_id_list_equals_the_link_target_ids_of_docs`) | 43 passed |
+| M5 name `pre_tool_secret_path.py` (no such file) in `stops` | 1 failed (`test_every_stop_names_a_real_wired_hook_in_a_comment_beside_it`) | 43 passed |
+
+Headless Chrome (`file://`, raw CDP script in the scratchpad, `cdp_check.mjs`): `scrollWidth == clientWidth` on both pages at 1440, 1024, 768 and 375 px. `index.html#hooks` ends on `docs.html#hooks`; `#verifier` ends on `docs.html#verifier`; `#nonsense` and `#journey` stay on `index.html`. Computed font of step title and card title: IBM Plex Sans; step label: IBM Plex Mono. Copy button on `index.html` runs (headless denies the clipboard, so it shows "Select and copy", as on `docs.html`).
+
+Screenshots (outside the repo, folder `/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-personal-agentic-claude/91713a2d-c4ca-4ba6-9c19-2b966a122175/scratchpad/shots/`): `after_index_1440x900.png`, `after_index_1024.png`, `after_index_768.png`, `after_index_375.png`, `after_docs_1440x900.png`, `idx_1440_crop.png` (1440x1700 crop of the whole story). Header fix found by the screenshots: the new Home/Docs nav overlapped the version tag at 1024 and the brand at 900, so the tag hides below 1200 px and the family nav tightens at 900-1099 px (`site/theme.css`).
+
+The Stops claims, each read in the hook before it was written: `pre_agent_validate_guide.py` blocks a spawn when the task guide is missing; `pre_bash_block_unsafe_merge.py` blocks git push/merge when a task has no passing `verify` row and no test command in its trace; `pre_tool_sensitive_path.py` returns `ask` for a path in `.claude/sensitive-paths.txt` (`.env*`, `**/secrets/**`, `*.pem`...); `pre_agent_step_limit.py` blocks a task's tool call once it passes the step limit.
+
+**DELTA**: A first-time reader now sees what Easy Kit does as one five-step flow in 270 plain words (was 1528 visible words in 17 sections), and the full reference is one click away on `docs.html` with no sentence lost.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
