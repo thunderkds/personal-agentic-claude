@@ -15,6 +15,9 @@ T211: git's global options between `git` and the verb (`git -C <dir> push`, `git
 config file, or through the `GIT_CONFIG_*` environment variables, is out of reach of a static
 check of the command text — this hook does not read git config. Shell aliases and functions,
 scripts that call git, and `gh pr merge` are out of scope too.
+
+T232: the project comes from `lib/project_root.py`, and from a plugin the hook stands down in a
+non-kit project. Inside one, input it cannot read is a block: it cannot tell the call is not a push.
 """
 import json
 import os
@@ -23,11 +26,7 @@ import shlex
 import subprocess
 import sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 HOOKS_DIR = os.path.dirname(os.path.abspath(__file__))
-KANBAN = os.path.join(ROOT, "PROJECT_KANBAN.md")
-TASKS_DIR = os.path.join(ROOT, "tasks")
-TRACE_DIR = os.path.join(ROOT, "memory", "event-trace")
 
 # The Evidence table may live in the guide or in the sibling TASK_REVIEW file
 # (T064). Imported off __file__, like post_tool_trace.py does for task_context.
@@ -47,6 +46,8 @@ TRACE_DIR = os.path.join(ROOT, "memory", "event-trace")
 # unavailable resolver is a block — rather than two.
 sys.path.insert(0, os.path.join(HOOKS_DIR, "lib"))
 try:
+    from project_root import exit_outside_kit_project, project_root  # noqa: E402
+    exit_outside_kit_project()  # T232: first, so a broken lib stays silent in a non-kit project
     from guide_sections import (  # noqa: E402
         GUIDE_PREFIX, REVIEW_PREFIX, _candidate_paths, is_pointer_only, normalize_task_id,
         read_guide_section, slice_section)
@@ -66,12 +67,17 @@ except Exception as exc:  # pragma: no cover - exercised via subprocess test
             "[hook:pre_bash] Evidence resolver unavailable "
             f"({type(exc).__name__}: {exc}) — cannot confirm Stage 5 verify "
             "evidence for any task, so this push/merge is blocked. Restore "
-            ".claude/hooks/lib/guide_sections.py, "
+            ".claude/hooks/lib/project_root.py, .claude/hooks/lib/guide_sections.py, "
             ".claude/hooks/lib/shell_data.py, .claude/hooks/lib/board/config.py, "
             ".claude/hooks/lib/board/moments.py and .claude/hooks/lib/verify_record.py."
         ),
     }))
     sys.exit(0)
+
+ROOT = project_root()
+KANBAN = os.path.join(ROOT, "PROJECT_KANBAN.md")
+TASKS_DIR = os.path.join(ROOT, "tasks")
+TRACE_DIR = os.path.join(ROOT, "memory", "event-trace")
 
 # T210: `git pull` fetches and merges, so it is a merge (D1), in every form (`--ff-only` and
 # `--rebase` both move the branch). `git merge-base` is a read-only query and is the only
@@ -1119,23 +1125,33 @@ ATTRIBUTION_REMEDY = (
 )
 
 
+def block_unreadable_input(detail):
+    """T232 D4: a call this hook cannot read may be a push, so it never passes silently."""
+    print(json.dumps({
+        "decision": "block",
+        "reason": (f"[hook:pre_bash] Hook input unreadable ({detail}) — cannot tell whether this "
+                   "call is a push or a merge, so it is blocked. Retry the call."),
+    }))
+    sys.exit(0)
+
+
 def main():
     try:
         event = json.load(sys.stdin)
-    except Exception:
-        sys.exit(0)
+    except Exception as exc:
+        block_unreadable_input(type(exc).__name__)
 
-    # Fail open on any payload shape this hook doesn't understand — it runs
-    # before every Bash call, so a traceback here breaks all work.
-    if not isinstance(event, dict) or event.get("tool_name") != "Bash":
+    if not isinstance(event, dict):
+        block_unreadable_input("event is not an object")
+    if event.get("tool_name") != "Bash":
         sys.exit(0)
 
     tool_input = event.get("tool_input")
     if not isinstance(tool_input, dict):
-        sys.exit(0)
+        block_unreadable_input("tool_input is not an object")
     command = tool_input.get("command", "")
     if not isinstance(command, str):
-        sys.exit(0)
+        block_unreadable_input("command is not a string")
 
     # Classify the command, not the data it carries (T095 defect C, T099).
     # Heredocs first, then quoted spans — that order is required, and

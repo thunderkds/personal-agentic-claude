@@ -50,6 +50,8 @@ HOOKS_DIR = os.path.dirname(os.path.abspath(__file__))
 # must degrade to "unattributed", never crash a tool call.
 sys.path.insert(0, os.path.join(HOOKS_DIR, "lib"))
 try:
+    from project_root import exit_outside_kit_project
+    exit_outside_kit_project()  # T232: first, so a broken lib stays silent in a non-kit project
     from task_context import resolve_task_id
 except Exception:
     def resolve_task_id(event):

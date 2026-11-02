@@ -31,21 +31,41 @@ brainstorming direction, the codebase map, the tech stack, a main-flow file with
 Mermaid diagram and the user's approval. The warning names every gap and the risk
 (agents code on a design nobody checked). It never blocks; a crash in the check
 fails open with no warning.
+
+T232: the project comes from `lib/project_root.py`, and from a plugin the hook stands down in a
+non-kit project. Inside one, input it cannot read is a block: it cannot tell the spawn has a guide.
 """
 import json
 import os
 import re
 import sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 HOOKS_DIR = os.path.dirname(os.path.abspath(__file__))
+
+sys.path.insert(0, os.path.join(HOOKS_DIR, "lib"))
+
+
+def block_spawn(reason):
+    print(json.dumps({"decision": "block", "reason": f"[hook:pre_agent] {reason}"}))
+    sys.exit(0)
+
+
+# T232 D4: unlike the advisory imports below, this one has no degraded mode. With no
+# project root the hook cannot look for a guide, so the spawn is blocked.
+try:
+    from project_root import exit_outside_kit_project, project_root
+    exit_outside_kit_project()  # first, so a broken lib stays silent in a non-kit project
+    ROOT = project_root()
+except Exception as exc:
+    block_spawn(f"Project root helper unavailable ({type(exc).__name__}: {exc}) — cannot look "
+                "for the TASK_GUIDE, so this spawn is blocked. Restore "
+                ".claude/hooks/lib/project_root.py.")
 TASKS_DIR = os.path.join(ROOT, "tasks")
 KANBAN = os.path.join(ROOT, "PROJECT_KANBAN.md")
 
 # The Demonstration block may live in the guide or in the sibling TASK_REVIEW
 # file (T064). This hook is advisory only, so a broken import degrades to "no
 # Demonstration warnings" rather than blocking a spawn.
-sys.path.insert(0, os.path.join(HOOKS_DIR, "lib"))
 try:
     from guide_sections import missing_guide_sections, read_guide_section
 except Exception:  # pragma: no cover - fail open, never block a spawn
@@ -428,16 +448,29 @@ def emit_readiness(readiness):
                                              "additionalContext": "\n\n".join(readiness)}}))
 
 
+def block_unreadable_input(detail):
+    """T232 D4: a spawn this hook cannot read may name a task with no guide."""
+    block_spawn(f"Hook input unreadable ({detail}) — cannot tell whether this spawn has a "
+                "TASK_GUIDE, so it is blocked. Retry the call.")
+
+
 def main():
     try:
         event = json.load(sys.stdin)
-    except Exception:
-        sys.exit(0)
+    except Exception as exc:
+        block_unreadable_input(type(exc).__name__)
 
+    if not isinstance(event, dict):
+        block_unreadable_input("event is not an object")
     if event.get("tool_name") != "Agent":
         sys.exit(0)
 
-    prompt = event.get("tool_input", {}).get("prompt", "")
+    tool_input = event.get("tool_input", {})
+    if not isinstance(tool_input, dict):
+        block_unreadable_input("tool_input is not an object")
+    prompt = tool_input.get("prompt", "")
+    if not isinstance(prompt, str):
+        block_unreadable_input("prompt is not a string")
 
     task_ids = extract_structural_task_ids(prompt)
     if not task_ids:

@@ -74,11 +74,19 @@ import signal
 import subprocess
 import sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-KANBAN = os.path.join(ROOT, "PROJECT_KANBAN.md")
 RUNS_REL = os.path.join(".claude", "verify-runs")
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib"))
+from project_root import exit_outside_kit_project, project_root  # noqa: E402
+
+# T232: `--start` is a command, not a hook: exit 0 there means "a run started", so it keeps its
+# one-line answer and only the Stop entry stands down. The detached `--run` keeps
+# $CLAUDE_PROJECT_DIR; call_claude() strips it for the headless `claude` alone.
+if sys.argv[1:2] != ["--start"]:
+    exit_outside_kit_project()
+ROOT = project_root()
+KANBAN = os.path.join(ROOT, "PROJECT_KANBAN.md")
+
 import auto_closeout as ac  # noqa: E402
 import auto_mode as am  # noqa: E402
 import verify_record as vr  # noqa: E402

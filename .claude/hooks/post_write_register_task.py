@@ -12,13 +12,18 @@ import re
 import sys
 from datetime import date
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib"))
+try:
+    from project_root import exit_outside_kit_project, project_root
+except Exception:  # T232: no helper, no known board to register a row on
+    sys.exit(0)
+exit_outside_kit_project()
+ROOT = project_root()
 KANBAN = os.path.join(ROOT, "PROJECT_KANBAN.md")
 TASKS_DIR = os.path.join(ROOT, "tasks")
 
 # `T\d+`, plus the board's `id_pattern` when `.claude/board.json` sets one (T153). A
 # broken import degrades to today's pattern: this hook only registers rows.
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib"))
 try:
     from board.config import task_id_pattern
 except Exception:  # pragma: no cover - fail open to local IDs

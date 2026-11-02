@@ -20,6 +20,8 @@ import os
 import re
 import sys
 
+from project_root import project_root
+
 CONFIG_NAME = "board.json"
 LOCAL_PATTERN = r"T\d+"
 
@@ -28,8 +30,7 @@ LOCAL_PATTERN = r"T\d+"
 ID_START = r"(?<![A-Za-z0-9_])"
 ID_END = r"(?![A-Za-z0-9_])"
 
-_DEFAULT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
-    os.path.dirname(os.path.abspath(__file__))))))
+_DEFAULT_ROOT = project_root()
 _warned = set()
 
 

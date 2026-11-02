@@ -112,6 +112,7 @@ from datetime import datetime, timezone
 # Board IDs (T153). This module must never fail to import (both callers would lose
 # attribution repo-wide), so an absent `board` package degrades to today's `T` IDs.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from project_root import project_root  # noqa: E402
 try:
     from board.config import (  # noqa: E402
         PATH_SAFE_ID,
@@ -152,11 +153,6 @@ def _task_id_declaration_pattern():
                       rf"({task_id_pattern(_resolve_root(), bounded=True)})", re.IGNORECASE)
 
 
-_LIB_DIR = os.path.dirname(os.path.abspath(__file__))
-_HOOKS_DIR = os.path.dirname(_LIB_DIR)
-_FILE_ROOT = os.path.dirname(os.path.dirname(_HOOKS_DIR))
-
-
 def _resolve_root():
     """Where the active-task state file lives. Prefer $CLAUDE_PROJECT_DIR —
     the harness sets it to the main checkout for every hook invocation
@@ -171,14 +167,12 @@ def _resolve_root():
     the live hook — always invoked as `$CLAUDE_PROJECT_DIR/.claude/hooks/*.py`
     — read `<main-checkout>/.claude/hooks/.state/`. Different files, so the
     agent's own writes were invisible to the hook it was trying to satisfy.
-    Env var wins when set (even to a bogus/missing path — `os.path.join` and
-    a later `open()` failure both degrade to "file not found", handled by
-    `_task_id_from_state_file`'s own never-raises contract); otherwise fall
-    back to __file__ arithmetic so the module still works when
-    $CLAUDE_PROJECT_DIR is unset (e.g. this module invoked directly in a
-    test or a checkout with no harness wrapping it)."""
-    env_root = os.environ.get("CLAUDE_PROJECT_DIR", "").strip()
-    return env_root if env_root else _FILE_ROOT
+    T232: `lib/project_root.py` now decides, for this module and every hook:
+    the env var when it is set and a directory, otherwise __file__ arithmetic,
+    so the module still works when $CLAUDE_PROJECT_DIR is unset (e.g. this
+    module invoked directly in a test or a checkout with no harness wrapping
+    it)."""
+    return project_root()
 
 
 # Structural channels, per caller (T196). See module docstring, precedence

@@ -40,7 +40,6 @@ import re
 import sys
 
 HOOKS_DIR = os.path.dirname(os.path.abspath(__file__))
-_FILE_ROOT = os.path.dirname(os.path.dirname(HOOKS_DIR))
 PATTERNS_RELPATH = os.path.join(".claude", "sensitive-paths.txt")
 PREDICTED_HEADING = "Files to Change (Predicted)"
 # What is passed to read_guide_section: its slicer puts `\b` after the heading,
@@ -55,6 +54,9 @@ TAG = "[hook:sensitive-path]"
 # turned into an `ask` in main().
 sys.path.insert(0, os.path.join(HOOKS_DIR, "lib"))
 try:
+    from project_root import exit_outside_kit_project  # noqa: E402
+    from project_root import project_root as project_dir  # noqa: E402
+    exit_outside_kit_project()  # T232: first, so a broken lib stays silent in a non-kit project
     from guide_sections import read_guide_section  # noqa: E402
     from shell_data import strip_heredoc_bodies, strip_quoted_spans  # noqa: E402
     from task_context import resolve_task_id  # noqa: E402
@@ -73,11 +75,6 @@ BACKTICK_SPAN_PATTERN = re.compile(r"`([^`]+)`")
 # strip_quoted_spans treats every quoted span behind `echo`/`printf` as data,
 # but a redirect target is where the output is written, not data.
 QUOTED_REDIRECT_TARGET_PATTERN = re.compile(r"""(?:&|\d*)>[>|]?\s*(?:"([^"]*)"|'([^']*)')""")
-
-
-def project_dir():
-    env_root = os.environ.get("CLAUDE_PROJECT_DIR", "").strip()
-    return env_root if env_root else _FILE_ROOT
 
 
 # --- Pattern file ------------------------------------------------------------

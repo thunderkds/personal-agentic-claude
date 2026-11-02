@@ -13,7 +13,13 @@ import os
 import re
 import sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib"))
+try:
+    from project_root import exit_outside_kit_project, project_root
+except Exception:  # T232: reminder only, and no known board to read
+    sys.exit(0)
+exit_outside_kit_project()
+ROOT = project_root()
 KANBAN = os.path.join(ROOT, "PROJECT_KANBAN.md")
 REPORTS_DIR = os.path.join(ROOT, "reports")
 MINIMAL_TRACK_MARKER = re.compile(r"\|\s*Track:\s*minimal\b", re.IGNORECASE)
