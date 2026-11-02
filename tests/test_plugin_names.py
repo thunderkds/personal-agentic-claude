@@ -687,3 +687,15 @@ def test_update_rewrites_the_codex_copies_again_and_reports_nothing_edited(tmp_p
     assert "Update complete" in text
     assert codex_files() == before, "a second run must change no Codex copy"
     assert not any(b"${CLAUDE_SKILL_DIR}" in data for data in before.values())
+
+
+def test_board_init_from_a_plugin_works_on_the_cwd_and_never_writes_the_plugin(tmp_path):
+    """`init` makes the first board config, so a folder with no board is its project (T235 owns the
+    rest of init). It must not report "no project found", and must not touch the plugin folder."""
+    plugin = make_plugin(tmp_path)
+    empty = tmp_path / "empty folder"
+    empty.mkdir()
+    before = tree(plugin)
+    result = run([plugin / "scripts" / "board_sync.py", "init"], empty)
+    assert NO_PROJECT_TEXT not in result.stdout + result.stderr, (result.stdout, result.stderr)
+    assert tree(plugin) == before

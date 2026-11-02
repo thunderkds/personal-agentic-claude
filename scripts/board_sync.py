@@ -635,9 +635,6 @@ def init(root, ask, make_adapter, env, out, err):
 
 def main(argv=None, root=None):
     root = root or ROOT
-    if root is None:  # T234 D7: run from a plugin, in no project
-        print(NO_PROJECT, file=sys.stderr)
-        return 2
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("pull")
@@ -660,6 +657,12 @@ def main(argv=None, root=None):
     p_push.add_argument("value", help="status slug, or comment milestone")
     p_push.add_argument("text", nargs="*", help="comment text")
     args = parser.parse_args(argv)
+
+    if root is None and args.command == "init":
+        root = os.getcwd()  # `init` makes the board config, so a folder with none yet is its project
+    if root is None:  # T234 D7: run from a plugin, in no project
+        print(NO_PROJECT, file=sys.stderr)
+        return 2
 
     if args.command == "init":
         return init(root, tty_ask, lambda key: LinearBoard(key, ""), os.environ,
