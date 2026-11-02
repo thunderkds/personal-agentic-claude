@@ -2979,3 +2979,8 @@ The merge gate needs a test-runner Bash call in `memory/event-trace/<ID>.jsonl`.
 
 **Learning**: T231's verify failed three times, each on a different sentence that claimed more than the code does ("No agent starts", "No test ... on record", "Easy Kit never does"). Fixing only the line named cost a full run each (up to $2). On the first fail, read every visible claim against the code, fix all of them in one round, and pin the text with a test. A guide rule "every claim must be true of a real hook" needs this audit at Stage 4, not at verify.
 **Files**: site/index.html, tests/test_site_story.py, .claude/hooks/pre_bash_block_unsafe_merge.py
+
+## A hook loaded in-process shares the first-imported `project_root` (2026-11-02)
+
+**Learning**: `importlib` loads of a copied hook reuse the `project_root` module already in `sys.modules`, so its `__file__` fallback points at the first copy. A test that loads a copied hook must set `CLAUDE_PROJECT_DIR`.
+**Files**: .claude/hooks/lib/project_root.py, tests/test_hooks_from_plugin.py, tests/test_board_sync_pull.py

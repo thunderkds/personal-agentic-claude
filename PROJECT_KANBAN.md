@@ -12,7 +12,6 @@
 - [ ] **T236** — Real plugin install proven, then published on the README and site | frontend-developer | C2 | Risk: Medium | P1
 - [ ] **T235** — /easy-kit:init sets up a project, and plugin hooks stand down beside in-repo hooks | common-infrastructure | C2 | Risk: Medium | P1
 - [ ] **T234** — Skills and agents work under the easy-kit prefix | common-infrastructure | C2 | Risk: Medium | P1
-- [ ] **T233** — Plugin package and MIT LICENSE at the repo root | common-infrastructure | C1 | Risk: Low | P1
 - [ ] **T230** — `dotfiles` follow-up, Depends on: T228: refuse a target inside the source (only an exact match is refused today); refuse skill folder names with unprintable text (a newline can fake a `plan` line); report a wrong source shape (`AGENTS.md` as a folder, `skills` as a file) | common-infrastructure | C1 | Risk: Low | P2
 - [ ] **T229** — `stop_auto_mode_check.py` false positive: any task touched after an `[auto]` request in the same session counts as an auto task (lines 266-268; T228 flagged because of T226's request). Also: `post_write_register_task.py` adds a Todo row when a guide is written, so a hand-added In Progress row duplicates it and breaks `test_find_kanban_section_on_real_current_board` | common-infrastructure | C1 | Risk: Low | P1
 - [ ] **T217** — The kit works with easy-memory installed as a plugin: agents list the plugin tool names too; kit marketplace `.claude-plugin/marketplace.json` lists easy-memory (git-subdir `plugin`, ref `v0.2.0`) | Supervisor | C1 | Risk: Low | P1 | Branch `feat/t217-easy-memory-plugin-names` in `../wt-t217` | Deferred to Todo 2026-10-30 by the user: easy-memory-mcp stays private on purpose, so the marketplace install fails for non-owners (verify FAIL 2026-10-30); branch kept unmerged. Was Ready for Review 2026-10-30; auto verify BLOCKED (27f58eff) until easy-memory-mcp `v0.2.0`; v0.2.0 pushed, `install easy-memory@easy-kit` and agent memory_search pass 10:18Z; 3 new tests pass; suite 2545 passed, 5 failed (MEMORY.md budget, fail on main too); real `claude plugin install` waits for easy-memory-mcp `v0.2.0` | Track: minimal | Record: tasks/MINIMAL_LOG.md
@@ -92,6 +91,7 @@
 
 
 ### In Progress
+- [ ] **T233** — Plugin package and MIT LICENSE at the repo root | common-infrastructure | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T233.md` | Started 2026-11-02: branch `feat/t233-plugin-package`, worktree `../wt-t233`
 
 
 
@@ -100,10 +100,10 @@
 
 
 ### Ready for Review
-- [ ] **T232** — Hooks find the real project when they run from a plugin | common-infrastructure | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T232.md` | Started 2026-11-02: branch `feat/t232-hooks-project-root`, worktree `../wt-t232`
 
 
 ### Done
+- [x] **T232** — Hooks find the real project when they run from a plugin | common-infrastructure | C2 | Risk: High | P1 | Guide: `tasks/TASK_GUIDE_T232.md` | Started 2026-11-02: branch `feat/t232-hooks-project-root`, worktree `../wt-t232` | Done 2026-11-02: auto verify pass at `321323c5`, merged `1b3aa7ed` at user request
 - [x] **T231** — Story landing page — one visual flow on index.html, reference moves to docs.html | frontend-developer | C2 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T231.md` | Started 2026-11-02: branch `feat/t231-story-page`, worktree `../wt-t231` | Done 2026-11-02: auto verify pass at `6f0ff115`, session dd56a996, merged `217c7c7a` at user request
 - [x] **T228** — `dotfiles` skill keeps agent config in one source (`plan`/`apply`/`status`, add-only) | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T228.md` | Merged 2026-11-01 (no squash) | Started 2026-11-01: branch `feat/t228-dotfiles` in `../wt-t228` | Ready for Review 2026-11-01: code-review P2×1 P3×1 open, security-review no findings; suite 2695 passed; rebase on T226 needed (site count, CLAUDE_LEGACY_REF pin) | Auto verify pass 2026-11-01 on `b323b07a`, fourth run ($3.40 total): three earlier fails fixed; suite 2760 passed; awaiting user merge | Done 2026-11-01
 - [x] **T226** — Stage 1 offers the optional companion MCP servers | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T226.md` | Started 2026-11-01 [auto]: branch `feat/t226-companion-setup` in `../wt-t226` | Ready for Review 2026-11-01: code-review P2×2 fixed, P3×1 open, security-review no findings; suite 2673 passed; merge without squash (two test pins name branch commits) | Done 2026-11-01: auto verify pass (session 22656147-f778-4816-a9d7-5c00df4b6757, commit b2b07a1a5c554dad0afafed589ec2c06a91d99b7)
