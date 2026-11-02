@@ -94,7 +94,7 @@ Word counts of `site/index.html` `<main>`, per top-level section, counted with `
 
 Screenshot of the page as it is now (headless Chrome, `file://` URL, 1440x900 viewport): `/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-personal-agentic-claude/91713a2d-c4ca-4ba6-9c19-2b966a122175/scratchpad/shots/before_index_1440x900.png`. A 1440x16000 tall capture, still not the whole page, is in the same folder: `before_index_1440_tall.png`. Copy of the old page: `.../scratchpad/before_index.html`.
 
-**AFTER** (implementation commits `0f1d67be` red tests, `71ed455f` story + docs, then a header fix; branch `feat/t231-story-page`, 2026-11-02):
+**AFTER** (implementation commits `0f1d67be` red tests, `71ed455f` story + docs + header fix; branch `feat/t231-story-page`, 2026-11-02):
 
 `site/index.html` `<main>`, same counter as BEFORE (`_visible` rules, `<details>` none): **270 words** in five sections: hero 29, journey 65, paths 60, stops 70, deeper 46 (cap 300; BEFORE 1528 visible, 4564 with folds). Page height at 1440 px: 1774 px (cap 5 x 900 = 4500; BEFORE 17 sections). No `<details>`. `site/docs.html` holds the 17 sections and the hero unchanged: all 367 baseline `<p>/<li>/<td>/<dd>` texts found, three Settings tool scripts byte-identical (sha256).
 
