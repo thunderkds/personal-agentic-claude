@@ -70,7 +70,7 @@ Hard rules for the tool:
 
 1. **Pasted text never leaves the browser.** No `fetch`/XHR/beacon, no `localStorage`/`sessionStorage`/IndexedDB/cookies of pasted or generated content. Asserted by test.
 2. **No forms that submit.** Inputs are page UI only (`<form>` absent, or `submit` handled with `preventDefault`).
-3. **Inline only.** Script and the settings catalog are inline in `site/index.html` (catalog in `<script type="application/json" id="settings-catalog">`); the existing no-external-assets and inline-script tests stay green.
+3. **Inline only.** Script and the settings catalog are inline in `site/docs.html` (moved from `site/index.html` by T231; catalog in `<script type="application/json" id="settings-catalog">`); the existing no-external-assets and inline-script tests stay green.
 4. **No build, no package.json.** Logic tests use Node's built-in test runner (`node --test`), zero dependencies — the one exception to "no node toolchain".
 5. **The page works without the tool.** With script disabled, the section shows a short static explanation and a link to the official settings reference.
 

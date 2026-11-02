@@ -1,0 +1,1497 @@
+{
+ "commit": "09d2544c",
+ "sections": [
+  "quick-reference",
+  "what-you-get",
+  "tracks",
+  "install",
+  "update-flow",
+  "settings-tool",
+  "install-variants",
+  "agent-roles",
+  "skills",
+  "hooks",
+  "agent-focus",
+  "packs",
+  "providers",
+  "repository-layout",
+  "memory-system",
+  "mcps",
+  "options"
+ ],
+ "sentences": [
+  [
+   "93af67c788f6305e",
+   "$ curl -fsSL https://raw.githubusercontent.com/thunderkds/pe"
+  ],
+  [
+   "12aca9f6a2a2ddb9",
+   ".*"
+  ],
+  [
+   "0d7b381504b63f16",
+   ".claude/agents/"
+  ],
+  [
+   "f27ac6f39d89fe02",
+   ".claude/settings.json"
+  ],
+  [
+   "90f89caa5e8cff06",
+   ".claude/skills/"
+  ],
+  [
+   "d1f23967cd03d15a",
+   ".cursor/rules/agent-base.mdc"
+  ],
+  [
+   "87ebcaea77abde11",
+   ".env*, secrets, production configs, infra."
+  ],
+  [
+   "748dac498872644d",
+   "// getting started"
+  ],
+  [
+   "fa96bba01ddb6046",
+   "// overview"
+  ],
+  [
+   "d7221466cabcb044",
+   "// reference"
+  ],
+  [
+   "d9065b5a1fd40e77",
+   "// the team"
+  ],
+  [
+   "a956b5ce5b9021a4",
+   "0.5 Stage 0.5 · Grill + brainstorm BRAINSTORMING_LOG.md"
+  ],
+  [
+   "7cbf2e3d1a4f2516",
+   "00 Phase 0 · Initiation PRD.md"
+  ],
+  [
+   "90f89cf02caa5a01",
+   "01 Stage 1 · Environment setup codebase map, CLI table"
+  ],
+  [
+   "ea73477086ff03e1",
+   "01Requesttagged [auto]"
+  ],
+  [
+   "9abf12b0956a0beb",
+   "01Run the commandinside your git repo"
+  ],
+  [
+   "b94af1acf10f8a2a",
+   "01Supervisor writesthe only writer"
+  ],
+  [
+   "4995415ebf45b85b",
+   "02 Stage 2 · Plan PROJECT_SPEC + TASK_GUIDEs"
+  ],
+  [
+   "cbc6e70eeb2d74e7",
+   "02Hot tiermemory/MEMORY.md, an index capped in characters"
+  ],
+  [
+   "7e8c262a4587b9e4",
+   "02Pick from numbered menusEnter takes the default"
+  ],
+  [
+   "d6452de2fd89f6d5",
+   "02Track runsno questions asked"
+  ],
+  [
+   "4442d5147c49529d",
+   "03 Stage 3 · Parallel execution code in isolated worktrees"
+  ],
+  [
+   "c51c4eb43634415d",
+   "03Cold tierdecisions.md, learnings.md, glossary.md"
+  ],
+  [
+   "eef98095dfdc3453",
+   "03Read the planCLIs, project type, backups"
+  ],
+  [
+   "a535245ca4619308",
+   "03Stop checkfinal report checked"
+  ],
+  [
+   "fd2a53036bdadfe6",
+   "04 Stage 4 · Review findings + Evidence"
+  ],
+  [
+   "418ad03c31742a04",
+   "04Auto verifyheadless /verify"
+  ],
+  [
+   "8cbbd08298864532",
+   "04ConfirmProceed? [Y/n]"
+  ],
+  [
+   "5ba8fb83f1abe8e8",
+   "05 Stage 5 · Integrate verify, merge, release plan"
+  ],
+  [
+   "cba809488862cf8b",
+   "05Close-outGates 5 and 6, report complete"
+  ],
+  [
+   "9e17ef8a62460f2b",
+   "06Donerow moved by the hook"
+  ],
+  [
+   "5ff95deb92aa9af8",
+   "1 asks about each file, as in the table below. Enter picks i"
+  ],
+  [
+   "df7e77336ee37e17",
+   "1) New project — the default with no terminal. You get CLAUD"
+  ],
+  [
+   "7e71f41735645590",
+   "1.5 Stage 1.5 · Sub-agent team agent roster"
+  ],
+  [
+   "31623ffb51b9c070",
+   "2 moves each file to <file>.bak-<commit>, then overwrites it"
+  ],
+  [
+   "38307217ddd444fd",
+   "2) Existing / legacy project — for an existing codebase. Use"
+  ],
+  [
+   "7506f2b76a0cf58e",
+   "3 keeps every edit. 4 changes nothing."
+  ],
+  [
+   "1c42ccaf9f94978d",
+   "35skills"
+  ],
+  [
+   "85c9e9f145cd084e",
+   "4spawnable roles"
+  ],
+  [
+   "22f304c06fdf356e",
+   "4spawnable roles 35skills 5blocking hooks (of 11) 6optional "
+  ],
+  [
+   "b2f37640a22511f9",
+   "5blocking hooks (of 11)"
+  ],
+  [
+   "6afe08aafe20eaf8",
+   "6optional domain packs"
+  ],
+  [
+   "65afb903b17ed45a",
+   "> multi-agent supervisor framework"
+  ],
+  [
+   "b7ba4f3f8ccd0b55",
+   "A Claude project keeps its .claude/{skills,agents} links rep"
+  ],
+  [
+   "8e0cf5929179a611",
+   "A Codex-only project refreshes .codex/skills/ and is not giv"
+  ],
+  [
+   "3b07fc9505068bb0",
+   "A Depends on task is not Done"
+  ],
+  [
+   "9df17d31c6c37f60",
+   "A Stop hook checks the final report before the run may end. "
+  ],
+  [
+   "9e71e5af579ce094",
+   "A UI component"
+  ],
+  [
+   "57e0a7cd2be1b9fc",
+   "A multi-agent supervisor framework: one Supervisor session e"
+  ],
+  [
+   "5d47aa79e13215b8",
+   "A name already taken gets .1, .2, … so no backup is ever ove"
+  ],
+  [
+   "12f83c924483e514",
+   "A plan then lists the CLIs, the project type and anything th"
+  ],
+  [
+   "2a47e3a6893797f3",
+   "A separate companion tool, not part of this kit: a Dockerize"
+  ],
+  [
+   "2223fa1d23516605",
+   "A separate companion tool, not part of this kit: a no-LLM ev"
+  ],
+  [
+   "e5bc1e9f503bb39c",
+   "A separate companion tool, optional and not part of this kit"
+  ],
+  [
+   "86af8e7a63fc23da",
+   "A separate companion tool, optional and not part of this kit"
+  ],
+  [
+   "92df769bef6f3352",
+   "A skill over the cap is skipped with a named, loud warning r"
+  ],
+  [
+   "f416f71f7df2cfe2",
+   "A task's Demonstration BEFORE is still blank"
+  ],
+  [
+   "fe76bfc552151653",
+   "A two-tier hot/cold memory design keeps agents aligned acros"
+  ],
+  [
+   "18051cc99352d5b4",
+   "A word like refactor or migrate"
+  ],
+  [
+   "40d6969713cedb45",
+   "A working prototype: about 28% fewer tokens in scripted test"
+  ],
+  [
+   "a54ff182c7e8acf5",
+   "AGENTS.md"
+  ],
+  [
+   "5578b947fbf8b1ee",
+   "AGENTS.md plus docs/claude-md/ stay the one primary source o"
+  ],
+  [
+   "da07b8aa4b758919",
+   "Adding a CLI later: run the same command, choose Reinstall, "
+  ],
+  [
+   "9fb076b5a7fa0784",
+   "After a long answer it saves a local note; your next prompt "
+  ],
+  [
+   "f1e34e9fbf6600ce",
+   "After the kit version it replaces: CLAUDE.md.bak-<commit>, t"
+  ],
+  [
+   "11b39c93777e8f1f",
+   "Agent"
+  ],
+  [
+   "1a3b2313c9b8ad45",
+   "Agent focus"
+  ],
+  [
+   "aaa11063da7f1f4a",
+   "Agent roles"
+  ],
+  [
+   "de2ed3c5ae7bda90",
+   "An existing update.sh in a checkout still works: it runs the"
+  ],
+  [
+   "59f5ec27ec1b370f",
+   "Answer n to go back to the menu. Cancel changes nothing."
+  ],
+  [
+   "bc45865b9723be4c",
+   "Any memory/decisions.md entry that lists those files, within"
+  ],
+  [
+   "9063ee427b152128",
+   "Anything on the command line — it stops with nothing written"
+  ],
+  [
+   "2f76ad0ae53b064e",
+   "Architectural and infrastructure decisions"
+  ],
+  [
+   "567c71a0c8d0b48e",
+   "At Stage 1 the Supervisor offers the profiles below, and use"
+  ],
+  [
+   "a2e1fc6c5ca7eb07",
+   "Auditable coverage — a \"found 4/6\" always shows the sources "
+  ],
+  [
+   "6fe6acb5dd3845d6",
+   "Auto verify runs for any task, with or without [auto]. When "
+  ],
+  [
+   "a10b32084db6c0a7",
+   "Base template inherited by all four roles above. Contains th"
+  ],
+  [
+   "d1e9567da9a8a4b0",
+   "Bash"
+  ],
+  [
+   "6a53113e7aabd7f3",
+   "Before changing anything it shows a plan — files to ask abou"
+  ],
+  [
+   "5d5254ff3285b7ca",
+   "Blank templates for PRD, PROJECT_SPEC, task board, TASK_GUID"
+  ],
+  [
+   "8c191904172b5267",
+   "Building what doesn't pay: a headroom-style Bash-output comp"
+  ],
+  [
+   "6ebdb617a8104a77",
+   "CLAUDE.md"
+  ],
+  [
+   "45fc531b469c8c99",
+   "CLAUDE.md is delivered from the same source the project was "
+  ],
+  [
+   "24b7bb7236787c89",
+   "Canon custom skills (DDR-0007)"
+  ],
+  [
+   "700fe9cac5ce3247",
+   "Canon sub-agent definitions plus general-agent-template.md ("
+  ],
+  [
+   "20e4f475af52b388",
+   "Canonical domain terms and core domain models"
+  ],
+  [
+   "64d1ac50352e2bf3",
+   "Captures console errors, page errors and failed network requ"
+  ],
+  [
+   "e487b82015989001",
+   "Claude Code — the Supervisor session and its hooks enforce e"
+  ],
+  [
+   "596c0bfd2c49b939",
+   "Close-out: after a pass, the hook moves the row to Done only"
+  ],
+  [
+   "d5cb26372dd8d0b3",
+   "Code nobody asked for, which someone must then review and ma"
+  ],
+  [
+   "379dde0ba42f4d62",
+   "Code, exact error text, file paths, commands and security wa"
+  ],
+  [
+   "9f2200e576909db7",
+   "Codex executes the kit's skills directly, by name, from a pr"
+  ],
+  [
+   "da97b157890d8b35",
+   "Codex; Claude Code through the CLAUDE.md import"
+  ],
+  [
+   "f151cd9e12c8994e",
+   "Cold"
+  ],
+  [
+   "e56bb6080ffd7d2a",
+   "Committed relative symlink onto agents/ so Claude Code can d"
+  ],
+  [
+   "dcec0b653f654405",
+   "Committed relative symlink onto skills/ so Claude Code can d"
+  ],
+  [
+   "32fe869497f6262c",
+   "Complexity C2 or above"
+  ],
+  [
+   "9fb8889db95d9fd8",
+   "Core backend engineering role — server-side APIs, services, "
+  ],
+  [
+   "559a0153dc31ce48",
+   "Core frontend engineering role — UI components, client-side "
+  ],
+  [
+   "76b7ddaed3600857",
+   "Cursor (alwaysApply: true)"
+  ],
+  [
+   "5987219128d48fe7",
+   "Customized"
+  ],
+  [
+   "591f6388009135ca",
+   "Deterministic shell/python guardrails the harness runs — not"
+  ],
+  [
+   "f2ae88adb1bc17d6",
+   "Directory tree, entry points, blast-radius hotspots — genera"
+  ],
+  [
+   "80424681802ed32a",
+   "Each Medium/High-risk choice was argued by 2 or 3 Advocates"
+  ],
+  [
+   "b55fd9822f02af72",
+   "Each line is linked to the one before by a hash chain, with "
+  ],
+  [
+   "babbd3621e414c11",
+   "Each row is a mechanism the kit applies, and the cost or was"
+  ],
+  [
+   "2b3bec51ee19fad1",
+   "Each skill's body is capped at 8 KB per Codex's own limit."
+  ],
+  [
+   "5bd69927ff2725ba",
+   "Easy Kit stores no list of CLIs. Update asks no CLI question"
+  ],
+  [
+   "3e026e053344a33f",
+   "Edit|Write|Bash"
+  ],
+  [
+   "5b46e14376d0d6e8",
+   "Environment and shared-config specialist — worktree setup, m"
+  ],
+  [
+   "f9059dfa3ae348ea",
+   "Every Update run adds a dated entry to the top of .claude/up"
+  ],
+  [
+   "e20872954c96ed39",
+   "Every agent reading the whole memory index before it starts"
+  ],
+  [
+   "c3d2afe21686e92f",
+   "Extended track if any of these is true: Complexity C2 or abo"
+  ],
+  [
+   "934ee7476374e886",
+   "Flutter, React Native, Swift, Kotlin"
+  ],
+  [
+   "b2569076db6fa8a8",
+   "Fork install — export your username first and swap it into t"
+  ],
+  [
+   "364df8c8170a4049",
+   "Four of this kit's skills currently exceed it and are skippe"
+  ],
+  [
+   "3bacb3e813697276",
+   "Four roles are directly spawnable via the Agent tool, each s"
+  ],
+  [
+   "958f51c4fdad079e",
+   "Four separate companion tools, not part of this kit: MCP ser"
+  ],
+  [
+   "68774b30f8f89fba",
+   "Four spawnable sub-agent roles, skills for every pipeline st"
+  ],
+  [
+   "d8525f0df998d562",
+   "GITHUB_USERNAME"
+  ],
+  [
+   "b937f7fb5a5c1cd5",
+   "High: a Debate with 3 Advocates, and at least one decision i"
+  ],
+  [
+   "60e1c21b05830f01",
+   "Holds only the import @AGENTS.md"
+  ],
+  [
+   "d412a062620ef57b",
+   "Hooks"
+  ],
+  [
+   "0ec53894d0324077",
+   "Hot"
+  ],
+  [
+   "b36af9c084928431",
+   "If it cannot be merged — invalid JSON, a symlink, or no pyth"
+  ],
+  [
+   "f4148b142540f29f",
+   "If the plan lists files you edited, one question about all o"
+  ],
+  [
+   "6df92eacdbb2d295",
+   "In .claude/harness-lock.json, which also records the kit's c"
+  ],
+  [
+   "bd68c51b1bc2ba78",
+   "In a Debate, read-only Advocate agents each frame the proble"
+  ],
+  [
+   "569ca49f4aaf7846",
+   "Install"
+  ],
+  [
+   "fb7aa76954310d76",
+   "Install variants"
+  ],
+  [
+   "dba3e9234823745f",
+   "Install/update from a fork instead of the canonical repo"
+  ],
+  [
+   "6685d399aa1b8687",
+   "Installing into an existing project never deletes what is al"
+  ],
+  [
+   "4b9ed38523631eca",
+   "Is any one of these true? Complexity C2 or above Risk Medium"
+  ],
+  [
+   "6906b52b3533395b",
+   "It changes user data"
+  ],
+  [
+   "b5cc33bd00fa9490",
+   "It merges into a .claude/settings.json your project already "
+  ],
+  [
+   "30e907258c2c317b",
+   "It writes the verify row and a run record"
+  ],
+  [
+   "dde88dab74b5a001",
+   "Karpathy principle names, Hard-Stop Gate titles, the untrust"
+  ],
+  [
+   "adaad5f632ed6986",
+   "Kit-aware mode treats this kit's specs, task guides and memo"
+  ],
+  [
+   "c39594c04d23845e",
+   "LLM apps, RAG, MCP servers"
+  ],
+  [
+   "13da973dc02b0ce7",
+   "Local-first: no network at runtime, metadata only and never "
+  ],
+  [
+   "0da099084e73a638",
+   "Low: the Supervisor decides and logs the reason."
+  ],
+  [
+   "65b34433b15f1277",
+   "MCP tools memory_search, memory_read, memory_list and memory"
+  ],
+  [
+   "d1478aecbb99abd1",
+   "MCPs"
+  ],
+  [
+   "06bd25a020444320",
+   "Manages your personal tool connectors and keeps their secret"
+  ],
+  [
+   "a820b184740dd3ae",
+   "Measure before keeping — a claimed saving is measured from s"
+  ],
+  [
+   "50a2a991ef979500",
+   "Measured compact-advisor — quotes the session's measured con"
+  ],
+  [
+   "9704385e37fe662d",
+   "Medium: a Debate with 2 Advocates."
+  ],
+  [
+   "4ee8bed7af1e0309",
+   "Memory slice — the spawn prompt pastes only the memory/MEMOR"
+  ],
+  [
+   "0262e82db5dfb849",
+   "Memory system"
+  ],
+  [
+   "b58b9ed4cf08b22c",
+   "Minimal and extended tracks"
+  ],
+  [
+   "00c6f8eb7a941ca7",
+   "Minimal track otherwise. The Supervisor writes the code itse"
+  ],
+  [
+   "17b5669e0f3b28a1",
+   "More than one session or agent"
+  ],
+  [
+   "61e0542dc9ccad58",
+   "Never deletes. A file it replaces is backed up first."
+  ],
+  [
+   "1d1c668b89aa8520",
+   "New or existing project — 1) New project 2) Existing / legac"
+  ],
+  [
+   "1f2863dac85e2a9a",
+   "New vs. existing (brownfield) project — a menu choice in the"
+  ],
+  [
+   "a793fc285c049ac6",
+   "No LLM and no model API key — ratings are deterministic rule"
+  ],
+  [
+   "c25707993a557191",
+   "No longer shipped"
+  ],
+  [
+   "11c717af10c0e916",
+   "No terminal (CI, containers) — no menus: the defaults are pr"
+  ],
+  [
+   "1d7f7e9f2018da35",
+   "No terminal (CI, containers, ssh without -t) — no menu: it p"
+  ],
+  [
+   "37782e45b5605443",
+   "Not a MANIFEST file, so it is merged rather than copied — on"
+  ],
+  [
+   "dd5b4a0b9210c9b2",
+   "One edge worth knowing: if both .claude/skills and .claude/a"
+  ],
+  [
+   "cad2a2646a3dbcce",
+   "One file, standard library only; notes are saved in clear te"
+  ],
+  [
+   "a10124c8846af6ee",
+   "One inline instruction set loaded per invocation, grouped by"
+  ],
+  [
+   "db6d4715bd7deed0",
+   "Optional domain packs — each adds agents + skills for a spec"
+  ],
+  [
+   "d0db8b5e364b6989",
+   "Options"
+  ],
+  [
+   "f2a3fc20d9d18be4",
+   "Other providers (Codex, Cursor) — Codex reads the full doctr"
+  ],
+  [
+   "1128e41d38cb3672",
+   "Output tokens, and the Supervisor carrying pasted logs for t"
+  ],
+  [
+   "47a7d86e51b0f23d",
+   "Over-engineering reviewer — code-review checks any diff that"
+  ],
+  [
+   "3e784fc40cfb2164",
+   "Packs"
+  ],
+  [
+   "17c7642529a996d6",
+   "Packs add domain-specific agents and skills on top of the fo"
+  ],
+  [
+   "802fbc91fc126060",
+   "Pasted into each sub-agent spawn prompt: the index lines nam"
+  ],
+  [
+   "f9611b7c53ac6acd",
+   "Phase 0 → 0.5 → 1 → 1.5 → 2 → 3 → 4 → 5"
+  ],
+  [
+   "0413461063b095df",
+   "Pick the Claude Code settings you want and copy a ready sett"
+  ],
+  [
+   "59626c61cba65820",
+   "Pipeline — plan → spawn isolated sub-agents → review → integ"
+  ],
+  [
+   "8b09fb1acec6bc89",
+   "Pipelines, notebooks, ETL, dbt"
+  ],
+  [
+   "300a7d04cd1cb8aa",
+   "Playwright browser automation that an agent such as Claude C"
+  ],
+  [
+   "15a4f899c3716e31",
+   "PostToolUse"
+  ],
+  [
+   "e156f9ef5e798971",
+   "PostToolUseafter the tool ran advises logs every call to the"
+  ],
+  [
+   "f27936b03f2c99c8",
+   "PreToolUse"
+  ],
+  [
+   "6161c95d430a49f3",
+   "PreToolUsebefore the tool runs blocks a spawn with no task g"
+  ],
+  [
+   "dde10e9b6a4798f4",
+   "Prerequisites: an existing git repo, and git, curl, and a PO"
+  ],
+  [
+   "8a6435dbe66753ab",
+   "Provider adapter for Cursor — see Providers below"
+  ],
+  [
+   "996c32b35f2182a9",
+   "Providers"
+  ],
+  [
+   "77dc403dbf60c48e",
+   "Put the exact tag [auto] in your request. The Supervisor run"
+  ],
+  [
+   "503a3cf6518cf2dc",
+   "Quality and evaluation role — owns the smoke suite, regressi"
+  ],
+  [
+   "5269eb1a112e9380",
+   "Quick reference"
+  ],
+  [
+   "f9a04949ae8f561f",
+   "REST/gRPC, OpenAPI, auth flows"
+  ],
+  [
+   "5785240d0d21197b",
+   "Re-reading a long conversation on every call, the largest co"
+  ],
+  [
+   "b69cbbf6621fb288",
+   "Read-only and local — never runs the target repo's code, no "
+  ],
+  [
+   "e16746b89e3b74d6",
+   "Removed if you never edited it; kept (and named) if you did"
+  ],
+  [
+   "ed717cc7aa574ad5",
+   "Repository layout"
+  ],
+  [
+   "f2b42f6579a26d06",
+   "Response Standard — replies lead with the answer and stay sh"
+  ],
+  [
+   "80f1aabe5db3ffd5",
+   "Restart Claude Code after install so it picks up the new .cl"
+  ],
+  [
+   "4a66dcd534a8ff22",
+   "Returns a JSON and HTML report with screenshots — no server-"
+  ],
+  [
+   "cb69de365a21f588",
+   "Rework from an agent that skipped the rules it must follow"
+  ],
+  [
+   "5acc0ccffdf7c619",
+   "Risk Medium or High"
+  ],
+  [
+   "c7663615a64bc818",
+   "Run the install command again from your project and choose U"
+  ],
+  [
+   "8689780ef3e54d21",
+   "Run the same command from your repo root and choose 1) Updat"
+  ],
+  [
+   "94c70f13862220cc",
+   "Runs in your browser only. Nothing is sent or saved."
+  ],
+  [
+   "1f56ef0b38ffe672",
+   "Separates claims from observations: ui_assert fails the run,"
+  ],
+  [
+   "70d7fe8b4529e335",
+   "Settings tool"
+  ],
+  [
+   "f1c09b5f069af79f",
+   "Seven independently callable dimensions, from architecture t"
+  ],
+  [
+   "442d0f140fb8c989",
+   "Shows a diff and prompts per file: overwrite / skip / view d"
+  ],
+  [
+   "50614095e6756d6e",
+   "Shows cost as API-equivalent cost (tokens times a dated pric"
+  ],
+  [
+   "75f7434ccdfc7dd2",
+   "Silently overwritten with the latest upstream version"
+  ],
+  [
+   "66d0f523a379b2de",
+   "Skills"
+  ],
+  [
+   "ab20562cca296894",
+   "Small work runs on the minimal track. Big or risky work runs"
+  ],
+  [
+   "1206be83ac763b72",
+   "Spec clarifications, patterns, gotchas"
+  ],
+  [
+   "c458587bc03d446b",
+   "Stage 0.5 — Requirement Grilling / Brainstorming brainstormi"
+  ],
+  [
+   "a3c81b28d4a0e54e",
+   "Stage 1 — Environment & Provider Setup git-guardrails-claude"
+  ],
+  [
+   "5636fc579f16e8b5",
+   "Stage 1.5 — Sub-Agent Architecture craft-agent"
+  ],
+  [
+   "0f3f805e116bb2fb",
+   "Stage 2 — Intent Transformation grill-with-docsto-issues"
+  ],
+  [
+   "375390fc45d06b1e",
+   "Stage 3 — Parallel Execution via Isolation tddbugfixdiagnose"
+  ],
+  [
+   "a93f4768cd329d46",
+   "Stage 4 review ran"
+  ],
+  [
+   "adf9052f811bc3ca",
+   "Stage 4 — Review blast-radiuscode-reviewhtml-reportscore"
+  ],
+  [
+   "ec177b9906f4cc73",
+   "Stage 5 — Integration & Verification shipdelivery-report"
+  ],
+  [
+   "4e2939a31e60db4f",
+   "Startup reads list — the spawn prompt names what to read fir"
+  ],
+  [
+   "cae7d57bc067a514",
+   "Stop"
+  ],
+  [
+   "691decee7ced938a",
+   "Stopwhen the run ends blocks an [auto] run until its report "
+  ],
+  [
+   "f9af38e656486a5a",
+   "Structural"
+  ],
+  [
+   "0b77f9e9e88b0f3a",
+   "Supervisorspawns each role on one task guide"
+  ],
+  [
+   "8d5db8cf7de9d111",
+   "Task guides generated at Stage 2 (per project)"
+  ],
+  [
+   "b50b5cbc03a82e27",
+   "Terraform, K8s, CI/CD, Docker"
+  ],
+  [
+   "2646c03f4495adf6",
+   "The command takes no options — you choose from numbered menu"
+  ],
+  [
+   "e1ebf62dbad976f3",
+   "The file is.claude/settings.json Mergednot copied, on instal"
+  ],
+  [
+   "1c41411d0f25cf93",
+   "The full doctrine, plus a short section naming what Codex an"
+  ],
+  [
+   "9abe39fd1c6d4c41",
+   "The full doctrine. Codex reads it directly. Claude Code read"
+  ],
+  [
+   "7bbbbea92ea78f8d",
+   "The installer never asks about packs."
+  ],
+  [
+   "e929491b688dd3f2",
+   "The kit's allow or ask rules are never copied."
+  ],
+  [
+   "77a10f1840d808b6",
+   "The kit's hooks are reconciled into it."
+  ],
+  [
+   "aa06649661f73597",
+   "The kit's non-negotiable rules (the four Karpathy principle "
+  ],
+  [
+   "279b68dcbf50d943",
+   "The kit's permissions.deny entries are appended to yours (ad"
+  ],
+  [
+   "e1a76203c8b3437a",
+   "The line is a statement, not a question: Track: minimal — C0"
+  ],
+  [
+   "56b3fe230ea7c7f6",
+   "The log holds paths, outcomes and counts only, never file co"
+  ],
+  [
+   "a4730f2128ff6730",
+   "The mandatory folder structure created by install. Core reso"
+  ],
+  [
+   "18aadf882a236619",
+   "The merge gate accepts that row only with the record"
+  ],
+  [
+   "6dac3ad17c9e4da6",
+   "The merge stays yours"
+  ],
+  [
+   "1bc80c51f7be821b",
+   "The reminder is for the Supervisor. The hand move is deliber"
+  ],
+  [
+   "17836e8b2fb91abc",
+   "The report is in its file, marked Mode: auto"
+  ],
+  [
+   "ad931f1fb8055a86",
+   "The spawn prompt has no memory slice or no **Startup reads**"
+  ],
+  [
+   "0f385ff71c5ccf0c",
+   "The wiring lives in .claude/settings.json. Both setup.sh and"
+  ],
+  [
+   "e8ac99d5f2eefe1d",
+   "There is one command: run the same install line again inside"
+  ],
+  [
+   "a972182c05678a00",
+   "This tool needs JavaScript. Without it, read the official se"
+  ],
+  [
+   "800980f33657ae90",
+   "Those stay on the Claude supervisor: an adapter carries the "
+  ],
+  [
+   "876917e18935b1ed",
+   "To pull in newer Easy Kit changes later, run the same comman"
+  ],
+  [
+   "6ae3799c9d10d167",
+   "Today's date, such as CLAUDE.md.bak-20261008, when no earlie"
+  ],
+  [
+   "17011048725fe0aa",
+   "Tool call"
+  ],
+  [
+   "2ab3cd8038b2abc0",
+   "Tool runs"
+  ],
+  [
+   "9717e3e95220c620",
+   "Top project documents: C4, sequence, journey, ER, risks, roa"
+  ],
+  [
+   "2fd3fbe0322c68b3",
+   "Turns your local Claude Code activity into usage numbers, wa"
+  ],
+  [
+   "be94311cc03dcb7e",
+   "Two-tier hot/cold memory files (per project) — see Memory Sy"
+  ],
+  [
+   "e001f22ce5b9c480",
+   "Untouched since install"
+  ],
+  [
+   "0863241d42f371f1",
+   "Update compares each file with the hash saved at your last i"
+  ],
+  [
+   "8ffbe9c9cd52d7c0",
+   "Update flow"
+  ],
+  [
+   "7a256a668186a967",
+   "Update keeps the packs/ catalog current like any other kit f"
+  ],
+  [
+   "4a5591b2542cc84e",
+   "Update re-fetches the framework fresh, then compares each MA"
+  ],
+  [
+   "29ad8b99c325427c",
+   "Use when a TASK_GUIDE assigns client-side work — a new UI co"
+  ],
+  [
+   "012577383b8de554",
+   "Use when a TASK_GUIDE assigns server-side work — a new API e"
+  ],
+  [
+   "ac64f1d0dc3014f9",
+   "Use when a task needs independent verification — checking a "
+  ],
+  [
+   "ec25affbcb5166e8",
+   "Use when a task needs worktree setup, dependency installs, m"
+  ],
+  [
+   "8edd699be4614ea3",
+   "Version 0.2.0, runs natively on Linux"
+  ],
+  [
+   "e357380bf1388ccd",
+   "Version 1 covers web only (Chromium) and runs locally only"
+  ],
+  [
+   "609b55b78b8f126e",
+   "View the Supervisor GitHub repository for the source and ins"
+  ],
+  [
+   "fd349e725526ee60",
+   "What a non-Claude provider still cannot enforce: Claude Code"
+  ],
+  [
+   "febe9dac9188f708",
+   "What to do — 1) Install 2) Cancel (or Update / Reinstall / C"
+  ],
+  [
+   "41a1acbef2962368",
+   "What you get"
+  ],
+  [
+   "58bf06e6996f11c5",
+   "Where the kit repository's transcript meter is present; an i"
+  ],
+  [
+   "ebd99707aacd401d",
+   "Which CLIs — 1) Claude Code 2) Codex. Pick one or both (1 2 "
+  ],
+  [
+   "dd8dee42204605ef",
+   "With nothing present, the project is indistinguishable from "
+  ],
+  [
+   "6a8324d9895d1b00",
+   "Without it installed, the kit runs as before — it is optiona"
+  ],
+  [
+   "3f00927a719345ed",
+   "Write"
+  ],
+  [
+   "b5844190e528d6aa",
+   "Your Supervisor recommends packs for your project from its b"
+  ],
+  [
+   "25764407de6e6b2b",
+   "Your copy isCustomized You are asked, per filediff, overwrit"
+  ],
+  [
+   "5cee220d0c70168a",
+   "Your copy isNo longer shipped Removed if untouchedkept and n"
+  ],
+  [
+   "38056e2e83e31fff",
+   "Your copy isUntouched Overwrittenwith the latest upstream ve"
+  ],
+  [
+   "93025951902f6dbe",
+   "Your override: reply full or minimal at any time and the Sup"
+  ],
+  [
+   "73023a399137c4e9",
+   "Your request"
+  ],
+  [
+   "a14e4d35c5ab8299",
+   "advises logs every call to the trace"
+  ],
+  [
+   "6ae40d8707af66ca",
+   "advises prompts a memory update"
+  ],
+  [
+   "9e59e25fc7ecb06e",
+   "advises registers new task guides"
+  ],
+  [
+   "57f4400b6ec29ff6",
+   "advises reminds you of Stage 4 review"
+  ],
+  [
+   "7214f755acd48466",
+   "advises starts auto verify"
+  ],
+  [
+   "d5dcd1eb5d730f23",
+   "advises — appends every tool call to memory/event-trace/<tas"
+  ],
+  [
+   "d4c2080113eadef9",
+   "advises — auto-registers new TASK_GUIDE files on the board"
+  ],
+  [
+   "24802719463898c2",
+   "advises — prompts a diff-driven memory-update pass after git"
+  ],
+  [
+   "27208688dbbacbfd",
+   "advises — reminds the Supervisor to run Stage 4 review for p"
+  ],
+  [
+   "8e686e366761b120",
+   "advises — starts one headless /verify run per commit for an "
+  ],
+  [
+   "21025012cda7774e",
+   "agents/"
+  ],
+  [
+   "c1f78a0a51c1bb6b",
+   "ai-agent"
+  ],
+  [
+   "cb524c197cd49042",
+   "ai-engineer"
+  ],
+  [
+   "14c2529eb4498c5d",
+   "api"
+  ],
+  [
+   "27a2e868d1364a21",
+   "api-designer"
+  ],
+  [
+   "5d35844b39704346",
+   "architecture-docs"
+  ],
+  [
+   "9a63addb548747d2",
+   "asks before a sensitive path"
+  ],
+  [
+   "9bde5ec940afac52",
+   "asks you to confirm before a call touches a path listed in ."
+  ],
+  [
+   "48d98536ee322ff0",
+   "backend-developerserver-side APIs and services"
+  ],
+  [
+   "52c041df09bd0a1f",
+   "blast-radiuscode-reviewhtml-reportscore"
+  ],
+  [
+   "1937b13a796b0b04",
+   "blocks a call past the step limit"
+  ],
+  [
+   "4f3ca2e76ff627bf",
+   "blocks a spawn with no task guide"
+  ],
+  [
+   "292e447cf011312d",
+   "blocks a task's tool call once it exceeds the step limit (de"
+  ],
+  [
+   "12896396cb400938",
+   "blocks an [auto] run until its report checks out"
+  ],
+  [
+   "e399196392ce1a99",
+   "blocks an unsafe push or merge"
+  ],
+  [
+   "9ebde2128cc9b703",
+   "blocks git push/merge if pipeline gates are unsatisfied"
+  ],
+  [
+   "c8b3ac5634c40fd0",
+   "blocks spawn if the TASK_GUIDE is missing; otherwise only ad"
+  ],
+  [
+   "3fec9ae8d2d4bb12",
+   "blocks the end of an [auto] run until its final report check"
+  ],
+  [
+   "e69bc43c9c583e40",
+   "brainstormingideate"
+  ],
+  [
+   "b2bafec946916229",
+   "caveman"
+  ],
+  [
+   "08734f529158d8f7",
+   "code-review, security-review, verify, ship, migration-safety"
+  ],
+  [
+   "1a3bec8329368dd4",
+   "common-infrastructureworktrees, installs, shared config"
+  ],
+  [
+   "0674175d1de52f94",
+   "compact-advisorcompact-memorycompoundcompound-refreshdotfile"
+  ],
+  [
+   "7c2c292f135ffec5",
+   "contract-review, auth-checklist"
+  ],
+  [
+   "f497813046b701dd",
+   "craft-agent"
+  ],
+  [
+   "3a6eb0790f39ac87",
+   "data"
+  ],
+  [
+   "be0be9836ec3c702",
+   "data-engineer"
+  ],
+  [
+   "aae62b5f0497c4a4",
+   "devops"
+  ],
+  [
+   "f0fd389242ab4776",
+   "devops-engineer"
+  ],
+  [
+   "f7bc19f18948901e",
+   "easy-memory-mcp on GitHub"
+  ],
+  [
+   "bec3cd707ce1bd57",
+   "easy-personal-mcp on GitHub · Easy Personal site"
+  ],
+  [
+   "e9b115ac443d0fa9",
+   "easy-ui-mcp on GitHub"
+  ],
+  [
+   "3a5ec05727cf38e9",
+   "easy-verifier-mcp on GitHub · Easy Verifier site"
+  ],
+  [
+   "207c845347a4b182",
+   "frontend-developerUI, state, accessibility"
+  ],
+  [
+   "c0d3aec9f6c3be00",
+   "git-guardrails-claude-codemap-codebasesettings-setupcompanio"
+  ],
+  [
+   "6bc81ce5323a70c4",
+   "grill-with-docsto-issues"
+  ],
+  [
+   "26e93d81a9553eab",
+   "headroom"
+  ],
+  [
+   "ea4065ffa33c6d6a",
+   "inert a reminder to move the row"
+  ],
+  [
+   "8409efb3ba832acc",
+   "inert — does not move anything and does not touch any step c"
+  ],
+  [
+   "24588f83b3070fa5",
+   "infra-safety, deployment-checklist"
+  ],
+  [
+   "ae3f53994b15c93b",
+   "memory/"
+  ],
+  [
+   "d44572b9d54d0bbe",
+   "memory/MEMORY.md"
+  ],
+  [
+   "ba8e586234d26c5f",
+   "memory/codebase-map.md"
+  ],
+  [
+   "92e7f53920df969e",
+   "memory/decisions.md"
+  ],
+  [
+   "1f6c823212f20c58",
+   "memory/glossary.md"
+  ],
+  [
+   "5287dfc6ce0f58f4",
+   "memory/learnings.md"
+  ],
+  [
+   "283128acef14943c",
+   "merge"
+  ],
+  [
+   "d524c1a0811da495",
+   "mobile"
+  ],
+  [
+   "79abec24f544dee5",
+   "mobile-developer"
+  ],
+  [
+   "d6431fcb131e5580",
+   "noMinimal track7 steps, one Decision record"
+  ],
+  [
+   "7a497ded2acbc106",
+   "notebook-review, pipeline-safety"
+  ],
+  [
+   "6052a3ba2fc81e9b",
+   "packs/"
+  ],
+  [
+   "99e1ea0dc21155f1",
+   "ponytail"
+  ],
+  [
+   "f37337865cb74a37",
+   "post_agent_move_to_review.py"
+  ],
+  [
+   "98b19b23668fc665",
+   "post_bash_memory_update.py"
+  ],
+  [
+   "1abe487ff84e6272",
+   "post_tool_trace.py"
+  ],
+  [
+   "295fe9465896cd0e",
+   "post_write_register_task.py"
+  ],
+  [
+   "90cb461e15dadd96",
+   "pre_agent_step_limit.py"
+  ],
+  [
+   "8105d68a0333f7a0",
+   "pre_agent_validate_guide.py"
+  ],
+  [
+   "3f598b3fdad4f204",
+   "pre_bash_block_unsafe_merge.py"
+  ],
+  [
+   "530f786e03de9410",
+   "pre_tool_sensitive_path.py"
+  ],
+  [
+   "4a07f99ffe4552c9",
+   "prompt-review, eval-design"
+  ],
+  [
+   "d107ea3629c32671",
+   "push"
+  ],
+  [
+   "0f4bd2995d2582e7",
+   "qa-expertindependent verification"
+  ],
+  [
+   "e5d5b971139eefeb",
+   "ship"
+  ],
+  [
+   "900e14e0479b0e1a",
+   "shipdelivery-report"
+  ],
+  [
+   "f1e8d760c12cd1f8",
+   "skills/"
+  ],
+  [
+   "43fabfbd86218a52",
+   "stop_auto_mode_check.py"
+  ],
+  [
+   "8a886e1baed9a547",
+   "stop_auto_verify.py"
+  ],
+  [
+   "3cd3f8b064d45511",
+   "stop_review_reminder.py"
+  ],
+  [
+   "14181e40c487d355",
+   "tasks/"
+  ],
+  [
+   "04da1d94a8957f63",
+   "tddbugfixdiagnosecraft-spawn-promptmigration-safety"
+  ],
+  [
+   "ee38ec3eb04ec7e3",
+   "tech-lead"
+  ],
+  [
+   "136c900054254f7e",
+   "templates/"
+  ],
+  [
+   "06dd950d37f57ffc",
+   "thunderkds"
+  ],
+  [
+   "b0545aa689dbba2d",
+   "ui-accessibility, platform-compatibility"
+  ],
+  [
+   "5825a33bdfbd730d",
+   "yesExtended trackthe 5-stage pipeline"
+  ],
+  [
+   "3e3ef4ce703670df",
+   "yesExtended trackthe 5-stage pipeline noMinimal track7 steps"
+  ],
+  [
+   "bda050585a00f0f6",
+   "—"
+  ],
+  [
+   "6f16f5d62108e601",
+   "≤42,000 characters. Each spawn prompt carries a memory slice"
+  ]
+ ],
+ "scripts": {
+  "settings-catalog": "7a6cb7caa4d3a71ef22fe19bc630d4a1299434176e6bbe1d0f9cdc13830507eb",
+  "settings-tool-core": "562800632c7c83b0e70417ded2df4efa1a2c3844b8aac189dbb79d561bbc1efa",
+  "settings-tool-ui": "2a875682b83afda68253ade14f64e6b84f4f0572e16f9c62e3122cf5ca9f9f9d"
+ }
+}

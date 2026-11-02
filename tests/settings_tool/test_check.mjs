@@ -1,5 +1,5 @@
 // T187: logic tests for the Settings tool Check mode. Zero dependencies (node:test).
-// Same harness as test_generate.mjs: the core block is read out of site/index.html
+// Same harness as test_generate.mjs: the core block is read out of site/docs.html
 // and run in node:vm. Every fixture here is synthetic: no real user file is copied.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const html = readFileSync(join(here, "..", "..", "site", "index.html"), "utf8");
+const html = readFileSync(join(here, "..", "..", "site", "docs.html"), "utf8");
 const fixtureDir = join(here, "fixtures");
 const fixture = (name) => readFileSync(join(fixtureDir, name), "utf8");
 

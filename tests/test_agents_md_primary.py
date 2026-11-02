@@ -189,7 +189,7 @@ POINTER_PATTERNS = [
 
 
 def _shipped_texts():
-    paths = [ROOT / "README.md", ROOT / "site" / "index.html", ROOT / "AGENTS.md",
+    paths = [ROOT / "README.md", ROOT / "site" / "index.html", ROOT / "site" / "docs.html", ROOT / "AGENTS.md",
              ROOT / "docs" / "MULTI_AGENT.md", CURSOR_MDC]
     for d in ("agents", "skills", "templates", "docs/claude-md"):
         paths += sorted(p for p in (ROOT / d).rglob("*") if p.is_file() and p.suffix in (".md", ".html"))
