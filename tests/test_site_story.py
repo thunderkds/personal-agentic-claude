@@ -240,6 +240,16 @@ def test_journey_marks_the_users_two_steps_with_a_text_label():
     )
 
 
+def test_the_journey_heading_and_the_merge_step_say_what_is_true():
+    """Round 5: the fast path skips the plan and the agents, so the five steps are the full journey; and
+    docs/claude-md/tracks.md has the Supervisor merge when the user asks, so 'never merges' is false."""
+    body = section(index_html(), "journey")
+    assert " ".join(visible_words(re.search(r"<h2>(.*?)</h2>", body, re.DOTALL).group(1))) == "The full journey"
+    merge = _journey_steps()[-1]
+    desc = re.search(r'<span class="flow-desc">(.*?)</span>', merge, re.DOTALL).group(1)
+    assert " ".join(visible_words(desc)) == "You review. Easy Kit merges only when you ask."
+
+
 # ---- AC 3: reading budget and plain words -----------------------------------------
 
 def test_main_holds_at_most_300_words():

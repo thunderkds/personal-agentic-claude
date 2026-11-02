@@ -155,5 +155,12 @@ The Stops claims, each read in the hook before it was written: `pre_agent_valida
 - Red first: `test_two_stops_say_exactly_what_their_hooks_do` became `test_every_stop_says_exactly_what_its_hook_does` and pins the exact text of all four pairs, keyed by hook comment: `1 failed, 49 passed` before the edit, `50 passed` after.
 - Verification command: `204 passed`; `node --test tests/settings_tool/*.mjs` pass 59 fail 0; `node --test tests/site_scrollspy/*.mjs` pass 8 fail 0; `pytest tests` `1450 passed in 117.88s`; `pytest .claude/hooks/tests` `1388 passed, 25 subtests passed`. Headless Chrome: `scrollWidth == clientWidth` at 1440, 1024, 768, 375 on both pages (index heights 2711, 3308, 4482, 5265 px, same as round 3).
 
+**AFTER, round 5 (auto verify found a false "You merge" line, 2026-11-02)**:
+
+- Journey step 5 description: "You review and merge. Easy Kit never does." now reads "You review. Easy Kit merges only when you ask." (`docs/claude-md/tracks.md` has the Supervisor merge when the user asks). Journey heading: "The journey" now reads "The full journey" (the fast path skips the plan and the agents). No other copy changed; no test pinned the old heading.
+- `<main>` words: **300** (cap 300; round 4 was 298).
+- Red first: new `test_the_journey_heading_and_the_merge_step_say_what_is_true` in `tests/test_site_story.py` pins both texts exactly: `1 failed, 50 passed` before the edit, `51 passed` after.
+- Verification command: `205 passed`; `node --test tests/settings_tool/*.mjs` pass 59 fail 0; `node --test tests/site_scrollspy/*.mjs` pass 8 fail 0; `pytest tests` `1451 passed in 118.31s`; `pytest .claude/hooks/tests` `1388 passed, 25 subtests passed`. Headless Chrome: `scrollWidth == clientWidth` at 1440, 1024, 768, 375 on both pages (index heights 2711, 3308, 4482, 5286 px).
+
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
