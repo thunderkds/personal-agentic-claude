@@ -372,3 +372,48 @@ def test_spawn_hook_names_the_scripts_it_mentions_by_paths_that_exist(tmp_path):
     assert named, context
     assert named.group(1) == str(plugin / "skills" / "craft-spawn-prompt" / "scripts" / "memory_slice.py")
     assert Path(named.group(1)).exists()
+
+
+# --- paths in messages are safe to paste ------------------------------------------------------
+
+def make_plugin_at(tmp_path, name):
+    plugin = make_plugin(tmp_path)
+    plugin.rename(tmp_path / name)
+    return tmp_path / name
+
+
+def test_hook_messages_quote_a_plugin_path_with_a_space(tmp_path):
+    import shlex
+    plugin = make_plugin_at(tmp_path, "my plug$in")
+    project = tmp_path / "project"
+    (project / "tasks").mkdir(parents=True)
+    (project / "PROJECT_KANBAN.md").write_text("# Board\n")
+    guide = project / "tasks" / "TASK_GUIDE_T900.md"
+    env = clean_env()
+    env["CLAUDE_PROJECT_DIR"] = str(project)
+    hook = plugin / ".claude" / "hooks" / "pre_agent_validate_guide.py"
+    event = {"tool_name": "Agent", "session_id": "s1",
+             "tool_input": {"prompt": "Task ID: T900\nRead tasks/TASK_GUIDE_T900.md"}}
+
+    def spawn():
+        return subprocess.run([sys.executable, str(hook)], input=json.dumps(event),
+                              capture_output=True, text=True, cwd=project, env=env, timeout=30)
+
+    guide.write_text("# TASK_GUIDE — T900: x\n")
+    blocked = json.loads(spawn().stdout)["reason"]
+    assert f"python3 {shlex.quote(str(plugin / 'scripts' / 'board_sync.py'))} update" in blocked, blocked
+    guide.write_text((REPO / "tasks" / "TASK_GUIDE_T234.md").read_text(encoding="utf-8"))
+    context = json.loads(spawn().stdout)["hookSpecificOutput"]["additionalContext"]
+    slice_script = plugin / "skills" / "craft-spawn-prompt" / "scripts" / "memory_slice.py"
+    assert f"python3 {shlex.quote(str(slice_script))} <guide>" in context, context
+
+
+def test_pull_moment_unsynced_message_quotes_a_plugin_path_with_a_space(tmp_path):
+    import shlex
+    plugin = make_plugin_at(tmp_path, "my plug$in")
+    project = make_online_project(tmp_path)
+    (project / ".board").mkdir()
+    (project / ".board" / "outbox.jsonl").write_text('{"a": 1}\n')
+    result = run([plugin / "scripts" / "pull_moment.py", "wake"], project)
+    sync = shlex.quote(str(plugin / "scripts" / "board_sync.py"))
+    assert f"run python3 {sync} flush" in result.stdout, result.stdout

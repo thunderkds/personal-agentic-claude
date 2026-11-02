@@ -80,8 +80,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib
 from project_root import exit_outside_kit_project, project_root, script_project_root  # noqa: E402
 
 # T232: `--start` is a command, not a hook: exit 0 there means "a run started", so it keeps its
-# one-line answer and only the Stop entry stands down. The detached `--run` keeps
-# $CLAUDE_PROJECT_DIR; call_claude() strips it for the headless `claude` alone.
+# one-line answer and only the Stop entry stands down. The detached `--run` gets
+# $CLAUDE_PROJECT_DIR from `start()`, which sets it to the root it resolved (T234 D5): a `Bash` tool
+# call has none, and without it `--run` would resolve to the folder this file sits in.
+# call_claude() strips it for the headless `claude` alone.
 if sys.argv[1:2] != ["--start"]:
     exit_outside_kit_project()
 # `--start` runs in a `Bash` tool call, where $CLAUDE_PROJECT_DIR is empty (T234 D5): it finds the
@@ -192,7 +194,7 @@ def start(task, head):
         fd = os.open(log_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_APPEND, 0o644)
     except FileExistsError:
         return log_rel, False  # this task and commit already ran (or is running)
-    env = dict(os.environ, **{CHILD_ENV: "1"})
+    env = dict(os.environ, **{CHILD_ENV: "1", "CLAUDE_PROJECT_DIR": ROOT})
     try:
         subprocess.Popen([sys.executable, os.path.abspath(__file__), "--run", task.task_id,
                           task.report_path, task.checkout, head, log_rel, task.track,

@@ -25,6 +25,7 @@ Exit 0 always — a pull moment never blocks work — except 2 for bad arguments
 """
 import argparse
 import os
+import shlex
 import subprocess
 import sys
 
@@ -73,7 +74,7 @@ def main(argv=None, root=None):
     elif args.moment == "wake" and moments.unsynced_count(root):
         # In the project the short path works; from a plugin it names the plugin's own copy.
         sync = ("scripts/board_sync.py" if os.path.realpath(CODE_ROOT) == os.path.realpath(root)
-                else os.path.join(CODE_ROOT, "scripts", "board_sync.py"))
+                else shlex.quote(os.path.join(CODE_ROOT, "scripts", "board_sync.py")))
         print(f"⚠ {moments.unsynced_count(root)} unsynced board writes — run "
               f"python3 {sync} flush")
 

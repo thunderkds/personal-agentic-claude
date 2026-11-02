@@ -38,6 +38,7 @@ non-kit project. Inside one, input it cannot read is a block: it cannot tell the
 import json
 import os
 import re
+import shlex
 import sys
 
 HOOKS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -315,7 +316,7 @@ def check_memory_slice_warning(prompt):
     return [
         "Spawn prompt names a TASK_GUIDE but has no `<!-- memory-slice:` marker, so "
         "the agent gets none of the memory lines its task touches. Run "
-        f"`python3 {os.path.join(KIT_DIR, 'skills', 'craft-spawn-prompt', 'scripts', 'memory_slice.py')} "
+        f"`python3 {shlex.quote(os.path.join(KIT_DIR, 'skills', 'craft-spawn-prompt', 'scripts', 'memory_slice.py'))} "
         "<guide>` and paste its output verbatim (craft-spawn-prompt element 4)."
     ]
 
@@ -508,7 +509,7 @@ def main():
             "reason": (
                 f"[hook:pre_agent] Cannot spawn agent — incomplete TASK_GUIDE for: "
                 f"{'; '.join(incomplete)}. Fill those sections first (Stage 2); in board "
-                f"mode push them with `python3 {os.path.join(KIT_DIR, 'scripts', 'board_sync.py')} update --guide <ID>`."
+                f"mode push them with `python3 {shlex.quote(os.path.join(KIT_DIR, 'scripts', 'board_sync.py'))} update --guide <ID>`."
             )
         }))
         sys.exit(0)

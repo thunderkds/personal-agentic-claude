@@ -2452,3 +2452,47 @@ def test_t203_sec_no_branch_in_the_row_and_no_worktree_naming_the_task_is_ambigu
     _decoy(project, tmp_path, "chore/unrelated")
     task = _auto_mode().resolve(TASK, RFR_ROW, _auto_mode().tasks_dirs(str(project)))
     assert task.ambiguous and Path(task.checkout).resolve() == project.resolve()
+
+
+# ── T234 D5(a) — `--start` from a plugin cache, with $CLAUDE_PROJECT_DIR empty ───────────────
+def _files(root):
+    return sorted(p.relative_to(root).as_posix() for p in root.rglob("*")
+                  if p.is_file() and "__pycache__" not in p.parts)
+
+
+def test_t234_start_from_a_plugin_cache_runs_in_the_project_not_the_cache(tmp_path):
+    """A `Bash` tool call has no $CLAUDE_PROJECT_DIR. `--start` finds the project from the cwd and
+    hands it to the detached `--run`, so the log, the run record and the result land in the project
+    and nothing lands in the folder the script came from."""
+    project, checkout = _project(tmp_path, review=_plain_review())
+    cache = tmp_path / "cache"
+    shutil.copytree(project / ".claude" / "hooks", cache / ".claude" / "hooks")
+    before = _files(cache)
+    stub_dir, calls = _stub(tmp_path)
+    env = _env(tmp_path, project, stub_dir)
+    del env["CLAUDE_PROJECT_DIR"]
+    head = _git(project, "rev-parse", "HEAD")
+    result = subprocess.run([sys.executable, str(cache / ".claude" / "hooks" / HOOK), "--start", TASK],
+                            stdin=subprocess.DEVNULL, capture_output=True, text=True, cwd=project,
+                            env=env, timeout=30)
+    assert result.returncode == 0, result
+    verdict, notes = _wait_row(checkout)
+    assert verdict == "☑ pass" and "auto-run by hook" in notes
+    _run_finished(project, TASK)
+    assert (project / ".claude" / "verify-runs" / f"{TASK}-{head[:12]}.log").exists()
+    sys.path.insert(0, str(HOOKS / "lib"))
+    try:
+        import trace_chain
+        import verify_record
+    finally:
+        sys.path.pop(0)
+    os.environ["CLAUDE_TRACE_ANCHOR_DIR"] = str(tmp_path / "anchors")
+    try:
+        record = verify_record.read_record(str(project), TASK, head)
+        wrong = verify_record.read_record(str(cache), TASK, head)
+    finally:
+        del os.environ["CLAUDE_TRACE_ANCHOR_DIR"]
+    assert record and record["verdict"] == "pass", (record, list((tmp_path / "anchors").rglob("*")))
+    assert wrong is None, "the run record must not be keyed to the cache"
+    assert _files(cache) == before, "the cache must stay as it was"
+    assert [c["cwd"] for c in _calls(calls)] == [str(project)]
