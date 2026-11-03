@@ -1,0 +1,1 @@
+../../../.claude/hooks/pre_agent_validate_guide.py

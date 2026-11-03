@@ -1,0 +1,1 @@
+../../../.claude/hooks/pre_bash_block_unsafe_merge.py

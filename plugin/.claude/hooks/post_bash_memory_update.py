@@ -1,0 +1,1 @@
+../../../.claude/hooks/post_bash_memory_update.py

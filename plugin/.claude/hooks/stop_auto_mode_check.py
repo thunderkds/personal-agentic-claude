@@ -1,0 +1,1 @@
+../../../.claude/hooks/stop_auto_mode_check.py

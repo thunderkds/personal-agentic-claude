@@ -1,0 +1,1 @@
+../../../.claude/hooks/post_write_register_task.py

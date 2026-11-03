@@ -1,0 +1,1 @@
+../../../.claude/hooks/post_tool_trace.py
