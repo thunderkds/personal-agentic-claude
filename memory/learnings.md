@@ -2996,3 +2996,7 @@ The merge gate needs a test-runner Bash call in `memory/event-trace/<ID>.jsonl`.
 ### 2026-11-03 — Testing a plugin install from an unpushed branch needs smart HTTP (T242)
 `claude plugin marketplace add` refuses `file://` (`✘ Invalid marketplace source format. Try: owner/repo, https://..., or ./path`), a `./path` marketplace loads in place (no copy, so it proves nothing about the cache), and dumb HTTP fails (`fatal: dumb http transport does not support shallow capabilities`). Serve a bare clone with `git http-backend` behind a stdlib `wsgiref` wrapper on `127.0.0.1`, in an isolated `CLAUDE_CONFIG_DIR` + scratch `HOME`.
 
+
+### 2026-11-03 — A report block ends only at a comment that ends it (T244)
+`auto_mode.section()` ran a `## Auto decisions` block on to the next `## ` heading, so a template comment holding a commented example heading sat inside the block and `add_line` wrote `Closed:` into the comment, hidden when rendered. Cutting at the first comment was wrong too (verify fail): an inline note between `Checks:` and `Memory:` then hid the fields below it. The block now ends at a comment only when nothing but blank lines and comments follow it (`_only_comments`).
+**Files**: .claude/hooks/lib/auto_mode.py, tests/test_closeout_comment_boundary.py
