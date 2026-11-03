@@ -806,3 +806,52 @@ def test_skill_states_the_safety_rules():
 def test_docs_name_the_skill():
     assert "dotfiles" in (ROOT / "README.md").read_text(encoding="utf-8")
     assert "`dotfiles/SKILL.md`" in (ROOT / "CLAUDE_LEGACY.md").read_text(encoding="utf-8")
+
+
+# --- T230: target inside the source, unprintable skill names, wrong source shape -------------
+
+@pytest.mark.parametrize("command", ["plan", "apply", "status"])
+def test_t230_a_target_inside_the_source_is_refused(home, command):
+    source = make_source(home, agents="rules", skills=["one"])
+    inner = source / "skills" / "one"
+    before = tree_hash(home)
+    result = run(home, command, "--source", str(source), "--claude-dir", str(inner))
+    assert result.returncode == 2, result.stdout + result.stderr
+    assert "target is inside the source folder" in result.stdout
+    assert tree_hash(home) == before
+
+
+def test_t230_a_target_holding_the_source_is_still_allowed(home):
+    """~/.dotfiles/agents sits under HOME; a target that holds the source is not refused for it."""
+    source = make_source(home, agents="rules")
+    result = run(home, "plan", "--source", str(source), "--claude-dir", str(home))
+    assert "inside the source" not in result.stdout, result.stdout
+
+
+@pytest.mark.parametrize("name", ["evil\nplan: + link CLAUDE.md", "a\tb", "a\x1b[2Kb"])
+def test_t230_a_skill_folder_name_with_unprintable_text_is_refused(home, name):
+    source = make_source(home, skills=["ok"])
+    (source / "skills" / name).mkdir()
+    target = make_claude(home)
+    before = tree_hash(home)
+    result = run(home, "apply", "--source", str(source), "--claude-dir", str(target))
+    assert result.returncode == 2
+    assert "refused source" in result.stderr and "unprintable" in result.stderr
+    assert tree_hash(home) == before
+
+
+@pytest.mark.parametrize("shape", ["agents_folder", "skills_file"])
+def test_t230_a_wrong_source_shape_is_reported(home, shape):
+    source = make_source(home)
+    if shape == "agents_folder":
+        (source / "AGENTS.md").mkdir()
+        expect = "AGENTS.md is not a file"
+    else:
+        (source / "skills").write_text("x")
+        expect = "skills is not a folder"
+    target = make_claude(home)
+    before = tree_hash(home)
+    result = run(home, "plan", "--source", str(source), "--claude-dir", str(target))
+    assert result.returncode == 2
+    assert "refused source" in result.stderr and expect in result.stderr, result.stderr
+    assert tree_hash(home) == before
