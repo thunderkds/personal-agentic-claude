@@ -3000,3 +3000,7 @@ The merge gate needs a test-runner Bash call in `memory/event-trace/<ID>.jsonl`.
 ### 2026-11-03 — A report block ends only at a comment that ends it (T244)
 `auto_mode.section()` ran a `## Auto decisions` block on to the next `## ` heading, so a template comment holding a commented example heading sat inside the block and `add_line` wrote `Closed:` into the comment, hidden when rendered. Cutting at the first comment was wrong too (verify fail): an inline note between `Checks:` and `Memory:` then hid the fields below it. The block now ends at a comment only when nothing but blank lines and comments follow it (`_only_comments`).
 **Files**: .claude/hooks/lib/auto_mode.py, tests/test_closeout_comment_boundary.py
+
+### 2026-11-03 — The plugin directory reads no file through a link (T243)
+`claude plugin validate <dir> --profile directory` is the submission bar (`--strict` also fails on warnings the directory accepts). It refuses a linked manifest (`could not read the plugin's manifest`) and linked hooks (`HOOKS_FILE_UNREAD`), and does not read an icon through a link (`ICON_MISSING`). A linked folder (skills, agents) is only a warning. So `plugin/` keeps real byte copies of `plugin.json`, `hooks/hooks.json` and `icon.png`; `tests/test_directory_prep.py` keeps them equal to the root files. A port held by another local server returns its own 404, so pick a free port for the smart-HTTP install recipe.
+**Files**: plugin/.claude-plugin/plugin.json, plugin/hooks/hooks.json, tests/test_directory_prep.py

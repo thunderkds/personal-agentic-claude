@@ -8,7 +8,6 @@
 ## Board
 
 ### Todo
-- [ ] **T243** — Prepare the Anthropic plugin directory submission: fix `claude plugin validate . --strict` warnings (marketplace `description`, root `CLAUDE.md`, 512–2048 px PNG icon); the user submits at claude.ai/directory/manage | frontend-developer | C1 | Risk: Low | P2
 - [ ] **T237** — Online board: with `.claude/board.json`, no `PROJECT_KANBAN.md` and a failed pull, the merge gate exits 0 silently in a kit project (found in T232 review, unchanged behaviour); also an exception in a gate `main()` on well-formed input exits 1 and passes; and find the intermittent full-suite failure seen on T232 (`test_t203_ac2` suspected); `test_ac4_blocked_row_never_says_pass[pass-and-fail]` also failed once under load on T234; `scripts/token_meter.py` is not in `MANIFEST`, so `compact-advisor` has no script in a `setup.sh` install (found in T234, older than it) | common-infrastructure | C1 | Risk: Medium | P2
 - [ ] **T230** — `dotfiles` follow-up, Depends on: T228: refuse a target inside the source (only an exact match is refused today); refuse skill folder names with unprintable text (a newline can fake a `plan` line); report a wrong source shape (`AGENTS.md` as a folder, `skills` as a file) | common-infrastructure | C1 | Risk: Low | P2
 - [ ] **T229** — `stop_auto_mode_check.py` false positive: any task touched after an `[auto]` request in the same session counts as an auto task (lines 266-268; T228 flagged because of T226's request). Also: `post_write_register_task.py` adds a Todo row when a guide is written, so a hand-added In Progress row duplicates it and breaks `test_find_kanban_section_on_real_current_board` | common-infrastructure | C1 | Risk: Low | P1
@@ -97,6 +96,7 @@
 
 
 ### Ready for Review
+- [ ] **T243** — Prepare the Anthropic plugin directory submission: fix `claude plugin validate . --strict` warnings (marketplace `description`, root `CLAUDE.md`, 512–2048 px PNG icon); the user submits at claude.ai/directory/manage | frontend-developer | C1 | Risk: Low | P2 | Started 2026-11-03 (auto): branch `feat/t243-directory-prep`, worktree `../wt-t243` | Ready for Review 2026-11-03: `validate plugin --profile directory` passes; icon = site header mark | Track: minimal | Record: tasks/MINIMAL_LOG.md
 
 
 ### Done
