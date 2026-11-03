@@ -25,7 +25,7 @@
      run; read them there. The enforced gate is the whole-file character budget above. -->
 
 ### Decisions
-- [T232–T236, T239, T240: plugin, `/easy-kit:init`, Stage 0–5, repo `thunderkds/easy-kit`](decisions.md) — never reuse old repo name
+- [T232–T236, T239, T240: plugin, init, Stage 0–5, repo `easy-kit`](decisions.md) — never reuse old repo name
 - [Anonymous GitHub check: block SSH](learnings.md) — T236
 - [T231: story `index.html`, reference `docs.html`](decisions.md) — 300-word cap; new skill goes on both pages
 - [T218–T220: tech-lead pack — map-first agent, dormant; pipeline pointers; packs activate by approved copy](decisions.md)
@@ -280,7 +280,7 @@
 ### Learning Records
 - [Audit every public claim in one pass](learnings.md) — T231: verify failed 3 times, one sentence each
 - [Sideways scroll: measure the table's minimum content width](learnings.md) — T199 addendum: `nowrap` was not the only floor; `Edit|Write|Bash` needed `<wbr>`
-- [Minimal-track test runs need the task state file first](learnings.md) — T241: the Supervisor's write went through; if refused, ask for the `!` line
+- [Minimal-track test runs need the task state file first](learnings.md) — T241: Supervisor write worked; else ask for `!`
 - [Merge gate reads evidence at hook time; `pkill`/`pgrep -f` match their own shell](learnings.md) — commit the verify row, merge in the next call; saved PID; wait on the log `verdict:`
 - [easy-memory `switch off` leaves the MCP tools on](learnings.md) — an off-run can still call memory_search if the prompt says to check notes
 <!-- One-liner per active LR: - [LR-NNNN slug](memory/learning-records/LR-NNNN-slug.md) — summary -->
