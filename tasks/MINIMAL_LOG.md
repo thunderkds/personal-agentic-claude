@@ -12,7 +12,7 @@
 - The icon copy is named but gets no `cp` line — a new icon never reaches the listing after the first submission
 **Checked:**
 - New test `test_runbook_says_to_copy_the_root_files_into_plugin` — `1 failed, 6 passed` before the RUNBOOK edit, passes after
-- Suite: `python3 -m pytest tests -q` — see the commit's run (all passed)
+- Suite: `python3 -m pytest tests -q` — `1721 passed in 166.04s (0:02:46)`
 - Real run: `python3 -m pytest tests/test_directory_prep.py tests/test_runbook_plugin_check.py tests/test_docs_match_installer.py -q` — `17 passed in 0.84s`
 **Files:** `RUNBOOK.md`, `tests/test_directory_prep.py`, `tasks/MINIMAL_LOG.md`
 **Memory:** nothing new
