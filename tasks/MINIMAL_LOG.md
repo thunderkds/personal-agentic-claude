@@ -8,16 +8,18 @@
 **Asked:** "continue"
 **Decisions:**
 - Took T244, the open Low-risk follow-up; T243 waits for the user's icon — the first submitted icon cannot be changed.
-- Fixed `auto_mode.section()` (`skip_comments=True`): the block now ends where an HTML comment begins inside it. `add_line`, `report_gaps` and every reader that skips comments get the same boundary; with no comment after the block, nothing changes.
+- Fixed `auto_mode.section()` (`skip_comments=True`): a comment that ends the block (only blank lines and comments after it) is no longer part of the block. A comment between two fields stays inside. Every reader that skips comments gets the same boundary; with no comment after the block, nothing changes.
+- First fix (`853daa7e`) cut the block at *any* comment; auto verify failed it: an inline `<!-- note -->` between `Checks:` and `Memory:` hid the fields below it (`report incomplete: Memory:`), a regression against `main`. Second fix keeps inline comments; two tests pin that case.
 - Left T242's existing hidden `Closed:` line as written — it is the audit trail of that run, and the row is already Done.
 - Assumed: no report puts its own fields inside a comment on purpose — the template says to copy the block out of the comment.
 **Checked:**
-- New test `tests/test_closeout_comment_boundary.py` (4 tests) — `2 failed, 2 passed` before the change (2026-11-03T13:17:33Z), `4 passed` after
-- Suite: `python3 -m pytest tests -q` — `1713 passed in 139.46s (0:02:19)`; `python3 -m pytest .claude/hooks/tests -q` — `1389 passed, 25 subtests passed in 29.40s`
-- Real run: `auto_closeout.add_line` on T242's review file as committed at `87a03426` (before its close-out) — printed `Closed at char 2611 | comment starts at 2685 | inside comment: False`
+- New test `tests/test_closeout_comment_boundary.py` (6 tests) — `2 failed, 2 passed` before the first fix (2026-11-03T13:17:33Z); the 2 inline-comment tests `2 failed, 4 passed` on `853daa7e`; `6 passed` after the second fix
+- Suite (2026-11-03T13:24:04Z): `python3 -m pytest tests -q` — `1715 passed in 136.54s (0:02:16)`; `python3 -m pytest .claude/hooks/tests -q` — `1389 passed, 25 subtests passed in 28.90s`
+- Real run: `auto_closeout.add_line` on T242's review file as committed at `87a03426` (before its close-out) — printed `Closed at char 2611 | comment starts at 2685 | inside comment: False`; re-run on the second fix — `real T242 file: inside comment: False`
 - verify: ☑ fail — auto-run by hook, session d5aa8918-0b11-4deb-a12b-3635af568fa5, commit 853daa7e711c668dbbb6ca003f1b618307e54c6f, log .claude/verify-runs/T244-853daa7e711c.log
+**Memory:** nothing new until the merge (normal mode; the memory pass runs at merge)
 **Files:** `.claude/hooks/lib/auto_mode.py`, `tests/test_closeout_comment_boundary.py`, `tasks/MINIMAL_LOG.md`
-**Not done:** merge (the user decides); auto verify: ☑ fail (session d5aa8918-0b11-4deb-a12b-3635af568fa5, commit 853daa7e711c668dbbb6ca003f1b618307e54c6f, log .claude/verify-runs/T244-853daa7e711c.log)
+**Not done:** merge (the user decides); auto verify: running (T182) — the first run failed at `853daa7e` (log .claude/verify-runs/T244-853daa7e711c.log)
 Paused: auto-mode check failed — its Decision record in tasks/MINIMAL_LOG.md does not start with `Mode: auto`; no `Memory:` line in the report — run the memory pass before you stop and record it there (each entry written, or `Memory: nothing new`) [report fe3d759cbe82]
 
 ## T241 — RUNBOOK post-deploy check also installs the plugin from GitHub · minimal

@@ -70,3 +70,30 @@ def test_a_block_with_no_comment_after_it_is_unchanged():
     text = "## Auto decisions\n\nMode: auto\n1. x — RULE: y\n\n## Evidence\n"
     start, end, body = am.section(text, am.AUTO_SECTION, skip_comments=True)
     assert body == "\nMode: auto\n1. x — RULE: y\n\n"
+
+
+INLINE = """## Auto decisions
+
+Mode: auto
+1. a decision — RULE: a rule
+Checks: tests — pass
+<!-- note: reviewer asked to keep D1 -->
+Memory: nothing new
+Not done: merge (yours); auto verify: pass
+
+## Evidence
+"""
+
+
+def test_an_inline_comment_between_fields_does_not_cut_the_block():
+    """T244 verify finding: a note between `Checks:` and `Memory:` must not hide the fields below it."""
+    start, end, body = am.section(INLINE, am.AUTO_SECTION, skip_comments=True)
+    assert "Memory: nothing new" in body and "Not done:" in body, body
+
+
+def test_closed_line_goes_after_the_last_field_when_an_inline_comment_is_present(tmp_path):
+    path = tmp_path / "TASK_REVIEW_T999.md"
+    path.write_text(INLINE, encoding="utf-8")
+    ac.add_line(str(path), "T999", False, CLOSED)
+    text = path.read_text(encoding="utf-8")
+    assert text.index("Not done:") < text.index(CLOSED) < text.index("## Evidence"), text
