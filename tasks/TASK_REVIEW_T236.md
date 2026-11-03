@@ -179,19 +179,68 @@ exit 0
 The `/plugin install easy-kit --marketplace thunderkds/easy-kit` in-session form was NOT run (needs an
 interactive session).
 
-### AC 2 — BLOCKED: no headless session in the isolated config
+### AC 2 — pass: a real session with `--plugin-dir`, by the user's choice (option (b), 2026-11-03)
+
+The first try, in the isolated config, could not log in:
 
 ```
 $ timeout 60 claude -p "Reply with the single word OK." --model haiku --max-budget-usd 0.05
 Not logged in · Please run /login
 ```
 
-Per the Supervisor note, credentials were not copied and the real config was not used. AC 2 (a session) is
-therefore unproven, and per D1 nothing is published.
+**Decision, by the user's choice:** both sessions below use the user's **real Claude login** (the real
+`CLAUDE_CONFIG_DIR`). They load the plugin with `--plugin-dir <isolated cache>`, which points at the copy that
+the anonymous AC 1 install fetched from GitHub. No `claude plugin install` and no `marketplace add` ran against
+the real config. Further flags: `--setting-sources project,local`, so the user's own settings and hooks are not
+loaded and only the plugin's hooks act. `--strict-mcp-config` loads no user MCP servers.
+`--no-session-persistence` keeps the session from saving a transcript. Model `haiku`. Budget $0.40 + $0.60
+(at most $1). Actual cost $0.0054 + $0.0049. Scratch repo: a fresh `git init` with one commit. Its `origin` is
+a throwaway local bare repo, `<scratch>/remote-ac2.git`, never GitHub. Driver:
+`<scratch>/t236/drv/ac2.py`. The raw stream-json logs are `<scratch>/t236/s1-init.jsonl` and `s2-gates.jsonl`.
 
-Hook-level evidence only (not AC 2 as written: no Claude Code session wires the hooks here). From the
-GitHub-installed cache `<cfg>/plugins/cache/easy-kit/easy-kit/2.2.0`, in a fresh `git init` repo: `/easy-kit:init`
-Step 1 script, then `T900` added to In Progress, then the two gate hooks fed the event JSON:
+Session 1 at 2026-11-03T10:42:42Z: `claude -p "/easy-kit:init" --model haiku --max-budget-usd 0.40 --plugin-dir <cache> --setting-sources project,local --strict-mcp-config --no-session-persistence --output-format stream-json --verbose --allowedTools Bash(python3:*)`
+
+```
+init: plugins [{'name': 'easy-kit', 'path': '<scratch>/t236/cfg/plugins/cache/easy-kit/easy-kit/2.2.0', 'source': 'easy-kit@inline', 'version': '2.2.0'}, ...builtins] | easy-kit slash cmds ['easy-kit:init', 'init'] | agents ['easy-kit:backend-developer', 'easy-kit:common-infrastructure', 'easy-kit:frontend-developer', 'easy-kit:qa-expert']
+TOOL_USE {"command": "python3 \"<cache>/scripts/plugin_init.py\"; echo \"EXIT=$?\"", ...}
+RESULT This Bash command contains multiple operations. The following part requires approval: echo "EXIT=$?"
+TOOL_USE {"command": "python3 \"<cache>/scripts/plugin_init.py\"", ...}
+RESULT easy-kit init in <scratch>/t236/proj-ac2
++ created CLAUDE.md
++ created PROJECT_KANBAN.md
++ created AGENTS.md
+... 
+TEXT Step 1 created 59 paths and kept none. Next, the settings dry runs.
+(legacy and high-security --dry-run: "dry run: nothing written" for each)
+TEXT ... Write these changes to `.claude/settings.json`? Both profiles only add rules.
+RESULT-FINAL cost 0.00538603 success
+```
+
+(The model's first Bash call added `echo`. `--allowedTools` did not cover it, so the session's permission check
+refused it. The model then ran the script alone. Nothing was written to settings, because no one approved.)
+
+Between the sessions the driver added `- [~] **T900** — open task | backend-developer | C1 | Risk: Low | P1` under
+`### In Progress` and committed. `tasks/` holds no `TASK_GUIDE_T901.md`.
+
+Session 2 at 2026-11-03T10:43:36Z: the prompt asks for one `Agent` call (`easy-kit:backend-developer`, `Task ID: T901`) and
+one `git push origin main`. `--allowedTools Agent Bash(git push:*)`, so only a hook could refuse either call.
+
+```
+TOOL_USE Agent {"description": "T901", "subagent_type": "easy-kit:backend-developer", "prompt": "Task ID: T901\nGuide: tasks/TASK_GUIDE_T901.md\nReply DONE."}
+TOOL_USE Bash {"command": "git push origin main", "description": "Push main branch to origin"}
+RESULT is_error=True PreToolUse:Agent hook error: [hook:pre_agent] Cannot spawn agent — missing TASK_GUIDE for: T901. Run Stage 2 planning first to generate the guide(s) in tasks/.
+RESULT is_error=True PreToolUse:Bash hook error: [hook:pre_bash] Pipeline gate failed — cannot push/merge:
+  • Tasks still In Progress: T900
+Complete Stage 4 review and Stage 5 verify first.
+  ...
+RESULT-FINAL cost 0.004869460000000001 success
+remote refs after: ''
+```
+
+Both gates blocked, from the plugin installed from GitHub, in a real Claude Code 2.1.317 session. The bare remote
+has no refs, so the push did not happen.
+
+Earlier hook-level check: the same cache, the hooks fed JSON directly, with no session. It is kept as a supporting run:
 
 ```
 2026-11-03T10:38:10Z
