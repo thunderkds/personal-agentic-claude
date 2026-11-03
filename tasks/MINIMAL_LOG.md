@@ -17,9 +17,11 @@ Mode: auto
 - New test `tests/test_runbook_plugin_check.py` (4 tests) — `4 failed in 0.03s` before the change (2026-11-03T11:46:19Z), `4 passed in 0.02s` after
 - Suite: `python3 -m pytest tests -q` — `1677 passed in 164.27s (0:02:44)`; `python3 -m pytest .claude/hooks/tests -q` after the rebase — `1389 passed, 25 subtests passed in 34.06s`
 - Real run (auto-checked, not /verify): the step-5 block as written, 2026-11-03T11:46:46Z — `✔ Successfully added marketplace: easy-kit (declared in user settings)`, exit 0; `✔ Successfully installed plugin: easy-kit@easy-kit (scope: user)`, exit 0; `claude plugin list` → `easy-kit@easy-kit  Version: 2.2.0  Status: ✔ enabled`, matching `.claude-plugin/plugin.json` `"version": "2.2.0"`
+- verify: ☑ pass — auto-run by hook, session 338ea189-d1b0-402a-b1a2-c24106f9caa7, commit d28532c29e8b503e32dcd24953c029d53ddfb78a, log .claude/verify-runs/T241-d28532c29e8b.log
 **Files:** `RUNBOOK.md`, `tests/test_runbook_plugin_check.py`, `tasks/MINIMAL_LOG.md`
 **Memory:** `memory/MEMORY.md` — 5 index lines shortened to the 42,000-char budget; the minimal-track state-file line now says the Supervisor's write worked (T241)
-**Not done:** merge (yours); push of `main` (yours: 2 memory commits); auto verify: running (T182)
+**Not done:** merge (yours); push of `main` (yours: 2 memory commits); auto verify: ☑ pass (session 338ea189-d1b0-402a-b1a2-c24106f9caa7, commit d28532c29e8b503e32dcd24953c029d53ddfb78a, log .claude/verify-runs/T241-d28532c29e8b.log)
+Closed: row moved to Done 2026-11-03 — auto verify pass (session 338ea189-d1b0-402a-b1a2-c24106f9caa7, commit d28532c29e8b503e32dcd24953c029d53ddfb78a); Gates 5 and 6 checked
 
 ## T238 — Rename a report file that clashed on Windows and macOS · minimal
 **Asked:** "got this one when upload the pluggin Two file or folder names would clash on Windows or macOS Two files or folders in or beside the plugin folder differ only by letter case, Unicode form, a trailing dot, or a Windows short name (such as PROGRA~1), so a checkout on Windows or macOS would merge them. Rename one, then validate again."
