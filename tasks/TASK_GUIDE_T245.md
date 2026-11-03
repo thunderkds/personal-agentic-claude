@@ -71,7 +71,9 @@ code-review only"*.
 
 ## Dependencies & Reachability
 
-**Depends on**: `None` (T192 is related, not a precondition: the skill works with headless Chrome alone)
+**Depends on**: `None`
+
+Related, not a precondition: the easy-ui task (Todo) adds one more screenshot method; the skill works with headless Chrome alone.
 
 **Entry point**: `Skill({ skill: "ux-evaluate" })` — called from `agents/frontend.md` `## Available skills`
 
