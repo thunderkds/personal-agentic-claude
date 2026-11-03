@@ -2989,3 +2989,7 @@ The merge gate needs a test-runner Bash call in `memory/event-trace/<ID>.jsonl`.
 
 **Learning**: T234 passed tests on `skills/...` paths three times while breaking real installs. A model shortened a command in the live run, hiding the `abspath` crash; an implementer's "limit" note on Codex was a regression the Supervisor did not read as one. Run every command as written, in plugin, `setup.sh` and Codex-only layouts, from day one, and read a report's cut list for regressions.
 **Files**: tests/test_plugin_names.py, lib/harness-fetch.sh
+
+### 2026-11-03 — An "anonymous" GitHub check must block SSH too (T236)
+`GIT_TERMINAL_PROMPT=0` plus no credential helper still cloned over SSH with the user's agent key, so the first "anonymous" install proved nothing. Block SSH as well: unset `SSH_AUTH_SOCK`, `GIT_SSH_COMMAND='ssh -o IdentityFile=/dev/null -o BatchMode=yes'`, `GIT_CONFIG_GLOBAL=/dev/null`, `GIT_CONFIG_NOSYSTEM=1`, scratch `HOME`. A headless `claude -p` in an isolated `CLAUDE_CONFIG_DIR` prints `Not logged in`; with the user's consent use the real login plus `--plugin-dir <cache>` and `--setting-sources project,local` instead of copying credentials.
+

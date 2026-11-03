@@ -2734,3 +2734,11 @@ The log refuses a symlink/non-file path, writes via `mktemp` in `.claude/` + `mv
 **Open**: the redirect ends if anyone creates a repo at `thunderkds/personal-agentic-claude` — never do. The site stays `personal-agentic-claude.vercel.app`: `easy-kit.vercel.app` is owned by another party; D4 list (lines to change, family-site links) is in `tasks/TASK_REVIEW_T240.md`. P3: the fork `curl` line in `site/docs.html` fails for a pre-rename fork. Local remotes `origin`/`github` still use the old URL (work via redirect).
 **Files**: setup.sh, update.sh, README.md, RUNBOOK.md, site/index.html, site/docs.html, tests/test_repo_name.py
 **Verified**: auto verify pass at `1ce2c44b`; merged at user request 2026-11-03 (`1626ef22`).
+
+### 2026-11-03 — T236: the plugin install is proven from GitHub and offered beside `setup.sh`
+**Decision**: README Quick Start and `docs.html#install` show the plugin path first (`claude plugin marketplace add thunderkds/easy-kit` + `claude plugin install easy-kit@easy-kit`; one-step `claude plugin install easy-kit --marketplace thunderkds/easy-kit` with "2.1.292 or later"), then `/easy-kit:init` once, then D3 limits (Claude Code only; each teammate installs; a plugin cannot set permissions). `index.html` hero: one link, page at 300/300 words. A "plugin and setup.sh both active → gates run twice" sentence was dropped as false: T235 stand-down.
+**Why**: AC 1 anonymous install passed (scratch HOME/config, no SSH key or agent, no credential helper); AC 2: in a real session (user's login, `--plugin-dir` on the GitHub-installed cache, `--setting-sources project,local`) a spawn with no guide and a push with a task In Progress were both refused.
+**Open**: RUNBOOK post-deploy check tests `setup.sh` only (T241). Install size ~28 MB (12 MB cache + 16 MB marketplace clone) vs ~2–2.5 MB used (T242). Anthropic directory submission: `claude plugin validate . --strict` fails on 3 warnings — no marketplace `description`, root `CLAUDE.md` not loaded, no icon (T243). One-step 2.1.292 floor is from docs; only 2.1.317 was run.
+**Files**: README.md, site/docs.html, site/index.html, tests/test_site_content.py, tests/test_site_story.py, tests/test_plugin_package.py
+**Verified**: auto verify pass at `5c8beddb`; merged at user request 2026-11-03 (`9cbf4206`).
+
