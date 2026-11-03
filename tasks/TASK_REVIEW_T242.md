@@ -14,8 +14,12 @@
 
 Mode: auto
 1. Picked T242, not T243: T243 needs the listing icon, which the directory keeps from the first submission and never changes — RULE: `skills/resolve-question/SKILL.md` § Decide, rule 2 ("it can be undone" ranks first); the icon choice stays the user's
-2. Extended track, C2 / Risk Medium: new component and a packaging change across many paths — RULE: `docs/claude-md/tracks.md` `## Track rule`
+2. Extended track, C2 / Risk Medium: new component and a packaging change across many paths — RULE: `docs/claude-md/tracks.md` § Track rule (row 1: "Complexity C2 or above: 3+ files, a design choice, or a new component")
 3. Layout: a `plugin/` folder of per-path symlinks, `"source": "./plugin"`, root `.claude-plugin/plugin.json` kept a real file — DEBATED: A (Advocate 1: A, per-path links, root plugin.json linked or removed; Advocate 2: A, per-path links, plugin.json moved into `plugin/`); both Advocates also left the 16 MB marketplace clone out of scope; the root file stays because it is the smaller change ⚠ decided for you — please review
+
+Paused: trace mismatch — the 2 Advocate calls for decision 3 ran (descriptions `Advocate 1: how to shrink plugin install?` / `Advocate 2: …`, prompts starting `Using the repo, answer alone:`), but `memory/event-trace/T241.jsonl` holds them, because this session's task file still named T241 when they ran. The Supervisor did not move trace records and did not debate the question twice (`skills/resolve-question/SKILL.md` § Debate: "A question is never debated twice"). Please review decision 3 yourself.
+Memory: pending — the diff-driven memory pass runs when T242 reaches Ready for Review
+Not done: merge (yours); auto verify: not started (T242 still In Progress)
 
 <!-- Optional: the final report, only for a task run in auto mode (the user's `[auto]` tag,
 `docs/claude-md/tracks.md` `## Auto mode`). To use it, copy the block below out of this comment, to this
