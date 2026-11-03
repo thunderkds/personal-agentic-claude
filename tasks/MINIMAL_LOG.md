@@ -20,9 +20,11 @@ Mode: auto
 - New test `tests/test_directory_prep.py` (6 tests) — `6 failed in 0.79s` on unchanged `main` 911a17cc, `6 passed` after; `tests/test_plugin_source.py` link-only pins updated for the 3 real files
 - Suite: `python3 -m pytest tests -q` — `1720 passed in 161.77s (0:02:41)`; `python3 -m pytest .claude/hooks/tests -q` — `1389 passed, 25 subtests passed in 69.65s`; `sh scripts/smoke-install.sh` — `smoke-install.sh: PASS`
 - Real run (auto-checked, not /verify): `claude plugin validate plugin --profile directory` — `✔ These checks found nothing to report` / `✔ Validation passed with warnings`, exit 0; root `--profile directory` — `✔ These checks found nothing to report`. Isolated install of this branch from a local smart-HTTP git marketplace (`CLAUDE_CONFIG_DIR` + scratch `HOME`, no SSH) — `✔ Successfully installed plugin: easy-kit@easy-kit (scope: user)`; cache 1.3M, 0 links, `.claude-plugin/icon.png` present, `hooks/hooks.json` equal to root, no `.claude/hooks/tests`; `scripts/plugin_init.py` in a fresh repo ran and printed its notes
+- verify: ☑ pass — auto-run by hook, session 3f69be33-29a4-4f42-ad30-a2c6d499c423, commit 40d1359815dc48cb4ceda739110df09aa133921d, log .claude/verify-runs/T243-40d1359815dc.log
 **Files:** `.claude-plugin/marketplace.json`, `.claude-plugin/icon.png`, `plugin/.claude-plugin/plugin.json`, `plugin/.claude-plugin/icon.png`, `plugin/hooks/hooks.json`, `tests/test_directory_prep.py`, `tests/test_plugin_source.py`, `tasks/MINIMAL_LOG.md`
 **Memory:** `memory/learnings.md` — the plugin directory reads no file through a link (T243)
-**Not done:** merge (yours); the submission at claude.ai/directory/manage (yours); auto verify: running (T182)
+**Not done:** merge (yours); the submission at claude.ai/directory/manage (yours); auto verify: ☑ pass (session 3f69be33-29a4-4f42-ad30-a2c6d499c423, commit 40d1359815dc48cb4ceda739110df09aa133921d, log .claude/verify-runs/T243-40d1359815dc.log)
+Closed: row moved to Done 2026-11-03 — auto verify pass (session 3f69be33-29a4-4f42-ad30-a2c6d499c423, commit 40d1359815dc48cb4ceda739110df09aa133921d); Gates 5 and 6 checked
 
 ## T244 — Auto close-out writes `Closed:` into the report, not the template comment · minimal
 **Asked:** "continue"
