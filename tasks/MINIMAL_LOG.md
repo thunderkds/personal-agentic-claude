@@ -15,8 +15,10 @@
 - New test `tests/test_closeout_comment_boundary.py` (4 tests) — `2 failed, 2 passed` before the change (2026-11-03T13:17:33Z), `4 passed` after
 - Suite: `python3 -m pytest tests -q` — `1713 passed in 139.46s (0:02:19)`; `python3 -m pytest .claude/hooks/tests -q` — `1389 passed, 25 subtests passed in 29.40s`
 - Real run: `auto_closeout.add_line` on T242's review file as committed at `87a03426` (before its close-out) — printed `Closed at char 2611 | comment starts at 2685 | inside comment: False`
+- verify: ☑ fail — auto-run by hook, session d5aa8918-0b11-4deb-a12b-3635af568fa5, commit 853daa7e711c668dbbb6ca003f1b618307e54c6f, log .claude/verify-runs/T244-853daa7e711c.log
 **Files:** `.claude/hooks/lib/auto_mode.py`, `tests/test_closeout_comment_boundary.py`, `tasks/MINIMAL_LOG.md`
-**Not done:** merge (the user decides); auto verify: running (T182)
+**Not done:** merge (the user decides); auto verify: ☑ fail (session d5aa8918-0b11-4deb-a12b-3635af568fa5, commit 853daa7e711c668dbbb6ca003f1b618307e54c6f, log .claude/verify-runs/T244-853daa7e711c.log)
+Paused: auto-mode check failed — its Decision record in tasks/MINIMAL_LOG.md does not start with `Mode: auto`; no `Memory:` line in the report — run the memory pass before you stop and record it there (each entry written, or `Memory: nothing new`) [report fe3d759cbe82]
 
 ## T241 — RUNBOOK post-deploy check also installs the plugin from GitHub · minimal
 Mode: auto
