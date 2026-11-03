@@ -140,7 +140,7 @@ If docs/legacy/ exists (legacy mode): also read `docs/legacy/risk-hotspots.md` a
 
 ### 4. UX Acceptance Criteria
 
-> One row per user story and per state the screen has (empty / loading / error / success). Cite the `PRD.md` US-ID, or quote the request. The pass condition states what a screenshot or a run shows, never "looks good". The frontend agent judges these rows with `ux-evaluate`; code review runs it again.
+> One row per user story and per state the screen has (empty / loading / error / success). Cite the `PRD.md` US-ID, or quote the request. The pass condition states what a screenshot or a run shows, never "looks good". The frontend agent judges these rows with `ux-evaluate`; code review runs it again. The baseline checks in `skills/ux-evaluate/SKILL.md` always apply; rows add task-specific conditions.
 
 | User story | User goal | Flow / state | Pass condition (observable) |
 |------------|-----------|--------------|-----------------------------|

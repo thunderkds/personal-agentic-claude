@@ -1,11 +1,11 @@
 ---
 name: ux-evaluate
-description: Use when a change touches UI - a frontend agent before it moves a task to Ready for Review, and code-review on a diff that touches UI files. Takes screenshots of the changed screens at 375px and 1280px, reads them, and judges each UX Acceptance Criteria row of the TASK_GUIDE pass or fail. Also when asked "does this UI meet the requirement" or "check the UX".
+description: Use when a change touches UI - a frontend agent before it moves a task to Ready for Review, and code-review on a diff that touches UI files. Takes screenshots of the changed screens at 375px and 1280px, reads them, and judges each UX Acceptance Criteria row of the TASK_GUIDE, and a fixed set of baseline UX checks, pass or fail. Works with no design and no rows. Also when asked "does this UI meet the requirement" or "check the UX".
 ---
 
 ## Role: UX Evaluator
 
-You judge whether a UI change meets the UX Acceptance Criteria in its TASK_GUIDE by looking at real screenshots. One job, one output: a verdict table. You do not design screens, change code, or fill the three UI design Evidence rows (visual regression, design-system compliance, responsiveness); those are a different check.
+You judge whether a UI change meets the UX Acceptance Criteria in its TASK_GUIDE, and the baseline UX checks below, by looking at real screenshots. One job, one output: a verdict table. You do not design screens, change code, or fill the three UI design Evidence rows (visual regression, design-system compliance, responsiveness); those are a different check.
 
 Two callers run the same steps:
 - The **frontend agent**, while it builds. A sub-agent has no `Skill` tool: it `Read`s this file and follows it.
@@ -14,8 +14,24 @@ Two callers run the same steps:
 ### Karpathy Operational Commands
 
 - **Ask vs. Guess**: A pass condition you cannot see in an image is not a pass. Say so; do not guess.
-- **Simplicity First**: Judge only the rows. Never add a `fail` for something no row asks.
-- **Goal-Driven Execution**: Success = every row has one verdict, a screenshot path, and a reason.
+- **Simplicity First**: Judge only the rows and the baseline checks; never fail something neither names; never judge on taste beyond them.
+- **Goal-Driven Execution**: Success = every row and every baseline check has one verdict, a screenshot path, and a reason.
+
+---
+
+### Baseline UX checks
+
+These apply to every run, with or without UX rows, so they hold when a frontend is built from a requirement with no design. Each is judged pass or fail on screenshots at 375 and 1280.
+
+- **B-a** One primary action per screen is the most prominent element (size, colour, position) and sits in view without scrolling at 375 and 1280.
+- **B-b** Clear visual hierarchy: page title, then content, then secondary actions; one reading order.
+- **B-c** Consistent spacing and alignment: elements on one grid, related items grouped, no cramped or random gaps.
+- **B-d** Touch targets are at least 44x44 px at 375.
+- **B-e** Text is readable: body at least 16px at 375, contrast clearly readable (no light grey on white).
+- **B-f** Every state the guide or requirement names (empty, loading, error, success) exists, says in plain words what happened and what to do next, and shows its action button.
+- **B-g** Feedback after an action is visible on screen.
+- **B-h** The 375 layout is designed for the phone: no squeezed desktop layout, no horizontal scroll, no clipped controls.
+- **B-i** One visual language: one accent colour for actions, one button style, one corner radius.
 
 ---
 
@@ -25,9 +41,9 @@ Two callers run the same steps:
 
 Open `tasks/TASK_GUIDE_<ID>.md`. Read `### 4. UX Acceptance Criteria` (columns `User story`, `User goal`, `Flow / state`, `Pass condition (observable)`), the requirement each row cites (a `PRD.md` US-ID or the quoted request), and `Entry point` under `## Dependencies & Reachability`. Rows the caller pastes into the prompt count as the rows.
 
-If there is no such section or it has no rows, the result is `no UX criteria`. Stop. Tell the caller to ask the Supervisor for the rows. Never write rows yourself and then judge them.
+If there is no such section or it has no rows, do not stop. Judge the baseline checks and put `no UX criteria — baseline checks only` in the output, so the caller can ask the Supervisor for rows. Never write rows yourself and then judge them. When rows exist, judge the rows and the baseline checks.
 
-Completion: every row listed with its story, state and pass condition.
+Completion: every row listed with its story, state and pass condition, and the nine baseline checks listed.
 
 #### 2. Take the screenshots
 
@@ -38,9 +54,9 @@ For the `Entry point` and each `Flow / state`, capture two widths, 375 and 1280,
 2. A running app: `Skill({ skill: "run" })` (or its start command from the guide), then the same command with its URL.
 3. easy-ui, when installed and its container runs, for a labelled session.
 
-A state other than the default (empty, loading, error, success) needs a way to reach it: a URL parameter, a fixture or a flag. A screenshot of another state is no evidence for that row.
+Capture every named state (empty, loading, error, success) at both widths. Each needs a way to reach it: a URL parameter or fixture the guide names, such as `?state=empty`, or a flag. A screenshot of another state is no evidence for that state.
 
-Completion: for every row, two images exist on disk, or the row is `not checked` with its reason.
+Completion: for every row, every named state and the default screen, two images exist on disk, or that row or check is `not checked` with its reason.
 
 #### 3. Read every image
 
@@ -48,9 +64,9 @@ Completion: for every row, two images exist on disk, or the row is `not checked`
 
 Completion: every captured image opened with `Read`.
 
-#### 4. Judge each row
+#### 4. Judge each row and check
 
-One verdict per row, taken from the images at both widths:
+One verdict per row and per baseline check, taken from the images at both widths:
 
 | Verdict | Meaning |
 |---|---|
@@ -61,7 +77,7 @@ One verdict per row, taken from the images at both widths:
 
 Judge the pass condition as written, not your taste.
 
-Completion: every row has exactly one verdict and a one-line reason.
+Completion: every row and baseline check has exactly one verdict and a one-line reason.
 
 #### 5. Output the verdict table
 
@@ -69,15 +85,18 @@ Completion: every row has exactly one verdict and a one-line reason.
 | # | User story | Flow / state | Width | Verdict | Screenshot | Reason |
 |---|------------|--------------|-------|---------|------------|--------|
 | 1 | US-003 | empty list | 375 / 1280 | pass | /tmp/x/list-375.png, /tmp/x/list-1280.png | "No items yet" and an Add button show at both widths |
+| B-a | baseline | default | 375 / 1280 | fail | /tmp/x/list-375.png | Add button is below the fold at 375 |
 
-ux-evaluate: 1 pass, 0 fail, 0 not checked, 0 not checkable. Overall: pass
+(one `B-a` to `B-i` row per check)
+
+ux-evaluate: 1 pass, 1 fail, 0 not checked, 0 not checkable. Overall: fail
 ```
 
-Overall is `pass` only when every row is `pass`. Any other outcome is not done.
+Overall is `pass` only when every row and every baseline check is `pass`. Any other outcome is not done.
 
 ### After the table
 
-- **Frontend agent**: fix every `fail`, take the screenshots again (an image from before the fix proves nothing), run the failed rows again, and put the final verdict table in your report. Report every `not checked`, `not checkable` and `no UX criteria` to the Supervisor; do not move the task to Ready for Review with one open and unreported.
+- **Frontend agent**: when there is no design, fix every baseline `fail` before Ready for Review; this is your design pass. Fix every `fail`, take the screenshots again (an image from before the fix proves nothing), run the failed rows again, and put the final verdict table in your report. Report every `not checked`, `not checkable` and `no UX criteria — baseline checks only` to the Supervisor; do not move the task to Ready for Review with one open and unreported.
 - **code-review**: turn each outcome into a finding at the severity its own table sets. The skill gives no severity.
 
 ### Communication Protocol

@@ -75,6 +75,35 @@ Added by the implementer before the first implementation commit (verbatim, from 
 
 **WITNESS**: [filled at Stage 4]
 
+
+---
+
+## Demonstration — BEFORE (amendment A1)
+
+**BEFORE (amendment A1)** (verbatim current content of `skills/ux-evaluate/SKILL.md`, captured 2026-11-03T15:57:07Z in `../wt-t245` at `2e867618`, before any A1 edit; this task changes skill-instruction text, no executable code):
+
+Line 17:
+```
+- **Simplicity First**: Judge only the rows. Never add a `fail` for something no row asks.
+```
+Line 28:
+```
+If there is no such section or it has no rows, the result is `no UX criteria`. Stop. Tell the caller to ask the Supervisor for the rows. Never write rows yourself and then judge them.
+```
+`### Workflow` step 1 heading block (lines 23-31):
+```
+
+#### 1. Read the rows
+
+Open `tasks/TASK_GUIDE_<ID>.md`. Read `### 4. UX Acceptance Criteria` (columns `User story`, `User goal`, `Flow / state`, `Pass condition (observable)`), the requirement each row cites (a `PRD.md` US-ID or the quoted request), and `Entry point` under `## Dependencies & Reachability`. Rows the caller pastes into the prompt count as the rows.
+
+If there is no such section or it has no rows, the result is `no UX criteria`. Stop. Tell the caller to ask the Supervisor for the rows. Never write rows yourself and then judge them.
+
+Completion: every row listed with its story, state and pass condition.
+
+```
+Size before A1: 5223 bytes. `tests/test_t245_ux_evaluate.py::test_ac3_no_ux_rows_tells_the_caller_to_ask_the_supervisor` pins the stop at `no UX criteria`.
+
 ---
 
 ## Experiment: before/after the skill (2026-11-03, user: "should check before/after adding skill to make sure skill is good to use, by the experiment")
