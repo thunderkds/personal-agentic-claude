@@ -29,7 +29,7 @@ User, 2026-11-02: chose the five-task split ("T236 Real install, then publish. I
 > A person with no access beyond the public repo installs the plugin from GitHub in a clean project, and the gates block. Only then do the README and site offer the plugin. Every sentence about it is true of what was run.
 
 **Supervisor design decisions** (binding):
-- **D1 — Prove first.** Run the install with anonymous access: `GIT_TERMINAL_PROMPT=0` and no credential helper, from `thunderkds/personal-agentic-claude`. Paste the real output. If it fails, stop and report; publish nothing.
+- **D1 — Prove first.** Run the install with anonymous access: `GIT_TERMINAL_PROMPT=0` and no credential helper, from `thunderkds/easy-kit` (renamed by T240, 2026-11-03). Paste the real output. If it fails, stop and report; publish nothing.
 - **D2 — Publish.** README install section: two paths, plugin and `setup.sh`. `docs.html#install`: the same. `index.html`: at most a short mention in `hero`, staying within 300 words; say what you cut.
 - **D3 — Honest limits.** Docs state: Claude Code only; run `/easy-kit:init` once; each teammate installs the plugin; a plugin cannot set permissions.
 - **D4 — Claims audit.** List every new sentence with what proves it in `tasks/TASK_REVIEW_T236.md` (T231 learning).
