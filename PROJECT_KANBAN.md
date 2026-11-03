@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-11-02
+**Last updated**: 2026-11-03
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -98,10 +98,10 @@
 
 
 ### Ready for Review
-- [ ] **T241** — RUNBOOK post-deploy check also installs the plugin from GitHub (two commands in a fresh folder); today it tests `setup.sh` only | common-infrastructure | C1 | Risk: Low | P1 | Started 2026-11-03: branch `fix/t241-runbook-plugin-check`, worktree `../wt-t241` | Track: minimal | Record: tasks/MINIMAL_LOG.md
 
 
 ### Done
+- [x] **T241** — RUNBOOK post-deploy check also installs the plugin from GitHub (two commands in a fresh folder); today it tests `setup.sh` only | common-infrastructure | C1 | Risk: Low | P1 | Started 2026-11-03: branch `fix/t241-runbook-plugin-check`, worktree `../wt-t241` | Track: minimal | Record: tasks/MINIMAL_LOG.md | Done 2026-11-03: auto verify pass (session 338ea189-d1b0-402a-b1a2-c24106f9caa7, commit d28532c29e8b503e32dcd24953c029d53ddfb78a)
 - [x] **T236** — Real plugin install proven, then published on the README and site | frontend-developer | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T236.md` | Started 2026-11-03: branch `feat/t236-plugin-publish`, worktree `../wt-t236` | Ready for Review 2026-11-03: AC 1 anonymous install pass, AC 2 gates block in a real session; code-review P3×1, security-review no findings | Done 2026-11-03: auto verify PASS at `5c8beddb`; 5 new tests; merged `9cbf4206`
 - [x] **T240** — Rename the repo from personal-agentic-claude to easy-kit | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T240.md` | Started 2026-11-03: branch `feat/t240-repo-name`, worktree `../wt-t240` | Ready for Review 2026-11-03: Stage 4 code-review P3×1 only, security-review no findings; user renamed the GitHub repo, redirect proven | Done 2026-11-03: auto verify PASS at `1ce2c44b`; 8 new tests; merged `1626ef22`
 - [x] **T235** — /easy-kit:init sets up a project, and plugin hooks stand down beside in-repo hooks | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T235.md` | Started 2026-11-03: branch `feat/t235-plugin-init`, worktree `../wt-t235`; D7 user decision: init copies templates/, docs/claude-md/, agents/ | Done 2026-11-03: auto verify PASS at `05b26d7a`; 39 new tests; merged into local main. P2 left: stand-down ignores settings.local.json; MEMORY scaffold duplicates setup.sh.
