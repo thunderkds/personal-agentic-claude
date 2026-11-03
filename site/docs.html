@@ -259,7 +259,7 @@
   <p class="eyebrow">&gt; multi-agent supervisor framework</p>
   <h1>Easy Kit</h1>
   <p class="lead">
-    A multi-agent supervisor framework: one Supervisor session enforces a 5-stage pipeline through
+    A multi-agent supervisor framework: one Supervisor session enforces a Stage 0–5 pipeline through
     deterministic hooks, not just prompted convention. Install it into any git repo with one command.
   </p>
   <ul class="lead">
@@ -282,7 +282,7 @@
   <dt>Update</dt>
   <dd>Run the same command from your repo root and choose <strong>1) Update</strong> — see <a href="#update-flow">Update flow</a>.</dd>
   <dt>Stages</dt>
-  <dd>Phase 0 → 0.5 → 1 → 1.5 → 2 → 3 → 4 → 5</dd>
+  <dd>0 → 1 → 2 → 3 → 4 → 5</dd>
   <dt>Roster</dt>
   <dd><ul class="strip">
     <li><a href="#agent-roles"><span class="num">4</span><span class="label">spawnable roles</span></a></li>
@@ -302,23 +302,13 @@
 <ol class="strip steps" aria-label="The Easy Kit pipeline, in order">
   <li data-stage="0">
     <span class="step-no">00</span>
-    <span class="step-title">Phase 0 · Initiation</span>
-    <span class="step-meta">PRD.md</span>
-  </li>
-  <li data-stage="0.5">
-    <span class="step-no">0.5</span>
-    <span class="step-title">Stage 0.5 · Grill + brainstorm</span>
-    <span class="step-meta">BRAINSTORMING_LOG.md</span>
+    <span class="step-title">Stage 0 · Define</span>
+    <span class="step-meta">PRD.md, BRAINSTORMING_LOG.md</span>
   </li>
   <li data-stage="1">
     <span class="step-no">01</span>
-    <span class="step-title">Stage 1 · Environment setup</span>
-    <span class="step-meta">codebase map, CLI table</span>
-  </li>
-  <li data-stage="1.5">
-    <span class="step-no">1.5</span>
-    <span class="step-title">Stage 1.5 · Sub-agent team</span>
-    <span class="step-meta">agent roster</span>
+    <span class="step-title">Stage 1 · Set up</span>
+    <span class="step-meta">codebase map, CLI table, agent roster</span>
   </li>
   <li data-stage="2">
     <span class="step-no">02</span>
@@ -343,55 +333,43 @@
 </ol>
 <details>
 <summary>Pipeline as a vertical diagram</summary>
-<svg id="pipeline-diagram" class="pipeline" role="img" viewBox="0 0 320 558" xmlns="http://www.w3.org/2000/svg" aria-labelledby="pipeline-diagram-title pipeline-diagram-desc">
+<svg id="pipeline-diagram" class="pipeline" role="img" viewBox="0 0 320 414" xmlns="http://www.w3.org/2000/svg" aria-labelledby="pipeline-diagram-title pipeline-diagram-desc">
   <title id="pipeline-diagram-title">The Easy Kit pipeline</title>
-  <desc id="pipeline-diagram-desc">Eight steps in order, top to bottom: Phase 0 initiation, Stage 0.5 grilling and brainstorming, Stage 1 environment setup, Stage 1.5 sub-agent team, Stage 2 planning, Stage 3 parallel execution, Stage 4 review, Stage 5 integration. These stages are the extended track. Each step hands its output to the next.</desc>
+  <desc id="pipeline-diagram-desc">Six steps in order, top to bottom: Stage 0 define (requirements, grilling and direction), Stage 1 set up (environment and agent team), Stage 2 planning, Stage 3 parallel execution, Stage 4 review, Stage 5 integration. These stages are the extended track. Each step hands its output to the next.</desc>
   <g class="node" data-stage="0">
     <rect x="10" y="2" width="300" height="50" rx="8"/>
-    <text class="node-title" x="160" y="23" text-anchor="middle">Phase 0 · Initiation</text>
-    <text class="node-out" x="160" y="41" text-anchor="middle">PRD.md</text>
+    <text class="node-title" x="160" y="23" text-anchor="middle">Stage 0 · Define</text>
+    <text class="node-out" x="160" y="41" text-anchor="middle">PRD.md, BRAINSTORMING_LOG.md</text>
   </g>
   <path class="arrow" d="M160 54 V67"/><path class="arrow-head" d="M155 66 L160 72 L165 66"/>
-  <g class="node" data-stage="0.5">
+  <g class="node" data-stage="1">
     <rect x="10" y="74" width="300" height="50" rx="8"/>
-    <text class="node-title" x="160" y="95" text-anchor="middle">Stage 0.5 · Grill + brainstorm</text>
-    <text class="node-out" x="160" y="113" text-anchor="middle">BRAINSTORMING_LOG.md</text>
+    <text class="node-title" x="160" y="95" text-anchor="middle">Stage 1 · Set up</text>
+    <text class="node-out" x="160" y="113" text-anchor="middle">codebase map, CLI table, agent roster</text>
   </g>
   <path class="arrow" d="M160 126 V139"/><path class="arrow-head" d="M155 138 L160 144 L165 138"/>
-  <g class="node" data-stage="1">
+  <g class="node" data-stage="2">
     <rect x="10" y="146" width="300" height="50" rx="8"/>
-    <text class="node-title" x="160" y="167" text-anchor="middle">Stage 1 · Environment setup</text>
-    <text class="node-out" x="160" y="185" text-anchor="middle">codebase map, CLI table</text>
+    <text class="node-title" x="160" y="167" text-anchor="middle">Stage 2 · Plan</text>
+    <text class="node-out" x="160" y="185" text-anchor="middle">PROJECT_SPEC + TASK_GUIDEs</text>
   </g>
   <path class="arrow" d="M160 198 V211"/><path class="arrow-head" d="M155 210 L160 216 L165 210"/>
-  <g class="node" data-stage="1.5">
+  <g class="node" data-stage="3">
     <rect x="10" y="218" width="300" height="50" rx="8"/>
-    <text class="node-title" x="160" y="239" text-anchor="middle">Stage 1.5 · Sub-agent team</text>
-    <text class="node-out" x="160" y="257" text-anchor="middle">agent roster</text>
+    <text class="node-title" x="160" y="239" text-anchor="middle">Stage 3 · Parallel execution</text>
+    <text class="node-out" x="160" y="257" text-anchor="middle">code in isolated worktrees</text>
   </g>
   <path class="arrow" d="M160 270 V283"/><path class="arrow-head" d="M155 282 L160 288 L165 282"/>
-  <g class="node" data-stage="2">
+  <g class="node" data-stage="4">
     <rect x="10" y="290" width="300" height="50" rx="8"/>
-    <text class="node-title" x="160" y="311" text-anchor="middle">Stage 2 · Plan</text>
-    <text class="node-out" x="160" y="329" text-anchor="middle">PROJECT_SPEC + TASK_GUIDEs</text>
+    <text class="node-title" x="160" y="311" text-anchor="middle">Stage 4 · Review</text>
+    <text class="node-out" x="160" y="329" text-anchor="middle">findings + Evidence</text>
   </g>
   <path class="arrow" d="M160 342 V355"/><path class="arrow-head" d="M155 354 L160 360 L165 354"/>
-  <g class="node" data-stage="3">
-    <rect x="10" y="362" width="300" height="50" rx="8"/>
-    <text class="node-title" x="160" y="383" text-anchor="middle">Stage 3 · Parallel execution</text>
-    <text class="node-out" x="160" y="401" text-anchor="middle">code in isolated worktrees</text>
-  </g>
-  <path class="arrow" d="M160 414 V427"/><path class="arrow-head" d="M155 426 L160 432 L165 426"/>
-  <g class="node" data-stage="4">
-    <rect x="10" y="434" width="300" height="50" rx="8"/>
-    <text class="node-title" x="160" y="455" text-anchor="middle">Stage 4 · Review</text>
-    <text class="node-out" x="160" y="473" text-anchor="middle">findings + Evidence</text>
-  </g>
-  <path class="arrow" d="M160 486 V499"/><path class="arrow-head" d="M155 498 L160 504 L165 498"/>
   <g class="node" data-stage="5">
-    <rect x="10" y="506" width="300" height="50" rx="8"/>
-    <text class="node-title" x="160" y="527" text-anchor="middle">Stage 5 · Integrate</text>
-    <text class="node-out" x="160" y="545" text-anchor="middle">verify, merge, release plan</text>
+    <rect x="10" y="362" width="300" height="50" rx="8"/>
+    <text class="node-title" x="160" y="383" text-anchor="middle">Stage 5 · Integrate</text>
+    <text class="node-out" x="160" y="401" text-anchor="middle">verify, merge, release plan</text>
   </g>
 </svg>
 </details>
@@ -419,7 +397,7 @@
     </li>
     <li class="flow-split">
       <ul class="flow-branches">
-        <li><span class="flow-edge">yes</span><div class="flow-node is-outcome"><span class="flow-title">Extended track</span><span class="flow-meta">the 5-stage pipeline</span></div></li>
+        <li><span class="flow-edge">yes</span><div class="flow-node is-outcome"><span class="flow-title">Extended track</span><span class="flow-meta">the Stage 0–5 pipeline</span></div></li>
         <li><span class="flow-edge">no</span><div class="flow-node is-outcome"><span class="flow-title">Minimal track</span><span class="flow-meta">7 steps, one Decision record</span></div></li>
       </ul>
     </li>
@@ -1867,27 +1845,23 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/personal-agentic-c
 </p>
 
 <ol class="skill-flow" aria-label="Skills grouped by pipeline stage, in stage order">
-  <li class="flow-step" data-stage="0.5" data-next="right">
-    <h3>Stage 0.5 — Requirement Grilling / Brainstorming</h3>
+  <li class="flow-step" data-stage="0" data-next="right">
+    <h3>Stage 0 — Define</h3>
     <p class="chips"><span class="chip">brainstorming</span><span class="chip">ideate</span></p>
   </li>
   <li class="flow-step" data-stage="1" data-next="down">
-    <h3>Stage 1 — Environment &amp; Provider Setup</h3>
-    <p class="chips"><span class="chip">git-guardrails-claude-code</span><span class="chip">map-codebase</span><span class="chip">settings-setup</span><span class="chip">companion-setup</span></p>
+    <h3>Stage 1 — Set up</h3>
+    <p class="chips"><span class="chip">git-guardrails-claude-code</span><span class="chip">map-codebase</span><span class="chip">settings-setup</span><span class="chip">companion-setup</span><span class="chip">craft-agent</span></p>
   </li>
-  <li class="flow-step" data-stage="1.5" data-next="left">
-    <h3>Stage 1.5 — Sub-Agent Architecture</h3>
-    <p class="chips"><span class="chip">craft-agent</span></p>
-  </li>
-  <li class="flow-step" data-stage="2" data-next="down">
+  <li class="flow-step" data-stage="2" data-next="left">
     <h3>Stage 2 — Intent Transformation</h3>
     <p class="chips"><span class="chip">grill-with-docs</span><span class="chip">to-issues</span></p>
   </li>
-  <li class="flow-step" data-stage="3" data-next="right">
+  <li class="flow-step" data-stage="3" data-next="down">
     <h3>Stage 3 — Parallel Execution via Isolation</h3>
     <p class="chips"><span class="chip">tdd</span><span class="chip">bugfix</span><span class="chip">diagnose</span><span class="chip">craft-spawn-prompt</span><span class="chip">migration-safety</span></p>
   </li>
-  <li class="flow-step" data-stage="4" data-next="down">
+  <li class="flow-step" data-stage="4" data-next="right">
     <h3>Stage 4 — Review</h3>
     <p class="chips"><span class="chip">blast-radius</span><span class="chip">code-review</span><span class="chip">html-report</span><span class="chip">score</span></p>
   </li>

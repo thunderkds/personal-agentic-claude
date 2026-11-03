@@ -47,16 +47,16 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_stage_names.py` (AC1-AC7, D6); pins updated: `tests/test_auto_mode.py`, `tests/test_tracks.py`, `tests/test_site_content.py`, `tests/test_site_story.py`, `tests/test_site_visual_first.py`, `tests/test_companion_setup.py`, `.claude/hooks/tests/test_pre_agent_validate_guide.py`. Red first at commit `test: red tests` (13 failed, 3 passed) |
+| Verification command run | ☑ pass | `python3 -m pytest tests/test_stage_names.py tests/test_site_content.py tests/test_site_story.py tests/test_tracks.py tests/test_auto_mode.py -q` -> 380 passed in 1.74s |
+| Negative cases hold | ☑ pass | Supervisor 2026-11-03: `python3 -m pytest tests/test_stage_names.py -q` on the red-test commit `7e19d759` (old stage names still in place, detached worktree) -> `13 failed, 3 passed in 0.17s`; the same file passes at HEAD (Verification command row). The tests catch every old name they pin. |
+| verify | ☑ pass | auto-run by hook, session 3ee1a58e-1e2e-4f32-acb1-1533a9ba0ae1, commit 5505e363bd2bb49bf4bdce70664ab1cda5425947, log .claude/verify-runs/T239-5505e363bd2b.log — pass |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | code-review inline on `main...HEAD`: P0 0, P1 0, P2 1 left (`grill-with-docs` stays grouped under Stage 2 while Stage 0 names Grilling), P3 0. security-review scoped by the Supervisor: non-test code changes are one hook message string and `scripts/token_audit.py` tags; no script tag changed on the site; merge gate, `setup.sh` and `lib/` unchanged; no new input or sink, so no finding. Startup-reads line complete. lane: `C2, 37 files, 731 lines, EXCEEDS`, label kept: label text. Merge without squashing: refs name `8c381c20`. |
+| Full smoke suite still green (no regression) | ☑ pass | Supervisor rerun at `75c894e2`: `pytest tests` 1618 passed; `.claude/hooks/tests` 1389 passed, 25 subtests passed; `smoke-install.sh: PASS`; scroll-spy fail 0. |
+| **Companion score (easy-verifier)** | ☐ N/A | Optional tool, not run for this task. |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ pass | headless Chrome 1440 px, `file://` URLs. After: `/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-personal-agentic-claude/91713a2d-c4ca-4ba6-9c19-2b966a122175/scratchpad/shots/after_index.png` (six stages, snake 0->1 / 3<-2 / 4->5, arrows intact); before: `.../shots/before_index.png`. Positions read by script: 0@129,818 1@733,818 2@733,983 3@129,983 4@129,1148 5@733,1148 |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ pass | existing hex-colour tests in `tests/test_site_content.py` pass; no colour added, only grid-area rules changed in `site/theme.css` |
+| **UI: Responsiveness at target viewports** | ☑ pass | Supervisor, device emulation at a true 375 px: index `sw 375 / cw 375`, docs `sw 375 / cw 375`. Implementer: 1440 and 768 equal on both pages. |
 
 ---
 
@@ -67,12 +67,47 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured 2026-11-02, before any implementation commit; script `before.sh` run in the worktree, with the sample hook event described in the last section):
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+```
+2026-11-02T14:25:46Z
+--- stage headings of docs/claude-md/pipeline-stages.md
+1:# 5-Stage Agentic Pipeline
+23:## Stage 0.5: Requirement Grilling → Creative Brainstorming (The First Mind)
+55:## Stage 1: Environment & Provider Setup
+119:## Stage 1.5: Sub-Agent Architecture (Dynamic Team Design)
+142:## Stage 2: Intent Transformation (Planning) — `/plan`
+179:## Stage 3: Parallel Execution via Isolation
+202:## Stage 4: Review
+245:## Stage 5: Integration & Verification
+--- live-file line counts per pattern (git grep, excluding tasks memory docs/brainstorming docs/prd docs/adr reports experiments docs/archive PROJECT_KANBAN.md tests/fixtures)
+Stage 0\.5: lines=37 files=18
+Stage 1\.5: lines=17 files=11
+Phase 0: lines=58 files=29
+--- hook readiness warning, sample event (empty Readiness)
+⚠ HIGH RISK — project readiness incomplete: `Requirements` line missing; `Direction` line missing; `Codebase map` line missing; `Tech stack` line missing; `Main flow` line missing; `Approved by` line missing. Risk: agents will code on a design nobody checked, and architecture gaps found later cost rework. To fix: fill `PROJECT_SPEC.md` `## Readiness` (run Phase 0 / Stage 0.5 / Stage 1), or ask the user for a `Waived` line (`- **Waived**: user YYYY-MM-DD — reason`). The spawn goes ahead (warning only).
+```
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+**AFTER** (same script, 2026-11-02, after the change; the remaining old-name lines are the mapping note, test baselines that pin pre-T239 text, and `tests/test_stage_names.py` itself):
 
-**WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
-implementing agent alone]
+```
+2026-11-02T14:40:00Z
+--- stage headings of docs/claude-md/pipeline-stages.md
+1:# Stage 0–5 Agentic Pipeline
+25:## Stage 0: Define (Requirements → Grilling → Direction)
+63:## Stage 1: Set up (Environment → Agent team)
+151:## Stage 2: Intent Transformation (Planning) — `/plan`
+188:## Stage 3: Parallel Execution via Isolation
+211:## Stage 4: Review
+254:## Stage 5: Integration & Verification
+--- live-file line counts per pattern (git grep, excluding tasks memory docs/brainstorming docs/prd docs/adr reports experiments docs/archive PROJECT_KANBAN.md tests/fixtures)
+Stage 0\.5: lines=15 files=5
+Stage 1\.5: lines=14 files=5
+Phase 0: lines=33 files=15
+--- hook readiness warning, sample event (empty Readiness)
+⚠ HIGH RISK — project readiness incomplete: `Requirements` line missing; `Direction` line missing; `Codebase map` line missing; `Tech stack` line missing; `Main flow` line missing; `Approved by` line missing. Risk: agents will code on a design nobody checked, and architecture gaps found later cost rework. To fix: fill `PROJECT_SPEC.md` `## Readiness` (run Stage 0 / Stage 1), or ask the user for a `Waived` line (`- **Waived**: user YYYY-MM-DD — reason`). The spawn goes ahead (warning only).
+```
+
+**DELTA**: The pipeline reads Stage 0 to Stage 5 with no half numbers; Stage 0 keeps its three stops (Requirements, Grilling, Direction) and the team stop now fires only when `craft-agent` proposes a new role.
+
+**WITNESS**: common-infrastructure agent ran it 2026-11-02 (trace `memory/event-trace/T239.jsonl`); independent witness pending: the Supervisor's auto verify run.

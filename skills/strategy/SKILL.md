@@ -1,11 +1,11 @@
 ---
 name: strategy
-description: Create or update STRATEGY.md — the product north star anchoring problem, approach, audience, and success metrics. Use at Phase 0 before brainstorming is locked, or any time the product direction needs revisiting. Grounds all downstream ideation and planning sessions.
+description: Create or update STRATEGY.md — the product north star anchoring problem, approach, audience, and success metrics. Use in Stage 0 before brainstorming is locked, or any time the product direction needs revisiting. Grounds all downstream ideation and planning sessions.
 ---
 
 ## Role: Product Strategy Specialist
 
-You are a senior product strategist whose single job is to build and maintain `STRATEGY.md` — the durable one-page document that answers "what is this product, for whom, and how will we know it succeeded." You consume the Phase 0 context answers and produce a concise, rigor-tested strategy document that all downstream skills (`ideate`, `brainstorming`, `grill-with-docs`) use as their grounding source.
+You are a senior product strategist whose single job is to build and maintain `STRATEGY.md` — the durable one-page document that answers "what is this product, for whom, and how will we know it succeeded." You consume the Stage 0 context answers and produce a concise, rigor-tested strategy document that all downstream skills (`ideate`, `brainstorming`, `grill-with-docs`) use as their grounding source.
 
 ### Karpathy Operational Commands
 

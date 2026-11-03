@@ -968,11 +968,10 @@ PIPELINE_DOC = os.path.join(ROOT, "docs", "claude-md", "pipeline-stages.md")
 
 
 def _pipeline_stage_numbers():
-    """Phase 0 first (it has no `## Stage` heading), then the number of every
-    `## Stage N:` heading in document order, read at test time."""
+    """The number of every `## Stage N:` heading in document order, read at test time (T239: Stage 0 has its own heading)."""
     with open(PIPELINE_DOC, encoding="utf-8") as f:
         text = f.read()
-    return ["0"] + re.findall(r"^## Stage (\d+(?:\.\d+)?)\b", text, re.MULTILINE)
+    return re.findall(r"^## Stage (\d+)\b", text, re.MULTILINE)
 
 
 def _pipeline_svg():
@@ -1001,7 +1000,7 @@ def test_pipeline_diagram_has_one_node_per_stage_in_document_order():
     nodes = re.findall(r'<g class="node" data-stage="([^"]+)">(.*?)</g>', svg, re.DOTALL)
     assert [n for n, _ in nodes] == _pipeline_stage_numbers()
     for number, body in nodes:
-        label = "Phase 0" if number == "0" else f"Stage {number} "
+        label = f"Stage {number} "
         assert label in body, f"node {number} does not show its stage label"
 
 
@@ -1104,7 +1103,7 @@ def test_quick_reference_shows_install_and_update_commands():
 
 def test_quick_reference_shows_the_stage_sequence_from_the_pipeline_doc():
     stages = _pipeline_stage_numbers()
-    expected = "Phase 0 → " + " → ".join(stages[1:])
+    expected = " → ".join(stages)
     assert expected in _quick_reference_text(), (
         f"quick reference does not show the stage sequence {expected!r}"
     )
@@ -1161,9 +1160,8 @@ def test_verifier_section_links_the_easy_verifier_site_beside_the_repo():
 
 # The one place the grouping is pinned (T166 Requirement): stage -> skills.
 SKILL_FLOW_GROUPING = {
-    "0.5": {"brainstorming", "ideate"},
-    "1": {"git-guardrails-claude-code", "map-codebase", "settings-setup", "companion-setup"},
-    "1.5": {"craft-agent"},
+    "0": {"brainstorming", "ideate"},
+    "1": {"git-guardrails-claude-code", "map-codebase", "settings-setup", "companion-setup", "craft-agent"},  # T239: craft-agent joins Stage 1
     "2": {"grill-with-docs", "to-issues"},
     "3": {"tdd", "bugfix", "diagnose", "craft-spawn-prompt", "migration-safety"},
     "4": {"blast-radius", "code-review", "html-report", "score"},
@@ -1205,7 +1203,7 @@ def _skill_band():
 
 def test_skills_flow_has_one_step_per_pipeline_stage_in_order():
     """AC1."""
-    expected = [n for n in _pipeline_stage_numbers() if n != "0"]
+    expected = _pipeline_stage_numbers()
     assert [s for s, _ in _flow_steps()] == expected
 
 
@@ -1261,7 +1259,7 @@ def test_skills_flow_snakes_with_an_arrow_between_every_consecutive_pair():
     dirs = [re.search(r'data-next="(right|left|down)"', t) for t in tags]
     assert all(dirs[:-1]), "every step except the last needs data-next=right|left|down"
     assert dirs[-1] is None, "the last step has no next step"
-    assert [d.group(1) for d in dirs[:-1]] == ["right", "down", "left", "down", "right", "down"]
+    assert [d.group(1) for d in dirs[:-1]] == ["right", "down", "left", "down", "right"]  # T239: six steps
     css = _style_block()  # T231: the flow-step rules moved from the page's <style> to theme.css
     for d in ("right", "left", "down"):
         assert re.search(rf'\.flow-step\[data-next="{d}"\]::after', css), f"no CSS arrow rule for {d}"

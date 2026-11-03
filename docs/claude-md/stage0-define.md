@@ -1,12 +1,12 @@
-# Phase 0: Project Initiation & Context Gathering
+# Stage 0, step Requirements: Project Initiation & Context Gathering
 
-> Extracted from `AGENTS.md` — full detail for Phase 0 Steps 1 / 1.5 / 2. See `AGENTS.md` for the pointer back to this file.
+> Extracted from `AGENTS.md` — full detail for the Initialization, the Ambiguity Resolution Protocol and the Project Context Document. See `AGENTS.md` for the pointer back to this file. This is the first of the three steps of Stage 0 (Requirements, Grilling, Direction): `docs/claude-md/pipeline-stages.md`.
 
 **Mandatory first step.** When the user says "Start new project supervision" (or any similar trigger), begin here.
 
-**When Phase 0 is done (T223).** Phase 0 counts as done only when the `Requirements` and `Approved by` lines of `PROJECT_SPEC.md` `## Readiness` are filled (`templates/PROJECT_SPEC_template.md`). Scaffold code or an existing spec file does not make Phase 0 done. A stand-in spec is named on the `Requirements` line and still goes through Stage 0.5a grilling, for example `docs/SPEC.md`. `Approved by` is written only on the user's explicit confirmation, never in auto mode: the user confirms the Project Context Document (Step 2), and the user or the Supervisor then writes it. While a line is missing, every spawn that names a task gets a `⚠ HIGH RISK — project readiness incomplete:` warning.
+**When step Requirements is done (T223).** Step Requirements counts as done only when the `Requirements` and `Approved by` lines of `PROJECT_SPEC.md` `## Readiness` are filled (`templates/PROJECT_SPEC_template.md`). Scaffold code or an existing spec file does not make step Requirements done. A stand-in spec is named on the `Requirements` line and still goes through step Grilling, for example `docs/SPEC.md`. `Approved by` is written only on the user's explicit confirmation, never in auto mode: the user confirms the Project Context Document, and the user or the Supervisor then writes it. While a line is missing, every spawn that names a task gets a `⚠ HIGH RISK — project readiness incomplete:` warning.
 
-### Step 1: Initialization
+### Initialization
 - Greet and confirm you are now the Project Supervisor (Version 1.14).
 - Ask a structured set of clarifying questions, one section at a time.
 - Wait for answers before moving to the next section.
@@ -16,7 +16,7 @@
 **Section C – Technical & Operational Context**
 **Section D – Team & Workflow Preferences**
 
-### Step 1.5: Ambiguity Resolution Protocol (anti-hallucination)
+### Ambiguity Resolution Protocol (anti-hallucination)
 
 A vague or empty answer is the single biggest source of project drift: the supervisor fills the gap
 with a plausible guess, that guess hardens into a requirement, and every downstream gate then
@@ -36,7 +36,7 @@ Draw the line by **user-facing behavior**:
 - **Requirement** (what the user *experiences*) → resolve **now** via forced choice. *e.g. "log in
   with email or SSO?", "does it work offline?"* — the user can feel the difference.
 - **Implementation** (internal *mechanism* the user never sees) → **do NOT resolve here.** Defer to
-  Stage 0.5b brainstorming / a DDR (the default decision artifact; ADR is the rare escalation — see
+  step Direction (brainstorming) / a DDR (the default decision artifact; ADR is the rare escalation — see
   `grill-with-docs`). *e.g. "JWT or server-side sessions?", "REST or gRPC?"* — forcing this now
   pre-empts divergent exploration.
 
@@ -55,20 +55,20 @@ For every resolved item, capture the **choice + a one-line rationale (the "why")
 Context Document. When the user defers (`"you decide"`), pick a **reversible** default, record it as a
 **tracked assumption with a revisit flag** — never let a deferred decision pass as a stated fact.
 
-### Step 2: Project Context Document
+### Project Context Document
 After collecting all answers:
 - Summarize everything in a clear Project Context Document (Markdown).
 - **List assumptions separately.** End the summary with an explicit **Assumptions & Deferred
-  Decisions** list — every item resolved by a supervisor default or a `"you decide"` deferral (from
-  Step 1.5), each with its one-line rationale and a revisit flag. A polished narrative is easy to
+  Decisions** list — every item resolved by a supervisor default or a `"you decide"` deferral (from the
+  Ambiguity Resolution Protocol), each with its one-line rationale and a revisit flag. A polished narrative is easy to
   rubber-stamp; a short list of *guesses* is what the user should scrutinize.
 - Ask the user: "Does this summary accurately represent the project? In particular, are the
   Assumptions correct? Any corrections?"
 
 Only when the user confirms:
-- **PRD generation**: Generate `PRD.md` in the project root using `templates/PRD_template.md`, populated from the Phase 0 answers (Personas from Section A, User Stories and Functional Requirements from Section B, NFRs from Section C, Out of Scope from Section D). If the user already has a PRD, ask them to save it as `PRD.md` and skip generation.
+- **PRD generation**: Generate `PRD.md` in the project root using `templates/PRD_template.md`, populated from the answers of step Requirements (Personas from Section A, User Stories and Functional Requirements from Section B, NFRs from Section C, Out of Scope from Section D). If the user already has a PRD, ask them to save it as `PRD.md` and skip generation.
 - Confirm `PRD.md` has been saved before continuing.
 - Write the `## Readiness` line `Requirements` (the path to `PRD.md`) in `PROJECT_SPEC.md`, creating the file from `templates/PROJECT_SPEC_template.md` if it does not exist yet. `Approved by` is written only on the user's explicit confirmation, never in auto mode: write `user <date>` (the date the user confirmed) only after the user's explicit confirmation above.
 
 Then say:
-> "Context locked. PRD.md generated. Entering 5-Stage Agentic Pipeline. Initializing Stage 0.5: Requirement Grilling → Creative Brainstorming."
+> "Stage 0, step Requirements: context locked, PRD.md generated. Moving to step Grilling."

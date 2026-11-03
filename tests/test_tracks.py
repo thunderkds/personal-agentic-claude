@@ -1,5 +1,5 @@
 """T178 — two tracks: the minimal track (small, low-risk work, no process stop, ends with a
-Decision record) and the extended track (today's 5-stage pipeline, unchanged).
+Decision record) and the extended track (today's Stage 0–5 pipeline, unchanged).
 
 AC 1 — `docs/claude-md/tracks.md`: the D1 rule as a table (each condition -> extended), the D2
        announcement with both literal examples, the up-only switch, the D4 flow as numbered steps.
@@ -262,7 +262,7 @@ def test_verify_agents_md_forbids_asking_or_offering_a_lower_track():
 def test_verify_agents_md_goes_on_with_the_pipeline_on_extended():
     text = _agents_tracks_text()
     assert re.search(r"[Oo]n the extended track[^.]*goes on with the pipeline at once[^.]*"
-                     r"Phase 0 / Stage 0\.5", text), text
+                     r"Stage 0 in a new project", text), text
 
 
 def test_verify_agents_md_keeps_the_users_own_switch():
@@ -306,7 +306,7 @@ def test_ac2_tracks_section_carries_the_short_rule():
         assert needle in text, f"short rule is missing {needle!r}"
     assert re.search(r"[Oo]therwise[^.]*minimal", text)
     assert "Decision record" in text and "`tasks/MINIMAL_LOG.md`" in text
-    assert re.search(r"5-stage pipeline[^.]*extended track", text, re.I)
+    assert re.search(r"Stage 0–5 pipeline[^.]*extended track", text, re.I)
 
 
 def _gate(n: int) -> str:
@@ -376,12 +376,12 @@ def test_ac3_doc_says_log_is_created_on_first_use_newest_first():
 # ── AC 4 — pipeline-stages.md ─────────────────────────────────────────────────────────────
 def _pipeline_head():
     text = _read(PIPELINE_MD)
-    return _norm(text.split("## Stage 0.5", 1)[0])
+    return _norm(text.split("## Stage 0:", 1)[0])
 
 
 def test_ac4_pipeline_doc_says_the_stages_are_the_extended_track():
     head = _pipeline_head()
-    assert re.search(r"5 stages[^.]*\bextended track\b", head), head
+    assert re.search(r"Stage 0 to Stage 5\)[^.]*\bextended track\b", head), head
     assert "`docs/claude-md/tracks.md`" in head
 
 

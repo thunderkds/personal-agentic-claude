@@ -1,6 +1,6 @@
 ---
 name: craft-agent
-description: Use when a project's requirement implies a sub-agent role the base team (Common-Infrastructure, Backend, Frontend, QA) doesn't cover — e.g. "we need a mobile/data/ML agent". Reads PROJECT_SPEC.md/PRD.md once and drafts the whole supplemental roster in one call. Also user-invokable as /craft-agent at any time. Optional and supplemental — the base team is always the Stage 1.5 default, never gated by this skill.
+description: Use when a project's requirement implies a sub-agent role the base team (Common-Infrastructure, Backend, Frontend, QA) doesn't cover — e.g. "we need a mobile/data/ML agent". Reads PROJECT_SPEC.md/PRD.md once and drafts the whole supplemental roster in one call. Also user-invokable as /craft-agent at any time. Optional and supplemental — the base team is always the Stage 1 Agent team default, never gated by this skill.
 ---
 
 ## Role: Supplemental Agent Drafter
@@ -18,14 +18,14 @@ Receives a locked requirement and the existing base team, and produces one or mo
 
 #### 1. Confirm prerequisites
 
-Require `PROJECT_SPEC.md` (or `PRD.md`) to exist and be locked. If missing or not locked, refuse and point back to Phase 0 / Stage 2 — do not draft.
+Require `PROJECT_SPEC.md` (or `PRD.md`) to exist and be locked. If missing or not locked, refuse and point back to Stage 0 / Stage 2 — do not draft.
 
 #### 2. Enumerate supplemental roles
 
 Cross-check the requirement against the base team (Common-Infrastructure-Agent, Backend-Implementer, Frontend-Implementer, QA-Automation-Agent) and every existing `agents/*.md` filename:
 - If a role is already covered by the base team or an existing agent file, reuse that name — do not draft a near-duplicate.
 - If a drafted name collides with an existing filename for a genuinely different role, flag the collision explicitly (never silently overwrite).
-- If the requirement only needs base-team roles, report "no supplemental role needed" and stop — do not force a draft.
+- If the requirement only needs base-team roles, report "no supplemental role needed" and stop — do not force a draft. The Supervisor then asks nothing in the Agent team step of Stage 1 and goes on with the base team; it asks the user to approve the team only when this skill proposes a role.
 - If the role set is unbounded or unclear, ask one clarifying question. Do not fabricate roles.
 
 #### 3. Draft each Agent Draft

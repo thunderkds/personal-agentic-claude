@@ -122,7 +122,7 @@ def test_no_visual_marker_outside_its_own_section():
 
 def test_tracks_visual_names_both_outcomes_and_every_trigger():
     text = " ".join(_words_of(_visual("tracks"))).lower()
-    for needle in ("extended track", "minimal track", "5-stage pipeline", "decision record",
+    for needle in ("extended track", "minimal track", "stage 0–5 pipeline", "decision record",
                    "c2", "risk medium", "refactor", "migrate", "user data",
                    "more than one session or agent", "ui component", "yes", "no"):
         assert needle in text, f"tracks visual lacks {needle!r}"
@@ -409,6 +409,15 @@ DUPLICATES_OF_A_VISUAL_LABEL = {
     "0d64e298bb52": "Stage 1 flow step gains companion-setup (T226)",
     # T228: the `dotfiles` skill joins the Any stage chips (count now 35).
     "9d5bff6dc560": "Any stage chip list changed by T228 (dotfiles)",
+    # T239: the half-number stages were merged into Stage 0 and Stage 1.
+    "a4d2005f8409": "the lead says Stage 0–5 pipeline, not 5-stage (T239)",
+    "cdef968136ca": "overview step Phase 0 is now Stage 0 · Define (T239)",
+    "30979276a6f0": "overview step Stage 0.5 is now Stage 0 · Define (T239)",
+    "08001aef9d90": "overview step Stage 1 is renamed Set up and holds the agent roster (T239)",
+    "c5ffe735f0f0": "overview step Stage 1.5 is now part of Stage 1 · Set up (T239)",
+    "c424a50494ca": "skills flow step Stage 0.5 is now Stage 0 — Define (T239)",
+    "02dc3d4dceda": "the craft-agent chip moved into the Stage 1 chip row (T239)",
+    "d790b2230f59": "skills flow step Stage 1.5 is now part of Stage 1 — Set up (T239)",
 }
 
 

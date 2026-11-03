@@ -465,7 +465,7 @@ def test_hero_strip_shows_the_docs_numbers_and_links_each_to_its_docs_section():
 def test_each_stage_marks_exactly_one_key_skill_with_a_shape_and_a_text_cue():
     body = section(index_html(), "stages")
     steps = re.findall(r'<li\b[^>]*class="flow-step"[^>]*data-stage="([^"]+)"[^>]*>(.*?)</li>', body, re.DOTALL)
-    assert len(steps) == 7
+    assert len(steps) == 6  # T239: Stage 0 to Stage 5
     for number, step in steps:
         keys = re.findall(r'<code class="chip[^"]*\bis-key\b[^"]*"[^>]*>(.*?)</code>', step, re.DOTALL)
         assert len(keys) == 1, f"stage {number} marks {len(keys)} key skills"
@@ -496,10 +496,33 @@ def test_settings_tool_script_blocks_are_byte_identical_to_the_old_page(script_i
 
 # ---- AC 6: no sentence is lost --------------------------------------------------------
 
+# T239: the half-number stages were merged into Stage 0 and Stage 1. A text listed here was reworded or moved; each is in the baseline and must be absent from docs.html
+# only because of this reason. Nothing else may be lost.
+CHANGED_BY_T239 = {
+    "a956b5ce5b9021a4": "overview step Stage 0.5 is now Stage 0 · Define",
+    "7cbf2e3d1a4f2516": "overview step Phase 0 is now Stage 0 · Define",
+    "90f89cf02caa5a01": "overview step Stage 1 is renamed Set up and holds the agent roster",
+    "7e71f41735645590": "overview step Stage 1.5 is now part of Stage 1 · Set up",
+    "57e0a7cd2be1b9fc": "the lead says Stage 0–5 pipeline, not 5-stage",
+    "f9611b7c53ac6acd": "the quick-reference stage line now reads 0 → 1 → 2 → 3 → 4 → 5",
+    "c458587bc03d446b": "skills flow step Stage 0.5 is now Stage 0 — Define",
+    "a3c81b28d4a0e54e": "skills flow step Stage 1 is now Set up and gains craft-agent",
+    "5636fc579f16e8b5": "skills flow step Stage 1.5 is now part of Stage 1 — Set up",
+    "f497813046b701dd": "the lone craft-agent chip of Stage 1.5 moved into the Stage 1 chip row",
+    "c0d3aec9f6c3be00": "the Stage 1 chip row gains craft-agent",
+    "5825a33bdfbd730d": "the tracks visual says the Stage 0–5 pipeline",
+    "3e3ef4ce703670df": "the tracks visual says the Stage 0–5 pipeline",
+}
+
+
 def test_every_paragraph_item_cell_and_definition_of_the_old_page_is_on_docs():
     now = set(sentence_hashes(docs_html()))
-    missing = [(h, t) for h, t in _baseline()["sentences"] if h not in now]
+    missing = [(h, t) for h, t in _baseline()["sentences"] if h not in now and h not in CHANGED_BY_T239]
     assert not missing, f"{len(missing)} text(s) lost from docs.html: {missing[:5]}"
+
+
+def test_every_listed_change_is_a_real_baseline_text():
+    assert set(CHANGED_BY_T239) <= {h for h, _ in _baseline()["sentences"]}
 
 
 def test_the_baseline_is_not_empty():

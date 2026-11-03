@@ -210,7 +210,7 @@ def test_skill_auto_mode_asks_nothing_and_names_one_not_done_line():
 # --- AC6: the doc pointers ---------------------------------------------------
 
 def test_pipeline_stages_stage_1_item_1_names_the_skill_and_its_auto_rule():
-    stage1 = _read("docs", "claude-md", "pipeline-stages.md").split("## Stage 1:")[1].split("## Stage 1.5")[0]
+    stage1 = _read("docs", "claude-md", "pipeline-stages.md").split("## Stage 1:")[1].split("### Step Agent team")[0]
     assert 'Skill({ skill: "companion-setup" })' in stage1
     assert "companion-setup" in stage1.split("2. **Multi-CLI")[0]
     auto = [l for l in stage1.splitlines() if l.strip().startswith("Auto mode:") and "settings-setup" in l]

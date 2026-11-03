@@ -158,7 +158,7 @@ def test_every_adapter_points_at_docs_claude_md():
     for adapter_name, path in CLI_FILES.items():
         text = _read(path)
         assert MULTI_AGENT_DOC in text, (
-            f"{adapter_name} does not point at {MULTI_AGENT_DOC} for pipeline/Phase 0/folder/"
+            f"{adapter_name} does not point at {MULTI_AGENT_DOC} for pipeline/Stage 0/folder/"
             f"naming/memory detail"
         )
 

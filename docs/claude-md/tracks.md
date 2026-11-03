@@ -8,7 +8,7 @@ Every implementation request goes on one of two tracks:
 
 - **Minimal track** — small, low-risk work. The Supervisor writes the code itself and runs straight
   through: test first, change, real run. No process stop. It ends with a **Decision record**.
-- **Extended track** — big, risky or multi-session work. This is the full 5-stage pipeline
+- **Extended track** — big, risky or multi-session work. This is the full Stage 0–5 pipeline
   (`docs/claude-md/pipeline-stages.md`), unchanged.
 
 The rule below picks the track, never how small a task feels.
@@ -206,17 +206,17 @@ is logged `RULE`, `FACT` or `SAFER OPTION`, not `DEBATED`. At Risk Medium or Hig
 
 | # | Stop today (where) | Auto rule | Logged as |
 |---|---|---|---|
-| 1 | Phase 0 questions and the `PRD.md` confirmation, while `Requirements` or `Approved by` is not filled (`PROJECT_SPEC.md` `## Readiness`; `docs/claude-md/phase0-project-initiation.md`) | Answer each question from the request and the repo, with Citations. A question they cannot answer is a Choice question: Debate. | `FACT` / `DEBATED` ⚠ |
-| 2 | Stage 0.5a `grill-with-docs`: "Resolve all flagged items with the user" | Answer from the docs and code with Citations. What they cannot answer is a Choice question: Debate. | `FACT` / `DEBATED` ⚠ |
+| 1 | Stage 0 step Requirements: the questions and the `PRD.md` confirmation, while `Requirements` or `Approved by` is not filled (`PROJECT_SPEC.md` `## Readiness`; `docs/claude-md/stage0-define.md`) | Answer each question from the request and the repo, with Citations. A question they cannot answer is a Choice question: Debate. | `FACT` / `DEBATED` ⚠ |
+| 2 | Stage 0 step Grilling `grill-with-docs`: "Resolve all flagged items with the user" | Answer from the docs and code with Citations. What they cannot answer is a Choice question: Debate. | `FACT` / `DEBATED` ⚠ |
 | 3 | `grill-with-docs`: an ADR-eligible decision ("ask the user whether to escalate") | Write the DDR; do not escalate to an ADR (the smaller change). | `SAFER OPTION` ⚠ |
-| 4 | Stage 0.5b `brainstorming`: the user approves one direction | Take the recommended direction and list the alternatives in the report. | `RULE` ⚠ (taste) |
-| 5 | Stage 1 item 1: one-time setup (`fewer-permission-prompts`, `update-config`, `companion-setup`) | Skip the first two: they change the user's permission settings and hooks. Name them under `Not done:`. `companion-setup` asks nothing and installs nothing: one line under `Not done:`. | `RULE` |
-| 6 | Stage 1 item 2 and `AGENTS.md` `## Multi-CLI Configuration`: the user lists the CLIs and their models | Read the `## CLI Model Table` in `PROJECT_SPEC.md`. No row or an empty cell: row 14. | `FACT` |
-| 7 | Stage 1 item 3: a missing agent guide ("ask the user to save it") | The Supervisor writes it from `templates/` on the task branch. | `RULE` |
-| 8 | Stage 1 item 4: "run `git status` … and paste the output" | The Supervisor runs it itself. | `RULE` |
-| 9 | Stage 1 item 6: the user must save or confirm `PROJECT_SPEC.md` | The Supervisor checks the file, or writes it from `templates/PROJECT_SPEC_template.md`. | `RULE` |
-| 10 | Stage 1 item 8: "Are they correct?" (the domain models) | Record the models the scan found, with their paths. | `FACT` ⚠ (taste) |
-| 11 | Stage 1.5: "Approve or request any modifications?" (the sub-agent team) | The base team; `craft-agent` only for a role the base team does not cover. | `RULE` |
+| 4 | Stage 0 step Direction `brainstorming`: the user approves one direction | Take the recommended direction and list the alternatives in the report. | `RULE` ⚠ (taste) |
+| 5 | Stage 1 step Environment item 1: one-time setup (`fewer-permission-prompts`, `update-config`, `companion-setup`) | Skip the first two: they change the user's permission settings and hooks. Name them under `Not done:`. `companion-setup` asks nothing and installs nothing: one line under `Not done:`. | `RULE` |
+| 6 | Stage 1 step Environment item 2 and `AGENTS.md` `## Multi-CLI Configuration`: the user lists the CLIs and their models | Read the `## CLI Model Table` in `PROJECT_SPEC.md`. No row or an empty cell: row 14. | `FACT` |
+| 7 | Stage 1 step Environment item 3: a missing agent guide ("ask the user to save it") | The Supervisor writes it from `templates/` on the task branch. | `RULE` |
+| 8 | Stage 1 step Environment item 4: "run `git status` … and paste the output" | The Supervisor runs it itself. | `RULE` |
+| 9 | Stage 1 step Environment item 6: the user must save or confirm `PROJECT_SPEC.md` | The Supervisor checks the file, or writes it from `templates/PROJECT_SPEC_template.md`. | `RULE` |
+| 10 | Stage 1 step Environment item 8: "Are they correct?" (the domain models) | Record the models the scan found, with their paths. | `FACT` ⚠ (taste) |
+| 11 | Stage 1 step Agent team: "Approve or request any modifications?" (the sub-agent team; asked only when `craft-agent` proposes a role beyond the base team) | The base team; `craft-agent` only for a role the base team does not cover. | `RULE` |
 | 12 | Stage 2: the user approves the task breakdown and confirms `tasks/` | The Supervisor's own breakdown, labelled by the Complexity matrices. It lists `tasks/` itself. | `RULE` |
 | 13 | Stage 2/3: the Requirement Fidelity Gate ("Restated intent confirmed") | Signed `auto (Supervisor)`, not by the user. | `RULE` |
 | 14 | Stage 3 `craft-spawn-prompt` returns STOP-and-ask: no CLI named, no `## CLI Model Table` row, or an empty cell | Spawn on the CLI that runs this session, with the model this session runs as. Never invent another CLI's model name. | `SAFER OPTION` ⚠ |
@@ -230,9 +230,9 @@ is logged `RULE`, `FACT` or `SAFER OPTION`, not `DEBATED`. At Risk Medium or Hig
 
 The skills these rows name keep their own stop text. In auto mode this table wins over it.
 
-**No stage skipped (T223).** Stage 0.5 and Stage 1 are never skipped as an auto decision: they run, with the
-auto rules of rows 1–10. A locked spec or a stand-in like `docs/SPEC.md` is not a reason to skip them;
-it is the input Stage 0.5a grills. `Approved by` is never filled by the Supervisor in auto mode: the line
+**No stage skipped (T223).** Stage 0 and Stage 1 are never skipped as an auto decision: they run, with the
+auto rules of rows 1–11. A locked spec or a stand-in like `docs/SPEC.md` is not a reason to skip them;
+it is the input step Grilling grills. `Approved by` is never filled by the Supervisor in auto mode: the line
 stays empty, so the readiness warning keeps firing until the user confirms. The rule everywhere:
 `Approved by` is written only on the user's explicit confirmation, never in auto mode.
 

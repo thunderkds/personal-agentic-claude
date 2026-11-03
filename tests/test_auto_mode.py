@@ -152,7 +152,7 @@ def _stop_rows():
 # Every place the agent found where a track waits for the user today (startup step 5). Each key
 # must name exactly one table row: one row per stop.
 STOP_KEYS = {
-    "phase0": r"Phase 0",
+    "requirements": r"Stage 0 step Requirements",
     "grill": r"Resolve all flagged items with the user",
     "adr": r"ADR-eligible",
     "brainstorm": r"`brainstorming`",
@@ -440,13 +440,13 @@ def test_ac3_every_pipeline_stop_names_its_auto_rule():
 
 
 def test_ac3_pipeline_head_points_at_the_auto_mode_table():
-    head = _norm(_read(PIPELINE_MD).split("## Stage 0.5", 1)[0])
+    head = _norm(_read(PIPELINE_MD).split("## Stage 0:", 1)[0])
     assert re.search(r"[Aa]uto mode[^.]*`\[auto\]`", head)
     assert "`## Auto mode`" in head and "`docs/claude-md/tracks.md`" in head
 
 
 def test_ac3_pipeline_cli_model_table_auto_rule():
-    stage1 = _section(_read(PIPELINE_MD), "Stage 1: Environment")
+    stage1 = _section(_read(PIPELINE_MD), "Stage 1: Set up")
     item2 = next(c for c in _chunks(stage1) if "Multi-CLI Authentication" in c)
     norm = _norm(item2)
     assert re.search(r"[Ii]n auto mode[^.]*CLI that runs this session[^.]*model this session runs as",
@@ -772,7 +772,7 @@ def test_d10_tracks_md_says_high_risk_always_debates_one_decision():
 
 
 # ── T223 — project readiness: the stage-done rule and no stage skipped as an auto decision ──
-PHASE0_MD = ROOT / "docs" / "claude-md" / "phase0-project-initiation.md"
+PHASE0_MD = ROOT / "docs" / "claude-md" / "stage0-define.md"  # T239: the Stage 0 doc was renamed
 SPEC_TEMPLATE = ROOT / "templates" / "PROJECT_SPEC_template.md"
 READINESS_LINES = [
     "- **Requirements**: [path, e.g. PRD.md or a stand-in like docs/SPEC.md]",
@@ -794,11 +794,11 @@ def test_t223_ac1_template_has_the_readiness_lines_in_order():
 
 def test_t223_ac6_phase0_and_pipeline_define_stage_done_by_readiness():
     phase0 = _norm(_read(PHASE0_MD))
-    assert re.search(r"Phase 0 counts as done only when[^.]*`Requirements`[^.]*`Approved by`", phase0), phase0
-    assert re.search(r"[Ss]caffold code or an existing spec file does not make Phase 0 done", phase0)
-    assert re.search(r"stand-in spec is named on the `Requirements` line[^.]*Stage 0\.5a", phase0)
+    assert re.search(r"[Ss]tep Requirements counts as done only when[^.]*`Requirements`[^.]*`Approved by`", phase0), phase0
+    assert re.search(r"[Ss]caffold code or an existing spec file does not make step Requirements done", phase0)
+    assert re.search(r"stand-in spec is named on the `Requirements` line[^.]*step Grilling", phase0)
     pipeline = _norm(_read(PIPELINE_MD))
-    for stage, lines in (("Stage 0.5", r"`Direction`"), ("Stage 1", r"`Codebase map`[^.]*`Tech stack`"),
+    for stage, lines in (("Step Direction", r"`Direction`"), ("Stage 1", r"`Codebase map`[^.]*`Tech stack`"),
                          ("Stage 2", r"`Main flow`[^.]*before the first spawn")):
         assert re.search(rf"{re.escape(stage)} counts as done only when[^.]*{lines}", pipeline), stage
 
@@ -806,14 +806,14 @@ def test_t223_ac6_phase0_and_pipeline_define_stage_done_by_readiness():
 def test_t223_ac6_tracks_first_stage_not_done_points_at_readiness():
     ann = _norm(_section(_read(TRACKS_MD), "Announcement"))
     assert re.search(r"first stage not yet done[^.]*`## Readiness`", ann), ann
-    row1 = " ".join(_row("phase0"))
+    row1 = " ".join(_row("requirements"))
     assert "new project only" not in row1
     assert "while `Requirements` or `Approved by` is not filled" in row1
 
 
-def test_t223_ac7_auto_mode_never_skips_stage_0_5_or_stage_1():
+def test_t223_ac7_auto_mode_never_skips_stage_0_or_stage_1():
     text = _norm(_auto())
-    assert re.search(r"Stage 0\.5 and Stage 1 are never skipped as an auto decision[^.]*rows 1–10", text), text
+    assert re.search(r"Stage 0 and Stage 1 are never skipped as an auto decision[^.]*rows 1–11", text), text
     assert re.search(r"`Approved by` is never filled by the Supervisor in auto mode", text), text
     report = _norm(_subsection(_auto(), "Final report"))
     assert "`readiness incomplete: <gaps> (yours)`" in report, report
@@ -838,7 +838,7 @@ def test_t223_c2_approved_by_has_one_meaning_everywhere(path):
 
 
 def test_t223_c2_phase0_step2_writes_requirements_and_approved_by_only_on_confirmation():
-    step2 = _norm(_read(PHASE0_MD).split("### Step 2", 1)[1])
+    step2 = _norm(_read(PHASE0_MD).split("### Project Context Document", 1)[1])
     bullet = next(b for b in step2.split("- ") if "`## Readiness`" in b)
     assert re.search(r"[Ww]rite the `## Readiness` line `Requirements`", bullet), bullet
     assert APPROVED_BY_RULE in bullet, bullet

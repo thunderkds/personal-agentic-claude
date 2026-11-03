@@ -28,7 +28,8 @@ BASE_REF = "c573bbf"
 # T200: `CLAUDE_LEGACY.md` gains the `settings-setup` skills-list line (CLAUDE_LEGACY.md sync policy),
 # so its pin moves off BASE_REF to T200's edit commit. BASE_REF stays for CLAUDE.md (AC 1).
 # T228: `CLAUDE_LEGACY.md` gains the `dotfiles` skills-list line; the pin moves to T228's merge commit (holds the T226 and T228 lines).
-CLAUDE_LEGACY_REF = "1226c97"
+# T239: `CLAUDE_LEGACY.md` renames its stage names (Stage 1 step Agent team, Stage 0); the pin moves to T239's edit commit.
+CLAUDE_LEGACY_REF = "8c381c20"
 
 # AC 1 allowed edits (a) and (b): (base span, new span). Each span must hit exactly one base line.
 REPLACED_SPANS = [
@@ -70,6 +71,26 @@ REPLACED_SPANS = [
     ("| `frontend-developer` | `agents/frontend.md` |",
      "| `frontend-developer` | `agents/frontend.md` | `easy-kit:frontend-developer` |"),
     ("| `qa-expert` | `agents/qa.md` |", "| `qa-expert` | `agents/qa.md` | `easy-kit:qa-expert` |"),
+    # T239: the pipeline reads Stage 0 to Stage 5. Phase 0 becomes Stage 0 step Requirements, Stage 0.5 becomes
+    # the Stage 0 steps Grilling and Direction, Stage 1.5 becomes the Stage 1 step Agent team. One line per
+    # base line; nothing is added or collapsed. The base text below is the old wording, on purpose.
+    ("run the 5-stage pipeline below", "run the Stage 0–5 pipeline below"),
+    ("0.5=`brainstorming`,`ideate` |", "0=`brainstorming`,`ideate` |"),
+    ("`companion-setup` | 1.5=`craft-agent` | 2=", "`companion-setup`,`craft-agent` | 2="),
+    ("## Phase 0: Project Initiation & Context Gathering", "## Stage 0, step Requirements: Project Initiation & Context Gathering"),
+    ("[`docs/claude-md/phase0-project-initiation.md`](docs/claude-md/phase0-project-initiation.md) for full Step 1 / Step 1.5 (Ambiguity Resolution Protocol) / Step 2 detail.",
+     "[`docs/claude-md/stage0-define.md`](docs/claude-md/stage0-define.md) for full Initialization / Ambiguity Resolution Protocol / Project Context Document detail."),
+    ("resolve ambiguity via forced choice (Step 1.5), then produce and confirm the Project Context Document + `PRD.md` (Step 2).",
+     "resolve ambiguity via forced choice (Ambiguity Resolution Protocol), then produce and confirm the Project Context Document + `PRD.md`."),
+    ('> "Context locked. PRD.md generated. Entering 5-Stage Agentic Pipeline. Initializing Stage 0.5: Requirement Grilling → Creative Brainstorming."',
+     '> "Stage 0, step Requirements: context locked, PRD.md generated. Moving to step Grilling."'),
+    ("## 5-Stage Agentic Pipeline", "## Stage 0–5 Agentic Pipeline"),
+    ("full Stage 0.5–5 detail", "full Stage 0–5 detail"),
+    ('- **Stage 0.5** (Requirement Grilling → Brainstorming): `Skill({ skill: "grill-with-docs", args: "mode=requirement" })` then `Skill({ skill: "brainstorming" })`. Runs after Phase 0, before Stage 1.',
+     '- **Stage 0** (Define): three steps in order, each with its own stop, never merged: step Requirements (the section above; the user confirms the Project Context Document), step Grilling (`Skill({ skill: "grill-with-docs", args: "mode=requirement" })`; the PRD gate must pass), step Direction (`Skill({ skill: "brainstorming" })`; the user picks a direction). Must complete before Stage 1.'),
+    ("- **Stage 1** (Environment & Provider Setup): checklist", "- **Stage 1, step Environment** (Set up): checklist"),
+    ('- **Stage 1.5** (Sub-Agent Architecture): design the sub-agent team; base team is always Common-Infrastructure/Backend/Frontend/QA; `Skill({ skill: "craft-agent" })` only if an uncovered role is needed.',
+     '- **Stage 1, step Agent team** (Sub-Agent Architecture): design the sub-agent team; base team is always Common-Infrastructure/Backend/Frontend/QA; `Skill({ skill: "craft-agent" })` only if an uncovered role is needed. The user is asked to approve the team only when `craft-agent` proposes a role beyond the base team; with the base team alone, state it in one line and go on.'),
 ]
 AC6_HEADING = re.compile(r"^## .*cannot enforce", re.IGNORECASE)
 # T178: the one later section allowed outside the opening block and the AC 6 section. Its

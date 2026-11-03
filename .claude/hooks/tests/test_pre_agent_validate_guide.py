@@ -324,7 +324,7 @@ def test_t223_sc1_idea_radar_shape_warns_and_is_allowed(tmp_path):
     assert context.startswith(READINESS_HEAD), context
     assert "no `## Readiness` section" in context
     assert "design nobody checked" in context and "rework" in context
-    assert "Phase 0" in context and "Stage 0.5" in context and "Stage 1" in context and "`Waived`" in context
+    assert "Stage 0" in context and "Stage 1" in context and "`Waived`" in context  # T239: names by the new stage names
     assert READINESS_HEAD in result.stderr, result.stderr
     assert "Demonstration BEFORE" in context, "the other advisories must stay"
 
