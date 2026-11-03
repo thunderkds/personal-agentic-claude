@@ -67,8 +67,36 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured by common-infrastructure in `../wt-t240` at `1dd90fe9`, before any implementation
+commit. The installer's own messages and URLs still name the old repo:
+
+```
+$ date -u +%Y-%m-%dT%H:%M:%SZ; git rev-parse --short HEAD; sh setup.sh --harness codex; echo "exit=$?"; d=$(mktemp -d); cp update.sh "$d/"; sh "$d/update.sh"; echo "exit=$?"; rm -rf "$d"; git grep -n 'personal-agentic-claude' -- setup.sh update.sh
+2026-11-03T07:46:28Z
+1dd90fe9
+[error] Easy Kit takes no options (got: --harness codex). Run it and choose from the menus:
+[error]   curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh
+exit=1
+[error] update.sh is now part of the one Easy Kit command. Run this inside your project and choose Update:
+  curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh
+exit=1
+setup.sh:41:  log_error "  curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh"
+setup.sh:56:  BOOTSTRAP_REPO="${SUPERVISOR_REPO:-https://github.com/${GITHUB_USERNAME:-thunderkds}/personal-agentic-claude.git}"
+setup.sh:87:    SUPERVISOR_REPO="https://github.com/${GITHUB_USERNAME}/personal-agentic-claude.git"
+update.sh:10:  printf '  curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh\n' >&2
+```
+
+Red test, written first (`tests/test_repo_name.py`, uncommitted):
+
+```
+$ python3 -m pytest tests/test_repo_name.py -q   # 2026-11-03T07:48:10Z
+FAILED tests/test_repo_name.py::test_no_live_file_names_the_old_repo - Assert...
+FAILED tests/test_repo_name.py::test_every_allow_entry_still_matches_a_line
+FAILED tests/test_repo_name.py::test_default_repo_is_easy_kit - AssertionErro...
+FAILED tests/test_repo_name.py::test_fork_named_easy_kit_is_used - AssertionE...
+FAILED tests/test_repo_name.py::test_error_messages_print_the_new_install_line
+5 failed, 3 passed in 0.77s
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
