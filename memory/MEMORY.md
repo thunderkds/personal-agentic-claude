@@ -25,8 +25,7 @@
      run; read them there. The enforced gate is the whole-file character budget above. -->
 
 ### Decisions
-- [T239: pipeline is Stage 0–5; old names only in history](decisions.md) — Stage 0 steps Requirements/Grilling/Direction; Stage 1 steps Environment/Agent team; `stage0-define.md`
-- [T232–T234: plugin base, package, `easy-kit:` names](decisions.md) — T235–T236 next
+- [T232–T234, T239: plugin, `easy-kit:` names; Stage 0–5](decisions.md) — T235–T236 next
 - [T231: story `index.html`, reference `docs.html`](decisions.md) — 300-word cap; new skill goes on both pages
 - [T218–T220: tech-lead pack — map-first agent, dormant; pipeline pointers; packs activate by approved copy](decisions.md)
 - [T216: plugin path (Option C) — Claude Code plugin works with prefixed names; setup.sh stays](decisions.md) — `easy-kit:<agent>` in plugin mode; Codex gate open
