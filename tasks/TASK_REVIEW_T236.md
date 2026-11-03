@@ -67,8 +67,46 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured 2026-11-03T10:39Z by frontend-developer, before any implementation commit; docs
+unchanged at `6c5e18e9`). The plugin path is absent from every install surface: each offers only `setup.sh`.
+
+`README.md:25-35` (Quick Start, verbatim):
+
+```
+## Quick Start
+
+**Prerequisite:** the target directory must already be a git repository (`git init` first if it
+isn't — your project's own git history is the undo mechanism, since nothing is symlinked from a
+shared location).
+
+Run from inside the target project root:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/thunderkds/easy-kit/main/setup.sh | sh
+```
+```
+
+`site/docs.html:466-473` (`#install`, verbatim):
+
+```
+<section id="install">
+<h2>Install</h2>
+<p class="lead">
+  Prerequisites: an existing <strong>git repo</strong>, and <code>git</code>, <code>curl</code>,
+  and a POSIX <code>sh</code> on your PATH.
+</p>
+<div class="codebox"><code><span class="prompt">$ </span>curl -fsSL https://raw.githubusercontent.com/thunderkds/easy-kit/main/setup.sh | sh</code><button type="button" class="btn btn-primary" aria-label="Copy install command">Copy</button></div>
+```
+
+`site/index.html:63-67` (`#hero`, verbatim):
+
+```
+<section id="hero" class="hero">
+  <p class="eyebrow">&gt; multi-agent supervisor framework</p>
+  <h1>Easy Kit</h1>
+  <p class="lead">You ask for a change. Easy Kit plans it, builds it, checks it, and leaves the merge to you.</p>
+  <div class="codebox"><code><span class="prompt">$ </span>curl -fsSL https://raw.githubusercontent.com/thunderkds/easy-kit/main/setup.sh | sh</code>...
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
@@ -76,3 +114,117 @@ first implementation commit] OR [verbatim excerpt of the prior content, for non-
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
+
+---
+
+## D1 — install run (frontend-developer, 2026-11-03)
+
+Isolation for every run below: `HOME` and `CLAUDE_CONFIG_DIR` = fresh scratch dirs; `GIT_CONFIG_NOSYSTEM=1`,
+`GIT_CONFIG_GLOBAL=/dev/null` (no credential helper); `GIT_TERMINAL_PROMPT=0`; `SSH_AUTH_SOCK` unset and
+`GIT_SSH_COMMAND` with `IdentityFile=/dev/null`, `BatchMode=yes` (no SSH key reachable). The user's real config
+(`~/.claude-personal`) was never touched.
+
+Note: a first attempt with only `GIT_TERMINAL_PROMPT=0` and no credential helper still succeeded **over SSH**,
+using the user's SSH agent key (`SSH_AUTH_SOCK` was set). That run is NOT anonymous and is discarded. The
+anonymous runs below force the SSH attempt to fail, so Claude Code falls back to HTTPS.
+
+### AC 1 — two-step form (anonymous) — pass
+
+```
+2026-11-03T10:36:45Z
+credential.helper: []  GIT_TERMINAL_PROMPT=0  SSH_AUTH_SOCK=[]  HOME=<scratch>/t236/home
+$ claude plugin marketplace add thunderkds/easy-kit
+Adding marketplace…Cloning via SSH: git@github.com:thunderkds/easy-kit.git
+Refreshing marketplace cache (timeout: 120s)…
+Cloning repository (timeout: 120s): git@github.com:thunderkds/easy-kit.git
+SSH clone failed, retrying with HTTPS: https://github.com/thunderkds/easy-kit.git
+Refreshing marketplace cache (timeout: 120s)…
+Cloning repository (timeout: 120s): https://github.com/thunderkds/easy-kit.git
+Clone complete, validating marketplace…
+Cleaning up old marketplace cache…
+✔ Successfully added marketplace: easy-kit (declared in user settings)
+exit 0
+$ claude plugin install easy-kit@easy-kit
+Installing plugin "easy-kit@easy-kit"...✔ Successfully installed plugin: easy-kit@easy-kit (scope: user)
+exit 0
+$ claude plugin list
+Installed plugins:
+
+  ❯ easy-kit@easy-kit
+    Version: 2.2.0
+    Scope: user
+    Status: ✔ enabled
+
+exit 0
+```
+
+### AC 1 — one-step form, Claude Code 2.1.317 (anonymous, fresh config) — pass
+
+```
+2026-11-03T10:37:07Z
+$ claude plugin install easy-kit --marketplace thunderkds/easy-kit
+Adding marketplace…
+Cloning via SSH: git@github.com:thunderkds/easy-kit.git
+Refreshing marketplace cache (timeout: 120s)…
+Cloning repository (timeout: 120s): git@github.com:thunderkds/easy-kit.git
+SSH clone failed, retrying with HTTPS: https://github.com/thunderkds/easy-kit.git
+Refreshing marketplace cache (timeout: 120s)…
+Cloning repository (timeout: 120s): https://github.com/thunderkds/easy-kit.git
+Clone complete, validating marketplace…
+✔ Successfully added marketplace: easy-kit (declared in user settings)
+Installing plugin "easy-kit@easy-kit"...✔ Successfully installed plugin: easy-kit@easy-kit (scope: user)
+exit 0
+```
+
+The `/plugin install easy-kit --marketplace thunderkds/easy-kit` in-session form was NOT run (needs an
+interactive session).
+
+### AC 2 — BLOCKED: no headless session in the isolated config
+
+```
+$ timeout 60 claude -p "Reply with the single word OK." --model haiku --max-budget-usd 0.05
+Not logged in · Please run /login
+```
+
+Per the Supervisor note, credentials were not copied and the real config was not used. AC 2 (a session) is
+therefore unproven, and per D1 nothing is published.
+
+Hook-level evidence only (not AC 2 as written: no Claude Code session wires the hooks here). From the
+GitHub-installed cache `<cfg>/plugins/cache/easy-kit/easy-kit/2.2.0`, in a fresh `git init` repo: `/easy-kit:init`
+Step 1 script, then `T900` added to In Progress, then the two gate hooks fed the event JSON:
+
+```
+2026-11-03T10:38:10Z
+$ python3 <cache>/scripts/plugin_init.py
+easy-kit init in <scratch>/t236/proj-hooks
++ created CLAUDE.md
++ created PROJECT_KANBAN.md
++ created AGENTS.md
+... (59 lines: templates/, docs/claude-md/, agents/, .claude/hooks/lib/, tasks/, memory/)
+59 path(s) created.
+note: the gates are plugin hooks. Each teammate must install the easy-kit plugin (`claude plugin install easy-kit@easy-kit`); a teammate without it has no gates.
+exit 0
+--- pre_agent_validate_guide.py <- {"subagent_type": "easy-kit:backend-developer", "prompt": "Task ID: T901\nGuide: tasks/TASK_GUIDE_T901.md"}
+{"decision": "block", "reason": "[hook:pre_agent] Cannot spawn agent \u2014 missing TASK_GUIDE for: T901. Run Stage 2 planning first to generate the guide(s) in tasks/."}
+exit 0
+--- pre_bash_block_unsafe_merge.py <- {"command": "git push origin main"}
+{"decision": "block", "reason": "[hook:pre_bash] Pipeline gate failed \u2014 cannot push/merge:\n  \u2022 Tasks still In Progress: T900\n..."}
+exit 0
+```
+
+### D5 — what a git-sourced install copies
+
+Measured with `du -sh` after the anonymous two-step install (`main` at `1d9669df`):
+
+| Where | Size | Notes |
+|---|---|---|
+| `plugins/cache/easy-kit/easy-kit/2.2.0` (the installed plugin) | 12 MB | `tasks/` 4.7 MB, `tests/` 1.6 MB, `experiments/` 1.2 MB, `.claude/` 1.2 MB, `docs/` 784 KB, `memory/` 620 KB, `skills/` 392 KB, `site/` 324 KB, `scripts/` 196 KB, `packs/` 128 KB, `templates/` 112 KB, `lib/` 80 KB, `PROJECT_KANBAN.md` 72 KB, `agents/` 40 KB |
+| `plugins/marketplaces/easy-kit` (the marketplace clone) | 16 MB | includes `.git/` 3.8 MB |
+| Total on disk | about 28 MB | |
+
+No `.claude/hooks/.state/` in the cache: a git source copies only committed files (T233's local-path install
+copied it). The parts the plugin runs from (`agents/`, `skills/`, `.claude/`, `hooks/`, `commands/`,
+`scripts/`, `lib/`, `templates/`, `docs/claude-md/`) are about 2 to 2.5 MB of the 12 MB. A smaller plugin
+source (a `plugins/easy-kit/` subfolder, or a `git-subdir` source) could cut the cache by roughly 80%, but it
+needs a build or a mirror step, and the 16 MB marketplace clone would stay unless the marketplace moves too.
+Recommendation: worth a follow-up task, low priority (P2): size only, no correctness issue.
