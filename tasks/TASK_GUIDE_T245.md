@@ -1,4 +1,4 @@
-# TASK_GUIDE — T245: UX review — UX criteria in the guide, a `ux-reviewer` in code-review, screenshots from the frontend agent
+# TASK_GUIDE — T245: `ux-evaluate` skill — the frontend agent checks its UI against the requirement's UX criteria
 **Date**: 2026-11-03
 **Complexity Level**: C2
 **Risk Level**: Medium
@@ -6,8 +6,8 @@
 **Assigned agent**: common-infrastructure
 **Agent guide**: `agents/common-infrastructure.md`
 
-> Risk Medium: two hub files. `skills/code-review/SKILL.md` runs on every extended-track task, and
-> `templates/TASK_GUIDE_template.md` feeds every guide. A hub touch raises Risk a level
+> Risk Medium: two hub files. `templates/TASK_GUIDE_template.md` feeds every guide, and
+> `skills/code-review/SKILL.md` runs on every extended-track task. A hub touch raises Risk a level
 > (`docs/claude-md/pipeline-stages.md` Stage 2 item 5). The edit is text only; no hook, no gate change.
 
 ---
@@ -21,8 +21,8 @@ Before writing any code:
 4. Read `agents/common-infrastructure.md`
 5. Note the **Complexity Level** above and apply the matching process from the Complexity matrix in your role guide
 6. Read `memory/codebase-map.md` (C2, multi-file)
-7. Read `skills/write-better-skill/SKILL.md` — the craft reference for any `SKILL.md` or skill reference file here
-8. Read `tasks/TASK_GUIDE_T192.md` `## Requirement` — T192 (Todo) owns the easy-ui `ui-test` skill and the three UI design rows; this task must not overlap it
+7. Read `skills/write-better-skill/SKILL.md` — the craft reference for any new `SKILL.md`. Draft the new skill through `Skill({ skill: "teach" })`'s workflow so its craft checks run inside creation
+8. Read `tasks/TASK_GUIDE_T192.md` `## Requirement` — T192 (Todo) owns the easy-ui `ui-test` skill and the three UI design Evidence rows; this task must not overlap it
 
 ---
 
@@ -31,45 +31,49 @@ Before writing any code:
 User, 2026-11-03: *"the frontend agent do not have the UX skill, so it can not evaluate the change is
 good or not following the requirement, let investigate and let me know"*. The Supervisor's
 investigation found three gaps:
-1. `agents/frontend.md` has no UX skill or checklist line, and no instruction to look at its own UI
-   (its tools are `Read, Write, Edit, Bash, Glob, Grep`; Pillar 3 says "confirm the UI behaves in the
-   browser" with no method).
-2. `templates/TASK_GUIDE_template.md` `## UI / Design Acceptance Criteria` checks conformance only
-   (visual regression, design tokens, responsiveness). No row names the user's goal, the flow steps,
-   the states, or a pass condition traced to a `PRD.md` user story.
-3. `skills/code-review/SKILL.md` has no UI/UX reviewer persona; `agents/qa.md` has nothing UI-specific.
+1. G1 — `agents/frontend.md` has no UX skill in its `## Available skills` table and no way to look at
+   its own UI (tools `Read, Write, Edit, Bash, Glob, Grep`; Pillar 3 says "confirm the UI behaves in
+   the browser" with no method).
+2. G2 — `templates/TASK_GUIDE_template.md` `## UI / Design Acceptance Criteria` checks conformance only
+   (visual regression, design tokens, responsiveness). No row names the user's goal, the flow, the
+   states, or a pass condition traced to the requirement.
+3. G3 — no review step judges UX: `skills/code-review/SKILL.md` has no UI/UX persona.
 
-The Supervisor proposed three fixes; the user replied *"yes, open the task [auto]"*.
+The user approved opening a task (*"yes, open the task [auto]"*), then corrected the design
+(2026-11-03): *"not the reviewer, it should be the UX skill and it belong to agent, not in the
+code-review only"*.
 
 **Restated intent**:
-> A UI task's guide states what "good for the user" means, in rows an observer can check on a
-> screenshot or a run. At Stage 4, a reviewer that is not the implementer looks at real screenshots
-> and judges each row pass or fail. The frontend agent takes and checks the same screenshots before
-> it reports ready, so most UX gaps are fixed before review.
+> A UX skill, `ux-evaluate`, that the frontend agent owns and runs while it builds. It looks at real
+> screenshots of the changed screens and judges each UX criterion in the guide pass or fail, so the
+> agent itself can tell whether its change meets the requirement. Code review runs the same skill
+> again on UI diffs, from a context that did not write the code. The guide template gains the UX
+> criteria the skill judges against.
 
 **Out of scope** (what this task explicitly does NOT do):
-- easy-ui sessions and the three existing UI design rows — T192 owns them. The `ux-reviewer` may name easy-ui as one screenshot method, nothing more.
-- A new Hard-Stop Gate, or any edit to `AGENTS.md` (196 of 200 lines used). The UX rows bind through `code-review` findings, not through Gate 6.
+- A `ux-reviewer` persona inside `code-review` with its own rules — the user rejected it. `code-review` only calls the skill.
+- easy-ui sessions and the three existing UI design Evidence rows — T192 owns them. `ux-evaluate` may name easy-ui as one screenshot method, nothing more.
+- A new Hard-Stop Gate, or new lines in `AGENTS.md` (196 of 200 lines used). The UX rows bind through the skill's verdict and `code-review` findings.
 - Any hook or merge-gate change.
-- `agents/qa.md` — the independent check is the `ux-reviewer` persona (see Cut list).
-- A UX design skill that designs screens. The scope is evaluation against stated criteria.
+- `agents/qa.md` (see Cut list).
+- Designing screens. The skill evaluates against stated criteria; it does not invent a design.
 
-**Requirement Refs**: the kit has no single `PRD.md` (`PROJECT_SPEC.md` `## Readiness`: `README.md` stand-in). This task traces to the user's quoted request and the three gaps above, labelled G1–G3.
+**Requirement Refs**: the kit has no single `PRD.md` (`PROJECT_SPEC.md` `## Readiness`: `README.md` stand-in). This task traces to the quoted requests and gaps G1–G3.
 
 ### Requirement Fidelity Gate (sign off BEFORE implementation)
 
-- [x] Restated intent confirmed to match the user's request (auto (Supervisor), from the quoted messages and the approved three-fix proposal)
+- [x] Restated intent confirmed to match the user's request (auto (Supervisor), from the quoted messages including the 2026-11-03 correction)
 - [x] Domain terms align with `PROJECT_SPEC.md` glossary — **UX Acceptance Criteria** (new) is kept apart from the three **UI design Evidence rows** (Hard-Stop Gate 6)
 - [x] Every Acceptance Criterion below traces to a line in the Requirement
-- [x] Requirement Refs: no `PRD.md` IDs exist; G1–G3 are covered by AC 1–6
+- [x] Requirement Refs: no `PRD.md` IDs exist; G1–G3 and the correction are covered by AC 1–8
 
 ---
 
 ## Dependencies & Reachability
 
-**Depends on**: `None` (T192 is related, not a precondition: this task works with headless Chrome alone)
+**Depends on**: `None` (T192 is related, not a precondition: the skill works with headless Chrome alone)
 
-**Entry point**: `ux-reviewer` — the persona row in `skills/code-review/SKILL.md` `#### Conditional reviewers`
+**Entry point**: `Skill({ skill: "ux-evaluate" })` — called from `agents/frontend.md` `## Available skills`
 
 ---
 
@@ -77,13 +81,14 @@ The Supervisor proposed three fixes; the user replied *"yes, open the task [auto
 
 | # | Criterion (testable) | Traces to requirement |
 |---|----------------------|-----------------------|
-| 1 | `templates/TASK_GUIDE_template.md` has `### 4. UX Acceptance Criteria` inside `## UI / Design Acceptance Criteria`, a table with columns `User story`, `User goal`, `Flow / state`, `Pass condition (observable)`. The guidance says: each row cites a `PRD.md` US-ID (or the quoted request when no PRD), covers the empty / loading / error / success states that the screen has, and a pass condition is something a reviewer can see on a screenshot or a run — never "looks good" | G2 |
-| 2 | `skills/code-review/SKILL.md` `#### Conditional reviewers` has one `ux-reviewer` row: activates when the diff touches UI files; the row points at `references/ux-reviewer.md` for its rules | G3 |
-| 3 | New `skills/code-review/references/ux-reviewer.md` states: (a) take screenshots of the guide's `Entry point` at 375px and 1280px width (headless Chrome `--screenshot`, `Skill({ skill: "run" })`, or easy-ui when installed); (b) `Read` each image; (c) judge each UX row `pass` / `fail` with the screenshot path; (d) a `fail` is a P1 finding; (e) a row it cannot check (no running app, no browser) is a P2 finding `UX not checked: <reason>`, never a pass; (f) a UI diff whose guide has no UX rows is a P2 finding `UI change with no UX criteria` | G3, independence rule (`pipeline-stages.md` Evidence Gate) |
-| 4 | `agents/frontend.md` `## Implementation checklist` has a `UX:` line: before Ready for Review, screenshot the changed screens, `Read` them, check each UX row, and list the screenshot paths in the report. Pillar 3 names the method (screenshot + `Read`) | G1 |
-| 5 | `skills/code-review/SKILL.md` stays ≤ 8192 bytes (Codex skill-body cap; it is 8163 bytes before this task) | Non-Claude CLI projection, `AGENTS.md` `## Non-Claude CLIs` |
-| 6 | Negative: a test checks that `ux-reviewer.md` maps "cannot check" to a finding and never to `pass`, and that the template's UX block is inside the UI section (deleted with it for pure-backend tasks) | G3 boundary |
-| 7 | The full test suite still passes (`python3 -m pytest -q`) — no existing template, skill-size or projection test breaks | regression |
+| 1 | New `skills/ux-evaluate/SKILL.md` with valid frontmatter (`scripts/validate.sh` accepts it), ≤ 8192 bytes (Codex cap). Its description says when to use it: a UI change, before Ready for Review, or from `code-review` on a UI diff | G1, correction |
+| 2 | The skill's workflow: (a) read the guide's `### 4. UX Acceptance Criteria` rows and the requirement they cite; (b) take screenshots of the guide's `Entry point` at 375px and 1280px width (headless Chrome `--screenshot`, `Skill({ skill: "run" })`, or easy-ui when installed); (c) `Read` each image; (d) judge each row `pass` / `fail`, with the screenshot path and one line of reason; (e) output one verdict table | G1 |
+| 3 | Negative paths in the skill: a row it cannot check (no running app, no browser) is `not checked: <reason>`, never `pass`; a UI change whose guide has no UX rows returns `no UX criteria` and tells the caller to ask the Supervisor for them; a vague pass condition ("looks good") is reported as `not checkable` | G1 boundary |
+| 4 | `agents/frontend.md`: `## Available skills` has a `ux-evaluate` row; `## Implementation checklist` has a `UX:` line (run `ux-evaluate` before Ready for Review, fix every `fail`, put the verdict table in the report); Pillar 3 names the method | G1, "belong to agent" |
+| 5 | `templates/TASK_GUIDE_template.md` has `### 4. UX Acceptance Criteria` inside `## UI / Design Acceptance Criteria`: columns `User story`, `User goal`, `Flow / state`, `Pass condition (observable)`; guidance says each row cites a `PRD.md` US-ID (or the quoted request), covers the empty / loading / error / success states the screen has, and states what is seen on a screenshot or a run | G2 |
+| 6 | `skills/code-review/SKILL.md`: one conditional row — on a diff that touches UI files, run `Skill({ skill: "ux-evaluate" })`; a `fail` is a P1 finding, a `not checked` / `no UX criteria` is P2. No UX rules are copied into `code-review`. The file stays ≤ 8192 bytes (8163 before this task) | G3, "not in the code-review only" |
+| 7 | Every place that lists all skills names `ux-evaluate` where tests require it (for example `site/index.html` skill flow, `tests/test_site_content.py` `SKILL_FLOW_GROUPING` stage 3); the full suite stays green | regression |
+| 8 | Real run: the implementer runs `ux-evaluate` on `site/index.html` with 2 UX rows written for the test, and pastes the verdict table and the two screenshot paths | G1 proof |
 
 ---
 
@@ -93,19 +98,21 @@ The Supervisor proposed three fixes; the user replied *"yes, open the task [auto
 
 | # | Given (input/state) | Expect (output/behavior) | How it's checked |
 |---|---------------------|--------------------------|------------------|
-| 1 | The template after the change | `### 4. UX Acceptance Criteria` sits between `### 3. Layout / Responsiveness` and `## Approach`, with the four column headers | automated test |
-| 2 | `skills/code-review/SKILL.md` | one `ux-reviewer` row in the conditional table; the file has ≤ 8192 bytes | automated test |
-| 3 | `skills/code-review/references/ux-reviewer.md` | holds `375`, `1280`, `Read`, `P1`, `UX not checked`, `UI change with no UX criteria` | automated test |
-| 4 | `agents/frontend.md` | a `- UX:` checklist line naming screenshot and `Read` | automated test |
-| 5 | A real run: Supervisor screenshots `site/index.html` with headless Chrome at 375px and 1280px and `Read`s both | two PNG files exist and open; proves the documented command works on this machine | app run |
-| 6 | Full suite | no new failure against `main` (5 known `MEMORY.md` budget failures noted on T217 are pre-existing; compare to a `main` run) | automated test |
+| 1 | `skills/ux-evaluate/SKILL.md` | valid frontmatter, ≤ 8192 bytes, holds `375`, `1280`, `Read`, `not checked`, `no UX criteria` | automated test |
+| 2 | `agents/frontend.md` | a `ux-evaluate` row in `## Available skills` and a `- UX:` checklist line | automated test |
+| 3 | The template | `### 4. UX Acceptance Criteria` between `### 3. Layout / Responsiveness` and `## Approach`, with the 4 headers | automated test |
+| 4 | `skills/code-review/SKILL.md` | one row naming `ux-evaluate`; no `ux-reviewer`; ≤ 8192 bytes | automated test |
+| 5 | Negative: the skill text | `not checked` never maps to `pass` | automated test |
+| 6 | Real run on `site/index.html` | 2 PNGs at 375px and 1280px exist, open with `Read`, verdict table pasted | app run |
+| 7 | Full suite | no new failure against a `main` run | automated test |
 
 ### Verification Command (exact, runnable)
 
 ```bash
-python3 -m pytest tests/test_t245_ux_review.py -q
+python3 -m pytest tests/test_t245_ux_evaluate.py -q
+sh scripts/validate.sh | grep "skills/ux-evaluate/SKILL.md"
 python3 -m pytest -q
-wc -c skills/code-review/SKILL.md   # must print ≤ 8192
+wc -c skills/ux-evaluate/SKILL.md skills/code-review/SKILL.md   # each ≤ 8192
 # ci: skip for the screenshot line below — needs a local Chrome
 google-chrome --headless --disable-gpu --window-size=375,800 --screenshot=/tmp/t245-375.png "file://$PWD/site/index.html"
 ```
@@ -124,27 +131,28 @@ google-chrome --headless --disable-gpu --window-size=375,800 --screenshot=/tmp/t
 
 ## Approach
 
-**Pattern reference**: `skills/resolve-question/references/advocate.md` — a skill that keeps a sub-role's full rules in `references/` and one pointer in `SKILL.md`, used here because `code-review/SKILL.md` has 29 bytes of headroom.
+**Pattern reference**: `skills/score/SKILL.md` — a skill that an optional tool improves, with a clear fallback when the tool is absent, and its own size + frontmatter tests (`tests/test_companion_scoring_skills.py`).
 
-**Vital slice**: the template UX block, the `ux-reviewer` row + reference file, and the frontend `UX:` line. Together they give a criterion, an independent judge, and a self-check.
+**Vital slice**: the `ux-evaluate` skill, its row in `agents/frontend.md`, the template UX block, and one `code-review` row that calls it. The agent gets the criterion, the skill and the habit; review reuses the same skill.
 **Cut list**:
-- `agents/qa.md` UX section — the `ux-reviewer` already is the non-implementer check; add later only if review misses UX gaps.
-- A 4th row in Hard-Stop Gate 6 — needs an `AGENTS.md` line (4 left) and a hook change; findings bind already.
+- `agents/qa.md` UX section — `code-review` already reruns the skill outside the implementer's context.
+- A 4th row in Hard-Stop Gate 6 — needs `AGENTS.md` lines and a hook change; the skill's verdict and P1 findings bind already.
 - Visual diff baselines — T192 / the existing Visual Regression row.
-- A `PRD_template.md` UX section — the template's existing User Stories table is the source the UX rows cite.
+- A `PRD_template.md` UX section — the UX rows cite the existing User Stories table.
+- An `AGENTS.md` stage-index entry — `score` is not listed there either; add only if a test requires it.
 
-Byte budget: if the one row does not fit in 29 bytes, shorten other lines in `code-review/SKILL.md` without changing any rule (same rule meaning, fewer words), and say which lines in the report.
+Byte budget for `code-review/SKILL.md` (29 bytes headroom): if the one row does not fit, shorten other lines without changing any rule, and list the lines in the report.
 
 ---
 
 ## Edge Case Checklist
 
-- [ ] `code-review/SKILL.md` over 8192 bytes after the row — AC 5 test catches it
-- [ ] A UI task with no running app (static HTML): `file://` screenshot works; a server app with no start command → `UX not checked` P2, not a silent pass
-- [ ] No Chrome/Chromium on the machine → `UX not checked: no browser` P2
-- [ ] A pure-backend guide deletes the whole UI section, so the UX block goes with it and `ux-reviewer` never activates (no UI files in the diff)
-- [ ] The UX block must not reuse the words "UI design Evidence rows" — one term, one meaning
-- [ ] Plugin/`setup.sh` projection: the new `references/ux-reviewer.md` ships with the skill folder (check `MANIFEST` or the projection test if one lists files)
+- [ ] Either `SKILL.md` over 8192 bytes — AC 1 / AC 6 tests catch it
+- [ ] Static HTML: `file://` screenshot works; a server app with no start command → `not checked`, not a silent pass
+- [ ] No Chrome/Chromium → `not checked: no browser`
+- [ ] A pure-backend guide deletes the whole UI section, so the UX block goes with it; `code-review` does not run the skill (no UI files in the diff)
+- [ ] The skill and template never call the UX rows "UI design Evidence rows" — one term, one meaning
+- [ ] Plugin and `setup.sh` installs ship the new skill folder (check any manifest or projection test that lists skills)
 
 ---
 
@@ -152,12 +160,12 @@ Byte budget: if the one row does not fit in 29 bytes, shorten other lines in `co
 
 | File | Change |
 |------|--------|
-| `templates/TASK_GUIDE_template.md` | add `### 4. UX Acceptance Criteria` block (AC 1) |
-| `skills/code-review/SKILL.md` | one `ux-reviewer` row in `#### Conditional reviewers` (AC 2, 5) |
-| `skills/code-review/references/ux-reviewer.md` | new — the persona's rules (AC 3) |
-| `agents/frontend.md` | `UX:` checklist line; Pillar 3 names the method (AC 4) |
-| `tests/test_t245_ux_review.py` | new — AC 1–6 |
-| `MANIFEST` (only if it lists skill files one by one) | add the reference file |
+| `skills/ux-evaluate/SKILL.md` | new — the UX skill (AC 1–3) |
+| `agents/frontend.md` | skills-table row, `UX:` checklist line, Pillar 3 method (AC 4) |
+| `templates/TASK_GUIDE_template.md` | `### 4. UX Acceptance Criteria` block (AC 5) |
+| `skills/code-review/SKILL.md` | one conditional row that calls the skill (AC 6) |
+| `site/index.html`, `tests/test_site_content.py` | only where tests require every skill listed (AC 7) |
+| `tests/test_t245_ux_evaluate.py` | new — AC 1–6 |
 
 ## Files Must NOT Touch
 
@@ -165,16 +173,16 @@ Byte budget: if the one row does not fit in 29 bytes, shorten other lines in `co
 |------|--------|
 | `AGENTS.md` | 196/200 lines; no gate change in scope |
 | `.claude/hooks/*` | no hook change in scope |
-| `tasks/TASK_GUIDE_T192.md`, any `ui-test` skill | T192 owns easy-ui and the three UI design rows |
+| `tasks/TASK_GUIDE_T192.md`, any `ui-test` skill | T192 owns easy-ui and the three UI design Evidence rows |
 | `agents/qa.md` | cut list |
 
 ---
 
 ## Test Plan
 
-Test-first (`tdd`): write `tests/test_t245_ux_review.py` with AC 1–6 as text assertions on the four
-files (red), make the edits (green), then run the full suite and compare with a `main` run. Then the
-real run: headless Chrome screenshots of `site/index.html` at 375px and 1280px, opened with `Read`.
+Test-first (`tdd`): write `tests/test_t245_ux_evaluate.py` with AC 1–6 as assertions on the files
+(red), make the edits (green), then run the full suite and compare with a `main` run. Then the real
+run (AC 8): `ux-evaluate` on `site/index.html` with 2 test UX rows, screenshots at 375px and 1280px.
 
 ---
 
