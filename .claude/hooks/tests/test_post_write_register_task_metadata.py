@@ -313,3 +313,29 @@ if __name__ == "__main__":
         print(f"\n{failures} test(s) failed")
         sys.exit(1)
     print(f"\nAll {len(tests)} tests passed")
+
+
+def test_t229_a_new_row_is_announced_to_the_model():
+    """T229: T228's guide write added a Todo row; the Supervisor, who never saw the stderr line,
+    then hand-added an In Progress row, so the board held T228 twice. A PostToolUse hook's stderr
+    on exit 0 does not reach the model; `additionalContext` does."""
+    sandbox = HookSandbox()
+    try:
+        result = sandbox.run_hook(sandbox.write_guide("T900", TEMPLATE_FORMAT_GUIDE))
+        assert result.returncode == 0, result.stderr
+        context = json.loads(result.stdout)["hookSpecificOutput"]
+        assert context["hookEventName"] == "PostToolUse"
+        assert "T900" in context["additionalContext"]
+        assert "do not add a second row" in context["additionalContext"]
+    finally:
+        sandbox.cleanup()
+
+
+def test_t229_an_existing_row_prints_nothing():
+    sandbox = HookSandbox()
+    try:
+        path = sandbox.write_guide("T900", TEMPLATE_FORMAT_GUIDE)
+        sandbox.run_hook(path)
+        assert sandbox.run_hook(path).stdout.strip() == ""
+    finally:
+        sandbox.cleanup()

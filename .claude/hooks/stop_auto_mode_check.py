@@ -28,8 +28,8 @@ or a `Mode: auto` line, and the newest `tasks/MINIMAL_LOG.md` record carrying `M
 `lib/auto_mode.py` (T188 D1) — the one reader, shared with `stop_auto_verify.py`, so the two hooks
 can never disagree about which tasks are in auto mode. Skipped as finished: a task whose row is in
 Done, and a review file whose `verify` row has `☑ pass` in its Result cell. A board row counts as
-auto mode when its report is marked as above, or the session's request carries `[auto]` (outside
-code spans) and the task's files changed after it.
+auto mode when its report is marked as above, or the task's files changed while a request carrying
+`[auto]` (outside code spans) was the latest user request — up to the next request without it (T229).
 
 Labels (D9): at Risk Medium/High a decision line is a choice — so it must be `DEBATED` with
 exactly 2 / 3 Advocates named — when it is flagged `⚠`, is a `SAFER OPTION`, is a `RULE:` that
@@ -142,10 +142,37 @@ def parse_ts(value):
         return None
 
 
-def auto_request_time(transcript_path):
-    """Timestamp of the first user message carrying `[auto]` outside code spans, or None."""
-    if not transcript_path or not os.path.isfile(transcript_path):
+# T229: not a user request — the harness writes these as `user` entries too
+NOT_A_REQUEST = re.compile(r"\s*<(task-notification|bash-input|bash-stdout|bash-stderr|local-command)")
+
+
+def request_text(entry):
+    """The text of a user request in a transcript entry, or None for any other entry (a tool
+    result, a task notification, a skill body or reminder, the compact summary, a `!` command)."""
+    if not isinstance(entry, dict) or entry.get("type") != "user":
         return None
+    if entry.get("isMeta") or entry.get("isCompactSummary"):
+        return None
+    origin = entry.get("origin")
+    if isinstance(origin, dict) and origin.get("kind") not in (None, "human"):
+        return None
+    content = (entry.get("message") or {}).get("content")
+    if isinstance(content, list):
+        content = " ".join(b.get("text", "") for b in content
+                           if isinstance(b, dict) and b.get("type") == "text")
+    if not isinstance(content, str) or not content.strip() or NOT_A_REQUEST.match(content):
+        return None
+    return content
+
+
+def auto_windows(transcript_path):
+    """(start, end) spans the session's `[auto]` requests cover (T229). A request carrying `[auto]`
+    outside code spans opens a span; the next request without it closes the span (end None: still
+    open). Before T229 the first `[auto]` request covered the rest of the session, so a task done
+    in normal mode later was checked as an auto-mode task."""
+    if not transcript_path or not os.path.isfile(transcript_path):
+        return []
+    spans, start = [], None
     try:
         with open(transcript_path, encoding="utf-8") as f:
             for line in f:
@@ -153,17 +180,27 @@ def auto_request_time(transcript_path):
                     entry = json.loads(line)
                 except Exception:
                     continue
-                if not isinstance(entry, dict) or entry.get("type") != "user" or entry.get("isMeta"):
+                text = request_text(entry)
+                if text is None:
                     continue
-                content = (entry.get("message") or {}).get("content")
-                if isinstance(content, list):
-                    content = " ".join(b.get("text", "") for b in content
-                                       if isinstance(b, dict) and b.get("type") == "text")
-                if isinstance(content, str) and am.TAG in CODE.sub(" ", content):
-                    return parse_ts(entry.get("timestamp"))
+                ts = parse_ts(entry.get("timestamp"))
+                if ts is None:
+                    continue
+                if am.TAG in CODE.sub(" ", text):
+                    if start is None:
+                        start = ts
+                elif start is not None:
+                    spans.append((start, ts))
+                    start = None
     except Exception as exc:
         warn(f"cannot read the transcript ({type(exc).__name__}) — `[auto]` request not checked")
-    return None
+    if start is not None:
+        spans.append((start, None))
+    return spans
+
+
+def in_auto_window(ts, windows):
+    return any(start <= ts and (end is None or ts < end) for start, end in windows)
 
 
 def trace_records(task_id):
@@ -274,7 +311,7 @@ def traced_test_run(task_id):
         return True
 
 
-def check_task(task, request_ts):
+def check_task(task, windows):
     """The reasons this task's report fails, or [] (also [] when the task is not auto mode)."""
     task_id, body = task.task_id, task.body
     if task.minimal:
@@ -294,8 +331,8 @@ def check_task(task, request_ts):
                    f"with `{am.MARKER}`")
 
     marked = task.marked
-    if not marked and request_ts is not None:
-        marked = any(datetime.fromtimestamp(os.path.getmtime(p), timezone.utc) >= request_ts
+    if not marked and windows:
+        marked = any(in_auto_window(datetime.fromtimestamp(os.path.getmtime(p), timezone.utc), windows)
                      for p in task.touched)
     if not marked:
         return []
@@ -423,7 +460,7 @@ def main():
     kanban = kanban or ""  # D9: no board is fine; tasks are also found from their files
 
     dirs = am.tasks_dirs(ROOT)
-    request_ts = auto_request_time(event.get("transcript_path"))
+    windows = auto_windows(event.get("transcript_path"))
     open_rows = am.board_rows(kanban)
     done = {task_id for task_id, _ in am.board_rows(kanban, ("Done",))}
     tasks = list(open_rows)
@@ -436,7 +473,7 @@ def main():
     for task_id, row in tasks:
         try:
             task = am.resolve(task_id, row, dirs)
-            for report_path, minimal, reason, stamp in check_task(task, request_ts):
+            for report_path, minimal, reason, stamp in check_task(task, windows):
                 failures.setdefault(task_id, (report_path, minimal, [], stamp))[2].append(reason)
         except am.Unreadable as exc:
             warn(f"{exc} — auto-mode check skipped for {task_id}")
