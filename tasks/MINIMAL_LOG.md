@@ -4,6 +4,20 @@
 > new record directly under this note. On first use, the Supervisor creates `tasks/MINIMAL_LOG.md` from
 > this template and deletes the example comment. The same block is the Supervisor's final chat message.
 
+## T246 — RUNBOOK names the `plugin/` file copies T243 added · minimal
+**Asked:** "do you update the guide, docs realtd"
+**Decisions:**
+- The copies are a release step (a version bump edits the root `plugin.json`), so the note goes in RUNBOOK beside the plugin health check — the RUNBOOK is where a release is run
+- Track minimal: one doc paragraph plus one test, C0, Risk Low — `docs/claude-md/tracks.md` `## Track rule`
+- The icon copy is named but gets no `cp` line — a new icon never reaches the listing after the first submission
+**Checked:**
+- New test `test_runbook_says_to_copy_the_root_files_into_plugin` — `1 failed, 6 passed` before the RUNBOOK edit, passes after
+- Suite: `python3 -m pytest tests -q` — see the commit's run (all passed)
+- Real run: `python3 -m pytest tests/test_directory_prep.py tests/test_runbook_plugin_check.py tests/test_docs_match_installer.py -q` — `17 passed in 0.84s`
+**Files:** `RUNBOOK.md`, `tests/test_directory_prep.py`, `tasks/MINIMAL_LOG.md`
+**Memory:** nothing new
+**Not done:** merge (the user decides); auto verify: running (T182)
+
 ## T243 — Plugin directory submission prep: icon, manifest and hooks the directory can read · minimal
 Mode: auto
 **Asked:** "continue, I saw you draw the icon for the index page, let use it [auto]"
