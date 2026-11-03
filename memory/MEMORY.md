@@ -25,7 +25,7 @@
      run; read them there. The enforced gate is the whole-file character budget above. -->
 
 ### Decisions
-- [T232–T235, T239: plugin, names, `/easy-kit:init`; Stage 0–5](decisions.md) — T236 next
+- [T232–T235, T239, T240: plugin, names, `/easy-kit:init`; Stage 0–5; repo is `thunderkds/easy-kit`](decisions.md) — T236 next; never reuse the old repo name (ends the redirect)
 - [T231: story `index.html`, reference `docs.html`](decisions.md) — 300-word cap; new skill goes on both pages
 - [T218–T220: tech-lead pack — map-first agent, dormant; pipeline pointers; packs activate by approved copy](decisions.md)
 - [T216: plugin path (Option C) — Claude Code plugin works with prefixed names; setup.sh stays](decisions.md) — `easy-kit:<agent>` in plugin mode; Codex gate open
