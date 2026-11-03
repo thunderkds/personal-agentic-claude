@@ -301,8 +301,9 @@ with a short reason when:
 7. the task's own trace `memory/event-trace/<ID>.jsonl` holds no test run (Gate 5): register the task (minimal-track step 1), rerun its tests, then stop.
 
 A board row counts as auto mode when its report carries `## Auto decisions` or a `Mode: auto` line, when its
-Decision record's request carries `[auto]`, or when this session's request carries `[auto]` and the task's
-files changed after it. Risk comes from the guide's `**Risk Level**`, else the review file, else the board
+Decision record's request carries `[auto]`, or when the task's files changed while a request carrying
+`[auto]` was this session's latest user request (T229: up to the next request without the tag; tool
+results, task notifications and `!` commands are not requests). Risk comes from the guide's `**Risk Level**`, else the review file, else the board
 row, else Low; a Decision record is Risk Low unless it says otherwise. The trace is `memory/event-trace/<ID>.jsonl` plus the last 6 hours of
 `memory/event-trace/_untagged.jsonl` (`CLAUDE_AUTO_CHECK_WINDOW_S`): Advocate prompts carry no task ID, so
 their calls land in `_untagged.jsonl` unless the active-task state file is set.
