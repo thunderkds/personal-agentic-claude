@@ -89,10 +89,18 @@ def test_every_link_resolves_inside_the_repo_and_is_relative():
         assert not real.startswith(os.path.realpath(PLUGIN) + os.sep), (link, real)
 
 
-def test_plugin_holds_only_links_and_folders():
+# T243: the plugin directory reads these through no link, so they are real copies of the root files
+# (tests/test_directory_prep.py keeps them equal). Every other file in plugin/ is a link.
+REAL_FILES = {".claude-plugin/plugin.json", ".claude-plugin/icon.png", "hooks/hooks.json"}
+
+
+def test_plugin_holds_only_links_folders_and_the_real_copies():
     for dirpath, dirs, names in os.walk(PLUGIN):
         for name in names:
-            assert os.path.islink(os.path.join(dirpath, name)), os.path.join(dirpath, name)
+            path = os.path.join(dirpath, name)
+            if os.path.relpath(path, PLUGIN) in REAL_FILES:
+                continue
+            assert os.path.islink(path), path
 
 
 def test_hook_tests_are_left_out():
@@ -101,14 +109,6 @@ def test_hook_tests_are_left_out():
     for dirpath, _dirs, _names in os.walk(PLUGIN, followlinks=True):
         real = os.path.realpath(dirpath)
         assert real != tests_dir and not real.startswith(tests_dir + os.sep), dirpath
-
-
-def test_plugin_json_is_a_link_to_the_real_root_manifest():
-    root_manifest = os.path.join(ROOT, ".claude-plugin", "plugin.json")
-    link = os.path.join(PLUGIN, ".claude-plugin", "plugin.json")
-    assert not os.path.islink(root_manifest)
-    assert os.path.islink(link)
-    assert os.path.realpath(link) == os.path.realpath(root_manifest)
 
 
 def test_setup_sh_does_not_ship_the_plugin_folder():
