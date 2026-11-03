@@ -4,6 +4,24 @@
 > new record directly under this note. On first use, the Supervisor creates `tasks/MINIMAL_LOG.md` from
 > this template and deletes the example comment. The same block is the Supervisor's final chat message.
 
+## T229 — The auto-mode Stop check counts only work done under an `[auto]` request · minimal
+Mode: auto
+**Asked:** "continue [auto]"
+**Decisions:**
+1. "Continue" is T229, the P1 row next to T230 (P2) — RULE: `docs/claude-md/tracks.md` `### Every user stop and its auto rule` (decide from the repo); the last reply named T229 and T230 as next
+2. Minimal track: two hook edits plus tests, C1, Risk Low, no UI, no user data — RULE: `docs/claude-md/tracks.md` `## Track rule`
+3. An `[auto]` request covers the work until the next user request without the tag; a later `[auto]` request opens a new span — RULE: AGENTS.md § Tracks: "With the literal tag `[auto]` in the request (a bare word *auto* is not the tag), run either track in **auto mode**" — each request sets its own mode, so a plain `continue` is a normal-mode request
+4. Tool results, task notifications (`origin.kind` not `human`), `isMeta` entries, the compact summary and `<bash-input>`/`<local-command` lines are not requests and do not close a span — FACT: this session's transcript holds them as `type: user` entries (204 tool results, 12 task notifications, 15 meta entries, 2 `<bash-input>`, 1 compact summary), so counting them would close every span at the first tool call
+5. The duplicate T228 row is fixed by telling the model, not by changing what the hook writes: the hook already skips an ID that has a row (`post_write_register_task.py` "Skip if already registered (any section)"); the second row came from a hand edit after the guide write (`ff45291b` added both rows). The notice now goes out as `additionalContext` — FACT: `.claude/hooks/post_bash_memory_update.py:93` "Plain stdout from a PostToolUse hook only reaches the debug log."
+6. Residual: a plain reply inside an auto run (an answer `1` to a stop that stays, or a bare `continue`) closes the span. A report marked `Mode: auto` is still checked, because the marker does not depend on the span — SAFER OPTION: the span only matters for a report the Supervisor forgot to mark; the literal-tag rule decides the other way ⚠ decided for you — please review
+**Checked:**
+- New tests `test_t229_*` in `.claude/hooks/tests/test_stop_auto_mode_check.py` (4) — the bug case `test_t229_a_task_touched_after_a_later_plain_request_is_not_auto` failed before (`1 failed, 3 passed`), all 4 pass after; `test_t229_*` in `test_post_write_register_task_metadata.py` (2) — `1 failed, 1 passed` before, pass after
+- Suite: `python3 -m pytest .claude/hooks/tests -q` — `1395 passed, 25 subtests passed in 39.06s`; `python3 -m pytest tests -q` — `1720 passed in 147.09s (0:02:27)`; `sh scripts/smoke-install.sh` — `smoke-install.sh: PASS`
+- Real run (auto-checked, not /verify): `auto_windows()` on this session's own transcript — `window 11:57:06 -> 12:16:04`, `window 14:41:05 -> 14:54:57`, `window 14:56:03 -> open`; the 13:16:41 `continue` that started T244 is in no span, so T244's false `Mode: auto` flag would not fire
+**Files:** `.claude/hooks/stop_auto_mode_check.py`, `.claude/hooks/post_write_register_task.py`, `.claude/hooks/tests/test_stop_auto_mode_check.py`, `.claude/hooks/tests/test_post_write_register_task_metadata.py`, `tasks/MINIMAL_LOG.md`
+**Memory:** `memory/learnings.md` — an `[auto]` request covers only the work before the next plain request; PostToolUse stderr never reaches the model (T229)
+**Not done:** merge (yours); auto verify: running (T182)
+
 ## T243 — Plugin directory submission prep: icon, manifest and hooks the directory can read · minimal
 Mode: auto
 **Asked:** "continue, I saw you draw the icon for the index page, let use it [auto]"
