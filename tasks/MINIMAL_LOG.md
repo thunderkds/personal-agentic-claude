@@ -18,9 +18,11 @@ Mode: auto
 - New tests `test_t229_*` in `.claude/hooks/tests/test_stop_auto_mode_check.py` (4) — the bug case `test_t229_a_task_touched_after_a_later_plain_request_is_not_auto` failed before (`1 failed, 3 passed`), all 4 pass after; `test_t229_*` in `test_post_write_register_task_metadata.py` (2) — `1 failed, 1 passed` before, pass after
 - Suite: `python3 -m pytest .claude/hooks/tests -q` — `1395 passed, 25 subtests passed in 39.06s`; `python3 -m pytest tests -q` — `1720 passed in 147.09s (0:02:27)`; `sh scripts/smoke-install.sh` — `smoke-install.sh: PASS`
 - Real run (auto-checked, not /verify): `auto_windows()` on this session's own transcript — `window 11:57:06 -> 12:16:04`, `window 14:41:05 -> 14:54:57`, `window 14:56:03 -> open`; the 13:16:41 `continue` that started T244 is in no span, so T244's false `Mode: auto` flag would not fire
+- verify: ☑ pass — auto-run by hook, session 7819efd6-8606-45e9-a214-f792ebee5be6, commit fa666f7e7a5dea4a9c99d4d8d2a27e0612b3e018, log .claude/verify-runs/T229-fa666f7e7a5d.log
 **Files:** `.claude/hooks/stop_auto_mode_check.py`, `.claude/hooks/post_write_register_task.py`, `.claude/hooks/tests/test_stop_auto_mode_check.py`, `.claude/hooks/tests/test_post_write_register_task_metadata.py`, `tasks/MINIMAL_LOG.md`
 **Memory:** `memory/learnings.md` — an `[auto]` request covers only the work before the next plain request; PostToolUse stderr never reaches the model (T229)
-**Not done:** merge (yours); auto verify: running (T182)
+**Not done:** merge (yours); auto verify: ☑ pass (session 7819efd6-8606-45e9-a214-f792ebee5be6, commit fa666f7e7a5dea4a9c99d4d8d2a27e0612b3e018, log .claude/verify-runs/T229-fa666f7e7a5d.log)
+Closed: row moved to Done 2026-11-03 — auto verify pass (session 7819efd6-8606-45e9-a214-f792ebee5be6, commit fa666f7e7a5dea4a9c99d4d8d2a27e0612b3e018); Gates 5 and 6 checked
 
 ## T243 — Plugin directory submission prep: icon, manifest and hooks the directory can read · minimal
 Mode: auto
