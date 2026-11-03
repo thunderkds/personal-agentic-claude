@@ -260,7 +260,7 @@ def test_no_external_assets():
 
 def test_canonical_repository_is_linked_on_page():
     text = _page_text()
-    assert 'href="https://github.com/thunderkds/personal-agentic-claude"' in text
+    assert 'href="https://github.com/thunderkds/easy-kit"' in text
     assert "GitHub repository" in text
 
 
@@ -639,7 +639,7 @@ def test_site_names_the_version_it_actually_ships_with():
         f"sidebar does not name the shipping version {version} (from RUNBOOK.md's "
         f"Release Log, newest row)"
     )
-    assert f"personal-agentic-claude — {version} release" in text, (
+    assert f"easy-kit — {version} release" in text, (
         f"footer does not name the shipping version {version} (from RUNBOOK.md's "
         f"Release Log, newest row)"
     )
@@ -1028,7 +1028,7 @@ import html as _html
 LEAD_WORD_CAP = 35
 CELL_WORD_CAP = 25
 ONE_LINE_INSTALL = (
-    "curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh"
+    "curl -fsSL https://raw.githubusercontent.com/thunderkds/easy-kit/main/setup.sh | sh"
 )
 EASY_VERIFIER_SITE_URL = "https://easy-verifier.vercel.app/"
 
@@ -1613,7 +1613,7 @@ SITE_DIR = os.path.join(ROOT, "site")
 THEME_CSS = os.path.join(SITE_DIR, "theme.css")
 FONTS_DIR = os.path.join(SITE_DIR, "fonts")
 RUNBOOK_PATH = os.path.join(ROOT, "RUNBOOK.md")
-CANONICAL_REPO_URL = "https://github.com/thunderkds/personal-agentic-claude"
+CANONICAL_REPO_URL = "https://github.com/thunderkds/easy-kit"
 
 GRAPHITE_MINT_TOKENS = {
     "color-scheme": "dark",
