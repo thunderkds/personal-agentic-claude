@@ -2993,3 +2993,6 @@ The merge gate needs a test-runner Bash call in `memory/event-trace/<ID>.jsonl`.
 ### 2026-11-03 — An "anonymous" GitHub check must block SSH too (T236)
 `GIT_TERMINAL_PROMPT=0` plus no credential helper still cloned over SSH with the user's agent key, so the first "anonymous" install proved nothing. Block SSH as well: unset `SSH_AUTH_SOCK`, `GIT_SSH_COMMAND='ssh -o IdentityFile=/dev/null -o BatchMode=yes'`, `GIT_CONFIG_GLOBAL=/dev/null`, `GIT_CONFIG_NOSYSTEM=1`, scratch `HOME`. A headless `claude -p` in an isolated `CLAUDE_CONFIG_DIR` prints `Not logged in`; with the user's consent use the real login plus `--plugin-dir <cache>` and `--setting-sources project,local` instead of copying credentials.
 
+### 2026-11-03 — Testing a plugin install from an unpushed branch needs smart HTTP (T242)
+`claude plugin marketplace add` refuses `file://` (`✘ Invalid marketplace source format. Try: owner/repo, https://..., or ./path`), a `./path` marketplace loads in place (no copy, so it proves nothing about the cache), and dumb HTTP fails (`fatal: dumb http transport does not support shallow capabilities`). Serve a bare clone with `git http-backend` behind a stdlib `wsgiref` wrapper on `127.0.0.1`, in an isolated `CLAUDE_CONFIG_DIR` + scratch `HOME`.
+

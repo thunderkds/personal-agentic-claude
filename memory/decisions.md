@@ -2742,3 +2742,10 @@ The log refuses a symlink/non-file path, writes via `mktemp` in `.claude/` + `mv
 **Files**: README.md, site/docs.html, site/index.html, tests/test_site_content.py, tests/test_site_story.py, tests/test_plugin_package.py
 **Verified**: auto verify pass at `5c8beddb`; merged at user request 2026-11-03 (`9cbf4206`).
 
+### 2026-11-03 — T242: the plugin installs from `plugin/`, a folder of per-path symlinks (auto, DEBATED)
+**Decision**: `.claude-plugin/marketplace.json` source `./plugin`. `plugin/` holds 23 relative links: `hooks`, `commands`, `skills`, `agents`, `templates`, `scripts`, `AGENTS.md`, `LICENSE`, `docs/claude-md`, `.claude/sensitive-paths.txt`, `.claude/hooks/lib`, one link per `.claude/hooks/*.py` (so `.claude/hooks/tests/` stays out), and `.claude-plugin/plugin.json` → the root file, which stays real. A git install dereferences links to elsewhere in the marketplace, so the cache gets real files.
+**Why**: the cache dropped from 12 MB to 1.3 MB (129 files, 0 symlinks); 16 MB marketplace clone unchanged (out of reach of a source change). Both Advocates proposed this layout.
+**Open**: a new runtime path must get a link — `tests/test_plugin_source.py` fails if a `${CLAUDE_PLUGIN_ROOT}/…` ref or a `plugin_init` path does not resolve under `plugin/`. Windows `core.symlinks=false` would check links out as text files (untested). `claude plugin validate plugin/` warns that it does not read inside linked dirs; the root validate test still checks real folders.
+**Files**: plugin/, .claude-plugin/marketplace.json, tests/test_plugin_source.py
+**Verified**: (pending auto verify)
+

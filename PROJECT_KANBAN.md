@@ -89,7 +89,6 @@
 
 
 ### In Progress
-- [ ] **T242** — Smaller plugin source: a git install copies ~28 MB (12 MB cache + 16 MB marketplace clone, `tasks/` 4.7 MB) while the plugin runs from ~2–2.5 MB (T236 D5) | common-infrastructure | C2 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_T242.md` | Started 2026-11-03 (auto): branch `feat/t242-plugin-source`, worktree `../wt-t242`
 
 
 
@@ -98,6 +97,7 @@
 
 
 ### Ready for Review
+- [ ] **T242** — Smaller plugin source: a git install copies ~28 MB (12 MB cache + 16 MB marketplace clone, `tasks/` 4.7 MB) while the plugin runs from ~2–2.5 MB (T236 D5) | common-infrastructure | C2 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_T242.md` | Started 2026-11-03 (auto): branch `feat/t242-plugin-source`, worktree `../wt-t242` | Ready for Review 2026-11-03: cache 12M → 1.3M; code-review P3×1, security-review no findings
 
 
 ### Done
