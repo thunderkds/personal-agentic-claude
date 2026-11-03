@@ -2719,3 +2719,11 @@ The log refuses a symlink/non-file path, writes via `mktemp` in `.claude/` + `mv
 **Open**: code-review P2 left: `grill-with-docs` stays listed under Stage 2 while Stage 0 names step Grilling. History (`tasks/`, `memory/`, archives, `docs/brainstorming/`, `docs/prd/`, `docs/adr/`) keeps old names on purpose. T240 (repo rename to easy-kit) next.
 **Files**: AGENTS.md, CLAUDE_LEGACY.md, README.md, docs/claude-md/*, skills/*/SKILL.md, agents/*.md, templates/*, site/index.html, site/docs.html, site/theme.css, scripts/token_audit.py, .claude/hooks/pre_agent_validate_guide.py, tests/test_stage_names.py
 **Verified**: auto verify pass at `5505e363`; merged 2026-11-03.
+
+## T235: `/easy-kit:init` sets up a plugin project; plugin hooks stand down beside in-repo hooks (2026-11-03)
+
+**Decision**: `commands/init.md` (a command, so it never shadows the built-in `/init`) runs `scripts/plugin_init.py`, add-only into the cwd git repo: `CLAUDE.md`, `AGENTS.md`, an empty board, `tasks/`, `memory/`, copies of `templates/`, `docs/claude-md/`, `agents/` (user, D7) and the scripts the doctrine calls by repo path. Settings go through the `settings-setup` dry run, written only after approval. A plugin hook exits 0 silently when `.claude/settings.json` wires its in-repo twin and that file exists (per hook; hook calls only, never `--run` workers). From a plugin with `CLAUDE_PROJECT_DIR` unset, `project_root()` is the nearest kit project at or above the cwd, else the cwd (D6a). D6b: a broken `project_root.py` still blocks everywhere (fail-closed). D8: `__pycache__` in the plugin folder is accepted.
+**Why**: a plugin carries no project files or permissions; with both modes present one push got two blocks.
+**Open**: P2s — the stand-down ignores `settings.local.json` (double block, never none); the `MEMORY` scaffold text duplicates `setup.sh` with no match test. Version-skew of an older copied `AGENTS.md` not handled.
+**Files**: commands/init.md, scripts/plugin_init.py, .claude/hooks/lib/project_root.py, tests/test_plugin_init.py
+**Verified**: auto verify pass at `05b26d7a`; merged at user request 2026-11-03.
