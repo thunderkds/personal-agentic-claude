@@ -24,11 +24,24 @@ skills, and update flow — lives on the project site:
 
 ## Quick Start
 
-**Prerequisite:** the target directory must already be a git repository (`git init` first if it
-isn't — your project's own git history is the undo mechanism, since nothing is symlinked from a
-shared location).
+There are two ways to install: the **Claude Code plugin**, or **`setup.sh`**, which copies the kit into your repo and can also set up Codex.
 
-Run from inside the target project root:
+**Claude Code plugin.** Run in a terminal. On Claude Code 2.1.292 or later, one command does both:
+`claude plugin install easy-kit --marketplace thunderkds/easy-kit`.
+
+```sh
+claude plugin marketplace add thunderkds/easy-kit
+claude plugin install easy-kit@easy-kit
+```
+
+Then, in Claude Code, run `/easy-kit:init` once in your git repo. Claude Code only. Each teammate
+installs the plugin; without it, a teammate has no gates. A plugin cannot set permissions:
+`/easy-kit:init` shows the kit's settings rules, and writes them only after you approve. More:
+[site](https://personal-agentic-claude.vercel.app/docs.html#install).
+
+**`setup.sh`.** Prerequisites: `git`, `curl`, POSIX `sh`, and a git repository (`git init` first if it isn't —
+your project's own git history is the undo mechanism, since nothing is symlinked from a shared
+location). Run from inside the target project root:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/thunderkds/easy-kit/main/setup.sh | sh
@@ -46,25 +59,12 @@ project**. It shows a plan and asks `Proceed? [Y/n]` before it changes anything.
 
 Codex caps a skill body at 8 KB. A skill whose body currently exceeds that cap is **skipped**
 entirely on a Codex install — never truncated — with a named, loud warning. Skills currently
-affected:
-
-- `bugfix`
-- `craft-spawn-prompt`
-- `diagnose`
-- `write-better-skill`
+affected: `bugfix`, `craft-spawn-prompt`, `diagnose`, `write-better-skill`.
 
 To update, run the same line again and choose **Update** — it keeps the CLIs your project already has,
 so a Codex-only install stays Codex-only. Edited kit files get one choice: ask about each one, overwrite
 all (each backed up first), or keep all. Each run is logged in `.claude/update-log.md`. To add a CLI later,
 choose **Reinstall** and pick it. Fork installs, packs and the full Update flow: see the [site](https://personal-agentic-claude.vercel.app/).
-
----
-
-## Prerequisites
-
-- `git`
-- `curl`
-- POSIX `sh`
 
 ---
 

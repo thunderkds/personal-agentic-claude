@@ -465,6 +465,29 @@
 
 <section id="install">
 <h2>Install</h2>
+<h3>Claude Code plugin</h3>
+<p class="lead">Run in a terminal:</p>
+<div class="codebox"><code><span class="prompt">$ </span>claude plugin marketplace add thunderkds/easy-kit</code><button type="button" class="btn btn-primary" aria-label="Copy marketplace command">Copy</button></div>
+<div class="codebox"><code><span class="prompt">$ </span>claude plugin install easy-kit@easy-kit</code><button type="button" class="btn btn-primary" aria-label="Copy plugin install command">Copy</button></div>
+<p class="lead">Or, on Claude Code 2.1.292 or later, in one step:</p>
+<div class="codebox"><code><span class="prompt">$ </span>claude plugin install easy-kit --marketplace thunderkds/easy-kit</code><button type="button" class="btn btn-primary" aria-label="Copy one-step plugin install command">Copy</button></div>
+<p class="lead">Then, in Claude Code, run <code>/easy-kit:init</code> once in your git repo.</p>
+<ul class="lead">
+  <li><strong>Claude Code only.</strong> For Codex, use <code>setup.sh</code>.</li>
+  <li><strong>Each teammate installs the plugin.</strong> Without it, a teammate has no gates.</li>
+  <li><strong>A plugin cannot set permissions.</strong> <code>/easy-kit:init</code> shows the kit's
+    settings rules, and writes them only after you approve.</li>
+</ul>
+<details>
+<summary>Plugin details</summary>
+<ul class="lead">
+  <li><code>/easy-kit:init</code> adds <code>CLAUDE.md</code>, <code>AGENTS.md</code>, the task board,
+    <code>tasks/</code> and <code>memory/</code>. It never changes a file that is already there.</li>
+  <li>Skills and agents are named <code>easy-kit:&lt;name&gt;</code>, for example
+    <code>/easy-kit:wake</code> and <code>easy-kit:backend-developer</code>.</li>
+</ul>
+</details>
+<h3><code>setup.sh</code>: copy the kit into your repo</h3>
 <p class="lead">
   Prerequisites: an existing <strong>git repo</strong>, and <code>git</code>, <code>curl</code>,
   and a POSIX <code>sh</code> on your PATH.

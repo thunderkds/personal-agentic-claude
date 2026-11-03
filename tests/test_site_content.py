@@ -2109,3 +2109,52 @@ def test_five_site_family_nav_moves_to_the_drawer_below_900px():
     block = css[m.end():i - 1]
     assert any("display: none" in b for b in _rule_bodies(block, ".site-header .family-nav"))
     assert any("display: flex" in b for b in _rule_bodies(block, ".family-nav-drawer"))
+
+
+# ---- T236: the plugin install path, proven by an anonymous install from GitHub --------------
+# Only command forms that were run (tasks/TASK_REVIEW_T236.md, D1) may appear here.
+PLUGIN_TWO_STEP = (
+    "claude plugin marketplace add thunderkds/easy-kit",
+    "claude plugin install easy-kit@easy-kit",
+)
+PLUGIN_ONE_STEP = "claude plugin install easy-kit --marketplace thunderkds/easy-kit"
+
+
+def _install_section():
+    m = re.search(r'<section id="install">(.*?)</section>', _page_text(), re.DOTALL)
+    assert m, "page has no install section"
+    return m.group(1)
+
+
+def _codeboxes(fragment):
+    return re.findall(r'<div class="codebox">(.*?)</div>', fragment, re.DOTALL)
+
+
+def test_install_shows_the_plugin_and_setup_sh_paths_each_in_its_own_copy_box():
+    """T236 AC3: both paths, exact commands, one command per box so Copy copies one line."""
+    boxes = _codeboxes(_install_section())
+    for command in PLUGIN_TWO_STEP + (PLUGIN_ONE_STEP, ONE_LINE_INSTALL):
+        hits = [b for b in boxes if command in b]
+        assert len(hits) == 1, f"#install needs one codebox holding {command!r}, found {len(hits)}"
+        assert '<span class="prompt">$ </span>' in hits[0] and re.search(r'aria-label="Copy [^"]+"', hits[0])
+
+
+def test_install_puts_the_plugin_path_first_and_the_version_floor_beside_the_one_step_form():
+    """T236 AC3: the one-step form needs Claude Code 2.1.292 or later; the page says so next to it."""
+    body = _install_section()
+    assert body.index(PLUGIN_TWO_STEP[0]) < body.index(PLUGIN_TWO_STEP[1]) < body.index(ONE_LINE_INSTALL)
+    before_one_step = body[:body.index(PLUGIN_ONE_STEP)]
+    last_lead = before_one_step[before_one_step.rindex("<p"):]
+    assert "2.1.292 or later" in last_lead, "the one-step form needs its version floor in the line above it"
+
+
+@pytest.mark.parametrize("limit", [
+    "Claude Code only",
+    "/easy-kit:init</code> once",
+    "Each teammate installs the plugin",
+    "A plugin cannot set permissions",
+])
+def test_install_states_the_plugin_limits(limit):
+    """T236 AC4 (D3): the honest limits of the plugin path sit in #install."""
+    text = re.sub(r"\s+", " ", _install_section())
+    assert limit in text, f"#install does not state the plugin limit {limit!r}"
