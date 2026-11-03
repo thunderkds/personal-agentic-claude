@@ -66,12 +66,26 @@ Ordered steps to ship a release. Commands copy-pasteable.
    ```
    all succeed (the `test ! -d` line fails the check if a release ships the kit's own test suite again). Then `rm -rf "$T"`.
 
+5. **Plugin health check** — install the plugin from the *published remote* into a throwaway Claude
+   config, so your own Claude Code setup is untouched (T241)
+   ```sh
+   P=$(mktemp -d) && export CLAUDE_CONFIG_DIR="$P"
+   claude plugin marketplace add thunderkds/easy-kit
+   claude plugin install easy-kit@easy-kit
+   claude plugin list
+   unset CLAUDE_CONFIG_DIR; rm -rf "$P"
+   ```
+   **Pass condition**: both commands exit 0, the install prints
+   `✔ Successfully installed plugin: easy-kit@easy-kit (scope: user)`, and `claude plugin list` shows
+   `easy-kit@easy-kit` with the version in `.claude-plugin/plugin.json`.
+
 ---
 
 ## Rollback Procedure
 
 - **Trigger conditions**
   - The health-check install exits non-zero, or `Setup complete` never prints.
+  - The plugin health check fails.
   - A fresh install produces a tree missing MANIFEST paths, or `harness-lock.json` is absent.
   - The hook suite fails from a clean clone of the published `main`.
   - Any downstream repo reports `update.sh` overwriting a file it should have prompted about.
