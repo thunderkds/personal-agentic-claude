@@ -99,10 +99,10 @@
 
 
 ### Ready for Review
-- [ ] **T239** — Pipeline becomes Stage 0–5 with no half numbers | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T239.md` | Started 2026-11-02: branch `feat/t239-stage-names`, worktree `../wt-t239`
 
 
 ### Done
+- [x] **T239** — Pipeline becomes Stage 0–5 with no half numbers | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T239.md` | Started 2026-11-02: branch `feat/t239-stage-names`, worktree `../wt-t239` | Done 2026-11-03: auto verify PASS at `5505e363`; negative cases: new tests 13 failed on `7e19d759`; merged into local main. P2 left: `grill-with-docs` still listed under Stage 2.
 - [x] **T238** — Rename a kit-arms report so no tracked names clash on Windows or macOS (plugin upload refused them) | Supervisor | C1 | Risk: Low | P0 | Started 2026-11-02: branch `fix/t238-name-clash`, worktree `../wt-t238` | Track: minimal | Record: tasks/MINIMAL_LOG.md | Done 2026-11-02: auto verify pass at `b81f49de`, merged at user request; upload result not yet confirmed
 - [x] **T234** — Skills and agents work under the easy-kit prefix | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T234.md` | Started 2026-11-02: branch `feat/t234-plugin-names`, worktree `../wt-t234` | Done 2026-11-02: auto verify pass at `1df50e35`, merged at user request
 - [x] **T233** — Plugin package and MIT LICENSE at the repo root | common-infrastructure | C1 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T233.md` | Started 2026-11-02: branch `feat/t233-plugin-package`, worktree `../wt-t233` | Done 2026-11-02: auto verify pass at `f58dd149`, merged `576dcff2` at user request

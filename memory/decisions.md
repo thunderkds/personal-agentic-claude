@@ -2711,3 +2711,11 @@ The log refuses a symlink/non-file path, writes via `mktemp` in `.claude/` + `mv
 **Why**: `claude plugin validate` does not check this; only the upload does.
 **Files**: experiments/kit-arms/results/ANALYSIS.md, experiments/kit-arms/RULE-2.md, tests/test_plugin_package.py
 **Verified**: auto verify pass at `b81f49de`; the upload itself not yet confirmed by the user.
+
+## T239: the pipeline reads Stage 0 to Stage 5, no half numbers (2026-11-03)
+
+**Decision**: Phase 0, Stage 0.5a and 0.5b become Stage 0 with named steps Requirements, Grilling, Direction; each keeps its own stop. Stage 1.5 becomes Stage 1 step Agent team, which asks the user only when `craft-agent` proposes a role beyond the base team. `docs/claude-md/phase0-project-initiation.md` is now `docs/claude-md/stage0-define.md`; `scripts/token_audit.py` tags are `stage-0`/`stage-1` and old tags stay readable. `pipeline-stages.md` holds the one old-to-new mapping note.
+**Why**: half numbers read as a defect of the kit; the stops under them carry the real gates, so only the names changed (Readiness lines, guide hook checks and the merge gate untouched).
+**Open**: code-review P2 left: `grill-with-docs` stays listed under Stage 2 while Stage 0 names step Grilling. History (`tasks/`, `memory/`, archives, `docs/brainstorming/`, `docs/prd/`, `docs/adr/`) keeps old names on purpose. T240 (repo rename to easy-kit) next.
+**Files**: AGENTS.md, CLAUDE_LEGACY.md, README.md, docs/claude-md/*, skills/*/SKILL.md, agents/*.md, templates/*, site/index.html, site/docs.html, site/theme.css, scripts/token_audit.py, .claude/hooks/pre_agent_validate_guide.py, tests/test_stage_names.py
+**Verified**: auto verify pass at `5505e363`; merged 2026-11-03.
