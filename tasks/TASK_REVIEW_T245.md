@@ -23,12 +23,12 @@ Paused: auto-mode check failed — no test run in memory/event-trace/T245.jsonl 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_t245_ux_evaluate.py` (AC 1-7, 23 tests): `23 passed in 0.32s`; red run before the edits `19 failed, 4 passed` |
 | Verification command run | ☐ pass / ☐ fail | [paste actual output] |
 | Negative cases hold | ☐ pass / ☐ fail | |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| Full smoke suite still green (no regression) | ☑ pass | `python3 -m pytest .claude/hooks/tests/ tests/ -q`: `3138 passed, 25 subtests passed in 201.12s`; `main` run: `3109 passed, 25 subtests passed in 209.70s` (0 failures on both) |
 | **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | |
