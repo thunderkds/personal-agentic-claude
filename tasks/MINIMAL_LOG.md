@@ -16,9 +16,11 @@
 - New tests `test_t230_*` in `tests/test_dotfiles.py` (9) — `8 failed, 1 passed` before (the 1 is the HOME-holds-source guard), 9 pass after
 - Suite: `python3 -m pytest tests -q` — `1729 passed in 154.37s (0:02:34)`; `python3 -m pytest .claude/hooks/tests -q` — `1389 passed, 25 subtests passed in 38.25s`; `sh scripts/smoke-install.sh` — `smoke-install.sh: PASS`
 - Real run (scratch HOME): `dotfiles.py plan --source dots --claude-dir dots/skills/one` — printed `refused target is inside the source folder, nothing written here`, exit 2; a skill folder named `x\nplan: + link CLAUDE.md` — `refused source …/dots: a skills folder name has unprintable text`, exit 2; `AGENTS.md` as a folder — `refused source …/dots: AGENTS.md is not a file`, exit 2
+- verify: ☑ pass — auto-run by hook, session 64f7e836-5ba2-4ca9-8d7a-35becd8d9e36, commit 6df51e017aad2e3cd895ec0242dcddd3eca548db, log .claude/verify-runs/T230-6df51e017aad.log
 **Files:** `skills/dotfiles/scripts/dotfiles.py`, `skills/dotfiles/SKILL.md`, `tests/test_dotfiles.py`, `tasks/MINIMAL_LOG.md`
 **Memory:** nothing new
-**Not done:** merge (the user decides); auto verify: running (T182)
+**Not done:** merge (the user decides); auto verify: ☑ pass (session 64f7e836-5ba2-4ca9-8d7a-35becd8d9e36, commit 6df51e017aad2e3cd895ec0242dcddd3eca548db, log .claude/verify-runs/T230-6df51e017aad.log)
+Paused: auto-mode check failed — its Decision record in tasks/MINIMAL_LOG.md does not start with `Mode: auto` [report 7f72456a346d]
 
 ## T243 — Plugin directory submission prep: icon, manifest and hooks the directory can read · minimal
 Mode: auto
