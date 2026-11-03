@@ -4,6 +4,20 @@
 
 ---
 
+## Auto decisions
+
+Mode: auto
+1. Extended track — RULE: `AGENTS.md` § Tracks ("The extended track applies if any of: C2 or above; Risk Medium or High")
+2. Requirement Fidelity Gate signed `auto (Supervisor)` — RULE: `docs/claude-md/tracks.md` `### Every user stop and its auto rule` (row 13)
+3. Base team, `common-infrastructure` implements — RULE: `docs/claude-md/tracks.md` `### Every user stop and its auto rule` (row 11)
+4. Spawn model `claude · C2 → sonnet` — FACT: PROJECT_SPEC.md:146 "| claude | `claude` | haiku | sonnet | sonnet or opus | opus |"
+5. Duplicate ID: the `ux-evaluate` task keeps T245; the hook fix added in `00c9a5bf` becomes T246 — DEBATED: renumber the row-only task (Advocate 1: keep T245 for the task with guide, branch and trace, rename the row-only one; Advocate 2: argued renaming the ux task, found it breaks guide, trace and pushed `e97c7586`, so proposed renaming the row-only one too) ⚠ decided for you — please review
+6. The frontend agent reads `skills/ux-evaluate/SKILL.md` instead of calling `Skill(...)` — FACT: memory/learnings.md:895 "## A sub-agent has no `Skill` tool (T065, 2026-08-09)"
+Paused: run in progress — implementer running; Stage 4 (`code-review`, `security-review`), the memory pass and auto verify not yet run
+Checks: pending — filled at Stage 4
+Memory: pending — the diff-driven pass runs at Stage 4
+Not done: merge (yours); auto verify: not started
+
 ## Evidence
 
 | Check | Result | Notes / output snippet |
