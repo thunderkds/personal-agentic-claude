@@ -16,11 +16,12 @@
 - New test `tests/test_closeout_comment_boundary.py` (6 tests) — `2 failed, 2 passed` before the first fix (2026-11-03T13:17:33Z); the 2 inline-comment tests `2 failed, 4 passed` on `853daa7e`; `6 passed` after the second fix
 - Suite (2026-11-03T13:24:04Z): `python3 -m pytest tests -q` — `1715 passed in 136.54s (0:02:16)`; `python3 -m pytest .claude/hooks/tests -q` — `1389 passed, 25 subtests passed in 28.90s`
 - Real run: `auto_closeout.add_line` on T242's review file as committed at `87a03426` (before its close-out) — printed `Closed at char 2611 | comment starts at 2685 | inside comment: False`; re-run on the second fix — `real T242 file: inside comment: False`
-- verify: ☑ fail — auto-run by hook, session d5aa8918-0b11-4deb-a12b-3635af568fa5, commit 853daa7e711c668dbbb6ca003f1b618307e54c6f, log .claude/verify-runs/T244-853daa7e711c.log
+- verify: ☑ pass — auto-run by hook, session 82210a04-e5b6-4280-a86a-da31a0789279, commit 8e7eeb82ee4c694756ec43f4296a7e72d9fa98bb, log .claude/verify-runs/T244-8e7eeb82ee4c.log
 **Memory:** nothing new until the merge (normal mode; the memory pass runs at merge)
 **Files:** `.claude/hooks/lib/auto_mode.py`, `tests/test_closeout_comment_boundary.py`, `tasks/MINIMAL_LOG.md`
-**Not done:** merge (the user decides); auto verify: running (T182) — the first run failed at `853daa7e` (log .claude/verify-runs/T244-853daa7e711c.log)
+**Not done:** merge (the user decides); auto verify: ☑ pass (session 82210a04-e5b6-4280-a86a-da31a0789279, commit 8e7eeb82ee4c694756ec43f4296a7e72d9fa98bb, log .claude/verify-runs/T244-8e7eeb82ee4c.log) — the first run failed at `853daa7e` (log .claude/verify-runs/T244-853daa7e711c.log)
 Paused: auto-mode check failed — its Decision record in tasks/MINIMAL_LOG.md does not start with `Mode: auto`; no `Memory:` line in the report — run the memory pass before you stop and record it there (each entry written, or `Memory: nothing new`) [report fe3d759cbe82]
+Paused: auto-mode check failed — its Decision record in tasks/MINIMAL_LOG.md does not start with `Mode: auto` [report fdab48bc4fb8]
 
 ## T241 — RUNBOOK post-deploy check also installs the plugin from GitHub · minimal
 Mode: auto
