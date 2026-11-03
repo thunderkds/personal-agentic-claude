@@ -4,6 +4,23 @@
 > new record directly under this note. On first use, the Supervisor creates `tasks/MINIMAL_LOG.md` from
 > this template and deletes the example comment. The same block is the Supervisor's final chat message.
 
+## T241 — RUNBOOK post-deploy check also installs the plugin from GitHub · minimal
+Mode: auto
+**Asked:** "and continue the task [auto]"
+**Decisions:**
+1. "The task" is T241, the one P1 follow-up T236 left on the board — RULE: `docs/claude-md/tracks.md` `### Every user stop and its auto rule` (decide from the repo); the user's last two requests were T236's merge and push
+2. Minimal track: one doc section plus one new test, C1, Risk Low, no UI, no user data — RULE: `docs/claude-md/tracks.md` `## Track rule`
+3. The plugin check installs into a throwaway `CLAUDE_CONFIG_DIR` and deletes it, never the operator's own config — SAFER OPTION: same isolation T236 used; an install into the real config would change every project the operator opens ⚠ decided for you — please review
+4. Added it as step 5 after the `setup.sh` check, plus one rollback trigger line; the `setup.sh` check is unchanged — RULE: Surgical Changes (AGENTS.md § Karpathy Engineering Principles)
+5. Fixed `main` first: `memory/MEMORY.md` was 42,209 chars, over the 42,000 hot-tier budget, after the T236/T240 memory passes, so 5 hook tests failed on `main`; shortened 5 index lines (2 commits on `main`, `5bbc1888`, `48a04e32`) and rebased this branch on them — RULE: Hard-Stop Gate 5 needs a passing suite; the overage was the Supervisor's own memory write
+**Checked:**
+- New test `tests/test_runbook_plugin_check.py` (4 tests) — `4 failed in 0.03s` before the change (2026-11-03T11:46:19Z), `4 passed in 0.02s` after
+- Suite: `python3 -m pytest tests -q` — `1677 passed in 164.27s (0:02:44)`; `python3 -m pytest .claude/hooks/tests -q` after the rebase — `1389 passed, 25 subtests passed in 34.06s`
+- Real run (auto-checked, not /verify): the step-5 block as written, 2026-11-03T11:46:46Z — `✔ Successfully added marketplace: easy-kit (declared in user settings)`, exit 0; `✔ Successfully installed plugin: easy-kit@easy-kit (scope: user)`, exit 0; `claude plugin list` → `easy-kit@easy-kit  Version: 2.2.0  Status: ✔ enabled`, matching `.claude-plugin/plugin.json` `"version": "2.2.0"`
+**Files:** `RUNBOOK.md`, `tests/test_runbook_plugin_check.py`, `tasks/MINIMAL_LOG.md`
+**Memory:** `memory/MEMORY.md` — 5 index lines shortened to the 42,000-char budget; the minimal-track state-file line now says the Supervisor's write worked (T241)
+**Not done:** merge (yours); push of `main` (yours: 2 memory commits); auto verify: running (T182)
+
 ## T238 — Rename a report file that clashed on Windows and macOS · minimal
 **Asked:** "got this one when upload the pluggin Two file or folder names would clash on Windows or macOS Two files or folders in or beside the plugin folder differ only by letter case, Unicode form, a trailing dot, or a Windows short name (such as PROGRA~1), so a checkout on Windows or macOS would merge them. Rename one, then validate again."
 **Decisions:**
