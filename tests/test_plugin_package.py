@@ -109,3 +109,24 @@ def test_no_tracked_names_clash_on_windows_or_macos():
         groups[key].add(path)
     clashes = sorted(sorted(v) for v in groups.values() if len(v) > 1)
     assert clashes == []
+
+
+# ---- T236: README offers both install paths with the commands that were run ----------------
+README = os.path.join(ROOT, "README.md")
+PLUGIN_COMMANDS = (
+    "claude plugin marketplace add thunderkds/easy-kit",
+    "claude plugin install easy-kit@easy-kit",
+    "claude plugin install easy-kit --marketplace thunderkds/easy-kit",
+)
+SETUP_SH_LINE = "curl -fsSL https://raw.githubusercontent.com/thunderkds/easy-kit/main/setup.sh | sh"
+
+
+def test_readme_quick_start_shows_the_plugin_and_setup_sh_paths():
+    """T236 AC3: the README install section shows both paths, with the version floor of the one-step form."""
+    with open(README, encoding="utf-8") as f:
+        text = f.read()
+    quick = text[text.index("## Quick Start"):]
+    quick = quick[:quick.index("\n## ", 1)]
+    for command in PLUGIN_COMMANDS + (SETUP_SH_LINE, "/easy-kit:init"):
+        assert command in quick, f"README Quick Start lacks {command!r}"
+    assert "2.1.292 or later" in quick, "README must state the one-step form's version floor"

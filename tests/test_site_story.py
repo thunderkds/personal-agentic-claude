@@ -655,3 +655,10 @@ def test_every_layout_class_of_the_story_page_stacks_at_768px():
     for cls in layout:
         assert f".{cls}" in phone, f".{cls} is not restacked at 768px"
     assert ".flow-row.is-long" in _media_bodies(css, "@media (max-width: 1100px)"), "the five-step journey stacks at 1100px"
+
+
+def test_hero_mentions_the_plugin_and_links_to_the_docs_install_section():
+    """T236 D2: at most a short mention in the hero; the commands and limits live on docs.html#install."""
+    body = section(index_html(), "hero")
+    link = re.search(r'<a href="docs\.html#install">(.*?)</a>', body, re.DOTALL)
+    assert link and "plugin" in " ".join(visible_words(link.group(1))), "hero needs a plugin link to docs.html#install"
