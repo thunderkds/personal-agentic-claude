@@ -2922,7 +2922,7 @@ highest ID anywhere, not only `PROJECT_KANBAN.md` on the checked-out branch. Ren
 
 
 ### The merge gate reads evidence at hook time, and `pkill -f` can kill its own shell
-Two Bash gotchas seen at T199 (2026-10-28). (1) `pre_bash_block_unsafe_merge.py` runs before the command, so a command that writes the `verify` Evidence row and then merges is blocked: write and commit the row in one Bash call, set the `active_task` state file, then merge in the next call. (2) `pkill -f "<pattern>"` inside a command whose own text contains the pattern kills the shell (exit 144) and leaves later steps unrun; save the server PID (`echo $! > file`) and `kill $(cat file)` instead.
+Two Bash gotchas seen at T199 (2026-10-28). (1) `pre_bash_block_unsafe_merge.py` runs before the command, so a command that writes the `verify` Evidence row and then merges is blocked: write and commit the row in one Bash call, set the `active_task` state file, then merge in the next call. (2) `pkill -f "<pattern>"` inside a command whose own text contains the pattern kills the shell (exit 144) and leaves later steps unrun; save the server PID (`echo $! > file`) and `kill $(cat file)` instead. (3) T235 (2026-11-03): the same self-match hangs a wait loop. `until ...; ! pgrep -f 'stop_auto_verify.py --run T235'; do sleep 5; done` matched its own shell forever, so the Supervisor waited 85 minutes after a verify that had passed. To wait for auto verify, poll for the log's `verdict:` line only (`until grep -q '^verdict:' <log>; do sleep 5; done`); never `pgrep -f` with a pattern that the command's own text contains.
 
 
 ### A table that scrolls the page sideways: measure its minimum content width, not just the rule you suspect

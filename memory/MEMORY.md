@@ -280,7 +280,7 @@
 - [Audit every public claim in one pass](learnings.md) — T231: verify failed 3 times, one sentence each
 - [Sideways scroll: measure the table's minimum content width](learnings.md) — T199 addendum: `nowrap` was not the only floor; `Edit|Write|Bash` needed `<wbr>`
 - [Minimal-track test runs need the task state file before the gate counts them](learnings.md) — the classifier refuses the Supervisor writing it; ask the user for the `!` line at task start
-- [Merge gate reads evidence at hook time; `pkill -f` can kill its own shell](learnings.md) — commit the verify row in one Bash call, merge in the next; use a saved PID, not `pkill -f`
+- [Merge gate reads evidence at hook time; `pkill`/`pgrep -f` match their own shell](learnings.md) — commit the verify row, merge in the next call; saved PID; wait on the log `verdict:`
 - [easy-memory `switch off` leaves the MCP tools on](learnings.md) — an off-run can still call memory_search if the prompt says to check notes
 <!-- One-liner per active LR: - [LR-NNNN slug](memory/learning-records/LR-NNNN-slug.md) — summary -->
 <!-- Superseded LRs: ~~old text~~ → see LR-NNNN -->
