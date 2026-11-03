@@ -88,7 +88,6 @@
 
 
 ### In Progress
-- [ ] **T236** — Real plugin install proven, then published on the README and site | frontend-developer | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T236.md` | Started 2026-11-03: branch `feat/t236-plugin-publish`, worktree `../wt-t236`
 
 
 
@@ -97,6 +96,7 @@
 
 
 ### Ready for Review
+- [ ] **T236** — Real plugin install proven, then published on the README and site | frontend-developer | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T236.md` | Started 2026-11-03: branch `feat/t236-plugin-publish`, worktree `../wt-t236` | Ready for Review 2026-11-03: AC 1 anonymous install pass, AC 2 gates block in a real session; code-review P3×1, security-review no findings
 
 
 ### Done
