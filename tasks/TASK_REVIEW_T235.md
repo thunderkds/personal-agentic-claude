@@ -47,16 +47,16 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_plugin_init.py` (39 tests: AC1-AC5, D6a, D6b, D7, D7a, D7c, D8, edge cases). Supervisor rerun at `e1a77b22`: `39 passed in 2.45s`. |
+| Verification command run | ☑ pass | Supervisor at `e1a77b22`: `python3 -m pytest tests/test_plugin_init.py -q && sh scripts/smoke-install.sh` -> `39 passed in 2.45s`, `smoke-install.sh: PASS`. Implementer live headless runs (haiku, about $0.02 total): `/easy-kit:init` created 59 paths; a push with an In Progress T900 was blocked; both modes gave one block, from the in-repo hook. |
+| Negative cases hold | ☑ pass | Red first at `97dee307`: `2 failed, 1 passed, 33 errors`. Against the old `project_root.py`: `10 failed, 26 passed` (AC4 stand-down and both D6a tests). Gate kept when the wired file is missing, the settings are not JSON, or the hooks are init's unwired copies; a worker call with arguments never stands down; a broken `project_root.py` still blocks (D6b). |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | code-review inline on `main...HEAD` (5 files) plus callers of `exit_outside_kit_project` (all 11 hooks, unchanged): P0 0, P1 0, P2 2 left (stand-down reads `.claude/settings.json` only, not `settings.local.json`: a project wiring hooks there gets two blocks, not zero; `MEMORY` scaffold text in `scripts/plugin_init.py` is copied from `setup.sh` with no test that they match), P3 1 (run from a repo subfolder, init writes into that subfolder; consistent with `CLAUDE_PROJECT_DIR`, no action). lane_check: `EXCEEDS (lines 799 > 500); unpredicted: scripts/plugin_init.py` — 468 of the lines are tests. Startup reads: all three Permanent-Rule reads present. security-review scoped by the Supervisor: `git` called with an argument list, no shell; JSON parsed with `json.load` and type-checked; copies never overwrite (`os.path.lexists`); the stand-down lets a project turn off a plugin gate only by wiring its own copy of that gate, the same trust as an in-repo install. No finding. |
+| Full smoke suite still green (no regression) | ☑ pass | Supervisor at `e1a77b22`: `pytest tests` 1657 passed; `.claude/hooks/tests` 1389 passed, 25 subtests passed (the 5 budget failures the implementer saw came from the Supervisor's `memory/MEMORY.md` line, fixed on main in `f786631d` and cherry-picked); `smoke-install.sh: PASS`. |
+| **Companion score (easy-verifier)** | ☐ N/A | Optional tool, not run for this task. |
+| **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | No UI: a command, a script and a hook library. |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ N/A | No UI: a command, a script and a hook library. |
+| **UI: Responsiveness at target viewports** | ☐ N/A | No UI: a command, a script and a hook library. |
 
 ---
 
@@ -88,9 +88,16 @@ $ sh both_modes.sh <worktree>   # in-repo hooks wired + plugin copy, one push pa
 
 No `/easy-kit:init` command exists, and with both modes present the same push gets two blocks.
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER** (Supervisor, at `e1a77b22`; `both_modes.sh` was a scratch script, so the both-modes check is its committed test):
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```
+2026-11-03T02:59:39Z
+$ ls commands/init.md
+commands/init.md
+$ python3 -m pytest tests/test_plugin_init.py -q -k "ac4_both_modes or ac1_init_creates or ac2_a_second"
+3 passed, 36 deselected in 0.32s
+```
 
-**WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
-implementing agent alone]
+**DELTA**: A plugin user runs `/easy-kit:init` once to get the project files, add-only, and a project with both the plugin and in-repo hooks now gets one block per push, not two.
+
+**WITNESS**: common-infrastructure agent ran it 2026-11-03 (trace `memory/event-trace/T235.jsonl`); the Supervisor reran the tests and suites at `e1a77b22`; independent witness pending: the auto verify run.
