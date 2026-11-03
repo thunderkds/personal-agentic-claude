@@ -152,3 +152,4 @@ D1 first, and stop on failure. Red: `tests/test_plugin_source.py` on `main`. Add
 ## Questions Log
 
 - 2026-11-03 DEBATE How should the kit shrink what a plugin install copies? → A: `plugin/` of per-path symlinks, `"source": "./plugin"`, root `plugin.json` kept real (Advocate 1: A with per-path links, root plugin.json linked or removed; Advocate 2: A with per-path links, plugin.json moved into `plugin/`) ⚠ decided for you — please review
+- 2026-11-03 USER: decision 3's trace mismatch (Advocate calls filed under T241) accepted as recorded, option 1; no re-debate, no trace edit
