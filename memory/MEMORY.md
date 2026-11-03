@@ -25,12 +25,12 @@
      run; read them there. The enforced gate is the whole-file character budget above. -->
 
 ### Decisions
-- [T232–T236, T239, T240: plugin, names, `/easy-kit:init`; Stage 0–5; repo `thunderkds/easy-kit`; plugin install on README/site](decisions.md) — never reuse the old repo name (ends the redirect); T241–T243 follow-ups
-- [Anonymous GitHub check must block SSH too](learnings.md) — no-helper + `GIT_TERMINAL_PROMPT=0` still used the SSH agent key (T236)
+- [T232–T236, T239, T240: plugin, `/easy-kit:init`, Stage 0–5, repo `thunderkds/easy-kit`](decisions.md) — never reuse old repo name
+- [Anonymous GitHub check: block SSH](learnings.md) — T236
 - [T231: story `index.html`, reference `docs.html`](decisions.md) — 300-word cap; new skill goes on both pages
 - [T218–T220: tech-lead pack — map-first agent, dormant; pipeline pointers; packs activate by approved copy](decisions.md)
 - [T216: plugin path (Option C) — Claude Code plugin works with prefixed names; setup.sh stays](decisions.md) — `easy-kit:<agent>` in plugin mode; Codex gate open
-- [T213: scroll-spy band starts below the header; click holds its link until a hand scroll](decisions.md) — test `node --test tests/site_scrollspy/*.mjs` (headless Chrome; bare dir fails on Node 26)
+- [T213: scroll-spy band starts below the header; click holds its link until a hand scroll](decisions.md) — test `node --test tests/site_scrollspy/*.mjs` (bare dir fails on Node 26)
 - [T212: neon accent `#3CF5A8` + glow tokens; supersedes T204 no-glow](decisions.md) — glow only via `--glow-*`; links stay `#7EDDB0` (`--link`); `prefers-contrast: more` turns glow off
 - [T207–T209: visual-first site; verdict parser](decisions.md) — diagrams lead, prose in Details; `**Verdict: PASS …**` reads; a line listing choices is ignored
 - [T143/T191/T189: CI re-runs a Done task's Verification Command; `score` skill; auto close-out](decisions.md) — `# ci: skip — <reason>`; score row optional; Stop check (7) needs a task test run
@@ -280,7 +280,7 @@
 ### Learning Records
 - [Audit every public claim in one pass](learnings.md) — T231: verify failed 3 times, one sentence each
 - [Sideways scroll: measure the table's minimum content width](learnings.md) — T199 addendum: `nowrap` was not the only floor; `Edit|Write|Bash` needed `<wbr>`
-- [Minimal-track test runs need the task state file before the gate counts them](learnings.md) — the classifier refuses the Supervisor writing it; ask the user for the `!` line at task start
+- [Minimal-track test runs need the task state file first](learnings.md) — T241: the Supervisor's write went through; if refused, ask for the `!` line
 - [Merge gate reads evidence at hook time; `pkill`/`pgrep -f` match their own shell](learnings.md) — commit the verify row, merge in the next call; saved PID; wait on the log `verdict:`
 - [easy-memory `switch off` leaves the MCP tools on](learnings.md) — an off-run can still call memory_search if the prompt says to check notes
 <!-- One-liner per active LR: - [LR-NNNN slug](memory/learning-records/LR-NNNN-slug.md) — summary -->
