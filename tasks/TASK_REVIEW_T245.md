@@ -74,3 +74,19 @@ Added by the implementer before the first implementation commit (verbatim, from 
 **DELTA**: [filled at Stage 4]
 
 **WITNESS**: [filled at Stage 4]
+
+---
+
+## Experiment: before/after the skill (2026-11-03, user: "should check before/after adding skill to make sure skill is good to use, by the experiment")
+
+Fixture: a static task-list page (`list.html`, `empty.html`, `error.html`, `style.css`) with 3 seeded UX defects that are in the DOM but not visible when rendered: the "Add task" button is clipped at 375px (`width:900px` + `overflow:hidden`); "No tasks yet" is `#fafafa` on white; a `position:absolute` notice covers "Try again". One criterion is correct (3 titles readable). The key was confirmed by the Supervisor's own screenshots. Correct verdict: NOT READY, 3 defects. Every run: `general-purpose`, sonnet, its own fixture copy, told to act as the frontend agent with a given role guide.
+
+| Round | Arm | Role guide | Task guide | Prompt | Runs | Defects found | Verdict right | Screenshots |
+|---|---|---|---|---|---|---|---|---|
+| 1 | before | `main` (no skill) | with UX rows | per-row report format, names "screenshots" as an example method | 2 | 3/3, 3/3 | 2/2 | 2/2 |
+| 1 | after | branch (skill) | with UX rows | same | 2 | 3/3, 3/3 | 2/2 | 2/2 |
+| 2 | before | `main` (no skill) | old template, no UX rows | neutral: "do the checks your role guide asks for" | 2 | 3/3, 3/3 | 2/2 | 2/2 (one run skipped 1 of 6 images) |
+| 2 | after | branch (skill) | UX rows | same neutral prompt | 2 | 3/3, 3/3 | 2/2 | 2/2 (both followed `ux-evaluate`, per-row table) |
+
+Result: no detection difference, 8/8 runs right. The baseline agent already takes headless-Chrome screenshots on its own when the requirement names widths. What the skill changed: every after run gave a per-row verdict traced to the guide's UX rows and opened every image; one before run skipped an image. One after run's summary line miscounted (said "2 of 4 pass" over a table with 1 pass).
+Limits: n = 2 per arm per round; the seeded defects are also visible by reading the CSS, so this fixture does not test what only a screenshot shows; requirement-level misses (wrong flow, wrong copy) were not seeded.
