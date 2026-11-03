@@ -14,9 +14,11 @@
 - New test `test_runbook_says_to_copy_the_root_files_into_plugin` — `1 failed, 6 passed` before the RUNBOOK edit, passes after
 - Suite: `python3 -m pytest tests -q` — `1721 passed in 166.04s (0:02:46)`
 - Real run: `python3 -m pytest tests/test_directory_prep.py tests/test_runbook_plugin_check.py tests/test_docs_match_installer.py -q` — `17 passed in 0.84s`
+- verify: ☐ blocked — auto-run by hook, session 140d1256-22ee-43cb-b698-215abeaec77f, commit 4a7d220281200b40e6f66f68491f3b522931c7c6, log .claude/verify-runs/T246-4a7d22028120.log (no single verdict line)
 **Files:** `RUNBOOK.md`, `tests/test_directory_prep.py`, `tasks/MINIMAL_LOG.md`
 **Memory:** nothing new
-**Not done:** merge (the user decides); auto verify: running (T182)
+**Not done:** merge (the user decides); auto verify: ☐ blocked (session 140d1256-22ee-43cb-b698-215abeaec77f, commit 4a7d220281200b40e6f66f68491f3b522931c7c6, log .claude/verify-runs/T246-4a7d22028120.log)
+Paused: auto-mode check failed — its Decision record in tasks/MINIMAL_LOG.md does not start with `Mode: auto` [report 96370f93b863]
 
 ## T243 — Plugin directory submission prep: icon, manifest and hooks the directory can read · minimal
 Mode: auto
