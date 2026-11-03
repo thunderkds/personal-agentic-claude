@@ -4,6 +4,20 @@
 > new record directly under this note. On first use, the Supervisor creates `tasks/MINIMAL_LOG.md` from
 > this template and deletes the example comment. The same block is the Supervisor's final chat message.
 
+## T244 — Auto close-out writes `Closed:` into the report, not the template comment · minimal
+**Asked:** "continue"
+**Decisions:**
+- Took T244, the open Low-risk follow-up; T243 waits for the user's icon — the first submitted icon cannot be changed.
+- Fixed `auto_mode.section()` (`skip_comments=True`): the block now ends where an HTML comment begins inside it. `add_line`, `report_gaps` and every reader that skips comments get the same boundary; with no comment after the block, nothing changes.
+- Left T242's existing hidden `Closed:` line as written — it is the audit trail of that run, and the row is already Done.
+- Assumed: no report puts its own fields inside a comment on purpose — the template says to copy the block out of the comment.
+**Checked:**
+- New test `tests/test_closeout_comment_boundary.py` (4 tests) — `2 failed, 2 passed` before the change (2026-11-03T13:17:33Z), `4 passed` after
+- Suite: `python3 -m pytest tests -q` — `1713 passed in 139.46s (0:02:19)`; `python3 -m pytest .claude/hooks/tests -q` — `1389 passed, 25 subtests passed in 29.40s`
+- Real run: `auto_closeout.add_line` on T242's review file as committed at `87a03426` (before its close-out) — printed `Closed at char 2611 | comment starts at 2685 | inside comment: False`
+**Files:** `.claude/hooks/lib/auto_mode.py`, `tests/test_closeout_comment_boundary.py`, `tasks/MINIMAL_LOG.md`
+**Not done:** merge (the user decides); auto verify: running (T182)
+
 ## T241 — RUNBOOK post-deploy check also installs the plugin from GitHub · minimal
 Mode: auto
 **Asked:** "and continue the task [auto]"

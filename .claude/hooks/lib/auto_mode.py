@@ -199,13 +199,17 @@ def section(text, heading_pattern, skip_comments=False):
     """(start, end, body) of the block under the first heading matching `heading_pattern`, or None.
 
     With `skip_comments`, a heading inside an HTML comment is passed over — that is the copy of a
-    template, not the report, and writing into it would edit the instructions.
+    template, not the report, and writing into it would edit the instructions. The block also ends
+    where a comment begins inside it (T244): a template comment right below the report is not part
+    of the report.
     """
     spans = comment_spans(text) if skip_comments else []
     for m in re.finditer(rf"^{heading_pattern}[^\n]*\n(.*?)(?=^## |\Z)", text, re.S | re.M):
         if any(a <= m.start() < b for a, b in spans):
             continue
-        return m.start(1), m.end(1), m.group(1)
+        start, end = m.start(1), m.end(1)
+        end = min([a for a, _ in spans if start <= a < end] + [end])
+        return start, end, text[start:end]
     return None
 
 
