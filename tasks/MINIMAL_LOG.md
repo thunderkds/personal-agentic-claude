@@ -4,6 +4,26 @@
 > new record directly under this note. On first use, the Supervisor creates `tasks/MINIMAL_LOG.md` from
 > this template and deletes the example comment. The same block is the Supervisor's final chat message.
 
+## T243 — Plugin directory submission prep: icon, manifest and hooks the directory can read · minimal
+Mode: auto
+**Asked:** "continue, I saw you draw the icon for the index page, let use it [auto]"
+**Decisions:**
+1. "Continue" is T243, the open task waiting on the icon — RULE: `docs/claude-md/tracks.md` `### Every user stop and its auto rule` (decide from the repo); the last reply named T243 as next
+2. Minimal track: three copied files, one image, one new test, C1, Risk Low, no UI component, no user data — RULE: `docs/claude-md/tracks.md` `## Track rule`
+3. The icon is the site header mark (`site/index.html` `.brand` svg: three linked nodes), mint `#3CF5A8` on the `#121413` tile, 1024 px PNG, drawn with Pillow — SAFER OPTION: "the icon for the index page" could also mean the favicon (a chevron); the header mark is the one drawn beside the name. Nothing is submitted until you submit, and the first icon submitted is permanent ⚠ decided for you — please review
+4. `plugin/.claude-plugin/plugin.json` and `plugin/hooks/hooks.json` are real byte copies of the root files, not links (changes T242 D2 for these two paths only) — FACT: `claude plugin validate plugin --profile directory` printed `✘ Validation failed (--profile directory could not read the plugin's manifest)`, then with the manifest copied `HOOKS_FILE_UNREAD ... Fix: Ship hooks/hooks.json as a regular file`
+5. The root keeps its real `plugin.json`, `hooks/hooks.json` and an icon copy — FACT: `.claude/hooks/lib/project_root.py:64` "True when `path` is a plugin package (T233 `.claude-plugin/plugin.json`)"; a root icon link was not read (`ICON_MISSING`)
+6. `marketplace.json` gains `metadata.description` — FACT: validator `description: No marketplace description provided`; the warning is gone after
+7. The root `CLAUDE.md` warning stays — RULE: AGENTS.md: "Claude Code loads it through the `@AGENTS.md` import that `CLAUDE.md` holds"; the directory checks `plugin/`, which has no `CLAUDE.md`
+8. The linked folders in `plugin/` (agents, commands, skills) keep their `This directory is a symlink, so the validator read nothing in it` warnings — SAFER OPTION: they are warnings, not refusals (`--profile directory` exit 0); copying them would undo T242. Unknown: whether the directory's own safety scan follows them ⚠ decided for you — please review
+**Checked:**
+- New test `tests/test_directory_prep.py` (6 tests) — `6 failed in 0.79s` on unchanged `main` 911a17cc, `6 passed` after; `tests/test_plugin_source.py` link-only pins updated for the 3 real files
+- Suite: `python3 -m pytest tests -q` — `1720 passed in 161.77s (0:02:41)`; `python3 -m pytest .claude/hooks/tests -q` — `1389 passed, 25 subtests passed in 69.65s`; `sh scripts/smoke-install.sh` — `smoke-install.sh: PASS`
+- Real run (auto-checked, not /verify): `claude plugin validate plugin --profile directory` — `✔ These checks found nothing to report` / `✔ Validation passed with warnings`, exit 0; root `--profile directory` — `✔ These checks found nothing to report`. Isolated install of this branch from a local smart-HTTP git marketplace (`CLAUDE_CONFIG_DIR` + scratch `HOME`, no SSH) — `✔ Successfully installed plugin: easy-kit@easy-kit (scope: user)`; cache 1.3M, 0 links, `.claude-plugin/icon.png` present, `hooks/hooks.json` equal to root, no `.claude/hooks/tests`; `scripts/plugin_init.py` in a fresh repo ran and printed its notes
+**Files:** `.claude-plugin/marketplace.json`, `.claude-plugin/icon.png`, `plugin/.claude-plugin/plugin.json`, `plugin/.claude-plugin/icon.png`, `plugin/hooks/hooks.json`, `tests/test_directory_prep.py`, `tests/test_plugin_source.py`, `tasks/MINIMAL_LOG.md`
+**Memory:** `memory/learnings.md` — the plugin directory reads no file through a link (T243)
+**Not done:** merge (yours); the submission at claude.ai/directory/manage (yours); auto verify: running (T182)
+
 ## T244 — Auto close-out writes `Closed:` into the report, not the template comment · minimal
 **Asked:** "continue"
 **Decisions:**
