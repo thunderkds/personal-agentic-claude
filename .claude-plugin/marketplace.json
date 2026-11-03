@@ -1,6 +1,9 @@
 {
   "name": "easy-kit",
   "owner": { "name": "thunderkds" },
+  "metadata": {
+    "description": "Easy Kit, a supervisor kit for Claude Code: a staged pipeline, role agents, skills and guard hooks."
+  },
   "plugins": [
     { "name": "easy-kit", "source": "./plugin", "description": "Easy Kit: a supervisor kit for Claude Code with a staged pipeline, role agents, skills and guard hooks." }
   ]
