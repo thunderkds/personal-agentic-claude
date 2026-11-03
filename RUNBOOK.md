@@ -8,7 +8,7 @@
 ## Service Identity
 
 - **Name**: Personal Agentic Claude — Supervisor agent harness (agents, skills, hooks, templates)
-- **Repo**: `git@github.com:thunderkds/personal-agentic-claude.git` (remotes `github` and `origin` both point here)
+- **Repo**: `git@github.com:thunderkds/easy-kit.git` (remotes `github` and `origin` both point here)
 - **Deployment target**: Local developer machine (macOS, Linux, WSL) — per `PROJECT_SPEC.md:16`
 - **Tech**: POSIX sh installer (`setup.sh`, `update.sh`, `lib/harness-fetch.sh`), Python 3 hooks under `.claude/hooks/`, Markdown agent/skill definitions
 - **Owner / on-call**: hungnh1110@gmail.com
@@ -49,7 +49,7 @@ Ordered steps to ship a release. Commands copy-pasteable.
 4. **Post-deploy health check** — install from the *published remote*, not a local path
    ```sh
    T=$(mktemp -d) && cd "$T" && git init -q . && git commit -q --allow-empty -m init
-   curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh
+   curl -fsSL https://raw.githubusercontent.com/thunderkds/easy-kit/main/setup.sh | sh
    ```
    The installer takes no options. It shows a menu (`1) Install  2) Cancel`), the CLI menu
    (`1) Claude Code  2) Codex`), the project-type menu (`1) New project  2) Existing / legacy

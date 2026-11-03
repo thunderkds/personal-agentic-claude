@@ -31,7 +31,7 @@ shared location).
 Run from inside the target project root:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh
+curl -fsSL https://raw.githubusercontent.com/thunderkds/easy-kit/main/setup.sh | sh
 ```
 
 This fetches the framework into a temporary clone, copies every `MANIFEST`-listed path plus

@@ -38,9 +38,22 @@ log_error() { printf "${RED}[error]${RESET} %s\n"   "$*" >&2; }
 # `--harness codex` from old docs fails loudly with nothing written.
 if [ "$#" -gt 0 ] && [ -z "${SETUP_SH_DEFINE_ONLY:-}" ]; then
   log_error "Easy Kit takes no options (got: $*). Run it and choose from the menus:"
-  log_error "  curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh"
+  log_error "  curl -fsSL https://raw.githubusercontent.com/thunderkds/easy-kit/main/setup.sh | sh"
   exit 1
 fi
+
+# ── The kit's git URL (T240: the repo was renamed to easy-kit) ─────────────────
+# GitHub redirects the old name, but a fork made before the rename keeps it, so
+# for a GITHUB_USERNAME other than thunderkds try easy-kit first, then the old name.
+kit_repo_url() {
+  _user="${GITHUB_USERNAME:-thunderkds}"
+  _url="https://github.com/${_user}/easy-kit.git"
+  if [ "$_user" != thunderkds ] && \
+     ! GIT_TERMINAL_PROMPT=0 git ls-remote "$_url" HEAD >/dev/null 2>&1; then
+    _url="https://github.com/${_user}/personal-agentic-claude.git"
+  fi
+  printf '%s\n' "$_url"
+}
 
 # ── Source the shared temp-clone-copy-discard fetch library (T031) ───────────
 HARNESS_LIB="$SCRIPT_DIR/lib/harness-fetch.sh"
@@ -53,7 +66,7 @@ if [ ! -f "$HARNESS_LIB" ]; then
   # — a regular call, so we can clean up the bootstrap dir afterward and
   # propagate the real invocation's exit code.
   log_info "No local checkout detected (likely a piped 'curl | sh' install) — bootstrapping a full checkout first."
-  BOOTSTRAP_REPO="${SUPERVISOR_REPO:-https://github.com/${GITHUB_USERNAME:-thunderkds}/personal-agentic-claude.git}"
+  BOOTSTRAP_REPO="${SUPERVISOR_REPO:-$(kit_repo_url)}"
   BOOTSTRAP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/harness-bootstrap.XXXXXX") || {
     log_error "Failed to create a temp directory for the bootstrap clone."
     exit 1
@@ -83,8 +96,7 @@ fi
 # otherwise builds the canonical URL from GITHUB_USERNAME.
 resolve_repo_url() {
   if [ -z "${SUPERVISOR_REPO:-}" ]; then
-    GITHUB_USERNAME="${GITHUB_USERNAME:-thunderkds}"
-    SUPERVISOR_REPO="https://github.com/${GITHUB_USERNAME}/personal-agentic-claude.git"
+    SUPERVISOR_REPO=$(kit_repo_url)
   fi
   log_info "Using repo: $SUPERVISOR_REPO"
 }

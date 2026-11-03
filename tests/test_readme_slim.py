@@ -18,7 +18,7 @@ def test_readme_contains_exact_install_command():
     text = _read()
     install = (
         "curl -fsSL "
-        "https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh"
+        "https://raw.githubusercontent.com/thunderkds/easy-kit/main/setup.sh | sh"
     )
     assert install in text, "exact install one-liner (curl ... | sh) not found verbatim"
 

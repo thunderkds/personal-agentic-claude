@@ -7,7 +7,7 @@ set -e
 _dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 if [ ! -f "$_dir/setup.sh" ]; then
   printf '[error] update.sh is now part of the one Easy Kit command. Run this inside your project and choose Update:\n' >&2
-  printf '  curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh\n' >&2
+  printf '  curl -fsSL https://raw.githubusercontent.com/thunderkds/easy-kit/main/setup.sh | sh\n' >&2
   exit 1
 fi
 EASYKIT_ACTION=update exec sh "$_dir/setup.sh" "$@"

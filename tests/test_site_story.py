@@ -38,7 +38,7 @@ STORY_SECTIONS = ["hero", "journey", "stages", "paths", "stops", "deeper"]  # A1
 WORD_CAP = 300  # D3: visible words in <main> of index.html
 SCRIPT_IDS = ("settings-catalog", "settings-tool-core", "settings-tool-ui")
 ONE_LINE_INSTALL = (
-    "curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh"
+    "curl -fsSL https://raw.githubusercontent.com/thunderkds/easy-kit/main/setup.sh | sh"
 )
 # D4: none of these may appear in text a reader sees or hears on index.html. A1: "Stage" is allowed inside #stages only.
 BANNED_TERMS = [

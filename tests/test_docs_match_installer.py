@@ -70,7 +70,7 @@ def test_owned_exemptions_are_still_needed():
 
 
 def test_live_docs_show_the_one_line_command():
-    one_line = "curl -fsSL https://raw.githubusercontent.com/thunderkds/personal-agentic-claude/main/setup.sh | sh"
+    one_line = "curl -fsSL https://raw.githubusercontent.com/thunderkds/easy-kit/main/setup.sh | sh"
     for rel in ("README.md", "site/index.html", "site/docs.html", "RUNBOOK.md"):
         assert one_line in _live_text(rel), f"{rel} does not show the one install/update line"
 
