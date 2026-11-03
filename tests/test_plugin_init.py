@@ -450,6 +450,15 @@ def test_d8_a_hook_from_a_read_only_plugin_folder_still_gates(plugin, repo, tmp_
             d.chmod(stat.S_IRWXU)
 
 
+def test_edge_a_path_that_blocks_a_copy_stops_with_a_message_and_overwrites_nothing(plugin, repo):
+    (repo / "templates").write_text("a file, not a folder\n", encoding="utf-8")
+    result = run_init(plugin, repo)
+    assert result.returncode == 1 and "Traceback" not in result.stderr
+    assert "cannot write" in result.stderr
+    assert (repo / "templates").read_text(encoding="utf-8") == "a file, not a folder\n"
+    assert "+ created CLAUDE.md" in result.stdout
+
+
 def test_edge_init_outside_a_git_repo_refuses_and_writes_nothing(plugin, tmp_path):
     folder = tmp_path / "not-a-repo"
     folder.mkdir()

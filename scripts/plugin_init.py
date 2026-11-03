@@ -142,17 +142,7 @@ def git_toplevel(cwd):
     return done.stdout.strip() if done.returncode == 0 else None
 
 
-def main():
-    root = os.path.realpath(os.getcwd())
-    if git_toplevel(root) is None:
-        print("easy-kit init: not inside a git repository; nothing written. Run `git init` first, "
-              "or run /easy-kit:init from inside your project.", file=sys.stderr)
-        return 2
-    if root == KIT:
-        print("easy-kit init: this folder is the kit itself; nothing written.", file=sys.stderr)
-        return 2
-
-    report = Report(root)
+def populate(report, root):
     report.write("CLAUDE.md", content="@AGENTS.md\n")
     report.write("PROJECT_KANBAN.md", content=board_text())
     for rel in FILES:
@@ -169,14 +159,37 @@ def main():
         report.write(os.path.join("memory", name), content=text)
     report.write(os.path.join("memory", "learning-records", ".gitkeep"), content="")
 
+
+def main():
+    root = os.path.realpath(os.getcwd())
+    if git_toplevel(root) is None:
+        print("easy-kit init: not inside a git repository; nothing written. Run `git init` first, "
+              "or run /easy-kit:init from inside your project.", file=sys.stderr)
+        return 2
+    if root == KIT:
+        print("easy-kit init: this folder is the kit itself; nothing written.", file=sys.stderr)
+        return 2
+
     print(f"easy-kit init in {root}")
+    report = Report(root)
+    try:
+        populate(report, root)
+    except OSError as exc:  # e.g. `templates` is a file: say so, never a traceback
+        print("\n".join(report.lines))
+        print(f"easy-kit init: stopped, cannot write ({exc}). The paths above were done; nothing "
+              "was overwritten. Fix the path and run /easy-kit:init again.", file=sys.stderr)
+        return 1
     print("\n".join(report.lines))
     print(f"{report.created} path(s) created." if report.created
           else "nothing changed: every path was already there.")
-    with open(os.path.join(root, "CLAUDE.md"), encoding="utf-8") as fh:
-        if "@AGENTS.md" not in fh.read():
-            print("note: your CLAUDE.md does not import the kit doctrine. Add the line `@AGENTS.md` "
-                  "to it yourself; init never edits an existing file.")
+    try:
+        with open(os.path.join(root, "CLAUDE.md"), encoding="utf-8") as fh:
+            imports = "@AGENTS.md" in fh.read()
+    except (OSError, UnicodeDecodeError):
+        imports = False
+    if not imports:
+        print("note: your CLAUDE.md does not import the kit doctrine. Add the line `@AGENTS.md` "
+              "to it yourself; init never edits an existing file.")
     print("note: templates/, docs/claude-md/, agents/ and the copied scripts go stale after a plugin "
           "update. Run /easy-kit:init again to add new files; it never replaces a file that is there.")
     print("note: the gates are plugin hooks. Each teammate must install the easy-kit plugin "
