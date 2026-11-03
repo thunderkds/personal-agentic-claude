@@ -67,8 +67,26 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured on `feat/t235-plugin-init` at `e9a02e11`, before the first implementation commit.
+`both_modes.sh` builds a temp project whose `.claude/settings.json` wires the in-repo kit hooks
+(a copy of the kit's), plus a plugin-shaped copy of the kit (`.claude-plugin/plugin.json` + `.claude/hooks`),
+and feeds one `git push origin main` payload to each copy of `pre_bash_block_unsafe_merge.py`.
+
+```
+2026-11-03T02:38:08Z
+$ ls commands/init.md
+ls: cannot access 'commands/init.md': No such file or directory
+$ python3 -m pytest tests/test_plugin_init.py -q
+
+no tests ran in 0.00s
+$ sh both_modes.sh <worktree>   # in-repo hooks wired + plugin copy, one push payload
+[proj hook] exit=0 stdout={"decision": "block", "reason": "[hook:pre_bash] Pipeline gate failed — cannot push/merge:
+  • Task
+[plugin hook] exit=0 stdout={"decision": "block", "reason": "[hook:pre_bash] Pipeline gate failed — cannot push/merge:
+  • Task
+```
+
+No `/easy-kit:init` command exists, and with both modes present the same push gets two blocks.
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
