@@ -90,7 +90,6 @@
 
 
 ### In Progress
-- [ ] **T235** — /easy-kit:init sets up a project, and plugin hooks stand down beside in-repo hooks | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T235.md` | Started 2026-11-03: branch `feat/t235-plugin-init`, worktree `../wt-t235`; D7 user decision: init copies templates/, docs/claude-md/, agents/
 
 
 
@@ -99,6 +98,7 @@
 
 
 ### Ready for Review
+- [ ] **T235** — /easy-kit:init sets up a project, and plugin hooks stand down beside in-repo hooks | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T235.md` | Started 2026-11-03: branch `feat/t235-plugin-init`, worktree `../wt-t235`; D7 user decision: init copies templates/, docs/claude-md/, agents/
 
 
 ### Done
