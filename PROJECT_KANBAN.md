@@ -96,6 +96,7 @@
 
 
 ### Ready for Review
+- [ ] **T246** — RUNBOOK names the `plugin/` file copies T243 added (`plugin.json`, `hooks/hooks.json`, `icon.png`) and the `cp` commands to refresh them after a root edit | Supervisor | C0 | Risk: Low | P2 | Started 2026-11-03: branch `docs/t246-plugin-copies`, worktree `../wt-t246` | Ready for Review 2026-11-03 | Track: minimal | Record: tasks/MINIMAL_LOG.md
 - [ ] **T230** — `dotfiles` follow-up, Depends on: T228: refuse a target inside the source (only an exact match is refused today); refuse skill folder names with unprintable text (a newline can fake a `plan` line); report a wrong source shape (`AGENTS.md` as a folder, `skills` as a file) | common-infrastructure | C1 | Risk: Low | P2 | Started 2026-11-03: branch `fix/t230-dotfiles-checks`, worktree `../wt-t230` | Ready for Review 2026-11-03: the three refusals added, 9 new tests | Track: minimal | Record: tasks/MINIMAL_LOG.md
 
 
