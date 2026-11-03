@@ -138,6 +138,14 @@ If docs/legacy/ exists (legacy mode): also read `docs/legacy/risk-hotspots.md` a
 | Tablet (768px) | [screenshot / Playwright / Detox / manual] | [expected layout description] |
 | Desktop (1024px+) | [screenshot / Playwright / Detox / manual] | [expected layout description] |
 
+### 4. UX Acceptance Criteria
+
+> One row per user story and per state the screen has (empty / loading / error / success). Cite the `PRD.md` US-ID, or quote the request. The pass condition states what a screenshot or a run shows, never "looks good". The frontend agent judges these rows with `ux-evaluate`; code review runs it again.
+
+| User story | User goal | Flow / state | Pass condition (observable) |
+|------------|-----------|--------------|-----------------------------|
+| [US-ID or quoted request] | [what the user wants to do] | [steps; the state shown] | [e.g. "No items yet" and an Add button show at 375px and 1280px] |
+
 ---
 
 ## Approach

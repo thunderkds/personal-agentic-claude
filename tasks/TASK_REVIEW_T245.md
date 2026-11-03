@@ -17,6 +17,7 @@ Paused: run in progress — implementer running; Stage 4 (`code-review`, `securi
 Checks: pending — filled at Stage 4
 Memory: pending — the diff-driven pass runs at Stage 4
 Not done: merge (yours); auto verify: not started
+Paused: auto-mode check failed — no test run in memory/event-trace/T245.jsonl — write /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state/active_task.d/$CLAUDE_CODE_SESSION_ID with the task ID (minimal-track step 1): `mkdir -p /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state/active_task.d && printf '%s\n%s\n' "T245" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state/active_task.d/$CLAUDE_CODE_SESSION_ID`, then rerun the task's tests so the trace records them under the task, then stop; extended track, but the trace has no `code-review` Skill call (Stage 4 runs in auto mode) [report e07fb4895580]
 
 ## Evidence
 
@@ -50,6 +51,23 @@ $ wc -c skills/code-review/SKILL.md
 8163 skills/code-review/SKILL.md
 ```
 `agents/frontend.md` `## Available skills` rows: `brainstorming`, `code-review`, `security-review`, `verify`, `run`, `compound`, `optimize` — no UX skill.
+
+Added by the implementer before the first implementation commit (verbatim, from the files as they stood at `e96bef31`):
+
+`agents/frontend.md` `## Implementation checklist (apply what the task needs)`:
+```
+- Accessibility: semantic HTML, keyboard navigation, ARIA where needed, WCAG per the TASK_GUIDE
+- State: use the project's existing state pattern; lift state only as far as required
+- Forms: client-side validation that mirrors server rules; clear error surfaces
+- Performance: meet the NFR targets stated in the TASK_GUIDE/PRD - measure (bundle size, render), don't assume a number
+- Responsiveness: match the TASK_GUIDE's breakpoints/design
+- Tests: cover the acceptance criteria and the negative/edge cases before marking ready
+```
+`agents/frontend.md` Pillar 3: `run the TASK_GUIDE's verification command and confirm the UI behaves in the browser; paste real output/observation into the Evidence table.`
+
+`skills/code-review/SKILL.md` `#### Conditional reviewers` table rows (persona | activates on): security-reviewer, performance-reviewer, migration-reviewer, adversarial-reviewer, api-reviewer, over-engineering-reviewer. None names UI, UX or a screenshot.
+
+`templates/TASK_GUIDE_template.md` UI section ends with `### 3. Layout / Responsiveness`; no UX block. `tests/test_t245_ux_evaluate.py` red run: `19 failed, 4 passed`.
 
 **AFTER**: [filled at Stage 4]
 

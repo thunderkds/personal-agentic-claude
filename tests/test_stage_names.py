@@ -273,6 +273,6 @@ def test_ac7_the_docs_page_lists_every_skill_once_under_the_new_stages():
     html = _read("site/docs.html")
     skills = re.search(r'<section id="skills">.*?</section>', html, re.S).group(0)
     chips = re.findall(r'<span class="chip">([^<]+)</span>', skills)
-    assert len(chips) == 35 == len(set(chips)), (len(chips), len(set(chips)))
+    assert len(chips) == 36 == len(set(chips)), (len(chips), len(set(chips)))
     desc = re.search(r'<desc id="pipeline-diagram-desc">(.*?)</desc>', html, re.S).group(1)
     assert desc.startswith("Six steps in order") and "Stage 0 define" in desc

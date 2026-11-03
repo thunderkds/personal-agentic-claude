@@ -101,11 +101,13 @@ def test_ac2_workflow_names_rows_widths_read_and_verdict_table():
 
 def test_ac2_workflow_steps_are_in_order():
     t = _text(SKILL)
-    rows = t.index("### 4. UX Acceptance Criteria")
-    shot = t.index("--screenshot")
-    read = t.index("`Read`")
-    verdict = t.index("Verdict |")
-    assert rows < shot < read < verdict
+    rows = t.index("#### 1. Read the rows")
+    shot = t.index("#### 2. Take the screenshots")
+    read = t.index("#### 3. Read every image")
+    judge = t.index("#### 4. Judge each row")
+    table = t.index("#### 5. Output the verdict table")
+    assert rows < shot < read < judge < table
+    assert t.index("--screenshot", shot) < read
 
 
 def test_ac2_works_when_read_by_an_agent_and_when_called_as_a_skill():
@@ -191,9 +193,12 @@ def test_ac5_template_guidance_names_story_states_and_observable():
 
 def test_ac5_ux_block_is_not_called_a_design_evidence_row():
     """One term, one meaning: the UX rows are not the three UI design Evidence rows."""
-    for path in (SKILL, TEMPLATE, FRONTEND):
-        t = _norm(_text(path))
-        assert "UI design Evidence row" not in t.replace("not the UI design Evidence rows", ""), path.name
+    ux_block = _text(TEMPLATE).split("### 4. UX Acceptance Criteria")[1].split("\n## Approach")[0]
+    ux_line = re.search(r"^- UX:.*$", _text(FRONTEND), re.M).group(0)
+    for name, text in (("template UX block", ux_block), ("frontend UX line", ux_line)):
+        assert "Evidence row" not in text, name
+    skill = _norm(_text(SKILL))
+    assert "Evidence rows (visual regression, design-system compliance, responsiveness); those are a different check" in skill
 
 
 # --- AC 6: code-review calls the skill, copies no rules --------------------------------
@@ -210,7 +215,8 @@ def test_ac6_code_review_has_one_conditional_row_that_calls_the_skill():
 def test_ac6_code_review_has_no_ux_reviewer_persona():
     t = _text(CODE_REVIEW)
     assert "ux-reviewer" not in t
-    assert t.count("ux-evaluate") == 1, "no UX rules are copied into code-review"
+    lines = [l for l in t.splitlines() if "ux-evaluate" in l]
+    assert len(lines) == 1, "no UX rules are copied into code-review: one row, nothing else"
 
 
 def test_ac6_code_review_stays_within_the_codex_cap():
