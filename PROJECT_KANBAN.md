@@ -89,7 +89,6 @@
 
 
 ### In Progress
-- [ ] **T240** — Rename the repo from personal-agentic-claude to easy-kit | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T240.md` | Started 2026-11-03: branch `feat/t240-repo-name`, worktree `../wt-t240`
 
 
 
@@ -98,6 +97,7 @@
 
 
 ### Ready for Review
+- [ ] **T240** — Rename the repo from personal-agentic-claude to easy-kit | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T240.md` | Started 2026-11-03: branch `feat/t240-repo-name`, worktree `../wt-t240` | Ready for Review 2026-11-03: Stage 4 code-review P3×1 only, security-review no findings; user renamed the GitHub repo, redirect proven
 
 
 ### Done
