@@ -8,7 +8,6 @@
 ## Board
 
 ### Todo
-- [ ] **T241** — RUNBOOK post-deploy check also installs the plugin from GitHub (two commands in a fresh folder); today it tests `setup.sh` only | common-infrastructure | C1 | Risk: Low | P1
 - [ ] **T242** — Smaller plugin source: a git install copies ~28 MB (12 MB cache + 16 MB marketplace clone, `tasks/` 4.7 MB) while the plugin runs from ~2–2.5 MB (T236 D5) | common-infrastructure | C2 | Risk: Medium | P2
 - [ ] **T243** — Prepare the Anthropic plugin directory submission: fix `claude plugin validate . --strict` warnings (marketplace `description`, root `CLAUDE.md`, 512–2048 px PNG icon); the user submits at claude.ai/directory/manage | frontend-developer | C1 | Risk: Low | P2
 - [ ] **T237** — Online board: with `.claude/board.json`, no `PROJECT_KANBAN.md` and a failed pull, the merge gate exits 0 silently in a kit project (found in T232 review, unchanged behaviour); also an exception in a gate `main()` on well-formed input exits 1 and passes; and find the intermittent full-suite failure seen on T232 (`test_t203_ac2` suspected); `test_ac4_blocked_row_never_says_pass[pass-and-fail]` also failed once under load on T234; `scripts/token_meter.py` is not in `MANIFEST`, so `compact-advisor` has no script in a `setup.sh` install (found in T234, older than it) | common-infrastructure | C1 | Risk: Medium | P2
@@ -99,6 +98,7 @@
 
 
 ### Ready for Review
+- [ ] **T241** — RUNBOOK post-deploy check also installs the plugin from GitHub (two commands in a fresh folder); today it tests `setup.sh` only | common-infrastructure | C1 | Risk: Low | P1 | Started 2026-11-03: branch `fix/t241-runbook-plugin-check`, worktree `../wt-t241` | Track: minimal | Record: tasks/MINIMAL_LOG.md
 
 
 ### Done
