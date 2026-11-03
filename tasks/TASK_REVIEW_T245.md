@@ -29,7 +29,7 @@ Paused: auto-mode check failed — no test run in memory/event-trace/T245.jsonl 
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
 | Full smoke suite still green (no regression) | ☑ pass | `python3 -m pytest .claude/hooks/tests/ tests/ -q`: `3138 passed, 25 subtests passed in 201.12s`; `main` run: `3109 passed, 25 subtests passed in 209.70s` (0 failures on both) |
-| **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | |
+| **Companion score (easy-verifier)** | ☑ N/A | MCP not registered in this session (no `score`/`write_report` tools); `easy_verifier` not importable (`ModuleNotFoundError: No module named 'easy_verifier'` for `python` and `python3`); stopped at rung 3, 2026-11-03. Nothing was scored. To score: the operator starts the easy-verifier container (`127.0.0.1:8766`) and registers its MCP, then reruns `score` on `main...feat/t245-ux-evaluate` |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | |
 | **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | |
