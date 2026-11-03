@@ -2747,5 +2747,5 @@ The log refuses a symlink/non-file path, writes via `mktemp` in `.claude/` + `mv
 **Why**: the cache dropped from 12 MB to 1.3 MB (129 files, 0 symlinks); 16 MB marketplace clone unchanged (out of reach of a source change). Both Advocates proposed this layout.
 **Open**: a new runtime path must get a link — `tests/test_plugin_source.py` fails if a `${CLAUDE_PLUGIN_ROOT}/…` ref or a `plugin_init` path does not resolve under `plugin/`. Windows `core.symlinks=false` would check links out as text files (untested). `claude plugin validate plugin/` warns that it does not read inside linked dirs; the root validate test still checks real folders.
 **Files**: plugin/, .claude-plugin/marketplace.json, tests/test_plugin_source.py
-**Verified**: (pending auto verify)
+**Verified**: auto verify pass at `87a03426`; merged at user request 2026-11-03 (`e9dd01a4`). Report `Paused:` line: the Advocate calls were traced under T241; the user accepted it as recorded (option 1).
 
