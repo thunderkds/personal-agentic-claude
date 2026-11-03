@@ -514,15 +514,20 @@ CHANGED_BY_T239 = {
     "3e3ef4ce703670df": "the tracks visual says the Stage 0–5 pipeline",
 }
 
+# T240: the repo was renamed to easy-kit, so the install line names the new repo. Same rule as above.
+CHANGED_BY_T240 = {
+    "93af67c788f6305e": "the install line fetches thunderkds/easy-kit, not the old repo name",
+}
+
 
 def test_every_paragraph_item_cell_and_definition_of_the_old_page_is_on_docs():
     now = set(sentence_hashes(docs_html()))
-    missing = [(h, t) for h, t in _baseline()["sentences"] if h not in now and h not in CHANGED_BY_T239]
+    missing = [(h, t) for h, t in _baseline()["sentences"] if h not in now and h not in CHANGED_BY_T239 and h not in CHANGED_BY_T240]
     assert not missing, f"{len(missing)} text(s) lost from docs.html: {missing[:5]}"
 
 
 def test_every_listed_change_is_a_real_baseline_text():
-    assert set(CHANGED_BY_T239) <= {h for h, _ in _baseline()["sentences"]}
+    assert set(CHANGED_BY_T239) | set(CHANGED_BY_T240) <= {h for h, _ in _baseline()["sentences"]}
 
 
 def test_the_baseline_is_not_empty():
