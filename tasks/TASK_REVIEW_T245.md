@@ -90,3 +90,14 @@ Fixture: a static task-list page (`list.html`, `empty.html`, `error.html`, `styl
 
 Result: no detection difference, 8/8 runs right. The baseline agent already takes headless-Chrome screenshots on its own when the requirement names widths. What the skill changed: every after run gave a per-row verdict traced to the guide's UX rows and opened every image; one before run skipped an image. One after run's summary line miscounted (said "2 of 4 pass" over a table with 1 pass).
 Limits: n = 2 per arm per round; the seeded defects are also visible by reading the CSS, so this fixture does not test what only a screenshot shows; requirement-level misses (wrong flow, wrong copy) were not seeded.
+
+### Round 3: harder fixture (user: "ys" to a harder test)
+
+Fixture: 5 pages (`list`, `add`, `confirm`, `saved`, `error`). 4 seeded misses: the "Add task" button is hidden at 375px by a "responsive" script (`layoutHeader`, only seen at run time); adding takes 3 pages where the requirement says one step from the list; the "Task saved" toast is placed above the screen at 375px by a script; the error page says only "Error 503.". 1 true pass (titles readable). Before: `main` role guide + old-template guide (ACs, no UX rows). After: branch role guide + skill + UX rows. Same neutral prompt as round 2. 3 runs per arm, sonnet.
+
+| Arm | Runs | Misses found | Verdict right | Notes |
+|---|---|---|---|---|
+| before | 3 | 4/4, 4/4, 4/4 | 3/3 | all took screenshots; 2 also dumped the live DOM (`top: -48px`); one skipped the overflow check and said so |
+| after | 3 | 4/4, 4/4, 4/4 | 3/3 | all followed `ux-evaluate`, per-row table, every image read |
+
+Total over 3 rounds: 14 runs, every run found every seeded miss and gave the right verdict. The skill gave no measurable detection gain. Its visible effect is format: a per-row verdict table tied to the guide's UX rows.
