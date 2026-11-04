@@ -87,7 +87,6 @@
 
 
 ### In Progress
-- [ ] **T245** — `ux-evaluate` skill — the frontend agent checks its UI against the requirement's UX criteria; guide template gains UX criteria; code-review calls the same skill on UI diffs | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T245.md` | Related: T192 (easy-ui owns the three UI design rows) | Registered 2026-11-03 [auto] from the Supervisor's investigation; user: "the frontend agent do not have the UX skill, so it can not evaluate the change is good or not following the requirement", then "yes, open the task [auto]" | Redesigned 2026-11-03, user: "not the reviewer, it should be the UX skill and it belong to agent, not in the code-review only" | Started 2026-11-03 (auto): branch `feat/t245-ux-evaluate`, worktree `../wt-t245`
 
 
 
@@ -96,6 +95,7 @@
 
 
 ### Ready for Review
+- [ ] **T245** — `ux-evaluate` skill — the frontend agent checks its UI against the requirement's UX criteria; guide template gains UX criteria; code-review calls the same skill on UI diffs | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T245.md` | Related: T192 (easy-ui owns the three UI design rows) | Registered 2026-11-03 [auto] from the Supervisor's investigation; user: "the frontend agent do not have the UX skill, so it can not evaluate the change is good or not following the requirement", then "yes, open the task [auto]" | Redesigned 2026-11-03, user: "not the reviewer, it should be the UX skill and it belong to agent, not in the code-review only" | Started 2026-11-03 (auto): branch `feat/t245-ux-evaluate`, worktree `../wt-t245` | Ready for Review 2026-11-04 (auto): code-review 0 P0/0 P1, R2-R4 fixed (older baseline fails P3); security-review no findings; round 4 blind no-design builds 35/35 vs 29/29; full suite 3150 passed
 - [ ] **T246** — RUNBOOK names the `plugin/` file copies T243 added (`plugin.json`, `hooks/hooks.json`, `icon.png`) and the `cp` commands to refresh them after a root edit | Supervisor | C0 | Risk: Low | P2 | Started 2026-11-03: branch `docs/t246-plugin-copies`, worktree `../wt-t246` | Ready for Review 2026-11-03 | Track: minimal | Record: tasks/MINIMAL_LOG.md
 - [ ] **T230** — `dotfiles` follow-up, Depends on: T228: refuse a target inside the source (only an exact match is refused today); refuse skill folder names with unprintable text (a newline can fake a `plan` line); report a wrong source shape (`AGENTS.md` as a folder, `skills` as a file) | common-infrastructure | C1 | Risk: Low | P2 | Started 2026-11-03: branch `fix/t230-dotfiles-checks`, worktree `../wt-t230` | Ready for Review 2026-11-03: the three refusals added, 9 new tests | Track: minimal | Record: tasks/MINIMAL_LOG.md
 
