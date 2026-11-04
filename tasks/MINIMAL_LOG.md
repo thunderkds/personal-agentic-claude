@@ -17,11 +17,12 @@ Mode: auto
 - Suite: `python3 -m pytest .claude/hooks/tests/ tests/ -q` — `3163 passed, 25 subtests passed in 246.50s (0:04:06)`
 - First-path case: the first verify run's step 3 (project root read-only, `agents` fails first) printed the old clause with nothing installed; the second commit adds "if any"; `tests/test_install_backups.sh` — `18 passed, 0 failed`
 - Real run (auto-checked, not /verify, first wording): `setup.sh` into a scratch git repo with its own `agents/mine.md` and an unwritable `docs/` — rc=1, printed `[warn]  Backed up your existing './agents' to './agents.bak-20261104' …` then `[error] Could not back up './docs/claude-md' to './docs/claude-md.bak-20261104' — './docs/claude-md' was not replaced; paths earlier in this run were already installed. Fix the permissions, then re-run.`; `agents/` then held the kit's `backend.md`, `common-infrastructure.md`, `frontend.md`, `qa.md`
-- verify: ☑ pass — auto-run by hook, session 1f7461d9-a42e-4388-96bd-9495edcca017, commit 60bd476986c4ba02b178dfd631b5cb66e1e32a9c, log .claude/verify-runs/T119-60bd476986c4.log
+- verify: ☑ pass — auto-run by hook, session a5523cae-43e4-4c1b-b8d1-4125dcebc4e5, commit 3432bdfb576c231c49d4562aef46ed04306ae461, log .claude/verify-runs/T119-3432bdfb576c.log
 **Files:** `lib/harness-fetch.sh`, `tests/test_install_backups.sh`, `tasks/MINIMAL_LOG.md`
-**Memory:** nothing new
-**Not done:** merge (yours); auto verify: ☑ pass (session 1f7461d9-a42e-4388-96bd-9495edcca017, commit 60bd476986c4ba02b178dfd631b5cb66e1e32a9c, log .claude/verify-runs/T119-60bd476986c4.log)
+**Memory:** `memory/learnings.md` — a change after an auto verify pass: move the row back from Done, verify again (T119) (`ebc89c0a` on main)
+**Not done:** merge (yours); auto verify: ☑ pass (session a5523cae-43e4-4c1b-b8d1-4125dcebc4e5, commit 3432bdfb576c231c49d4562aef46ed04306ae461, log .claude/verify-runs/T119-3432bdfb576c.log)
 Closed: row moved to Done 2026-11-04 — auto verify pass (session 1f7461d9-a42e-4388-96bd-9495edcca017, commit 60bd476986c4ba02b178dfd631b5cb66e1e32a9c); Gates 5 and 6 checked
+Closed: row moved to Done 2026-11-04 — auto verify pass (session a5523cae-43e4-4c1b-b8d1-4125dcebc4e5, commit 3432bdfb576c231c49d4562aef46ed04306ae461); Gates 5 and 6 checked
 
 ## T248 — `ux-evaluate` measures tap targets and uses an absolute scratch folder · minimal
 **Asked:** "let do it" (to: "add both as one small follow-up task" — the T245 verify run's two weak points: a relative screenshot path writes into the repo; B-d judged by eye)
