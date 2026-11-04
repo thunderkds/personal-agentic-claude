@@ -87,7 +87,6 @@
 
 
 ### In Progress
-- [ ] **T251** — `.claude/settings.json` denies agent writes to session transcripts (`Edit(~/.claude/projects/**/*.jsonl)`), so the T250 user-`/verify` proof has the harness-anchors trust level; a custom `CLAUDE_CONFIG_DIR` is not covered (say so in `docs/claude-md/tracks.md` `### Known limits`) | common-infrastructure | C1 | Risk: Medium | P1 | Registered 2026-11-04 from T250 Debate (b); user approved 2026-11-04: "approve all you do all" | Guide: `tasks/TASK_GUIDE_T251.md` | D1 user 2026-11-04: Edit + Bash | Started 2026-11-04: branch `fix/t251-transcript-deny`, worktree `../wt-t251`
 
 
 
@@ -96,6 +95,7 @@
 
 
 ### Ready for Review
+- [ ] **T251** — `.claude/settings.json` denies agent writes to session transcripts (`Edit(~/.claude/projects/**/*.jsonl)`), so the T250 user-`/verify` proof has the harness-anchors trust level; a custom `CLAUDE_CONFIG_DIR` is not covered (say so in `docs/claude-md/tracks.md` `### Known limits`) | common-infrastructure | C1 | Risk: Medium | P1 | Registered 2026-11-04 from T250 Debate (b); user approved 2026-11-04: "approve all you do all" | Guide: `tasks/TASK_GUIDE_T251.md` | D1 user 2026-11-04: Edit + Bash | Started 2026-11-04: branch `fix/t251-transcript-deny`, worktree `../wt-t251` | Stage 4 2026-11-04: code-review no P0/P1; security-review no finding >= 8; 4 deny rules (`bd25d2ac`) | Ready for Review 2026-11-04; live denial check is the user's after merge
 
 
 ### Done
