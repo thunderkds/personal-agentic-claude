@@ -883,7 +883,13 @@ main() {
   offer_board_mode
   log_info "Setup complete. Easy Kit copied into $(pwd)"
   log_info "CLAUDE source: $CLAUDE_SRC | lock: .claude/harness-lock.json"
-  log_info "CLIs: $(cli_names)"
+  # Reinstall also refreshes a CLI already set up but not picked (T098); name
+  # what the run touched, as the plan did (T120).
+  if [ "$ACTION" = "reinstall" ]; then
+    log_info "CLIs: $(cli_names "$PROJECTION_HARNESSES")"
+  else
+    log_info "CLIs: $(cli_names)"
+  fi
   # packs/ arrives through MANIFEST as a dormant catalog (ADR-0002): nothing
   # links or projects it, so no CLI loads a pack until the Supervisor activates it.
   log_info "Pack catalog: every pack is in packs/, inactive. Your Supervisor recommends packs for this project."

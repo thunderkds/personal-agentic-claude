@@ -4,6 +4,21 @@
 > new record directly under this note. On first use, the Supervisor creates `tasks/MINIMAL_LOG.md` from
 > this template and deletes the example comment. The same block is the Supervisor's final chat message.
 
+## T120 — Reinstall's closing summary names every CLI the run touched · minimal
+Mode: auto
+**Asked:** "yes, let go, and you can start for parallel task with tag [auto]"
+**Decisions:**
+1. T120 is a parallel task for this run: C0, Risk Low, `setup.sh` summary line plus one test, none of T250's files — RULE: `docs/claude-md/tracks.md` `## Track rule` (minimal track)
+2. On Reinstall the summary names `$PROJECTION_HARNESSES` (picked plus already present, set by `reproject_harnesses`); Install keeps `$HARNESSES`, where `PROJECTION_HARNESSES` is not set for the run — RULE: the T120 board row ("`PROJECTION_HARNESSES` is the set the run really touched. Scope is the closing `log_info` in `main()` and nothing else")
+3. The Update path is left as is: it prints `Refreshed: <projected non-Claude CLIs>` plus its own Claude re-point line, pinned by `tests/test_t098_harness_presence.sh` AC9 — FACT: `lib/harness-update.sh:782` "log_info \"Refreshed: $(cli_names \"$_rp_done\")\""
+**Checked:**
+- New test `T120: Reinstall summary names the kept Codex too (CLIs: Claude Code, Codex)` in `tests/test_cli_and_project_menus.sh` — failed before the change (`24 passed, 1 failed`: `CLIs: Claude Code`), passes after (`25 passed, 0 failed`)
+- Suite: `python3 -m pytest .claude/hooks/tests/ tests/ -q` — `1 failed, 3162 passed, 25 subtests passed in 293.46s`; the failure is `tests/test_auto_verify.py::test_ac4_blocked_row_never_says_pass[budget-stop]`, the flaky test T237 tracks; alone it gives `9 passed in 1.83s` 3 times on this branch and `9 passed in 2.36s` on `main` (the host ran two suites and a sub-agent at once)
+- Real run (auto-checked, not /verify): with stub `claude` and `codex` on PATH, `setup.sh` into a scratch repo (both CLIs), commit, then Reinstall picking `1` (Claude Code) — printed `  - Already set up here, not picked, kept and refreshed: Codex …`, `[info]  Refreshed: Codex`, `[info]  CLIs: Claude Code, Codex`
+**Files:** `setup.sh`, `tests/test_cli_and_project_menus.sh`, `tasks/MINIMAL_LOG.md`
+**Memory:** nothing new
+**Not done:** merge (yours); auto verify: running (T182)
+
 ## T248 — `ux-evaluate` measures tap targets and uses an absolute scratch folder · minimal
 **Asked:** "let do it" (to: "add both as one small follow-up task" — the T245 verify run's two weak points: a relative screenshot path writes into the repo; B-d judged by eye)
 **Decisions:**
