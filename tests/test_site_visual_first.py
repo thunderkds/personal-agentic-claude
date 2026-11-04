@@ -418,6 +418,9 @@ DUPLICATES_OF_A_VISUAL_LABEL = {
     "c424a50494ca": "skills flow step Stage 0.5 is now Stage 0 — Define (T239)",
     "02dc3d4dceda": "the craft-agent chip moved into the Stage 1 chip row (T239)",
     "d790b2230f59": "skills flow step Stage 1.5 is now part of Stage 1 — Set up (T239)",
+    # T245: the `ux-evaluate` skill joins the Stage 3 chip row and flow step.
+    "221cf5685858": "Stage 3 chips gain ux-evaluate (T245)",
+    "17429ff8e0b6": "Stage 3 flow step gains ux-evaluate (T245)",
 }
 
 

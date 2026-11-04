@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Structured multi-reviewer code review for Stage 4. Use after every task reaches Ready for Review. Layers P0–P3 severity scoring, cross-reviewer confidence anchors, conditional reviewer personas, and model tiering over the base review — producing a deduplicated, confidence-gated finding set rather than a raw list of comments.
+description: Structured multi-reviewer code review for Stage 4. Use after every task reaches Ready for Review. Layers P0–P3 severity scoring, cross-reviewer confidence anchors, conditional reviewer personas, and model tiering over the base review — producing a deduplicated, confidence-gated finding set.
 ---
 
 ## Role: Review Orchestration Specialist
@@ -61,6 +61,7 @@ Stage 4 review gatekeeper: run a structured, multi-perspective review of the cur
 | **migration-reviewer** | Schema changes, data migrations, seed files |
 | **adversarial-reviewer** | ≥ 50 changed lines, or any security-reviewer activation |
 | **api-reviewer** | Public API changes, endpoint signatures, OpenAPI/schema files |
+| **ux-evaluate** | UI files: run `Skill({ skill: "ux-evaluate" })`; `fail` is P1, `fail (older)` P3, `not checked` or `no UX criteria` P2 |
 | **over-engineering-reviewer** | Any diff that adds a new function, class, module, dependency or config option. Flags: a new abstraction with one caller; a new dependency replacing ≤ 10 lines; speculative config or flags nothing sets; duplication of an existing helper or the stdlib. Apply "Search Before You Build" (`templates/general-agent-template.md`) by name — do not restate its rungs |
 
 ---
@@ -86,7 +87,7 @@ Read the task's `TASK_GUIDE_Txxx.md` `## Dependencies & Reachability` section (`
 
 Completion criterion: reachability check run (or explicitly skipped as N/A) and its result folded into the Phase 1 findings set.
 
-**Startup-reads check (T129).** Compare the implementing agent's final-report line `Startup reads: <paths>` against the spawn prompt's `**Startup reads**` block. A Permanent-Rule read (`PROJECT_SPEC.md`, the TASK_GUIDE, the `agents/` role guide) missing from the line is a **P1 process finding**; a missing line counts as all missing. Lives here because Phase 0.5 already checks spawn/guide conformance before the reviewers run.
+**Startup-reads check (T129).** Compare the implementing agent's final-report line `Startup reads: <paths>` against the spawn prompt's `**Startup reads**` block. A Permanent-Rule read (`PROJECT_SPEC.md`, the TASK_GUIDE, the `agents/` role guide) missing from the line is a **P1 process finding**; a missing line counts as all missing.
 
 ---
 

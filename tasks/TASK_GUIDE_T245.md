@@ -71,9 +71,11 @@ code-review only"*.
 
 ## Dependencies & Reachability
 
-**Depends on**: `None` (T192 is related, not a precondition: the skill works with headless Chrome alone)
+**Depends on**: `None`
 
-**Entry point**: `Skill({ skill: "ux-evaluate" })` — called from `agents/frontend.md` `## Available skills`
+Related, not a precondition: the easy-ui task (Todo) adds one more screenshot method; the skill works with headless Chrome alone.
+
+**Entry point**: `skills/ux-evaluate/SKILL.md` — named in `agents/frontend.md` `## Available skills` (the agent reads and follows it) and run by `code-review` as `Skill({ skill: "ux-evaluate" })`
 
 ---
 
@@ -84,11 +86,15 @@ code-review only"*.
 | 1 | New `skills/ux-evaluate/SKILL.md` with valid frontmatter (`scripts/validate.sh` accepts it), ≤ 8192 bytes (Codex cap). Its description says when to use it: a UI change, before Ready for Review, or from `code-review` on a UI diff | G1, correction |
 | 2 | The skill's workflow: (a) read the guide's `### 4. UX Acceptance Criteria` rows and the requirement they cite; (b) take screenshots of the guide's `Entry point` at 375px and 1280px width (headless Chrome `--screenshot`, `Skill({ skill: "run" })`, or easy-ui when installed); (c) `Read` each image; (d) judge each row `pass` / `fail`, with the screenshot path and one line of reason; (e) output one verdict table | G1 |
 | 3 | Negative paths in the skill: a row it cannot check (no running app, no browser) is `not checked: <reason>`, never `pass`; a UI change whose guide has no UX rows returns `no UX criteria` and tells the caller to ask the Supervisor for them; a vague pass condition ("looks good") is reported as `not checkable` | G1 boundary |
-| 4 | `agents/frontend.md`: `## Available skills` has a `ux-evaluate` row; `## Implementation checklist` has a `UX:` line (run `ux-evaluate` before Ready for Review, fix every `fail`, put the verdict table in the report); Pillar 3 names the method | G1, "belong to agent" |
+| 4 | `agents/frontend.md`: `## Available skills` has a `ux-evaluate` row; `## Implementation checklist` has a `UX:` line (before Ready for Review, `Read` `skills/ux-evaluate/SKILL.md` and follow its steps — a sub-agent has no `Skill` tool, `memory/learnings.md:895`; fix every `fail`; put the verdict table in the report); Pillar 3 names the method. The skill's own text works both ways: called with `Skill(...)` by the Supervisor, or read and followed by an agent | G1, "belong to agent" |
 | 5 | `templates/TASK_GUIDE_template.md` has `### 4. UX Acceptance Criteria` inside `## UI / Design Acceptance Criteria`: columns `User story`, `User goal`, `Flow / state`, `Pass condition (observable)`; guidance says each row cites a `PRD.md` US-ID (or the quoted request), covers the empty / loading / error / success states the screen has, and states what is seen on a screenshot or a run | G2 |
 | 6 | `skills/code-review/SKILL.md`: one conditional row — on a diff that touches UI files, run `Skill({ skill: "ux-evaluate" })`; a `fail` is a P1 finding, a `not checked` / `no UX criteria` is P2. No UX rules are copied into `code-review`. The file stays ≤ 8192 bytes (8163 before this task) | G3, "not in the code-review only" |
 | 7 | Every place that lists all skills names `ux-evaluate` where tests require it (for example `site/index.html` skill flow, `tests/test_site_content.py` `SKILL_FLOW_GROUPING` stage 3); the full suite stays green | regression |
 | 8 | Real run: the implementer runs `ux-evaluate` on `site/index.html` with 2 UX rows written for the test, and pastes the verdict table and the two screenshot paths | G1 proof |
+
+**Amendment A1 (2026-11-03, user: "when I apply to build FE without design, it got the poor UX"; commit `75fecb67`)**: AC 3's `no UX criteria` no longer stops the skill. It judges nine fixed baseline UX checks (B-a to B-i) with or without rows and reports `no UX criteria — baseline checks only`. Evidence: round 4 in `tasks/TASK_REVIEW_T245.md` (blind-judged no-design builds: 35/35 with the skill, 29/29 without).
+
+**Amendment A2 (2026-11-04, Stage 4 review R2, user: "yes [auto]")**: on a diff, the skill writes a baseline `fail` on a part the diff did not change as `fail (older)`; `code-review` rates it P3, not P1. AC 6's P1/P2 mapping stays for row fails and new baseline fails.
 
 ---
 

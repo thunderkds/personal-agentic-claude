@@ -232,6 +232,7 @@ Run these **one by one**. After each session, summarize findings, ask for user c
   - `ship/SKILL.md` — post-merge deployment plan, rollback plan, and release notes
   - `blast-radius/SKILL.md` — data-breach impact analysis (PII/PHI, regulatory/financial estimate)
   - `migration-safety/SKILL.md` — go/no-go gate for DB schema/migration changes
+  - `ux-evaluate/SKILL.md` — Stage 3: the frontend agent judges its UI on screenshots at 375px and 1280px (nine baseline UX checks + the guide's UX rows); `code-review` reruns it on UI diffs
   - `strategy/SKILL.md` — create/update STRATEGY.md (product north star); use in Stage 0 before brainstorming
   - `ideate/SKILL.md` — pre-brainstorm divergent filter; 25–50 ideas → adversarial critique → 5–7 survivors; use in Stage 0 before step Direction
   - `code-review/SKILL.md` — project override of built-in; adds P0–P3 severity, confidence anchors, conditional personas, dedup+promotion

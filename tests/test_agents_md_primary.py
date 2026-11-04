@@ -29,7 +29,8 @@ BASE_REF = "c573bbf"
 # so its pin moves off BASE_REF to T200's edit commit. BASE_REF stays for CLAUDE.md (AC 1).
 # T228: `CLAUDE_LEGACY.md` gains the `dotfiles` skills-list line; the pin moves to T228's merge commit (holds the T226 and T228 lines).
 # T239: `CLAUDE_LEGACY.md` renames its stage names (Stage 1 step Agent team, Stage 0); the pin moves to T239's edit commit.
-CLAUDE_LEGACY_REF = "8c381c20"
+# T245: `CLAUDE_LEGACY.md` gains the `ux-evaluate` skills-list line; the pin moves to T245's docs commit.
+CLAUDE_LEGACY_REF = "496c110f"
 
 # AC 1 allowed edits (a) and (b): (base span, new span). Each span must hit exactly one base line.
 REPLACED_SPANS = [
@@ -88,6 +89,8 @@ REPLACED_SPANS = [
     ("full Stage 0.5–5 detail", "full Stage 0–5 detail"),
     ('- **Stage 0.5** (Requirement Grilling → Brainstorming): `Skill({ skill: "grill-with-docs", args: "mode=requirement" })` then `Skill({ skill: "brainstorming" })`. Runs after Phase 0, before Stage 1.',
      '- **Stage 0** (Define): three steps in order, each with its own stop, never merged: step Requirements (the section above; the user confirms the Project Context Document), step Grilling (`Skill({ skill: "grill-with-docs", args: "mode=requirement" })`; the PRD gate must pass), step Direction (`Skill({ skill: "brainstorming" })`; the user picks a direction). Must complete before Stage 1.'),
+    # T245: the `ux-evaluate` skill joins the Stage 3 index.
+    ("`craft-spawn-prompt`,`migration-safety` |", "`craft-spawn-prompt`,`migration-safety`,`ux-evaluate` |"),
     ("- **Stage 1** (Environment & Provider Setup): checklist", "- **Stage 1, step Environment** (Set up): checklist"),
     ('- **Stage 1.5** (Sub-Agent Architecture): design the sub-agent team; base team is always Common-Infrastructure/Backend/Frontend/QA; `Skill({ skill: "craft-agent" })` only if an uncovered role is needed.',
      '- **Stage 1, step Agent team** (Sub-Agent Architecture): design the sub-agent team; base team is always Common-Infrastructure/Backend/Frontend/QA; `Skill({ skill: "craft-agent" })` only if an uncovered role is needed. The user is asked to approve the team only when `craft-agent` proposes a role beyond the base team; with the base team alone, state it in one line and go on.'),

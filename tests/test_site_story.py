@@ -520,14 +520,23 @@ CHANGED_BY_T240 = {
 }
 
 
+# T245: the `ux-evaluate` skill joins Stage 3, so the skill count is 36 and the Stage 3 chip row changed.
+CHANGED_BY_T245 = {
+    "1c42ccaf9f94978d": "the skills count is 36 (T245)",
+    "22f304c06fdf356e": "the quick-reference strip says 36 skills (T245)",
+    "375390fc45d06b1e": "skills flow step Stage 3 gains ux-evaluate (T245)",
+    "04da1d94a8957f63": "the Stage 3 chip row gains ux-evaluate (T245)",
+}
+
+
 def test_every_paragraph_item_cell_and_definition_of_the_old_page_is_on_docs():
     now = set(sentence_hashes(docs_html()))
-    missing = [(h, t) for h, t in _baseline()["sentences"] if h not in now and h not in CHANGED_BY_T239 and h not in CHANGED_BY_T240]
+    missing = [(h, t) for h, t in _baseline()["sentences"] if h not in now and h not in CHANGED_BY_T239 and h not in CHANGED_BY_T240 and h not in CHANGED_BY_T245]
     assert not missing, f"{len(missing)} text(s) lost from docs.html: {missing[:5]}"
 
 
 def test_every_listed_change_is_a_real_baseline_text():
-    assert set(CHANGED_BY_T239) | set(CHANGED_BY_T240) <= {h for h, _ in _baseline()["sentences"]}
+    assert set(CHANGED_BY_T239) | set(CHANGED_BY_T240) | set(CHANGED_BY_T245) <= {h for h, _ in _baseline()["sentences"]}
 
 
 def test_the_baseline_is_not_empty():

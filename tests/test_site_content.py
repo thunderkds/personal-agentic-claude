@@ -1163,7 +1163,7 @@ SKILL_FLOW_GROUPING = {
     "0": {"brainstorming", "ideate"},
     "1": {"git-guardrails-claude-code", "map-codebase", "settings-setup", "companion-setup", "craft-agent"},  # T239: craft-agent joins Stage 1
     "2": {"grill-with-docs", "to-issues"},
-    "3": {"tdd", "bugfix", "diagnose", "craft-spawn-prompt", "migration-safety"},
+    "3": {"tdd", "bugfix", "diagnose", "craft-spawn-prompt", "migration-safety", "ux-evaluate"},  # T245
     "4": {"blast-radius", "code-review", "html-report", "score"},
     "5": {"ship", "delivery-report"},
 }
