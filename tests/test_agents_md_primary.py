@@ -29,7 +29,8 @@ BASE_REF = "c573bbf"
 # so its pin moves off BASE_REF to T200's edit commit. BASE_REF stays for CLAUDE.md (AC 1).
 # T228: `CLAUDE_LEGACY.md` gains the `dotfiles` skills-list line; the pin moves to T228's merge commit (holds the T226 and T228 lines).
 # T239: `CLAUDE_LEGACY.md` renames its stage names (Stage 1 step Agent team, Stage 0); the pin moves to T239's edit commit.
-CLAUDE_LEGACY_REF = "8c381c20"
+# T245: `CLAUDE_LEGACY.md` gains the `ux-evaluate` skills-list line; the pin moves to T245's docs commit.
+CLAUDE_LEGACY_REF = "496c110f"
 
 # AC 1 allowed edits (a) and (b): (base span, new span). Each span must hit exactly one base line.
 REPLACED_SPANS = [
