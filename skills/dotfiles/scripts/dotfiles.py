@@ -76,11 +76,18 @@ def load_source(root):
         source.ignored = sorted("permissions." + k for k in permissions if k not in RULE_KEYS)
         source.ignored += sorted(k for k in data if k != "permissions")
     agents = os.path.join(root, "AGENTS.md")
+    if os.path.lexists(agents) and not os.path.isfile(agents):
+        raise ValueError("AGENTS.md is not a file")  # T230: a folder would be skipped unseen
     source.agents = agents if os.path.isfile(agents) else None
     skills = os.path.join(root, "skills")
+    if os.path.lexists(skills) and not os.path.isdir(skills):
+        raise ValueError("skills is not a folder")
     names = sorted(os.listdir(skills)) if os.path.isdir(skills) else []
     source.skills = [n for n in names
                      if not n.startswith(".") and os.path.isdir(os.path.join(skills, n))]
+    if not all(n.isprintable() for n in source.skills):
+        # T230: a newline in a folder name could print a fake `plan` line
+        raise ValueError("a skills folder name has unprintable text")
     return source
 
 
@@ -132,8 +139,12 @@ def broken_links(target, root):
 
 def inspect_target(target, kind, source):
     found = SimpleNamespace(changes=[], conflicts=[], links=[], refused=None, merged=None, raw=None)
-    if os.path.realpath(target) == os.path.realpath(source.root):
+    real_target, real_root = os.path.realpath(target), os.path.realpath(source.root)
+    if real_target == real_root:
         found.refused = "target is the source folder"
+        return found
+    if real_target.startswith(real_root + os.sep):
+        found.refused = "target is inside the source folder"  # T230: links would point into itself
         return found
     if kind == "claude" and any(source.rules.values()):
         inspect_settings(target, source.rules, found)

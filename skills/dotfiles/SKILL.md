@@ -32,7 +32,9 @@ AGENTS.md            linked as CLAUDE.md (Claude folders) and AGENTS.md (Codex f
 skills/<name>/       linked as skills/<name> in each folder
 ```
 
-Codex folders get skills and instructions only, never settings.
+Codex folders get skills and instructions only, never settings. The script refuses a source
+whose `AGENTS.md` is not a file, whose `skills` is not a folder, or whose skill folder name has
+unprintable text (`refused source`, exit 2).
 
 ### Step 1 — Find the folders
 
@@ -57,7 +59,7 @@ python3 "${CLAUDE_SKILL_DIR}/scripts/dotfiles.py" plan --source <dir> --claude-d
 - `conflict <name>` is a path that exists and is not our link, or our link to a source part that
   is gone (`broken link`). The script leaves it unchanged.
 - `refused` means the script writes nothing in that folder, for example on invalid JSON or a
-  read-only `settings.json`. Exit 2.
+  read-only `settings.json`, or a target folder inside the source. Exit 2.
 - `skipped` means the folder does not exist.
 
 Ask: "Apply this plan to these folders?"

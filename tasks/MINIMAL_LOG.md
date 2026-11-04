@@ -81,6 +81,25 @@ Mode: auto
 **Not done:** merge (yours); auto verify: ☑ pass (session 7819efd6-8606-45e9-a214-f792ebee5be6, commit fa666f7e7a5dea4a9c99d4d8d2a27e0612b3e018, log .claude/verify-runs/T229-fa666f7e7a5d.log)
 Closed: row moved to Done 2026-11-03 — auto verify pass (session 7819efd6-8606-45e9-a214-f792ebee5be6, commit fa666f7e7a5dea4a9c99d4d8d2a27e0612b3e018); Gates 5 and 6 checked
 
+## T230 — `dotfiles` refuses a target inside the source, unprintable skill names and a wrong source shape · minimal
+**Asked:** "next"
+**Decisions:**
+- "Next" is T230: T245 edits `stop_auto_mode_check.py`, which the unmerged T229 branch changes, so it waits for that merge — the two would conflict
+- Track minimal: C1, Risk Low, one script and its tests, no UI, no user data — `docs/claude-md/tracks.md` `## Track rule`
+- A wrong source shape is refused (`refused source`, exit 2), not only reported — every other unreadable source part is already refused that way, and plan/apply write nothing on it
+- A target that holds the source (e.g. HOME holding `~/.dotfiles/agents`) stays allowed — only a target under the source makes links point into the source itself
+- Assumed: a skill folder name is checked with `str.isprintable()`, the same test `load_source` uses for rules — one rule for both
+**Checked:**
+- New tests `test_t230_*` in `tests/test_dotfiles.py` (9) — `8 failed, 1 passed` before (the 1 is the HOME-holds-source guard), 9 pass after
+- Suite: `python3 -m pytest tests -q` — `1729 passed in 154.37s (0:02:34)`; `python3 -m pytest .claude/hooks/tests -q` — `1389 passed, 25 subtests passed in 38.25s`; `sh scripts/smoke-install.sh` — `smoke-install.sh: PASS`
+- Real run (scratch HOME): `dotfiles.py plan --source dots --claude-dir dots/skills/one` — printed `refused target is inside the source folder, nothing written here`, exit 2; a skill folder named `x\nplan: + link CLAUDE.md` — `refused source …/dots: a skills folder name has unprintable text`, exit 2; `AGENTS.md` as a folder — `refused source …/dots: AGENTS.md is not a file`, exit 2
+- verify: ☑ pass — auto-run by hook, session 64f7e836-5ba2-4ca9-8d7a-35becd8d9e36, commit 6df51e017aad2e3cd895ec0242dcddd3eca548db, log .claude/verify-runs/T230-6df51e017aad.log
+**Files:** `skills/dotfiles/scripts/dotfiles.py`, `skills/dotfiles/SKILL.md`, `tests/test_dotfiles.py`, `tasks/MINIMAL_LOG.md`
+**Memory:** nothing new
+**Not done:** merge (the user decides); auto verify: ☑ pass (session 64f7e836-5ba2-4ca9-8d7a-35becd8d9e36, commit 6df51e017aad2e3cd895ec0242dcddd3eca548db, log .claude/verify-runs/T230-6df51e017aad.log)
+Paused: auto-mode check failed — its Decision record in tasks/MINIMAL_LOG.md does not start with `Mode: auto` [report 7f72456a346d]
+
+
 ## T243 — Plugin directory submission prep: icon, manifest and hooks the directory can read · minimal
 Mode: auto
 **Asked:** "continue, I saw you draw the icon for the index page, let use it [auto]"
