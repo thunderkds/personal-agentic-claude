@@ -251,7 +251,7 @@ fi
 if [ "$(id -u)" -eq 0 ]; then
   pass "T119: abort wording — skipped (root ignores directory permissions)"
 elif printf '%s' "$RO_OUT" | grep -qF "'$T/p/templates' was not replaced" \
-   && printf '%s' "$RO_OUT" | grep -qF 'paths earlier in this run were already installed' \
+   && printf '%s' "$RO_OUT" | grep -qF 'paths before it in this run, if any, were already installed' \
    && ! printf '%s' "$RO_OUT" | grep -qF 'nothing was replaced'; then
   pass "T119: abort says which path was not replaced, not 'nothing was replaced'"
 else
