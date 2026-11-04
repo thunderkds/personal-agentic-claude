@@ -5,6 +5,7 @@ marked auto mode (T250 G3 covered only a task found by file time).
   AC 1 — marked, failing, this session did not work on it: no block, one stderr note.
   AC 2 — the same task, this session worked on it: the block, same reasons.
   AC 3 — ownership cannot be told (reader raises, unreadable transcript, none): the block.
+  Stage 4 P1 — a marked minimal-track record is always checked (no ownership question).
   AC 5 — end to end through the hook's `main()` (stdin JSON, synthetic transcript in `tmp_path`).
 
 Run with: python3 -m pytest .claude/hooks/tests/test_t252_marked_ownership.py -q
@@ -124,9 +125,11 @@ MIN_LOG = ("# Minimal log\n\n## T900 — Sort the names · minimal\nMode: auto\n
            "Checked: tests\nFiles: a.py\nNot done: merge (yours)\n")
 
 
-def test_edge_a_minimal_track_task_marked_auto_and_not_worked_on_is_not_checked(tmp_path):
+def test_edge_a_marked_minimal_track_task_is_still_checked_without_work_by_this_session(tmp_path):
+    """Stage 4 P1: a minimal-track task done in the main checkout leaves no `tasks/*_<ID>*` write,
+    so ownership cannot be told from the transcript; its marked record keeps today's check."""
     project = gate_project(tmp_path, in_progress=(MIN_ROW,), files={"tasks/MINIMAL_LOG.md": MIN_LOG})
     t = session(tmp_path, project, [auto_request(), bash("ls", cwd=str(project))])
     reason, stderr = run_stop(project, t)
-    assert reason is None, (reason, stderr)
-    assert "did not work on it" in stderr, stderr
+    assert reason and "T900" in reason, (reason, stderr)
+    assert "did not work on it" not in stderr, stderr

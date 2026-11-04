@@ -52,11 +52,21 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 | Negative cases hold | ☐ pass / ☐ fail | |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☑ pass | `python3 -m pytest .claude/hooks/tests/ tests/ -q` -> `3293 passed, 25 subtests passed in 203.50s (0:03:23)` |
+| Full smoke suite still green (no regression) | ☑ pass | `python3 -m pytest .claude/hooks/tests/ tests/ -q` -> `3293 passed, 25 subtests passed in 203.50s (0:03:23)`; after the Stage 4 fix pass: `3293 passed, 25 subtests passed in 191.40s (0:03:11)` |
 | **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
 | **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+
+### Stage 4 fix pass (P1: marked minimal-track tasks stay checked)
+
+Finding: a minimal-track `[auto]` task done in the main checkout leaves no `tasks/*_<ID>*` write and no worktree, so `owned(task)` is False and the first T252 change skipped it (fail open; on main it was always checked). Fix: the marked-path ownership question is asked only for an extended-track task; `task.marked and task.minimal` is always checked. The file-time path (T250 G3) is unchanged for both tracks.
+
+RED (2026-11-04T15:03:14Z, hook still asking ownership for minimal): the edge-case test flipped to "is checked" -> `FAILED .claude/hooks/tests/test_t252_marked_ownership.py::test_edge_a_marked_minimal_track_task_is_still_checked_without_work_by_this_session`, `1 failed, 8 passed`.
+
+GREEN: `python3 -m pytest .claude/hooks/tests/test_t252_marked_ownership.py -q` -> `9 passed`; `python3 -m pytest .claude/hooks/tests/test_stop_auto_mode_check.py .claude/hooks/tests/test_t250_session_ownership.py .claude/hooks/tests/test_t252_marked_ownership.py -q` -> `198 passed in 14.77s`; full suite `python3 -m pytest .claude/hooks/tests/ tests/ -q` -> `3293 passed, 25 subtests passed in 191.40s (0:03:11)`.
+
+Docs: `docs/claude-md/tracks.md` T252 sentence now says extended-track only; new Known-limits bullet "A parallel session's marked minimal-track record can block your stop".
 
 ---
 

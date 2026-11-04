@@ -339,8 +339,9 @@ def session_owner(transcript_path):
 
 def check_task(task, windows, owned=None):
     """The reasons this task's report fails, or [] (also [] when the task is not auto mode).
-    `owned(task)` (T250 G3, T252) narrows the check, for a task marked auto mode or found in an
-    `[auto]` window, to this session's work; None, or an answer of None, keeps the check."""
+    `owned(task)` (T250 G3, T252) narrows the check, for an extended-track task marked auto mode or
+    any task found in an `[auto]` window, to this session's work; None, or an answer of None, keeps
+    the check."""
     task_id, body = task.task_id, task.body
     if task.minimal:
         risk_text = body
@@ -365,8 +366,9 @@ def check_task(task, windows, owned=None):
             in_auto_window(datetime.fromtimestamp(os.path.getmtime(p), timezone.utc), windows)
             for p in task.touched)
     # T250 G3, T252: a parallel session's task is charged to this session only when this session
-    # worked on it. `owned` None, or an answer of None, keeps the check (fail closed).
-    if marked and owned is not None and owned(task) is False:
+    # worked on it. `owned` None, or an answer of None, keeps the check (fail closed). A marked
+    # minimal-track record is always checked: work in the main checkout leaves nothing to match.
+    if marked and owned is not None and not (task.marked and task.minimal) and owned(task) is False:
         warn(f"{task_id}: its files changed in the `[auto]` window, but this session did not "
              "work on it — not checked" if from_window else
              f"{task_id}: its report is marked auto mode, but this session did not work on it "

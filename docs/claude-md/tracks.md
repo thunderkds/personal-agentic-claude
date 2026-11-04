@@ -303,7 +303,7 @@ with a short reason when:
 A board row counts as auto mode when its report carries `## Auto decisions` or a `Mode: auto` line, when its
 Decision record's request carries `[auto]`, or when the task's files changed while a request carrying
 `[auto]` was this session's latest user request (T229: up to the next request without the tag; tool
-results, task notifications and `!` commands are not requests). Since T250, a task whose files changed in that window counts as this session's auto work only when this session (or one of its sub-agents) worked on it, by `.claude/hooks/lib/session_work.py`. Since T252 the same rule also applies to a task whose report is already marked auto mode (`Mode: auto`, a `Mode: auto` Decision record or the `[auto]` tag): if this session did not work on it, the check skips it and writes one stderr note. A transcript that cannot be read, or an ownership answer that cannot be told, keeps the check (fail closed). A task this session ran in `[auto]`, and the user then `/resume`d into a new session id, is not checked in the new session, because that session did not work on it; the session that ran it was already checked at its own stop (T252, accepted gap). Risk comes from the guide's `**Risk Level**`, else the review file, else the board
+results, task notifications and `!` commands are not requests). Since T250, a task whose files changed in that window counts as this session's auto work only when this session (or one of its sub-agents) worked on it, by `.claude/hooks/lib/session_work.py`. Since T252 the same rule also applies to an extended-track task whose report is already marked auto mode (`Mode: auto`): if this session did not work on it, the check skips it and writes one stderr note. A minimal-track task whose Decision record is marked is still checked, because work in the main checkout cannot be told apart from the transcript. A transcript that cannot be read, or an ownership answer that cannot be told, keeps the check (fail closed). A task this session ran in `[auto]`, and the user then `/resume`d into a new session id, is not checked in the new session, because that session did not work on it; the session that ran it was already checked at its own stop (T252, accepted gap). Risk comes from the guide's `**Risk Level**`, else the review file, else the board
 row, else Low; a Decision record is Risk Low unless it says otherwise. The trace is `memory/event-trace/<ID>.jsonl` plus the last 6 hours of
 `memory/event-trace/_untagged.jsonl` (`CLAUDE_AUTO_CHECK_WINDOW_S`): Advocate prompts carry no task ID, so
 their calls land in `_untagged.jsonl` unless the active-task state file is set.
@@ -505,6 +505,10 @@ Read these before you rely on `[auto]`. T180 left them open, on purpose. T186 re
 - **A paused task is not checked again until its report changes.** If the report block does not change,
   the check does not block the task a second time, even when a later trace would give different
   reasons. Edit the report to have the task checked again.
+- **A parallel session's marked minimal-track record can block your stop.** The ownership rule (T250,
+  T252) does not apply to a minimal-track task whose Decision record is marked auto mode. A record in
+  `tasks/MINIMAL_LOG.md` that fails a check still blocks this session's stop, even when this session did
+  not work on it. Fix the record, or wait for the other session to finish it.
 - **An agent can still forge the transcript that proves your `/verify`, in three ways the rules miss.**
   The merge gate reads the proof for the line `- verify: ☑ pass — /verify by the user, session <id>,
   commit <sha>` from `<id>.jsonl` in the transcripts folder. Since T251, `.claude/settings.json` denies
