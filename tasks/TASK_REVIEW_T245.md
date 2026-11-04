@@ -130,3 +130,17 @@ Fixture: 5 pages (`list`, `add`, `confirm`, `saved`, `error`). 4 seeded misses: 
 | after | 3 | 4/4, 4/4, 4/4 | 3/3 | all followed `ux-evaluate`, per-row table, every image read |
 
 Total over 3 rounds: 14 runs, every run found every seeded miss and gave the right verdict. The skill gave no measurable detection gain. Its visible effect is format: a per-row verdict table tied to the guide's UX rows.
+
+### Round 4: build with no design, blind-judged (2026-11-04, per the user's "build FE without design, it got the poor UX")
+
+Setup: one requirement with no design and no UX rows (habit tracker, static `index.html`/`style.css`/`app.js`, `?state=empty|list|error`). 4 builds, `general-purpose` sonnet, each in its own folder: before = `main` `agents/frontend.md` (b1, b2); after = branch `agents/frontend.md` + `skills/ux-evaluate/SKILL.md` (a1, a2). Same prompt otherwise. Only the 3 page files were copied into folders P/Q/R/T in a random order (Python `random.shuffle`); the key stayed in a separate file. One judge (`general-purpose`, opus) read only those folders and an 8-item rubric that is not the skill's B-a to B-i list. It took 24 screenshots (4 builds × 3 states × 2 widths) and scored each item 1-5.
+
+| Build (blind) | Arm | Clarity | Primary | Status | Empty | Error | Mobile | Polish | Overall | Total |
+|---|---|---|---|---|---|---|---|---|---|---|
+| T = a1 | after | 4 | 5 | 4 | 4 | 4 | 5 | 5 | 4 | 35 |
+| Q = a2 | after | 4 | 5 | 4 | 4 | 5 | 5 | 4 | 4 | 35 |
+| P = b1 | before | 4 | 4 | 4 | 3 | 3 | 4 | 4 | 3 | 29 |
+| R = b2 | before | 4 | 4 | 4 | 3 | 3 | 4 | 4 | 3 | 29 |
+
+Result: both builds made with the skill rank above both builds made without it (35, 35 vs 29, 29). The judge rated this gap "high" confidence before unblinding: the skill builds have a retry action in the error state, an empty state that names the button, and bigger phone tap targets; the others have none of these. Both skill runs reported a baseline `fail` and fixed it (a1: retry button style, B-i; a2: a wrapped button). Both opened every screenshot; the before runs opened 3 of 8 (b2) and 3 of 7 (b1).
+Limits: n = 2 per arm, one judge, one requirement; the judge did not drive the add/tick flow. Self-reported "all pass" from the builds is not part of the score.
