@@ -278,6 +278,7 @@
 - [Parallel tasks merge together; 401 ≠ permanent](learnings.md) — T156/T157: gate serialises merges
 
 ### Learning Records
+- [Measure a UX skill on no-design builds, judged blind](learnings.md) — T245: seeded defects showed no gain; blind no-design builds 35 vs 29; older baseline fails are P3
 - [Audit every public claim in one pass](learnings.md) — T231: verify failed 3 times, one sentence each
 - [Sideways scroll: measure the table's minimum content width](learnings.md) — T199 addendum: `nowrap` was not the only floor; `Edit|Write|Bash` needed `<wbr>`
 - [Minimal-track test runs need the task state file first](learnings.md) — T241: Supervisor write worked; else ask for `!`
