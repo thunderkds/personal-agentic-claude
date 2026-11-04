@@ -342,3 +342,21 @@ def test_r2_the_skill_marks_baseline_fails_the_diff_did_not_cause():
 def test_r3_frontend_skills_row_names_the_baseline_checks():
     row = [l for l in _text(FRONTEND).splitlines() if l.startswith("|") and "ux-evaluate" in l][0]
     assert "baseline" in row, row
+
+
+# --- verify fail at e9012dc5 (2026-11-04): a cropped 375 screenshot hides sideways overflow ---
+
+def test_v1_step2_keeps_scrollbars_at_375_so_overflow_shows():
+    """A cropped screenshot hides sideways overflow; with scrollbars on, a horizontal bar shows it.
+    `--dump-dom` lays out at 500px in headless Chrome 156, so a width read there is wrong."""
+    step2 = _norm(re.search(r"#### 2\. Take the screenshots(.*?)#### 3\.", _text(SKILL), re.S).group(1))
+    cmd375 = re.search(r"`google-chrome[^`]*-375\.png[^`]*`", step2).group(0)
+    assert "--hide-scrollbars" not in cmd375, cmd375
+    assert "scrollbar" in step2 and "B-h" in step2
+    assert "--dump-dom" in step2 and "500" in step2
+
+
+def test_v1_step2_names_the_snap_chromium_tmp_limit():
+    step2 = _norm(re.search(r"#### 2\. Take the screenshots(.*?)#### 3\.", _text(SKILL), re.S).group(1))
+    assert "snap" in step2 and "/tmp" in step2
+    assert len(SKILL.read_bytes()) <= CODEX_CAP, len(SKILL.read_bytes())

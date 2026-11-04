@@ -177,3 +177,10 @@ Test UX rows (written for this run, from the T245 change to the page): 1 — "a 
 | B-i | baseline | default | 375 / 1280 | pass | both | one green accent, one chip style, one radius |
 
 ux-evaluate: 9 pass, 1 fail, 1 not checked, 0 not checkable. Overall: fail (the one fail is older than this diff; see review finding R2).
+
+## Verify fail at `e9012dc5` and the fix (2026-11-04)
+
+The auto verify run (session 27f3055e) failed T245 on step 2 of the skill: `--window-size=375` measured `innerWidth=500`, so it judged the 375 images a cropped 500px layout, and a page with a fixed 1100px wrapper looked clean at 375.
+Supervisor re-check (Chrome 156.0.8078.79): the 500 comes from `--dump-dom`, which lays the page out at 500px. At `--screenshot` time the viewport is 375. A probe page that rewrites its text on `resize` showed `iw=375 sw=1100 mq400=true` in the 375 PNG. So the 375 layout in the images was right. The real gap the run found holds: `--hide-scrollbars` plus the crop hide sideways overflow (`sw=1100`), so B-h could pass on an overflowing page. Without `--hide-scrollbars` the same page shows a horizontal scrollbar at the bottom of the image.
+Fix: step 2 keeps scrollbars at 375 (the bar is the B-h evidence), says never to measure widths with `--dump-dom`, and names the snap `chromium` `/tmp` limit (the run's second finding). Tests: `test_v1_step2_keeps_scrollbars_at_375_so_overflow_shows`, `test_v1_step2_names_the_snap_chromium_tmp_limit` (red on the old step 2, then `37 passed`). Real run of the new command on `site/index.html`: `99948 bytes written` (375) and `114792 bytes written` (1280); the 375 image has a vertical scrollbar only, no horizontal bar, so B-h passes.
+Effect on earlier evidence: round 4's judge shots and the AC 8 run used `--hide-scrollbars` at 375, so sideways overflow would not have shown in them; their layouts were real 375 layouts. The build agents b1, b2 and a1 measured `scrollWidth` over DevTools, not from images.

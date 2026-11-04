@@ -50,7 +50,7 @@ Completion: every row listed with its story, state and pass condition, and the n
 For the `Entry point` and each `Flow / state`, capture two widths, 375 and 1280, into a scratch directory outside the repo. Never commit a screenshot. First method that works:
 
 1. Headless Chrome (`google-chrome`, `chromium` or `chromium-browser`):
-   `google-chrome --headless --disable-gpu --hide-scrollbars --window-size=375,1600 --screenshot=<dir>/<name>-375.png "file://<abs path>"`, then `--window-size=1280,1000` for the second image. Make the window tall enough for content below the fold when a row is about it.
+   `google-chrome --headless --disable-gpu --window-size=375,1600 --screenshot=<dir>/<name>-375.png "file://<abs path>"`, then `--hide-scrollbars --window-size=1280,1000` for the second image. Make the window tall enough for content below the fold when a row is about it. Keep scrollbars at 375: a screenshot crops sideways overflow, so a horizontal scrollbar at the bottom of the image is the only sign of it (B-h). Never measure widths with `--dump-dom`: it lays the page out at 500px, not 375. The snap `chromium` cannot read `/tmp` and writes nothing; use `google-chrome` or a scratch directory under your home.
 2. A running app: `Skill({ skill: "run" })` (or its start command from the guide), then the same command with its URL.
 3. easy-ui, when installed and its container runs, for a labelled session.
 
