@@ -67,8 +67,17 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured 2026-11-04T08:56:33Z in `../wt-t250` at `f3f24ac7`, before any implementation commit; session f5ea81bb has never edited T249's files, and its transcript holds the user's `/verify T246`):
+```
+$ echo '{"tool_name":"Bash","tool_input":{"command":"git merge --no-ff fix/t246-x"},"transcript_path":"…/f5ea81bb-c349-4953-9f6b-0307a641966a.jsonl","session_id":"f5ea81bb-…","cwd":"…/personal-agentic-claude"}' | python3 .claude/hooks/pre_bash_block_unsafe_merge.py
+{"decision": "block", "reason": "[hook:pre_bash] Pipeline gate failed — cannot push/merge:\n  • Tasks still In Progress: T250, T249\n  • Tasks in Ready for Review missing Stage 5 verify evidence: T246 (no evidence row)\n…"}
+```
+G3, from this session's Stop hook (every stop since 2026-11-04 ~08:31Z):
+```
+[hook:stop_auto_mode_check] Auto-mode final report check failed — fix it before you stop (docs/claude-md/tracks.md `## Auto mode`):
+  • T249: tasks/TASK_REVIEW_T249.md has no `## Auto decisions` section starting with `Mode: auto`
+  • T249: no `Memory:` line in the report — run the memory pass before you stop and record it there (each entry written, or `Memory: nothing new`)
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
