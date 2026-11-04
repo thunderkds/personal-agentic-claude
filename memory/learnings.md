@@ -3016,3 +3016,11 @@ Three rounds (14 runs) of seeded UX defects showed no gain from `ux-evaluate`: a
 ### 2026-11-04 — Headless Chrome: `--dump-dom` lays out at 500px; screenshots hide sideways overflow (T245, T248)
 Chrome 156 headless: `--window-size=375 --dump-dom` reports `innerWidth=500`, but at `--screenshot` time the viewport is 375 (a resize-listening probe printed `iw=375`). Never read widths from `--dump-dom`. `--hide-scrollbars` plus the crop hides sideways overflow; keep scrollbars at 375 and a horizontal bar shows it. Tap sizes judged by eye were wrong (said "about 20px", measured `Home 38x44`); `skills/ux-evaluate/scripts/tap_probe.py` outlines targets under 44px. Snap `chromium` cannot read `/tmp`.
 **Files**: skills/ux-evaluate/SKILL.md, skills/ux-evaluate/scripts/tap_probe.py
+
+### 2026-11-04 — A change after an auto verify pass: move the row back from Done, verify again (T119)
+On the minimal track, the auto close-out moves a row to Done within seconds of an auto verify pass (`### Auto close-out`). When the verify report then shows a flaw and the Supervisor commits a fix, the Done row and its `Closed:` line describe the old commit, and the merge gate accepts a pass only for the head commit. Move the row back to Ready for Review (strip the `Done …` suffix, `- [x]` → `- [ ]`), note why in the record, and run `stop_auto_verify.py --start <ID>` again. Read the verifier's findings before you treat a PASS as final: T119's PASS carried a real wording flaw (first-path case).
+**Files**: tasks/MINIMAL_LOG.md, .claude/hooks/stop_auto_verify.py, .claude/hooks/lib/auto_closeout.py
+
+### 2026-11-04 — The built-in `security-review` diffs the main checkout against its remote, not a worktree branch (T250)
+Invoked from the main checkout, `security-review` builds its diff from the current branch against `github/main` — 75 unrelated local commits, not the task. For a task in `../wt-<id>`, run the review as a sub-task with the diff named explicitly (`git -C <worktree> diff main...HEAD`) and the skill's full instructions, and log that as a decision. The Stop check still sees the `security-review` Skill call.
+**Files**: docs/claude-md/pipeline-stages.md, skills/code-review/SKILL.md
