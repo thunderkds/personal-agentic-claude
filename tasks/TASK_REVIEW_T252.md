@@ -48,15 +48,15 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_t252_marked_ownership.py` (AC 1, 2, 3, 5 + minimal-track edge case); `python3 -m pytest .claude/hooks/tests/test_t252_marked_ownership.py -q` -> `9 passed` (BEFORE: 4 failed, 5 passed). AC 4: `python3 -m pytest .claude/hooks/tests/test_stop_auto_mode_check.py .claude/hooks/tests/test_t250_session_ownership.py -q` -> `189 passed in 14.95s`. AC 6: `docs/claude-md/tracks.md` (Stop-check text, `### Known limits`) |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| Verification command run | ☑ pass | The guide's Verification Command: targeted files `198 passed in 14.77s`; full suite `3293 passed, 25 subtests passed in 191.40s` (implementing agent, after `ce406d9d`). End-to-end through the hook's `main()` with stdin JSON is in `.claude/hooks/tests/test_t252_marked_ownership.py` (AC 5). The live run is the auto verify — pass |
+| Negative cases hold | ☑ pass | Fail closed kept: a reader that raises, a missing transcript and an unreadable sub-agent transcript all still block (AC 3 tests); a session's own `Write` of the report, and a sub-agent's, still block (AC 2); a marked minimal-track record with no work by this session is still checked (Stage 4 P1 test `test_edge_a_marked_minimal_track_task_is_still_checked_without_work_by_this_session`) — pass |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | code-review read `git diff main...HEAD` (5 files) and the one caller, `main()` at `stop_auto_mode_check.py:517`; `lane: C1, 4 files, 187 lines, FITS; unpredicted: .claude/hooks/tests/test_stop_auto_mode_check.py` (the AC 4 fixture change). code-review: one P1 (a marked minimal-track task in the main checkout went unchecked — fixed in `ce406d9d`), one P3 (two tests keep an unneeded `_wrote_report` entry — left). Startup reads: all 3. security-review (scoped to the hook diff): one finding, confidence 8 — work hidden from `session_work.worked_on` (e.g. `python3 -c`) makes a marked extended report unchecked; same blind spot as T250's file-time path; accepted as a known limit, docs bullet `d131b3ad` — pass |
 | Full smoke suite still green (no regression) | ☑ pass | `python3 -m pytest .claude/hooks/tests/ tests/ -q` -> `3293 passed, 25 subtests passed in 203.50s (0:03:23)`; after the Stage 4 fix pass: `3293 passed, 25 subtests passed in 191.40s (0:03:11)` |
-| **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **Companion score (easy-verifier)** | ☑ N/A | Not run; `score` is optional at Stage 4 |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | No UI: a hook and docs only |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | No UI |
+| **UI: Responsiveness at target viewports** | ☑ N/A | No UI |
 
 ### Stage 4 fix pass (P1: marked minimal-track tasks stay checked)
 
