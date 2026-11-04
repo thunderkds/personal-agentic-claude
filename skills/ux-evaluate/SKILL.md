@@ -26,7 +26,7 @@ These apply to every run, with or without UX rows, so they hold when a frontend 
 - **B-a** One primary action per screen is the most prominent element (size, colour, position) and sits in view without scrolling at 375 and 1280.
 - **B-b** Clear visual hierarchy: page title, then content, then secondary actions; one reading order.
 - **B-c** Consistent spacing and alignment: elements on one grid, related items grouped, no cramped or random gaps.
-- **B-d** Touch targets are at least 44x44 px at 375.
+- **B-d** Touch targets are at least 44x44 px at 375. Measure, do not guess: for a static page run `python3 "${CLAUDE_SKILL_DIR}/scripts/tap_probe.py" <abs page> <dir>` (`${CLAUDE_SKILL_DIR}` = the folder of this file) and shoot the page it prints at 375; red boxes and the banner list targets under 44px.
 - **B-e** Text is readable: body at least 16px at 375, contrast clearly readable (no light grey on white).
 - **B-f** Every state the guide or requirement names (empty, loading, error, success) exists, says in plain words what happened and what to do next, and shows its action button.
 - **B-g** Feedback after an action is visible on screen.
@@ -47,7 +47,7 @@ Completion: every row listed with its story, state and pass condition, and the n
 
 #### 2. Take the screenshots
 
-For the `Entry point` and each `Flow / state`, capture two widths, 375 and 1280, into a scratch directory outside the repo. Never commit a screenshot. First method that works:
+For the `Entry point` and each `Flow / state`, capture two widths, 375 and 1280, into a scratch directory outside the repo: `<dir>` is an absolute path from `mktemp -d`, never a relative one (a relative `--screenshot` path writes into the repo). Never commit a screenshot. First method that works:
 
 1. Headless Chrome (`google-chrome`, `chromium` or `chromium-browser`):
    `google-chrome --headless --disable-gpu --window-size=375,1600 --screenshot=<dir>/<name>-375.png "file://<abs path>"`, then `--hide-scrollbars --window-size=1280,1000` for the second image. Make the window tall enough for content below the fold when a row is about it. Keep scrollbars at 375: a screenshot crops sideways overflow, so a horizontal scrollbar at the bottom of the image is the only sign of it (B-h). Never measure widths with `--dump-dom`: it lays the page out at 500px, not 375. The snap `chromium` cannot read `/tmp` and writes nothing; use `google-chrome` or a scratch directory under your home.
