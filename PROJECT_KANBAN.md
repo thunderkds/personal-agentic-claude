@@ -86,7 +86,6 @@
 
 
 ### In Progress
-- [ ] **T252** — Stop check: a parallel session's task whose report already carries `Mode: auto` still blocks this session's stop — `check_task` asks about ownership only when the marker is absent (T250 verify finding, step 7); apply the T250 ownership rule to marked tasks too | common-infrastructure | C1 | Risk: Medium | P1 | Depends on: T250 | Registered 2026-11-04 from T250 auto verify (session of `.claude/verify-runs/T250-dc9e9da502e0.log`) | Guide: `tasks/TASK_GUIDE_T252.md` | Folds in the T251 docs sentence (Bash rule refuses commands that only name the folder) | Started 2026-11-04 on the user's "let start": branch `fix/t252-marked-ownership`, worktree `../wt-t252`
 
 
 
@@ -95,6 +94,7 @@
 
 
 ### Ready for Review
+- [ ] **T252** — Stop check: a parallel session's task whose report already carries `Mode: auto` still blocks this session's stop — `check_task` asks about ownership only when the marker is absent (T250 verify finding, step 7); apply the T250 ownership rule to marked tasks too | common-infrastructure | C1 | Risk: Medium | P1 | Depends on: T250 | Registered 2026-11-04 from T250 auto verify (session of `.claude/verify-runs/T250-dc9e9da502e0.log`) | Guide: `tasks/TASK_GUIDE_T252.md` | Folds in the T251 docs sentence (Bash rule refuses commands that only name the folder) | Started 2026-11-04 on the user's "let start": branch `fix/t252-marked-ownership`, worktree `../wt-t252` | Stage 4 2026-11-04: code-review P1 fixed (`ce406d9d`: marked minimal-track records stay checked), security-review one finding accepted as a known limit (`d131b3ad`) | Ready for Review 2026-11-04 (`dfb2c1ed`)
 
 
 ### Done
