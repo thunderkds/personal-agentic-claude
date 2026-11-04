@@ -67,8 +67,17 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured 2026-11-04T14:55:48Z in `/home/hungnguyenhuu/workspace/pets/wt-t252`, against the unchanged `.claude/hooks/stop_auto_mode_check.py` (HEAD `0dbdcdc4`), command `python3 -m pytest .claude/hooks/tests/test_t252_marked_ownership.py -q`:
+
+```
+FAILED .claude/hooks/tests/test_t252_marked_ownership.py::test_ac1_ac5_a_marked_task_this_session_did_not_work_on_is_not_checked
+FAILED .claude/hooks/tests/test_t252_marked_ownership.py::test_ac1_a_marked_task_is_not_checked_without_an_auto_request_too
+FAILED .claude/hooks/tests/test_t252_marked_ownership.py::test_ac3_an_ownership_reader_that_raises_keeps_the_check
+FAILED .claude/hooks/tests/test_t252_marked_ownership.py::test_edge_a_minimal_track_task_marked_auto_and_not_worked_on_is_not_checked
+4 failed, 5 passed in 1.08s
+```
+
+The AC 1 / AC 5 no-work test fails because the hook blocks a marked task this session did not work on: `assert '[hook:stop_auto_mode_check] Auto-mode final report check failed ... • T900: no `Memory:` line in the report ...' is None`. The AC 3 test fails with `assert 'session ownership unknown (RuntimeError)' in ''` (ownership is never asked for a marked task). The 5 passing tests are the block cases (AC 2, rest of AC 3) that must stay unchanged.
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
