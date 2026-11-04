@@ -88,7 +88,7 @@
 
 
 ### In Progress
-- [ ] **T249** — TokenEconomizer A/B experiment — does the plugin cut cost on this kit without breaking it? | common-infrastructure | C2 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_T249.md` | Registered 2026-11-04, user: "Let make some experiments for that, to make sure this one is good for us"; budget: Sonnet, ~26 runs (~$15–40, hard stop $40) | Report-only: no merge | Started 2026-11-04: branch `exp/t249-token-economizer`, worktree `../wt-t249`; phase 1 (harness + plugin scope check, $0) spawned; phase 2 paid runs wait for Supervisor sign-off | Run 1 2026-11-04 invalid ($4.39): plugin core package not loaded, hook audit artefact; noise floor 11.1% between two plugin-less arms (report `2f29a87d`) | User chose rerun with 4 reps/task (46 sessions, ~$8); harness fix sent back to agent
+- [ ] **T249** — TokenEconomizer A/B experiment — does the plugin cut cost on this kit without breaking it? | common-infrastructure | C2 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_T249.md` | Registered 2026-11-04, user: "Let make some experiments for that, to make sure this one is good for us"; budget: Sonnet, ~26 runs (~$15–40, hard stop $40) | Report-only: no merge | Started 2026-11-04: branch `exp/t249-token-economizer`, worktree `../wt-t249`; phase 1 (harness + plugin scope check, $0) spawned; phase 2 paid runs wait for Supervisor sign-off | Run 1 2026-11-04 invalid ($4.39): plugin core package not loaded, hook audit artefact; noise floor 11.1% between two plugin-less arms (report `2f29a87d`) | User chose rerun with 4 reps/task (46 sessions, ~$8); harness fix sent back to agent | Run 2 2026-11-04 stopped by Claude Code at 23/46 sessions ($3.96) — host low on memory, not a harness failure; total spend $8.35; waits for user to restart
 
 
 
