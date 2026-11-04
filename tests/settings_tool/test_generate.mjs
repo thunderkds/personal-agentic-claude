@@ -194,9 +194,9 @@ test("T201 AC4: High security on Project target gives the 7 deny, 4 ask, and the
   assert.deepEqual(plain(out.removed), []);
 });
 
-test("T201 AC5: Legacy gives the 2 anchor deny rules and a note that the installer adds the hooks", () => {
+test("T201 AC5: Legacy gives the 4 kit deny rules (T251) and a note that the installer adds the hooks", () => {
   const out = core.generate(catalog, core.applyPreset(catalog, "legacy"), "user");
-  assert.deepEqual(JSON.parse(out.json), { permissions: { deny: ["Edit(~/.claude/harness-anchors/**)", "Bash(*harness-anchors*)"] } });
+  assert.deepEqual(JSON.parse(out.json), { permissions: { deny: ["Edit(~/.claude/harness-anchors/**)", "Bash(*harness-anchors*)", "Edit(~/.claude/projects/**/*.jsonl)", "Bash(*.claude/projects/*)"] } });
   const legacy = catalog.presets.find((p) => p.id === "legacy");
   assert.match(legacy.note, /hooks/);
   assert.match(legacy.note, /installer/);

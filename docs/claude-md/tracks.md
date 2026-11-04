@@ -505,12 +505,21 @@ Read these before you rely on `[auto]`. T180 left them open, on purpose. T186 re
 - **A paused task is not checked again until its report changes.** If the report block does not change,
   the check does not block the task a second time, even when a later trace would give different
   reasons. Edit the report to have the task checked again.
-- **An agent can forge the transcript that proves your `/verify`.** The merge gate reads the proof for
-  the line `- verify: ☑ pass — /verify by the user, session <id>, commit <sha>` from `<id>.jsonl` in the
-  transcripts folder. No deny rule in `.claude/settings.json` covers that folder. So an agent that runs as
-  the same OS user can write a fake `<id>.jsonl`. This is the same trust level as the run records in the
-  trace anchors' directory (`.claude/hooks/lib/verify_record.py` lines 14–17): it raises the bar, it is
-  not a proof.
+- **An agent can still forge the transcript that proves your `/verify`, in three ways the rules miss.**
+  The merge gate reads the proof for the line `- verify: ☑ pass — /verify by the user, session <id>,
+  commit <sha>` from `<id>.jsonl` in the transcripts folder. Since T251, `.claude/settings.json` denies
+  agents `Edit(~/.claude/projects/**/*.jsonl)` (the Edit and Write tools) and `Bash(*.claude/projects/*)`
+  (any command that names that folder). This is the same trust level as the run records in the trace
+  anchors' directory (`.claude/hooks/lib/verify_record.py` lines 14–17): it raises the bar, it is not a
+  proof. The rules do not cover:
+  - A custom `CLAUDE_CONFIG_DIR`, for example `~/.claude-<name>/projects/`. The rules name only the
+    default `~/.claude/projects/`. To cover another folder, add the same two rules with that path to your
+    own `~/.claude*/settings.json`. The kit does not write your user settings.
+  - A command that builds the path at run time. The Bash rule matches the command text, so a command that
+    joins the folder name from parts is not stopped.
+  - You. The rules stop the agent's tools, not the human operator and not a process outside Claude Code.
+  The rules stop an agent's `ls`, `grep` and `cat` on that folder too. To read a transcript, use the
+  Read tool. The hooks are not stopped, because they read transcripts in Python, not through a tool call.
 - **The proof shows that you typed `/verify <ID>`, not that it passed.** The transcript entry shows only
   that you ran `/verify <ID>` for that code. It does not show the verdict. Read the verdict yourself
   before you merge.

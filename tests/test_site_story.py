@@ -486,10 +486,19 @@ def test_docs_holds_all_17_section_ids_in_the_old_order():
     assert [sid for sid, _ in top_level_sections(docs_html())] == base["sections"]
 
 
+# T251: the Legacy preset in the settings catalog carries the kit's 4 deny rules (2 for the trace anchors,
+# 2 for the session transcripts). It must equal `.claude/settings.json` (T148), so the catalog block
+# changed. The new hash replaces the baseline hash for that one block; the other two stay byte-identical.
+CHANGED_SCRIPTS_BY_T251 = {
+    "settings-catalog": "56acc659c76eaa535199ff4eb3e78afc3c17288f72c25803206cd0c4a7e358c2",
+}
+
+
 @pytest.mark.parametrize("script_id", SCRIPT_IDS)
 def test_settings_tool_script_blocks_are_byte_identical_to_the_old_page(script_id):
     block = script_block(docs_html(), script_id)
-    assert hashlib.sha256(block.encode("utf-8")).hexdigest() == _baseline()["scripts"][script_id], (
+    expected = CHANGED_SCRIPTS_BY_T251.get(script_id, _baseline()["scripts"][script_id])
+    assert hashlib.sha256(block.encode("utf-8")).hexdigest() == expected, (
         f"<script id={script_id}> on docs.html differs from index.html at 09d2544c"
     )
 
@@ -529,14 +538,20 @@ CHANGED_BY_T245 = {
 }
 
 
+# T251: the Settings tool lead says the installer adds 4 deny rules, not 2.
+CHANGED_BY_T251 = {
+    "0413461063b095df": "the Settings tool lead says the installer adds the kit's hooks and 4 deny rules (T251)",
+}
+
+
 def test_every_paragraph_item_cell_and_definition_of_the_old_page_is_on_docs():
     now = set(sentence_hashes(docs_html()))
-    missing = [(h, t) for h, t in _baseline()["sentences"] if h not in now and h not in CHANGED_BY_T239 and h not in CHANGED_BY_T240 and h not in CHANGED_BY_T245]
+    missing = [(h, t) for h, t in _baseline()["sentences"] if h not in now and h not in CHANGED_BY_T239 and h not in CHANGED_BY_T240 and h not in CHANGED_BY_T245 and h not in CHANGED_BY_T251]
     assert not missing, f"{len(missing)} text(s) lost from docs.html: {missing[:5]}"
 
 
 def test_every_listed_change_is_a_real_baseline_text():
-    assert set(CHANGED_BY_T239) | set(CHANGED_BY_T240) | set(CHANGED_BY_T245) <= {h for h, _ in _baseline()["sentences"]}
+    assert set(CHANGED_BY_T239) | set(CHANGED_BY_T240) | set(CHANGED_BY_T245) | set(CHANGED_BY_T251) <= {h for h, _ in _baseline()["sentences"]}
 
 
 def test_the_baseline_is_not_empty():

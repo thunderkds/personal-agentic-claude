@@ -585,5 +585,36 @@ else
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
+# T251 — the kit's REAL permissions.deny (the 2 run-record rules + the 2 transcript
+# rules) ships add-only: a project's own deny keeps its place first, each kit rule
+# lands once, and a second merge changes nothing.
+# ─────────────────────────────────────────────────────────────────────────────
+TD="$WORK/perm-deny-real"
+mkdir -p "$TD/root/.claude/hooks"
+python3 - "$REPO_ROOT/.claude/settings.json" "$TD/kit.json" <<'PYEOF'
+import json, sys
+kit = json.load(open(sys.argv[1], encoding="utf-8"))
+json.dump({"permissions": kit["permissions"]}, open(sys.argv[2], "w", encoding="utf-8"))
+PYEOF
+printf '{"permissions": {"deny": ["Read(.env)", "Edit(~/.claude/projects/**/*.jsonl)"]}}\n' > "$TD/own.json"
+printf '{}\n' > "$TD/none.json"
+for f in own none; do
+  python3 "$MERGE" "$TD/kit.json" "$TD/$f.json" "$TD/root" \
+    || fail "T251: merge exited non-zero on $f.json"
+done
+assert_json "T251: project with no permissions gets all 4 kit deny rules, transcript rules last" "$TD/none.json" \
+  'd["permissions"]["deny"][2:] == ["Edit(~/.claude/projects/**/*.jsonl)", "Bash(*.claude/projects/*)"] and len(d["permissions"]["deny"]) == 4'
+assert_json "T251: project deny kept first; rule it already had is not doubled; missing kit rules appended" "$TD/own.json" \
+  'd["permissions"]["deny"][:2] == ["Read(.env)", "Edit(~/.claude/projects/**/*.jsonl)"] and len(d["permissions"]["deny"]) == 5 and d["permissions"]["deny"].count("Bash(*.claude/projects/*)") == 1'
+cp "$TD/own.json" "$TD/own.first"; cp "$TD/none.json" "$TD/none.first"
+python3 "$MERGE" "$TD/kit.json" "$TD/own.json" "$TD/root"
+python3 "$MERGE" "$TD/kit.json" "$TD/none.json" "$TD/root"
+if cmp -s "$TD/own.json" "$TD/own.first" && cmp -s "$TD/none.json" "$TD/none.first"; then
+  pass "T251: re-running the merge is byte-identical (transcript rules not doubled)"
+else
+  fail "T251: a second merge changed the permissions"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
 printf '\n--- %d passed, %d failed ---\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ] || exit 1

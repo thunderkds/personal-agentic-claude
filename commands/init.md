@@ -27,8 +27,8 @@ Show its whole output to the user, unchanged. It prints one line per path: `+ cr
 ## Step 2 — Settings: show first, write only after approval
 
 The plugin cannot set permissions. Follow the `settings-setup` flow (Steps 4 and 5 of
-`${CLAUDE_PLUGIN_ROOT}/skills/settings-setup/SKILL.md`) for two profiles: `legacy` (the kit's 2 deny
-rules that protect the trace anchors) and `high-security` (the default profile).
+`${CLAUDE_PLUGIN_ROOT}/skills/settings-setup/SKILL.md`) for two profiles: `legacy` (the kit's 4 deny
+rules that protect the trace anchors and the session transcripts) and `high-security` (the default profile).
 
 Show the change first. Run both dry runs and show their output unchanged:
 
