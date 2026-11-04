@@ -47,12 +47,12 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_t250_session_ownership.py` — 85 tests for AC 1–8, `85 passed in 3.61s`. Written test-first; red before each change: `ModuleNotFoundError: No module named 'session_work'` (tracer); G2 `2 failed, 51 passed`; G1 `4 failed, 66 passed`; G3 `1 failed, 77 passed` (exactly the T249 case); real-transcript false positives `3 failed` then pass. Four T229 window fixtures in `test_stop_auto_mode_check.py` now show the session's own `Write` (AC 7 changes their outcome by design) |
+| Verification command run | ☑ pass | Guide line as written, wt-t250 at `365379ce`, 2026-11-04T09:15:28Z: `[hook:pre_bash] T249 is In Progress, but this session did not work on it and this merge does not bring in its branch — not blocking (T250)` then block with only `Tasks still In Progress: T250` and Ready for Review `T248, T246, T230 (no evidence row)` (T246's real record has no user line; not edited). Board-state copy (scratch clone of wt-t246 with T250 hooks, main's board, user line for `5244fce5…`), 09:16:46Z — A, session f5ea81bb's transcript: T249 not blocking, blockers `T250` + `T248, T230 (no evidence row)`: T246 accepted. B, a folder without f5ea81bb.jsonl: `cannot read this session's transcript — every In Progress task blocks this merge`, blockers `T250, T249` + `T248, T246, T230 (no evidence row)`: pass |
 | Negative cases hold | ☐ pass / ☐ fail | |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| Full smoke suite still green (no regression) | ☑ pass | `python3 -m pytest .claude/hooks/tests/ tests/ -q` on the branch: `3249 passed, 25 subtests passed in 179.33s (0:02:59)`; `main` at `f3f24ac7`: `3163 passed, 25 subtests passed in 182.95s (0:03:02)` — +86 = 85 new T250 tests + 1 net elsewhere, 0 failed |
 | **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
@@ -79,9 +79,25 @@ G3, from this session's Stop hook (every stop since 2026-11-04 ~08:31Z):
   • T249: no `Memory:` line in the report — run the memory pass before you stop and record it there (each entry written, or `Memory: nothing new`)
 ```
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER** (2026-11-04T09:15:28Z, wt-t250 at `365379ce`, the guide's real-run line as written):
+```
+[hook:pre_bash] T249 is In Progress, but this session did not work on it and this merge does not bring in its branch — not blocking (T250)
+{"decision": "block", "reason": "[hook:pre_bash] Pipeline gate failed — cannot push/merge:\n  • Tasks still In Progress: T250\n  • Tasks in Ready for Review missing Stage 5 verify evidence: T248 (no evidence row), T246 (no evidence row), T230 (no evidence row)\n…"}
+exit=0
+```
+With T246's user line (`- verify: ☑ pass — /verify by the user, session f5ea81bb-c349-4953-9f6b-0307a641966a, commit 5244fce5adeb30cce9e11293d7bd3441af289516`) in a scratch copy of the board state, 09:16:46Z:
+```
+== A: session f5ea81bb's own transcript
+[hook:pre_bash] T249 is In Progress, but this session did not work on it and this merge does not bring in its branch — not blocking (T250)
+BLOCK: … • Tasks still In Progress: T250
+  • Tasks in Ready for Review missing Stage 5 verify evidence: T248 (no evidence row), T230 (no evidence row)
+== B: a transcripts folder without f5ea81bb.jsonl
+[hook:pre_bash] cannot read this session's transcript — every In Progress task blocks this merge
+BLOCK: … • Tasks still In Progress: T250, T249
+  • Tasks in Ready for Review missing Stage 5 verify evidence: T248 (no evidence row), T246 (no evidence row), T230 (no evidence row)
+```
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+**DELTA**: A merge no longer waits on another session's In Progress task, and the user's own `/verify` now opens the gate after a blocked auto run.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/T250.jsonl`, never the
 implementing agent alone]
