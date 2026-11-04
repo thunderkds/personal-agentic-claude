@@ -279,6 +279,12 @@ if [ "$RC" -eq 0 ] && has_claude_links "$T" && [ -f "$T/.codex/skills/tdd/SKILL.
 else
   fail "Reinstall deselect (rc=$RC note=$NOTE_AT ask=$ASK_AT)"; cat "$T.log" >&2
 fi
+# T120: the closing summary names every CLI the run touched, not only the picked one
+if tr -d '\r' < "$T.log" | grep -q 'info.*  CLIs: Claude Code, Codex$'; then
+  pass "T120: Reinstall summary names the kept Codex too (CLIs: Claude Code, Codex)"
+else
+  fail "T120: Reinstall summary CLIs line: $(tr -d '\r' < "$T.log" | grep 'CLIs: ' | tail -1)"
+fi
 
 # ── D3 — both Claude links deleted: Update leaves them; Reinstall + 1 restores
 if [ "$HAVE_SETSID" -eq 1 ]; then
