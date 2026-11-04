@@ -8,7 +8,6 @@
 ## Board
 
 ### Todo
-- [ ] **T251** — `.claude/settings.json` denies agent writes to session transcripts (`Edit(~/.claude/projects/**/*.jsonl)`), so the T250 user-`/verify` proof has the harness-anchors trust level; a custom `CLAUDE_CONFIG_DIR` is not covered (say so in `docs/claude-md/tracks.md` `### Known limits`) | common-infrastructure | C1 | Risk: Medium | P1 | Registered 2026-11-04 from T250 Debate (b); user approved 2026-11-04: "approve all you do all"
 - [ ] **T252** — Stop check: a parallel session's task whose report already carries `Mode: auto` still blocks this session's stop — `check_task` asks about ownership only when the marker is absent (T250 verify finding, step 7); apply the T250 ownership rule to marked tasks too | common-infrastructure | C1 | Risk: Medium | P1 | Depends on: T250 | Registered 2026-11-04 from T250 auto verify (session of `.claude/verify-runs/T250-dc9e9da502e0.log`)
 - [ ] **T253** — Update `[o]verwrite`: a failed backup does not stop the run (`lib/harness-update.sh:263-271` records `backup_failed` and goes on), so later paths are installed too; the T119 abort text says only that paths before it were installed — make the Update summary say what was and was not replaced | common-infrastructure | C0 | Risk: Low | P2 | Depends on: T119 | Registered 2026-11-04 from T119 auto verify (`.claude/verify-runs/T119-3432bdfb576c.log`)
 - [ ] **T249** — TokenEconomizer A/B experiment — does the plugin cut cost on this kit without breaking it? | common-infrastructure | C2 | Risk: Medium | P2 | Guide: `tasks/TASK_GUIDE_T249.md` | Registered 2026-11-04, user: "Let make some experiments for that, to make sure this one is good for us"; budget: Sonnet, ~26 runs (~$15–40, hard stop $40) | Report-only: no merge | Started 2026-11-04: branch `exp/t249-token-economizer`, worktree `../wt-t249`; phase 1 (harness + plugin scope check, $0) spawned; phase 2 paid runs wait for Supervisor sign-off | Run 1 2026-11-04 invalid ($4.39): plugin core package not loaded, hook audit artefact; noise floor 11.1% between two plugin-less arms (report `2f29a87d`) | User chose rerun with 4 reps/task (46 sessions, ~$8); harness fix sent back to agent | Run 2 2026-11-04 stopped by Claude Code at 23/46 sessions ($3.96) — host low on memory, not a harness failure; total spend $8.35; waits for user to restart | Deferred to Todo 2026-11-04 by the user: another account will run the experiment; worktree `../wt-t249` (untracked `tasks/T249_REPORT_run2.md`) left as is
@@ -88,6 +87,7 @@
 
 
 ### In Progress
+- [ ] **T251** — `.claude/settings.json` denies agent writes to session transcripts (`Edit(~/.claude/projects/**/*.jsonl)`), so the T250 user-`/verify` proof has the harness-anchors trust level; a custom `CLAUDE_CONFIG_DIR` is not covered (say so in `docs/claude-md/tracks.md` `### Known limits`) | common-infrastructure | C1 | Risk: Medium | P1 | Registered 2026-11-04 from T250 Debate (b); user approved 2026-11-04: "approve all you do all" | Guide: `tasks/TASK_GUIDE_T251.md` | D1 user 2026-11-04: Edit + Bash | Started 2026-11-04: branch `fix/t251-transcript-deny`, worktree `../wt-t251`
 
 
 
