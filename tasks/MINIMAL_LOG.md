@@ -4,6 +4,21 @@
 > new record directly under this note. On first use, the Supervisor creates `tasks/MINIMAL_LOG.md` from
 > this template and deletes the example comment. The same block is the Supervisor's final chat message.
 
+## T119 — An aborted install says which path it did not replace, not "nothing was replaced" · minimal
+Mode: auto
+**Asked:** "yes, let go, and you can start for parallel task with tag [auto]"
+**Decisions:**
+1. T119 is a parallel task for this run: C0, Risk Low, it touches none of T250's files (`lib/harness-fetch.sh` and one test) — RULE: `docs/claude-md/tracks.md` `## Track rule` (minimal track); the last plan reply listed the small fixes as batch 2
+2. The message names the one path and says earlier paths were installed: `'<path>' was not replaced; paths earlier in this run were already installed` — RULE: the T119 board row's scope ("the message wording, scoped to the one path … plus a test pinning it; explicitly NOT a rollback")
+3. One wording serves all callers (install, Reinstall, Update `[o]verwrite`), because they share `harness_backup_path` — SAFER OPTION: "earlier paths in this run" is true when there are none, so no caller gets a false claim
+**Checked:**
+- New test `T119: abort says which path was not replaced, not 'nothing was replaced'` in `tests/test_install_backups.sh` — failed before the change (`17 passed, 1 failed`), passes after (`18 passed, 0 failed`)
+- Suite: `python3 -m pytest .claude/hooks/tests/ tests/ -q` — `3163 passed, 25 subtests passed in 246.50s (0:04:06)`
+- Real run (auto-checked, not /verify): `setup.sh` into a scratch git repo with its own `agents/mine.md` and an unwritable `docs/` — rc=1, printed `[warn]  Backed up your existing './agents' to './agents.bak-20261104' …` then `[error] Could not back up './docs/claude-md' to './docs/claude-md.bak-20261104' — './docs/claude-md' was not replaced; paths earlier in this run were already installed. Fix the permissions, then re-run.`; `agents/` then held the kit's `backend.md`, `common-infrastructure.md`, `frontend.md`, `qa.md`
+**Files:** `lib/harness-fetch.sh`, `tests/test_install_backups.sh`, `tasks/MINIMAL_LOG.md`
+**Memory:** nothing new
+**Not done:** merge (yours); auto verify: running (T182)
+
 ## T248 — `ux-evaluate` measures tap targets and uses an absolute scratch folder · minimal
 **Asked:** "let do it" (to: "add both as one small follow-up task" — the T245 verify run's two weak points: a relative screenshot path writes into the repo; B-d judged by eye)
 **Decisions:**
