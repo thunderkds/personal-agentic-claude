@@ -72,7 +72,7 @@ Budget answer (AskUserQuestion): **"Sonnet, ~26 runs (Recommended)"** — roughl
 | 3 | Plugin-side model calls (micro-skill review, loop-guard judge) are counted into arm B's cost, or the report states plainly they could not be measured and why | honest cost comparison |
 | 4 | Side-effect audit: diff of the sandbox `.claude/settings.json`, `.claude/hooks/`, and the plugin's injected session-start text, before vs after; plus a before/after checksum of `~/.claude-personal/settings.json` and this repo's `.claude/settings.json` proving nothing leaked | "good for us" — does not break the kit |
 | 5 | Hard budget stop: the harness aborts when cumulative cost reaches **$40** and the report says so | budget answer |
-| 6 | Report `tasks/T249_REPORT.md` with: per-run table, per-arm mean cost and pass rate, % cost delta, the side-effect findings, and a verdict against the bar: **GO only if** cost −15% or better, pass rate not lower, and no guardrail hook / deny rule removed or disabled | user's decision input |
+| 6 | Report `tasks/T249_REPORT.md` with: per-run table, per-arm mean cost and pass rate, % cost delta, the side-effect findings, and a verdict against the bar: **GO only if** cost −15% or better, pass rate not lower, and no guardrail hook / deny rule removed or disabled, and `Skill` / `Agent` not pruned (Supervisor sign-off 2026-11-04: the kit cannot run without them) | user's decision input |
 | 7 | Negative: with 2 runs per task the report must not claim significance; it states the sample size and the run-to-run spread of arm A | honest result |
 
 ---
