@@ -68,6 +68,8 @@ GREEN: `python3 -m pytest .claude/hooks/tests/test_t252_marked_ownership.py -q` 
 
 Docs: `docs/claude-md/tracks.md` T252 sentence now says extended-track only; new Known-limits bullet "A parallel session's marked minimal-track record can block your stop".
 
+security-review: one finding (confidence 8) — accepted as a known limit, docs bullet added (`### Known limits`: "The Stop check cannot see every kind of work.")
+
 ---
 
 ## Demonstration

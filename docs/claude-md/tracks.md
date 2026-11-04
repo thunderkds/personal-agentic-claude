@@ -509,6 +509,14 @@ Read these before you rely on `[auto]`. T180 left them open, on purpose. T186 re
   T252) does not apply to a minimal-track task whose Decision record is marked auto mode. A record in
   `tasks/MINIMAL_LOG.md` that fails a check still blocks this session's stop, even when this session did
   not work on it. Fix the record, or wait for the other session to finish it.
+- **The Stop check cannot see every kind of work.** The ownership rule (T250, T252) reads the session's
+  Edit, Write, Bash and Agent calls (`.claude/hooks/lib/session_work.py`). Work that it cannot see does
+  not count. Examples: code passed to an interpreter in one quoted argument (`python3 -c "…"`), a path
+  held in a shell variable, a heredoc fed to an interpreter, and a script that writes a task file
+  without naming it. If this kind of work is the only work a session did on a task, the Stop check does
+  not check that task at stop. This was already true since T250 for a task found by file time. T252
+  extends it to a marked extended-track report. The Stop check is a reminder to finish the report, not a
+  security boundary: the merge gate and the auto verify still apply.
 - **An agent can still forge the transcript that proves your `/verify`, in three ways the rules miss.**
   The merge gate reads the proof for the line `- verify: ☑ pass — /verify by the user, session <id>,
   commit <sha>` from `<id>.jsonl` in the transcripts folder. Since T251, `.claude/settings.json` denies
