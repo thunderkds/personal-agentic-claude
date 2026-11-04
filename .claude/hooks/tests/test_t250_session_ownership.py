@@ -189,6 +189,46 @@ def test_ac4_a_read_or_unrelated_call_is_not_work(tmp_path, entry):
     assert worked(tmp_path, [entry]) is False
 
 
+SPACED_WT = "/work/my wt-t900"   # a worktree under a folder whose name holds a space
+
+
+@pytest.mark.parametrize("entry", [
+    tool_use("Edit", {"file_path": f"{SPACED_WT}/a.py", "old_string": "a", "new_string": "b"}),
+    tool_use("Write", {"file_path": f"{SPACED_WT}/src/app.py", "content": "x"}),
+    tool_use("NotebookEdit", {"notebook_path": f"{SPACED_WT}/n.ipynb", "new_source": "x"}),
+    tool_use("Write", {"file_path": "/work/My Projects/repo/tasks/TASK_REVIEW_T900.md",
+                       "content": "x"}),
+    bash(f"cp a '{SPACED_WT}/my file'"),
+    bash(f"cd '{SPACED_WT}' && git commit -qm 'T900 work'"),
+], ids=["edit-spaced-worktree", "write-spaced-worktree", "notebook-spaced-worktree",
+        "write-task-file-under-spaced-folder", "bash-cp-into-spaced-path", "bash-cd-spaced-worktree"])
+def test_ac4_a_path_holding_a_space_is_still_work(tmp_path, entry):
+    assert worked(tmp_path, [entry], worktrees=(SPACED_WT,)) is True
+
+
+def test_ac4_a_bash_argument_with_a_space_into_the_worktree_is_work(tmp_path):
+    assert worked(tmp_path, [bash(f"cp a '{WT}/my file'")]) is True
+
+
+def test_ac4_a_message_naming_a_spaced_worktree_is_not_work(tmp_path):
+    assert worked(tmp_path, [bash(f"git commit -qm 'see {SPACED_WT}/a.py'")],
+                  worktrees=(SPACED_WT,)) is False
+
+
+def test_ac4_an_edit_through_a_symlinked_path_is_work(tmp_path):
+    real = tmp_path / "real-wt-t900"
+    (real / "src").mkdir(parents=True)
+    link = tmp_path / "link"
+    link.symlink_to(real)
+    edit = tool_use("Edit", {"file_path": f"{link}/src/app.py", "old_string": "a", "new_string": "b"})
+    assert worked(tmp_path, [edit], worktrees=(str(real),)) is True
+    # and the other way round: the worktree listed through the link, the edit by its real path
+    edit = tool_use("Edit", {"file_path": f"{real}/src/app.py", "old_string": "a", "new_string": "b"})
+    assert worked(tmp_path, [edit], worktrees=(str(link),)) is True
+    assert worked(tmp_path, [bash(f"cd {link}/src && python3 run.py")],
+                  worktrees=(str(real),)) is True
+
+
 def test_ac4_a_sub_agent_of_this_session_counts(tmp_path):
     edit = tool_use("Edit", {"file_path": f"{WT}/src/app.py", "old_string": "a", "new_string": "b"})
     assert worked(tmp_path, [bash("ls")], sub_entries=[edit]) is True
@@ -268,14 +308,81 @@ def session(tmp_path, project, entries):
     return write_transcript(tmp_path / "projects" / f"{SID}.jsonl", entries)
 
 
+ROW_WITH_BRANCH = IN_PROGRESS_ROW + " | Started 2026-11-04: branch `exp/t900-x`, worktree `../wt-t900`"
+
+
+def commit_on(project, branch, start, rel, text):
+    """Create `branch` at `start` with one commit adding `rel`; HEAD goes back to main."""
+    _git(project, "checkout", "-q", "-b", branch, start)
+    (project / rel).write_text(text, encoding="utf-8")
+    _git(project, "add", "-A")
+    _git(project, "commit", "-qm", f"{branch}: {rel}")
+    _git(project, "checkout", "-q", "main")
+
+
+def t900_in_its_worktree(tmp_path, project):
+    """As T249: the task's branch, with unfinished work, checked out in its own worktree."""
+    commit_on(project, "exp/t900-x", "main", "t900.txt", "unfinished\n")
+    _git(project, "worktree", "add", "-q", str(tmp_path / "wt-t900"), "exp/t900-x")
+
+
 def test_ac5_another_sessions_in_progress_task_does_not_block_an_unrelated_merge(tmp_path):
     project = gate_project(tmp_path)
+    t900_in_its_worktree(tmp_path, project)
+    commit_on(project, "fix/t901-x", "main", "t901.txt", "done\n")
     t = session(tmp_path, project, [
         tool_use("Grep", {"pattern": "Risk", "path": str(project / "tasks" / "TASK_GUIDE_T900.md")}),
         bash("grep -n Risk tasks/TASK_GUIDE_T900.md", cwd=str(project))])
     reason, stderr = run_gate(project, "git merge --no-ff fix/t901-x", t)
     assert reason is None, reason
     assert "T900" in stderr and "not blocking" in stderr
+
+
+def test_ac5_an_unrelated_branch_does_not_block_with_the_row_branch_only(tmp_path):
+    project = gate_project(tmp_path, in_progress=(ROW_WITH_BRANCH,))
+    commit_on(project, "exp/t900-x", "main", "t900.txt", "unfinished\n")
+    commit_on(project, "fix/t901-x", "main", "t901.txt", "done\n")
+    t = session(tmp_path, project, [bash("ls", cwd=str(project))])
+    reason, _ = run_gate(project, "git merge --no-ff fix/t901-x", t)
+    assert reason is None, reason
+
+
+@pytest.mark.parametrize("where", ["row", "worktree"])
+def test_ac5_a_branch_cut_from_the_tasks_branch_still_blocks(tmp_path, where):
+    """A branch named for T901 but cut from T900's branch brings in T900's unfinished commits."""
+    project = gate_project(tmp_path, in_progress=(ROW_WITH_BRANCH if where == "row"
+                                                  else IN_PROGRESS_ROW,))
+    if where == "row":
+        commit_on(project, "exp/t900-x", "main", "t900.txt", "unfinished\n")
+    else:
+        t900_in_its_worktree(tmp_path, project)
+    commit_on(project, "fix/t901-x", "exp/t900-x", "t901.txt", "done\n")
+    t = session(tmp_path, project, [bash("ls", cwd=str(project))])
+    reason, _ = run_gate(project, "git merge --no-ff fix/t901-x", t)
+    assert reason and "Tasks still In Progress: T900" in reason
+
+
+def test_ac5_a_task_branch_already_merged_does_not_block(tmp_path):
+    project = gate_project(tmp_path, in_progress=(ROW_WITH_BRANCH,))
+    commit_on(project, "exp/t900-x", "main", "t900.txt", "first part\n")
+    _git(project, "merge", "-q", "--no-ff", "-m", "merge first part", "exp/t900-x")
+    commit_on(project, "fix/t901-x", "exp/t900-x", "t901.txt", "done\n")
+    t = session(tmp_path, project, [bash("ls", cwd=str(project))])
+    reason, _ = run_gate(project, "git merge --no-ff fix/t901-x", t)
+    assert reason is None, reason
+
+
+@pytest.mark.parametrize("case", ["no-branch-known", "row-branch-missing", "merged-ref-missing"])
+def test_ac5_ac8_a_branch_that_cannot_be_compared_keeps_the_blocker(tmp_path, case):
+    project = gate_project(tmp_path, in_progress=(
+        IN_PROGRESS_ROW if case == "no-branch-known" else ROW_WITH_BRANCH,))
+    if case == "merged-ref-missing":
+        commit_on(project, "exp/t900-x", "main", "t900.txt", "unfinished\n")
+    else:
+        commit_on(project, "fix/t901-x", "main", "t901.txt", "done\n")
+    t = session(tmp_path, project, [bash("ls", cwd=str(project))])
+    reason, _ = run_gate(project, "git merge --no-ff fix/t901-x", t)
+    assert reason and "Tasks still In Progress: T900" in reason
 
 
 def test_ac5_a_task_this_session_edited_still_blocks(tmp_path):
@@ -637,3 +744,17 @@ def test_ac5_ac8_an_unreadable_sub_agent_transcript_keeps_the_gates_blocker(tmp_
         assert reason and "Tasks still In Progress: T900" in reason
     finally:
         sub.chmod(0o600)
+
+
+def test_ac7_ac8_an_ownership_reader_that_raises_keeps_the_check(tmp_path):
+    """AC 8 for AC 7 without chmod: `session_work.load_work` raises inside the Stop hook. The
+    transcript is another session's case (a `Grep` only), which alone would leave T900 unchecked."""
+    project = stop_project(tmp_path)
+    lib = project / ".claude" / "hooks" / "lib" / "session_work.py"
+    lib.write_text(lib.read_text(encoding="utf-8") + "\n\ndef load_work(_path):\n"
+                   "    raise RuntimeError('ownership reader broke')\n", encoding="utf-8")
+    t = session(tmp_path, project, [auto_request(), tool_use("Grep", {
+        "pattern": "Mode", "path": str(project / "tasks" / "TASK_REVIEW_T900.md")}, _ago(300))])
+    reason, stderr = run_stop(project, t)
+    assert reason and "T900" in reason and "Auto decisions" in reason, (reason, stderr)
+    assert "session ownership unknown (RuntimeError)" in stderr

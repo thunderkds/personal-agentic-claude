@@ -61,6 +61,7 @@ try:
         AUTO_CHECKED_TAG, AUTO_ROW_TAG, MINIMAL_LOG_REL, ROW_COMMIT, ROW_SESSION, SHA_PATTERN,
         auto_row_confirmed, head_commit, minimal_verify_lines, read_record, record_verify_lines,
         same_code)
+    import auto_mode  # noqa: E402
     from auto_mode import record_block  # noqa: E402
     import session_work  # noqa: E402
 except Exception as exc:  # pragma: no cover - exercised via subprocess test
@@ -1153,9 +1154,12 @@ def branch_target(command, cwd, id_pattern=None):
 # (T249, in its own worktree) blocked this session's merge of an unrelated branch. Now, for a
 # `git merge` whose every branch names exactly one task, an In Progress task stays a blocker when
 # this session worked on it (`session_work.worked_on`: an edit, a writing `Bash` command or a spawn
-# for it, in the session's transcript or a sub-agent's), or the merge brings in its branch. Every
-# doubt keeps the blocker: another command (push, pull, rebase, `merge --abort`), a branch that
-# names no task, no transcript, an unreadable one, or any error.
+# for it, in the session's transcript or a sub-agent's), or the merge brings in its branch. A branch
+# name is not enough for that: `fix/t251-x` cut from T249's branch carries T249's unfinished
+# commits, so each of the task's branches (`branch_carries_task_work`) is also compared by commit.
+# Every doubt keeps the blocker: another command (push, pull, rebase, `merge --abort`), a branch
+# that names no task, no transcript, an unreadable one, a task with no known branch, a missing ref,
+# or any error.
 
 
 def merge_brought_task_ids(command, cwd, id_pattern=None):
@@ -1181,6 +1185,43 @@ def merge_brought_task_ids(command, cwd, id_pattern=None):
         return None
 
 
+def _merged_refs(command, cwd):
+    """`[(directory, ref)]` for every ref the `git merge` segments of `command` merge."""
+    sources = []
+    for args, where in _git_actions(command, cwd) or []:
+        if args and args[0] == "merge":
+            sources.extend(_merge_sources(args[1:], where))
+    return sources
+
+
+def branch_carries_task_work(command, cwd, task_id, row):
+    """False only when every merged ref is proven to bring in none of the task's own commits: for
+    each merged ref M and each branch B of the task (its board row's, and each of its worktrees'),
+    `git merge-base M B` is already in HEAD. True on any doubt — no branch known, no merged ref, a
+    missing ref, a git error (fail closed)."""
+    try:
+        branches = {auto_mode.row_branch(row or "")}
+        branches.update(auto_mode.branch_of(path)
+                        for path in session_work.task_worktrees(ROOT, task_id, row))
+        branches.discard(None)
+        refs = _merged_refs(command, cwd)
+        if not branches or not refs:
+            return True
+        for where, ref in refs:
+            if where is None:
+                return True
+            for branch in branches:
+                base = _git(where, "merge-base", f"{ref}^{{commit}}", f"{branch}^{{commit}}")
+                if base is None or base.returncode != 0 or not base.stdout.strip():
+                    return True
+                held = _git(where, "merge-base", "--is-ancestor", base.stdout.strip(), "HEAD")
+                if held is None or held.returncode != 0:
+                    return True
+        return False
+    except Exception:
+        return True
+
+
 def session_owned_in_progress(rows, command, cwd, transcript_path):
     """The In Progress task IDs (from `[(ID, board row)]`) that still block this command (T250 G2).
     Fails closed: on any doubt every ID is kept."""
@@ -1199,6 +1240,11 @@ def session_owned_in_progress(rows, command, cwd, transcript_path):
             if task_id.upper() in brought or session_work.worked_on(
                     calls, task_id, session_work.task_worktrees(ROOT, task_id, row)):
                 kept.append(task_id)
+            elif branch_carries_task_work(command, cwd, task_id, row):
+                kept.append(task_id)
+                print(f"[hook:pre_bash] {task_id} is In Progress and this merge may bring in "
+                      "commits of its branch (or its branch is not known) — still blocking (T250)",
+                      file=sys.stderr)
             else:
                 print(f"[hook:pre_bash] {task_id} is In Progress, but this session did not work "
                       "on it and this merge does not bring in its branch — not blocking (T250)",

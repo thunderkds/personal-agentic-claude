@@ -205,7 +205,8 @@ def test_a_correct_minimal_record_passes(tmp_path):
 def test_a_non_auto_task_is_ignored(tmp_path):
     plain = _report(["1. x — FACT: a.py:1 \"y\""]).replace("## Auto decisions\n\nMode: auto\n", "")
     project = _project(tmp_path, [EXT_ROW], review=plain,
-                       transcript=[_user("move the data, and use `[auto]` next time")])
+                       transcript=[_user("move the data, and use `[auto]` next time"),
+                                   _wrote_guide(tmp_path)])
     _, out = _run(project)
     assert out == {}, out
 
@@ -237,7 +238,8 @@ def test_check1_auto_request_with_no_report_file_blocks(tmp_path):
 
 def test_check1_ignores_a_guide_older_than_the_auto_request(tmp_path):
     project = _project(tmp_path, [EXT_ROW], review=None,
-                       transcript=[_user("store expenses as JSON [auto]", offset_s=+3600)])
+                       transcript=[_wrote_guide(tmp_path),
+                                   _user("store expenses as JSON [auto]", offset_s=+3600)])
     _, out = _run(project)
     assert out == {}, out
 
@@ -263,7 +265,8 @@ def test_t229_a_task_touched_after_a_later_plain_request_is_not_auto(tmp_path):
     project = _project(tmp_path, [EXT_ROW], review=None, untagged=_trace(3),
                        transcript=[_user("continue [auto]", offset_s=-600),
                                    _user("merge and push", offset_s=-300),
-                                   _user("continue", offset_s=-120)])
+                                   _user("continue", offset_s=-120),
+                                   _wrote_guide(tmp_path)])
     _, out = _run(project)
     assert out == {}, out
 

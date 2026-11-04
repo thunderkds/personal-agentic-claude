@@ -393,7 +393,7 @@ exists for that task and the head commit, and says pass. A hand-typed line in a 
 nothing, except one shape (T250). When the run is blocked and you run `/verify <ID>` yourself on the minimal
 track, its pass goes under `Checked:` as
 `- verify: ☑ pass — /verify by the user, session <id>, commit <sha>`. `<id>` is the session you typed
-`/verify` in, and `<sha>` is the full 40-character commit you verified. The gate never trusts the line's text.
+`/verify` in, and `<sha>` is the full 40-character commit you verified. The gate does not accept the line on its text alone.
 It accepts the line only when that session's transcript (in the same folder as the merging session's) holds
 your own `/verify <ID>` entry, dated after `<sha>` was committed and before the line was committed, and
 `<sha>` is the same code as the head (only `tasks/MINIMAL_LOG.md` may differ). A missing transcript, a short
@@ -505,3 +505,12 @@ Read these before you rely on `[auto]`. T180 left them open, on purpose. T186 re
 - **A paused task is not checked again until its report changes.** If the report block does not change,
   the check does not block the task a second time, even when a later trace would give different
   reasons. Edit the report to have the task checked again.
+- **An agent can forge the transcript that proves your `/verify`.** The merge gate reads the proof for
+  the line `- verify: ☑ pass — /verify by the user, session <id>, commit <sha>` from `<id>.jsonl` in the
+  transcripts folder. No deny rule in `.claude/settings.json` covers that folder. So an agent that runs as
+  the same OS user can write a fake `<id>.jsonl`. This is the same trust level as the run records in the
+  trace anchors' directory (`.claude/hooks/lib/verify_record.py` lines 14–17): it raises the bar, it is
+  not a proof.
+- **The proof shows that you typed `/verify <ID>`, not that it passed.** The transcript entry shows only
+  that you ran `/verify <ID>` for that code. It does not show the verdict. Read the verdict yourself
+  before you merge.

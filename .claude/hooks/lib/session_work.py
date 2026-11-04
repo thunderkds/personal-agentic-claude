@@ -92,8 +92,9 @@ def verify_typed(transcript_path, task_id, after=None, before=None):
 # (`"$WT"`, `cd $S`), a heredoc body (data, as in `shell_data`, even when an interpreter reads it),
 # code passed to an interpreter as one quoted argument (`python3 -c "…"`; `bash -c`, `sh -c`, `zsh -c`
 # and `eval` strings are read as commands), and a script that writes a task file without naming it on
-# its command line are not seen as work. A token holding whitespace is code or a message, not a file
-# argument.
+# its command line are not seen as work. A `Bash` token holding whitespace is code or a message, not
+# a file argument, unless the whole token is a path into the worktree; an `Edit`/`Write` path is
+# always a path. Worktree paths are compared as written and resolved (`os.path.realpath`).
 
 WRITE_TOOLS = {"Edit": "file_path", "Write": "file_path", "MultiEdit": "file_path",
                "NotebookEdit": "notebook_path"}
@@ -152,29 +153,57 @@ def load_work(transcript_path):
     return calls
 
 
+def _forms(path):
+    """`path` normalized and resolved (`os.path.realpath`); just normalized when it cannot be
+    resolved."""
+    forms = {os.path.normpath(path)}
+    try:
+        forms.add(os.path.realpath(path))
+    except Exception:
+        pass
+    return forms
+
+
 class _Task:
     """How one task's files and worktrees are named in a command."""
 
     def __init__(self, task_id, worktrees):
         self.task_id = str(task_id).strip().upper()
-        self.worktrees = [os.path.normpath(w) for w in worktrees if isinstance(w, str)
-                          and os.path.isabs(w)]
+        # Each worktree as listed and as resolved, so a path through a symlink still matches.
+        self.worktrees = sorted({form for w in worktrees if isinstance(w, str) and os.path.isabs(w)
+                                 for form in _forms(w)})
         self.file = re.compile(rf"(?<![A-Za-z0-9])tasks/[A-Za-z0-9_.-]*_{re.escape(self.task_id)}"
                                r"(?![0-9])", re.I)
 
     def inside(self, path):
-        path = os.path.normpath(path)
-        return any(path == w or path.startswith(w + os.sep) for w in self.worktrees)
+        """True when the absolute `path`, as written or resolved, is in one of the worktrees."""
+        return any(form == w or form.startswith(w + os.sep)
+                   for form in _forms(path) for w in self.worktrees)
+
+    def _path_in(self, path, directory):
+        if os.path.isabs(path):
+            return self.inside(path)
+        return isinstance(directory, str) and self.inside(os.path.join(directory, path))
+
+    def names_path(self, path, directory):
+        """True when the file path of an `Edit`/`Write`/`NotebookEdit` call is one of the task's
+        files or lies in its worktree. A path is a path: spaces in it are kept."""
+        return bool(self.file.search(path)) or self._path_in(path, directory)
 
     def named(self, token, directory):
-        """True when `token` names one of the task's files or a path in its worktree."""
+        """True when the `Bash` argument `token` names one of the task's files or a path in its
+        worktree. A token holding whitespace counts only when the whole token is such a path
+        (`cp a '/w/wt-t900/my file'`); otherwise it is code or a message, not a file argument."""
         if any(c.isspace() for c in token):
-            return False
+            return (not token.startswith("-") and "$" not in token and "`" not in token
+                    and self._path_in(token, directory))
         if self.file.search(token):
             return True
         for part in [token] + token.split("=")[1:]:
             if any(part == w or part.startswith(w + os.sep) or (w + os.sep) in part
                    for w in self.worktrees):
+                return True
+            if os.path.isabs(part) and self.inside(part):
                 return True
             if (isinstance(directory, str) and part and not part.startswith("-")
                     and "$" not in part and "`" not in part
@@ -263,7 +292,7 @@ def worked_on(calls, task_id, worktrees):
     for name, tool_input, cwd in calls:
         if name in WRITE_TOOLS:
             path = tool_input.get(WRITE_TOOLS[name])
-            if isinstance(path, str) and task.named(path, cwd):
+            if isinstance(path, str) and task.names_path(path, cwd):
                 return True
         elif name in SPAWN_TOOLS:
             if _task_id_from_spawn_prompt(tool_input.get("prompt")) == task.task_id:
@@ -283,5 +312,5 @@ def task_worktrees(root, task_id, row=None):
     for path in auto_mode.worktree_dirs(root):
         name = auto_mode.branch_of(path)
         if name and (name == branch or auto_mode.names_task(name, task_id)):
-            found.append(os.path.normpath(os.path.abspath(path)))
+            found.append(os.path.realpath(path))
     return found
