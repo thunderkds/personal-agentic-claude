@@ -92,6 +92,10 @@ Related, not a precondition: the easy-ui task (Todo) adds one more screenshot me
 | 7 | Every place that lists all skills names `ux-evaluate` where tests require it (for example `site/index.html` skill flow, `tests/test_site_content.py` `SKILL_FLOW_GROUPING` stage 3); the full suite stays green | regression |
 | 8 | Real run: the implementer runs `ux-evaluate` on `site/index.html` with 2 UX rows written for the test, and pastes the verdict table and the two screenshot paths | G1 proof |
 
+**Amendment A1 (2026-11-03, user: "when I apply to build FE without design, it got the poor UX"; commit `75fecb67`)**: AC 3's `no UX criteria` no longer stops the skill. It judges nine fixed baseline UX checks (B-a to B-i) with or without rows and reports `no UX criteria — baseline checks only`. Evidence: round 4 in `tasks/TASK_REVIEW_T245.md` (blind-judged no-design builds: 35/35 with the skill, 29/29 without).
+
+**Amendment A2 (2026-11-04, Stage 4 review R2, user: "yes [auto]")**: on a diff, the skill writes a baseline `fail` on a part the diff did not change as `fail (older)`; `code-review` rates it P3, not P1. AC 6's P1/P2 mapping stays for row fails and new baseline fails.
+
 ---
 
 ## Evaluation & Acceptance (How we know the agent worked correctly)

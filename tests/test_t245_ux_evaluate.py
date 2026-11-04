@@ -322,3 +322,23 @@ def test_ac6_code_review_stays_within_the_codex_cap():
 def test_ac7_both_site_pages_name_the_skill():
     for page in ("index.html", "docs.html"):
         assert "ux-evaluate" in _text(ROOT / "site" / page), f"site/{page} lacks ux-evaluate"
+
+
+# --- Stage 4 review R2 / R3 (2026-11-04, user: "yes [auto]") ----------------------------
+
+def test_r2_code_review_rates_an_older_baseline_fail_p3():
+    """R2: a baseline `fail` on a part the diff did not change is older debt -> P3, not P1."""
+    row = [l for l in _text(CODE_REVIEW).splitlines() if l.startswith("|") and "ux-evaluate" in l][0]
+    assert "P3" in row and "older" in row, row
+    assert len(CODE_REVIEW.read_bytes()) <= CODEX_CAP, len(CODE_REVIEW.read_bytes())
+
+
+def test_r2_the_skill_marks_baseline_fails_the_diff_did_not_cause():
+    t = _norm(_text(SKILL))
+    assert re.search(r"`fail \(older\)`", t), "the skill must tell the caller which baseline fails are older than the change"
+    assert len(SKILL.read_bytes()) <= CODEX_CAP
+
+
+def test_r3_frontend_skills_row_names_the_baseline_checks():
+    row = [l for l in _text(FRONTEND).splitlines() if l.startswith("|") and "ux-evaluate" in l][0]
+    assert "baseline" in row, row

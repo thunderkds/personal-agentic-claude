@@ -97,7 +97,7 @@ Overall is `pass` only when every row and every baseline check is `pass`. Any ot
 ### After the table
 
 - **Frontend agent**: when there is no design, fix every baseline `fail` before Ready for Review; this is your design pass. Fix every `fail`, take the screenshots again (an image from before the fix proves nothing), run the failed rows again, and put the final verdict table in your report. Report every `not checked`, `not checkable` and `no UX criteria — baseline checks only` to the Supervisor; do not move the task to Ready for Review with one open and unreported.
-- **code-review**: turn each outcome into a finding at the severity its own table sets. The skill gives no severity.
+- **code-review**: write a baseline `fail` on a part of the screen the diff did not change as `fail (older)`: it is debt from before the change, not caused by it. Then turn each outcome into a finding at the severity its own table sets. The skill gives no severity.
 
 ### Communication Protocol
 

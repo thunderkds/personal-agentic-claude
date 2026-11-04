@@ -105,7 +105,7 @@ through. Anything larger than C3 is an Epic and must be split by the Supervisor 
 | `Skill({ skill: "security-review" })` | Auth UI, sensitive-data display, or CSP changes (Risk Med/High), whatever the complexity |
 | `Skill({ skill: "verify" })` | C1+ after implementation — confirm the UI works end-to-end in the browser; adversarial at C3 |
 | `Skill({ skill: "run" })` | Launch the dev server to observe UI behavior while developing |
-| `ux-evaluate` | Any UI change: judge the guide's UX rows on screenshots |
+| `ux-evaluate` | Any UI change: UX rows and baseline checks on screenshots |
 | `Skill({ skill: "compound" })` | After any non-trivial UI fix or pattern discovery — document in `docs/solutions/frontend/` |
 | `Skill({ skill: "optimize" })` | When a UX metric (render time, bundle size, LCP) needs iterative improvement |
 
