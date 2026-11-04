@@ -43,20 +43,34 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 -->
 
+## Auto decisions
+
+Mode: auto
+1. This session took T250 over at Stage 4: its first session (f5ea81bb) had finished Stage 3 and stopped after starting `code-review` (last trace entry 2026-11-04T09:22:05Z, idle 67 min, worktree clean) — RULE: `AGENTS.md` § Tracks ("the Supervisor goes on with the pipeline at once, from the first stage not yet done"); the user's request "yes, let go" answered "start T250"
+2. Review findings (a) stacked branch → fixed in code; (b) forgeable transcript and (c) typed-not-passed → recorded under `docs/claude-md/tracks.md` `### Known limits` — DEBATED: (a) code, (b) and (c) docs (Advocate 1: fix (a), document (b) and (c), add an `Edit` deny rule for (b); Advocate 2: fix (a), document (b) and (c), deny rule only if the user approves; Advocate 3: fix (a) and (c) in code, document (b)). (c) went to docs by the safer-option order (both can be undone; docs is the smaller change) ⚠ decided for you — please review
+3. Also fixed: the P1 (paths with a space), `realpath` for symlinked worktrees, the three Stop-check tests that passed for the wrong reason, a `load_work`-raises test — RULE: `tasks/TASK_GUIDE_T250.md` § Acceptance Criteria (AC 7 "a task this session edited in the window still does"; AC 8 "Every new path fails closed … A test proves it for each of AC 1, 5, 7"); left as suggestions: duplicate `parse_ts`, unused `minimal_verify_line`, `sed w/e` classifier gaps — RULE: `skills/code-review/SKILL.md` § Phase 4 ("Do not apply P2/P3 fixes automatically")
+4. An In Progress task with no known branch now blocks a merge (the guide's edge case said it does not) — RULE: `tasks/TASK_GUIDE_T250.md` § Acceptance Criteria AC 8 ("an exception or unreadable input keeps today's behaviour (block / check), never a silent pass")
+5. No `.claude/settings.json` deny rule for the transcripts folder — RULE: `docs/claude-md/tracks.md` `### Every user stop and its auto rule` row 5 (auto mode skips changes to the user's permission settings)
+6. `security-review` run as a sub-task scoped to `main...fix/t250-session-ownership`, because the built-in skill diffed the main checkout against `github/main` (75 unrelated commits) — RULE: `skills/code-review/SKILL.md` § Phase 0 ("Never review the whole repo — scope to the change's blast radius")
+7. Companion score row N/A — RULE: `tasks/TASK_REVIEW_T250.md` § Evidence, Companion score row ("☑ N/A with a reason when neither companion tool was run")
+Checks: tests `python3 -m pytest .claude/hooks/tests/test_t250_session_ownership.py .claude/hooks/tests/test_stop_auto_mode_check.py -q` — `189 passed in 18.26s`; full suite `3266 passed, 25 subtests passed` (fix pass, see Evidence); reviews `code-review` — 2 independent reviewers, 1 P1 + 4 P2 + 6 P3, P1 and decided P2/P3 fixed in `ba1faf34`; `security-review` — no findings at confidence >= 8; real run: the guide's merge-gate line, see Evidence "Verification command run" (auto-checked, not /verify)
+Memory: memory/learnings.md — a minimal-track change after its auto verify pass needs the row moved back from Done and verify run again; the built-in `security-review` diffs the main checkout against its remote, not a worktree branch (T119, T250)
+Not done: merge (yours); auto verify: running (T182); `html-report` for code-review and security-review not generated this run; the transcripts-folder deny rule in `.claude/settings.json` (yours)
+
 ## Evidence
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_t250_session_ownership.py` — 102 tests for AC 1–8, `102 passed in 8.70s` (2026-11-04, `3c01a43b`). Written test-first; red before each change: `ModuleNotFoundError: No module named 'session_work'` (tracer); G2 `2 failed, 51 passed`; G1 `4 failed, 66 passed`; G3 `1 failed, 77 passed` (exactly the T249 case); real-transcript false positives `3 failed` then pass. Stage 4 fix pass (+17): paths with a space / symlinked worktree, 10:40:35Z `7 failed, 2 passed, 85 deselected` then `94 passed`; stacked branch cut from an In Progress task's branch, 10:41:15Z `5 failed, 13 passed, 83 deselected` then `101 passed`; Stop hook with a `load_work` that raises still checks the task (`2 passed`; mutated to treat the error as not-owned: `1 failed`). `.claude/hooks/tests/test_stop_auto_mode_check.py`: the session's own `Write` added to `test_a_non_auto_task_is_ignored`, `test_check1_ignores_a_guide_older_than_the_auto_request`, `test_t229_a_task_touched_after_a_later_plain_request_is_not_auto` — each passes; each window-rule mutation (code-span strip removed / window start ignored / plain request no longer closes the window) makes the new test `1 failed` and the old test `1 passed` (mutations reverted). Four other T229 window fixtures show the session's own `Write` (AC 7 changes their outcome by design) |
+| Verification command run | ☑ pass | Guide line as written, wt-t250 at `365379ce`, 2026-11-04T09:15:28Z: `[hook:pre_bash] T249 is In Progress, but this session did not work on it and this merge does not bring in its branch — not blocking (T250)` then block with only `Tasks still In Progress: T250` and Ready for Review `T248, T246, T230 (no evidence row)` (T246's real record has no user line; not edited). Board-state copy (scratch clone of wt-t246 with T250 hooks, main's board, user line for `5244fce5…`), 09:16:46Z — A, session f5ea81bb's transcript: T249 not blocking, blockers `T250` + `T248, T230 (no evidence row)`: T246 accepted. B, a folder without f5ea81bb.jsonl: `cannot read this session's transcript — every In Progress task blocks this merge`, blockers `T250, T249` + `T248, T246, T230 (no evidence row)`: pass |
+| Negative cases hold | ☑ pass | 69 of the 102 `test_t250_session_ownership.py` tests are negatives, all passing: AC 2 not-a-pass cases (`other-task`, `longer-id`, `no-args`, `task-notification`, `isMeta`, `no-origin`, `sidechain`, `tool-result`, `assistant`, missing/unreadable transcript), AC 4 read-only calls are not work (`Read`, `Grep`, `Glob`, `bash-grep`, `cat`, `sed -n`, `git -C log`, `cd`+readers, heredoc mentions, longer ID), AC 5/8 fail-closed (no transcript, unreadable, stacked branch blocks, missing ref blocks), AC 7/8 (`load_work` raises → still checked). Run 2026-11-04: `189 passed in 18.26s` with `test_stop_auto_mode_check.py` — pass |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | `code-review` and `security-review` read `git diff main...HEAD` (10 files) plus direct callers in `.claude/hooks/` (`lib/auto_mode.py`, `stop_auto_verify.py`); `lane_check.py`: `lane: C2, 9 files, 1208 lines, EXCEEDS (lines 1208 > 500); unpredicted: .claude/hooks/lib/verify_record.py, .claude/hooks/tests/merge_gate_guard.py, .claude/hooks/tests/test_merge_gate_guard.py, .claude/hooks/tests/test_stop_auto_mode_check.py` (warn-only; 639 of the lines are the new test file; the unpredicted files are an allowlist entry and fixtures) — pass |
+| Full smoke suite still green (no regression) | ☑ pass | `python3 -m pytest .claude/hooks/tests/ tests/ -q` on the branch at `3c01a43b` (the fix commit before it was amended to add only this review file — same code), 2026-11-04T10:57:38Z–11:02:14Z: `3266 passed, 25 subtests passed in 275.36s (0:04:35)`; `main` at `f3f24ac7`: `3163 passed, 25 subtests passed in 182.95s (0:03:02)` — +103 = 102 new T250 tests + 1 net elsewhere, 0 failed. One earlier run at 10:49:00Z had `1 failed, 3265 passed` (`tests/test_auto_verify.py::test_ac5_fail_record_blocks_even_if_the_row_is_edited_to_pass`, a `WAIT_S` wait on a detached run under host load); it passed 3/3 alone and `tests/test_auto_verify.py` gave `254 passed` |
+| **Companion score (easy-verifier)** | ☑ N/A | Not run in this auto session; `score` is optional (Stage 4) and the gate blocks on ☑ fail only. Template text: | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | No UI: hook scripts, tests and one doc only |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | No UI: hook scripts, tests and one doc only |
+| **UI: Responsiveness at target viewports** | ☑ N/A | No UI: hook scripts, tests and one doc only |
 
 ---
 
@@ -67,12 +81,37 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured 2026-11-04T08:56:33Z in `../wt-t250` at `f3f24ac7`, before any implementation commit; session f5ea81bb has never edited T249's files, and its transcript holds the user's `/verify T246`):
+```
+$ echo '{"tool_name":"Bash","tool_input":{"command":"git merge --no-ff fix/t246-x"},"transcript_path":"…/f5ea81bb-c349-4953-9f6b-0307a641966a.jsonl","session_id":"f5ea81bb-…","cwd":"…/personal-agentic-claude"}' | python3 .claude/hooks/pre_bash_block_unsafe_merge.py
+{"decision": "block", "reason": "[hook:pre_bash] Pipeline gate failed — cannot push/merge:\n  • Tasks still In Progress: T250, T249\n  • Tasks in Ready for Review missing Stage 5 verify evidence: T246 (no evidence row)\n…"}
+```
+G3, from this session's Stop hook (every stop since 2026-11-04 ~08:31Z):
+```
+[hook:stop_auto_mode_check] Auto-mode final report check failed — fix it before you stop (docs/claude-md/tracks.md `## Auto mode`):
+  • T249: tasks/TASK_REVIEW_T249.md has no `## Auto decisions` section starting with `Mode: auto`
+  • T249: no `Memory:` line in the report — run the memory pass before you stop and record it there (each entry written, or `Memory: nothing new`)
+```
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER** (2026-11-04T09:15:28Z, wt-t250 at `365379ce`, the guide's real-run line as written):
+```
+[hook:pre_bash] T249 is In Progress, but this session did not work on it and this merge does not bring in its branch — not blocking (T250)
+{"decision": "block", "reason": "[hook:pre_bash] Pipeline gate failed — cannot push/merge:\n  • Tasks still In Progress: T250\n  • Tasks in Ready for Review missing Stage 5 verify evidence: T248 (no evidence row), T246 (no evidence row), T230 (no evidence row)\n…"}
+exit=0
+```
+With T246's user line (`- verify: ☑ pass — /verify by the user, session f5ea81bb-c349-4953-9f6b-0307a641966a, commit 5244fce5adeb30cce9e11293d7bd3441af289516`) in a scratch copy of the board state, 09:16:46Z:
+```
+== A: session f5ea81bb's own transcript
+[hook:pre_bash] T249 is In Progress, but this session did not work on it and this merge does not bring in its branch — not blocking (T250)
+BLOCK: … • Tasks still In Progress: T250
+  • Tasks in Ready for Review missing Stage 5 verify evidence: T248 (no evidence row), T230 (no evidence row)
+== B: a transcripts folder without f5ea81bb.jsonl
+[hook:pre_bash] cannot read this session's transcript — every In Progress task blocks this merge
+BLOCK: … • Tasks still In Progress: T250, T249
+  • Tasks in Ready for Review missing Stage 5 verify evidence: T248 (no evidence row), T246 (no evidence row), T230 (no evidence row)
+```
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+**DELTA**: A merge no longer waits on another session's In Progress task, and the user's own `/verify` now opens the gate after a blocked auto run.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/T250.jsonl`, never the
 implementing agent alone]

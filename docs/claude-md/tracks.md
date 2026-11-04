@@ -303,7 +303,7 @@ with a short reason when:
 A board row counts as auto mode when its report carries `## Auto decisions` or a `Mode: auto` line, when its
 Decision record's request carries `[auto]`, or when the task's files changed while a request carrying
 `[auto]` was this session's latest user request (T229: up to the next request without the tag; tool
-results, task notifications and `!` commands are not requests). Risk comes from the guide's `**Risk Level**`, else the review file, else the board
+results, task notifications and `!` commands are not requests). Since T250, a task whose files changed in that window counts as this session's auto work only when this session (or one of its sub-agents) worked on it, by `.claude/hooks/lib/session_work.py`, or when its report has `Mode: auto`; a transcript that cannot be read keeps the T229 check. Risk comes from the guide's `**Risk Level**`, else the review file, else the board
 row, else Low; a Decision record is Risk Low unless it says otherwise. The trace is `memory/event-trace/<ID>.jsonl` plus the last 6 hours of
 `memory/event-trace/_untagged.jsonl` (`CLAUDE_AUTO_CHECK_WINDOW_S`): Advocate prompts carry no task ID, so
 their calls land in `_untagged.jsonl` unless the active-task state file is set.
@@ -389,8 +389,17 @@ pass. The parser fails closed: anything it does not recognise is `blocked`. Each
 `blocked`: a SKIP or BLOCKED verdict, no verdict line, a budget stop, a timeout, or no `claude` on the PATH.
 A blocked result never contains the word "pass". The hook never overwrites a row or a line you filled. The
 merge gate accepts an `auto-run by hook` row — or a minimal-track `verify:` line — only when its run record
-exists for that task and the head commit, and says pass; a hand-typed line in a Decision record counts for
-nothing. After a pass, the same run closes out a task whose report has the `Mode: auto` line (`### Auto close-out`).
+exists for that task and the head commit, and says pass. A hand-typed line in a Decision record counts for
+nothing, except one shape (T250). When the run is blocked and you run `/verify <ID>` yourself on the minimal
+track, its pass goes under `Checked:` as
+`- verify: ☑ pass — /verify by the user, session <id>, commit <sha>`. `<id>` is the session you typed
+`/verify` in, and `<sha>` is the full 40-character commit you verified. The gate does not accept the line on its text alone.
+It accepts the line only when that session's transcript (in the same folder as the merging session's) holds
+your own `/verify <ID>` entry, dated after `<sha>` was committed and before the line was committed, and
+`<sha>` is the same code as the head (only `tasks/MINIMAL_LOG.md` may differ). A missing transcript, a short
+hash or other code: not a pass. The hook never edits or removes this line, and `--start` starts nothing for
+it. A blocked hook line above it for other code still gets a new run, and that run rewrites only the hook's
+line. After a pass, the same run closes out a task whose report has the `Mode: auto` line (`### Auto close-out`).
 A task without it stays in Ready for Review after its pass, and the Supervisor moves it to Done as before.
 The merge stays yours. You may still run `/verify` yourself at any time; when the run is blocked, you must.
 
@@ -496,3 +505,12 @@ Read these before you rely on `[auto]`. T180 left them open, on purpose. T186 re
 - **A paused task is not checked again until its report changes.** If the report block does not change,
   the check does not block the task a second time, even when a later trace would give different
   reasons. Edit the report to have the task checked again.
+- **An agent can forge the transcript that proves your `/verify`.** The merge gate reads the proof for
+  the line `- verify: ☑ pass — /verify by the user, session <id>, commit <sha>` from `<id>.jsonl` in the
+  transcripts folder. No deny rule in `.claude/settings.json` covers that folder. So an agent that runs as
+  the same OS user can write a fake `<id>.jsonl`. This is the same trust level as the run records in the
+  trace anchors' directory (`.claude/hooks/lib/verify_record.py` lines 14–17): it raises the bar, it is
+  not a proof.
+- **The proof shows that you typed `/verify <ID>`, not that it passed.** The transcript entry shows only
+  that you ran `/verify <ID>` for that code. It does not show the verdict. Read the verdict yourself
+  before you merge.

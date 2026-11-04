@@ -25,6 +25,7 @@ import re
 import shlex
 import subprocess
 import sys
+from datetime import datetime, timezone
 
 HOOKS_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -58,8 +59,11 @@ try:
         board_mode, my_blocking_tasks, my_review_tasks, pull_cache)
     from verify_record import (  # noqa: E402
         AUTO_CHECKED_TAG, AUTO_ROW_TAG, MINIMAL_LOG_REL, ROW_COMMIT, ROW_SESSION, SHA_PATTERN,
-        auto_row_confirmed, minimal_verify_line, read_record, record_verify_line, same_code)
+        auto_row_confirmed, head_commit, minimal_verify_lines, read_record, record_verify_lines,
+        same_code)
+    import auto_mode  # noqa: E402
     from auto_mode import record_block  # noqa: E402
+    import session_work  # noqa: E402
 except Exception as exc:  # pragma: no cover - exercised via subprocess test
     print(json.dumps({
         "decision": "block",
@@ -69,7 +73,8 @@ except Exception as exc:  # pragma: no cover - exercised via subprocess test
             "evidence for any task, so this push/merge is blocked. Restore "
             ".claude/hooks/lib/project_root.py, .claude/hooks/lib/guide_sections.py, "
             ".claude/hooks/lib/shell_data.py, .claude/hooks/lib/board/config.py, "
-            ".claude/hooks/lib/board/moments.py and .claude/hooks/lib/verify_record.py."
+            ".claude/hooks/lib/board/moments.py, .claude/hooks/lib/verify_record.py and "
+            ".claude/hooks/lib/session_work.py."
         ),
     }))
     sys.exit(0)
@@ -404,14 +409,16 @@ def has_filled_verify_row(task_id, tasks_dir=None):
 
     T188 D5 adds one more place to look, and only after every Evidence table has
     said no: a **minimal-track** task has no guide and no review file, so its
-    result is the `verify:` line in its Decision record
-    (`tasks/MINIMAL_LOG.md`). That line is read under exactly T182's rule and
-    nothing weaker — it counts only when it is an `auto-run by hook` line whose
-    run record exists for this task and the checkout's head commit and says
-    pass. A hand-typed line counts for nothing there, including one that claims
-    the user ran `/verify`: before T188 a minimal-track task at Ready for Review
-    always blocked, so reading a line the hook did not write would be the one
-    way this change could make the gate weaker.
+    result is a `verify:` line in its Decision record (`tasks/MINIMAL_LOG.md`).
+    An `auto-run by hook` line is read under exactly T182's rule — its run
+    record exists for this task and the checkout's head commit and says pass.
+    T250 G1 adds one hand-written shape, and only with proof the hook cannot
+    fake: `/verify by the user, session <sid>, commit <sha>` counts when the
+    transcript of session `<sid>` (in this session's transcripts folder) holds a
+    human `/verify <ID>` entry dated after `<sha>` was committed and before the
+    line was, and `<sha>` is the same code as the head (`user_line_confirmed`).
+    Any other hand-typed line still counts for nothing. Every `verify:` line of
+    the record is read, so the user's line may follow a blocked hook line.
     """
     for directory in evidence_search_dirs(tasks_dir):
         checkout = os.path.dirname(os.path.abspath(directory))
@@ -421,9 +428,13 @@ def has_filled_verify_row(task_id, tasks_dir=None):
             return True
     for directory in evidence_search_dirs(tasks_dir):
         checkout = os.path.dirname(os.path.abspath(directory))
-        if minimal_line_passes(
-                minimal_verify_line(task_id, directory),
-                lambda notes, rel: auto_row_confirmed(ROOT, checkout, task_id, notes, rel)):
+        lines = minimal_verify_lines(task_id, directory)
+        if any(minimal_line_passes(
+                line,
+                lambda notes, rel: auto_row_confirmed(ROOT, checkout, task_id, notes, rel),
+                lambda notes: user_line_confirmed(checkout, task_id, notes,
+                                                  head_commit(checkout)))
+               for line in lines):
             return True
     return False
 
@@ -448,18 +459,73 @@ def verify_row_passes(section, confirm):
     return False
 
 
-def minimal_line_passes(line, confirm):
+def minimal_line_passes(line, confirm, confirm_user=None):
     """True when a minimal-track `verify:` line `(result, notes)` is a confirmed hook pass (T188
-    D5). A hand-typed line counts for nothing."""
+    D5), or a user `/verify` line `confirm_user(notes)` proves (T250 G1). Any other hand-typed
+    line counts for nothing."""
     if not line:
         return False
     result, notes = line
     if "☑" not in result or "pass" not in result.lower():
         return False
     low = notes.lower()
-    if AUTO_CHECKED_TAG in low or AUTO_ROW_TAG not in low:
+    if AUTO_CHECKED_TAG in low:
         return False
-    return confirm(notes, MINIMAL_LOG_REL)
+    if AUTO_ROW_TAG in low:
+        return confirm(notes, MINIMAL_LOG_REL)
+    if confirm_user is not None and USER_LINE.match(notes.strip()):
+        return confirm_user(notes)
+    return False
+
+
+# --- The user's `/verify` line (T250 G1) --------------------------------------
+#
+# A blocked auto verify run falls back to the user's own `/verify <ID>` (tracks.md). For a
+# minimal-track task the fallback's result is one hand-written line under `Checked:`:
+#
+#     - verify: ☑ pass — /verify by the user, session <session id>, commit <40-hex sha>
+#
+# The line's text is never the proof. It counts only when (all of): the session's transcript —
+# `<sid>.jsonl` in the folder of this hook event's own `transcript_path` — holds a human
+# `/verify <ID>` entry (`session_work.verify_typed`); that entry is dated after `<sha>` was
+# committed and before the line itself was (when it is committed; a line only in the working tree
+# has no upper date); and `<sha>` is the same code as the head (`same_code`, the record excepted).
+# No transcript folder, a missing or unreadable file, a short hash, an unknown commit: not a pass.
+USER_LINE = re.compile(r"/verify by the user, session ([A-Za-z0-9-]{1,128}), commit ([0-9a-f]{40})$")
+TRANSCRIPTS_DIR = None  # set by main() from the event's transcript_path
+
+
+def _commit_time(directory, *args):
+    """The committer time of the last line `git log`/`git show` prints, as an aware datetime, or
+    None (no output, a failure)."""
+    done = _git(directory, *args)
+    if done is None or done.returncode != 0 or not done.stdout.strip():
+        return None
+    return datetime.fromtimestamp(int(done.stdout.split()[-1]), timezone.utc)
+
+
+def user_line_confirmed(checkout, task_id, notes, head, ref=None):
+    """True when the user `/verify` line `notes` is proven (see above). `ref` is the branch tip
+    the line was read from (a committed read: the line must be in its history), or None for a
+    working-tree read. Never raises; any doubt is False."""
+    try:
+        match = USER_LINE.match((notes or "").strip())
+        if not match or not TRANSCRIPTS_DIR or not head:
+            return False
+        sid, sha = match.groups()
+        after = _commit_time(checkout, "show", "-s", "--format=%ct", f"{sha}^{{commit}}")
+        if after is None:
+            return False
+        before = _commit_time(checkout, "log", "--format=%ct", "-S", notes.strip(),
+                              ref or head, "--", MINIMAL_LOG_REL)
+        if before is None and ref is not None:
+            return False
+        transcript = os.path.join(TRANSCRIPTS_DIR, f"{sid}.jsonl")
+        if not session_work.verify_typed(transcript, task_id, after, before):
+            return False
+        return same_code(checkout, task_id, sha, head, MINIMAL_LOG_REL)
+    except Exception:
+        return False
 
 
 # --- The verify row must be committed on the branch (T210 D4) -----------------
@@ -518,8 +584,10 @@ def committed_verify_row(task_id, branch, directory):
                                    and not is_pointer_only(s)), None), confirm):
             return True
         block = record_block(show(MINIMAL_LOG_REL) or "", task_id, skip_comments=True)
-        hit, result, notes = record_verify_line(block[2]) if block else (None, "", "")
-        return minimal_line_passes((result, notes) if hit else None, confirm)
+        return any(minimal_line_passes(
+            line, confirm,
+            lambda notes: user_line_confirmed(directory, task_id, notes, tip, ref=tip))
+            for line in (record_verify_lines(block[2]) if block else []))
     except Exception:
         return False
 
@@ -1080,6 +1148,114 @@ def branch_target(command, cwd, id_pattern=None):
     return targets[0] if len(targets) == 1 and not doubts else None
 
 
+# --- An In Progress task blocks only this session's merge (T250 G2) ---------
+#
+# Before T250 any In Progress row refused every merge, so a task another session was working on
+# (T249, in its own worktree) blocked this session's merge of an unrelated branch. Now, for a
+# `git merge` whose every branch names exactly one task, an In Progress task stays a blocker when
+# this session worked on it (`session_work.worked_on`: an edit, a writing `Bash` command or a spawn
+# for it, in the session's transcript or a sub-agent's), or the merge brings in its branch. A branch
+# name is not enough for that: `fix/t251-x` cut from T249's branch carries T249's unfinished
+# commits, so each of the task's branches (`branch_carries_task_work`) is also compared by commit.
+# Every doubt keeps the blocker: another command (push, pull, rebase, `merge --abort`), a branch
+# that names no task, no transcript, an unreadable one, a task with no known branch, a missing ref,
+# or any error.
+
+
+def merge_brought_task_ids(command, cwd, id_pattern=None):
+    """The task IDs (upper-cased) of every branch a `git merge` command merges, or None when the
+    command is anything else or one branch names no single task. Never raises."""
+    try:
+        actions = _git_actions(command, cwd)
+        if not actions or any(args[0] != "merge" for args, _ in actions):
+            return None
+        id_regex = re.compile(id_pattern or task_id_pattern(ROOT, bounded=True), re.IGNORECASE)
+        ids = set()
+        for args, where in actions:
+            names = [name for _, name in _merge_sources(args[1:], where)]
+            if not names:
+                return None
+            for name in names:
+                task_id = _ref_task_id(name, id_regex)
+                if task_id is None:
+                    return None
+                ids.add(task_id)
+        return ids
+    except Exception:
+        return None
+
+
+def _merged_refs(command, cwd):
+    """`[(directory, ref)]` for every ref the `git merge` segments of `command` merge."""
+    sources = []
+    for args, where in _git_actions(command, cwd) or []:
+        if args and args[0] == "merge":
+            sources.extend(_merge_sources(args[1:], where))
+    return sources
+
+
+def branch_carries_task_work(command, cwd, task_id, row):
+    """False only when every merged ref is proven to bring in none of the task's own commits: for
+    each merged ref M and each branch B of the task (its board row's, and each of its worktrees'),
+    `git merge-base M B` is already in HEAD. True on any doubt — no branch known, no merged ref, a
+    missing ref, a git error (fail closed)."""
+    try:
+        branches = {auto_mode.row_branch(row or "")}
+        branches.update(auto_mode.branch_of(path)
+                        for path in session_work.task_worktrees(ROOT, task_id, row))
+        branches.discard(None)
+        refs = _merged_refs(command, cwd)
+        if not branches or not refs:
+            return True
+        for where, ref in refs:
+            if where is None:
+                return True
+            for branch in branches:
+                base = _git(where, "merge-base", f"{ref}^{{commit}}", f"{branch}^{{commit}}")
+                if base is None or base.returncode != 0 or not base.stdout.strip():
+                    return True
+                held = _git(where, "merge-base", "--is-ancestor", base.stdout.strip(), "HEAD")
+                if held is None or held.returncode != 0:
+                    return True
+        return False
+    except Exception:
+        return True
+
+
+def session_owned_in_progress(rows, command, cwd, transcript_path):
+    """The In Progress task IDs (from `[(ID, board row)]`) that still block this command (T250 G2).
+    Fails closed: on any doubt every ID is kept."""
+    ids = [task_id for task_id, _ in rows]
+    try:
+        brought = merge_brought_task_ids(command, cwd)
+        if brought is None or not ids:
+            return ids
+        calls = session_work.load_work(transcript_path)
+        if calls is None:
+            print("[hook:pre_bash] cannot read this session's transcript — every In Progress "
+                  "task blocks this merge", file=sys.stderr)
+            return ids
+        kept = []
+        for task_id, row in rows:
+            if task_id.upper() in brought or session_work.worked_on(
+                    calls, task_id, session_work.task_worktrees(ROOT, task_id, row)):
+                kept.append(task_id)
+            elif branch_carries_task_work(command, cwd, task_id, row):
+                kept.append(task_id)
+                print(f"[hook:pre_bash] {task_id} is In Progress and this merge may bring in "
+                      "commits of its branch (or its branch is not known) — still blocking (T250)",
+                      file=sys.stderr)
+            else:
+                print(f"[hook:pre_bash] {task_id} is In Progress, but this session did not work "
+                      "on it and this merge does not bring in its branch — not blocking (T250)",
+                      file=sys.stderr)
+        return kept
+    except Exception as exc:
+        print(f"[hook:pre_bash] session ownership check failed ({type(exc).__name__}) — every "
+              "In Progress task blocks this merge", file=sys.stderr)
+        return ids
+
+
 # --- What to actually do about an unattributed Bash call (T095 defect B) ----
 #
 # This gate used to end its block with "a Bash command is attributed to a task
@@ -1145,6 +1321,13 @@ def main():
         block_unreadable_input("event is not an object")
     if event.get("tool_name") != "Bash":
         sys.exit(0)
+
+    # T250 G1: the folder holding this session's transcript, where a user `/verify` line's own
+    # session file is looked up. No path, no folder: such a line never passes.
+    global TRANSCRIPTS_DIR
+    transcript_path = event.get("transcript_path")
+    if isinstance(transcript_path, str) and os.path.isabs(transcript_path):
+        TRANSCRIPTS_DIR = os.path.dirname(transcript_path)
 
     tool_input = event.get("tool_input")
     if not isinstance(tool_input, dict):
@@ -1238,6 +1421,13 @@ def main():
     if scoped is not None and scoped in {tid.upper() for tid in [*in_progress, *ready_review]}:
         in_progress = [tid for tid in in_progress if tid.upper() == scoped]
         ready_review = [tid for tid in ready_review if tid.upper() == scoped]
+
+    # T250 G2: of the In Progress tasks left, only this session's work blocks a merge.
+    if in_progress:
+        rows = dict(tasks_in_section("In Progress", id_pattern, with_lines=True))
+        in_progress = session_owned_in_progress(
+            [(tid, rows.get(tid, "")) for tid in in_progress], command, event.get("cwd"),
+            event.get("transcript_path"))
 
     blockers = []
 
