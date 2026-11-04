@@ -444,6 +444,7 @@ SAFE_ARGS = {
     "render.py": ["T900", "tasks/TASK_GUIDE_T900.md", "feat-x", "{out}"],
     "apply_profile.py": ["--help"],                  # the real run writes .claude/settings.json
     "dotfiles.py": ["--help"],                       # the real run writes the user's home folders
+    "tap_probe.py": ["--help"],                      # T248: the real run needs a page and an out dir
 }
 CRASH_MARKERS = ("Traceback", "No such file", "ModuleNotFoundError", "can't open file")
 

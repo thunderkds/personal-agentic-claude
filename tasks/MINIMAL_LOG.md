@@ -4,6 +4,25 @@
 > new record directly under this note. On first use, the Supervisor creates `tasks/MINIMAL_LOG.md` from
 > this template and deletes the example comment. The same block is the Supervisor's final chat message.
 
+## T248 — `ux-evaluate` measures tap targets and uses an absolute scratch folder · minimal
+**Asked:** "let do it" (to: "add both as one small follow-up task" — the T245 verify run's two weak points: a relative screenshot path writes into the repo; B-d judged by eye)
+**Decisions:**
+- Minimal track: one small script, skill text, tests; C1, Risk Low, no UI component, no user data — `docs/claude-md/tracks.md` `## Track rule`
+- Branch `fix/t248-ux-evaluate-measure` is cut from `feat/t245-ux-evaluate`, not `main` — the skill exists only on the T245 branch; T248 merges after T245
+- B-d is measured by `skills/ux-evaluate/scripts/tap_probe.py`: it writes a copy of a static page (with `<base href>` so its CSS loads) that outlines targets under 44px in red and lists them as `name WxH` in a banner above the page — a screenshot alone gives no pixel size; the agent still reads the image, no new tool to install
+- Inline links in a sentence are not counted (WCAG 2.5.8 exception); a checkbox inside a label is measured by its label
+- Step 2 says `<dir>` is an absolute path from `mktemp -d`; the probe refuses a relative page or out dir
+- The banner sits above the page, not fixed over it — the first run's fixed banner covered the header targets it should outline
+- Assumed: static `file://` pages are the main case for the probe — a served app keeps the by-eye B-d; the skill says "for a static page"
+**Checked:**
+- New test `tests/test_t248_tap_probe.py` (5 tests, one drives headless Chrome on a fixture: a 80x20 button flagged, a 48px button, a 64px label row and an inline link not) — `5 failed in 2.24s` before the change, `5 passed` after; `tests/test_plugin_names.py` SAFE_ARGS gains `tap_probe.py --help`
+- Suite: `python3 -m pytest .claude/hooks/tests/ tests/ -q` — `3157 passed, 25 subtests passed in 260.77s (0:04:20)`
+- Real run: `python3 skills/ux-evaluate/scripts/tap_probe.py "$PWD/site/index.html" "$D"` then `google-chrome --headless --disable-gpu --window-size=375,500 --screenshot=$D/site-375.png "file://$D/index-probe.html"` — printed `52158 bytes written`; the image shows `tap-probe: 18 under 44px: Home 38x44; Docs 31x44; You ask 54x19; …` and red boxes on Home and Docs. On the blind-test build b2: `tap-probe: 0 under 44px`
+- verify: ☑ pass — auto-run by hook, session 99e88592-3540-423f-b9d5-9760e24bf831, commit 60743097d132672e69bdffa04a8c55dffeea3812, log .claude/verify-runs/T248-60743097d132.log
+**Files:** `skills/ux-evaluate/scripts/tap_probe.py`, `skills/ux-evaluate/SKILL.md`, `tests/test_t248_tap_probe.py`, `tests/test_plugin_names.py`, `tasks/MINIMAL_LOG.md`
+**Memory:** `memory/learnings.md` — headless Chrome `--dump-dom` lays out at 500px; screenshots hide sideways overflow; tap targets measured, not judged by eye (T245, T248) (`eaf9ebd6` on main)
+**Not done:** merge (yours; merge T245 first); auto verify: ☑ pass (session 99e88592-3540-423f-b9d5-9760e24bf831, commit 60743097d132672e69bdffa04a8c55dffeea3812, log .claude/verify-runs/T248-60743097d132.log)
+
 ## T243 — Plugin directory submission prep: icon, manifest and hooks the directory can read · minimal
 Mode: auto
 **Asked:** "continue, I saw you draw the icon for the index page, let use it [auto]"
