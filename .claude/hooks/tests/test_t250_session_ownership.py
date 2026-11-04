@@ -141,14 +141,17 @@ def bash(command, cwd=MAIN):
     bash("cd ../wt-t900 && python3 -m pytest -q"),
     bash("cat > tasks/TASK_REVIEW_T900.md <<'EOF'\nhello\nEOF"),
     bash("sed -i 's/a/b/' tasks/TASK_GUIDE_T900.md"),
+    bash("sort -o tasks/TASK_GUIDE_T900.md tasks/TASK_GUIDE_T900.md"),
     bash("echo done >> ../wt-t900/notes.txt"),
     bash("python3 -m pytest -q", cwd=f"{WT}/sub"),
     bash("git -C ../wt-t900 commit -qm x"),
+    bash("bash -c 'echo x > tasks/TASK_REVIEW_T900.md'"),
+    bash("eval \"rm ../wt-t900/old.txt\""),
     tool_use("Agent", {"description": "T900 implement", "subagent_type": "backend-developer",
                        "prompt": "Task ID: T900\nGuide: tasks/TASK_GUIDE_T900.md\n"}),
 ], ids=["edit-guide", "write-in-worktree", "write-review", "notebook", "cd-worktree-commit",
-        "cd-relative-pytest", "heredoc-into-review", "sed-in-place", "append-into-worktree",
-        "cwd-in-worktree", "git-C-commit", "agent-spawn"])
+        "cd-relative-pytest", "heredoc-into-review", "sed-in-place", "sort-output", "append-into-worktree",
+        "cwd-in-worktree", "git-C-commit", "bash-c-string", "eval-string", "agent-spawn"])
 def test_ac4_a_non_read_call_on_the_task_is_work(tmp_path, entry):
     assert worked(tmp_path, [entry]) is True
 
@@ -162,9 +165,15 @@ def test_ac4_a_non_read_call_on_the_task_is_work(tmp_path, entry):
     bash("sed -n '1,40p' ../wt-t900/tasks/TASK_GUIDE_T900.md"),
     bash("git -C ../wt-t900 log -1 --format='%h %s'; git -C ../wt-t900 status --short | head -3"),
     bash(f"cd {WT} && git log --oneline -3"),
+    bash(f"cd {WT} && grep -n x tasks/MINIMAL_LOG.md | cut -c1-80 | sort | tr a b | nl"),
     bash("grep -n '\\*\\*T900\\*\\*' PROJECT_KANBAN.md"),  # names the ID, not its files
     bash("python3 - <<'EOF'\np='tasks/TASK_REVIEW_T901.md'\n# quotes tasks/TASK_REVIEW_T900.md\nEOF"),
     bash("cat tasks/TASK_REVIEW_T9000.md > /tmp/x"),
+    # a real shape: a scratch dir held in a variable — not known to be the task's worktree
+    bash("S=/tmp/scratch/blind; cd $S; mkdir -p judge key; cp build-a/x judge/"),
+    # code or a message passed as one quoted argument is not a file argument
+    bash("python3 -c \"print(list(shlex.split('cat a > tasks/X_T900.md')))\""),
+    bash("git commit -qm 'record: T900 is in tasks/TASK_REVIEW_T900.md'"),
     tool_use("Edit", {"file_path": f"{MAIN}/tasks/TASK_GUIDE_T9000.md", "old_string": "a",
                       "new_string": "b"}),
     tool_use("Write", {"file_path": f"{MAIN}/tasks/TASK_GUIDE_T901.md",
@@ -173,7 +182,8 @@ def test_ac4_a_non_read_call_on_the_task_is_work(tmp_path, entry):
                        "prompt": "Task ID: T901\nT900 is another session's task; only read "
                                  "tasks/TASK_GUIDE_T900.md.\n"}),
 ], ids=["Read", "Grep", "Glob", "bash-grep", "bash-cat", "bash-sed-print", "git-C-log-status",
-        "cd-worktree-log", "bash-names-id-only", "heredoc-body-mentions", "longer-id-path",
+        "cd-worktree-log", "cd-worktree-pipe-readers", "bash-names-id-only", "heredoc-body-mentions", "longer-id-path", "cd-variable",
+        "python-c-code", "commit-message",
         "edit-longer-id", "write-other-task-mentions", "agent-for-other-task"])
 def test_ac4_a_read_or_unrelated_call_is_not_work(tmp_path, entry):
     assert worked(tmp_path, [entry]) is False

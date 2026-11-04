@@ -303,7 +303,7 @@ with a short reason when:
 A board row counts as auto mode when its report carries `## Auto decisions` or a `Mode: auto` line, when its
 Decision record's request carries `[auto]`, or when the task's files changed while a request carrying
 `[auto]` was this session's latest user request (T229: up to the next request without the tag; tool
-results, task notifications and `!` commands are not requests). Risk comes from the guide's `**Risk Level**`, else the review file, else the board
+results, task notifications and `!` commands are not requests). Since T250, a task whose files changed in that window counts as this session's auto work only when this session (or one of its sub-agents) worked on it, by `.claude/hooks/lib/session_work.py`, or when its report has `Mode: auto`; a transcript that cannot be read keeps the T229 check. Risk comes from the guide's `**Risk Level**`, else the review file, else the board
 row, else Low; a Decision record is Risk Low unless it says otherwise. The trace is `memory/event-trace/<ID>.jsonl` plus the last 6 hours of
 `memory/event-trace/_untagged.jsonl` (`CLAUDE_AUTO_CHECK_WINDOW_S`): Advocate prompts carry no task ID, so
 their calls land in `_untagged.jsonl` unless the active-task state file is set.

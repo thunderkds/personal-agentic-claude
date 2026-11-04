@@ -89,8 +89,11 @@ def verify_typed(transcript_path, task_id, after=None, before=None):
 # --- did this session work on task X (AC 4) ------------------------------------------------------
 #
 # Known limits, by design (a static read of what the session ran): a path held in a shell variable
-# (`"$WT"`), a heredoc body (data, as in `shell_data`, even when an interpreter reads it), and a
-# script that writes a task file without naming it on its command line are not seen as work.
+# (`"$WT"`, `cd $S`), a heredoc body (data, as in `shell_data`, even when an interpreter reads it),
+# code passed to an interpreter as one quoted argument (`python3 -c "…"`; `bash -c`, `sh -c`, `zsh -c`
+# and `eval` strings are read as commands), and a script that writes a task file without naming it on
+# its command line are not seen as work. A token holding whitespace is code or a message, not a file
+# argument.
 
 WRITE_TOOLS = {"Edit": "file_path", "Write": "file_path", "MultiEdit": "file_path",
                "NotebookEdit": "notebook_path"}
@@ -101,13 +104,13 @@ SEPARATORS = frozenset({";", "&&", "||", "|", "&", "|&", ";;", "(", ")"})
 READ_ONLY_COMMANDS = frozenset({
     "cat", "head", "tail", "grep", "egrep", "fgrep", "rg", "ls", "wc", "stat", "file", "diff",
     "cmp", "echo", "printf", "pwd", "true", "false", "test", "[", "basename", "dirname",
-    "realpath", "readlink", "jq"})
+    "realpath", "readlink", "jq", "cut", "tr", "nl", "column"})
 READ_ONLY_GIT = frozenset({"log", "status", "show", "diff", "rev-parse", "ls-files", "blame",
                            "merge-base", "cat-file", "describe", "shortlog", "grep"})
 REDIRECT = re.compile(r"[<>&|]*>[<>&|]*")
 HARMLESS_TARGET = re.compile(r"/dev/null|&?\d")
 SED_WRITE = re.compile(r"(?:^|[;/}\s])w\s")
-UNKNOWN_DIR = object()
+SHELLS = frozenset({"sh", "bash", "zsh"})
 
 
 def _session_files(transcript_path):
@@ -165,6 +168,8 @@ class _Task:
 
     def named(self, token, directory):
         """True when `token` names one of the task's files or a path in its worktree."""
+        if any(c.isspace() for c in token):
+            return False
         if self.file.search(token):
             return True
         for part in [token] + token.split("=")[1:]:
@@ -213,6 +218,8 @@ def _read_only(tokens):
         return True
     if head == "sed":
         return not any(a.startswith(("-i", "--in-place")) or SED_WRITE.search(a) for a in args)
+    if head == "sort":
+        return not any(a.startswith(("-o", "--output")) for a in args)
     if head != "git":
         return False
     while args and args[0].startswith("-"):
@@ -224,24 +231,27 @@ def _read_only(tokens):
     return args[:2] == ["worktree", "list"]
 
 
-def _bash_works(command, cwd, task):
+def _bash_works(command, cwd, task, depth=0):
     segments = _segments(command)
     if segments is None:  # unparsable: any mention of the task's paths is work
         return any(task.named(t, cwd) for t in strip_heredoc_bodies(command).split())
     directory = cwd
     for tokens in segments:
-        if tokens[0] == "cd":
+        head = os.path.basename(tokens[0])
+        if head == "cd":
             target = tokens[1] if len(tokens) == 2 else None
             if (target and isinstance(directory, str) and "$" not in target
                     and "`" not in target and not target.startswith("~")):
                 directory = os.path.normpath(os.path.join(directory, target))
             else:
-                directory = UNKNOWN_DIR
+                directory = None  # a variable or `~`: not known to be the task's worktree
             continue
-        runs_in = directory is UNKNOWN_DIR or (isinstance(directory, str)
-                                               and task.inside(directory))
-        here = directory if isinstance(directory, str) else None
-        if (runs_in or any(task.named(t, here) for t in tokens)) and not _read_only(tokens):
+        if depth < 3 and (head == "eval" or (head in SHELLS and "-c" in tokens[1:-1])):
+            code = " ".join(tokens[1:]) if head == "eval" else tokens[tokens.index("-c", 1) + 1]
+            if _bash_works(code, directory, task, depth + 1):
+                return True
+        runs_in = isinstance(directory, str) and task.inside(directory)
+        if (runs_in or any(task.named(t, directory) for t in tokens)) and not _read_only(tokens):
             return True
     return False
 
