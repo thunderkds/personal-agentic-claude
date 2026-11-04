@@ -144,3 +144,24 @@ Setup: one requirement with no design and no UX rows (habit tracker, static `ind
 
 Result: both builds made with the skill rank above both builds made without it (35, 35 vs 29, 29). The judge rated this gap "high" confidence before unblinding: the skill builds have a retry action in the error state, an empty state that names the button, and bigger phone tap targets; the others have none of these. Both skill runs reported a baseline `fail` and fixed it (a1: retry button style, B-i; a2: a wrapped button). Both opened every screenshot; the before runs opened 3 of 8 (b2) and 3 of 7 (b1).
 Limits: n = 2 per arm, one judge, one requirement; the judge did not drive the add/tick flow. Self-reported "all pass" from the builds is not part of the score.
+
+## AC 8 real run: `ux-evaluate` on `site/index.html` (Supervisor, 2026-11-04, Stage 4)
+
+Commands: `google-chrome --headless --disable-gpu --hide-scrollbars --window-size=375,2400 --screenshot=/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-personal-agentic-claude/f5ea81bb-c349-4953-9f6b-0307a641966a/scratchpad/t245-ac8/index-375.png "file://$PWD/site/index.html"`, then `--window-size=1280,2400` → `/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-personal-agentic-claude/f5ea81bb-c349-4953-9f6b-0307a641966a/scratchpad/t245-ac8/index-1280.png`. Both opened with `Read`.
+Test UX rows (written for this run, from the T245 change to the page): 1 — "a reader sees ux-evaluate under Stage 3: Build"; 2 — "the numbers strip says 36 skills".
+
+| # | User story | Flow / state | Width | Verdict | Screenshot | Reason |
+|---|---|---|---|---|---|---|
+| 1 | T245 request | Skills by stage | 375 / 1280 | pass | index-375.png, index-1280.png | `ux-evaluate` chip is the last chip of "Stage 3: Build" at both widths, same style as its row |
+| 2 | T245 request | numbers strip | 375 / 1280 | pass | index-375.png, index-1280.png | "36 skills" in the strip at both widths (2×2 grid at 375, one row at 1280) |
+| B-a | baseline | default | 375 / 1280 | pass | both | the install command with its green "Copy" button is the first and most prominent action, in view at both widths |
+| B-b | baseline | default | 375 / 1280 | pass | both | title, one-line pitch, command, then sections in one reading order |
+| B-c | baseline | default | 375 / 1280 | pass | both | cards on one grid, equal gaps |
+| B-d | baseline | default | 375 | fail | index-375.png | header links "Home" / "Docs" are about 20 px tall at 375; present on `main` too, not caused by this diff |
+| B-e | baseline | default | 375 / 1280 | pass | both | body text readable on the dark ground; chip labels are small monospace but readable |
+| B-f | baseline | default | 375 / 1280 | pass | both | static page, no empty/loading/error state named |
+| B-g | baseline | default | — | not checked: no action was run (the Copy click was not driven) | — | — |
+| B-h | baseline | default | 375 | pass | index-375.png | stacked single column, no sideways scroll, the command wraps inside its box |
+| B-i | baseline | default | 375 / 1280 | pass | both | one green accent, one chip style, one radius |
+
+ux-evaluate: 9 pass, 1 fail, 1 not checked, 0 not checkable. Overall: fail (the one fail is older than this diff; see review finding R2).
