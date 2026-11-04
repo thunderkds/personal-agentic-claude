@@ -2765,3 +2765,11 @@ The log refuses a symlink/non-file path, writes via `mktemp` in `.claude/` + `mv
 **Open**: the Bash rule matches command text, so it also refuses a command that only mentions the folder (e.g. a `grep` over a repo file holding that string) — the docs do not yet say so; a custom `CLAUDE_CONFIG_DIR` (this machine: `~/.claude-hung2`) is not covered — the user adds the twin rules to their own user settings; a path built at run time is not matched.
 **Files**: .claude/settings.json, skills/settings-setup/profiles.json, docs/claude-md/tracks.md, tests/test_t251_transcript_deny.py
 **Verified**: auto verify pass at `d82abe93` (headless session saw the Write and `ls` refused); merged 2026-11-04 (`9950ac79`) on the user's "yes"
+
+
+### 2026-11-04 — T252: the Stop check skips a marked extended-track report this session did not work on
+**Decision** (user "let start"; Stage 4 P1 by the Supervisor): `stop_auto_mode_check.py` `check_task` asks `owned(task)` once, for a task marked auto mode and for one found by file time. `False` → one stderr note, not checked. `owned` None or an answer of None → checked (fail closed). A marked minimal-track record is always checked, because work in the main checkout leaves nothing `session_work.worked_on` can match (`task_worktrees` never includes the main checkout; `tasks/MINIMAL_LOG.md` does not match `tasks/*_<ID>*`).
+**Why**: T250's auto verify found a parallel session's marked report still blocking this session's stop.
+**Open**: a parallel session's marked minimal-track record still blocks; work hidden from `worked_on` (`python3 -c`, shell-variable paths, heredocs to an interpreter) makes a marked extended report unchecked — the same blind spot as T250's file-time path; both in `docs/claude-md/tracks.md` `### Known limits`. A `/resume` into a new session id does not re-check the task. T254: hook tests pass `CLAUDE_AUTO_VERIFY_RUN` through.
+**Files**: .claude/hooks/stop_auto_mode_check.py, .claude/hooks/tests/test_t252_marked_ownership.py, docs/claude-md/tracks.md
+**Verified**: auto verify pass at `dfb2c1ed`; merged 2026-11-04 (`b0fc705e`) on the user's "yes"
