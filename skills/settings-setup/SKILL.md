@@ -44,7 +44,7 @@ python3 "${CLAUDE_SKILL_DIR}/scripts/apply_profile.py" <id> --dry-run
   nothing. Tell the user the reason it printed, and stop. Do not fix the file yourself.
 - `high-security`, `solo-engineer` or `team-project` prints `no change`: say
   "This project already has profile <label>." and stop.
-- Only `legacy` prints `no change`: the project has the kit's 2 anchor rules (Legacy). Say so,
+- Only `legacy` prints `no change`: the project has the kit's 4 deny rules (Legacy). Say so,
   and go on to Step 2. Legacy is today's kit default, not a choice the user made.
 
 ### Step 2 — Offer the profiles

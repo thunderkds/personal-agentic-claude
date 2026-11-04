@@ -270,6 +270,23 @@ def test_ac3_dry_run_writes_nothing_and_the_write_keeps_every_key(plugin, repo):
     assert "Bash(*harness-anchors*)" in data["permissions"]["deny"]
 
 
+def test_t251_the_legacy_profile_adds_the_transcript_deny_rules_add_only(plugin, repo):
+    settings = repo / ".claude" / "settings.json"
+    settings.parent.mkdir()
+    own = "Edit(~/.claude/projects/**/*.jsonl)"  # a project that already has one of them
+    settings.write_text(json.dumps({"permissions": {"deny": ["Read(./secret)", own]}}), encoding="utf-8")
+    apply = [sys.executable, str(plugin / "skills" / "settings-setup" / "scripts" / "apply_profile.py")]
+    dry = subprocess.run(apply + ["legacy", "--dry-run"], capture_output=True, text=True, cwd=str(repo))
+    assert "+ permissions.deny: Bash(*.claude/projects/*)" in dry.stdout
+    assert "+ permissions.deny: " + own not in dry.stdout
+    subprocess.run(apply + ["legacy"], check=True, capture_output=True, cwd=str(repo))
+    deny = json.loads(settings.read_text(encoding="utf-8"))["permissions"]["deny"]
+    assert deny[:2] == ["Read(./secret)", own]
+    assert deny.count(own) == 1 and deny.count("Bash(*.claude/projects/*)") == 1
+    kit = json.loads((REPO / ".claude" / "settings.json").read_text(encoding="utf-8"))
+    assert set(kit["permissions"]["deny"]) <= set(deny)
+
+
 def test_edge_settings_that_are_not_json_are_refused_and_left_alone(plugin, repo):
     settings = repo / ".claude" / "settings.json"
     settings.parent.mkdir()

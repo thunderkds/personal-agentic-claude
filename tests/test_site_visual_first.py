@@ -421,6 +421,8 @@ DUPLICATES_OF_A_VISUAL_LABEL = {
     # T245: the `ux-evaluate` skill joins the Stage 3 chip row and flow step.
     "221cf5685858": "Stage 3 chips gain ux-evaluate (T245)",
     "17429ff8e0b6": "Stage 3 flow step gains ux-evaluate (T245)",
+    # T251: the Settings tool lead says the installer adds the kit's hooks and 4 deny rules, not 2.
+    "425dc05dbb62": "Settings tool lead says 4 deny rules (T251)",
 }
 
 

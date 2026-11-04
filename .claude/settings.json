@@ -117,7 +117,9 @@
   "permissions": {
     "deny": [
       "Edit(~/.claude/harness-anchors/**)",
-      "Bash(*harness-anchors*)"
+      "Bash(*harness-anchors*)",
+      "Edit(~/.claude/projects/**/*.jsonl)",
+      "Bash(*.claude/projects/*)"
     ]
   }
 }

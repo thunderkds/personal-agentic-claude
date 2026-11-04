@@ -35,7 +35,8 @@ HIGH_SECURITY = {
     "permissions.disableBypassPermissionsMode": "disable",
 }
 
-KIT_DENY = ["Edit(~/.claude/harness-anchors/**)", "Bash(*harness-anchors*)"]
+KIT_DENY = ["Edit(~/.claude/harness-anchors/**)", "Bash(*harness-anchors*)",
+            "Edit(~/.claude/projects/**/*.jsonl)", "Bash(*.claude/projects/*)"]  # T251
 KIT_HOOKS = {
     "PreToolUse": [{"matcher": "Bash", "hooks": [
         {"type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pre_bash.py"}]}],

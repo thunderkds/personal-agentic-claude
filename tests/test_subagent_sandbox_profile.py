@@ -120,7 +120,9 @@ def test_ac5_never_waits_on_a_human_and_test_runners_are_preallowed():
 # permissions block — deny-only, holding exactly the trace-anchor rules. Anything else
 # (allow, ask, defaultMode, sandbox, another deny entry) still changes the Supervisor's
 # permissions and fails T147's AC4.
-ANCHOR_DENY_RULES = ["Edit(~/.claude/harness-anchors/**)", "Bash(*harness-anchors*)"]
+# T251 (user decision, 2026-11-04): two more deny rules for the session transcripts folder.
+ANCHOR_DENY_RULES = ["Edit(~/.claude/harness-anchors/**)", "Bash(*harness-anchors*)",
+                     "Edit(~/.claude/projects/**/*.jsonl)", "Bash(*.claude/projects/*)"]
 
 
 def supervisor_settings_violations(settings):

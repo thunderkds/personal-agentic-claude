@@ -26,11 +26,13 @@
     {
       "id": "legacy",
       "label": "Legacy",
-      "for": "Keeps today's kit behavior: only the 2 deny rules that protect the trace anchors.",
+      "for": "Keeps today's kit behavior: only the 4 deny rules that protect the trace anchors and the session transcripts.",
       "values": {
         "permissions.deny": [
           "Edit(~/.claude/harness-anchors/**)",
-          "Bash(*harness-anchors*)"
+          "Bash(*harness-anchors*)",
+          "Edit(~/.claude/projects/**/*.jsonl)",
+          "Bash(*.claude/projects/*)"
         ]
       }
     },

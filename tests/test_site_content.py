@@ -1592,7 +1592,7 @@ def test_settings_lead_says_what_the_installer_and_stage_1_do():
     section = _settings_section()
     intro = re.sub(r"\s+", " ", section[:section.index('<div id="st-app"')])
     assert "installs no settings" not in section
-    assert "The installer adds only the kit's hooks and 2 deny rules." in intro
+    assert "The installer adds only the kit's hooks and 4 deny rules." in intro
     assert "At Stage 1 the Supervisor offers the profiles below, and uses High security if you skip." in intro
     assert "writes only after you approve, and never removes an entry" in intro
 
