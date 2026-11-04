@@ -18,8 +18,10 @@
 - New test `tests/test_t248_tap_probe.py` (5 tests, one drives headless Chrome on a fixture: a 80x20 button flagged, a 48px button, a 64px label row and an inline link not) — `5 failed in 2.24s` before the change, `5 passed` after; `tests/test_plugin_names.py` SAFE_ARGS gains `tap_probe.py --help`
 - Suite: `python3 -m pytest .claude/hooks/tests/ tests/ -q` — `3157 passed, 25 subtests passed in 260.77s (0:04:20)`
 - Real run: `python3 skills/ux-evaluate/scripts/tap_probe.py "$PWD/site/index.html" "$D"` then `google-chrome --headless --disable-gpu --window-size=375,500 --screenshot=$D/site-375.png "file://$D/index-probe.html"` — printed `52158 bytes written`; the image shows `tap-probe: 18 under 44px: Home 38x44; Docs 31x44; You ask 54x19; …` and red boxes on Home and Docs. On the blind-test build b2: `tap-probe: 0 under 44px`
+- verify: ☑ pass — auto-run by hook, session 99e88592-3540-423f-b9d5-9760e24bf831, commit 60743097d132672e69bdffa04a8c55dffeea3812, log .claude/verify-runs/T248-60743097d132.log
 **Files:** `skills/ux-evaluate/scripts/tap_probe.py`, `skills/ux-evaluate/SKILL.md`, `tests/test_t248_tap_probe.py`, `tests/test_plugin_names.py`, `tasks/MINIMAL_LOG.md`
-**Not done:** merge (yours; merge T245 first); auto verify: not started
+**Memory:** `memory/learnings.md` — headless Chrome `--dump-dom` lays out at 500px; screenshots hide sideways overflow; tap targets measured, not judged by eye (T245, T248) (`eaf9ebd6` on main)
+**Not done:** merge (yours; merge T245 first); auto verify: ☑ pass (session 99e88592-3540-423f-b9d5-9760e24bf831, commit 60743097d132672e69bdffa04a8c55dffeea3812, log .claude/verify-runs/T248-60743097d132.log)
 
 ## T243 — Plugin directory submission prep: icon, manifest and hooks the directory can read · minimal
 Mode: auto
