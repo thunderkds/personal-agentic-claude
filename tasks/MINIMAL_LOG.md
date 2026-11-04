@@ -15,9 +15,12 @@ Mode: auto
 - New test `T120: Reinstall summary names the kept Codex too (CLIs: Claude Code, Codex)` in `tests/test_cli_and_project_menus.sh` — failed before the change (`24 passed, 1 failed`: `CLIs: Claude Code`), passes after (`25 passed, 0 failed`)
 - Suite: `python3 -m pytest .claude/hooks/tests/ tests/ -q` — `1 failed, 3162 passed, 25 subtests passed in 293.46s`; the failure is `tests/test_auto_verify.py::test_ac4_blocked_row_never_says_pass[budget-stop]`, the flaky test T237 tracks; alone it gives `9 passed in 1.83s` 3 times on this branch and `9 passed in 2.36s` on `main` (the host ran two suites and a sub-agent at once)
 - Real run (auto-checked, not /verify): with stub `claude` and `codex` on PATH, `setup.sh` into a scratch repo (both CLIs), commit, then Reinstall picking `1` (Claude Code) — printed `  - Already set up here, not picked, kept and refreshed: Codex …`, `[info]  Refreshed: Codex`, `[info]  CLIs: Claude Code, Codex`
+- verify: ☑ pass — auto-run by hook, session e0fbfd80-de0d-4ed0-8f4f-300c97cbb12e, commit 7867c11e3ce3181e1952a3efeae035715b08a403, log .claude/verify-runs/T120-7867c11e3ce3.log; done not moved: Gate 5: no test run in memory/event-trace/T120.jsonl
 **Files:** `setup.sh`, `tests/test_cli_and_project_menus.sh`, `tasks/MINIMAL_LOG.md`
 **Memory:** nothing new
-**Not done:** merge (yours); auto verify: running (T182)
+**Not done:** merge (yours); auto verify: ☑ pass (session e0fbfd80-de0d-4ed0-8f4f-300c97cbb12e, commit 7867c11e3ce3181e1952a3efeae035715b08a403, log .claude/verify-runs/T120-7867c11e3ce3.log)
+Paused: done not moved — Gate 5: no test run in memory/event-trace/T120.jsonl
+Paused: auto-mode check failed — no test run in memory/event-trace/T120.jsonl — write /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state/active_task.d/$CLAUDE_CODE_SESSION_ID with the task ID (minimal-track step 1): `mkdir -p /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state/active_task.d && printf '%s\n%s\n' "T120" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state/active_task.d/$CLAUDE_CODE_SESSION_ID`, then rerun the task's tests so the trace records them under the task, then stop [report b16708741ecb]
 
 ## T248 — `ux-evaluate` measures tap targets and uses an absolute scratch folder · minimal
 **Asked:** "let do it" (to: "add both as one small follow-up task" — the T245 verify run's two weak points: a relative screenshot path writes into the repo; B-d judged by eye)
