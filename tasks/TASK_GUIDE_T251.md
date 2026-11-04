@@ -58,7 +58,7 @@ From T250's Stage 4 Debate, finding (b): the merge gate accepts a minimal-track 
 |---|----------------------|-----------|
 | 1 | `.claude/settings.json` `permissions.deny` gains an `Edit(...)` rule covering `*.jsonl` under the default transcripts folder `~/.claude/projects/`; the two existing rules stay, in order | Restated intent: Edit/Write tools |
 | 2 | It also gains a `Bash(...)` rule for a command that names the transcripts folder, (user decision D1: Edit + Bash) | Restated intent: Bash command |
-| 3 | A real headless Claude Code run with the kit's settings is refused: a `Write` of `~/.claude/projects/<x>/fake.jsonl` and (if D1 adds it) a Bash `printf … > ~/.claude/projects/<x>/fake.jsonl`; the denial text is pasted. The same run can still `Read` a transcript file | AC 1–2 observed, not assumed |
+| 3 | The live check is the user's, after the merge (user 2026-11-04: an agent probe that writes into the real config folder was refused by the permission check). The agent writes the exact command for it into the review file's `Verification command run` notes and runs no headless probe | AC 1–2 observed by the user |
 | 4 | Install paths ship the new rules: `setup.sh` settings merge (`tests/test_settings_merge.sh` T148 block) and `plugin_init` (`tests/test_plugin_init.py`) add them, add-only, to a project that lacks them | Restated intent: "in a kit project" |
 | 5 | `docs/claude-md/tracks.md` `### Known limits` (the T250 bullet on the forgeable transcript) says the deny rules now cover the default `~/.claude/projects/` only: a custom `CLAUDE_CONFIG_DIR` (e.g. `~/.claude-<name>/`) is not covered unless the pattern does (D2), and the Bash rule matches command text, so a command that builds the path at run time is not stopped | Restated intent: "what the rule does not cover is written down" |
 | 6 | Negative: no deny rule blocks the hooks themselves (hooks read transcripts in Python, not through a tool call) — the full suite stays green, including `.claude/hooks/tests/test_t250_session_ownership.py` | regression |
@@ -72,9 +72,9 @@ From T250's Stage 4 Debate, finding (b): the merge gate accepts a minimal-track 
 | # | Given (input/state) | Expect (output/behavior) | How it's checked |
 |---|---------------------|--------------------------|------------------|
 | 1 | Kit `.claude/settings.json` | deny list = old two rules + new rules | automated test |
-| 2 | Headless `claude -p` in a scratch kit project asked to write a fake transcript | tool call denied, file absent | real run (pasted) |
+| 2 | User's live check after merge | write refused | user run |
 | 3 | Fresh `setup.sh` install / `plugin_init` into a project with its own deny list | own rules kept first, kit rules appended once | automated test |
-| 4 | Headless run asked to read a transcript | read allowed | real run (pasted) |
+| 4 | User's live check after merge | read allowed | user run |
 
 ### Verification Command (exact, runnable)
 
@@ -106,9 +106,9 @@ python3 -m pytest .claude/hooks/tests/ tests/ -q
 
 Decisions for the Fidelity Gate:
 - **D1 — Bash rule. DECIDED by the user 2026-11-04: Edit + Bash.** Was recommended: add a Bash rule like the run-record one, matching a command that names `.claude/projects/` (the T250 forgery used a Bash heredoc, so an Edit-only rule does not stop it). Cost: an agent's Bash `ls`/`grep`/`cat` on that folder is refused too; agents read transcripts with the Read tool instead. Alternative: Edit rule only (the Advocates' proposal), which leaves the reproduced Bash path open.
-- **D2 — config dir.** Try a pattern that also matches `~/.claude-<name>/projects/` (e.g. `~/.claude*/projects/**/*.jsonl`) and prove with the headless run whether Claude Code honours it. If it does not, keep `~/.claude/projects/` and record the gap (AC 5).
+- **D2 — config dir. DEFERRED to the user's live check.** Keep `~/.claude/projects/`; the Known-limits text says a custom config dir is not covered. Was: try a pattern that also matches `~/.claude-<name>/projects/` (e.g. `~/.claude*/projects/**/*.jsonl`) and prove with the headless run whether Claude Code honours it. If it does not, keep `~/.claude/projects/` and record the gap (AC 5).
 
-Write the test for AC 1 first and see it fail; then the settings change; then AC 4 tests; then the real run (AC 3).
+Write the test for AC 1 first and see it fail; then the settings change; then AC 4 tests; then write the user's live-check command (AC 3).
 
 ---
 
@@ -141,7 +141,7 @@ Write the test for AC 1 first and see it fail; then the settings change; then AC
 
 ## Test Plan
 
-Shape test on the settings file; install-path tests (setup merge, plugin_init); one real headless `claude -p` run in a `mktemp -d` scratch project with the kit's settings, showing a denied write and an allowed read; full suite.
+Shape test on the settings file; install-path tests (setup merge, plugin_init); full suite. The live denial check is the user's, after the merge.
 
 ---
 
