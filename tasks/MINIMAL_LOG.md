@@ -14,10 +14,11 @@
 - New test `test_runbook_says_to_copy_the_root_files_into_plugin` — `1 failed, 6 passed` before the RUNBOOK edit, passes after
 - Suite: `python3 -m pytest tests -q` — `1721 passed in 166.04s (0:02:46)`
 - Real run: `python3 -m pytest tests/test_directory_prep.py tests/test_runbook_plugin_check.py tests/test_docs_match_installer.py -q` — `17 passed in 0.84s`
-- verify: ☑ pass — /verify run by the user in session f5ea81bb-c349-4953-9f6b-0307a641966a, commit 5244fce5adeb, 2026-11-04 (the auto run before it, session 140d1256-22ee-43cb-b698-215abeaec77f, was blocked: no single verdict line). In a temp checkout: root `plugin.json` bumped to 9.9.9, plugin copy stayed 2.2.0; after the two RUNBOOK `cp` commands the copy read 9.9.9 and was still a regular file; `claude plugin validate plugin --profile directory` → `✔ Validation passed with warnings`
+- verify: ☐ blocked — auto-run by hook, session 140d1256-22ee-43cb-b698-215abeaec77f, commit 4a7d220281200b40e6f66f68491f3b522931c7c6, log .claude/verify-runs/T246-4a7d22028120.log (no single verdict line)
+- User-run check (2026-11-04, PASS; the merge gate reads only hook-written lines): `/verify` by the user in session f5ea81bb-c349-4953-9f6b-0307a641966a, commit 5244fce5adeb, 2026-11-04 (the auto run before it, session 140d1256-22ee-43cb-b698-215abeaec77f, was blocked: no single verdict line). In a temp checkout: root `plugin.json` bumped to 9.9.9, plugin copy stayed 2.2.0; after the two RUNBOOK `cp` commands the copy read 9.9.9 and was still a regular file; `claude plugin validate plugin --profile directory` → `✔ Validation passed with warnings`
 **Files:** `RUNBOOK.md`, `tests/test_directory_prep.py`, `tasks/MINIMAL_LOG.md`
 **Memory:** nothing new
-**Not done:** merge (the user decides); /verify: ☑ pass (user, session f5ea81bb-c349-4953-9f6b-0307a641966a, commit 5244fce5adeb)
+**Not done:** merge (the user decides); auto verify: ☐ blocked (session 140d1256-22ee-43cb-b698-215abeaec77f, commit 4a7d220281200b40e6f66f68491f3b522931c7c6, log .claude/verify-runs/T246-4a7d22028120.log)
 Paused: auto-mode check failed — its Decision record in tasks/MINIMAL_LOG.md does not start with `Mode: auto` [report 96370f93b863]
 
 ## T243 — Plugin directory submission prep: icon, manifest and hooks the directory can read · minimal
