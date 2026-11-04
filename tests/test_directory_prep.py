@@ -63,3 +63,12 @@ def test_directory_would_accept_the_plugin_folder():
     output = result.stdout + result.stderr
     assert result.returncode == 0, output
     assert "These checks found nothing to report" in output, output
+
+
+def test_runbook_says_to_copy_the_root_files_into_plugin():
+    """T246: the copies are a release step, so the RUNBOOK names them and the copy commands."""
+    with open(os.path.join(ROOT, "RUNBOOK.md"), encoding="utf-8") as f:
+        text = f.read()
+    for command in ("cp .claude-plugin/plugin.json plugin/.claude-plugin/plugin.json",
+                    "cp hooks/hooks.json plugin/hooks/hooks.json"):
+        assert command in text, command

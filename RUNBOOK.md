@@ -79,6 +79,12 @@ Ordered steps to ship a release. Commands copy-pasteable.
    `✔ Successfully installed plugin: easy-kit@easy-kit (scope: user)`, and `claude plugin list` shows
    `easy-kit@easy-kit` with the version in `.claude-plugin/plugin.json`.
 
+   **Plugin file copies (T243)**: `plugin/` is mostly links, but it holds real byte copies of
+   `.claude-plugin/plugin.json`, `hooks/hooks.json` and `.claude-plugin/icon.png`, because the plugin
+   directory reads none of them through a link. After you change a root copy (for example the version
+   bump), copy it over: `cp .claude-plugin/plugin.json plugin/.claude-plugin/plugin.json` and
+   `cp hooks/hooks.json plugin/hooks/hooks.json`. `tests/test_directory_prep.py` fails until you do.
+
 ---
 
 ## Rollback Procedure
