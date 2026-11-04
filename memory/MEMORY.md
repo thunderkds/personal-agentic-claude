@@ -278,6 +278,7 @@
 - [Parallel tasks merge together; 401 ≠ permanent](learnings.md) — T156/T157: gate serialises merges
 
 ### Learning Records
+- [Headless Chrome: `--dump-dom` is 500px wide; screenshots hide sideways overflow](learnings.md) — T245/T248: keep scrollbars at 375; measure tap targets with tap_probe.py
 - [Measure a UX skill on no-design builds, judged blind](learnings.md) — T245: seeded defects showed no gain; blind no-design builds 35 vs 29; older baseline fails are P3
 - [Audit every public claim in one pass](learnings.md) — T231: verify failed 3 times, one sentence each
 - [Sideways scroll: measure the table's minimum content width](learnings.md) — T199 addendum: `nowrap` was not the only floor; `Edit|Write|Bash` needed `<wbr>`
