@@ -286,7 +286,7 @@ harness_backup_path() {
   # Checked explicitly: a caller in an `if`/`&&` context runs without set -e,
   # and reporting success here would send it on to rm -rf the unsaved original.
   if ! mv "$_bk_dst" "$_bk_to"; then
-    _harness_log_error "Could not back up '$_bk_dst' to '$_bk_to' — nothing was replaced. Fix the permissions, then re-run."
+    _harness_log_error "Could not back up '$_bk_dst' to '$_bk_to' — '$_bk_dst' was not replaced; paths before it in this run, if any, were already installed. Fix the permissions, then re-run."
     return 1
   fi
   _harness_log_warn "Backed up your existing '$_bk_dst' to '$_bk_to' before installing the kit's copy — compare and merge by hand, then delete the backup."

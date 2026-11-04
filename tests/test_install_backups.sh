@@ -246,6 +246,17 @@ elif ! printf '%s' "$RO_OUT" | grep -q -e HELPER_OK -e 'Backed up' \
 else
   fail "edge: unwritable backup reported success: $RO_OUT"
 fi
+# T119: the abort names the one path it did not replace, and does not claim the
+# whole run replaced nothing (MANIFEST paths before it are already installed).
+if [ "$(id -u)" -eq 0 ]; then
+  pass "T119: abort wording — skipped (root ignores directory permissions)"
+elif printf '%s' "$RO_OUT" | grep -qF "'$T/p/templates' was not replaced" \
+   && printf '%s' "$RO_OUT" | grep -qF 'paths before it in this run, if any, were already installed' \
+   && ! printf '%s' "$RO_OUT" | grep -qF 'nothing was replaced'; then
+  pass "T119: abort says which path was not replaced, not 'nothing was replaced'"
+else
+  fail "T119: abort wording: $RO_OUT"
+fi
 
 # ══ T137 — a backup is named after the kit version it replaces ═══════════════
 # kit_commit <lock> -> the lock's top-level "kit_commit" value ('' if absent)
