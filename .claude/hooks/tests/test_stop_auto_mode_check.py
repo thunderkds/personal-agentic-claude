@@ -147,6 +147,15 @@ def _user(text, offset_s=-60):
     return {"type": "user", "timestamp": _now(offset_s), "message": {"role": "user", "content": text}}
 
 
+def _wrote_guide(tmp_path, offset_s=-30):
+    """T250: this session's own `Write` of T951's guide — without work on a task, files that merely
+    changed inside the `[auto]` window do not make it this session's auto-mode task."""
+    return {"type": "assistant", "timestamp": _now(offset_s), "cwd": str(tmp_path / "proj"),
+            "message": {"role": "assistant", "content": [{"type": "tool_use", "id": "w1",
+                        "name": "Write", "input": {"file_path": str(
+                            tmp_path / "proj" / "tasks" / "TASK_GUIDE_T951.md"), "content": "x"}}]}}
+
+
 def _run(project, active=False, **env):
     event = {"session_id": "S1", "transcript_path": str(project / "transcript.jsonl"),
              "hook_event_name": "Stop", "stop_hook_active": active}
@@ -219,7 +228,8 @@ def test_check1_marker_not_first_under_the_heading_blocks(tmp_path):
 def test_check1_auto_request_with_no_report_file_blocks(tmp_path):
     """AC 6 re-run 1, task 5: the report was only in chat. The request carried `[auto]`."""
     project = _project(tmp_path, [EXT_ROW], review=None, untagged=_trace(3),
-                       transcript=[_user("store expenses as JSON instead of CSV [auto]")])
+                       transcript=[_user("store expenses as JSON instead of CSV [auto]"),
+                                   _wrote_guide(tmp_path)])
     _, out = _run(project)
     assert _blocked(out), out
     assert "T951" in out["reason"] and "tasks/TASK_REVIEW_T951.md" in out["reason"], out
@@ -261,6 +271,7 @@ def test_t229_a_task_touched_after_a_later_plain_request_is_not_auto(tmp_path):
 def test_t229_a_task_touched_inside_the_auto_window_is_still_auto(tmp_path):
     project = _project(tmp_path, [EXT_ROW], review=None, untagged=_trace(3),
                        transcript=[_user("store expenses as JSON [auto]", offset_s=-600),
+                                   _wrote_guide(tmp_path, -500),
                                    _user("merge", offset_s=+3600)])
     _, out = _run(project)
     assert _blocked(out) and "T951" in out["reason"], out
@@ -270,7 +281,8 @@ def test_t229_a_second_auto_request_opens_a_new_window(tmp_path):
     project = _project(tmp_path, [EXT_ROW], review=None, untagged=_trace(3),
                        transcript=[_user("continue [auto]", offset_s=-900),
                                    _user("merge and push", offset_s=-600),
-                                   _user("continue [auto]", offset_s=-60)])
+                                   _user("continue [auto]", offset_s=-60),
+                                   _wrote_guide(tmp_path)])
     _, out = _run(project)
     assert _blocked(out) and "T951" in out["reason"], out
 
@@ -278,6 +290,7 @@ def test_t229_a_second_auto_request_opens_a_new_window(tmp_path):
 def test_t229_tool_results_notifications_and_meta_entries_do_not_close_the_window(tmp_path):
     project = _project(tmp_path, [EXT_ROW], review=None, untagged=_trace(3),
                        transcript=[_user("store expenses as JSON [auto]", offset_s=-600),
+                                   _wrote_guide(tmp_path, -550),
                                    _tool_result(-500), _notification(-400), _meta(-300),
                                    _user("<bash-input>git status</bash-input>", offset_s=-200)])
     _, out = _run(project)

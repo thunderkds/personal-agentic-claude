@@ -30,6 +30,9 @@ can never disagree about which tasks are in auto mode. Skipped as finished: a ta
 Done, and a review file whose `verify` row has `☑ pass` in its Result cell. A board row counts as
 auto mode when its report is marked as above, or the task's files changed while a request carrying
 `[auto]` (outside code spans) was the latest user request — up to the next request without it (T229).
+T250: that last rule also needs this session's own work on the task (`lib/session_work.py`): an edit,
+a writing `Bash` command or a spawn for it, by the session or its sub-agents. A parallel session's task
+whose files changed in the same window is not checked. Ownership that cannot be read keeps the check.
 
 Labels (D9): at Risk Medium/High a decision line is a choice — so it must be `DEBATED` with
 exactly 2 / 3 Advocates named — when it is flagged `⚠`, is a `SAFER OPTION`, is a `RULE:` that
@@ -311,8 +314,33 @@ def traced_test_run(task_id):
         return True
 
 
-def check_task(task, windows):
-    """The reasons this task's report fails, or [] (also [] when the task is not auto mode)."""
+def session_owner(transcript_path):
+    """T250 G3: `owned(task)` — True/False for "did this session work on the task", None when that
+    cannot be told (no transcript, unreadable, any error). The transcript is read once."""
+    cache = {}
+
+    def owned(task):
+        try:
+            if "calls" not in cache:
+                import session_work  # lazy: a broken module only loses this narrowing
+                cache["sw"], cache["calls"] = session_work, session_work.load_work(transcript_path)
+            if cache["calls"] is None:
+                return None
+            sw = cache["sw"]
+            worktrees = sw.task_worktrees(ROOT, task.task_id, task.row)
+            if os.path.normpath(task.checkout) != os.path.normpath(ROOT):
+                worktrees.append(task.checkout)
+            return sw.worked_on(cache["calls"], task.task_id, worktrees)
+        except Exception as exc:
+            warn(f"{task.task_id}: session ownership unknown ({type(exc).__name__}) — checked")
+            return None
+    return owned
+
+
+def check_task(task, windows, owned=None):
+    """The reasons this task's report fails, or [] (also [] when the task is not auto mode).
+    `owned(task)` (T250 G3) narrows the `[auto]` window rule to this session's work; None, or an
+    answer of None, keeps the T229 rule."""
     task_id, body = task.task_id, task.body
     if task.minimal:
         risk_text = body
@@ -334,6 +362,11 @@ def check_task(task, windows):
     if not marked and windows:
         marked = any(in_auto_window(datetime.fromtimestamp(os.path.getmtime(p), timezone.utc), windows)
                      for p in task.touched)
+        # T250 G3: a parallel session's task changes its files inside this session's window too.
+        if marked and owned is not None and owned(task) is False:
+            warn(f"{task_id}: its files changed in the `[auto]` window, but this session did not "
+                 "work on it — not checked")
+            marked = False
     if not marked:
         return []
 
@@ -461,6 +494,7 @@ def main():
 
     dirs = am.tasks_dirs(ROOT)
     windows = auto_windows(event.get("transcript_path"))
+    owned = session_owner(event.get("transcript_path"))
     open_rows = am.board_rows(kanban)
     done = {task_id for task_id, _ in am.board_rows(kanban, ("Done",))}
     tasks = list(open_rows)
@@ -473,7 +507,7 @@ def main():
     for task_id, row in tasks:
         try:
             task = am.resolve(task_id, row, dirs)
-            for report_path, minimal, reason, stamp in check_task(task, windows):
+            for report_path, minimal, reason, stamp in check_task(task, windows, owned):
                 failures.setdefault(task_id, (report_path, minimal, [], stamp))[2].append(reason)
         except am.Unreadable as exc:
             warn(f"{exc} — auto-mode check skipped for {task_id}")

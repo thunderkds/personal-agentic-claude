@@ -389,8 +389,17 @@ pass. The parser fails closed: anything it does not recognise is `blocked`. Each
 `blocked`: a SKIP or BLOCKED verdict, no verdict line, a budget stop, a timeout, or no `claude` on the PATH.
 A blocked result never contains the word "pass". The hook never overwrites a row or a line you filled. The
 merge gate accepts an `auto-run by hook` row — or a minimal-track `verify:` line — only when its run record
-exists for that task and the head commit, and says pass; a hand-typed line in a Decision record counts for
-nothing. After a pass, the same run closes out a task whose report has the `Mode: auto` line (`### Auto close-out`).
+exists for that task and the head commit, and says pass. A hand-typed line in a Decision record counts for
+nothing, except one shape (T250). When the run is blocked and you run `/verify <ID>` yourself on the minimal
+track, its pass goes under `Checked:` as
+`- verify: ☑ pass — /verify by the user, session <id>, commit <sha>`. `<id>` is the session you typed
+`/verify` in, and `<sha>` is the full 40-character commit you verified. The gate never trusts the line's text.
+It accepts the line only when that session's transcript (in the same folder as the merging session's) holds
+your own `/verify <ID>` entry, dated after `<sha>` was committed and before the line was committed, and
+`<sha>` is the same code as the head (only `tasks/MINIMAL_LOG.md` may differ). A missing transcript, a short
+hash or other code: not a pass. The hook never edits or removes this line, and `--start` starts nothing for
+it. A blocked hook line above it for other code still gets a new run, and that run rewrites only the hook's
+line. After a pass, the same run closes out a task whose report has the `Mode: auto` line (`### Auto close-out`).
 A task without it stays in Ready for Review after its pass, and the Supervisor moves it to Done as before.
 The merge stays yours. You may still run `/verify` yourself at any time; when the run is blocked, you must.
 

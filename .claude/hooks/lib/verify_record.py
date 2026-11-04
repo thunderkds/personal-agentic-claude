@@ -200,3 +200,23 @@ def minimal_verify_line(task_id, tasks_dir):
         return None if hit is None else (result, notes)
     except Exception:
         return None
+
+
+def record_verify_lines(body):
+    """[(result, notes)] of every `verify:` line inside the record body's `Checked:` field, in
+    order (T250: the user's `/verify` line may follow a blocked hook line)."""
+    field = checked_field(body)
+    if field is None:
+        return []
+    return [((hit.group("result") or "").strip(), (hit.group("notes") or "").strip())
+            for hit in VERIFY_LINE.finditer(body, field.start(), field.end())]
+
+
+def minimal_verify_lines(task_id, tasks_dir):
+    """`record_verify_lines` of this task's Decision record under `tasks_dir`; [] on any failure."""
+    try:
+        text = auto_mode.read(os.path.join(tasks_dir, auto_mode.MINIMAL_LOG))
+        block = auto_mode.record_block(text, task_id, skip_comments=True) if text else None
+        return record_verify_lines(block[2]) if block else []
+    except Exception:
+        return []

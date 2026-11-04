@@ -58,7 +58,11 @@ GATE_REL = ".claude/hooks/pre_bash_block_unsafe_merge.py"
 #   T232 — D1, D2, D4: the project root comes from `lib/project_root.py`; from a plugin the gate
 #          stands down in a non-kit project; input it cannot read is a block, never a pass
 #          (`tasks/TASK_GUIDE_T232.md`). User-approved task text, 2026-11-02.
-AUTHORISED_TASKS = ("T182", "T188", "T190", "T197", "T196", "T210", "T211", "T232")
+#   T250 — G1, G2: a minimal-track `/verify by the user` line counts only with the user's own
+#          `/verify <ID>` entry in that session's transcript and the same code as the head; an In
+#          Progress task blocks a merge only when this session worked on it, the merge brings in its
+#          branch, or that cannot be told (`tasks/TASK_GUIDE_T250.md`). User-approved, 2026-11-04.
+AUTHORISED_TASKS = ("T182", "T188", "T190", "T197", "T196", "T210", "T211", "T232", "T250")
 
 
 def _git(root, *args):
