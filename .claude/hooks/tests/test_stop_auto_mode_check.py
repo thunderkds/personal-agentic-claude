@@ -232,6 +232,58 @@ def test_check1_ignores_a_guide_older_than_the_auto_request(tmp_path):
     assert out == {}, out
 
 
+# ── T229: an `[auto]` request covers only the work before the next plain request ─────────
+def _tool_result(offset_s):
+    return {"type": "user", "timestamp": _now(offset_s), "message": {"role": "user", "content": [
+        {"type": "tool_result", "tool_use_id": "t1", "content": "ok"}]}}
+
+
+def _notification(offset_s):
+    return {"type": "user", "timestamp": _now(offset_s), "origin": {"kind": "task-notification"},
+            "message": {"role": "user", "content": "<task-notification> done </task-notification>"}}
+
+
+def _meta(offset_s):
+    return {"type": "user", "isMeta": True, "timestamp": _now(offset_s),
+            "message": {"role": "user", "content": "<system-reminder> skill body </system-reminder>"}}
+
+
+def test_t229_a_task_touched_after_a_later_plain_request_is_not_auto(tmp_path):
+    """T244 flagged: `continue [auto]` (T242), then `merge and push`, then `continue` (T244)."""
+    project = _project(tmp_path, [EXT_ROW], review=None, untagged=_trace(3),
+                       transcript=[_user("continue [auto]", offset_s=-600),
+                                   _user("merge and push", offset_s=-300),
+                                   _user("continue", offset_s=-120)])
+    _, out = _run(project)
+    assert out == {}, out
+
+
+def test_t229_a_task_touched_inside_the_auto_window_is_still_auto(tmp_path):
+    project = _project(tmp_path, [EXT_ROW], review=None, untagged=_trace(3),
+                       transcript=[_user("store expenses as JSON [auto]", offset_s=-600),
+                                   _user("merge", offset_s=+3600)])
+    _, out = _run(project)
+    assert _blocked(out) and "T951" in out["reason"], out
+
+
+def test_t229_a_second_auto_request_opens_a_new_window(tmp_path):
+    project = _project(tmp_path, [EXT_ROW], review=None, untagged=_trace(3),
+                       transcript=[_user("continue [auto]", offset_s=-900),
+                                   _user("merge and push", offset_s=-600),
+                                   _user("continue [auto]", offset_s=-60)])
+    _, out = _run(project)
+    assert _blocked(out) and "T951" in out["reason"], out
+
+
+def test_t229_tool_results_notifications_and_meta_entries_do_not_close_the_window(tmp_path):
+    project = _project(tmp_path, [EXT_ROW], review=None, untagged=_trace(3),
+                       transcript=[_user("store expenses as JSON [auto]", offset_s=-600),
+                                   _tool_result(-500), _notification(-400), _meta(-300),
+                                   _user("<bash-input>git status</bash-input>", offset_s=-200)])
+    _, out = _run(project)
+    assert _blocked(out) and "T951" in out["reason"], out
+
+
 # ── check (2): flagged lines at Risk Medium/High ──────────────────────────────────────────
 def test_check2_a_flagged_fact_at_high_risk_blocks(tmp_path):
     """/verify T180: `recurring.csv` logged `FACT … ⚠` at Risk High, no Debate."""

@@ -100,5 +100,13 @@ def main():
         f.write(kanban)
 
     print(f"[hook:post_write] Registered {task_id} in PROJECT_KANBAN.md", file=sys.stderr)
+    # T229: stderr on exit 0 never reaches the model, so the Supervisor once hand-added a second
+    # T228 row. additionalContext puts the notice next to the Write result.
+    print(json.dumps({"hookSpecificOutput": {
+        "hookEventName": "PostToolUse",
+        "additionalContext": (f"[hook:post_write] Registered {task_id} under ### Todo in "
+                              f"PROJECT_KANBAN.md. Move that row when the task starts; "
+                              f"do not add a second row for {task_id}."),
+    }}))
 
 main()
