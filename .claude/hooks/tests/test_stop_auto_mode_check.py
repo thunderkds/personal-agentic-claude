@@ -139,7 +139,9 @@ def _project(tmp_path, rows, risk="High", review=None, guide=True, minimal_log=N
         with open(trace_dir / f"{tid}.jsonl", "a", encoding="utf-8") as f:
             f.write(json.dumps(_pytest_run()) + "\n")
     tpath = project / "transcript.jsonl"
-    tpath.write_text("".join(json.dumps(e) + "\n" for e in (transcript or [])), encoding="utf-8")
+    if transcript is None:  # T252: a marked task is checked only when this session worked on it
+        transcript = [_wrote_report(project, tid) for tid in TEST_RUN_TASKS]
+    tpath.write_text("".join(json.dumps(e) + "\n" for e in transcript), encoding="utf-8")
     return project
 
 
@@ -154,6 +156,15 @@ def _wrote_guide(tmp_path, offset_s=-30):
             "message": {"role": "assistant", "content": [{"type": "tool_use", "id": "w1",
                         "name": "Write", "input": {"file_path": str(
                             tmp_path / "proj" / "tasks" / "TASK_GUIDE_T951.md"), "content": "x"}}]}}
+
+
+def _wrote_report(project, task_id, offset_s=-30):
+    """T252: this session's own `Write` of a task's report file — the work that makes a marked task
+    this session's. A test of the not-worked-on case passes its own `transcript`."""
+    return {"type": "assistant", "timestamp": _now(offset_s), "cwd": str(project),
+            "message": {"role": "assistant", "content": [{"type": "tool_use", "id": f"r-{task_id}",
+                        "name": "Write", "input": {"file_path": str(
+                            project / "tasks" / f"TASK_REVIEW_{task_id}.md"), "content": "x"}}]}}
 
 
 def _run(project, active=False, **env):
@@ -383,7 +394,7 @@ def test_second_fire_records_the_pause_in_a_minimal_record(tmp_path):
            f"1. sort A–Z — SAFER OPTION: literal {FLAG}\n**Not done:** merge (yours)\n\n"
            "## T950 — Older · minimal\n**Asked:** \"x\"\n")
     project = _project(tmp_path, [MIN_ROW], guide=False, minimal_log=log,
-                       transcript=[_user("sort the names [auto]")])
+                       transcript=[_user("sort the names [auto]"), _wrote_report(tmp_path / "proj", "T952")])
     _, first = _run(project)
     assert _blocked(first) and "T952" in first["reason"] and "Risk High" in first["reason"], first
     _run(project, active=True)
@@ -867,7 +878,7 @@ def test_t186_ac1_a_minimal_record_with_a_pause_line_is_not_re_blocked(tmp_path)
            "Risk: High (track set by the user)\n**Asked:** \"sort [auto]\"\n**Decisions:**\n"
            f"1. sort A–Z — SAFER OPTION: literal {FLAG}\n**Not done:** merge (yours)\n")
     project = _project(tmp_path, [MIN_ROW], guide=False, minimal_log=log,
-                       transcript=[_user("sort the names [auto]")])
+                       transcript=[_user("sort the names [auto]"), _wrote_report(tmp_path / "proj", "T952")])
     assert _blocked(_run(project)[1])
     _run(project, active=True)
     assert _run(project)[1] == {}

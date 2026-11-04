@@ -47,12 +47,12 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_t252_marked_ownership.py` (AC 1, 2, 3, 5 + minimal-track edge case); `python3 -m pytest .claude/hooks/tests/test_t252_marked_ownership.py -q` -> `9 passed` (BEFORE: 4 failed, 5 passed). AC 4: `python3 -m pytest .claude/hooks/tests/test_stop_auto_mode_check.py .claude/hooks/tests/test_t250_session_ownership.py -q` -> `189 passed in 14.95s`. AC 6: `docs/claude-md/tracks.md` (Stop-check text, `### Known limits`) |
 | Verification command run | ☐ pass / ☐ fail | [paste actual output] |
 | Negative cases hold | ☐ pass / ☐ fail | |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| Full smoke suite still green (no regression) | ☑ pass | `python3 -m pytest .claude/hooks/tests/ tests/ -q` -> `3293 passed, 25 subtests passed in 203.50s (0:03:23)` |
 | **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
 | **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
@@ -79,7 +79,7 @@ FAILED .claude/hooks/tests/test_t252_marked_ownership.py::test_edge_a_minimal_tr
 
 The AC 1 / AC 5 no-work test fails because the hook blocks a marked task this session did not work on: `assert '[hook:stop_auto_mode_check] Auto-mode final report check failed ... • T900: no `Memory:` line in the report ...' is None`. The AC 3 test fails with `assert 'session ownership unknown (RuntimeError)' in ''` (ownership is never asked for a marked task). The 5 passing tests are the block cases (AC 2, rest of AC 3) that must stay unchanged.
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**: same command post-change, `python3 -m pytest .claude/hooks/tests/test_t252_marked_ownership.py -q` -> `9 passed`. New `docs/claude-md/tracks.md` text: "Since T252 the same rule also applies to a task whose report is already marked auto mode ... if this session did not work on it, the check skips it and writes one stderr note."
 
 **DELTA**: [one sentence — what a user can now do that they could not before]
 

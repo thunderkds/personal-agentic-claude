@@ -303,7 +303,7 @@ with a short reason when:
 A board row counts as auto mode when its report carries `## Auto decisions` or a `Mode: auto` line, when its
 Decision record's request carries `[auto]`, or when the task's files changed while a request carrying
 `[auto]` was this session's latest user request (T229: up to the next request without the tag; tool
-results, task notifications and `!` commands are not requests). Since T250, a task whose files changed in that window counts as this session's auto work only when this session (or one of its sub-agents) worked on it, by `.claude/hooks/lib/session_work.py`, or when its report has `Mode: auto`; a transcript that cannot be read keeps the T229 check. Risk comes from the guide's `**Risk Level**`, else the review file, else the board
+results, task notifications and `!` commands are not requests). Since T250, a task whose files changed in that window counts as this session's auto work only when this session (or one of its sub-agents) worked on it, by `.claude/hooks/lib/session_work.py`. Since T252 the same rule also applies to a task whose report is already marked auto mode (`Mode: auto`, a `Mode: auto` Decision record or the `[auto]` tag): if this session did not work on it, the check skips it and writes one stderr note. A transcript that cannot be read, or an ownership answer that cannot be told, keeps the check (fail closed). A task this session ran in `[auto]`, and the user then `/resume`d into a new session id, is not checked in the new session, because that session did not work on it; the session that ran it was already checked at its own stop (T252, accepted gap). Risk comes from the guide's `**Risk Level**`, else the review file, else the board
 row, else Low; a Decision record is Risk Low unless it says otherwise. The trace is `memory/event-trace/<ID>.jsonl` plus the last 6 hours of
 `memory/event-trace/_untagged.jsonl` (`CLAUDE_AUTO_CHECK_WINDOW_S`): Advocate prompts carry no task ID, so
 their calls land in `_untagged.jsonl` unless the active-task state file is set.
@@ -509,7 +509,9 @@ Read these before you rely on `[auto]`. T180 left them open, on purpose. T186 re
   The merge gate reads the proof for the line `- verify: ☑ pass — /verify by the user, session <id>,
   commit <sha>` from `<id>.jsonl` in the transcripts folder. Since T251, `.claude/settings.json` denies
   agents `Edit(~/.claude/projects/**/*.jsonl)` (the Edit and Write tools) and `Bash(*.claude/projects/*)`
-  (any command that names that folder). This is the same trust level as the run records in the trace
+  (any command that names that folder). The Bash rule matches the command text only, so it also refuses
+  a command that merely names the folder, for example a `grep` over a repo file that holds the string
+  `.claude/projects/`; read such a file with the Read tool. This is the same trust level as the run records in the trace
   anchors' directory (`.claude/hooks/lib/verify_record.py` lines 14–17): it raises the bar, it is not a
   proof. The rules do not cover:
   - A custom `CLAUDE_CONFIG_DIR`, for example `~/.claude-<name>/projects/`. The rules name only the
