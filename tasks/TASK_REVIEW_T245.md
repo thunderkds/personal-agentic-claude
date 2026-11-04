@@ -17,22 +17,24 @@ Paused: run in progress — implementer running; Stage 4 (`code-review`, `securi
 Checks: pending — filled at Stage 4
 Memory: pending — the diff-driven pass runs at Stage 4
 Not done: merge (yours); auto verify: not started
+7. Stage 4 review R2: a baseline `fail` on a part the diff did not change is `fail (older)`, P3 — USER: "yes [auto]" (2026-11-04) to the Supervisor's recommendation
+8. Stage 4 P1 on `agents/frontend.md` withdrawn — FACT: agents/frontend.md:141-142 "propose it to the Supervisor ... don't introduce it unilaterally"; :64 "You own: ... accessibility"
 Paused: auto-mode check failed — no test run in memory/event-trace/T245.jsonl — write /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state/active_task.d/$CLAUDE_CODE_SESSION_ID with the task ID (minimal-track step 1): `mkdir -p /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state/active_task.d && printf '%s\n%s\n' "T245" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state/active_task.d/$CLAUDE_CODE_SESSION_ID`, then rerun the task's tests so the trace records them under the task, then stop; extended track, but the trace has no `code-review` Skill call (Stage 4 runs in auto mode) [report e07fb4895580]
 
 ## Evidence
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_t245_ux_evaluate.py` (AC 1-7, 23 tests): `23 passed in 0.32s`; red run before the edits `19 failed, 4 passed` |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_t245_ux_evaluate.py` (AC 1-7, 23 tests): `23 passed in 0.32s`; red run before the edits `19 failed, 4 passed`. A1 + review R2/R3 tests added (2026-11-04): red `3 failed, 32 passed`, then `35 passed in 0.29s` |
+| Verification command run | ☑ pass | 2026-11-04 at `466e2769`: `35 passed in 0.29s`; `[ok]   skills/ux-evaluate/SKILL.md`; `7368 skills/ux-evaluate/SKILL.md`, `8175 skills/code-review/SKILL.md` (each ≤ 8192); Chrome line: `56772 bytes written to file …/scratchpad/t245-375.png` |
+| Negative cases hold | ☑ pass | tests pin `not checked` never `pass`, `not checkable` never `pass`, `no UX criteria — baseline checks only`, the old early stop gone, `fail (older)` → P3. AC 8 real run produced a real `fail` (B-d, header links ~20 px at 375) and a real `not checked` (B-g) |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | code-review on `merge-base..HEAD` (14 files). Lane: `EXCEEDS (lines 506 > 500)`, unpredicted test/site files — warn-only, mostly tests + records. Findings: 0 P0, 0 P1 (one P1 raised and withdrawn: the two 'dropped' `agents/frontend.md` lines duplicate rules still in the file — commit `ea388ac9`), 3 P2 R2-R4 fixed in this commit. security-review (Risk Medium): no findings — static text in `site/*.html`, markdown, tests only |
 | Full smoke suite still green (no regression) | ☑ pass | `python3 -m pytest .claude/hooks/tests/ tests/ -q`: `3138 passed, 25 subtests passed in 201.12s`; `main` run: `3109 passed, 25 subtests passed in 209.70s` (0 failures on both) |
 | **Companion score (easy-verifier)** | ☑ N/A | MCP not registered in this session (no `score`/`write_report` tools); `easy_verifier` not importable (`ModuleNotFoundError: No module named 'easy_verifier'` for `python` and `python3`); stopped at rung 3, 2026-11-03. Nothing was scored. To score: the operator starts the easy-verifier container (`127.0.0.1:8766`) and registers its MCP, then reruns `score` on `main...feat/t245-ux-evaluate` |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | no UI component built; the only page change is one chip label and a count on `site/*.html`, seen in the AC 8 screenshots (index-375.png, index-1280.png) |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | same: the new chip reuses the existing `chip` class, no new style |
+| **UI: Responsiveness at target viewports** | ☑ N/A | same; AC 8 run: the Stage 3 chip row wraps cleanly at 375 and 1280 |
 
 ---
 
@@ -69,11 +71,23 @@ Added by the implementer before the first implementation commit (verbatim, from 
 
 `templates/TASK_GUIDE_template.md` UI section ends with `### 3. Layout / Responsiveness`; no UX block. `tests/test_t245_ux_evaluate.py` red run: `19 failed, 4 passed`.
 
-**AFTER**: [filled at Stage 4]
+**AFTER** (2026-11-04, branch HEAD):
+```
+$ ls skills/ux-evaluate
+SKILL.md
+$ grep -n "^### 4" templates/TASK_GUIDE_template.md
+141:### 4. UX Acceptance Criteria
+$ grep -c "ux-evaluate" skills/code-review/SKILL.md
+1
+$ wc -c skills/code-review/SKILL.md skills/ux-evaluate/SKILL.md
+8175 skills/code-review/SKILL.md
+7368 skills/ux-evaluate/SKILL.md
+```
+`agents/frontend.md`: `| \`ux-evaluate\` | Any UI change: UX rows and baseline checks on screenshots |` in `## Available skills`; `- UX:` checklist line; Pillar 3 names `ux-evaluate`.
 
-**DELTA**: [filled at Stage 4]
+**DELTA**: the frontend agent gains a UX skill it reads and follows before Ready for Review (nine baseline checks + the guide's UX rows, on screenshots at 375 and 1280); the template gains `### 4. UX Acceptance Criteria`; `code-review` gains one row that reruns the skill (`fail` P1, `fail (older)` P3, `not checked` / `no UX criteria` P2). Measured: no-design builds, blind-judged, 35/35 with the skill vs 29/29 without (round 4).
 
-**WITNESS**: [filled at Stage 4]
+**WITNESS**: `python3 -m pytest tests/test_t245_ux_evaluate.py -q` → `35 passed`; AC 8 real run table above; round 4 blind scores above.
 
 
 ---
