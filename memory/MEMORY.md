@@ -25,7 +25,6 @@
      run; read them there. The enforced gate is the whole-file character budget above. -->
 
 ### Decisions
-- [T255/T256: /self-review](decisions.md)
 - [T232–T236, T239, T240: plugin, init, Stage 0–5, repo `easy-kit`](decisions.md) — never reuse old repo name
 - [Anonymous GitHub check: block SSH](learnings.md) — T236
 - [T231: story `index.html`, reference `docs.html`](decisions.md) — 300-word cap; new skill goes on both pages
