@@ -56,8 +56,8 @@ Mode: auto
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_t258_pin_test_preflight.py` (3 tests, AC 1-3 by text). RED first against the prior template: `3 failed in 0.07s` (AC1, AC2, AC3 each AssertionError); GREEN after the template edit. AC4 pins updated and listed in the guide's `Pre-existing pin tests` row. |
-| Verification command run | ☑ pass | `python3 -m pytest -q tests/ .claude/hooks/tests/` -> `3405 passed, 25 subtests passed in 352.75s (0:05:52)` |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_t258_pin_test_preflight.py` (3 tests, AC 1-3 by text). RED first against the prior template: `3 failed in 0.07s` (AC1, AC2, AC3 each AssertionError); GREEN after the template edit. AC4: the line-cap pin is met by rewrapping 2 lines (cap stays 205); the Edge Case Checklist pin is narrowed (same hunk as T259); both listed in the guide's `Pre-existing pin tests` row. |
+| Verification command run | ☑ pass | `python3 -m pytest -q tests/ .claude/hooks/tests/` -> `3405 passed, 25 subtests passed in 231.44s (0:03:51)` |
 | Negative cases hold | ☑ pass | Mutating baseline line `- [ ] [edge case 1]` in the template turned the narrowed `test_ac3_reasoning_prose_sections_are_byte_identical_to_the_baseline` RED (`1 failed`); restored, green. The 3 new tests were RED against the prior template. |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |

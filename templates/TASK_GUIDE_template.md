@@ -78,11 +78,9 @@ If docs/legacy/ exists (legacy mode): also read `docs/legacy/risk-hotspots.md` a
 
 ## Evaluation & Acceptance (How we know the agent worked correctly)
 
-> Fill **Success Criteria** and **Verification Command** at Stage 2 (before spawning the agent).
-> The reviewer fills **Evidence** at Stage 4/5 in `tasks/TASK_REVIEW_T[NNN].md`, copied from
-> `templates/TASK_REVIEW_template.md`. A task is **not done** until every row has evidence.
-> Rule: the implementing agent must NOT be the sole author of its own acceptance test — the
-> Supervisor writes or signs off on the oracle first, so code and test can't be wrong together.
+> Fill **Success Criteria** and **Verification Command** at Stage 2 (before spawning the agent). The reviewer fills **Evidence** at Stage 4/5 in `tasks/TASK_REVIEW_T[NNN].md`,
+> copied from `templates/TASK_REVIEW_template.md`. A task is **not done** until every row has evidence. Rule: the implementing agent must NOT be the sole author of its own
+> acceptance test — the Supervisor writes or signs off on the oracle first, so code and test can't be wrong together.
 
 ### Success Criteria (observable, pass/fail)
 
