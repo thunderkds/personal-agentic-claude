@@ -34,7 +34,7 @@ Drafted by `/self-review` (2026-11-05) from pattern `stale-claim-after-behaviour
 
 ### Requirement Fidelity Gate (sign off BEFORE implementation)
 
-- [x] Restated intent confirmed to match the user's request — user approved the proposal 2026-11-05
+- [x] Restated intent confirmed to match the user's request — user approved the proposal 2026-11-05; signed auto (Supervisor) for the [auto] run 2026-11-05
 - [ ] Domain terms align with `PROJECT_SPEC.md` glossary
 - [x] Every Acceptance Criterion below traces to a line in the Requirement
 - [x] All Requirement Refs exist

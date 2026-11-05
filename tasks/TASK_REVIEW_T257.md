@@ -43,6 +43,15 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 -->
 
+## Auto decisions
+
+Mode: auto
+1. Track extended, run in parallel with T257/T258/T259 in 3 worktrees, one common-infrastructure agent each — RULE: `docs/claude-md/tracks.md` (extended when more than one agent; the user asked "start new one as parallel [auto]")
+2. Spawn model claude · C1 → sonnet — FACT: PROJECT_SPEC.md `## CLI Model Table` "| claude | `claude` | haiku | sonnet |"
+3. Requirement Fidelity Gate signed `auto (Supervisor)` — RULE: `docs/claude-md/tracks.md` `### Every user stop and its auto rule` row 13
+4. T258 and T259 both add one line to the Edge Case Checklist of `templates/TASK_GUIDE_template.md`; run them in parallel anyway and resolve the adjacent-line conflict at merge, keeping both lines — SAFER OPTION: parallel runs were asked for; the conflict is two added lines, no logic ⚠ decided for you — please review
+
+
 ## Evidence
 
 | Check | Result | Notes / output snippet |
