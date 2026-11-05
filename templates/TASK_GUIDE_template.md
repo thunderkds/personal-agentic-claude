@@ -78,11 +78,9 @@ If docs/legacy/ exists (legacy mode): also read `docs/legacy/risk-hotspots.md` a
 
 ## Evaluation & Acceptance (How we know the agent worked correctly)
 
-> Fill **Success Criteria** and **Verification Command** at Stage 2 (before spawning the agent).
-> The reviewer fills **Evidence** at Stage 4/5 in `tasks/TASK_REVIEW_T[NNN].md`, copied from
-> `templates/TASK_REVIEW_template.md`. A task is **not done** until every row has evidence.
-> Rule: the implementing agent must NOT be the sole author of its own acceptance test — the
-> Supervisor writes or signs off on the oracle first, so code and test can't be wrong together.
+> Fill **Success Criteria** and **Verification Command** at Stage 2 (before spawning the agent). The reviewer fills **Evidence** at Stage 4/5 in `tasks/TASK_REVIEW_T[NNN].md`,
+> copied from `templates/TASK_REVIEW_template.md`. A task is **not done** until every row has evidence. Rule: the implementing agent must NOT be the sole author of its own
+> acceptance test — the Supervisor writes or signs off on the oracle first, so code and test can't be wrong together.
 
 ### Success Criteria (observable, pass/fail)
 
@@ -169,6 +167,7 @@ If docs/legacy/ exists (legacy mode): also read `docs/legacy/risk-hotspots.md` a
 
 - [ ] [edge case 1]
 - [ ] [edge case 2]
+- [ ] Pin-test pre-flight: the `Pre-existing pin tests` row below is filled before work starts
 
 ---
 
@@ -177,6 +176,7 @@ If docs/legacy/ exists (legacy mode): also read `docs/legacy/risk-hotspots.md` a
 | File | Change |
 |------|--------|
 | [path/to/file] | [what and why] |
+| Pre-existing pin tests | List each test that pins the text, size, line count, location or a baseline ref of a file this task edits, and its handling: repoint, narrow or escalate. Find them: grep `.claude/hooks/tests/` and `tests/` for the changed strings and paths; always check `test_agent_guide_dedup.py`, `test_vital_slice.py` and the memory budget tests. |
 
 ## Files Must NOT Touch
 
