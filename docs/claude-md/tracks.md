@@ -7,7 +7,7 @@
 Every implementation request goes on one of two tracks:
 
 - **Minimal track** — small, low-risk work. The Supervisor writes the code itself and runs straight
-  through: test first, change, real run. No process stop. It ends with a **Decision record**.
+  through: test first, change, a `/simplify` pass, real run. No process stop. It ends with a **Decision record**.
 - **Extended track** — big, risky or multi-session work. This is the full Stage 0–5 pipeline
   (`docs/claude-md/pipeline-stages.md`), unchanged.
 
