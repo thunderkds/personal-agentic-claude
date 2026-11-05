@@ -46,6 +46,8 @@ Same user request and PRD as T255 (`docs/prd/PRD_self-review.md`, Path B). This 
 
 **Depends on**: T255 — `skills/self-review/scripts/self_review.py` with the `pre` / `post` / `decide` CLI
 
+**Stacked (Supervisor 2026-11-05):** this branch `feat/t256-self-review-skill` starts from `feat/t255-self-review-script`. T255 alone leaves `skills/self-review/` without a `SKILL.md`, which turns 14 suite tests red (skill-spec conformance, validate.sh, site skill counts/chips — list in T255's hand-back). T255 and T256 are reviewed and merged together. **The full suite `python3 -m pytest .claude/hooks/tests/ tests/ -q` must be green on this branch** — that is AC 10. T255's CLI contract as built is in `skills/self-review/scripts/self_review.py` (`pre` JSON adds `dropped_same_commit`; `post` takes `--max-files`; `post` exit 1 when the report cannot be written).
+
 **Entry point**: `/self-review`
 
 ---
@@ -62,6 +64,7 @@ Same user request and PRD as T255 (`docs/prd/PRD_self-review.md`, Path B). This 
 | 6 | `skills/learn/SKILL.md` Step 8 says kit-change proposals belong to `self-review`; Step 8 keeps only its project-level skill stub. | FR-009 |
 | 7 | `AGENTS.md` cross-cutting skill list names `self-review`; every test that pins the skill list (e.g. `tests/test_plugin_names.py:648`) passes. | discoverability |
 | 8 | No file under `.claude/hooks/`, `hooks/hooks.json` or `.claude/settings.json` mentions `self-review` (grep test). | FR-001 |
+| 10 | Full suite green on this stacked branch, including the 14 tests T255 left red. | stacked merge |
 | 9 | Real run: `/self-review` on this repo returns `ready`, spawns one miner, `post` writes a report with <=3 patterns whose citations pass; a second `/self-review` straight after prints the nothing-new line and spawns no Agent (event trace shows 0 `Agent` records for the second run). | US-003, PRD success metrics |
 
 ---
