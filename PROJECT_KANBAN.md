@@ -8,6 +8,7 @@
 ## Board
 
 ### Todo
+- [ ] **T260** — `self_review.py` keeps dropped and over-cap patterns for the next run (two-key in-run dedupe, `waiting` register state), unique report names, SKILL Step 6 says the report is local (`reports/*` gitignored) | common-infrastructure | C2 | Risk: Low | P2 | Depends on T255, T256 | Guide: `tasks/TASK_GUIDE_T260.md` | Registered 2026-11-05 by the user ("yes") from the first real `/self-review` run: `unverified-guide-or-report-claim` wrongly dropped as a repeat, `pre-existing-red-baseline` lost past the cap
 - [ ] **T257** — `tdd` + review template: prove each new test or mutation control can go red | common-infrastructure | C1 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_T257.md` | Drafted 2026-11-05 by `/self-review` (pattern `vacuous-assertion-or-noop-mutation-control`, 8 tasks), approved by the user; LR `LR-0003-tests-that-cannot-fail`
 - [ ] **T258** — TASK_GUIDE template: list the pre-existing pin tests a task will hit, at Stage 2 | common-infrastructure | C1 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_T258.md` | Drafted 2026-11-05 by `/self-review` (pattern `pin-tests-collide-with-later-tasks`, 7 tasks), approved by the user; LR `LR-0004-pin-tests-hit-later-tasks`
 - [ ] **T259** — `code-review`: stale-reference sweep for every fact the diff changes | common-infrastructure | C1 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_T259.md` | Drafted 2026-11-05 by `/self-review` (pattern `stale-claim-after-behaviour-change`, 7 tasks), approved by the user; LR `LR-0005-stale-text-after-change`
