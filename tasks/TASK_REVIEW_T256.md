@@ -67,8 +67,47 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: Non-executable change (skill-instruction text) plus the 14 red tests T255 left. Captured 2026-11-05T04:48:45Z, before any T256 implementation commit.
+
+`skills/learn/SKILL.md` Step 8, verbatim (lines 113-121):
+
+```
+#### Step 8 — Skill Promotion (Conditional)
+
+Scan all active LRs for pattern overlap (same domain area / recurring behaviour / correction type across ≥2 LRs). If found, surface:
+
+> "Pattern detected across LR-NNNN and LR-MMMM: [shared pattern]. Want me to draft a `learn-[slug]` skill stub that encodes this pattern permanently?"
+
+**On user approval only**: draft a `SKILL.md` stub per `templates/SKILL_template.md`, output it as a fenced markdown code block, and instruct: "Save this as `skills/learn-[slug]/SKILL.md` and register it in AGENTS.md."
+
+**Never write the file automatically** — the promotion step outputs a code block and stops; the Write tool must not be called for the stub. If no overlap, skip silently.
+```
+
+`AGENTS.md` cross-cutting line, verbatim:
+
+```
+**Stage index** (names only): 0=`brainstorming`,`ideate` | 1=`git-guardrails-claude-code`,`map-codebase`,`settings-setup`,`companion-setup`,`craft-agent` | 2=`grill-with-docs`,`to-issues` | 3=`tdd`,`bugfix`,`diagnose`,`craft-spawn-prompt`,`migration-safety`,`ux-evaluate` | 4=`blast-radius`,`code-review`,`html-report` | 5=`ship`,`delivery-report`. Built-ins (no definition file): `security-review`, `verify`, `run`, `update-config`, `fewer-permission-prompts`. Cross-cutting (any stage, not tied to a single one): `compact-memory` (cold memory files), `compact-advisor` (live conversation health — see Self-monitoring rule above), `dotfiles` (shared agent config, optional), `resolve-question` (a confused Supervisor, or a sub-agent `Status: blocked` + `Question:`).
+```
+
+`date -u` 2026-11-05T04:48:45Z; `python3 -m pytest .claude/hooks/tests/ tests/ -q 2>&1 | tail -20` (the last lines of the run; it ends 3 minutes later):
+
+```
+FAILED .claude/hooks/tests/test_skill_spec_conformance.py::test_skill_md_exists[self-review]
+FAILED .claude/hooks/tests/test_skill_spec_conformance.py::test_frontmatter_parses[self-review]
+FAILED .claude/hooks/tests/test_skill_spec_conformance.py::test_name_field_conforms[self-review]
+FAILED .claude/hooks/tests/test_skill_spec_conformance.py::test_description_field_conforms[self-review]
+FAILED .claude/hooks/tests/test_skill_spec_conformance.py::test_skill_md_within_line_budget[self-review]
+FAILED .claude/hooks/tests/test_skill_spec_conformance.py::test_compatibility_field_within_budget[self-review]
+FAILED tests/test_agents_md_primary.py::test_ac8_validate_fails_when_agents_md_references_a_missing_path
+FAILED tests/test_companion_scoring_skills.py::test_ac1_validate_sh_accepts_the_skill
+FAILED tests/test_site_content.py::test_every_skill_dir_appears_on_page
+FAILED tests/test_site_content.py::test_skills_heading_count_matches_source
+FAILED tests/test_site_content.py::test_quick_reference_counts_match_source
+FAILED tests/test_site_content.py::test_skills_section_lists_every_skill_dir_exactly_once_and_nothing_else
+FAILED tests/test_site_content.py::test_quick_reference_strip_has_four_cells_whose_numbers_match_source
+FAILED tests/test_t245_ux_evaluate.py::test_ac1_validate_sh_accepts_the_skill
+14 failed, 3331 passed, 25 subtests passed in 199.31s (0:03:19)
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
