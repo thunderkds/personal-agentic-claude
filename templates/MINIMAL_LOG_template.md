@@ -15,6 +15,7 @@
 - New test `<test name>` — <failed before the change, passes after>
 - Suite: `<command>` — <its result line>
 - Real run: `<command>` — printed `<what it printed>`
+- Simplify: <N kept, M undone, or "skipped: under 20 lines"> — <one line per kept edit>
 **Files:** `<path>`, `<path>`
 **Not done:** merge (the user decides)<; anything else left undone>
 
@@ -52,6 +53,7 @@ Paused: <only when a stop that stays paused the task: which one, and why>
 - New test `<test name>` — <failed before the change, passes after>
 - Suite: `<command>` — <its result line>
 - Real run: `<command>` — printed `<what it printed>` (auto-checked, not /verify)
+- Simplify: <N kept, M undone, or "skipped: under 20 lines"> — <one line per kept edit>
 **Files:** `<path>`, `<path>`
 **Memory:** <each entry the memory pass wrote, as `file — entry` | nothing new>
 **Not done:** merge (yours); <auto verify: running (T182) | auto verify: <result> | /verify (yours)>

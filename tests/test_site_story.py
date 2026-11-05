@@ -550,14 +550,20 @@ CHANGED_BY_T256 = {
 }
 
 
+# T261: the minimal track adds a /simplify pass, whose read-only reviewers are a sub-agent exception.
+CHANGED_BY_T261 = {
+    "00c6f8eb7a941ca7": "the Minimal track item names the /simplify pass and its reviewer exception (T261)",
+}
+
+
 def test_every_paragraph_item_cell_and_definition_of_the_old_page_is_on_docs():
     now = set(sentence_hashes(docs_html()))
-    missing = [(h, t) for h, t in _baseline()["sentences"] if h not in now and h not in CHANGED_BY_T239 and h not in CHANGED_BY_T240 and h not in CHANGED_BY_T245 and h not in CHANGED_BY_T251 and h not in CHANGED_BY_T256]
+    missing = [(h, t) for h, t in _baseline()["sentences"] if h not in now and h not in CHANGED_BY_T239 and h not in CHANGED_BY_T240 and h not in CHANGED_BY_T245 and h not in CHANGED_BY_T251 and h not in CHANGED_BY_T256 and h not in CHANGED_BY_T261]
     assert not missing, f"{len(missing)} text(s) lost from docs.html: {missing[:5]}"
 
 
 def test_every_listed_change_is_a_real_baseline_text():
-    assert set(CHANGED_BY_T239) | set(CHANGED_BY_T240) | set(CHANGED_BY_T245) | set(CHANGED_BY_T251) | set(CHANGED_BY_T256) <= {h for h, _ in _baseline()["sentences"]}
+    assert set(CHANGED_BY_T239) | set(CHANGED_BY_T240) | set(CHANGED_BY_T245) | set(CHANGED_BY_T251) | set(CHANGED_BY_T256) | set(CHANGED_BY_T261) <= {h for h, _ in _baseline()["sentences"]}
 
 
 def test_the_baseline_is_not_empty():

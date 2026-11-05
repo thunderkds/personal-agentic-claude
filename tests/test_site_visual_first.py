@@ -423,6 +423,8 @@ DUPLICATES_OF_A_VISUAL_LABEL = {
     "17429ff8e0b6": "Stage 3 flow step gains ux-evaluate (T245)",
     # T251: the Settings tool lead says the installer adds the kit's hooks and 4 deny rules, not 2.
     "425dc05dbb62": "Settings tool lead says 4 deny rules (T251)",
+    # T261: the Minimal track item names the /simplify pass and its read-only reviewer exception.
+    "1a657ee69be4": "Minimal track item gains the /simplify pass (T261)",
 }
 
 

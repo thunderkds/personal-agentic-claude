@@ -7,7 +7,7 @@
 Every implementation request goes on one of two tracks:
 
 - **Minimal track** — small, low-risk work. The Supervisor writes the code itself and runs straight
-  through: test first, change, real run. No process stop. It ends with a **Decision record**.
+  through: test first, change, a `/simplify` pass, real run. No process stop. It ends with a **Decision record**.
 - **Extended track** — big, risky or multi-session work. This is the full Stage 0–5 pipeline
   (`docs/claude-md/pipeline-stages.md`), unchanged.
 
@@ -71,13 +71,13 @@ scaffold code or a spec file never makes a project "not new".
 ## Minimal-track flow
 
 The Supervisor runs these steps itself, in one context, straight through. No task guide, no sub-agent, no
-Stage 4 skills. In auto mode, the Debate's read-only `Explore` Advocates are the one exception
-(`## Auto mode`).
+Stage 4 skills. In auto mode, the Debate's read-only `Explore` Advocates are one exception
+(`## Auto mode`). The read-only reviewers that `simplify` starts in step 4 are the other.
 
 1. **Register.** Take the next task ID and set the active-task state for this session (`.claude/hooks/.state/active_task.d/$CLAUDE_CODE_SESSION_ID`, at the literal absolute path of the main checkout), so the trace hook attributes every call to the task.
 2. **Branch.** Work on a new branch for the task, never on `main`.
 3. **Test first.** Write a new test that fails for the right reason, and run it to see it fail. Gate 5 holds on this track too: a new test, and its passing output in the record's `Checked:` field.
-4. **Change.** Make the smallest change that passes the test. Touch only the code the task needs.
+4. **Change.** Make the smallest change that passes the test. Touch only the code the task needs. Then run `Skill({ skill: "simplify" })` on the branch diff, unless fewer than 20 changed lines lie outside tests and docs. Keep only the edits that change no behavior; if step 5's suite run goes red, undo the edit that broke it. A finding that simplify skips because it reaches outside the diff goes in the record's `Not done:` as a follow-up.
 5. **Run it for real.** Run the full test suite. Then run the program the way a user would, and note the command and what it printed.
 6. **Record.** Append the Decision record to `tasks/MINIMAL_LOG.md`, newest first, with every field of the template: the `## <ID> — <title> · <track>` heading, `Asked:`, `Decisions:`, `Checked:`, `Files:`, `Not done:`. If the file does not exist, create it from `templates/MINIMAL_LOG_template.md`. The same block is the Supervisor's final chat message.
 7. **Board.** Add one board row under Ready for Review in `PROJECT_KANBAN.md`, marked `| Track: minimal | Record: tasks/MINIMAL_LOG.md` at its end. Commit on the task branch without asking: the commit is part of this step.
@@ -189,7 +189,7 @@ Every decision, at every Risk level, has its log line in the final report. This 
 The one stop of the minimal track (an unclear request) is decided by `### Debate size by Risk`. A
 minimal-track task is Risk Low by the track rule, so the Supervisor decides and logs the reason: no
 Advocates are required. When the user set the minimal track for a Medium or High risk task, the table's
-Advocates are required, and they are the one exception to the track's no-sub-agent rule; the Supervisor
+Advocates are required, and they are one exception to the track's no-sub-agent rule (the other is the `simplify` reviewers of step 4); the Supervisor
 starts them (`resolve-question`) and never argues both sides itself. The Decision record carries the
 final report: the `Mode: auto` line, each decision with how it was made, and the flag
 (`templates/MINIMAL_LOG_template.md`). A minimal-track task has no guide, so it counts its Debates per
