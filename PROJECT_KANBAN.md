@@ -90,7 +90,6 @@
 
 
 ### In Progress
-- [ ] **T260** — `self_review.py` keeps dropped and over-cap patterns for the next run (two-key in-run dedupe, `waiting` register state), unique report names, SKILL Step 6 says the report is local (`reports/*` gitignored) | common-infrastructure | C2 | Risk: Low | P2 | Depends on T255, T256 | Guide: `tasks/TASK_GUIDE_T260.md` | Registered 2026-11-05 by the user ("yes") from the first real `/self-review` run: `unverified-guide-or-report-claim` wrongly dropped as a repeat, `pre-existing-red-baseline` lost past the cap | Started 2026-11-05: worktree `../wt-t260`, branch `feat/t260-self-review-waiting`, common-infrastructure (sonnet) spawned
 
 
 
@@ -99,6 +98,7 @@
 
 
 ### Ready for Review
+- [ ] **T260** — `self_review.py` keeps dropped and over-cap patterns for the next run (two-key in-run dedupe, `waiting` register state), unique report names, SKILL Step 6 says the report is local (`reports/*` gitignored) | common-infrastructure | C2 | Risk: Low | P2 | Depends on T255, T256 | Guide: `tasks/TASK_GUIDE_T260.md` | Registered 2026-11-05 by the user ("yes") from the first real `/self-review` run: `unverified-guide-or-report-claim` wrongly dropped as a repeat, `pre-existing-red-baseline` lost past the cap | Started 2026-11-05: worktree `../wt-t260`, branch `feat/t260-self-review-waiting`, common-infrastructure (sonnet) spawned | Ready for Review 2026-11-05: implementation d426105b, Stage 4 code-review 6e1fb64e (P0/P1/P2 0, P3 3), suite 3402 passed
 
 
 ### Done
