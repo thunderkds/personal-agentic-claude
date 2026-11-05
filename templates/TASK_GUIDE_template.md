@@ -49,11 +49,10 @@ If docs/legacy/ exists (legacy mode): also read `docs/legacy/risk-hotspots.md` a
 
 ## Dependencies & Reachability
 
-> Advisory, not a Hard-Stop Gate. `Depends on` is verified (non-blocking warning) at Agent-spawn
-> time by `pre_agent_validate_guide.py`. `Entry point` is verified (non-blocking finding) at Stage 4
-> `code-review` time. This is distinct from `PROJECT_KANBAN.md`'s `## Blocked` table, which stays a
-> manual escape hatch for non-task blockers (external people/APIs/decisions) that can't be checked
-> automatically — don't use `Depends on` for those.
+> Advisory, not a Hard-Stop Gate. `Depends on` is verified (non-blocking warning) at Agent-spawn time by
+> `pre_agent_validate_guide.py`. `Entry point` is verified (non-blocking finding) at Stage 4 `code-review`
+> time. This is distinct from `PROJECT_KANBAN.md`'s `## Blocked` table, which stays a manual escape hatch
+> for non-task blockers (external people/APIs/decisions) that can't be checked automatically — don't use `Depends on` for those.
 
 **Depends on**: [Txxx — short description of the artifact this task needs from it] or `None`
 > Example: `Depends on: T012 — /api/users endpoint must exist`
@@ -168,6 +167,7 @@ If docs/legacy/ exists (legacy mode): also read `docs/legacy/risk-hotspots.md` a
 - [ ] [edge case 1]
 - [ ] [edge case 2]
 - [ ] Pin-test pre-flight: the `Pre-existing pin tests` row below is filled before work starts
+- [ ] Stale references: for each fact this task changes (flag, count, path, name, version, "green" claim), grep the repo for the old wording (README, `site/`, `docs/claude-md/`, comments, docstrings, `agents/`, board notes)
 
 ---
 
