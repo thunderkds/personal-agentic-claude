@@ -50,6 +50,12 @@ Mode: auto
 2. Spawn model claude · C1 → sonnet — FACT: PROJECT_SPEC.md `## CLI Model Table` "| claude | `claude` | haiku | sonnet |"
 3. Requirement Fidelity Gate signed `auto (Supervisor)` — RULE: `docs/claude-md/tracks.md` `### Every user stop and its auto rule` row 13
 4. T258 and T259 both add one line to the Edge Case Checklist of `templates/TASK_GUIDE_template.md`; run them in parallel anyway and resolve the adjacent-line conflict at merge, keeping both lines — SAFER OPTION: parallel runs were asked for; the conflict is two added lines, no logic ⚠ decided for you — please review
+5. Kept `templates/TASK_GUIDE_template.md` at its 205-line cap by rewrapping the Dependencies blockquote 5→4 lines (same words), not raising the cap — RULE: `.claude/hooks/tests/test_vital_slice.py` LINE_CAPS "do not raise the cap"
+6. Trimmed ~500 bytes of prose in `skills/code-review/SKILL.md` to fit the sweep under the 8 KB Codex cap (8161 bytes) — SAFER OPTION: the cap skips an over-size skill for Codex; no rule removed except one sentence the confidence gate already covers ⚠ decided for you — please review
+7. Edge Case Checklist pin in `test_guide_sections.py` narrowed to an in-order subsequence — RULE: `tasks/TASK_GUIDE_T259.md` AC 4 (pins must still pass) with AC 3 adding a checklist line
+Checks: tests `python3 -m pytest -q tests/ .claude/hooks/tests/` — `1 failed, 3408 passed` (agent; the failure a timing flake of `test_auto_verify.py` with 3 suites at once); Supervisor re-run of T259 tests + test_guide_sections + test_vital_slice + test_auto_verify — `349 passed`; reviews code-review — P0 0, P1 0, P2 2, P3 0; real run: text-only change, red proof `5 failed, 2 passed` on prior text then `7 passed` (auto-checked, not /verify)
+Memory: nothing new — the pattern is already recorded as LR-0005 and in `memory/self-review/register.md`
+Not done: merge (yours); auto verify: running (T182)
 
 
 ## Evidence
