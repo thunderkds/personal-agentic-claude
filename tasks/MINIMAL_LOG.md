@@ -4,6 +4,24 @@
 > new record directly under this note. On first use, the Supervisor creates `tasks/MINIMAL_LOG.md` from
 > this template and deletes the example comment. The same block is the Supervisor's final chat message.
 
+## T261 — The minimal track runs `/simplify` after the change · minimal
+**Asked:** "let investigate more clearly and do if you think it's good for progress, if needed take an experiment"
+**Decisions:**
+- Built it: an experiment ran `/simplify` on 4 past minimal-track diffs (T229, T230, T244, T248). It applied 6 real fixes (2 T229 tests that `python file.py` silently skipped, a T248 assert that could never fail, a T248 doc line that contradicted itself), 9 taste edits and 0 harmful ones, at about 120k tokens and 2 minutes per run. Source: the article "Building verification loops in Claude Code with skills" (embedded-check pattern).
+- Folded into step 4 (Change), not a new step 8 — "7 steps" is pinned in `AGENTS.md`, `site/docs.html` and `tests/test_tracks.py`.
+- Guard "change no behavior": a T248 taste edit dropped the `resize` listener with no test noticing.
+- Skip under 20 changed lines outside tests and docs: T230 (13 code lines) gave 0 real fixes; the three larger diffs gave all 6.
+- Out-of-diff findings go to `Not done:`: in the experiment they were the most valuable output, and `/simplify` skips them by design.
+- `/simplify`'s reviewers are a second stated exception to the track's no-sub-agent rule (tracks.md flow intro and `## Auto mode`, `site/docs.html`).
+- Rejected: `allowed-tools` on read-only skills (it pre-approves tools, it does not restrict them); `/simplify` in Stage 4 (`code-review` already has an over-engineering reviewer, and Supervisor edits there break the extended track).
+**Checked:**
+- New test `test_t261_change_step_runs_simplify_with_guards`, `test_t261_record_template_has_a_simplify_line` — failed before the change (2 failed), pass after
+- Suite: `python3 -m pytest -q -p no:cacheprovider tests .claude/hooks/tests` — `3420 passed, 25 subtests passed in 227.42s`
+- Real run: `python3 -c "import sys; sys.path.insert(0,'tests'); import test_tracks as t; s,_=t._flow_steps(); print(len(s),'steps'); print(s[3])"` — printed `7 steps` and the new step 4 text
+- Simplify: ran on this diff (under 20 code lines, run anyway as the first use); 6 kept, 0 undone — `TEMPLATE` constant reused; "one exception" contradiction fixed in tracks.md (2 places); experiment comment trimmed; plain `in` checks; one suite run in step 5, not one per edit; docs-only skip replaced by the 20-line cutoff. Rejected: "keep simplify inside the diff" (out-of-diff findings were the best output). Also fixed `site/docs.html` ("starts no sub-agent" was now wrong) and its two text-baseline tests (`CHANGED_BY_T261`)
+**Files:** `docs/claude-md/tracks.md`, `templates/MINIMAL_LOG_template.md`, `site/docs.html`, `tests/test_tracks.py`, `tests/test_site_story.py`, `tests/test_site_visual_first.py`, `tasks/MINIMAL_LOG.md`, `PROJECT_KANBAN.md`
+**Not done:** merge (the user decides); follow-ups the experiment found on `main`: (1) `skills/dotfiles/scripts/dotfiles.py:123-128,158` `broken_links()` prints `skills/<name>` from `os.listdir` unescaped, so a link name with a newline can fake a `plan` line (T230 only checked source names); (2) `.claude/hooks/tests/test_post_write_register_task_metadata.py:318,334` two `test_t229_*` tests sit below `if __name__ == "__main__":` (line 302), so the script runner skips them; (3) T229's `[auto]`-window logic in `stop_auto_mode_check.py` duplicates `lib/auto_mode.py`, "the one reader"; 4 experiment worktrees under `.claude/worktrees/agent-*` left in place (removal was denied)
+
 ## T120 — Reinstall's closing summary names every CLI the run touched · minimal
 Mode: auto
 **Asked:** "yes, let go, and you can start for parallel task with tag [auto]"

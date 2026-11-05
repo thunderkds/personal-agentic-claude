@@ -95,6 +95,7 @@
 
 
 ### Ready for Review
+- [ ] **T261** — Minimal track runs `/simplify` after the change (step 4: skip under 20 code lines, keep no-behavior-change edits only, out-of-diff findings to `Not done:`) | common-infrastructure | C1 | Risk: Low | P2 | Registered 2026-11-05 from the verification-loops article + 4-task experiment | Ready for Review 2026-11-05 | Track: minimal | Record: tasks/MINIMAL_LOG.md
 
 
 ### Done

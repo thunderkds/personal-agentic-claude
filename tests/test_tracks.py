@@ -596,3 +596,18 @@ def test_ac6_stop_reminder_unchanged_with_no_minimal_row(tmp_path):
     err = _hook(project, "stop_review_reminder.py", {}).stderr
     assert "Tasks awaiting Stage 4 Review:" in err and "Skill({ skill: 'code-review' })" in err
     assert "MINIMAL_LOG" not in err
+
+
+# ── T261 — the minimal track runs /simplify after the change (verification-loop "embedded" check) ──
+def test_t261_change_step_runs_simplify_with_guards():
+    steps, body = _flow_steps()
+    change = next(s for s in steps if s.startswith("**Change.**"))
+    for phrase in ('Skill({ skill: "simplify" })', "fewer than 20 changed lines lie outside tests and docs",
+                   "change no behavior", "step 5's suite run goes red"):
+        assert phrase in change, f"step 4 lacks {phrase!r}"
+    assert re.search(r"outside the diff.*`Not done:`", change), "skipped out-of-diff findings go to Not done:"
+    assert "reviewers that `simplify` starts" in body, "simplify's sub-agents are a stated exception"
+
+
+def test_t261_record_template_has_a_simplify_line():
+    assert "- Simplify: <N kept, M undone" in _read(TEMPLATE), "the record must say what simplify kept and undid"

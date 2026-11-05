@@ -425,9 +425,10 @@
     a word such as <em>refactor</em> or <em>migrate</em>; a change that deletes, moves, renames or converts
     user data (for example CSV to JSON); more than one session or agent; a UI component.</li>
   <li><strong>Minimal track</strong> otherwise. The Supervisor writes the code itself: test first, change,
-    real run. It saves a Decision record in <code>tasks/MINIMAL_LOG.md</code> and adds a board row marked
-    <code>Track: minimal</code>. It commits on a new branch without asking. It writes no task guide and
-    starts no sub-agent.</li>
+    a <code>/simplify</code> pass, real run. It saves a Decision record in <code>tasks/MINIMAL_LOG.md</code> and adds a board row marked
+    <code>Track: minimal</code>. It commits on a new branch without asking. It writes no task guide.
+    It starts no sub-agent, except the read-only reviewers of <code>/simplify</code> (and of a Debate in auto
+    mode).</li>
   <li><strong>Your override:</strong> reply <code>full</code> or <code>minimal</code> at any time and the
     Supervisor switches. It may move a task up to extended on its own. It never moves a task down.</li>
 </ul>
