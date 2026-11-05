@@ -47,7 +47,7 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_self_review_skill.py` (AC 1-8, 8 tests); AC 10: full suite `python3 -m pytest .claude/hooks/tests/ tests/ -q` -> `3355 passed, 25 subtests passed in 185.38s`. AC 9 (live run twice) left for the Supervisor at Stage 4 |
 | Verification command run | ☐ pass / ☐ fail | [paste actual output] |
 | Negative cases hold | ☐ pass / ☐ fail | |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
@@ -109,9 +109,25 @@ FAILED tests/test_t245_ux_evaluate.py::test_ac1_validate_sh_accepts_the_skill
 14 failed, 3331 passed, 25 subtests passed in 199.31s (0:03:19)
 ```
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**: Captured 2026-11-05T05:04:50Z, after the T256 commits.
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+`skills/learn/SKILL.md` Step 8 gains, after "Never write the file automatically ...":
+
+```
+**Kit changes are not proposed here.** This step offers only the project-level `learn-[slug]` stub above. A proposal to change the kit itself (a rule, hook, skill or template of Easy Kit) belongs to `self-review` alone: it mines the Stage 4 review records and the user approves each one. Do not suggest a kit change from `learn`.
+```
+
+`AGENTS.md` cross-cutting line now ends: "... `resolve-question` (a confused Supervisor, or a sub-agent `Status: blocked` + `Question:`), `self-review` (started only by the user's `/self-review`: mines new Stage 4 review records for defects that recur and proposes kit changes the user approves)."
+
+New files: `skills/self-review/SKILL.md` (6 steps, one miner spawn), `skills/self-review/references/miner-prompt.md`, `tests/test_self_review_skill.py` (8 tests, AC 1-8).
+
+`python3 -m pytest .claude/hooks/tests/ tests/ -q` (finished 2026-11-05T05:04:50Z):
+
+```
+3355 passed, 25 subtests passed in 185.38s (0:03:05)
+```
+
+**DELTA**: The user can type `/self-review` to run the script's gate, one Sonnet miner and the approve/reject step, and `learn` no longer proposes kit changes.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
