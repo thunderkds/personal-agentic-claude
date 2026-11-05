@@ -54,8 +54,8 @@ Mode: auto
 6. Made T258's `test_guide_sections.py` hunk byte-identical to T259's so the two branches merge cleanly — RULE: `tasks/TASK_REVIEW_T258.md` decision 4 (conflict kept to the two added checklist lines)
 Checks: tests `python3 -m pytest -q tests/ .claude/hooks/tests/` — `3405 passed, 25 subtests passed` (agent, after fix round 1); Supervisor re-run of T258 tests + test_guide_sections + test_vital_slice — `91 passed`; reviews code-review — P0 0, P1 0, P2 0, P3 1; real run: text-only change, red proof `3 failed` on the prior template then green (auto-checked, not /verify)
 Memory: nothing new — the pattern is already recorded as LR-0004 and in `memory/self-review/register.md`
-Not done: merge (yours); auto verify: running (T182)
-
+Not done: merge (yours); auto verify: ☑ pass (session fa4bd786-1edb-46ce-8c85-a22cc0f81d3f, commit 3071a8211677df4851c8ea52ef006ea370801cfe, log .claude/verify-runs/T258-3071a8211677.log)
+Closed: row moved to Done 2026-11-05 — auto verify pass (session fa4bd786-1edb-46ce-8c85-a22cc0f81d3f, commit 3071a8211677df4851c8ea52ef006ea370801cfe); Gates 5 and 6 checked
 
 ## Evidence
 
@@ -64,7 +64,7 @@ Not done: merge (yours); auto verify: running (T182)
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_t258_pin_test_preflight.py` (3 tests, AC 1-3 by text). RED first against the prior template: `3 failed in 0.07s` (AC1, AC2, AC3 each AssertionError); GREEN after the template edit. AC4: the line-cap pin is met by rewrapping 2 lines (cap stays 205); the Edge Case Checklist pin is narrowed (same hunk as T259); both listed in the guide's `Pre-existing pin tests` row. |
 | Verification command run | ☑ pass | `python3 -m pytest -q tests/ .claude/hooks/tests/` -> `3405 passed, 25 subtests passed in 231.44s (0:03:51)` |
 | Negative cases hold | ☑ pass | Mutating baseline line `- [ ] [edge case 1]` in the template turned the narrowed `test_ac3_reasoning_prose_sections_are_byte_identical_to_the_baseline` RED (`1 failed`); restored, green. The 3 new tests were RED against the prior template. |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [filled from the headless auto verify run (`stop_auto_verify.py --start T258`)] |
+| verify | ☑ pass | auto-run by hook, session fa4bd786-1edb-46ce-8c85-a22cc0f81d3f, commit 3071a8211677df4851c8ea52ef006ea370801cfe, log .claude/verify-runs/T258-3071a8211677.log — pass |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Supervisor `code-review` 2026-11-05 on `main...feat/t258-pin-test-preflight` (6 files): `templates/TASK_GUIDE_template.md` (checklist line + `Pre-existing pin tests` row; Evaluation blockquote rewrapped 5→3 lines, same words, to stay at the 205-line cap), `.claude/hooks/tests/test_guide_sections.py` (Edge Case pin hunk byte-identical to T259's), new `tests/test_t258_pin_test_preflight.py`, `tasks/TASK_GUIDE_T258.md` pin row. Fix round 1 (Supervisor): reverted a raised line cap 205→207 in `test_vital_slice.py` ("do not raise the cap"). lane_check: `lane: C1, 4 files, 54 lines, FITS; unpredicted: .claude/hooks/tests/test_guide_sections.py, tasks/TASK_GUIDE_T258.md, tests/test_t258_pin_test_preflight.py`. Startup reads: all 3 Permanent-Rule reads present. P0 0, P1 0, P2 0, P3 1. P3 (75): the rewrapped Evaluation blockquote has ~170-char lines, harder to read in an editor; harmless. Supervisor re-run: `91 passed in 0.57s` (T258 tests, test_guide_sections, test_vital_slice). |
 | Full smoke suite still green (no regression) | ☑ pass | Agent full run after fix round 1: `3405 passed, 25 subtests passed in 231.44s`. |
 | **Companion score (easy-verifier)** | ☐ N/A | Not run: C1 / Risk Low, template change. |
