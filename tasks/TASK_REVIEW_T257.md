@@ -50,22 +50,27 @@ Mode: auto
 2. Spawn model claude · C1 → sonnet — FACT: PROJECT_SPEC.md `## CLI Model Table` "| claude | `claude` | haiku | sonnet |"
 3. Requirement Fidelity Gate signed `auto (Supervisor)` — RULE: `docs/claude-md/tracks.md` `### Every user stop and its auto rule` row 13
 4. T258 and T259 both add one line to the Edge Case Checklist of `templates/TASK_GUIDE_template.md`; run them in parallel anyway and resolve the adjacent-line conflict at merge, keeping both lines — SAFER OPTION: parallel runs were asked for; the conflict is two added lines, no logic ⚠ decided for you — please review
-
+5. `test_guide_sections.py` moved-row pin repointed to the new Negative-cases row text (AC4 changes that row) — RULE: `tasks/TASK_GUIDE_T257.md` § Edge Case Checklist "Pin tests on the edited files"
+6. P2 (hand-copied PRIOR_TDD excerpt in the RED control) left as a suggestion, not fixed — RULE: `skills/code-review/SKILL.md` § Phase 4 "Do not apply P2/P3 fixes automatically"
+Checks: tests `python3 -m pytest -q tests/ .claude/hooks/tests/` — `3408 passed, 25 subtests passed` (agent); Supervisor re-run of T257 tests + test_guide_sections — `57 passed`; reviews code-review — P0 0, P1 0, P2 1, P3 1; real run: text-only change, red proof `4 failed, 2 passed` on prior content then `6 passed` (auto-checked, not /verify)
+Memory: nothing new — the pattern is already recorded as LR-0003 and in `memory/self-review/register.md`
+Not done: merge (yours); auto verify: ☑ pass (session 0cad2dae-0981-4bfd-8375-d5172b8d6118, commit 00ec1c3aa59b712e6057a65293afddabb69c1f21, log .claude/verify-runs/T257-00ec1c3aa59b.log)
+Closed: row moved to Done 2026-11-05 — auto verify pass (session 0cad2dae-0981-4bfd-8375-d5172b8d6118, commit 00ec1c3aa59b712e6057a65293afddabb69c1f21); Gates 5 and 6 checked
 
 ## Evidence
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_t257_tdd_red_proof.py` (AC1-AC5 + `test_pins_fail_on_prior_content`); `.claude/hooks/tests/test_guide_sections.py` pin repointed to the AC4 row text. Written first: against the prior content `4 failed, 2 passed` (AC1-AC4 RED; AC5 size pin and the prior-content control pass by design). After the edit `6 passed`. |
+| Verification command run | ☑ pass | `python3 -m pytest -q tests/ .claude/hooks/tests/` -> `3408 passed, 25 subtests passed in 402.14s (0:06:42)`. An earlier run before the pin repoint showed `1 failed, 3407 passed` (`test_guide_sections.py::test_ac1_moved_evidence_rows_are_present_unchanged_and_in_order`, which froze the old row); fixed in the same commit. |
+| Negative cases hold | ☑ pass | Red run against prior content: `4 failed, 2 passed` (see above). Mutation controls on the new text, each with a non-empty `git diff --stat` before the verdict, each `1 failed, 5 passed`, reverted to `6 passed`: `s/git show/git XXXX/` (1 insertion, 1 deletion); `s/non-empty/XXXX/` (2 ins, 2 del); `s/no CI step/XXXX/` (1/1); template `s/mutation diff (/XXXX (/` (1/1). The repointed `test_guide_sections.py` pin: with the prior template row `1 failed, 50 passed`; with the new row `57 passed`. |
+| verify | ☑ pass | auto-run by hook, session 0cad2dae-0981-4bfd-8375-d5172b8d6118, commit 00ec1c3aa59b712e6057a65293afddabb69c1f21, log .claude/verify-runs/T257-00ec1c3aa59b.log — pass |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Supervisor `code-review` 2026-11-05 on `main...feat/t257-tdd-red-proof` (5 files): `skills/tdd/SKILL.md` step 5 + checklist line, `templates/TASK_REVIEW_template.md` Negative-cases row, `.claude/hooks/tests/test_guide_sections.py` (moved-row pin repointed to the new row text), new `tests/test_t257_tdd_red_proof.py`. lane_check: `lane: C1, 4 files, 101 lines, FITS; unpredicted: .claude/hooks/tests/test_guide_sections.py, tests/test_t257_tdd_red_proof.py`. Startup reads: all 3 Permanent-Rule reads present. P0 0, P1 0, P2 1, P3 1. P2 (75): `tests/test_t257_tdd_red_proof.py` RED control uses a hand-copied excerpt `PRIOR_TDD` instead of `git show <base>:skills/tdd/SKILL.md` — the 'hand-kept list that claims to mirror a file' form the new step itself names; suggestion: read the prior file with `git show e0093fed:...`. P3 (75): `test_guide_sections.py` now hard-codes the new row text in a second place (template + test). Supervisor re-run: `57 passed in 0.30s` (T257 tests + test_guide_sections). |
+| Full smoke suite still green (no regression) | ☑ pass | `3408 passed, 25 subtests passed in 402.14s (0:06:42)` |
+| **Companion score (easy-verifier)** | ☑ N/A | Companion tool not run: C1 skill/template text change. |
+| **UI: Visual regression** | ☑ N/A | No UI component (skill text and template only). |
+| **UI: Design-system compliance** | ☑ N/A | No UI component (skill text and template only). |
+| **UI: Responsiveness** | ☑ N/A | No UI component (skill text and template only). |
 
 ---
 
@@ -76,12 +81,30 @@ Mode: auto
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: verbatim prior content (non-executable change: skill text and template), captured 2026-11-05 before the first implementation commit, from `skills/tdd/SKILL.md` (2813 bytes) and `templates/TASK_REVIEW_template.md:52`:
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+```
+#### 2. Tracer Bullet
+Write ONE test for the first behavior → it fails (RED) → write minimal code → it passes (GREEN). This proves the path works end-to-end.
+...
+### Checklist Per Cycle
+[ ] Test describes behavior, not implementation
+[ ] Test uses the public interface only
+[ ] Test would survive an internal refactor
+[ ] Code is minimal for this test
+[ ] No speculative features added
+```
+```
+| Negative cases hold | ☐ pass / ☐ fail | |
+```
+The skill has no step to run a test against the prior content, no mutation-control rule and no list of vacuous forms; the template row has an empty Notes cell.
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+**AFTER**: `skills/tdd/SKILL.md` (3703 bytes) gains `#### 5. Prove each test can go RED`: a test counts only after it ran against the prior content (`git show <base>:<file>`) and failed, with the RED output pasted; a `mutation control` needs a non-empty `git diff --stat` before its verdict; four vacuous forms are listed (`x <= x`, `not in` on a string the old content never held, a hand-kept list that claims to mirror a file, a guard no CI step runs); the cycle checklist gains one line. `templates/TASK_REVIEW_template.md` row now reads:
+```
+| Negative cases hold | ☐ pass / ☐ fail | [paste the red run against the prior content, or the mutation diff (`git diff --stat`, non-empty) before each verdict] |
+```
+
+**DELTA**: A reviewer or implementer who follows `tdd` must show each new test failing against the prior content and each mutation changing bytes, so a test that can never fail is caught when the work is done.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]

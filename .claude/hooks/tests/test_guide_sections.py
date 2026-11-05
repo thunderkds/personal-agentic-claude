@@ -549,10 +549,20 @@ def _is_subsequence(needle, haystack):
     return all(any(row == candidate for candidate in remaining) for row in needle)
 
 
+T257_NEGATIVE_CASES_ROW = (
+    "| Negative cases hold | \u2610 pass / \u2610 fail | [paste the red run against the prior content, "
+    "or the mutation diff (`git diff --stat`, non-empty) before each verdict] |")
+
+
 def _baseline_and_current_evidence_rows():
     baseline = _git_show(BASELINE_REF, "templates/TASK_GUIDE_template.md")
     review = _read(os.path.join(TEMPLATES_DIR, "TASK_REVIEW_template.md"))
-    return ([l for l in _slice(baseline, EVIDENCE_SLICE_RE).splitlines() if l.startswith("|")],
+    old_rows = [l for l in _slice(baseline, EVIDENCE_SLICE_RE).splitlines() if l.startswith("|")]
+    # T257 (AC4) deliberately changed one moved row: its Notes cell now asks for the red run or the
+    # mutation diff. The row stays pinned byte-for-byte, to its new text.
+    old_rows = [T257_NEGATIVE_CASES_ROW if l.startswith("| Negative cases hold |") else l
+                for l in old_rows]
+    return (old_rows,
             [l for l in _slice(review, EVIDENCE_SLICE_RE).splitlines() if l.startswith("|")])
 
 
