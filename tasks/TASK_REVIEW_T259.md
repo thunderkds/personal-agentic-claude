@@ -56,9 +56,9 @@ Mode: auto
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_stale_reference_sweep.py` (7 tests, AC1-AC4 plus a negative case). RED against the prior text, 2026-11-05: `FAILED test_ac1_sweep_names_each_changed_fact_kind`, `..._names_each_place_to_grep`, `..._sits_in_phase_0_5`, `test_ac2_hit_outside_files_to_change_is_p2_with_file_line`, `test_ac3_template_checklist_has_stale_reference_line` — `5 failed, 2 passed` (the 2 passes are the AC4 size pin and the negative-case reader test, which must pass on prior text). GREEN after the change: `7 passed in 0.03s`. Pins narrowed: `.claude/hooks/tests/test_guide_sections.py::test_ac3_reasoning_prose_sections_are_byte_identical_to_the_baseline` (Edge Case Checklist may gain lines; baseline lines must stay, in order). |
+| Verification command run | ☑ pass | `python3 -m pytest -q tests/ .claude/hooks/tests/`: first full run `2 failed, 3407 passed` (template 206 lines over the 205 cap in `test_vital_slice.py`; the byte-identical Edge Case Checklist pin) — fixed by rewrapping one blockquote in the template and narrowing the pin. Second full run `1 failed, 3408 passed, 25 subtests passed in 378.89s` — the one failure, `tests/test_auto_verify.py::test_ac5_a_minimal_fail_record_blocks_even_if_the_line_is_edited_to_pass`, is a timing flake of a detached run while 3 suites ran at once; alone: `python3 -m pytest -q tests/test_auto_verify.py` -> `254 passed in 94.96s`. |
+| Negative cases hold | ☑ pass | `test_neg_readers_reject_prior_content` (readers raise on text with no sweep and no checklist line). Mutation: `[edge case 2]` -> `[edge case TWO]` in the template makes the narrowed `test_ac3_reasoning_prose_sections_are_byte_identical_to_the_baseline` fail (`1 failed`); reverted. `skills/code-review/SKILL.md` is 8161 bytes (cap 8192). |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
 | Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
@@ -76,12 +76,44 @@ Mode: auto
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: non-executable change (skill-instruction text and a template line); verbatim prior content, captured 2026-11-05 before any implementation commit.
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+`skills/code-review/SKILL.md` (8175 bytes) ends Phase 0.5 with the Startup-reads check and has no stale-reference sweep:
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```
+**Startup-reads check (T129).** Compare the implementing agent's final-report line `Startup reads: <paths>` against the spawn prompt's `**Startup reads**` block. A Permanent-Rule read (`PROJECT_SPEC.md`, the TASK_GUIDE, the `agents/` role guide) missing from the line is a **P1 process finding**; a missing line counts as all missing.
+
+---
+
+#### Phase 1 — Run Always-On Reviewers
+```
+
+`templates/TASK_GUIDE_template.md` Edge Case Checklist (no line for stale references):
+
+```
+## Edge Case Checklist
+
+[Populated from brainstorming skill output. List silent failures and boundary conditions to guard against.]
+
+- [ ] [edge case 1]
+- [ ] [edge case 2]
+```
+
+**AFTER**: verbatim new content.
+
+`skills/code-review/SKILL.md`, Phase 0.5, after the reachability completion criterion:
+
+```
+**Stale-reference sweep (T259).** For each fact the diff changes (a flag, count, path, channel or skill name, version, or a "green" claim), grep the repo for the old wording: README, `site/`, `docs/claude-md/`, docstrings and comments, `agents/`, `PROJECT_KANBAN.md` notes, test comments. Each hit outside the guide's `Files to Change` is a **P2 finding** with its `file:line`.
+```
+
+`templates/TASK_GUIDE_template.md` Edge Case Checklist:
+
+```
+- [ ] Stale references: for each fact this task changes (flag, count, path, name, version, "green" claim), grep the repo for the old wording (README, `site/`, `docs/claude-md/`, comments, docstrings, `agents/`, board notes)
+```
+
+**DELTA**: A reviewer, and a guide author, now has a written step to grep the repo for the old wording of every fact a diff changes, and each stray hit is a P2 finding with its file:line.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]

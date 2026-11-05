@@ -5,12 +5,12 @@ description: Structured multi-reviewer code review for Stage 4. Use after every 
 
 ## Role: Review Orchestration Specialist
 
-Stage 4 review gatekeeper: run a structured, multi-perspective review of the current diff and produce a finding set where every item has an explicit severity, a confidence anchor, and at least one concrete action. Suppress noise (low-confidence findings), promote signal (cross-reviewer agreement), apply safe fixes directly.
+Stage 4 review gatekeeper: run a structured, multi-perspective review of the current diff and produce a finding set where every item has a severity, a confidence anchor, and a concrete action. Suppress low-confidence noise, promote cross-reviewer agreement, apply safe fixes directly.
 
 ### Karpathy Operational Commands
 
-- **Think Before Coding / Ask vs. Guess**: Determine review scope from git diff before spawning any reviewer persona. Never review the whole repo — scope to the change's blast radius (affected files + their direct callers).
-- **Simplicity First**: Only surface findings that survive the confidence gate (≥75 for P1–P3; ≥50 for P0). Suppress advisory findings from a single low-confidence reviewer.
+- **Think Before Coding / Ask vs. Guess**: Determine review scope from git diff before spawning any reviewer persona. Scope to the change's blast radius (affected files + direct callers), never the whole repo.
+- **Simplicity First**: Only surface findings that survive the confidence gate (≥75 for P1–P3; ≥50 for P0).
 - **Surgical Changes**: Apply only fixes that are unambiguous and safe — no refactoring, no style sweeps beyond the flagged lines.
 - **Goal-Driven Execution**: Success = every surviving finding has severity + confidence + action; safe fixes are applied and committed; the diff is ready for Supervisor merge decision.
 
@@ -70,11 +70,11 @@ Stage 4 review gatekeeper: run a structured, multi-perspective review of the cur
 
 #### Phase 0 — Determine Scope
 
-Run `git diff --name-only` (or `git diff <base>..HEAD --name-only` if a base ref is provided). List the changed files, then identify direct callers of changed functions (Grep) and test files covering the changed code. This set is the review scope — do not review files outside it.
+Run `git diff --name-only` (or `git diff <base>..HEAD --name-only` if a base ref is given). List the changed files, their direct callers (Grep) and the test files covering them. This set is the review scope.
 
 Also run `python3 "${CLAUDE_SKILL_DIR}/../../scripts/lane_check.py" tasks/TASK_GUIDE_Txxx.md <base>...HEAD` and paste its one line into the report (T144). It is warn-only: `EXCEEDS (...)` or `unpredicted: ...` means the task may be under-labelled — raise it to the Supervisor; it never blocks.
 
-Completion criterion: review scope listed; no file outside the diff + direct callers set queued for review.
+Completion criterion: review scope listed; no file outside it queued for review.
 
 ---
 
@@ -87,15 +87,17 @@ Read the task's `TASK_GUIDE_Txxx.md` `## Dependencies & Reachability` section (`
 
 Completion criterion: reachability check run (or explicitly skipped as N/A) and its result folded into the Phase 1 findings set.
 
+**Stale-reference sweep (T259).** For each fact the diff changes (a flag, count, path, channel or skill name, version, or a "green" claim), grep the repo for the old wording: README, `site/`, `docs/claude-md/`, docstrings and comments, `agents/`, `PROJECT_KANBAN.md` notes, test comments. Each hit outside the guide's `Files to Change` is a **P2 finding** with its `file:line`.
+
 **Startup-reads check (T129).** Compare the implementing agent's final-report line `Startup reads: <paths>` against the spawn prompt's `**Startup reads**` block. A Permanent-Rule read (`PROJECT_SPEC.md`, the TASK_GUIDE, the `agents/` role guide) missing from the line is a **P1 process finding**; a missing line counts as all missing.
 
 ---
 
 #### Phase 1 — Run Always-On Reviewers
 
-For each always-on persona: read the scoped files, produce findings with severity + confidence + one-line action as a structured list — do not apply changes yet. Activate conditional reviewers based on diff content analysis.
+For each always-on persona: read the scoped files, list findings with severity + confidence + one-line action — do not apply changes yet. Activate conditional reviewers by diff content.
 
-Completion criterion: all always-on reviewers complete; conditional reviewers activated or skipped with stated reason.
+Completion criterion: all always-on reviewers complete; conditional reviewers activated or skipped with a reason.
 
 ---
 
@@ -108,7 +110,7 @@ Merge findings from all reviewers:
 3. **Gate**: remove any P1–P3 finding with confidence < 75 after promotion. Keep P0 at ≥ 50.
 4. **Assign model tier**: P0 and security findings → re-verify with top-tier model reasoning before surfacing. All others → mid-tier is sufficient.
 
-Completion criterion: deduplicated finding set; no duplicate fingerprints; confidence gate applied.
+Completion criterion: no duplicate fingerprints; confidence gate applied.
 
 ---
 
@@ -136,13 +138,13 @@ If no findings in a severity group: emit "None."
 
 #### Phase 4 — Apply Safe Fixes
 
-For each P0 and P1 finding where the fix is unambiguous and safe (no behavior change beyond what the finding describes): apply the fix to the working tree, re-run relevant tests if a test suite exists, stage the change.
+For each P0 and P1 finding with an unambiguous, safe fix (no behavior change beyond the finding): apply it, re-run relevant tests, stage the change.
 
 Commit all applied fixes together: `fix: address Stage 4 review findings (P0/P1)`
 
 Do not apply P2/P3 fixes automatically — present them as suggestions only.
 
-Completion criterion: all unambiguous P0/P1 fixes applied and committed; P2/P3 left as suggestions.
+Completion criterion: all unambiguous P0/P1 fixes applied and committed.
 
 ---
 
