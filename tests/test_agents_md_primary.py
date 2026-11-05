@@ -58,6 +58,9 @@ REPLACED_SPANS = [
     # T228: the optional `dotfiles` skill joins the cross-cutting list.
     ("`resolve-question` (a confused Supervisor",
      "`dotfiles` (shared agent config, optional), `resolve-question` (a confused Supervisor"),
+    # T256: the user-started skill `self-review` joins the cross-cutting list.
+    ("`Status: blocked` + `Question:`).",
+     "`Status: blocked` + `Question:`), `self-review` (started only by the user's `/self-review`: mines new Stage 4 review records for defects that recur and proposes kit changes the user approves)."),
     # T234: the role table gains a column with the plugin form of each agent name, and one
     # sentence says when to use it.
     ("`prompt` only needs the task pointer (Task ID + guide refs) -- do **not** re-paste the guide.",

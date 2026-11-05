@@ -445,6 +445,7 @@ SAFE_ARGS = {
     "apply_profile.py": ["--help"],                  # the real run writes .claude/settings.json
     "dotfiles.py": ["--help"],                       # the real run writes the user's home folders
     "tap_probe.py": ["--help"],                      # T248: the real run needs a page and an out dir
+    "self_review.py": ["pre"],                       # T256: read-only; exit 0 on any git repo with a commit
 }
 CRASH_MARKERS = ("Traceback", "No such file", "ModuleNotFoundError", "can't open file")
 

@@ -120,6 +120,8 @@ Scan all active LRs for pattern overlap (same domain area / recurring behaviour 
 
 **Never write the file automatically** — the promotion step outputs a code block and stops; the Write tool must not be called for the stub. If no overlap, skip silently.
 
+**Kit changes are not proposed here.** This step offers only the project-level `learn-[slug]` stub above. A proposal to change the kit itself (a rule, hook, skill or template of Easy Kit) belongs to `self-review` alone: it mines the Stage 4 review records and the user approves each one. Do not suggest a kit change from `learn`.
+
 ---
 
 ### Communication Protocol
