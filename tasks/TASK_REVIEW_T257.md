@@ -56,16 +56,16 @@ Mode: auto
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_t257_tdd_red_proof.py` (AC1-AC5 + `test_pins_fail_on_prior_content`); `.claude/hooks/tests/test_guide_sections.py` pin repointed to the AC4 row text. Written first: against the prior content `4 failed, 2 passed` (AC1-AC4 RED; AC5 size pin and the prior-content control pass by design). After the edit `6 passed`. |
+| Verification command run | ☑ pass | `python3 -m pytest -q tests/ .claude/hooks/tests/` -> `3408 passed, 25 subtests passed in 402.14s (0:06:42)`. An earlier run before the pin repoint showed `1 failed, 3407 passed` (`test_guide_sections.py::test_ac1_moved_evidence_rows_are_present_unchanged_and_in_order`, which froze the old row); fixed in the same commit. |
+| Negative cases hold | ☑ pass | Red run against prior content: `4 failed, 2 passed` (see above). Mutation controls on the new text, each with a non-empty `git diff --stat` before the verdict, each `1 failed, 5 passed`, reverted to `6 passed`: `s/git show/git XXXX/` (1 insertion, 1 deletion); `s/non-empty/XXXX/` (2 ins, 2 del); `s/no CI step/XXXX/` (1/1); template `s/mutation diff (/XXXX (/` (1/1). The repointed `test_guide_sections.py` pin: with the prior template row `1 failed, 50 passed`; with the new row `57 passed`. |
+| verify | ☐ N/A | Auto verify run is started by the Supervisor at Ready for Review (T182); not run by this agent. |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Reviewed `skills/tdd/SKILL.md`, `templates/TASK_REVIEW_template.md`, `tests/test_t257_tdd_red_proof.py`, `.claude/hooks/tests/test_guide_sections.py`. grep for `Negative cases hold` found only that one pin on the template row. Not reviewed: past TASK_REVIEW files (out of scope). |
+| Full smoke suite still green (no regression) | ☑ pass | `3408 passed, 25 subtests passed in 402.14s (0:06:42)` |
+| **Companion score (easy-verifier)** | ☑ N/A | Companion tool not run: C1 skill/template text change. |
+| **UI: Visual regression** | ☑ N/A | No UI component (skill text and template only). |
+| **UI: Design-system compliance** | ☑ N/A | No UI component (skill text and template only). |
+| **UI: Responsiveness** | ☑ N/A | No UI component (skill text and template only). |
 
 ---
 
@@ -76,12 +76,30 @@ Mode: auto
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: verbatim prior content (non-executable change: skill text and template), captured 2026-11-05 before the first implementation commit, from `skills/tdd/SKILL.md` (2813 bytes) and `templates/TASK_REVIEW_template.md:52`:
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+```
+#### 2. Tracer Bullet
+Write ONE test for the first behavior → it fails (RED) → write minimal code → it passes (GREEN). This proves the path works end-to-end.
+...
+### Checklist Per Cycle
+[ ] Test describes behavior, not implementation
+[ ] Test uses the public interface only
+[ ] Test would survive an internal refactor
+[ ] Code is minimal for this test
+[ ] No speculative features added
+```
+```
+| Negative cases hold | ☐ pass / ☐ fail | |
+```
+The skill has no step to run a test against the prior content, no mutation-control rule and no list of vacuous forms; the template row has an empty Notes cell.
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+**AFTER**: `skills/tdd/SKILL.md` (3703 bytes) gains `#### 5. Prove each test can go RED`: a test counts only after it ran against the prior content (`git show <base>:<file>`) and failed, with the RED output pasted; a `mutation control` needs a non-empty `git diff --stat` before its verdict; four vacuous forms are listed (`x <= x`, `not in` on a string the old content never held, a hand-kept list that claims to mirror a file, a guard no CI step runs); the cycle checklist gains one line. `templates/TASK_REVIEW_template.md` row now reads:
+```
+| Negative cases hold | ☐ pass / ☐ fail | [paste the red run against the prior content, or the mutation diff (`git diff --stat`, non-empty) before each verdict] |
+```
+
+**DELTA**: A reviewer or implementer who follows `tdd` must show each new test failing against the prior content and each mutation changing bytes, so a test that can never fail is caught when the work is done.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]

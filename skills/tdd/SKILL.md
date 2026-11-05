@@ -38,6 +38,15 @@ For each remaining behavior: RED (next test fails) → GREEN (minimal code passe
 #### 4. Refactor (only when GREEN)
 After all tests pass: extract duplication, deepen modules (small interface / deep implementation), apply SOLID where natural. Run tests after each refactor step. **Never refactor while RED.**
 
+#### 5. Prove each test can go RED
+A test counts as covering an AC only after it ran against the **prior content** and failed. Run it against the file before your change (`git show <base>:<file>`, or the pre-change checkout) and paste the RED output. A test that is green on the prior content proves nothing.
+- **Mutation control**: a `mutation control` counts only after a non-empty `git diff --stat` (or other byte diff) shows the mutation changed bytes. Paste that diff before the verdict. A `sed` that matched nothing is a pass that proves nothing.
+- **Vacuous forms** (each can never fail):
+  - `x <= x`, or any comparison of a value with itself
+  - a `not in` check on a string the old content never held
+  - a hand-kept list that claims to mirror a file (read the file, do not copy it)
+  - a guard no CI step runs
+
 ### Checklist Per Cycle
 ```
 [ ] Test describes behavior, not implementation
@@ -45,6 +54,7 @@ After all tests pass: extract duplication, deepen modules (small interface / dee
 [ ] Test would survive an internal refactor
 [ ] Code is minimal for this test
 [ ] No speculative features added
+[ ] Test run RED against the prior content; mutation diff non-empty
 ```
 
 ### Communication Protocol
