@@ -67,8 +67,15 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (2026-11-05T04:25:15Z, worktree `wt-t255`, before any implementation commit; the guide's Verification Command):
+
+```
+$ python3 -m pytest -q tests/test_self_review.py
+ERROR: file or directory not found: tests/test_self_review.py
+no tests ran in 0.00s
+$ python3 skills/self-review/scripts/self_review.py pre --repo .
+python3: can't open file '/home/hungnguyenhuu/workspace/pets/wt-t255/skills/self-review/scripts/self_review.py': [Errno 2] No such file or directory
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
