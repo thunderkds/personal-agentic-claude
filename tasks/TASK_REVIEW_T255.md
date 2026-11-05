@@ -47,8 +47,8 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_self_review.py` — 46 passed (AC 1-14, SC 1-4; fake miner = JSON file, call counter in `test_ac2_no_loop_miner_called_once`) |
+| Verification command run | ☑ pass | `46 passed in 6.03s`; real-repo `pre`: `ready 40 109` (149 review files on `main`) |
 | Negative cases hold | ☐ pass / ☐ fail | |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
@@ -77,7 +77,15 @@ $ python3 skills/self-review/scripts/self_review.py pre --repo .
 python3: can't open file '/home/hungnguyenhuu/workspace/pets/wt-t255/skills/self-review/scripts/self_review.py': [Errno 2] No such file or directory
 ```
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER** (2026-11-05T04:30:11Z, commit `feat(T255)`, same two commands):
+
+```
+$ python3 -m pytest -q tests/test_self_review.py
+..............................................                           [100%]
+46 passed in 6.03s
+$ python3 skills/self-review/scripts/self_review.py pre --repo . | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['status'], len(d['files']), d['deferred'])"
+ready 40 109
+```
 
 **DELTA**: [one sentence — what a user can now do that they could not before]
 
