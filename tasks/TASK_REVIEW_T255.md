@@ -49,14 +49,14 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 |-------|--------|------------------------|
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_self_review.py` — 46 passed (AC 1-14, SC 1-4; fake miner = JSON file, call counter in `test_ac2_no_loop_miner_called_once`) |
 | Verification command run | ☑ pass | `46 passed in 6.03s`; real-repo `pre`: `ready 40 109` (149 review files on `main`) |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| Negative cases hold | ☑ pass | FX tests cover fabricated/short/negative-line quotes, odd file names, non-ancestor watermark, malformed JSON/register (exit 2, nothing written), off-main checkout, fix-task review under a new slug |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Stage 4 code-review of `main...feat/t256-self-review-skill` only (15 files + direct callers: `skills/learn/SKILL.md`, skill-list pins). 3 reviewers (maintainability sonnet, correctness opus, adversarial opus). lane_check: EXCEEDS on both guides (15 files, 1334 lines, mostly tests) — warn-only, label C2/C1 kept. 7 P1 + 5 P2 fixed in fix round 1 (`093545e9`, FX-1..12 / SX-1..6); left as suggestions: beyond-cap patterns lost, Kanban archive not read for `fixed`, no pre/post lock, `--report` accepts any path |
+| Full smoke suite still green (no regression) | ☑ pass | after fix round 1: `python3 -m pytest -q .claude/hooks/tests/ tests/` -> `3383 passed, 25 subtests passed in 191.64s` (07:35:08Z, `093545e9`); self-review tests re-run by Supervisor: `82 passed in 8.95s` |
+| **Companion score (easy-verifier)** | ☑ N/A | easy-verifier not run (Risk Low; optional) |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | pure-backend script/skill text, no UI |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | pure-backend script/skill text, no UI |
+| **UI: Responsiveness at target viewports** | ☑ N/A | pure-backend script/skill text, no UI |
 
 ---
 
