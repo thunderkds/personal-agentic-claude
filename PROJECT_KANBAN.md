@@ -87,8 +87,6 @@
 
 
 ### In Progress
-- [ ] **T256** — `self-review` skill — run the miner between `pre` and `post`, approvals become tasks | common-infrastructure | C1 | Risk: Low | P1 | Depends on T255 | Started 2026-11-05, stacked on T255: worktree `../wt-t256`, branch `feat/t256-self-review-skill`; T255+T256 merge together
-- [ ] **T255** — `self_review.py` — watermark gate, citation check and proposal register for self-review | common-infrastructure | C2 | Risk: Low | P1 | Started 2026-11-05, worktree `../wt-t255`, branch `feat/t255-self-review-script`
 
 
 
@@ -97,6 +95,8 @@
 
 
 ### Ready for Review
+- [ ] **T256** — `self-review` skill — run the miner between `pre` and `post`, approvals become tasks | common-infrastructure | C1 | Risk: Low | P1 | Depends on T255 | Started 2026-11-05, stacked on T255: worktree `../wt-t256`, branch `feat/t256-self-review-skill`; T255+T256 merge together; Stage 4 code-review: 7 P1 + 5 P2 fixed (fix round 1, `093545e9`), evidence `84d1ee92`, AC 9 live re-run pass; Ready for Review 2026-11-05, merge T256 branch with --no-ff (T070 pin)
+- [ ] **T255** — `self_review.py` — watermark gate, citation check and proposal register for self-review | common-infrastructure | C2 | Risk: Low | P1 | Started 2026-11-05, worktree `../wt-t255`, branch `feat/t255-self-review-script`; Stage 4 code-review: 7 P1 + 5 P2 fixed (fix round 1, `093545e9`), evidence `84d1ee92`, AC 9 live re-run pass; Ready for Review 2026-11-05, merge T256 branch with --no-ff (T070 pin)
 
 
 ### Done
