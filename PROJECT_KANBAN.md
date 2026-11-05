@@ -87,9 +87,7 @@
 
 
 ### In Progress
-- [ ] **T259** — `code-review`: stale-reference sweep for every fact the diff changes | common-infrastructure | C1 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_T259.md` | Drafted 2026-11-05 by `/self-review` (pattern `stale-claim-after-behaviour-change`, 7 tasks), approved by the user; LR `LR-0005-stale-text-after-change` | Started 2026-11-05 [auto], parallel with T257-T259: worktree `../wt-t259`, branch `feat/t259-stale-reference-sweep`, common-infrastructure (sonnet)
 - [ ] **T258** — TASK_GUIDE template: list the pre-existing pin tests a task will hit, at Stage 2 | common-infrastructure | C1 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_T258.md` | Drafted 2026-11-05 by `/self-review` (pattern `pin-tests-collide-with-later-tasks`, 7 tasks), approved by the user; LR `LR-0004-pin-tests-hit-later-tasks` | Started 2026-11-05 [auto], parallel with T257-T259: worktree `../wt-t258`, branch `feat/t258-pin-test-preflight`, common-infrastructure (sonnet)
-- [ ] **T257** — `tdd` + review template: prove each new test or mutation control can go red | common-infrastructure | C1 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_T257.md` | Drafted 2026-11-05 by `/self-review` (pattern `vacuous-assertion-or-noop-mutation-control`, 8 tasks), approved by the user; LR `LR-0003-tests-that-cannot-fail` | Started 2026-11-05 [auto], parallel with T257-T259: worktree `../wt-t257`, branch `feat/t257-tdd-red-proof`, common-infrastructure (sonnet)
 
 
 
@@ -98,6 +96,8 @@
 
 
 ### Ready for Review
+- [ ] **T259** — `code-review`: stale-reference sweep for every fact the diff changes | common-infrastructure | C1 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_T259.md` | Drafted 2026-11-05 by `/self-review` (pattern `stale-claim-after-behaviour-change`, 7 tasks), approved by the user; LR `LR-0005-stale-text-after-change` | Started 2026-11-05 [auto], parallel with T257-T259: worktree `../wt-t259`, branch `feat/t259-stale-reference-sweep`, common-infrastructure (sonnet) | Ready for Review 2026-11-05 [auto]: code-review P0/P1 0, P2 2; auto verify started
+- [ ] **T257** — `tdd` + review template: prove each new test or mutation control can go red | common-infrastructure | C1 | Risk: Low | P2 | Guide: `tasks/TASK_GUIDE_T257.md` | Drafted 2026-11-05 by `/self-review` (pattern `vacuous-assertion-or-noop-mutation-control`, 8 tasks), approved by the user; LR `LR-0003-tests-that-cannot-fail` | Started 2026-11-05 [auto], parallel with T257-T259: worktree `../wt-t257`, branch `feat/t257-tdd-red-proof`, common-infrastructure (sonnet) | Ready for Review 2026-11-05 [auto]: code-review P0/P1 0, P2 1; auto verify started
 
 
 ### Done
