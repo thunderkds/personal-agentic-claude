@@ -6,14 +6,18 @@
     self_review.py decide FINGERPRINT (approved TASK_ID | rejected) [--repo DIR]
 
 `pre` decides whether a run happens: it prints JSON, and when no `tasks/TASK_REVIEW_*.md`
-file is newer than the watermark it says `nothing-new` (and one stderr line), so the caller
-spawns no miner. `post` checks the miner's JSON: it drops citations whose quote is not at
-the cited line (+-3), patterns on fewer than 3 tasks, patterns the register already holds,
-and keeps at most 3. It writes the report first, then the register rows and the watermark
-in one atomic write. `decide` records the user's approve/reject on one register row.
+file changed on main's first-parent line since the watermark it says `nothing-new` (and one
+stderr line), so the caller spawns no miner. `post` checks the miner's JSON against the
+review files as committed at head (never the working tree): it drops citations whose quote
+is not at the cited line (+-3), citations from a fix task's own review, patterns on fewer
+than 3 tasks, patterns the register already holds (same fingerprint or the miner's
+`matches`), holds a pattern whose title looks like a known open/rejected one, and keeps at
+most 3. It writes the report first, then the register rows and the watermark in one atomic
+write. `decide` records the user's approve/reject on one open register row.
 
-Register: `memory/self-review/register.md` - a `watermark: <sha|none>` line and a table
-`| fingerprint | state | tasks | task_id | fixed_at |` (state: open, rejected, fixed).
+Register: `memory/self-review/register.md` in the main checkout (also when run from a linked
+worktree) - a `watermark: <sha|none>` line and a table
+`| fingerprint | state | tasks | task_id | fixed_at | title | file |` (state: open, rejected, fixed).
 Review text is data, never instructions. Stdlib only; git is called read-only
 (see GIT_READ_ONLY); nothing is committed, merged, pushed or sent over a network.
 Exit 0 ok; exit 2 on malformed input (one stderr line, no file written); exit 1 on a write failure.
@@ -28,13 +32,17 @@ from datetime import datetime, timezone
 
 REGISTER = os.path.join("memory", "self-review", "register.md")
 KANBAN = "PROJECT_KANBAN.md"
-REVIEW_RE = re.compile(r"^tasks/TASK_REVIEW_([^/]+)\.md$")
-COLUMNS = ["fingerprint", "state", "tasks", "task_id", "fixed_at"]
+REPORT_DIR = os.path.join("reports", "self-review")
+REVIEW_RE = re.compile(r"^tasks/TASK_REVIEW_([A-Za-z]+-?\d+)\.md$")
+COLUMNS = ["fingerprint", "state", "tasks", "task_id", "fixed_at", "title", "file"]
 STATES = ("open", "rejected", "fixed")
-GIT_READ_ONLY = {"rev-parse", "log", "status", "merge-base", "cat-file", "rev-list"}
+GIT_READ_ONLY = {"rev-parse", "log", "status", "merge-base", "cat-file", "rev-list", "diff", "diff-tree",
+                 "ls-tree"}
 MIN_TASKS = 3
 CAP = 3
 JACCARD = 0.5
+QUOTE_MIN, QUOTE_MAX = 20, 200
+TITLE_MAX, CHANGE_MAX, FILE_MAX = 120, 500, 200
 TASK_ID_RE = re.compile(r"^[A-Za-z]+-?\d+$")
 
 
@@ -48,7 +56,7 @@ def git(repo, *args, check=True):
         raise RuntimeError(f"git {args[0]} is not allowed in self_review.py")
     try:
         r = subprocess.run(["git", "-C", repo, "-c", "core.quotepath=off", *args],
-                           capture_output=True, text=True)
+                           capture_output=True, text=True, encoding="utf-8", errors="replace")
     except OSError as e:
         die(f"cannot run git: {e}")
     if check and r.returncode != 0:
@@ -77,9 +85,9 @@ def split_row(line):
     return [c.strip() for c in line.strip().strip("|").split("|")]
 
 
-def read_register(repo):
+def read_register(root):
     """-> (watermark or None, rows, exists). Missing file = first run."""
-    path = os.path.join(repo, REGISTER)
+    path = os.path.join(root, REGISTER)
     if not os.path.isfile(path):
         return None, [], False
     try:
@@ -111,15 +119,21 @@ def read_register(repo):
             continue
         if len(cells) != len(COLUMNS):
             die(f"register row has {len(cells)} columns, expected {len(COLUMNS)}: {ln.strip()[:60]}")
-        fp, state, tasks, task_id, fixed_at = cells
+        fp, state, tasks, task_id, fixed_at, title, pfile = cells
         if state not in STATES:
             die(f"register row '{fp}' has unknown state '{state}'")
         if not fp:
             die("register row with an empty fingerprint")
         rows.append({"fingerprint": fp, "state": state,
                      "tasks": [t.strip() for t in tasks.split(",") if t.strip() and t.strip() != "-"],
-                     "task_id": task_id or "-", "fixed_at": fixed_at or "-"})
+                     "task_id": task_id or "-", "fixed_at": fixed_at or "-",
+                     "title": title or "-", "file": pfile or "-"})
     return wm, rows, True
+
+
+def cell(s):
+    """One register cell: one line, no `|` (it would split the row)."""
+    return one_line(s).replace("|", "/") or "-"
 
 
 def render_register(wm, rows):
@@ -130,7 +144,7 @@ def render_register(wm, rows):
            "| " + " | ".join(COLUMNS) + " |", "|" + "---|" * len(COLUMNS)]
     for r in rows:
         out.append(f"| {r['fingerprint']} | {r['state']} | {','.join(r['tasks']) or '-'} | "
-                   f"{r['task_id']} | {r['fixed_at']} |")
+                   f"{r['task_id']} | {r['fixed_at']} | {cell(r['title'])} | {cell(r['file'])} |")
     return "\n".join(out) + "\n"
 
 
@@ -150,31 +164,57 @@ def verify_commit(repo, sha):
     return r.stdout.strip() if r.returncode == 0 else None
 
 
+def main_root(repo):
+    """The main checkout: the register and reports live there, also for a linked worktree."""
+    r = git(repo, "rev-parse", "--path-format=absolute", "--git-common-dir", check=False)
+    if r.returncode != 0:
+        die(f"'{repo}' is not a git repository")
+    return os.path.dirname(r.stdout.strip().rstrip("/"))
+
+
+def require_register(root, exists):
+    """A missing register next to earlier reports means it was lost: re-mining would re-propose."""
+    if exists:
+        return
+    d = os.path.join(root, REPORT_DIR)
+    n = len([f for f in os.listdir(d) if f.endswith(".md")]) if os.path.isdir(d) else 0
+    if n:
+        die(f"register missing but {n} report(s) exist in {d}; restore {REGISTER} "
+            "(for example from git history) before a new run")
+
+
 def usable_watermark(repo, wm, head):
-    """The watermark if it is a commit that is an ancestor of head, else None (+ stderr note)."""
+    """The watermark as a full SHA; exit 2 when it is not a commit that is an ancestor of head."""
     if not wm:
         return None
     full = verify_commit(repo, wm)
     if full and git(repo, "merge-base", "--is-ancestor", full, head, check=False).returncode == 0:
         return full
-    print(f"self-review: watermark {wm[:12]} is not reachable from {head[:12]}; "
-          "treating it as no watermark", file=sys.stderr)
-    return None
+    die(f"watermark {wm} is not an ancestor of {head[:12]}; edit the 'watermark:' line of {REGISTER}")
+
+
+def changed_reviews(repo, sha, has_parent):
+    """Review files a first-parent commit added or modified, compared with its first parent."""
+    if has_parent:
+        r = git(repo, "diff", "--name-only", "--no-renames", "--diff-filter=ACMR", f"{sha}^1", sha, "--", "tasks")
+    else:
+        r = git(repo, "diff-tree", "--root", "--no-commit-id", "--name-only", "-r", "--no-renames",
+                "--diff-filter=ACMR", sha, "--", "tasks")
+    return [f for f in r.stdout.splitlines() if REVIEW_RE.match(f)]
 
 
 def review_files(repo, wm, head, max_files):
-    """New review files in wm..head, oldest last-commit first, cut at max_files on a commit boundary."""
+    """New review files on main's first-parent line in wm..head, oldest commit first,
+    cut at max_files on a commit boundary. Only files that exist at head count."""
     rng = f"{wm}..{head}" if wm else head
-    r = git(repo, "log", "--reverse", "--name-only", "--no-renames", "--diff-filter=ACMR",
-            "--format=%x01%H", rng, "--", "tasks")
-    last, idx, sha = {}, -1, None
-    for ln in r.stdout.splitlines():
-        if ln.startswith("\x01"):
-            sha, idx = ln[1:], idx + 1
-        elif sha and REVIEW_RE.match(ln):
-            last[ln] = (idx, sha)
-    ordered = sorted(((i, f, s) for f, (i, s) in last.items()
-                      if os.path.isfile(os.path.join(repo, f))))
+    commits = [ln.split() for ln in git(repo, "rev-list", "--first-parent", "--reverse", "--parents",
+                                        rng).stdout.splitlines() if ln.strip()]
+    present = set(git(repo, "ls-tree", "-r", "--name-only", head, "--", "tasks").stdout.splitlines())
+    last = {}
+    for idx, c in enumerate(commits):
+        for f in changed_reviews(repo, c[0], len(c) > 1):
+            last[f] = (idx, c[0])
+    ordered = sorted((i, f, s) for f, (i, s) in last.items() if f in present)
     groups = []
     for i, f, s in ordered:
         if groups and groups[-1][0] == s:
@@ -250,15 +290,16 @@ def mark_fixed(repo, rows, head):
 # ---------------------------------------------------------------- pre
 
 def cmd_pre(a):
-    repo = a.repo
+    repo, root = a.repo, main_root(a.repo)
     head = resolve_head(repo)
-    wm_raw, rows, exists = read_register(repo)
+    wm_raw, rows, exists = read_register(root)
+    require_register(root, exists)
+    wm = usable_watermark(repo, wm_raw, head)  # exit 2 before any write
     if exists and mark_fixed(repo, rows, head):
         try:
-            atomic_write(os.path.join(repo, REGISTER), render_register(wm_raw, rows))
+            atomic_write(os.path.join(root, REGISTER), render_register(wm_raw, rows))
         except OSError as e:
             die(f"cannot write register: {e}", 1)
-    wm = usable_watermark(repo, wm_raw, head)
     inp = review_files(repo, wm, head, a.max_files) if wm != head else \
         {"files": [], "deferred": 0, "dropped_same_commit": 0}
     status = "ready" if inp["files"] else "nothing-new"
@@ -278,11 +319,13 @@ def norm(s):
 
 
 def citation_ok(lines, line, quote):
-    needle = norm(quote)[:60].rstrip(". …")
-    if not needle:
+    """Line in the file; the whole normalised quote (20-200 chars) inside lines line-3..line+3."""
+    if not 1 <= line <= len(lines):
         return False
-    lo, hi = max(0, line - 4), min(len(lines), line + 3)
-    return any(needle in norm(ln) for ln in lines[lo:hi])
+    q = norm(quote)
+    if not QUOTE_MIN <= len(q) <= QUOTE_MAX:
+        return False
+    return q in norm(" ".join(lines[max(0, line - 4):line + 3]))
 
 
 def jaccard(a, b):
@@ -290,12 +333,25 @@ def jaccard(a, b):
     return len(a & b) / len(u) if u else 0.0
 
 
+def title_words(s):
+    return set(re.findall(r"[a-z]{3,}", str(s).lower()))
+
+
 def slug(s):
     return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")[:80]
 
 
-def one_line(s):
-    return re.sub(r"\s+", " ", str(s)).strip()
+def one_line(s, cap=None):
+    s = re.sub(r"\s+", " ", str(s)).strip()
+    return s[:cap].rstrip() if cap else s
+
+
+def touches_guardrails(path):
+    p = path.strip().replace("\\", "/")
+    while p.startswith("./"):
+        p = p[2:]
+    parts = [x for x in p.split("/") if x]
+    return bool(parts) and (".claude" in parts or "hooks" in parts[:-1] or "settings" in parts[-1].lower())
 
 
 def load_miner(path):
@@ -312,9 +368,12 @@ def load_miner(path):
         if not isinstance(p.get("citations"), list):
             die(f"pattern '{p['id']}' has no 'citations' list")
         prop = p.get("proposal") if isinstance(p.get("proposal"), dict) else {}
-        pats.append({"fp": slug(p["id"]), "title": one_line(p.get("title") or p["id"]),
+        m = p.get("matches")
+        pats.append({"fp": slug(p["id"]), "title": one_line(p.get("title") or p["id"], TITLE_MAX),
                      "citations": p["citations"], "already_open": p.get("already_open") is True,
-                     "proposal": {"file": one_line(prop.get("file", "")), "change": one_line(prop.get("change", ""))}})
+                     "matches": m.strip() if isinstance(m, str) and m.strip() else None,
+                     "proposal": {"file": one_line(prop.get("file", ""), FILE_MAX),
+                                  "change": one_line(prop.get("change", ""), CHANGE_MAX)}})
     return pats
 
 
@@ -331,16 +390,16 @@ def has_commit_after(repo, path, fixed_at, head):
 
 
 def evaluate(repo, pats, rows, allowed, head):
-    """-> (kept, dropped_reasons, stats). kept = list of dicts with fp, tasks, citations, label, row."""
-    cache, kept, dropped = {}, [], []
+    """-> (kept, held, dropped_reasons, stats). Review text is read at head, never from the working tree."""
+    cache, kept, held, dropped = {}, [], [], []
     stats = {"cited": 0, "valid": 0}
+    by_fp = {r["fingerprint"]: r for r in rows}
+    fix_reviews = {f"tasks/TASK_REVIEW_{r['task_id']}.md" for r in rows if r["task_id"] != "-"}  # FX-2
 
     def lines_of(path):
         if path not in cache:
-            try:
-                cache[path] = open(os.path.join(repo, path), encoding="utf-8").read().splitlines()
-            except (OSError, UnicodeDecodeError):
-                cache[path] = None
+            r = git(repo, "cat-file", "blob", f"{head}:{path}", check=False)
+            cache[path] = r.stdout.splitlines() if r.returncode == 0 else None
         return cache[path]
 
     for p in pats:
@@ -350,37 +409,45 @@ def evaluate(repo, pats, rows, allowed, head):
             if not (isinstance(c, dict) and isinstance(c.get("file"), str) and isinstance(c.get("quote"), str)
                     and isinstance(c.get("line"), int) and not isinstance(c.get("line"), bool)):
                 continue
-            if c["file"] not in allowed or lines_of(c["file"]) is None:
+            if c["file"] not in allowed or c["file"] in fix_reviews or lines_of(c["file"]) is None:
                 continue
-            if citation_ok(lines_of(c["file"]), c["line"], c["quote"]):
-                valid.append({"file": c["file"], "line": c["line"], "quote": one_line(c["quote"])})
+            lines = lines_of(c["file"])
+            if citation_ok(lines, c["line"], c["quote"]):
+                valid.append({"file": c["file"], "line": c["line"],
+                              "text": one_line(lines[c["line"] - 1], QUOTE_MAX)})
                 stats["valid"] += 1
-        tasks = {review_task(c["file"]) for c in valid}
-        hits = [r for r in rows + kept_rows(kept)
-                if r["fingerprint"] == p["fp"] or jaccard(tasks, set(r["tasks"])) >= JACCARD]
-        if any(h["state"] in ("open", "rejected") for h in hits) or (not hits and p["already_open"]):
-            dropped.append((p["fp"], "already in the register"))
+        row = by_fp.get(p["fp"]) or by_fp.get(p["matches"])
+        if row and row["state"] in ("open", "rejected"):
+            dropped.append((p["fp"], f"same as register row `{row['fingerprint']}` ({row['state']})"))
             continue
-        label, row = "new", None
-        if hits:  # only fixed rows are left
-            row = hits[0]
-            valid = [c for c in valid if review_task(c["file"]) != row["task_id"]]  # AC 8
-            valid = [c for c in valid if has_commit_after(repo, c["file"], row["fixed_at"], head)]  # AC 7
+        if not row and p["already_open"]:
+            dropped.append((p["fp"], "the miner marked it already open"))
+            continue
+        label = "new"
+        if row:  # a fixed row: only evidence committed after the fix counts (AC 7)
+            valid = [c for c in valid if has_commit_after(repo, c["file"], row["fixed_at"], head)]
             label = "regressed"
         tasks = sorted({review_task(c["file"]) for c in valid})
         if len(tasks) < MIN_TASKS:
             dropped.append((p["fp"], f"{len(tasks)} task(s) with a valid citation, need {MIN_TASKS}"))
             continue
+        dup = next((k for k in kept if k["fp"] == p["fp"] or jaccard(set(tasks), set(k["tasks"])) >= JACCARD), None)
+        if dup:
+            dropped.append((p["fp"], f"repeats `{dup['fp']}` from this run"))
+            continue
+        if not row:  # backstop: a known open/rejected pattern under a new name is held, not proposed
+            words = title_words(p["title"])
+            near = next((r for r in rows if r["state"] in ("open", "rejected")
+                         and jaccard(words, title_words(r["title"])) >= JACCARD), None)
+            if near:
+                held.append((p["fp"], p["title"], near["fingerprint"]))
+                continue
         kept.append({"fp": p["fp"], "title": p["title"], "tasks": tasks, "citations": valid,
                      "proposal": p["proposal"], "label": label, "row": row})
-    return kept, dropped, stats
+    return kept, held, dropped, stats
 
 
-def kept_rows(kept):
-    return [{"fingerprint": k["fp"], "state": "open", "tasks": k["tasks"]} for k in kept]
-
-
-def render_report(now, head, old_wm, new_wm, inp, ranked, extra, dropped, stats, open_rows):
+def render_report(now, head, old_wm, new_wm, inp, ranked, extra, held, dropped, stats, open_rows):
     out = [f"# Self-review report - {now}", "",
            f"- head: `{head}`", f"- watermark: `{old_wm or 'none'}` -> `{new_wm}`",
            f"- review files read: {len(inp['files'])}; deferred to the next run: {inp['deferred']}",
@@ -392,13 +459,19 @@ def render_report(now, head, old_wm, new_wm, inp, ranked, extra, dropped, stats,
     if not ranked:
         out += ["", "No pattern is backed by >= 3 tasks with valid citations and not yet in the register."]
     for i, k in enumerate(ranked, 1):
+        f = k["proposal"]["file"]
         out += ["", f"### {i}. {k['title']}  [{k['label']}]", "",
                 f"- fingerprint: `{k['fp']}`", f"- tasks ({len(k['tasks'])}): {', '.join(k['tasks'])}",
-                f"- proposed change: `{k['proposal']['file'] or '-'}` - {k['proposal']['change'] or '-'}",
-                "- evidence:"]
-        out += [f"  - `{c['file']}:{c['line']}` - {c['quote']}" for c in k["citations"]]
+                f"- proposed change: `{f or '-'}` - {k['proposal']['change'] or '-'}"]
+        if f and touches_guardrails(f):
+            out.append("- ⚠ touches guardrails: the change is under `.claude/`, `hooks/` or a settings file")
+        out.append("- evidence (the file line at the cited line):")
+        out += [f"  - `{c['file']}:{c['line']}` - {c['text']}" for c in k["citations"]]
     if extra:
         out += ["", f"## Beyond the cap (not recorded, not proposed): {', '.join(k['fp'] for k in extra)}"]
+    if held:
+        out += ["", "## Held (not proposed, not recorded)"]
+        out += [f"- Held — possible repeat of `{near}`: `{fp}` - {title}" for fp, title, near in held]
     if dropped:
         out += ["", "## Dropped"] + [f"- `{fp}` - {why}" for fp, why in dropped]
     out += ["", "## Still open (not proposed again)"]
@@ -408,17 +481,18 @@ def render_report(now, head, old_wm, new_wm, inp, ranked, extra, dropped, stats,
 
 
 def cmd_post(a):
-    repo = a.repo
+    repo, root = a.repo, main_root(a.repo)
     pats = load_miner(a.miner_json)
     head = verify_commit(repo, a.head)
     if not head:
         die(f"--head '{a.head}' is not a commit")
-    wm_raw, rows, _ = read_register(repo)
-    mark_fixed(repo, rows, head)
+    wm_raw, rows, exists = read_register(root)
+    require_register(root, exists)
     wm = usable_watermark(repo, wm_raw, head)
+    mark_fixed(repo, rows, head)
     inp = review_files(repo, wm, head, a.max_files) if wm != head else \
         {"files": [], "shas": [], "deferred": 0, "dropped_same_commit": 0}
-    kept, dropped, stats = evaluate(repo, pats, rows, set(inp["files"]), head)
+    kept, held, dropped, stats = evaluate(repo, pats, rows, set(inp["files"]), head)
     kept.sort(key=lambda k: (-len(k["tasks"]), k["fp"]))
     ranked, extra = kept[:CAP], kept[CAP:]
     for k in ranked:
@@ -426,20 +500,21 @@ def cmd_post(a):
             k["row"].update(state="open", fixed_at="-", task_id="-", tasks=k["tasks"])
         else:
             rows.append({"fingerprint": k["fp"], "state": "open", "tasks": k["tasks"],
-                         "task_id": "-", "fixed_at": "-"})
+                         "task_id": "-", "fixed_at": "-", "title": k["title"],
+                         "file": k["proposal"]["file"] or "-"})
     new_wm = inp["shas"][-1] if inp["deferred"] else head
     now = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
-    report = a.report or os.path.join("reports", "self-review", f"self-review-{now}.md")
+    report = a.report or os.path.join(root, REPORT_DIR, f"self-review-{now}.md")
     if not os.path.isabs(report):
         report = os.path.join(repo, report)
     open_rows = [r for r in rows if r["state"] == "open"]
-    text = render_report(now, head, wm, new_wm, inp, ranked, extra, dropped, stats, open_rows)
+    text = render_report(now, head, wm, new_wm, inp, ranked, extra, held, dropped, stats, open_rows)
     try:
         atomic_write(report, text)  # the report first ...
     except OSError as e:
         die(f"cannot write report: {e}", 1)
     try:
-        atomic_write(os.path.join(repo, REGISTER), render_register(new_wm, rows))  # ... then rows + watermark
+        atomic_write(os.path.join(root, REGISTER), render_register(new_wm, rows))  # ... then rows + watermark
     except OSError as e:
         die(f"report written to {report} but the register could not be written: {e}", 1)
     print(report)
@@ -448,8 +523,8 @@ def cmd_post(a):
 # ---------------------------------------------------------------- decide
 
 def cmd_decide(a):
-    repo = a.repo
-    wm, rows, exists = read_register(repo)
+    root = main_root(a.repo)
+    wm, rows, exists = read_register(root)
     if not exists:
         die("no register: nothing to decide")
     if a.verdict == "approved" and not (a.task_id and TASK_ID_RE.match(a.task_id)):
@@ -459,12 +534,14 @@ def cmd_decide(a):
     row = next((r for r in rows if r["fingerprint"] == a.fingerprint), None)
     if row is None:
         die(f"unknown fingerprint '{a.fingerprint}'")
+    if row["state"] != "open":
+        die(f"row '{a.fingerprint}' is {row['state']}, not open; only open rows can be decided")
     if a.verdict == "rejected":
         row["state"] = "rejected"
     else:
         row["task_id"] = a.task_id
     try:
-        atomic_write(os.path.join(repo, REGISTER), render_register(wm, rows))
+        atomic_write(os.path.join(root, REGISTER), render_register(wm, rows))
     except OSError as e:
         die(f"cannot write register: {e}", 1)
     print(f"{a.fingerprint}: {row['state']}" + (f" (task {row['task_id']})" if row["task_id"] != "-" else ""))

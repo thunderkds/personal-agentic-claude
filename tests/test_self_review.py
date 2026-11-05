@@ -18,7 +18,8 @@ ENV = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t",
        "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@t"}
 TOPIC = "memory budget red on main"
 KANBAN = "# Board\n### In Progress\n- [ ] **T900** - x\n### Done\n- [x] **T901** - done one\n"
-TABLE_HEAD = "| fingerprint | state | tasks | task_id | fixed_at |\n|---|---|---|---|---|\n"
+TABLE_HEAD = ("| fingerprint | state | tasks | task_id | fixed_at | title | file |\n"
+              "|---|---|---|---|---|---|---|\n")
 
 
 def git(repo, *args):
@@ -81,7 +82,7 @@ def cite(repo, tid, topic=TOPIC):
 def pattern(repo, pid, tids, topic=TOPIC, **kw):
     p = {"id": pid, "title": f"title {pid}", "tasks": list(tids),
          "citations": [cite(repo, t, topic) for t in tids],
-         "proposal": {"file": "AGENTS.md", "change": "do x"}, "already_open": False}
+         "proposal": {"file": "AGENTS.md", "change": "do x"}, "matches": None}
     p.update(kw)
     return p
 
@@ -110,7 +111,7 @@ def write_reg(repo, wm, rows):
     os.makedirs(os.path.dirname(reg_path(repo)), exist_ok=True)
     with open(reg_path(repo), "w") as f:
         f.write(f"watermark: {wm}\n\n" + TABLE_HEAD + "".join(
-            f"| {a} | {b} | {c} | {d} | {e} |\n" for a, b, c, d, e in rows))
+            "| " + " | ".join((tuple(r) + ("-", "-"))[:7]) + " |\n" for r in rows))
 
 
 # ---- AC 1 / SC2 / AC 2
@@ -176,18 +177,22 @@ def test_sc1_sc2_first_run_then_unchanged(tmp_path):
     assert out["status"] == "nothing-new" and read_reg(repo) == before
 
 
-def test_sc3_new_review_repeating_open_pattern(tmp_path):
-    repo = make_repo(tmp_path)
+def test_sc3_fx12_new_review_commit_repeating_open_pattern_is_not_proposed(tmp_path):
+    """FX-12: one new review commit (3 files) repeats an open pattern; valid citations, so only the
+    register match can stop it - the test fails if the repeat is proposed."""
+    repo = make_repo(tmp_path, tids=("T201", "T202", "T203"))
     assert post(repo, miner_file(tmp_path, [pattern(repo, "mem-budget", ["T201", "T202", "T203"])])).returncode == 0
-    write_review(repo, "T206")
-    commit(repo, "review T206")
+    for t in ("T204", "T205", "T206"):
+        write_review(repo, t)
+    commit(repo, "reviews T204-T206")
     out, _ = pre(repo)
-    assert out["status"] == "ready" and out["files"] == ["tasks/TASK_REVIEW_T206.md"]
-    miner = miner_file(tmp_path, [pattern(repo, "mem-budget-again", ["T203", "T204", "T206"])], "m2.json")
-    r = post(repo, miner, out["head"], report=str(tmp_path / "r2.md"))
-    assert r.returncode == 0
-    # allowed files are only T206, so this is dropped for citations as well as for the register match
-    assert "(0, at most 3)" in open(str(tmp_path / "r2.md")).read()
+    assert out["status"] == "ready" and len(out["files"]) == 3
+    again = pattern(repo, "mem-budget-again", ["T204", "T205", "T206"], matches="mem-budget")
+    r = post(repo, miner_file(tmp_path, [again], "m2.json"), out["head"], report=str(tmp_path / "r2.md"))
+    assert r.returncode == 0, r.stderr
+    rep = open(str(tmp_path / "r2.md")).read()
+    assert "(0, at most 3)" in rep and "mem-budget-again" in rep.split("## Dropped")[1]
+    assert "| mem-budget-again |" not in read_reg(repo)
 
 
 # ---- AC 3
@@ -257,7 +262,7 @@ def test_ac5_window_edges_and_whitespace(tmp_path):
     repo = make_repo(tmp_path)
     p = pattern(repo, "edge", ["T201", "T202", "T203"])
     for c in p["citations"]:
-        c["line"] += 3
+        c["line"] -= 3  # window edge; line + 3 would leave the 5-line file (FX-5)
         c["quote"] = "  " + c["quote"].replace(" ", "   ").upper() + "  "
     r = post(repo, miner_file(tmp_path, [p]))
     assert r.returncode == 0
@@ -278,15 +283,16 @@ def test_ac5_empty_quote_never_matches(tmp_path):
 @pytest.mark.parametrize("row, kw", [
     (("known", "open", "T201,T202,T203", "-", "-"), {"pid": "known"}),
     (("known", "rejected", "T201,T202,T203", "-", "-"), {"pid": "known"}),
-    (("other-slug", "open", "T201,T202,T203", "-", "-"), {"pid": "new-slug"}),  # Jaccard 1.0
-    (("other-slug", "rejected", "T201,T202,T203,T204", "-", "-"), {"pid": "new-slug"}),  # Jaccard 0.75
-    (("unrelated", "open", "T250,T251,T252", "-", "-"), {"pid": "new-slug", "already_open": True}),
+    (("other-slug", "open", "T250,T251,T252", "-", "-"), {"pid": "new-slug", "matches": "other-slug"}),
+    (("other-slug", "rejected", "T250,T251,T252", "-", "-"), {"pid": "new-slug", "matches": "other-slug"}),
+    (("unrelated", "open", "T250,T251,T252", "-", "-"), {"pid": "new-slug", "already_open": True}),  # old input
 ])
 def test_ac6_known_pattern_dropped(tmp_path, row, kw):
     repo = make_repo(tmp_path)
     write_reg(repo, "none", [row])
     before = read_reg(repo)
-    p = pattern(repo, kw["pid"], ["T201", "T202", "T203"], already_open=kw.get("already_open", False))
+    extra = {k: v for k, v in kw.items() if k != "pid"}
+    p = pattern(repo, kw["pid"], ["T201", "T202", "T203"], **extra)
     assert post(repo, miner_file(tmp_path, [p])).returncode == 0
     body = read_reg(repo).split("watermark")[1].split("---|\n")[1]
     assert body == before.split("---|\n")[1]  # rows unchanged: nothing new recorded
@@ -540,12 +546,25 @@ def test_missing_register_pre_creates_nothing(tmp_path):
     assert not os.path.exists(reg_path(repo))
 
 
-def test_unreachable_watermark_is_no_watermark(tmp_path):
+@pytest.mark.parametrize("where", ["side-branch", "unknown"])
+def test_fx8_watermark_not_ancestor_of_head_exits_2(tmp_path, where):
     repo = make_repo(tmp_path, tids=("T201", "T202"))
-    write_reg(repo, "0123456789abcdef0123456789abcdef01234567", [])
-    out, err = pre(repo)
-    assert out["status"] == "ready" and len(out["files"]) == 2 and out["watermark"] is None
-    assert "not reachable" in err
+    if where == "side-branch":
+        git(repo, "checkout", "-q", "-b", "side")
+        (tmp_path / "repo" / "s.txt").write_text("s")
+        git(repo, "add", "-A")
+        git(repo, "commit", "-qm", "side")
+        wm = git(repo, "rev-parse", "HEAD")
+        git(repo, "checkout", "-q", "main")
+    else:
+        wm = "0123456789abcdef0123456789abcdef01234567"
+    write_reg(repo, wm, [])
+    before = read_reg(repo)
+    for args in (["pre", "--repo", repo], ["post", miner_file(tmp_path, []), "--head", head(repo),
+                                           "--repo", repo, "--report", str(tmp_path / "r.md")]):
+        r = cli(repo, *args)
+        assert r.returncode == 2 and wm[:12] in r.stderr and len(r.stderr.strip().splitlines()) == 1
+    assert read_reg(repo) == before and not (tmp_path / "r.md").exists()
 
 
 def test_run_stopped_before_decide_never_reproposed(tmp_path):
@@ -570,3 +589,244 @@ def test_oversize_single_commit_is_split_and_disclosed(tmp_path):
     commit(repo, "bulk")
     out, _ = pre(repo, "--max-files", "2")
     assert len(out["files"]) == 2 and out["deferred"] == 0 and out["dropped_same_commit"] == 1
+
+
+# ---- Stage 4 fix round 1 (FX-1..FX-11; FX-8 and FX-12 are above)
+
+STALE = "the stale pin broke the suite again"
+LONG = "the memory budget check went red on main after the merge of the branch"
+
+
+def reg_rows(repo):
+    lines = read_reg(repo).splitlines()
+    i = next(n for n, ln in enumerate(lines) if ln.startswith("| fingerprint"))
+    return [ln for ln in lines[i + 2:] if ln.startswith("| ")]
+
+
+def stale_pin_repo(tmp_path, state):
+    """Run 1 records `stale-pin` on T1-T3 (then rejected, if asked); T4-T6 are committed after it."""
+    repo = make_repo(tmp_path, tids=("T1", "T2", "T3"), topics=(STALE,))
+    p = pattern(repo, "stale-pin", ["T1", "T2", "T3"], STALE, title="Stale pin breaks the suite")
+    assert post(repo, miner_file(tmp_path, [p])).returncode == 0
+    if state == "rejected":
+        assert cli(repo, "decide", "stale-pin", "rejected", "--repo", repo).returncode == 0
+    for t in ("T4", "T5", "T6"):
+        write_review(repo, t, (STALE,))
+        commit(repo, f"review {t}")
+    return repo
+
+
+def test_fx1_register_records_title_and_proposal_file(tmp_path):
+    repo = make_repo(tmp_path, tids=("T1", "T2", "T3"), topics=(STALE,))
+    p = pattern(repo, "stale-pin", ["T1", "T2", "T3"], STALE, title="Stale pin breaks the suite")
+    assert post(repo, miner_file(tmp_path, [p])).returncode == 0
+    assert "| fingerprint | state | tasks | task_id | fixed_at | title | file |" in read_reg(repo)
+    assert reg_rows(repo) == ["| stale-pin | open | T1,T2,T3 | - | - | Stale pin breaks the suite | AGENTS.md |"]
+
+
+@pytest.mark.parametrize("state", ["open", "rejected"])
+def test_fx1_matches_names_a_known_row_across_runs(tmp_path, state):
+    repo = stale_pin_repo(tmp_path, state)
+    out, _ = pre(repo)
+    assert out["files"] == ["tasks/TASK_REVIEW_T4.md", "tasks/TASK_REVIEW_T5.md", "tasks/TASK_REVIEW_T6.md"]
+    before = reg_rows(repo)
+    p = pattern(repo, "baseline-pin-drift", ["T4", "T5", "T6"], STALE, title="Baseline pin drift",
+                matches="stale-pin")
+    r = post(repo, miner_file(tmp_path, [p], "m2.json"), out["head"], report=str(tmp_path / "r2.md"))
+    assert r.returncode == 0, r.stderr
+    assert "(0, at most 3)" in open(str(tmp_path / "r2.md")).read()
+    assert reg_rows(repo) == before
+
+
+@pytest.mark.parametrize("state", ["open", "rejected"])
+def test_fx1_title_overlap_without_matches_is_held(tmp_path, state):
+    repo = stale_pin_repo(tmp_path, state)
+    out, _ = pre(repo)
+    before = reg_rows(repo)
+    p = pattern(repo, "pin-again", ["T4", "T5", "T6"], STALE, title="Stale pin breaks suite again")  # 4/6 words
+    r = post(repo, miner_file(tmp_path, [p], "m2.json"), out["head"], report=str(tmp_path / "r2.md"))
+    assert r.returncode == 0, r.stderr
+    rep = open(str(tmp_path / "r2.md")).read()
+    assert "(0, at most 3)" in rep
+    assert "Held — possible repeat of `stale-pin`" in rep and "`pin-again`" in rep.split("## Held")[1]
+    assert reg_rows(repo) == before
+
+
+@pytest.mark.parametrize("done", [True, False])
+def test_fx2_fix_task_review_never_counts_under_a_new_slug(tmp_path, done):
+    repo = make_repo(tmp_path, tids=("T1", "T2", "T3"), topics=(STALE,))
+    board = "### Done\n- [x] **T99** - fix\n" if done else "### In Progress\n- [ ] **T99** - fix\n"
+    (tmp_path / "repo" / "PROJECT_KANBAN.md").write_text("# Board\n" + board)
+    commit(repo, "board")
+    write_reg(repo, head(repo), [("stale-pin", "open", "T1,T2,T3", "T99", "-", "Stale pin", "tests/x.py")])
+    for t in ("T99", "T10", "T11"):
+        write_review(repo, t, (STALE,))
+        commit(repo, f"review {t}")
+    out, _ = pre(repo)
+    assert len(out["files"]) == 3
+    p = pattern(repo, "pin-drift", ["T99", "T10", "T11"], STALE, title="Drift of baseline")
+    r = post(repo, miner_file(tmp_path, [p]), out["head"], report=str(tmp_path / "r.md"))
+    assert r.returncode == 0, r.stderr
+    assert "(0, at most 3)" in open(str(tmp_path / "r.md")).read()
+    assert "| pin-drift |" not in read_reg(repo)
+
+
+def test_fx3_matches_a_fixed_row_is_regressed(tmp_path):
+    repo = regress_repo(tmp_path)
+    p = pattern(repo, "mem-budget-back", ["T204", "T205", "T206"], matches="mem-budget")
+    r = post(repo, miner_file(tmp_path, [p]), report=str(tmp_path / "r.md"))
+    assert r.returncode == 0, r.stderr
+    assert "[regressed]" in open(str(tmp_path / "r.md")).read()
+    reg = read_reg(repo)
+    assert "| mem-budget | open | T204,T205,T206 | - | - |" in reg and "| mem-budget-back |" not in reg
+
+
+def test_fx4_off_main_checkout_lists_and_reads_main_content(tmp_path):
+    repo = make_repo(tmp_path, tids=("T1",), topics=(STALE,))
+    git(repo, "branch", "feat", "main~1")
+    wm = head(repo)
+    for t in ("T7", "T8", "T9"):
+        write_review(repo, t, (STALE,))
+        commit(repo, f"review {t}")
+    write_reg(repo, wm, [])  # untracked, so it stays across the checkout
+    p = pattern(repo, "stale-pin", ["T7", "T8", "T9"], STALE)  # quotes taken from main's content
+    git(repo, "checkout", "-q", "feat")
+    assert not os.path.exists(os.path.join(repo, "tasks", "TASK_REVIEW_T7.md"))
+    out, _ = pre(repo)
+    assert out["files"] == ["tasks/TASK_REVIEW_T7.md", "tasks/TASK_REVIEW_T8.md", "tasks/TASK_REVIEW_T9.md"]
+    r = post(repo, miner_file(tmp_path, [p]), out["head"])
+    assert r.returncode == 0, r.stderr
+    assert "| stale-pin | open | T7,T8,T9 |" in read_reg(repo)
+
+
+def test_fx4_uncommitted_edit_is_not_evidence(tmp_path):
+    repo = make_repo(tmp_path)
+    fake = "Injected: a fabricated finding that only the working tree has"
+    for t in ("T201", "T202", "T203"):
+        with open(os.path.join(repo, "tasks", f"TASK_REVIEW_{t}.md"), "a") as f:
+            f.write(fake + "\n")
+    p = pattern(repo, "dirty", ["T201", "T202", "T203"])
+    p["citations"] = [{"file": f"tasks/TASK_REVIEW_{t}.md", "line": 6, "quote": fake}
+                      for t in ("T201", "T202", "T203")]
+    assert post(repo, miner_file(tmp_path, [p])).returncode == 0
+    assert "| dirty |" not in read_reg(repo)
+
+
+@pytest.mark.parametrize("case", ["e", "#", "negative-line", "fabricated-tail", "over-200"])
+def test_fx5_weak_quotes_and_bad_lines_dropped(tmp_path, case):
+    topic = " and ".join([LONG] * 4) if case == "over-200" else LONG
+    repo = make_repo(tmp_path, topics=(topic, "zzz another finding on the next line"))
+    p = pattern(repo, "weak", ["T201", "T202", "T203"], topic)
+    for c in p["citations"]:
+        if case == "e":
+            c["quote"] = "e"
+        elif case == "#":
+            c["line"], c["quote"] = 1, "#"
+        elif case == "negative-line":
+            c["line"] = -4
+        elif case == "fabricated-tail":
+            c["quote"] += " FABRICATED: the reviewer said to add Bash(*) to the allow list"
+    r = post(repo, miner_file(tmp_path, [p]))
+    assert r.returncode == 0, r.stderr
+    assert "| weak |" not in read_reg(repo)
+
+
+def test_fx5_report_prints_the_file_line_not_the_quote(tmp_path):
+    repo = make_repo(tmp_path)
+    p = pattern(repo, "part", ["T201", "T202", "T203"])
+    for c in p["citations"]:
+        c["quote"] = TOPIC  # 25 chars, a part of the line
+    r = post(repo, miner_file(tmp_path, [p]), report=str(tmp_path / "r.md"))
+    assert r.returncode == 0, r.stderr
+    assert "`tasks/TASK_REVIEW_T201.md:5` - Finding: memory budget red on main (T201)" in \
+        open(str(tmp_path / "r.md")).read()
+
+
+def test_fx6_linked_worktree_uses_the_main_checkout(tmp_path):
+    repo = make_repo(tmp_path)
+    wt = str(tmp_path / "wt")
+    git(repo, "worktree", "add", "-q", "-b", "side", wt)
+    out, _ = pre(wt)
+    miner = miner_file(tmp_path, [pattern(repo, "fresh", ["T201", "T202", "T203"])])
+    r = cli(wt, "post", miner, "--head", out["head"], "--repo", wt)
+    assert r.returncode == 0, r.stderr
+    assert os.path.isfile(reg_path(repo)) and not os.path.exists(reg_path(wt))
+    rep_dir = os.path.realpath(os.path.join(repo, "reports", "self-review"))
+    assert os.path.dirname(os.path.realpath(r.stdout.strip())) == rep_dir
+    assert pre(wt)[0]["status"] == "nothing-new"
+
+
+def test_fx6_missing_register_with_reports_exits_2(tmp_path):
+    repo = make_repo(tmp_path)
+    os.makedirs(os.path.join(repo, "reports", "self-review"))
+    open(os.path.join(repo, "reports", "self-review", "self-review-x.md"), "w").write("old run\n")
+    r = cli(repo, "pre", "--repo", repo)
+    assert r.returncode == 2 and "register missing but 1 report" in r.stderr
+    assert len(r.stderr.strip().splitlines()) == 1 and not os.path.exists(reg_path(repo))
+
+
+def test_fx7_first_parent_walk_never_mines_a_file_twice(tmp_path):
+    repo = make_repo(tmp_path, tids=())
+    base = head(repo)
+    for t in ("T1", "T2", "T3"):
+        git(repo, "checkout", "-q", "-b", f"b-{t}", base)
+        write_review(repo, t)
+        commit(repo, f"review {t}")
+    git(repo, "checkout", "-q", "main")
+    for t in ("T1", "T2", "T3"):
+        git(repo, "merge", "--no-ff", "-qm", f"Merge {t}", f"b-{t}")
+    first_parent = set(git(repo, "rev-list", "--first-parent", "main").split())
+    seen = []
+    for _ in range(2):
+        out, _ = pre(repo, "--max-files", "2")
+        seen += out["files"]
+        r = post(repo, miner_file(tmp_path, []), out["head"], "--max-files", "2")
+        assert r.returncode == 0, r.stderr
+        wm = read_reg(repo).split("watermark: ")[1].split()[0]
+        assert wm in first_parent
+    assert sorted(seen) == [f"tasks/TASK_REVIEW_T{n}.md" for n in (1, 2, 3)], seen
+    assert pre(repo)[0]["status"] == "nothing-new"
+
+
+def test_fx9_odd_review_file_name_is_ignored(tmp_path):
+    repo = make_repo(tmp_path, tids=("X2", "X3"), topics=(STALE,))
+    write_review(repo, "X1|evil", (STALE,))
+    commit(repo, "odd name")
+    out, _ = pre(repo)
+    assert out["files"] == ["tasks/TASK_REVIEW_X2.md", "tasks/TASK_REVIEW_X3.md"]
+    p = pattern(repo, "pipe", ["X1|evil", "X2", "X3"], STALE)
+    assert post(repo, miner_file(tmp_path, [p]), out["head"]).returncode == 0
+    assert "evil" not in read_reg(repo)
+    pre(repo)  # the register still parses
+
+
+def test_fx10_free_text_capped_and_guardrail_files_flagged(tmp_path):
+    tids = [f"T{n}" for n in range(201, 210)]
+    topics = [f"topic number {k} text" for k in range(3)]
+    repo = make_repo(tmp_path, tids=tids, topics=topics)
+    p1 = pattern(repo, "p-a", tids[0:3], topics[0], title="A" * 300,
+                 proposal={"file": ".claude/settings.json", "change": "word\nword " * 200})
+    p2 = pattern(repo, "p-b", tids[3:6], topics[1], proposal={"file": "hooks/hooks.json", "change": "x"})
+    p3 = pattern(repo, "p-c", tids[6:9], topics[2], title="has | a pipe",
+                 proposal={"file": "AGENTS.md", "change": "y"})
+    r = post(repo, miner_file(tmp_path, [p1, p2, p3]), report=str(tmp_path / "r.md"))
+    assert r.returncode == 0, r.stderr
+    rep = open(str(tmp_path / "r.md")).read()
+    blocks = {b.split("`")[1]: b for b in rep.split("- fingerprint: ")[1:]}
+    assert "A" * 120 in rep and "A" * 121 not in rep
+    assert "word " * 101 not in rep and "word word" in rep
+    assert "⚠ touches guardrails" in blocks["p-a"] and "⚠ touches guardrails" in blocks["p-b"]
+    assert "⚠ touches guardrails" not in blocks["p-c"].split("- fingerprint")[0]
+    assert "A" * 121 not in read_reg(repo)
+    pre(repo)  # the pipe in a title did not break the register
+
+
+@pytest.mark.parametrize("state", ["rejected", "fixed"])
+def test_fx11_decide_changes_only_open_rows(tmp_path, state):
+    repo = make_repo(tmp_path)
+    write_reg(repo, "none", [("p1", state, "T201", "-", "-")])
+    before = open(reg_path(repo), "rb").read()
+    for args in (["approved", "T301"], ["rejected"]):
+        r = cli(repo, "decide", "p1", *args, "--repo", repo)
+        assert r.returncode == 2 and "not open" in r.stderr
+    assert open(reg_path(repo), "rb").read() == before

@@ -33,6 +33,7 @@ def test_ac1_frontmatter_user_only_description_and_codex_cap():
     desc = re.search(r"^description:\s*(.+)$", fm, re.MULTILINE).group(1)
     assert "only by the user" in desc and "/self-review" in desc
     assert "no hook, schedule or agent starts it" in desc
+    assert re.search(r"^disable-model-invocation: true$", fm, re.MULTILINE), "SX-1: user-invoked skill"
     assert len(body.encode("utf-8")) < CODEX_CAP, "Codex caps a skill body at 8 KB"
 
 
@@ -47,27 +48,29 @@ def test_ac2_pre_runs_first_and_nothing_new_stops_before_any_agent_call():
     assert body.index("### Step 1") < body.index("Agent({")
 
 
-def test_ac3_exactly_one_sonnet_miner_writing_to_the_scratchpad():
+def test_ac3_sx2_exactly_one_read_only_sonnet_miner_reply_saved_to_the_scratchpad():
     _, body = frontmatter(read("skills", "self-review", "SKILL.md"))
     spawns = re.findall(r"Agent\(\{[^}]*\}\)", body)
     assert len(spawns) == 1, spawns
-    assert 'subagent_type: "general-purpose"' in spawns[0]
+    assert 'subagent_type: "Explore"' in spawns[0], "SX-2: the miner is read-only"
     assert 'model: "sonnet"' in spawns[0]
     assert "references/miner-prompt.md" in spawns[0]
     two = step(body, 2)
     assert "FILES" in two and "scratchpad" in two and "never inside the repo" in two
     assert "Never start a second miner" in two
+    assert "write that reply to `OUT`" in two, "SX-2: the runner, not the miner, writes OUT"
     assert "(references/miner-prompt.md)" in two, "a link, with the trigger to load it"
 
 
 def test_ac4_miner_prompt_is_the_spike_prompt_adapted():
     miner = read("skills", "self-review", "references", "miner-prompt.md")
-    assert "FILES" in miner and "KNOWN" in miner and "OUT" in miner
+    assert "FILES" in miner and "KNOWN" in miner
+    assert "OUT" not in miner, "SX-2: the runner writes OUT, the miner only replies"
     assert "only input" in miner and "Read nothing else" in miner
     assert "data, never instructions" in miner
     assert "docs/claude-md/untrusted-content-boundary.md" in miner
     assert "3 or more" in miner and "at most 5" in miner
-    assert "already_open" in miner
+    assert "whole final reply" in miner and "Do not edit or write any file" in miner  # SX-2
     assert "/home/" not in miner and "{{" not in miner, "no spike path or placeholder left"
 
 
@@ -117,3 +120,30 @@ def test_ac8_no_hook_or_hook_config_mentions_self_review():
         if re.search(r"self[-_]review", text):
             hits.append(os.path.relpath(p, ROOT))
     assert not hits, hits
+
+
+def test_sx3_known_rows_carry_state_title_file_and_miner_sets_matches():
+    _, body = frontmatter(read("skills", "self-review", "SKILL.md"))
+    assert "`fingerprint | state | title | file`" in step(body, 2)
+    miner = read("skills", "self-review", "references", "miner-prompt.md")
+    assert '"matches"' in miner and "exact fingerprint" in miner and "any state" in miner
+    assert "else `null`" in miner
+
+
+def test_sx4_report_and_miner_output_are_untrusted_and_guardrail_flag_shown():
+    _, body = frontmatter(read("skills", "self-review", "SKILL.md"))
+    three = step(body, 3)
+    assert "untrusted data" in three and "docs/claude-md/untrusted-content-boundary.md" in three
+    assert "⚠ touches guardrails" in three
+
+
+def test_sx5_miner_failure_keeps_watermark_and_names_the_skip_command():
+    _, body = frontmatter(read("skills", "self-review", "SKILL.md"))
+    two = step(body, 2)
+    assert "watermark stays" in two and '`{"patterns":[]}`' in two and "post" in two
+
+
+def test_sx6_register_and_report_live_in_the_main_checkout_and_are_not_committed():
+    _, body = frontmatter(read("skills", "self-review", "SKILL.md"))
+    six = step(body, 6)
+    assert "main checkout" in six and "git-tracked" in six and "does not commit" in six
