@@ -47,16 +47,16 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_self_review.py` (`test_t260_ac1_*` .. `test_t260_edge_*`, 17 tests + updated `test_ac9_*`), `tests/test_self_review_skill.py` (`test_sx6_*`, `test_t260_ac8_*`). Each new test was RED on the unmodified script (15 failed, 73 passed on `tests/test_self_review.py` before the change), GREEN after. |
+| Verification command run | ☑ pass | `python3 -m pytest -q tests/ .claude/hooks/tests/` at commit d426105b, started 2026-11-05T10:25:06Z: `3402 passed, 25 subtests passed in 211.00s (0:03:30)`. (An earlier run, with the tree edited during the run, failed `test_memory_usage_report.py::test_script_does_not_touch_the_real_repository` on a dirty `git status`; clean re-run above is green.) |
+| Negative cases hold | ☑ pass | Near-identical title + tasks still dropped (`test_t260_ac1_same_tasks_and_near_identical_title_is_still_a_repeat`); waiting row repeated by miner (fingerprint / `matches` / title) makes no second row; `decide` on a waiting row exits 2; waiting row with a fix-task citation or a moved line is removed, not proposed; no new file -> no proposal; unknown register state still exits 2. |
+| verify | ☑ pass | Headless auto verify (`stop_auto_verify.py --start T260`) at 6e1fb64ed79b — `verdict: pass`, log `.claude/verify-runs/T260-6e1fb64ed79b.log` ($0.64). Real `pre`/`post`/`decide` over 3 runs on a scratch repo: overlapping patterns with different titles both proposed; 3 over-cap rows `waiting`; no-new-file `pre` → `nothing-new`, `waiting: 3`; next run with a new review proposes the 3 waiting rows → `open`, `detail` column gone; miner repeat of a waiting row → no second row; 4 parallel `post` → 4 report files; `decide` on a waiting row → exit 2. Minor (pre-existing, not T260): rows just proposed also show under `## Still open (not proposed again)`. Row copied from the log by the Supervisor: the hook printed `no report section for T260 ... auto verify slot not written`. — pass |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Supervisor `code-review` 2026-11-05 on `main...feat/t260-self-review-waiting` (7 files, +481/-47): `self_review.py` (`read_register`, `render_register`, `evaluate`, `waiting_candidates`, `reserve_report`, `cmd_pre`, `cmd_post`), `SKILL.md` Steps 1/3/6, PRD FR-005, both test files. Callers: SKILL Steps 1/3/5 only. lane_check: `lane: C2, 6 files, 483 lines, FITS; unpredicted: tasks/TASK_GUIDE_T260.md` (Approach section, expected). P0 0, P1 0, P2 0, P3 3: (1) the waiting-row re-check reads the commit the row was recorded at, so it only catches a hand-edited `detail` cell, not later edits to the review file (by design: committed evidence stays evidence); (2) the in-run repeat check now needs title-word Jaccard >= 0.5, so two wordings of one defect in the same run can both be proposed; the miner prompt asks for distinct patterns; (3) Startup reads skipped the guide's step-6 extras `tasks/TASK_REVIEW_T255.md`/`T256.md` (Permanent-Rule reads were done, so not a P1). Read-only `pre` against the real register from this worktree: `ready 33 0 ['open','open','open']` (3 open rows read, `waiting` 0). |
+| Full smoke suite still green (no regression) | ☑ pass | Same run as the Verification row: `3402 passed, 25 subtests passed in 211.00s` at d426105b; Supervisor re-run of `tests/test_self_review.py tests/test_self_review_skill.py`: `101 passed in 14.80s`. |
+| **Companion score (easy-verifier)** | ☐ N/A | Not run: C2 / Risk Low, script-only change, no score requested. |
+| **UI: Visual regression (diff or verdict pasted)** | ☐ N/A | No UI component: Python script, skill text and tests only. |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ N/A | No UI component: Python script, skill text and tests only. |
+| **UI: Responsiveness at target viewports** | ☐ N/A | No UI component: Python script, skill text and tests only. |
 
 ---
 
@@ -67,12 +67,43 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured 2026-11-05T10:14:50Z, unmodified `self_review.py`, before any implementation commit). Command: `python3 /tmp/.../scratchpad/t260_scenario.py skills/self-review/scripts/self_review.py`. It builds a temp git repo with the 2026-11-05 shape (8-task pattern, a 5-task pattern inside it with a different title, 4 more 3-4 task patterns) and runs `post`:
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+```
+exit: 0
+## Proposals (3, at most 3)
+### 1. Vacuous assertion or noop mutation control  [new]
+### 2. d1  [new]
+### 3. d4  [new]
+## Beyond the cap (not recorded, not proposed): memory-budget-overrun, stale-sibling-text
+## Dropped
+- `unverified-guide-or-report-claim` - repeats `vacuous-assertion-or-noop-mutation-control` from this run
+## Still open (not proposed again)
+...
+register rows: vacuous-assertion-or-noop-mutation-control | open ; pre-existing-red-baseline | open ; hook-trace-gap | open
+(no row for unverified-guide-or-report-claim, memory-budget-overrun, stale-sibling-text)
+```
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+SKILL.md Step 6 prior text (verbatim): "The register (`memory/self-review/register.md`) and the report (`reports/self-review/`) are git-tracked files in the main checkout, also when you ran from a worktree. The skill does not commit them. Tell the user they changed, with both paths, so they can commit them."
+
+**AFTER** (2026-11-05T10:20:58Z, same scenario command, `self_review.py` at the T260 change):
+
+```
+exit: 0
+## Proposals (3, at most 3)
+### 1. Vacuous assertion or noop mutation control  [new]
+### 2. Unverified guide or report claim  [new]
+### 3. d1  [new]
+## Waiting for a later run (3; kept in the register, proposed first next time)
+- `hook-trace-gap` - T311,T312,T313 (recorded in this run)
+- `memory-budget-overrun` - T308,T309,T310 (recorded in this run)
+- `stale-sibling-text` - T305,T306,T307 (recorded in this run)
+register: 3 `open` rows + 3 `waiting` rows (8th column `detail` holds the evidence); no `Dropped` section.
+```
+
+SKILL.md Step 6 now (verbatim): "The register (`memory/self-review/register.md`) is git-tracked in the main checkout ... The report (`reports/self-review/`) is local only: `reports/*` is ignored by git, so do not tell the user to commit it."
+
+**DELTA**: A real recurring pattern the miner found is no longer lost to the cap of 3 or to a task-overlap-only duplicate check: it waits in the register and a later `/self-review` proposes it, and the skill text says the register is committed while the report stays local.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
