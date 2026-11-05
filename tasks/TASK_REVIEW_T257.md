@@ -50,6 +50,11 @@ Mode: auto
 2. Spawn model claude · C1 → sonnet — FACT: PROJECT_SPEC.md `## CLI Model Table` "| claude | `claude` | haiku | sonnet |"
 3. Requirement Fidelity Gate signed `auto (Supervisor)` — RULE: `docs/claude-md/tracks.md` `### Every user stop and its auto rule` row 13
 4. T258 and T259 both add one line to the Edge Case Checklist of `templates/TASK_GUIDE_template.md`; run them in parallel anyway and resolve the adjacent-line conflict at merge, keeping both lines — SAFER OPTION: parallel runs were asked for; the conflict is two added lines, no logic ⚠ decided for you — please review
+5. `test_guide_sections.py` moved-row pin repointed to the new Negative-cases row text (AC4 changes that row) — RULE: `tasks/TASK_GUIDE_T257.md` § Edge Case Checklist "Pin tests on the edited files"
+6. P2 (hand-copied PRIOR_TDD excerpt in the RED control) left as a suggestion, not fixed — RULE: `skills/code-review/SKILL.md` § Phase 4 "Do not apply P2/P3 fixes automatically"
+Checks: tests `python3 -m pytest -q tests/ .claude/hooks/tests/` — `3408 passed, 25 subtests passed` (agent); Supervisor re-run of T257 tests + test_guide_sections — `57 passed`; reviews code-review — P0 0, P1 0, P2 1, P3 1; real run: text-only change, red proof `4 failed, 2 passed` on prior content then `6 passed` (auto-checked, not /verify)
+Memory: nothing new — the pattern is already recorded as LR-0003 and in `memory/self-review/register.md`
+Not done: merge (yours); auto verify: running (T182)
 
 
 ## Evidence
