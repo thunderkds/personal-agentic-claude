@@ -47,9 +47,9 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_self_review.py` (`test_t260_ac1_*` .. `test_t260_edge_*`, 17 tests + updated `test_ac9_*`), `tests/test_self_review_skill.py` (`test_sx6_*`, `test_t260_ac8_*`). Each new test was RED on the unmodified script (15 failed, 73 passed on `tests/test_self_review.py` before the change), GREEN after. |
+| Verification command run | ☑ pass | `python3 -m pytest -q tests/ .claude/hooks/tests/` at commit d426105b, started 2026-11-05T10:25:06Z: `3402 passed, 25 subtests passed in 211.00s (0:03:30)`. (An earlier run, with the tree edited during the run, failed `test_memory_usage_report.py::test_script_does_not_touch_the_real_repository` on a dirty `git status`; clean re-run above is green.) |
+| Negative cases hold | ☑ pass | Near-identical title + tasks still dropped (`test_t260_ac1_same_tasks_and_near_identical_title_is_still_a_repeat`); waiting row repeated by miner (fingerprint / `matches` / title) makes no second row; `decide` on a waiting row exits 2; waiting row with a fix-task citation or a moved line is removed, not proposed; no new file -> no proposal; unknown register state still exits 2. |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
 | Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
@@ -86,9 +86,24 @@ register rows: vacuous-assertion-or-noop-mutation-control | open ; pre-existing-
 
 SKILL.md Step 6 prior text (verbatim): "The register (`memory/self-review/register.md`) and the report (`reports/self-review/`) are git-tracked files in the main checkout, also when you ran from a worktree. The skill does not commit them. Tell the user they changed, with both paths, so they can commit them."
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER** (2026-11-05T10:20:58Z, same scenario command, `self_review.py` at the T260 change):
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```
+exit: 0
+## Proposals (3, at most 3)
+### 1. Vacuous assertion or noop mutation control  [new]
+### 2. Unverified guide or report claim  [new]
+### 3. d1  [new]
+## Waiting for a later run (3; kept in the register, proposed first next time)
+- `hook-trace-gap` - T311,T312,T313 (recorded in this run)
+- `memory-budget-overrun` - T308,T309,T310 (recorded in this run)
+- `stale-sibling-text` - T305,T306,T307 (recorded in this run)
+register: 3 `open` rows + 3 `waiting` rows (8th column `detail` holds the evidence); no `Dropped` section.
+```
+
+SKILL.md Step 6 now (verbatim): "The register (`memory/self-review/register.md`) is git-tracked in the main checkout ... The report (`reports/self-review/`) is local only: `reports/*` is ignored by git, so do not tell the user to commit it."
+
+**DELTA**: A real recurring pattern the miner found is no longer lost to the cap of 3 or to a task-overlap-only duplicate check: it waits in the register and a later `/self-review` proposes it, and the skill text says the register is committed while the report stays local.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
