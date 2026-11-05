@@ -169,6 +169,7 @@ If docs/legacy/ exists (legacy mode): also read `docs/legacy/risk-hotspots.md` a
 
 - [ ] [edge case 1]
 - [ ] [edge case 2]
+- [ ] Pin-test pre-flight: the `Pre-existing pin tests` row below is filled before work starts
 
 ---
 
@@ -177,6 +178,7 @@ If docs/legacy/ exists (legacy mode): also read `docs/legacy/risk-hotspots.md` a
 | File | Change |
 |------|--------|
 | [path/to/file] | [what and why] |
+| Pre-existing pin tests | List each test that pins the text, size, line count, location or a baseline ref of a file this task edits, and its handling: repoint, narrow or escalate. Find them: grep `.claude/hooks/tests/` and `tests/` for the changed strings and paths; always check `test_agent_guide_dedup.py`, `test_vital_slice.py` and the memory budget tests. |
 
 ## Files Must NOT Touch
 

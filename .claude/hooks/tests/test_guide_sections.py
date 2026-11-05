@@ -642,6 +642,12 @@ def test_ac3_reasoning_prose_sections_are_byte_identical_to_the_baseline():
         pattern = rf"^## {re.escape(heading)}\s*$(.*?)(?=^## |\Z)"
         old, new = _slice(baseline, pattern), _slice(guide, pattern)
         assert old, f"baseline slice for {heading!r} is empty — the slicer is vacuous"
+        if heading == "Edge Case Checklist":
+            # T258 NARROWED this pin: the checklist may gain lines (T258's pin-test pre-flight),
+            # but every baseline line must stay, in order. Other headings stay byte-identical.
+            rest = iter(new.splitlines())
+            assert all(line in rest for line in old.splitlines()), f"`## {heading}` lost or changed a baseline line"
+            continue
         assert new == old, f"`## {heading}` changed"
 
 

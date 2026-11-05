@@ -60,7 +60,7 @@ LINE_CAPS = {
     "agents/common-infrastructure.md": 137,
     "agents/qa.md": 129,
     "AGENTS.md": 196,  # T169 scope extension: slimmed 218 -> 186 (user: <=200); cap ratchets down to the new count. T173: the doctrine moved to AGENTS.md (186 + opening line + non-Claude CLI section = 196)
-    TASK_GUIDE_TEMPLATE: 205,  # T245: +8 lines for the UX Acceptance Criteria block (197 before)
+    TASK_GUIDE_TEMPLATE: 207,  # T245: +8 lines for the UX Acceptance Criteria block (197 before). T258: +2 (pin-test pre-flight line and row)
 }
 
 FORBIDDEN_NUMBERS = ["80/20", "80%", "20%", "Pareto"]

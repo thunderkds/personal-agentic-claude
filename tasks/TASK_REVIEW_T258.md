@@ -56,9 +56,9 @@ Mode: auto
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_t258_pin_test_preflight.py` (3 tests, AC 1-3 by text). RED first against the prior template: `3 failed in 0.07s` (AC1, AC2, AC3 each AssertionError); GREEN after the template edit. AC4 pins updated and listed in the guide's `Pre-existing pin tests` row. |
+| Verification command run | ☑ pass | `python3 -m pytest -q tests/ .claude/hooks/tests/` -> `3405 passed, 25 subtests passed in 352.75s (0:05:52)` |
+| Negative cases hold | ☑ pass | Mutating baseline line `- [ ] [edge case 1]` in the template turned the narrowed `test_ac3_reasoning_prose_sections_are_byte_identical_to_the_baseline` RED (`1 failed`); restored, green. The 3 new tests were RED against the prior template. |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
 | Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
@@ -76,12 +76,38 @@ Mode: auto
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: (verbatim prior content of `templates/TASK_GUIDE_template.md`, captured 2026-11-05, before any T258 commit; the change is template text, not executable code)
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+```
+## Edge Case Checklist
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+[Populated from brainstorming skill output. List silent failures and boundary conditions to guard against.]
+
+- [ ] [edge case 1]
+- [ ] [edge case 2]
+
+---
+
+## Files to Change (Predicted)
+
+| File | Change |
+|------|--------|
+| [path/to/file] | [what and why] |
+```
+
+No `Pre-existing pin tests` row and no pin-test pre-flight line exist.
+
+**AFTER**: (verbatim new content of `templates/TASK_GUIDE_template.md`)
+
+```
+- [ ] [edge case 2]
+- [ ] Pin-test pre-flight: the `Pre-existing pin tests` row below is filled before work starts
+...
+| [path/to/file] | [what and why] |
+| Pre-existing pin tests | List each test that pins the text, size, line count, location or a baseline ref of a file this task edits, and its handling: repoint, narrow or escalate. Find them: grep `.claude/hooks/tests/` and `tests/` for the changed strings and paths; always check `test_agent_guide_dedup.py`, `test_vital_slice.py` and the memory budget tests. |
+```
+
+**DELTA**: A task author now lists, at Stage 2, the pre-existing pin tests the task will hit and how to handle each, instead of meeting them mid-task.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]

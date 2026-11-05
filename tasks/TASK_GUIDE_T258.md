@@ -100,6 +100,7 @@ python3 -m pytest -q .claude/hooks/tests/ tests/
 |------|--------|
 | `templates/TASK_GUIDE_template.md` | `Files to Change` gains a `Pre-existing pin tests` row; Edge Case Checklist gains the pre-flight line |
 | tests (new) | text pins for the ACs |
+| Pre-existing pin tests | `test_vital_slice.py::test_ac11_line_cap` (template line cap 205, +2 lines): repoint cap to 207; `test_guide_sections.py::test_ac3_reasoning_prose_sections_are_byte_identical_to_the_baseline` (Edge Case Checklist byte-identical to baseline): narrow to baseline lines kept in order, additions allowed |
 
 ## Files Must NOT Touch
 
