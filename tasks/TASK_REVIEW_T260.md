@@ -67,8 +67,24 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured 2026-11-05T10:14:50Z, unmodified `self_review.py`, before any implementation commit). Command: `python3 /tmp/.../scratchpad/t260_scenario.py skills/self-review/scripts/self_review.py`. It builds a temp git repo with the 2026-11-05 shape (8-task pattern, a 5-task pattern inside it with a different title, 4 more 3-4 task patterns) and runs `post`:
+
+```
+exit: 0
+## Proposals (3, at most 3)
+### 1. Vacuous assertion or noop mutation control  [new]
+### 2. d1  [new]
+### 3. d4  [new]
+## Beyond the cap (not recorded, not proposed): memory-budget-overrun, stale-sibling-text
+## Dropped
+- `unverified-guide-or-report-claim` - repeats `vacuous-assertion-or-noop-mutation-control` from this run
+## Still open (not proposed again)
+...
+register rows: vacuous-assertion-or-noop-mutation-control | open ; pre-existing-red-baseline | open ; hook-trace-gap | open
+(no row for unverified-guide-or-report-claim, memory-budget-overrun, stale-sibling-text)
+```
+
+SKILL.md Step 6 prior text (verbatim): "The register (`memory/self-review/register.md`) and the report (`reports/self-review/`) are git-tracked files in the main checkout, also when you ran from a worktree. The skill does not commit them. Tell the user they changed, with both paths, so they can commit them."
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
