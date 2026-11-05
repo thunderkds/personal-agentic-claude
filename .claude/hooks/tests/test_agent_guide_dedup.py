@@ -140,7 +140,7 @@ T069_BASELINE_REF = "8d6d56b"
 # REPOINTED AGAIN by T234 (`6841ebf` -> `fb3ff0f`, T234's edit commit; the AGENTS.md role table gains a plugin `subagent_type` column and one sentence, not separately user-approved). Repointed, NOT deleted.
 # REPOINTED AGAIN by T239 (`fb3ff0f` -> `8c381c20`, T239's edit commit; the pipeline reads Stage 0 to Stage 5, user-approved 2026-11-02): AGENTS.md renames its stage headings and bullets line for line. Nothing collapsed. Repointed, NOT deleted.
 # REPOINTED AGAIN by T245 (`8c381c20` -> `496c110f`, T245's docs commit; the Stage index gains `ux-evaluate`, user-approved 2026-11-04: "AGENTS.md stage index").
-# REPOINTED AGAIN by T256 (`496c110f` -> `00f404bf`, T256's edit commit; the cross-cutting list gains `self-review`, required by TASK_GUIDE_T256 AC 7, not separately user-approved). One list entry; nothing collapsed. Repointed, NOT deleted.
+# REPOINTED AGAIN by T256 (`496c110f` -> `00f404bf`, T256's edit commit; the cross-cutting list gains the user-started mining skill, required by TASK_GUIDE_T256 AC 7, not separately user-approved). One list entry; nothing collapsed. Repointed, NOT deleted.
 T070_BASELINE_REF = "00f404bf"  # T256 (was 496c110f, T245)
 
 # T082's own edit commit (same commit as the repoint above). T082 adds a mandatory Base Rule bullet
