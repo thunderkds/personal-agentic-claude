@@ -97,6 +97,12 @@ python3 -m pytest -q tests/ .claude/hooks/tests/
 
 **Vital slice**: the `waiting` state and the two-key duplicate check. Keep the register format one table; add one state, no new columns unless the stored citations need one (prefer re-checking citations at the head the row was recorded at, kept in an existing cell, over a new file).
 
+**Chosen (AC 5)**: no new review file means no proposal, with or without `waiting` rows. `pre` still says `nothing-new` (no miner call) and adds `"waiting": N` to its JSON; the skill tells the user how many rows wait. `post` with no new files leaves every `waiting` row as it is (no re-check, no proposal) and lists it under `## Waiting for a later run`. Reason: FR-003 says no new file means no work, and `post` on `{"patterns":[]}` is the documented way to skip files, so it must not start proposals. Pinned by `test_t260_ac5_pre_with_no_new_files_stays_nothing_new_and_reports_waiting` and `test_t260_ac5_post_with_no_new_files_proposes_no_waiting_row`.
+
+**Built**: one table, optional 8th column `detail` (JSON: head the evidence was checked at, label, proposed change, `file:line:text` per citation). The table has 8 columns only while a `waiting` row exists; otherwise the register stays at 7 columns, byte-for-byte as before. A `waiting` row is re-checked at the head it was recorded at (the cited line must still hold the stored text there), so moved or edited lines never pass; fix-task review citations are dropped (FX-2); a row left with < 3 tasks is removed and reported under `## Dropped`. Ranking: `waiting` rows first (task count, then register order), then new patterns (task count, then fingerprint), cap 3. A regressed pattern beyond the cap also becomes `waiting` (its fix task is forgotten, as when it becomes `open`) and comes back labelled `regressed`. The default report name gets `-2`, `-3` ... when the same-second name exists (the file is reserved with `O_EXCL`).
+
+**Cut list**: no update of a `waiting` row from new miner evidence (a repeat is dropped as the row, FR-005); no automatic expiry of old `waiting` rows; the 2026-11-05 lost patterns are not re-injected (out of scope).
+
 ---
 
 ## Edge Case Checklist

@@ -143,7 +143,22 @@ def test_sx5_miner_failure_keeps_watermark_and_names_the_skip_command():
     assert "watermark stays" in two and '`{"patterns":[]}`' in two and "post" in two
 
 
-def test_sx6_register_and_report_live_in_the_main_checkout_and_are_not_committed():
+def test_sx6_register_and_report_live_in_the_main_checkout_register_tracked_report_local():
+    """T260 AC 8: the register is tracked and committed by the user; the report is local (reports/* ignored)."""
     _, body = frontmatter(read("skills", "self-review", "SKILL.md"))
     six = step(body, 6)
-    assert "main checkout" in six and "git-tracked" in six and "does not commit" in six
+    assert "main checkout" in six and "does not commit" in six
+    assert "register" in six and "git-tracked" in six.split("report")[0]
+    assert "commit it" in six and "`reports/*` is ignored by git" in six and "local only" in six
+    assert "report (`reports/self-review/`) are git-tracked" not in six
+    gi = read(".gitignore")
+    assert re.search(r"^reports/\*$", gi, re.MULTILINE)
+
+
+def test_t260_ac8_skill_and_prd_name_the_waiting_state():
+    _, body = frontmatter(read("skills", "self-review", "SKILL.md"))
+    assert "waiting" in step(body, 1) and "waiting" in step(body, 3)
+    prd = read("docs", "prd", "PRD_self-review.md")
+    fr5 = next(ln for ln in prd.splitlines() if ln.startswith("| FR-005"))
+    assert "`waiting`" in fr5
+    assert len(body.encode("utf-8")) < CODEX_CAP

@@ -365,8 +365,8 @@ def test_ac9_cap_three_ranked_by_task_count(tmp_path):
     report = open(str(tmp_path / "r.md")).read()
     proposals = [ln for ln in report.splitlines() if ln.startswith("### ")]
     assert [ln.split("title ")[1].split()[0] for ln in proposals] == ["p-b", "p-a", "p-c"]
-    assert "Beyond the cap" in report and "p-d" in report and "p-e" in report
-    assert read_reg(repo).count("| open |") == 3 and "| p-d |" not in read_reg(repo)
+    assert "Waiting for a later run" in report and "p-d" in report and "p-e" in report  # T260: kept, not lost
+    assert read_reg(repo).count("| open |") == 3 and "| p-d | waiting |" in read_reg(repo)
 
 
 def test_ac9_ties_by_fingerprint(tmp_path):
@@ -378,7 +378,8 @@ def test_ac9_ties_by_fingerprint(tmp_path):
     r = post(repo, miner_file(tmp_path, pats), report=str(tmp_path / "r.md"))
     assert r.returncode == 0
     reg = read_reg(repo)
-    assert "| a |" in reg and "| b |" in reg and "| m |" in reg and "| z |" not in reg
+    assert "| a | open |" in reg and "| b | open |" in reg and "| m | open |" in reg and "| z | open |" not in reg
+    assert "| z | waiting |" in reg
 
 
 # ---- AC 10
@@ -830,3 +831,271 @@ def test_fx11_decide_changes_only_open_rows(tmp_path, state):
         r = cli(repo, "decide", "p1", *args, "--repo", repo)
         assert r.returncode == 2 and "not open" in r.stderr
     assert open(reg_path(repo), "rb").read() == before
+
+
+# ---- T260: waiting state, two-key in-run duplicate check, unique report names
+
+def topic_repo(tmp_path, groups, tids_per=None):
+    """groups: {topic: [tids]}. One review per task; each carries the topics of the groups it is in."""
+    repo = str(tmp_path / "repo")
+    if not os.path.isdir(repo):
+        os.makedirs(repo)
+        git(repo, "init", "-q", "-b", "main")
+        with open(os.path.join(repo, "PROJECT_KANBAN.md"), "w") as f:
+            f.write(KANBAN)
+        commit(repo, "init")
+    add_reviews(repo, groups)
+    return repo
+
+
+def add_reviews(repo, groups):
+    for t in sorted({t for ts in groups.values() for t in ts}):
+        write_review(repo, t, tuple(topic for topic, ts in groups.items() if t in ts))
+        commit(repo, f"review {t}")
+
+
+def gpat(repo, pid, topic, tids, **kw):
+    return pattern(repo, pid, tids, topic, **kw)
+
+
+def four_patterns(tmp_path):
+    """p-a..p-d on disjoint triples: equal task counts, so the fingerprint order picks p-a, p-b, p-c."""
+    t = [f"T{n}" for n in range(201, 213)]
+    groups = {f"topic about {n} one": t[i * 3:i * 3 + 3] for i, n in enumerate(["alpha", "bravo", "charlie", "delta"])}
+    repo = topic_repo(tmp_path, groups)
+    words = ["alpha apples", "bravo bananas", "charlie cherries", "delta dates"]  # no shared word: no title hold
+    pats = [gpat(repo, f"p-{c}", topic, ts, title=w) for c, w, (topic, ts) in zip("abcd", words, groups.items())]
+    return repo, pats
+
+
+def waiting_repo(tmp_path):
+    repo, pats = four_patterns(tmp_path)
+    r = post(repo, miner_file(tmp_path, pats), report=str(tmp_path / "r1.md"))
+    assert r.returncode == 0, r.stderr
+    return repo
+
+
+def reg_row(repo, fp):
+    return next(r for r in reg_rows(repo) if r.startswith(f"| {fp} |"))
+
+
+def test_t260_ac1_overlapping_tasks_with_a_different_defect_both_kept(tmp_path):
+    big = [f"T{n}" for n in range(201, 209)]
+    groups = {"vacuous assertion noop control": big, "unverified guide premise claim": big[:5]}
+    repo = topic_repo(tmp_path, groups)
+    pats = [gpat(repo, "vacuous-assertion-noop", "vacuous assertion noop control", big,
+                 title="Vacuous assertion or noop mutation control"),
+            gpat(repo, "unverified-guide-claim", "unverified guide premise claim", big[:5],
+                 title="Unverified guide or report claim")]
+    r = post(repo, miner_file(tmp_path, pats), report=str(tmp_path / "r.md"))
+    assert r.returncode == 0, r.stderr
+    rep = open(str(tmp_path / "r.md")).read()
+    assert "(2, at most 3)" in rep and "repeats" not in rep
+    assert reg_row(repo, "vacuous-assertion-noop").split("|")[2].strip() == "open"
+    assert reg_row(repo, "unverified-guide-claim").split("|")[2].strip() == "open"
+
+
+def test_t260_ac1_same_tasks_and_near_identical_title_is_still_a_repeat(tmp_path):
+    ts = [f"T{n}" for n in range(201, 206)]
+    repo = topic_repo(tmp_path, {"shared topic line here": ts})
+    pats = [gpat(repo, "first-name", "shared topic line here", ts, title="Stale pin breaks the suite"),
+            gpat(repo, "second-name", "shared topic line here", ts[:4], title="Stale pin breaks the suite again")]
+    r = post(repo, miner_file(tmp_path, pats), report=str(tmp_path / "r.md"))
+    assert r.returncode == 0, r.stderr
+    rep = open(str(tmp_path / "r.md")).read()
+    assert "(1, at most 3)" in rep and "repeats `first-name` from this run" in rep
+    assert "| second-name |" not in read_reg(repo)
+
+
+def test_t260_ac2_over_cap_pattern_is_recorded_as_waiting(tmp_path):
+    repo, pats = four_patterns(tmp_path)
+    r = post(repo, miner_file(tmp_path, pats), report=str(tmp_path / "r.md"))
+    assert r.returncode == 0, r.stderr
+    rep = open(str(tmp_path / "r.md")).read()
+    assert "(3, at most 3)" in rep and "## Waiting for a later run" in rep
+    assert "p-d" in rep.split("## Waiting for a later run")[1] and "Beyond the cap" not in rep
+    row = [c.strip() for c in reg_row(repo, "p-d").strip("|").split("|")]
+    assert row[1] == "waiting" and row[2] == "T210,T211,T212" and row[5] == "delta dates" and row[6] == "AGENTS.md"
+    assert read_reg(repo).count("| open |") == 3
+    assert "| fixed_at | title | file | detail |" in read_reg(repo)  # the 8th column holds the waiting evidence
+
+
+def propose_after(tmp_path, repo, groups, pats, **kw):
+    add_reviews(repo, groups)
+    out, _ = pre(repo)
+    assert out["status"] == "ready"
+    rp = str(tmp_path / "r2.md")
+    r = post(repo, miner_file(tmp_path, pats, "m2.json"), out["head"], report=rp)
+    assert r.returncode == 0, r.stderr
+    return open(rp).read()
+
+
+def test_t260_ac3_later_run_proposes_waiting_first_then_new_by_task_count(tmp_path):
+    repo = waiting_repo(tmp_path)
+    groups = {"topic new one": [f"T{n}" for n in range(301, 306)], "topic new two": [f"T{n}" for n in range(306, 310)],
+              "topic new three": [f"T{n}" for n in range(310, 314)]}
+    add_reviews(repo, groups)
+    pats = [gpat(repo, f"n-{i}", t, ts, title=w) for i, (w, (t, ts)) in enumerate(
+        zip(["zulu zebras", "yankee yaks", "xray xenon"], groups.items()), 1)]
+    out, _ = pre(repo)
+    r = post(repo, miner_file(tmp_path, pats, "m2.json"), out["head"], report=str(tmp_path / "r2.md"))
+    assert r.returncode == 0, r.stderr
+    rep = open(str(tmp_path / "r2.md")).read()
+    titles = [ln.split(". ")[1].split("  ")[0] for ln in rep.splitlines() if ln.startswith("### ")]
+    assert titles == ["delta dates", "zulu zebras", "yankee yaks"]  # the waiting row first, then new ones by task count
+    assert "tasks/TASK_REVIEW_T210.md:5` - Finding: topic about delta one (T210)" in rep  # old evidence, kept
+    assert "(3, at most 3)" in rep
+    assert reg_row(repo, "p-d").split("|")[2].strip() == "open"
+    assert reg_row(repo, "n-3").split("|")[2].strip() == "waiting"  # over the cap again: kept, not lost
+
+
+def test_t260_ac3_waiting_row_is_proposed_although_its_files_are_older_than_the_watermark(tmp_path):
+    repo = waiting_repo(tmp_path)
+    assert "watermark: none" not in read_reg(repo)
+    rep = propose_after(tmp_path, repo, {"topic new one": ["T301", "T302", "T303"]}, [])
+    assert "(1, at most 3)" in rep and "`p-d`" in rep and "[new]" in rep
+
+
+@pytest.mark.parametrize("how", ["fingerprint", "matches"])
+def test_t260_ac4_miner_repeat_of_a_waiting_row_makes_no_second_row(tmp_path, how):
+    repo = waiting_repo(tmp_path)
+    ts = ["T214", "T215", "T216"]
+    add_reviews(repo, {"topic about delta one": ts})
+    out, _ = pre(repo)
+    p = gpat(repo, "p-d" if how == "fingerprint" else "other-name", "topic about delta one", ts,
+             **({} if how == "fingerprint" else {"matches": "p-d"}))
+    r = post(repo, miner_file(tmp_path, [p], "m2.json"), out["head"], report=str(tmp_path / "r2.md"))
+    assert r.returncode == 0, r.stderr
+    rep = open(str(tmp_path / "r2.md")).read()
+    assert "same as register row `p-d` (waiting)" in rep.split("## Dropped")[1]
+    assert "| other-name |" not in read_reg(repo) and read_reg(repo).count("| p-d |") == 1
+
+
+def test_t260_ac4_title_hold_covers_waiting_rows(tmp_path):
+    repo = waiting_repo(tmp_path)
+    ts = ["T214", "T215", "T216"]
+    add_reviews(repo, {"topic about delta one": ts})
+    out, _ = pre(repo)
+    p = gpat(repo, "renamed", "topic about delta one", ts, title="delta dates")
+    r = post(repo, miner_file(tmp_path, [p], "m2.json"), out["head"], report=str(tmp_path / "r2.md"))
+    assert r.returncode == 0, r.stderr
+    rep = open(str(tmp_path / "r2.md")).read()
+    assert "Held — possible repeat of `p-d`" in rep and "| renamed |" not in read_reg(repo)
+
+
+def test_t260_ac4_decide_acts_only_on_open_and_waiting_is_not_still_open(tmp_path):
+    repo = waiting_repo(tmp_path)
+    before = open(reg_path(repo), "rb").read()
+    r = cli(repo, "decide", "p-d", "rejected", "--repo", repo)
+    assert r.returncode == 2 and "waiting, not open" in r.stderr
+    assert open(reg_path(repo), "rb").read() == before
+    rep = open(str(tmp_path / "r1.md")).read()
+    assert "`p-d`" not in rep.split("## Still open")[1]
+
+
+def test_t260_ac5_pre_with_no_new_files_stays_nothing_new_and_reports_waiting(tmp_path):
+    repo = waiting_repo(tmp_path)
+    out, err = pre(repo)
+    assert out["status"] == "nothing-new" and out["files"] == [] and out["waiting"] == 1
+    assert [ln for ln in err.splitlines() if ln][0].startswith("self-review: nothing new")
+    assert "detail" not in json.dumps(out["register"])
+
+
+def test_t260_ac5_post_with_no_new_files_proposes_no_waiting_row(tmp_path):
+    """Chosen (guide Approach): no new review file, no proposal. The row stays waiting, the register is unchanged."""
+    repo = waiting_repo(tmp_path)
+    before = open(reg_path(repo), "rb").read()
+    r = post(repo, miner_file(tmp_path, [], "m2.json"), report=str(tmp_path / "r2.md"))
+    assert r.returncode == 0, r.stderr
+    rep = open(str(tmp_path / "r2.md")).read()
+    assert "(0, at most 3)" in rep and "`p-d`" in rep.split("## Waiting for a later run")[1]
+    assert open(reg_path(repo), "rb").read() == before
+
+
+def test_t260_ac6_register_without_waiting_rows_keeps_its_seven_columns(tmp_path):
+    repo = make_repo(tmp_path)
+    r = post(repo, miner_file(tmp_path, [pattern(repo, "fresh", ["T201", "T202", "T203"])]))
+    assert r.returncode == 0, r.stderr
+    assert "| fingerprint | state | tasks | task_id | fixed_at | title | file |\n" in read_reg(repo)
+    assert "detail" not in read_reg(repo)
+
+
+def test_t260_ac6_old_register_and_unknown_state(tmp_path):
+    repo = make_repo(tmp_path)
+    write_reg(repo, "none", [("p1", "open", "T201,T202,T203", "-", "-"), ("p2", "fixed", "T201", "T9", "abc")])
+    assert pre(repo)[0]["status"] == "ready"
+    write_reg(repo, "none", [("p1", "pending", "T201,T202,T203", "-", "-")])
+    r = cli(repo, "pre", "--repo", repo)
+    assert r.returncode == 2 and "unknown state 'pending'" in r.stderr
+
+
+def test_t260_ac7_two_posts_in_the_same_second_write_two_reports(tmp_path, monkeypatch, capsys):
+    import datetime as dt
+    repo = make_repo(tmp_path)
+    spec = importlib.util.spec_from_file_location("self_review_mod7", SCRIPT)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+
+    class Frozen(dt.datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return dt.datetime(2026, 11, 5, 8, 0, 0, tzinfo=tz)
+
+    monkeypatch.setattr(mod, "datetime", Frozen)
+    miner = miner_file(tmp_path, [])
+    paths = []
+    for _ in range(3):
+        mod.main(["post", miner, "--head", head(repo), "--repo", repo])
+        paths.append(capsys.readouterr().out.strip())
+    assert len(set(paths)) == 3 and all(os.path.isfile(p) for p in paths)
+    assert os.path.basename(paths[0]) == "self-review-20261105T080000.md"
+
+
+def test_t260_edge_more_than_three_waiting_rows_none_lost(tmp_path):
+    t = [f"T{n}" for n in range(201, 222)]
+    groups = {f"topic about {n} one": t[i * 3:i * 3 + 3] for i, n in enumerate(
+        ["alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf"])}
+    repo = topic_repo(tmp_path, groups)
+    pats = [gpat(repo, f"p-{c}", topic, ts) for c, (topic, ts) in zip("abcdefg", groups.items())]
+    assert post(repo, miner_file(tmp_path, pats), report=str(tmp_path / "r1.md")).returncode == 0
+    assert read_reg(repo).count("| waiting |") == 4
+    rep = propose_after(tmp_path, repo, {"topic fresh one": ["T301", "T302", "T303"]}, [])
+    assert [ln.split("title ")[1].split()[0] for ln in rep.splitlines() if ln.startswith("### ")] == ["p-d", "p-e", "p-f"]
+    reg = read_reg(repo)
+    assert reg.count("| open |") == 6 and reg.count("| waiting |") == 1 and "| p-g | waiting |" in reg
+
+
+def test_t260_edge_waiting_row_cites_a_fix_task_review_is_dropped_not_proposed(tmp_path):
+    repo = waiting_repo(tmp_path)
+    reg = read_reg(repo).replace("| p-d | waiting | T210,T211,T212 | - |", "| p-d | waiting | T210,T211,T212 | T210 |")
+    open(reg_path(repo), "w").write(reg)  # T210 now stands for a fix task: its review is not evidence
+    rep = propose_after(tmp_path, repo, {"topic new one": ["T301", "T302", "T303"]}, [])
+    assert "(0, at most 3)" in rep and "`p-d` - waiting row removed" in rep.split("## Dropped")[1]
+    assert "| p-d |" not in read_reg(repo)
+
+
+def test_t260_edge_waiting_row_with_moved_lines_is_dropped(tmp_path):
+    repo = waiting_repo(tmp_path)
+    reg = read_reg(repo)
+    import re
+    m = re.search(r'\["tasks/TASK_REVIEW_T210\.md",(\d+),', reg)
+    assert m, reg
+    open(reg_path(repo), "w").write(reg.replace(m.group(0), f'["tasks/TASK_REVIEW_T210.md",{int(m.group(1)) - 1},'))
+    rep = propose_after(tmp_path, repo, {"topic new one": ["T301", "T302", "T303"]}, [])
+    assert "(0, at most 3)" in rep and "`p-d` - waiting row removed" in rep.split("## Dropped")[1]
+
+
+def test_t260_edge_regressed_over_cap_goes_waiting_and_comes_back_regressed(tmp_path):
+    repo = regress_repo(tmp_path)  # fixed row mem-budget; T204-T206 are the post-fix evidence
+    ts = [f"T{n}" for n in range(301, 313)]
+    groups = {f"topic about {n} one": ts[i * 4 - 4:i * 4] for i, n in enumerate(["alpha", "bravo", "charlie"], 1)}
+    add_reviews(repo, groups)
+    pats = [gpat(repo, f"p-{c}", topic, tt) for c, (topic, tt) in zip("abc", groups.items())]
+    pats.append(pattern(repo, "mem-budget", ["T204", "T205", "T206"]))
+    out, _ = pre(repo)
+    r = post(repo, miner_file(tmp_path, pats, "m3.json"), out["head"], report=str(tmp_path / "r3.md"))
+    assert r.returncode == 0, r.stderr
+    assert "| mem-budget | waiting | T204,T205,T206 | - | - |" in read_reg(repo)
+    rep = propose_after(tmp_path, repo, {"topic fresh one": ["T401", "T402", "T403"]}, [])
+    assert "`mem-budget`" in rep and "[regressed]" in rep
+    assert "| mem-budget | open | T204,T205,T206 | - | - |" in read_reg(repo)
