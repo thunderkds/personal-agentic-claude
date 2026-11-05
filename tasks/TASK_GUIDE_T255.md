@@ -176,3 +176,26 @@ pytest on `tmp_path` fixture repos (`git init -b main`, commit review files, a `
 - [ ] Tests written AND pass — output pasted into `tasks/TASK_REVIEW_T255.md` (Hard-Stop Gate 5)
 - [ ] `Skill({ skill: "verify" })` run
 - [ ] Supervisor notified: task ready for Stage 4 review
+
+---
+
+## Stage 4 fix round 1 (2026-11-05) — supersedes AC 3, 6, 7, 8 where they conflict
+
+Source: Stage 4 code-review of `main...feat/t256-self-review-skill` (correctness + adversarial reviewers, repros in the session scratchpad `review/exp.py`, `adv/`). Fixes land on `feat/t256-self-review-skill` (T255+T256 merge together). Every FX item needs a test that fails before the fix.
+
+| # | Sev | Defect | Required behaviour |
+|---|-----|--------|--------------------|
+| FX-1 | P1 | Task-set Jaccard can never match across runs (each run sees only new files), so a rejected/open pattern returns under a new slug. | Miner output gains `"matches": "<fingerprint>"|null` per pattern (replaces `already_open`; still accept `already_open` for old input). `matches` naming an existing row applies that row's rule. Register gains columns `title` and `file` (proposal file): `| fingerprint | state | tasks | task_id | fixed_at | title | file |`. Backstop: an unmatched pattern whose title-word Jaccard (lowercase words of 3+ letters) with an `open`/`rejected` row is >= 0.5 is **held**: listed in the report under "Held — possible repeat of <fp>", not proposed, not recorded. Task-set Jaccard stays only for duplicates inside one run. |
+| FX-2 | P1 | AC 8 runs only when a pattern matches a fixed row; a fresh slug lets the fix task's own review count. | Before any matching, drop every citation whose file is `tasks/TASK_REVIEW_<task_id>.md` for any register row with a `task_id`. |
+| FX-3 | P1 | `regressed` is unreachable unless the slug repeats; `already_open` drops it. | A pattern with `matches` = a `fixed` row follows AC 7 (post-`fixed_at` evidence → `regressed`, row back to `open`; else dropped). |
+| FX-4 | P1 | Files are listed at `main` but read from the working tree; off-main checkouts skip files forever and check citations against the wrong copy. | Read content with `git cat-file blob <head>:<path>`; never `os.path.isfile`/`open` for review files. Uncommitted edits are then ignored by construction. |
+| FX-5 | P1 | Citation check accepts a 1-char quote, a negative line, and any text after the first 60 chars. | `line` must be 1..len(lines). Normalised quote length 20..200, else dropped. The whole normalised quote must be a substring of the normalised join of lines `line-3..line+3`. The report prints the real file line at `line`, not the miner quote. |
+| FX-6 | P1 | The register is written into whichever checkout runs it and is never committed; another worktree/clone re-mines everything. | Resolve the register and report directory against the main checkout: parent of `git rev-parse --path-format=absolute --git-common-dir`. `pre` exits 2 ("register missing but N reports exist …") when the register is missing and `reports/self-review/*.md` exist. |
+| FX-7 | P2 | `git log` without `--first-parent` can set the watermark to a side-branch commit; files are mined twice. | Walk `git rev-list --first-parent --reverse <wm>..<head>`; files per commit = `git diff --name-only <c>^1 <c>` (root commit: `git diff-tree --root --name-only -r <c>`). The deferral watermark is a first-parent commit. Add `diff`, `diff-tree` to `GIT_READ_ONLY`. |
+| FX-8 | P2 | A watermark that is not an ancestor of head silently re-mines all history. | Exit 2 with one line naming the SHA; the user edits the register. |
+| FX-9 | P2 | `REVIEW_RE` accepts `|` and `,`; one such file name breaks the register for good. | Task part must match `[A-Za-z]+-?\d+`; other names are ignored. |
+| FX-10 | P2 | Miner free text reaches the report unchecked. | Cap `title` at 120 and `proposal.change` at 500 chars (one line). Flag `proposal.file` under `.claude/`, `hooks/`, or a name containing `settings` with `⚠ touches guardrails` in the report. |
+| FX-11 | P3 | `decide` accepts any row. | `decide` changes only `open` rows; else exit 2, register unchanged. |
+| FX-12 | P2 | Success Criterion 3 test is vacuous (review @ maint). | Make it fail if the repeat pattern is proposed. |
+
+Not in this round (suggestions, logged in TASK_REVIEW): beyond-cap patterns are lost; Kanban archive not read for `fixed`; no pre/post lock; `--report` accepts any path.

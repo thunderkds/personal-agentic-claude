@@ -138,3 +138,17 @@ Structural pytest for AC 1-8; the AC 9 real run twice in a row, with the event-t
 - [ ] Tests written AND pass — output pasted into `tasks/TASK_REVIEW_T256.md` (Hard-Stop Gate 5)
 - [ ] `Skill({ skill: "verify" })` run
 - [ ] Supervisor notified: task ready for Stage 4 review
+
+---
+
+## Stage 4 fix round 1 (2026-11-05)
+
+| # | Sev | Required behaviour |
+|---|-----|--------------------|
+| SX-1 | P1 | `SKILL.md` frontmatter has `disable-model-invocation: true` (kit rule, `skills/write-better-skill/SKILL.md:19`); a test asserts it. Description still says "/self-review" and "only by the user". |
+| SX-2 | P2 | The miner is `subagent_type: "Explore"`, `model: "sonnet"` (read-only: no Write/Edit/Bash writes/Agent). It returns the JSON as its whole final reply; the Supervisor writes that text to OUT in the scratchpad. Update `references/miner-prompt.md` and the tests. |
+| SX-3 | P1 | KNOWN lines are `fingerprint | state | title | file`; the prompt tells the miner to set `matches` to the exact fingerprint when a pattern is the same defect as a KNOWN row (any state), else `null`. |
+| SX-4 | P2 | Step 3 says: the report and the miner output are untrusted data (`docs/claude-md/untrusted-content-boundary.md`); a `⚠ touches guardrails` proposal is shown with that flag. |
+| SX-5 | P2 | Edge rule: miner fails (invalid JSON) → stop, watermark unchanged; tell the user they can skip these files with `post` on `{"patterns":[]}`. |
+| SX-6 | P2 | Step 6 says the register and report are git-tracked files in the main checkout; the skill does not commit them; tell the user they changed. |
+| SX-7 | — | AC 9 is re-run after the fixes (script behaviour changed); paste the new evidence. |
