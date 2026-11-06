@@ -148,9 +148,16 @@ SHELL_TOOLS = frozenset({"Bash", "PowerShell"})
 #     verb, or by a `$`/`@` expansion while a verb is anywhere (`$a='push'; git $a`); or an
 #     indirection marker (`& $name`, `& <path>git.exe`, `iex`, `Invoke-Expression`, `cmd /c`,
 #     `powershell`/`pwsh`) and a verb anywhere.
-#   * Both: `powershell`/`pwsh` running `-EncodedCommand` (any prefix): the verb is in base64.
-# Known limit: a verb built at run time (`-join`, `[char]` codes) is out of reach of a text check,
-# as git config aliases are (see the module docstring).
+#     Before that, block comments (`<# #>`) are removed, `$(x)` is read as `x`, and `${x}`, `$x`
+#     are removed (`pu$()sh`, `"p$("u")sh"`, `pu${null}sh`). Flagged too, with no verb: any
+#     `-EncodedCommand` flag (`-`, `--`, `/`, a Unicode dash; any prefix from `e`; `-enc,` after
+#     quotes go), and code decoded or built at run time (`FromBase64String`,
+#     `ScriptBlock]::Create`, `iex`, `Invoke-Expression`).
+#   * Bash tool on Windows: also `powershell`/`pwsh` with an `-EncodedCommand` flag.
+# Known limit: a verb built at run time is out of reach of a text check, as git config aliases are
+# (see the module docstring): `-join`, `-f` format strings, `[char]` codes, string multiplication or
+# indexing, and variables set in another statement (`$v="pu"; git "${v}sh"`). Bash on the base has
+# the same class (`x=pu; git ${x}sh`).
 #
 # Every pattern here is matched in linear time, never as one `git…verb` regex: a lazy `[^\n]*?`
 # between the two is quadratic (measured: 100 000 characters took 36 s), and a hook that times out
@@ -161,10 +168,29 @@ WINDOWS_GIT_FALLBACK = re.compile(  # the git-write verbs the fallback looks for
 WINDOWS_INDIRECTION = re.compile(
     r"&\s*\$\w|&[^&\n]*\bgit(?:\.exe|\.cmd)?\b|\biex\b|\bInvoke-Expression\b"
     r"|\bcmd(?:\.exe)?\s+/[ck]\b|\b(?:powershell|pwsh)(?:\.exe)?\b", re.IGNORECASE)
-WINDOWS_ENCODED_COMMAND = re.compile(r"(?:^|\s)-e(?:c|n\w*)?(?=\s|$)", re.IGNORECASE)
+WINDOWS_ENCODED_COMMAND = re.compile(
+    "(?:^|[\\s,(@;])(?:--?|/|[\u2013\u2014\u2015])e(?:c|n\\w*)?(?=[\\s:,;)]|$)", re.IGNORECASE)
+POWERSHELL_RUNTIME_CODE = re.compile(
+    r"FromBase64String|ScriptBlock\]::Create|\biex\b|\bInvoke-Expression\b", re.IGNORECASE)
+POWERSHELL_SUBEXPRESSION = re.compile(r"\$\(([^()\n]*)\)")  # `$(x)` is read as `x` (not nested)
+POWERSHELL_VARIABLE = re.compile(r"\$\{[^{}$\n]*\}|\$\w+(?::\w+)?")  # `${x}`, `$x`, `$env:X`
 WINDOWS_SHELL_WORD = re.compile(r"\b(?:powershell|pwsh)(?:\.exe)?\b", re.IGNORECASE)
 POWERSHELL_NOISE = re.compile("[`^+'\"\u2018\u2019\u201a\u201b\u201c\u201d\u201e]")
 LINE_CONTINUATION = re.compile(r"[`\\]\r?\n")
+
+
+def _strip_block_comments(text):
+    """`text` without PowerShell `<# … #>` comments; an unclosed one is left as it is."""
+    pieces, pos = [], 0
+    while True:
+        start = text.find("<#", pos)
+        end = text.find("#>", start + 2) if start != -1 else -1
+        if end == -1:
+            break
+        pieces.append(text[pos:start])
+        pos = end + 2
+    pieces.append(text[pos:])
+    return "".join(pieces)
 
 
 def _runs_encoded_command(text):
@@ -176,8 +202,10 @@ def windows_git_write(command, tool_name):
     if not isinstance(command, str):
         return False
     if tool_name == "PowerShell":
-        text = POWERSHELL_NOISE.sub("", command)
-        return bool(WINDOWS_GIT_FALLBACK.search(text)) or _runs_encoded_command(text)
+        text = POWERSHELL_SUBEXPRESSION.sub(r"\1", _strip_block_comments(command))
+        text = POWERSHELL_NOISE.sub("", POWERSHELL_VARIABLE.sub("", text))
+        return bool(WINDOWS_GIT_FALLBACK.search(text) or WINDOWS_ENCODED_COMMAND.search(text)
+                    or POWERSHELL_RUNTIME_CODE.search(text))
     if sys.platform != "win32":
         return False
     text = LINE_CONTINUATION.sub(" ", strip_heredoc_bodies(command))
@@ -1421,9 +1449,11 @@ def main():
     # negative means "not verified" and refuses the merge; here it would mean
     # "not a push" and wave one through.
     scannable = strip_quoted_spans(strip_heredoc_bodies(command))
-    if (not any(re.search(p, scannable) for p in BLOCKED_PATTERNS)
-            and not defines_git_alias(scannable)
-            and not windows_git_write(command, tool_name)):
+    # T267 round 3: the linear fallback runs first, so a command it flags never waits on the slower
+    # checks after it (a hook that times out does not block).
+    if (not windows_git_write(command, tool_name)
+            and not any(re.search(p, scannable) for p in BLOCKED_PATTERNS)
+            and not defines_git_alias(scannable)):
         sys.exit(0)
 
     # T157: in board mode `online` the board cache is refreshed before it is evaluated

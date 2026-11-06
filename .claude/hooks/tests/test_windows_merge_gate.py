@@ -197,7 +197,44 @@ POWERSHELL_SPELLINGS = [
     ("cmd /c gi^t pu^sh", PUSH),
     ("g\u2019it push", PUSH),
     ("& $g pu\u201csh\u201d", PUSH),
+    # Round 3 (P0-A): empty or quoted expansions inside the verb.
+    (GIT + ' "pu$()sh" origin main', PUSH + " origin main"),
+    (GIT + " pu$()sh origin main", PUSH + " origin main"),
+    (GIT + ' "pu${null}sh"', PUSH),
+    (GIT + " pu$null`sh", PUSH),
+    (GIT + ' "p$("u")sh"', PUSH),
+    (GIT + ' "$("pu")sh"', PUSH),
+    (GIT + " pu$(<# x #>)sh", PUSH),
 ]
+
+
+# Round 3 (P0-B): every spelling of -EncodedCommand; (P0-C): code decoded or built at run time.
+ROUND3_NO_VISIBLE_VERB = [
+    "pwsh --EncodedCommand X", "pwsh /enc X", "powershell.exe /e X", "pwsh \u2013EncodedCommand X",
+    "pwsh \u2014enc X", "& pwsh -EncodedCommand:X", "Start-Process pwsh -ArgumentList '-enc','X'",
+    "& (Get-Command pw*sh) -enc X",
+    "[Text.Encoding]::Unicode.GetString([Convert]::FromBase64String($b))",
+    "[ScriptBlock]::Create($s).Invoke()", "[scriptblock]::create($s)", "iex $s",
+    "Invoke-Expression $s",
+]
+
+
+@pytest.mark.parametrize("command", ROUND3_NO_VISIBLE_VERB)
+def test_round3_powershell_hidden_or_runtime_code_is_gated(gate, command):
+    gate("in_progress")
+    assert run_gate(command, "PowerShell") == run_gate(PUSH, "Bash"), command
+
+
+@pytest.mark.parametrize("tool_name", ["PowerShell", "Bash"])
+def test_round3_long_command_blocks_before_the_slow_checks(gate, tool_name):
+    """Round 3 (P1): the linear fallback runs first. A 300 KB command must block in under 2 s; a
+    hook that times out does not block."""
+    gate("in_progress")
+    command = GIT + ".exe push origin main\n" + (GIT + " $") * 60000
+    start = time.perf_counter()
+    blocked = run_gate(command, tool_name)
+    elapsed = time.perf_counter() - start
+    assert blocked is not None and elapsed < 2.0, elapsed
 
 
 @pytest.mark.parametrize("board", sorted(BOARDS))
@@ -418,6 +455,10 @@ def test_review_p0_1_powershell_call_is_never_narrowed(gate, tmp_path, monkeypat
     "git.exe " * 1250,
     "& $g " * 2000,
     "`" * 10000,
+    "$(" * 5000,
+    "${" * 5000,
+    "<#" * 5000,
+    "-e," * 2500,
     ("git " * 2500)[:10000] + "\n" + "x" * 10000,
 ])
 def test_edge_detector_is_fast_on_10k_input(text, monkeypatch):
@@ -442,7 +483,7 @@ def test_edge_detector_is_fast_on_100k_input(monkeypatch):
 
 def test_mutation_without_the_fallback_branch_git_exe_push_passes(gate):
     mutant = load_hook_module("merge_gate_t267_no_fallback", mutate=(
-        "and not windows_git_write(command, tool_name)", ""))
+        "not windows_git_write(command, tool_name)\n            and ", ""))
     gate("in_progress", module=mutant)
     assert run_gate(GIT + ".exe push origin main", module=mutant) is None  # the bypass is back
     gate("in_progress")
