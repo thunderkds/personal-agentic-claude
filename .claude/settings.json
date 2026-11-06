@@ -23,7 +23,7 @@
       },
       {
         "description": "Prompt Supervisor to run diff-driven memory-update pass after git push/merge/pull",
-        "matcher": "Bash",
+        "matcher": "Bash|PowerShell",
         "hooks": [
           {
             "type": "command",
@@ -55,7 +55,7 @@
       },
       {
         "description": "Block git push/merge if pipeline gates are not satisfied",
-        "matcher": "Bash",
+        "matcher": "Bash|PowerShell",
         "hooks": [
           {
             "type": "command",
@@ -65,7 +65,7 @@
       },
       {
         "description": "Ask the human before Edit/Write/Bash touches a path in .claude/sensitive-paths.txt, unless the active task predicted it",
-        "matcher": "Edit|Write|Bash",
+        "matcher": "Edit|Write|Bash|PowerShell",
         "hooks": [
           {
             "type": "command",

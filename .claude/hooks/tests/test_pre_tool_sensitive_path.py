@@ -274,7 +274,7 @@ class SensitivePathHookTest(unittest.TestCase):
         self.assertIn(user_entry, pre)
         ours = [g for g in pre if any("pre_tool_sensitive_path.py" in h["command"] for h in g["hooks"])]
         self.assertEqual(len(ours), 1)
-        self.assertEqual(ours[0]["matcher"], "Edit|Write|Bash")
+        self.assertEqual(ours[0]["matcher"], "Edit|Write|Bash|PowerShell")  # T266
 
     # --- SC8: mutation controls ---------------------------------------------
 
