@@ -633,6 +633,7 @@ def check_script(script, base, project, tmp_path, label):
         assert "memory-slice:T900" in result.stdout, text
 
 
+@pytest.mark.posix_only("runs a shell script through sh/bash; shell suites are not run on Windows [via kit_snapshot]")
 def test_codex_only_install_rewrites_the_variable_and_every_command_runs(tmp_path, kit_snapshot):
     project, out = real_install(tmp_path, kit_snapshot, CODEX_ANSWERS, "my codex project")
     assert not (project / ".claude" / "skills").exists(), "a Codex-only install makes no Claude Code link"
@@ -662,6 +663,7 @@ def test_codex_only_install_rewrites_the_variable_and_every_command_runs(tmp_pat
     assert ran, "no command ran"
 
 
+@pytest.mark.posix_only("runs a shell script through sh/bash; shell suites are not run on Windows [via kit_snapshot]")
 def test_claude_install_runs_every_command_by_the_dot_claude_path(tmp_path, kit_snapshot):
     project, out = real_install(tmp_path, kit_snapshot, CLAUDE_ANSWERS, "my claude project")
     assert (project / ".claude" / "skills").is_symlink() and not (project / ".codex").exists()
@@ -674,6 +676,7 @@ def test_claude_install_runs_every_command_by_the_dot_claude_path(tmp_path, kit_
         check_script(script, base, project, tmp_path, f"claude: {rel(path)}: {tail}")
 
 
+@pytest.mark.posix_only("runs a shell script through sh/bash; shell suites are not run on Windows [via kit_snapshot]")
 def test_update_rewrites_the_codex_copies_again_and_reports_nothing_edited(tmp_path, kit_snapshot):
     project, _ = real_install(tmp_path, kit_snapshot, CODEX_ANSWERS, "my codex project")
 

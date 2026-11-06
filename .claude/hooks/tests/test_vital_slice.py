@@ -249,6 +249,7 @@ def test_ac6_the_pinned_simplicity_row_still_matches_every_role_guide(role):
 AGENT_TEMPLATE_SCRIPT_REF = "05a23df"
 
 
+@pytest.mark.posix_only("runs a shell script through sh/bash; shell suites are not run on Windows [sh]")
 def test_ac7_agent_template_script_is_unmodified_and_still_passes():
     rel = "scripts/test-agent-template.sh"
     assert (ROOT / rel).read_bytes() == read_at(rel, AGENT_TEMPLATE_SCRIPT_REF), f"{rel} was modified"

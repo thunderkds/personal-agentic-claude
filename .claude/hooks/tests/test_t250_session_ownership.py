@@ -234,6 +234,7 @@ def test_ac4_a_sub_agent_of_this_session_counts(tmp_path):
     assert worked(tmp_path, [bash("ls")], sub_entries=[edit]) is True
 
 
+@pytest.mark.posix_only("relies on POSIX permission bits or execute bits, which Windows does not enforce [chmod(0)]")
 def test_ac4_ownership_is_unknown_without_a_readable_transcript(tmp_path):
     assert sw.load_work(None) is None
     assert sw.load_work(str(tmp_path / "missing.jsonl")) is None
@@ -432,6 +433,7 @@ def test_ac5_ac8_no_transcript_blocks(tmp_path):
     assert reason and "Tasks still In Progress: T900" in reason
 
 
+@pytest.mark.posix_only("relies on POSIX permission bits or execute bits, which Windows does not enforce [chmod(0)]")
 def test_ac8_an_unreadable_transcript_blocks(tmp_path):
     project = gate_project(tmp_path)
     t = session(tmp_path, project, [bash("ls", cwd=str(project))])
@@ -626,6 +628,7 @@ def verify_hook_env(tmp_path, project):
     return env, calls, project / ".claude" / "hooks" / "stop_auto_verify.py"
 
 
+@pytest.mark.posix_only("relies on POSIX permission bits or execute bits, which Windows does not enforce [via verify_hook_env]")
 @pytest.mark.parametrize("with_blocked_line", [False, True], ids=["user-line-only", "after-blocked"])
 def test_ac3_start_starts_nothing_and_never_edits_the_user_line(tmp_path, with_blocked_line):
     # As T246: the hook's blocked line is for the same code the user then verified.
@@ -648,6 +651,7 @@ def test_ac3_tracks_md_states_the_user_line_shape():
     assert "- verify: ☑ pass — /verify by the user, session <id>, commit <sha>" in section
 
 
+@pytest.mark.posix_only("relies on POSIX permission bits or execute bits, which Windows does not enforce [via verify_hook_env]")
 def test_ac3_a_new_run_for_other_code_rewrites_only_the_hooks_line(tmp_path):
     project, sha = min_project(tmp_path, line_for=lambda sha: [BLOCKED_HOOK_LINE, user_line(sha)])
     env, calls, hook = verify_hook_env(tmp_path, project)
@@ -718,6 +722,7 @@ def test_ac7_a_task_this_session_wrote_in_the_window_is_still_checked(tmp_path):
     assert reason and "T900" in reason and "Auto decisions" in reason
 
 
+@pytest.mark.posix_only("relies on POSIX permission bits or execute bits, which Windows does not enforce [chmod(0)]")
 def test_ac7_ac8_unreadable_ownership_keeps_the_check(tmp_path):
     project = stop_project(tmp_path)
     t = session(tmp_path, project, [auto_request()])
@@ -732,6 +737,7 @@ def test_ac7_ac8_unreadable_ownership_keeps_the_check(tmp_path):
         sub.chmod(0o600)
 
 
+@pytest.mark.posix_only("relies on POSIX permission bits or execute bits, which Windows does not enforce [chmod(0)]")
 def test_ac5_ac8_an_unreadable_sub_agent_transcript_keeps_the_gates_blocker(tmp_path):
     project = gate_project(tmp_path)
     t = session(tmp_path, project, [bash("ls", cwd=str(project))])

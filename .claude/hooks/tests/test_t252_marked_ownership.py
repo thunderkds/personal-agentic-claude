@@ -104,6 +104,7 @@ def test_ac3_no_transcript_keeps_the_check(tmp_path):
     assert reason and "T900" in reason, reason
 
 
+@pytest.mark.posix_only("relies on POSIX permission bits or execute bits, which Windows does not enforce [chmod(0)]")
 def test_ac3_an_unreadable_sub_agent_transcript_keeps_the_check(tmp_path):
     project = marked_project(tmp_path)
     t = session(tmp_path, project, [auto_request()])

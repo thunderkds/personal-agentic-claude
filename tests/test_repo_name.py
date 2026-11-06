@@ -11,6 +11,7 @@ itself was renamed — which is this task.
 
 Run with: python3 -m pytest tests/test_repo_name.py -q
 """
+import pytest
 import os
 import subprocess
 from pathlib import Path
@@ -122,6 +123,7 @@ def fake_git(tmp_path, ls_remote_rc):
     return bin_dir, log
 
 
+@pytest.mark.posix_only("runs a shell script through sh/bash; shell suites are not run on Windows [via sourced]")
 def test_default_repo_is_easy_kit(tmp_path):
     bin_dir, log = fake_git(tmp_path, 1)
     r = sourced('resolve_repo_url >/dev/null; printf "%s" "$SUPERVISOR_REPO"', path_prefix=bin_dir)
@@ -130,6 +132,7 @@ def test_default_repo_is_easy_kit(tmp_path):
     assert not log.exists(), "the canonical repo needs no probe"
 
 
+@pytest.mark.posix_only("runs a shell script through sh/bash; shell suites are not run on Windows [via sourced]")
 def test_fork_named_easy_kit_is_used(tmp_path):
     bin_dir, log = fake_git(tmp_path, 0)
     r = sourced('resolve_repo_url >/dev/null; printf "%s" "$SUPERVISOR_REPO"',
@@ -138,6 +141,7 @@ def test_fork_named_easy_kit_is_used(tmp_path):
     assert "ls-remote https://github.com/someone/easy-kit.git" in log.read_text()
 
 
+@pytest.mark.posix_only("runs a shell script through sh/bash; shell suites are not run on Windows [via sourced]")
 def test_fork_made_before_the_rename_keeps_working(tmp_path):
     bin_dir, _ = fake_git(tmp_path, 2)
     r = sourced('resolve_repo_url >/dev/null; printf "%s" "$SUPERVISOR_REPO"',
@@ -145,6 +149,7 @@ def test_fork_made_before_the_rename_keeps_working(tmp_path):
     assert r.stdout == f"https://github.com/someone/{OLD}.git", r.stderr
 
 
+@pytest.mark.posix_only("runs a shell script through sh/bash; shell suites are not run on Windows [via sourced]")
 def test_supervisor_repo_wins(tmp_path):
     bin_dir, log = fake_git(tmp_path, 1)
     r = sourced('resolve_repo_url >/dev/null; printf "%s" "$SUPERVISOR_REPO"',
@@ -153,6 +158,7 @@ def test_supervisor_repo_wins(tmp_path):
     assert not log.exists()
 
 
+@pytest.mark.posix_only("runs a shell script through sh/bash; shell suites are not run on Windows [sh]")
 def test_error_messages_print_the_new_install_line(tmp_path):
     r = subprocess.run(["sh", str(REPO / "setup.sh"), "--harness", "codex"], capture_output=True, text=True)
     assert r.returncode == 1 and NEW_INSTALL_LINE in r.stderr, r.stderr

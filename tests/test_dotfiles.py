@@ -308,6 +308,7 @@ def test_second_apply_writes_nothing(home):
     assert len(backups(target)) == 1
 
 
+@pytest.mark.posix_only("relies on POSIX permission bits or execute bits, which Windows does not enforce [S_IMODE]")
 def test_mode_600_survives_on_settings_and_on_the_backup(home):
     source = make_source(home, base={"permissions": {"deny": ["a"]}})
     target = make_claude(home, settings={})
@@ -530,9 +531,10 @@ def test_non_finite_number_in_source_is_refused(home, bad):
 
 
 # The kernel lets root write a 444 file, so os.access says yes: these two need a non-root user.
-needs_non_root = pytest.mark.skipif(os.geteuid() == 0, reason="needs a non-root user")
+needs_non_root = pytest.mark.skipif(hasattr(os, "geteuid") and os.geteuid() == 0, reason="needs a non-root user")
 
 
+@pytest.mark.posix_only("relies on POSIX permission bits or execute bits, which Windows does not enforce [chmod(0o444)]")
 @needs_non_root
 @pytest.mark.parametrize("command", ["plan", "apply", "status"])
 def test_read_only_settings_is_refused_and_the_lock_holds(home, command):
@@ -552,6 +554,7 @@ def test_read_only_settings_is_refused_and_the_lock_holds(home, command):
         assert json.loads((good / "settings.json").read_text())["permissions"]["deny"] == ["a"]
 
 
+@pytest.mark.posix_only("relies on POSIX permission bits or execute bits, which Windows does not enforce [chmod(0o444)]")
 @needs_non_root
 def test_read_only_settings_with_nothing_to_add_is_in_sync(home):
     source = make_source(home, base={"permissions": {"deny": ["a"]}})

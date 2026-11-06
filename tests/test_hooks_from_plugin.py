@@ -315,6 +315,7 @@ def git(project, *args):
                     *args], check=True, capture_output=True, text=True)
 
 
+@pytest.mark.posix_only("relies on POSIX permission bits or execute bits, which Windows does not enforce [chmod(0o755)]")
 def test_detached_verify_run_from_the_cache_keeps_finding_the_project(cache, kit, tmp_path):
     """`stop_auto_verify.py:354` strips CLAUDE_PROJECT_DIR for the headless `claude` only: the
     detached `--run` process keeps it, so it writes the result into the project."""
