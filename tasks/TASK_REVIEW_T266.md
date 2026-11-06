@@ -78,8 +78,27 @@ Not done: merge (yours); auto verify: not started
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured on branch `feat/t266-windows-hooks` at `dcf83f54`, before any implementation commit.
+The script prints the matcher lists (`python3 -c` over both JSON files), then feeds `{"tool_name":"<T>","tool_input":{"command":"cat .env"}}` to `.claude/hooks/pre_tool_sensitive_path.py` on a temp fixture project (shipped `.claude/sensitive-paths.txt`, `PROJECT_KANBAN.md`):
+
+```
+captured 2026-11-06T12:37:36Z  HEAD dcf83f54
+.claude/settings.json ['Write', 'Agent', 'Bash', '.*', 'Agent', 'Bash', 'Edit|Write|Bash', '.*', None, None, None]
+plugin/hooks/hooks.json ['Write', 'Agent', 'Bash', '.*', 'Agent', 'Bash', 'Edit|Write|Bash', '.*', None, None, None]
+tool_name=PowerShell exit=0 output=<empty>
+tool_name=Bash exit=0 output={"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "ask", "permissionDecisionReason": "[hook:sensitive-path] This Bash call touches a sensitive path: .env (pattern `.env`). Listed in .claude/sensitive-paths.txt and no active task predicts it."}}
+```
+
+Suites at `dcf83f54` (2026-11-06T12:37:40Z):
+
+```
+$ bash tests/test_settings_merge.sh
+--- 49 passed, 0 failed ---
+$ python3 -m pytest .claude/hooks/tests tests -q
+3420 passed, 25 subtests passed in 201.47s (0:03:21)
+```
+
+The PowerShell `cat .env` call gets no decision (silent allow), and no matcher names `PowerShell`, so on Windows without Git Bash none of the three shell-inspecting hooks fires at all.
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
