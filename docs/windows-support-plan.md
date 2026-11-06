@@ -89,3 +89,24 @@ Task **T-W8 = T269** (reserved): bump the three version strings, add a README "W
 ## Next step
 
 Register T-W1 on the board, then write its `TASK_GUIDE`. Board IDs: T-W1 = T262 (guide written, Todo), T-W2 = T263, T-W3 = T264, T-W4 = T265, T-W5 = T266, T-W6 = T267, T-W7 = T268. T263..T268 are reserved here; their guides and board rows come when each is picked up.
+
+## Resume here (written 2026-11-06 for the next wake)
+
+**Branch model.** `windows` is the release branch (cut from `plan/windows-support`; the old `plan/windows-support` and all `feat/t26x-*`, `feat/t271-*` branches stay for history). The main checkout is on `windows`. Nothing is pushed.
+
+**State.**
+- Merged into `windows` and Done: T262 ADR-0003 + `.gitattributes`; T264 file lock; T265 process start/kill; T266 PowerShell matchers + exec-form converter; T267 merge gate sees the PowerShell tool. T263 (Windows CI job) is merged but its `verify` row is blocked: it needs a real Windows run.
+- Built, reviewed, auto verify PASS, NOT merged yet: T268 (`feat/t268-setup-ps1`, `setup.ps1` + `lib/harness.ps1`) and T271 (`feat/t271-update-ps1`, built on T268: `update.ps1` + `lib/harness-update.ps1`). Both sit in Ready for Review.
+- Not started: T269 (release v2.3.0: bump `.claude-plugin/plugin.json`, `plugin/.claude-plugin/plugin.json`, `README.md` line 3; README "Windows" section; `ship` release notes and rollback plan; no tag, no push without the user).
+
+**User actions waiting** (the model's merge gate blocks its own merges while T263 is unverified):
+1. `! bash /tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-personal-agentic-claude/ba8d2885-149b-442b-a832-cab0d11b2433/scratchpad/merge_windows2.sh` (merges T268 then T271 into `windows`; this scratchpad file may be gone: the commands are `git merge --no-ff feat/t268-setup-ps1` then `git merge --no-ff feat/t271-update-ps1`). Earlier script `merge_windows.sh` already merged T262-T267.
+2. Push `windows`, open a PR to `main` (the Windows workflow runs on `pull_request`, and on `push` only to `main`).
+3. Read the first `Python tests (Windows)` run and the four smoke steps (`setup.ps1` and `update.ps1`, each under Windows PowerShell 5.1 and pwsh 7). Expect red at first; the run lists what is still missing on Windows. Then `/verify T263` (or tell the Supervisor the result).
+
+**Next for the Supervisor, in order.** (a) After the user merges: run the full suite on `windows` (`python3 -m pytest .claude/hooks/tests tests -q`, last result 3834-3838 passed on the task branches). (b) Fix whatever the first Windows CI run shows, as small tasks. (c) T269 only after a green Windows run. (d) Follow-ups below.
+
+**Follow-up candidates (not on the board).** T270: `GIT_ALIAS_PATTERN` in `pre_bash_block_unsafe_merge.py` is quadratic (a 240 KB command times out the hook; a timed-out hook does not block; on the base code too). T-W2b: a portable stub `claude` so ~114 skipped `tests/test_auto_verify.py` tests run on Windows. `site/docs.html:1972-1977` and `skills/git-guardrails-claude-code/SKILL.md:33` still show the `Bash` matcher; a Python twin of the git-guardrails hook. Windows `PermissionError` when `stop_auto_mode_check.py` reads a trace file that a hook has locked. The merge gate's known limit: a PowerShell verb built at run time. Worktrees `../wt-t262` to `../wt-t268`, `../wt-t271` can be removed with `git worktree remove` after the merges.
+
+**Local test tooling.** No `pwsh` on this machine; Docker runs the pinned `mcr.microsoft.com/powershell` image (339 MB, `docker rmi` to remove). The Docker tests skip when the image is absent.
+

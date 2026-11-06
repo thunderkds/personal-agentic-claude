@@ -25,6 +25,7 @@
      run; read them there. The enforced gate is the whole-file character budget above. -->
 
 ### Decisions
+- [Native Windows support: where we stopped, 2026-11-06](decisions.md) — `windows` is the release branch; T268/T271 await your merge; first Windows CI run, then T269 (v2.3.0). Full state: docs/windows-support-plan.md § Resume here
 - [T232–T236, T239, T240: plugin, init, Stage 0–5, repo `easy-kit`](decisions.md) — never reuse old repo name
 - [Anonymous GitHub check: block SSH](learnings.md) — T236
 - [T231: story `index.html`, reference `docs.html`](decisions.md) — 300-word cap; new skill goes on both pages
