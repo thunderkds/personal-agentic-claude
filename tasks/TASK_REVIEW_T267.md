@@ -53,6 +53,7 @@ Mode: auto
 Checks: pending (T267 in progress)
 Memory: pending (written before the run ends)
 Not done: merge (yours); auto verify: not started
+Paused: auto-mode check failed — no test run in memory/event-trace/T267.jsonl — write /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state/active_task.d/$CLAUDE_CODE_SESSION_ID with the task ID (minimal-track step 1): `mkdir -p /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state/active_task.d && printf '%s\n%s\n' "T267" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /home/hungnguyenhuu/workspace/pets/personal-agentic-claude/.claude/hooks/.state/active_task.d/$CLAUDE_CODE_SESSION_ID`, then rerun the task's tests so the trace records them under the task, then stop; Risk High, but the trace has no `security-review` Skill call [report 013a22ffa61b]
 
 
 ## Evidence
@@ -79,8 +80,21 @@ Not done: merge (yours); auto verify: not started
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE**: captured on `eb76a9af` (no implementation commit yet). Fixture project: `PROJECT_KANBAN.md`
+with T900 In Progress, no evidence; each event piped to the worktree hook with
+`CLAUDE_PROJECT_DIR=<fixture>`. The hook signals a block by a `"decision": "block"` JSON on stdout, exit 0;
+no stdout = allow. Command: `python3 <scratchpad>/demo.py .claude/hooks/pre_bash_block_unsafe_merge.py`
+
+```
+eb76a9af
+captured 2026-11-06T12:36:19+00:00
+Bash       'git push origin main'         exit=0 BLOCK  • Tasks still In Progress: T900
+Bash       'git.exe push origin main'     exit=0 ALLOW  (no output)
+Bash       'git` push'                    exit=0 ALLOW  (no output)
+PowerShell 'git push origin main'         exit=0 ALLOW  (no output)
+```
+
+Three spellings slip past today: `git.exe push`, ``git` push``, and any command from the PowerShell tool.
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
