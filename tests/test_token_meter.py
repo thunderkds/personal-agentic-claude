@@ -248,6 +248,7 @@ def test_sc8_malformed_line_is_skipped_and_counted():
     assert data["summary"]["api_calls"] == 2
 
 
+@pytest.mark.posix_only("creates a symlink, which needs Developer Mode or admin rights on Windows [os.symlink]")
 def test_symlinked_directory_outside_root_is_not_followed():
     with tempfile.TemporaryDirectory() as root:
         os.symlink(FIX / "basic" / "projects" / "proj-a", os.path.join(root, "link"))

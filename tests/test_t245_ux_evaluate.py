@@ -6,6 +6,7 @@ Acceptance Criterion of `tasks/TASK_GUIDE_T245.md` it covers. The skill is a pro
 load-bearing sentences are pinned: a sentence that can be deleted without a test going red will be
 deleted by the next person who needs the bytes.
 """
+import pytest
 import re
 import subprocess
 from pathlib import Path
@@ -51,6 +52,7 @@ def test_ac1_frontmatter_valid():
     assert frontmatter_problems(_text(SKILL)) == []
 
 
+@pytest.mark.posix_only("runs a shell script through sh/bash; shell suites are not run on Windows [sh]")
 def test_ac1_validate_sh_accepts_the_skill():
     res = subprocess.run(["sh", "scripts/validate.sh"], cwd=ROOT, capture_output=True, text=True)
     assert res.returncode == 0, res.stdout[-800:] + res.stderr[-800:]

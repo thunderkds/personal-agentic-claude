@@ -17,6 +17,7 @@ would pass or fail depending on which worktrees happen to exist today.
 
 Run with: python3 -m pytest .claude/hooks/tests/test_merge_gate_t095.py -v
 """
+import pytest
 import io
 import json
 import os
@@ -505,6 +506,7 @@ def test_fail_closed_template_unchecked_pass_placeholder(tmp_path):
     assert merge_gate.has_filled_verify_row("T900", dirs) is False
 
 
+@pytest.mark.posix_only("relies on POSIX permission bits or execute bits, which Windows does not enforce [geteuid]")
 def test_fail_closed_unreadable_review_file(tmp_path):
     if os.geteuid() == 0:
         import pytest

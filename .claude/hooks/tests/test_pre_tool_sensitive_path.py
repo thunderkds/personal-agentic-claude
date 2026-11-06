@@ -13,6 +13,7 @@ nothing.
 
 Run with: python3 -m pytest .claude/hooks/tests/test_pre_tool_sensitive_path.py -q
 """
+import pytest
 import json
 import os
 import shutil
@@ -130,6 +131,7 @@ class SensitivePathHookTest(unittest.TestCase):
             with self.subTest(path=path):
                 self.assert_silent(self.edit(path))
 
+    @pytest.mark.posix_only("creates a symlink, which needs Developer Mode or admin rights on Windows [symlink_to]")
     def test_symlink_to_sensitive_path_asks(self):
         os.makedirs(os.path.join(self.project, "infra"))
         target = os.path.join(self.project, "infra", "main.tf")

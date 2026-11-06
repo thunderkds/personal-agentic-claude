@@ -448,6 +448,7 @@ def test_d8_init_reports_what_it_did_and_copies_no_bytecode(plugin, repo):
     assert not [p for p in repo.rglob("__pycache__") if ".git" not in p.parts]
 
 
+@pytest.mark.posix_only("relies on POSIX permission bits or execute bits, which Windows does not enforce [S_IRUSR]")
 def test_d8_a_hook_from_a_read_only_plugin_folder_still_gates(plugin, repo, tmp_path):
     """Accepting bytecode is safe: where the plugin folder is read-only, Python skips the write."""
     ro = tmp_path / "ro" / "easy-kit"

@@ -266,6 +266,7 @@ def _verdict_output(verdict_line, **fields):
 
 
 # ── AC 2 — trigger, detached, once per commit ─────────────────────────────────────────────
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [os.getsid]")
 def test_ac2_stop_hook_returns_at_once_and_the_detached_run_writes_the_row(tmp_path):
     project, checkout = _project(tmp_path)
     stub_dir, calls = _stub(tmp_path, sleep=3)
@@ -282,6 +283,7 @@ def test_ac2_stop_hook_returns_at_once_and_the_detached_run_writes_the_row(tmp_p
     assert call["parent_sid"] == call["parent_pid"] != os.getsid(0)
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_ac2_same_task_and_commit_never_start_twice(tmp_path):
     project, checkout = _project(tmp_path)
     stub_dir, calls = _stub(tmp_path, sleep=1)
@@ -294,6 +296,7 @@ def test_ac2_same_task_and_commit_never_start_twice(tmp_path):
     assert len(_calls(calls)) == 1
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_ac2_a_blocked_run_is_not_retried_on_the_same_commit(tmp_path):
     project, checkout = _project(tmp_path)
     stub_dir, calls = _stub(tmp_path, output="not json")
@@ -305,6 +308,7 @@ def test_ac2_a_blocked_run_is_not_retried_on_the_same_commit(tmp_path):
     assert len(_calls(calls)) == 1
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_ac2_a_new_code_commit_starts_a_new_run(tmp_path):
     project, checkout = _project(tmp_path)
     stub_dir, calls = _stub(tmp_path)
@@ -322,6 +326,7 @@ def test_ac2_a_new_code_commit_starts_a_new_run(tmp_path):
     assert len(_calls(calls)) == 2
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_ac2_committing_only_the_review_file_does_not_start_a_new_run(tmp_path):
     """The Supervisor commits the hook-written row: the verified code did not change."""
     project, checkout = _project(tmp_path)
@@ -335,6 +340,7 @@ def test_ac2_committing_only_the_review_file_does_not_start_a_new_run(tmp_path):
     assert len(_calls(calls)) == 1
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 @pytest.mark.parametrize("where", ["nowhere", "In Progress", "Done"])
 def test_ac2_no_run_unless_the_task_is_ready_for_review(tmp_path, where):
     project, _ = _project(tmp_path)
@@ -347,6 +353,7 @@ def test_ac2_no_run_unless_the_task_is_ready_for_review(tmp_path, where):
     assert result.returncode == 0 and _calls(calls) == []
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_ac2_no_run_when_the_user_already_filled_the_row(tmp_path):
     project, checkout = _project(tmp_path, review=_review("☑ pass | user ran /verify T951 — pass"))
     stub_dir, calls = _stub(tmp_path)
@@ -355,6 +362,7 @@ def test_ac2_no_run_when_the_user_already_filled_the_row(tmp_path):
     assert _calls(calls) == [] and _row(checkout) == ("☑ pass", "user ran /verify T951 — pass")
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_ac2_the_headless_run_never_starts_another(tmp_path):
     """The run's own session fires Stop hooks too; the run marks its env so they do nothing."""
     project, _ = _project(tmp_path)
@@ -364,6 +372,7 @@ def test_ac2_the_headless_run_never_starts_another(tmp_path):
     assert _calls(calls) == []
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_ac2_two_auto_tasks_get_two_runs_with_their_own_log_and_record(tmp_path):
     second = "- [ ] **T952** — Sort | Supervisor | C2 | Risk: Medium | P1"
     project, checkout = _project(tmp_path, rows=(RFR_ROW, second),
@@ -391,6 +400,7 @@ def test_ac2_two_auto_tasks_get_two_runs_with_their_own_log_and_record(tmp_path)
 
 
 # ── AC 3 — the run ────────────────────────────────────────────────────────────────────────
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_ac3_new_session_budget_flag_no_skip_permissions_in_the_task_worktree(tmp_path):
     project, checkout = _project(tmp_path, worktree=True)
     stub_dir, calls = _stub(tmp_path)
@@ -406,6 +416,7 @@ def test_ac3_new_session_budget_flag_no_skip_permissions_in_the_task_worktree(tm
     assert call["project_dir"] is None
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_ac3_budget_is_a_default_the_user_can_change(tmp_path):
     project, checkout = _project(tmp_path)
     stub_dir, calls = _stub(tmp_path)
@@ -415,6 +426,7 @@ def test_ac3_budget_is_a_default_the_user_can_change(tmp_path):
     assert argv[argv.index("--max-budget-usd") + 1] == "0.75"
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_ac3_log_is_under_verify_runs_and_gitignored(tmp_path):
     project, checkout = _project(tmp_path)
     stub_dir, _ = _stub(tmp_path)
@@ -429,6 +441,7 @@ def test_ac3_log_is_under_verify_runs_and_gitignored(tmp_path):
 
 
 # ── AC 4 — the row ────────────────────────────────────────────────────────────────────────
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_ac4_pass_row_has_the_d4_shape(tmp_path):
     project, checkout = _project(tmp_path)
     stub_dir, _ = _stub(tmp_path)
@@ -440,6 +453,7 @@ def test_ac4_pass_row_has_the_d4_shape(tmp_path):
                      f"log .claude/verify-runs/{TASK}-{head[:12]}.log — pass")
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_ac4_fail_row(tmp_path):
     project, checkout = _project(tmp_path)
     stub_dir, _ = _stub(tmp_path, output=_verdict_output("**Verdict:** FAIL"))
@@ -461,6 +475,7 @@ BLOCKED_CASES = {
 }
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 @pytest.mark.parametrize("case", sorted(BLOCKED_CASES))
 def test_ac4_blocked_row_never_says_pass(tmp_path, case):
     project, checkout = _project(tmp_path)
@@ -499,6 +514,7 @@ def test_t208_ac2_the_saved_t207_output_parses_as_pass():
     assert _parse(stdout)[0] == "pass"
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_t208_ac2_the_saved_t207_output_writes_a_pass_row(tmp_path):
     project, checkout = _project(tmp_path)
     stub_dir, _ = _stub(tmp_path, output=FIXTURE_BOLD_SENTENCE.read_text(encoding="utf-8"))
@@ -577,6 +593,7 @@ def test_t209_ac3_a_verdict_word_later_in_the_sentence_is_not_a_choice(line):
     assert _parse(_verdict_output(line))[0] == "pass"
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_t209_sc1_the_blank_template_is_recorded_blocked_by_the_hook(tmp_path):
     project, checkout = _project(tmp_path)
     stub_dir, _ = _stub(tmp_path, output=_verdict_output(BLANK_TEMPLATE))
@@ -593,6 +610,7 @@ def test_t209_ac4_the_doctrine_names_the_shapes_and_fails_closed():
     assert re.search(r"lists? choices[^.]*not a verdict", section, re.I), section
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_ac4_timeout_is_blocked(tmp_path):
     project, checkout = _project(tmp_path)
     stub_dir, _ = _stub(tmp_path, sleep=30)
@@ -601,6 +619,7 @@ def test_ac4_timeout_is_blocked(tmp_path):
     assert verdict == "☐ blocked" and "timed out" in notes and "pass" not in notes.lower()
 
 
+@pytest.mark.posix_only("builds a POSIX PATH (/usr/bin:/bin) to find stub executables [via _env]")
 def test_ac4_claude_not_on_path_is_blocked_with_no_crash(tmp_path):
     project, checkout = _project(tmp_path)
     result, _ = _stop(project, _env(tmp_path, project))
@@ -609,6 +628,7 @@ def test_ac4_claude_not_on_path_is_blocked_with_no_crash(tmp_path):
     assert verdict == "☐ blocked" and "claude not found" in notes and "pass" not in notes.lower()
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_ac4_a_row_the_user_filled_during_the_run_is_kept(tmp_path):
     project, checkout = _project(tmp_path)
     stub_dir, _ = _stub(tmp_path, sleep=2)
@@ -628,22 +648,26 @@ def _ran(tmp_path, output=None, worktree=False):
     return project, checkout, env
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _ran]")
 def test_ac5_hook_row_with_its_record_is_accepted(tmp_path):
     project, _, env = _ran(tmp_path)
     assert _merge(project, env) == ("allow", "")
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _ran]")
 def test_ac5_hook_row_with_its_record_is_accepted_from_a_worktree(tmp_path):
     project, _, env = _ran(tmp_path, worktree=True)
     assert _merge(project, env) == ("allow", "")
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _ran]")
 def test_ac5_hook_row_is_accepted_after_committing_only_the_review_file(tmp_path):
     project, checkout, env = _ran(tmp_path)
     _git(checkout, "commit", "-qam", "review: verify row")
     assert _merge(project, env)[0] == "allow"
 
 
+@pytest.mark.posix_only("builds a POSIX PATH (/usr/bin:/bin) to find stub executables [via _env]")
 def test_ac5_hand_typed_row_with_no_record_blocks(tmp_path):
     project, checkout = _project(tmp_path)
     head = _git(project, "rev-parse", "HEAD")
@@ -653,6 +677,7 @@ def test_ac5_hand_typed_row_with_no_record_blocks(tmp_path):
     assert decision == "block" and f"{TASK} (no evidence row)" in reason
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _ran]")
 def test_ac5_record_for_another_commit_blocks(tmp_path):
     """The run verified commit A; the code then changed (head B). The row still names A."""
     project, checkout, env = _ran(tmp_path)
@@ -661,6 +686,7 @@ def test_ac5_record_for_another_commit_blocks(tmp_path):
     assert _merge(project, env)[0] == "block"
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _ran]")
 def test_ac5_row_retargeted_to_the_head_commit_without_its_record_blocks(tmp_path):
     project, checkout, env = _ran(tmp_path)
     old = _git(checkout, "rev-parse", "HEAD")
@@ -672,6 +698,7 @@ def test_ac5_row_retargeted_to_the_head_commit_without_its_record_blocks(tmp_pat
     assert _merge(project, env)[0] == "block"
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _ran]")
 def test_ac5_fail_record_blocks_even_if_the_row_is_edited_to_pass(tmp_path):
     project, checkout, env = _ran(tmp_path, output=_verdict_output("**Verdict:** FAIL"))
     _, notes = _row(checkout)
@@ -679,6 +706,7 @@ def test_ac5_fail_record_blocks_even_if_the_row_is_edited_to_pass(tmp_path):
     assert _merge(project, env)[0] == "block"
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _ran]")
 def test_ac5_record_for_another_task_blocks(tmp_path):
     project, checkout, env = _ran(tmp_path)
     head = _git(project, "rev-parse", "HEAD")
@@ -697,6 +725,7 @@ def test_ac5_record_for_another_task_blocks(tmp_path):
     assert _merge(project, env)[0] == "block"
 
 
+@pytest.mark.posix_only("builds a POSIX PATH (/usr/bin:/bin) to find stub executables [via _env]")
 @pytest.mark.parametrize("cells", [
     "☑ pass | auto-checked, not /verify — pass",
     "☑ pass | real run ok (auto-checked, not /verify) — pass",
@@ -708,6 +737,7 @@ def test_ac5_auto_checked_row_blocks(tmp_path, cells):
     assert decision == "block" and f"{TASK} (no evidence row)" in reason
 
 
+@pytest.mark.posix_only("builds a POSIX PATH (/usr/bin:/bin) to find stub executables [via _env]")
 def test_ac5_a_record_the_agent_could_write_is_not_trusted(tmp_path):
     """Forgery: a pass record written where an agent can write (in the repo, next to the log) and a
     hand-typed row. The gate reads records only from the anchor directory, so it still blocks."""
@@ -746,6 +776,7 @@ def test_ac5_relative_record_dir_is_refused(tmp_path, monkeypatch):
 
 
 # ── AC 6 — not changed without [auto]; docs ──────────────────────────────────────────────
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 @pytest.mark.parametrize("marker", ["Mode: manual", "<!-- Mode: auto -->", "Mode: auto (later)"])
 def test_ac6_no_auto_marker_no_run(tmp_path, marker):
     # T203 D1 runs every task by default; this rule (no marker, no run) now holds under the D3
@@ -759,6 +790,7 @@ def test_ac6_no_auto_marker_no_run(tmp_path, marker):
     assert _row(checkout)[0].startswith("☐ pass")
 
 
+@pytest.mark.posix_only("builds a POSIX PATH (/usr/bin:/bin) to find stub executables [via _env]")
 def test_ac6_auto_mode_check_stays_silent_inside_the_headless_run(tmp_path):
     """T180's auto-mode Stop hook must not block the `/verify` session's own stop (it would tell
     that session to fix the final report)."""
@@ -959,6 +991,7 @@ def test_ac1_neither_stop_hook_holds_a_second_copy_of_the_reader():
 
 
 # ── AC 2 — the minimal-track run ──────────────────────────────────────────────────────────
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [os.getsid]")
 def test_ac2_a_minimal_track_row_starts_one_detached_run(tmp_path):
     project, checkout = _project(tmp_path, rows=(MIN_ROW,), review_file=False, minimal_log=_log())
     stub_dir, calls = _stub(tmp_path, sleep=3)
@@ -978,6 +1011,7 @@ def test_ac2_a_minimal_track_row_starts_one_detached_run(tmp_path):
     assert log.is_file() and _git(project, "check-ignore", f".claude/verify-runs/{log.name}")
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_ac2_a_second_stop_on_the_same_commit_starts_nothing_on_the_minimal_track(tmp_path):
     project, checkout = _project(tmp_path, rows=(MIN_ROW,), review_file=False, minimal_log=_log())
     stub_dir, calls = _stub(tmp_path, sleep=1)
@@ -991,6 +1025,7 @@ def test_ac2_a_second_stop_on_the_same_commit_starts_nothing_on_the_minimal_trac
     assert _verify_line(checkout).count("auto-run by hook") == 1
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_ac2_a_record_in_a_worktree_is_resolved_like_evidence(tmp_path):
     row = f"{MIN_ROW} | Started 2026-10-29: branch `feat/t951` in `../wt-t951`"  # T203 sec review
     project, checkout = _project(tmp_path, rows=(row,), review_file=False, worktree=True,
@@ -1002,6 +1037,7 @@ def test_ac2_a_record_in_a_worktree_is_resolved_like_evidence(tmp_path):
     assert Path(call["cwd"]).resolve() == checkout.resolve()
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_ac2_a_minimal_and_an_extended_task_both_due_get_their_own_run(tmp_path):
     project, checkout = _project(tmp_path, rows=(RFR_ROW, MIN_ROW), minimal_log=_log())
     stub_dir, calls = _stub(tmp_path)
@@ -1014,6 +1050,7 @@ def test_ac2_a_minimal_and_an_extended_task_both_due_get_their_own_run(tmp_path)
         f"{TASK}-{head[:12]}.log", f"{MIN_TASK}-{head[:12]}.log"]
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_ac2_no_decision_record_is_one_stderr_line_and_no_run(tmp_path):
     project, _ = _project(tmp_path, rows=(MIN_ROW,), review_file=False)
     stub_dir, calls = _stub(tmp_path)
@@ -1025,6 +1062,7 @@ def test_ac2_no_decision_record_is_one_stderr_line_and_no_run(tmp_path):
     assert len(lines) == 1 and MIN_TASK in lines[0] and "MINIMAL_LOG.md" in lines[0], result.stderr
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_ac2_a_record_with_no_checked_field_is_one_stderr_line_and_no_run(tmp_path):
     record = _record().replace("**Checked:**\n- Suite: `pytest -q` — 12 passed\n", "")
     project, _ = _project(tmp_path, rows=(MIN_ROW,), review_file=False, minimal_log=_log(record))
@@ -1037,6 +1075,7 @@ def test_ac2_a_record_with_no_checked_field_is_one_stderr_line_and_no_run(tmp_pa
 
 
 # ── AC 3 — the D3 `verify:` line ──────────────────────────────────────────────────────────
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 @pytest.mark.parametrize("verdict", sorted(VERDICT_OUTPUT))
 def test_ac3_the_record_gets_the_d3_line_for_pass_fail_and_blocked(tmp_path, verdict):
     project, checkout = _project(tmp_path, rows=(MIN_ROW,), review_file=False, minimal_log=_log())
@@ -1051,6 +1090,7 @@ def test_ac3_the_record_gets_the_d3_line_for_pass_fail_and_blocked(tmp_path, ver
         assert "pass" not in line.lower(), line
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_ac3_the_checked_lines_the_user_wrote_are_left_exactly_as_they_were(tmp_path):
     mine = ["- New test `test_sort_is_alphabetical` — failed before the change, passes after",
             "- Real run: `python3 -m app sort` — printed `Ann, Bob`"]
@@ -1068,6 +1108,7 @@ def test_ac3_the_checked_lines_the_user_wrote_are_left_exactly_as_they_were(tmp_
     assert "**Files:** `src/app.py`" in body and "**Decisions:**" in body
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_ac3_a_verify_line_the_user_filled_is_never_run_over(tmp_path):
     mine = "- verify: ☑ pass — user ran /verify T952 — pass"
     project, checkout = _project(tmp_path, rows=(MIN_ROW,), review_file=False,
@@ -1078,6 +1119,7 @@ def test_ac3_a_verify_line_the_user_filled_is_never_run_over(tmp_path):
     assert _calls(calls) == [] and _verify_line(checkout) == mine
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_ac3_an_earlier_auto_line_for_other_code_is_replaced_not_duplicated(tmp_path):
     project, checkout = _project(tmp_path, rows=(MIN_ROW,), review_file=False, minimal_log=_log())
     stub_dir, calls = _stub(tmp_path)
@@ -1095,6 +1137,7 @@ def test_ac3_an_earlier_auto_line_for_other_code_is_replaced_not_duplicated(tmp_
     assert len(_calls(calls)) == 2
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_ac3_committing_only_the_record_does_not_start_a_new_run(tmp_path):
     """The Supervisor commits the hook-written line: the verified code did not change."""
     project, checkout = _project(tmp_path, rows=(MIN_ROW,), review_file=False, minimal_log=_log())
@@ -1109,6 +1152,7 @@ def test_ac3_committing_only_the_record_does_not_start_a_new_run(tmp_path):
 
 
 # ── AC 4 — the extended track is unchanged; a template copy is not marked ────────────────
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_ac4_a_review_file_copied_from_the_template_starts_no_run(tmp_path):
     # T203 D1 runs every task by default; this rule (no marker, no run) now holds under the D3
     # off switch, `CLAUDE_AUTO_VERIFY=off`, which restores it exactly.
@@ -1121,6 +1165,7 @@ def test_ac4_a_review_file_copied_from_the_template_starts_no_run(tmp_path):
     assert not (project / ".claude" / "verify-runs").exists()
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_ac4_a_minimal_log_copied_from_the_template_starts_no_run(tmp_path):
     project, _ = _project(tmp_path, rows=(MIN_ROW,), review_file=False,
                           minimal_log=(ROOT / "templates" / "MINIMAL_LOG_template.md"
@@ -1149,16 +1194,19 @@ def _ran_minimal(tmp_path, output=None, worktree=False):
     return project, checkout, env
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _ran_minimal]")
 def test_ac5_a_minimal_line_with_its_record_is_accepted(tmp_path):
     project, _, env = _ran_minimal(tmp_path)
     assert _merge(project, env) == ("allow", "")
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _ran_minimal]")
 def test_ac5_a_minimal_line_from_a_worktree_record_is_accepted(tmp_path):
     project, _, env = _ran_minimal(tmp_path, worktree=True)
     assert _merge(project, env) == ("allow", "")
 
 
+@pytest.mark.posix_only("builds a POSIX PATH (/usr/bin:/bin) to find stub executables [via _env]")
 def test_ac5_a_minimal_line_with_no_record_blocks(tmp_path):
     project, checkout = _project(tmp_path, rows=(MIN_ROW,), review_file=False, minimal_log=_log())
     head = _git(project, "rev-parse", "HEAD")
@@ -1168,6 +1216,7 @@ def test_ac5_a_minimal_line_with_no_record_blocks(tmp_path):
     assert decision == "block" and f"{MIN_TASK} (no evidence row)" in reason
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _ran_minimal]")
 def test_ac5_a_minimal_record_for_another_commit_blocks(tmp_path):
     project, checkout, env = _ran_minimal(tmp_path)
     (checkout / "src" / "app.py").write_text("print('v2')\n", encoding="utf-8")
@@ -1175,12 +1224,14 @@ def test_ac5_a_minimal_record_for_another_commit_blocks(tmp_path):
     assert _merge(project, env)[0] == "block"
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _ran_minimal]")
 def test_ac5_a_minimal_fail_record_blocks_even_if_the_line_is_edited_to_pass(tmp_path):
     project, checkout, env = _ran_minimal(tmp_path, output=_verdict_output("**Verdict:** FAIL"))
     _set_verify_line(checkout, _verify_line(checkout).replace("☑ fail", "☑ pass"))
     assert _merge(project, env)[0] == "block"
 
 
+@pytest.mark.posix_only("builds a POSIX PATH (/usr/bin:/bin) to find stub executables [via _env]")
 @pytest.mark.parametrize("line", [
     "- verify: ☑ pass — user ran /verify T952 — pass",
     "- verify: ☑ pass — auto-checked, not /verify — pass",
@@ -1193,6 +1244,7 @@ def test_ac5_a_hand_typed_minimal_line_blocks(tmp_path, line):
     assert decision == "block" and f"{MIN_TASK} (no evidence row)" in reason
 
 
+@pytest.mark.posix_only("builds a POSIX PATH (/usr/bin:/bin) to find stub executables [via _env]")
 def test_ac5_a_record_the_agent_could_write_is_not_trusted_on_the_minimal_track(tmp_path):
     """Forgery: a pass record written where an agent can write (in the repo, next to the log) plus
     a hand-typed line. The gate reads records only from the anchor directory, so it still blocks."""
@@ -1209,6 +1261,7 @@ def test_ac5_a_record_the_agent_could_write_is_not_trusted_on_the_minimal_track(
 
 
 # ── AC 6 — no marker, no run, on either track ────────────────────────────────────────────
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 @pytest.mark.parametrize("marker", ["Mode: manual", "<!-- Mode: auto -->", "Mode: auto (later)"])
 def test_ac6_a_minimal_record_without_the_marker_starts_no_run(tmp_path, marker):
     # T203 D1 runs every task by default; this rule (no marker, no run) now holds under the D3
@@ -1225,6 +1278,7 @@ def test_ac6_a_minimal_record_without_the_marker_starts_no_run(tmp_path, marker)
 
 
 # ── AC 7 — the report stops saying "running" ─────────────────────────────────────────────
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 @pytest.mark.parametrize("verdict", sorted(VERDICT_OUTPUT))
 def test_ac7_the_extended_report_slot_names_the_result(tmp_path, verdict):
     project, checkout = _project(tmp_path)
@@ -1239,6 +1293,7 @@ def test_ac7_the_extended_report_slot_names_the_result(tmp_path, verdict):
     assert "running (T182)" not in slot
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 @pytest.mark.parametrize("verdict", sorted(VERDICT_OUTPUT))
 def test_ac7_the_minimal_record_slot_names_the_result(tmp_path, verdict):
     project, checkout = _project(tmp_path, rows=(MIN_ROW,), review_file=False, minimal_log=_log())
@@ -1253,6 +1308,7 @@ def test_ac7_the_minimal_record_slot_names_the_result(tmp_path, verdict):
     assert "running (T182)" not in slot
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_ac7_the_template_placeholder_slot_is_the_unwritten_state(tmp_path):
     placeholder = ("merge (yours); <auto verify: running (T182) | auto verify: <result> "
                    "| /verify (yours)>")
@@ -1265,6 +1321,7 @@ def test_ac7_the_template_placeholder_slot_is_the_unwritten_state(tmp_path):
     assert slot.startswith("Not done: merge (yours); auto verify: ☑ pass (session "), slot
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_ac7_a_slot_the_user_wrote_is_left_alone_and_the_reason_goes_in_the_log(tmp_path):
     mine = "merge (yours); /verify (yours)"
     project, checkout = _project(tmp_path, review=_review(not_done=mine))
@@ -1276,6 +1333,7 @@ def test_ac7_a_slot_the_user_wrote_is_left_alone_and_the_reason_goes_in_the_log(
     assert "auto verify slot" in _run_log(project, TASK)
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 @pytest.mark.parametrize("lines,count", [(f"Not done: {NOT_DONE}\nNot done: merge (yours)", 2),
                                          ("", 0)])
 def test_ac7_no_single_not_done_line_writes_nothing_and_says_which_in_the_log(tmp_path, lines, count):
@@ -1432,6 +1490,7 @@ def _assert_not_moved(project, board_before, task=TASK):
 
 
 # ── AC 1 — the gated Done move ────────────────────────────────────────────────────────────
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_t189_ac1_a_pass_with_complete_evidence_moves_the_row_to_done(tmp_path):
     project, checkout = _project(tmp_path, review=COMPLETE)
     _with_done_row(project)
@@ -1449,6 +1508,7 @@ def test_t189_ac1_a_pass_with_complete_evidence_moves_the_row_to_done(tmp_path):
     assert _board_text(project) == expected
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_t189_ac1_a_minimal_track_pass_moves_its_row_to_done(tmp_path):
     project, checkout = _project(tmp_path, rows=(MIN_ROW,), review_file=False,
                                  minimal_log=_log(_record(memory="nothing new")))
@@ -1462,6 +1522,7 @@ def test_t189_ac1_a_minimal_track_pass_moves_its_row_to_done(tmp_path):
 
 
 # ── AC 2 — fail and blocked leave the row exactly where it was ────────────────────────────
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 @pytest.mark.parametrize("verdict", ["fail", "blocked"])
 def test_t189_ac2_a_fail_or_blocked_verdict_leaves_the_row_untouched(tmp_path, verdict):
     project, checkout = _project(tmp_path, review=COMPLETE)
@@ -1495,6 +1556,7 @@ D2_CASES = {
 }
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 @pytest.mark.parametrize("case", sorted(D2_CASES))
 def test_t189_ac3_a_gate_5_or_6_gap_keeps_the_row_and_says_why(tmp_path, case):
     old, new, reason = D2_CASES[case]
@@ -1512,6 +1574,7 @@ def test_t189_ac3_a_gate_5_or_6_gap_keeps_the_row_and_says_why(tmp_path, case):
     assert "Closed:" not in _auto_section(checkout)
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_t189_ac3_no_test_run_in_the_trace_keeps_the_row(tmp_path):
     project, checkout = _project(tmp_path, review=COMPLETE)
     (project / "memory" / "event-trace" / f"{TASK}.jsonl").write_text("", encoding="utf-8")
@@ -1523,6 +1586,7 @@ def test_t189_ac3_no_test_run_in_the_trace_keeps_the_row(tmp_path):
     _assert_not_moved(project, before)
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_t189_ac3_a_minimal_record_with_no_new_test_line_keeps_the_row(tmp_path):
     record = _record(checked=("- Suite: `pytest -q` — 12 passed",), memory="nothing new")
     project, checkout = _project(tmp_path, rows=(MIN_ROW,), review_file=False, minimal_log=_log(record))
@@ -1536,6 +1600,7 @@ def test_t189_ac3_a_minimal_record_with_no_new_test_line_keeps_the_row(tmp_path)
     assert "Paused: done not moved — Gate 5" in _record_body(checkout)
 
 
+@pytest.mark.posix_only("builds a POSIX PATH (/usr/bin:/bin) to find stub executables [via _passed]")
 def test_t189_ac3_a_pure_backend_task_with_three_na_rows_and_a_reason_moves(tmp_path):
     """Edge case: `☐ N/A` with a written reason satisfies Gate 6 — the COMPLETE fixture's rows."""
     project, checkout, head, env, task, report = _passed(tmp_path)
@@ -1543,6 +1608,7 @@ def test_t189_ac3_a_pure_backend_task_with_three_na_rows_and_a_reason_moves(tmp_
 
 
 # ── AC 4 — the forgery guard (D3) ─────────────────────────────────────────────────────────
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_t189_ac4_no_run_record_keeps_the_row(tmp_path):
     """End to end: the run cannot write its record (a relative anchor directory is refused)."""
     project, checkout = _project(tmp_path, review=COMPLETE)
@@ -1554,6 +1620,7 @@ def test_t189_ac4_no_run_record_keeps_the_row(tmp_path):
     _assert_not_moved(project, before)
 
 
+@pytest.mark.posix_only("builds a POSIX PATH (/usr/bin:/bin) to find stub executables [via _passed]")
 def test_t189_ac4_a_record_for_another_commit_keeps_the_row(tmp_path):
     project, checkout, head, env, task, report = _passed(tmp_path, record_commit="a" * 40)
     before = _board_text(project)
@@ -1562,6 +1629,7 @@ def test_t189_ac4_a_record_for_another_commit_keeps_the_row(tmp_path):
     _assert_not_moved(project, before)
 
 
+@pytest.mark.posix_only("builds a POSIX PATH (/usr/bin:/bin) to find stub executables [via _passed]")
 def test_t189_ac4_a_fail_record_keeps_the_row(tmp_path):
     project, checkout, head, env, task, report = _passed(tmp_path, record="fail")
     before = _board_text(project)
@@ -1570,6 +1638,7 @@ def test_t189_ac4_a_fail_record_keeps_the_row(tmp_path):
     _assert_not_moved(project, before)
 
 
+@pytest.mark.posix_only("builds a POSIX PATH (/usr/bin:/bin) to find stub executables [via _passed]")
 def test_t189_ac4_a_hand_typed_auto_run_result_keeps_the_row(tmp_path):
     project, checkout, head, env, task, report = _passed(tmp_path, record=None)
     assert "auto-run by hook" in _row(checkout)[1]
@@ -1579,6 +1648,7 @@ def test_t189_ac4_a_hand_typed_auto_run_result_keeps_the_row(tmp_path):
     _assert_not_moved(project, before)
 
 
+@pytest.mark.posix_only("builds a POSIX PATH (/usr/bin:/bin) to find stub executables [via _passed]")
 def test_t189_ac4_a_record_for_another_session_than_the_result_keeps_the_row(tmp_path):
     project, checkout, head, env, task, report = _passed(tmp_path, row_session="forged-session")
     before = _board_text(project)
@@ -1587,6 +1657,7 @@ def test_t189_ac4_a_record_for_another_session_than_the_result_keeps_the_row(tmp
     _assert_not_moved(project, before)
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_t189_ac4_the_runs_own_output_cannot_ask_for_the_move(tmp_path):
     """The run's text is data: a FAIL verdict whose prose says "move it to Done" moves nothing."""
     project, checkout = _project(tmp_path, review=COMPLETE)
@@ -1622,6 +1693,7 @@ def _git_subcommand(argv):
     return args[0] if args else ""
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_t189_ac6_the_run_issues_no_git_command_that_writes(tmp_path):
     project, checkout = _project(tmp_path, review=COMPLETE)
     stub_dir, _ = _stub(tmp_path)
@@ -1654,6 +1726,7 @@ def test_t189_ac6_the_closeout_module_has_no_git_merge_push_or_ship():
 
 
 # ── AC 7 — the report says what the close-out did (D8) ───────────────────────────────────
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_t189_ac7_a_move_writes_the_closed_line_once(tmp_path):
     project, checkout = _project(tmp_path, review=COMPLETE)
     stub_dir, _ = _stub(tmp_path)
@@ -1665,6 +1738,7 @@ def test_t189_ac7_a_move_writes_the_closed_line_once(tmp_path):
                       f"commit {head}); Gates 5 and 6 checked"]
 
 
+@pytest.mark.posix_only("builds a POSIX PATH (/usr/bin:/bin) to find stub executables [via _passed]")
 def test_t189_ac7_a_second_close_out_after_the_move_adds_nothing(tmp_path):
     project, checkout, head, env, task, report = _passed(tmp_path)
     assert "RESULT True" in _close(project, env, task, report, head)
@@ -1674,6 +1748,7 @@ def test_t189_ac7_a_second_close_out_after_the_move_adds_nothing(tmp_path):
     assert _board_text(project) == board and report.read_text(encoding="utf-8") == text
 
 
+@pytest.mark.posix_only("builds a POSIX PATH (/usr/bin:/bin) to find stub executables [via _passed]")
 def test_t189_ac7_a_minimal_move_writes_the_closed_line_in_the_record(tmp_path):
     project, checkout, head, env, task, report = _passed(
         tmp_path, minimal_log=_log(_record(memory="nothing new")))
@@ -1683,6 +1758,7 @@ def test_t189_ac7_a_minimal_move_writes_the_closed_line_in_the_record(tmp_path):
     assert f"(session {SESSION_ID}, commit {head}); Gates 5 and 6 checked" in body
 
 
+@pytest.mark.posix_only("builds a POSIX PATH (/usr/bin:/bin) to find stub executables [via _passed]")
 def test_t189_ac7_a_stopped_move_writes_the_paused_line_once(tmp_path):
     project, checkout, head, env, task, report = _passed(tmp_path, review=_review())  # no Memory:
     for _ in range(2):
@@ -1691,6 +1767,7 @@ def test_t189_ac7_a_stopped_move_writes_the_paused_line_once(tmp_path):
     assert lines == ["Paused: done not moved — report incomplete: Memory:"], lines
 
 
+@pytest.mark.posix_only("builds a POSIX PATH (/usr/bin:/bin) to find stub executables [via _passed]")
 def test_t189_ac7_lines_the_user_wrote_are_never_rewritten(tmp_path):
     mine = ("Memory: memory/decisions.md — T951 decision (cold); MEMORY.md index line",
             "Paused: a safety-hook block — the push was refused, by design")
@@ -1717,6 +1794,7 @@ D9_FIELDS = {
 }
 
 
+@pytest.mark.posix_only("builds a POSIX PATH (/usr/bin:/bin) to find stub executables [via _passed]")
 @pytest.mark.parametrize("field", sorted(D9_FIELDS))
 def test_t189_ac8_a_report_missing_a_field_keeps_the_row(tmp_path, field):
     project, checkout, head, env, task, report = _passed(tmp_path, review=D9_FIELDS[field](COMPLETE))
@@ -1729,6 +1807,7 @@ def test_t189_ac8_a_report_missing_a_field_keeps_the_row(tmp_path, field):
     assert "Closed:" not in text
 
 
+@pytest.mark.posix_only("builds a POSIX PATH (/usr/bin:/bin) to find stub executables [via _passed]")
 @pytest.mark.parametrize("field,line", [
     ("decision line", "1. <what was decided> — RULE: <the rule>"),
     ("Checks:", "Checks: tests `<command>` — <result>"),
@@ -1741,6 +1820,7 @@ def test_t189_ac8_a_field_still_holding_its_placeholder_counts_as_missing(tmp_pa
     assert f"report incomplete: {field}" in out, out
 
 
+@pytest.mark.posix_only("builds a POSIX PATH (/usr/bin:/bin) to find stub executables [via _passed]")
 def test_t189_ac8_the_minimal_record_needs_its_memory_line(tmp_path):
     project, checkout, head, env, task, report = _passed(tmp_path, minimal_log=_log(_record()))
     before = _board_text(project)
@@ -1750,6 +1830,7 @@ def test_t189_ac8_the_minimal_record_needs_its_memory_line(tmp_path):
     assert "Paused: done not moved — report incomplete: Memory:" in _record_body(checkout)
 
 
+@pytest.mark.posix_only("builds a POSIX PATH (/usr/bin:/bin) to find stub executables [via _passed]")
 def test_t189_ac8_a_deleted_report_moves_nothing_and_creates_nothing(tmp_path):
     project, checkout, head, env, task, report = _passed(tmp_path)
     report.unlink()
@@ -1759,6 +1840,7 @@ def test_t189_ac8_a_deleted_report_moves_nothing_and_creates_nothing(tmp_path):
     assert _board_text(project) == before and not report.exists()
 
 
+@pytest.mark.posix_only("builds a POSIX PATH (/usr/bin:/bin) to find stub executables [via _passed]")
 def test_t189_ac8_a_complete_report_moves_the_row(tmp_path):
     project, checkout, head, env, task, report = _passed(tmp_path)
     assert "RESULT True" in _close(project, env, task, report, head)
@@ -1830,6 +1912,7 @@ def test_t189_ac9_agents_md_stays_within_its_line_cap():
     assert len((ROOT / "AGENTS.md").read_text(encoding="utf-8").splitlines()) <= 200
 
 
+@pytest.mark.posix_only("builds a POSIX PATH (/usr/bin:/bin) to find stub executables [via _passed]")
 def test_t189_edge_a_row_the_user_already_moved_gets_no_note(tmp_path):
     """Edge case: the row is already in Done, and the report is incomplete — nothing is written."""
     project, checkout, head, env, task, report = _passed(tmp_path, review=_review())  # no Memory:
@@ -1842,6 +1925,7 @@ def test_t189_edge_a_row_the_user_already_moved_gets_no_note(tmp_path):
     assert _board_text(project) == board and report.read_text(encoding="utf-8") == text
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_t189_edge_two_auto_tasks_passing_in_one_turn_both_move(tmp_path):
     second = "- [ ] **T953** — Sort | Supervisor | C2 | Risk: Medium | P1"
     project, checkout = _project(tmp_path, review=COMPLETE, rows=(RFR_ROW, second),
@@ -1915,6 +1999,7 @@ def _run_finished(project, task, checkout=None):
 
 
 # ── AC 1 — no marker needed, both tracks ─────────────────────────────────────────────────
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_t203_ac1_an_unmarked_extended_task_gets_one_run_and_its_row(tmp_path):
     project, checkout = _project(tmp_path, review=_plain_review())
     stub_dir, calls = _stub(tmp_path)
@@ -1929,6 +2014,7 @@ def test_t203_ac1_an_unmarked_extended_task_gets_one_run_and_its_row(tmp_path):
     assert [c["argv"][:2] for c in _calls(calls)] == [["-p", f"/verify {TASK}"]]
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_t203_ac1_an_unmarked_minimal_task_gets_one_run_and_its_line(tmp_path):
     project, checkout = _project(tmp_path, rows=(MIN_ROW,), review_file=False,
                                  minimal_log=_log(_plain_record()))
@@ -1943,6 +2029,7 @@ def test_t203_ac1_an_unmarked_minimal_task_gets_one_run_and_its_line(tmp_path):
     assert [c["argv"][:2] for c in _calls(calls)] == [["-p", f"/verify {MIN_TASK}"]]
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_t203_ac1_a_ready_for_review_task_with_no_review_file_is_one_stderr_line(tmp_path):
     """Edge: an old board row with no `TASK_REVIEW_<ID>.md` — one stderr line, no run, no crash."""
     project, _ = _project(tmp_path, review_file=False)
@@ -1955,6 +2042,7 @@ def test_t203_ac1_a_ready_for_review_task_with_no_review_file_is_one_stderr_line
 
 
 # ── AC 2 — `--start <ID>` ────────────────────────────────────────────────────────────────
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_t203_ac2_start_returns_at_once_with_the_log_path_and_the_run_writes_the_row(tmp_path):
     project, checkout = _project(tmp_path, review=_plain_review())
     stub_dir, calls = _stub(tmp_path, sleep=3)
@@ -1968,6 +2056,7 @@ def test_t203_ac2_start_returns_at_once_with_the_log_path_and_the_run_writes_the
     assert len(_calls(calls)) == 1
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_t203_ac2_start_twice_on_one_commit_runs_once(tmp_path):
     project, checkout = _project(tmp_path, review=_plain_review())
     stub_dir, calls = _stub(tmp_path, sleep=2)
@@ -1986,6 +2075,7 @@ def test_t203_ac2_start_twice_on_one_commit_runs_once(tmp_path):
     assert len(_calls(calls)) == 1
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 @pytest.mark.parametrize("first", ["stop", "start"])
 def test_t203_ac2_the_stop_hook_and_start_share_one_lock(tmp_path, first):
     project, checkout = _project(tmp_path, review=_plain_review())
@@ -2004,6 +2094,7 @@ def test_t203_ac2_the_stop_hook_and_start_share_one_lock(tmp_path, first):
     assert len(_calls(calls)) == 1
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 @pytest.mark.parametrize("where", ["nowhere", "In Progress", "Done"])
 def test_t203_ac2_start_starts_nothing_unless_the_task_is_ready_for_review(tmp_path, where):
     project, _ = _project(tmp_path, review=_plain_review())
@@ -2018,6 +2109,7 @@ def test_t203_ac2_start_starts_nothing_unless_the_task_is_ready_for_review(tmp_p
     assert _calls(calls) == [] and not (project / ".claude" / "verify-runs").exists()
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_t203_ac2_start_starts_nothing_when_the_user_filled_the_row(tmp_path):
     project, checkout = _project(tmp_path, review=_plain_review("☑ pass | user ran /verify T951 — pass"))
     stub_dir, calls = _stub(tmp_path)
@@ -2027,6 +2119,7 @@ def test_t203_ac2_start_starts_nothing_when_the_user_filled_the_row(tmp_path):
     assert _calls(calls) == [] and _row(checkout) == ("☑ pass", "user ran /verify T951 — pass")
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_t203_ac2_a_new_commit_gets_a_new_run_from_start(tmp_path):
     """Edge: the Supervisor commits again — the old run was for the old commit."""
     project, checkout = _project(tmp_path, review=_plain_review())
@@ -2044,6 +2137,7 @@ def test_t203_ac2_a_new_commit_gets_a_new_run_from_start(tmp_path):
     assert len(_calls(calls)) == 2
 
 
+@pytest.mark.posix_only("builds a POSIX PATH (/usr/bin:/bin) to find stub executables [via _env]")
 def test_t203_ac2_start_without_claude_on_path_is_blocked_with_no_crash(tmp_path):
     project, checkout = _project(tmp_path, review=_plain_review())
     result, _ = _start(project, _env(tmp_path, project))
@@ -2053,6 +2147,7 @@ def test_t203_ac2_start_without_claude_on_path_is_blocked_with_no_crash(tmp_path
 
 
 # ── AC 3 — the off switch ────────────────────────────────────────────────────────────────
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 @pytest.mark.parametrize("value", ["off", "OFF", " off "])
 def test_t203_ac3_off_leaves_an_unmarked_task_untouched_by_the_hook(tmp_path, value):
     project, checkout = _project(tmp_path, review=_plain_review())
@@ -2064,6 +2159,7 @@ def test_t203_ac3_off_leaves_an_unmarked_task_untouched_by_the_hook(tmp_path, va
     assert _row(checkout)[0].startswith("☐ pass")
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_t203_ac3_off_leaves_an_unmarked_task_untouched_by_start(tmp_path):
     project, checkout = _project(tmp_path, review=_plain_review())
     stub_dir, calls = _stub(tmp_path)
@@ -2075,6 +2171,7 @@ def test_t203_ac3_off_leaves_an_unmarked_task_untouched_by_start(tmp_path):
     assert _calls(calls) == [] and not (project / ".claude" / "verify-runs").exists()
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_t203_ac3_off_leaves_an_unmarked_minimal_task_untouched(tmp_path):
     project, checkout = _project(tmp_path, rows=(MIN_ROW,), review_file=False,
                                  minimal_log=_log(_plain_record()))
@@ -2086,6 +2183,7 @@ def test_t203_ac3_off_leaves_an_unmarked_minimal_task_untouched(tmp_path):
     assert _calls(calls) == [] and _verify_line(checkout) == ""
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 @pytest.mark.parametrize("entry", ["stop", "start"])
 def test_t203_ac3_off_still_runs_a_marked_task(tmp_path, entry):
     project, checkout = _project(tmp_path)  # the default fixture carries `Mode: auto`
@@ -2100,6 +2198,7 @@ def test_t203_ac3_off_still_runs_a_marked_task(tmp_path, entry):
 
 
 # ── AC 4 — the user's result, the child guard, and T189's scope ──────────────────────────
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_t203_ac4_the_hook_never_runs_over_a_user_filled_row_on_an_unmarked_task(tmp_path):
     project, checkout = _project(tmp_path, review=_plain_review("☑ fail | user ran /verify — broken"))
     stub_dir, calls = _stub(tmp_path)
@@ -2108,6 +2207,7 @@ def test_t203_ac4_the_hook_never_runs_over_a_user_filled_row_on_an_unmarked_task
     assert _calls(calls) == [] and _row(checkout) == ("☑ fail", "user ran /verify — broken")
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_t203_ac4_a_user_line_on_an_unmarked_minimal_task_is_never_run_over(tmp_path):
     record = _plain_record().replace("**Checked:**\n", "**Checked:**\n- verify: ☑ pass — user ran /verify\n")
     project, checkout = _project(tmp_path, rows=(MIN_ROW,), review_file=False, minimal_log=_log(record))
@@ -2117,6 +2217,7 @@ def test_t203_ac4_a_user_line_on_an_unmarked_minimal_task_is_never_run_over(tmp_
     assert _calls(calls) == [] and _verify_line(checkout) == "- verify: ☑ pass — user ran /verify"
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 @pytest.mark.parametrize("entry", ["stop", "start"])
 def test_t203_ac4_inside_the_headless_run_nothing_starts(tmp_path, entry):
     project, _ = _project(tmp_path, review=_plain_review())
@@ -2131,6 +2232,7 @@ def test_t203_ac4_inside_the_headless_run_nothing_starts(tmp_path, entry):
     assert _calls(calls) == [] and not (project / ".claude" / "verify-runs").exists()
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_t203_ac4_a_pass_on_an_unmarked_task_does_not_move_the_row_to_done(tmp_path):
     """T203 D6: T189's Done move keeps its scope — auto-mode tasks only. The unmarked report gets
     no `Closed:` and no `Paused:` line either: it has no auto-mode report to write them in."""
@@ -2145,6 +2247,7 @@ def test_t203_ac4_a_pass_on_an_unmarked_task_does_not_move_the_row_to_done(tmp_p
     assert "Closed:" not in text and "Paused:" not in text
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_t203_ac4_a_marked_task_still_closes_out_after_its_pass(tmp_path):
     project, checkout = _project(tmp_path, review=COMPLETE)
     stub_dir, _ = _stub(tmp_path)
@@ -2163,11 +2266,13 @@ def _ran_plain(tmp_path, output=None):
     return project, checkout, env
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _ran_plain]")
 def test_t203_ac5_an_unmarked_hook_row_with_its_record_is_accepted(tmp_path):
     project, _, env = _ran_plain(tmp_path)
     assert _merge(project, env) == ("allow", "")
 
 
+@pytest.mark.posix_only("builds a POSIX PATH (/usr/bin:/bin) to find stub executables [via _env]")
 def test_t203_ac5_an_unmarked_hand_typed_row_with_no_record_blocks(tmp_path):
     project, checkout = _project(tmp_path, review=_plain_review())
     head = _git(project, "rev-parse", "HEAD")
@@ -2177,6 +2282,7 @@ def test_t203_ac5_an_unmarked_hand_typed_row_with_no_record_blocks(tmp_path):
     assert decision == "block" and f"{TASK} (no evidence row)" in reason
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _ran_plain]")
 def test_t203_ac5_an_unmarked_record_for_another_commit_blocks(tmp_path):
     project, checkout, env = _ran_plain(tmp_path)
     (checkout / "src" / "app.py").write_text("print('v2')\n", encoding="utf-8")
@@ -2184,6 +2290,7 @@ def test_t203_ac5_an_unmarked_record_for_another_commit_blocks(tmp_path):
     assert _merge(project, env)[0] == "block"
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _ran_plain]")
 def test_t203_ac5_an_unmarked_fail_record_blocks_even_if_the_row_is_edited_to_pass(tmp_path):
     project, checkout, env = _ran_plain(tmp_path, output=_verdict_output("**Verdict:** FAIL"))
     _, notes = _row(checkout)
@@ -2191,6 +2298,7 @@ def test_t203_ac5_an_unmarked_fail_record_blocks_even_if_the_row_is_edited_to_pa
     assert _merge(project, env)[0] == "block"
 
 
+@pytest.mark.posix_only("builds a POSIX PATH (/usr/bin:/bin) to find stub executables [via _env]")
 def test_t203_ac5_an_unmarked_auto_checked_row_blocks(tmp_path):
     project, _ = _project(tmp_path, review=_plain_review("☑ pass | auto-checked, not /verify — pass"))
     decision, reason = _merge(project, _env(tmp_path, project))
@@ -2289,6 +2397,7 @@ def test_t203_ac6_glossary_auto_verify_names_every_task_start_and_off():
         assert needle in row, needle
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_t203_ac2_start_on_a_task_with_no_review_file_says_why_in_one_line(tmp_path):
     project, _ = _project(tmp_path, review_file=False)
     stub_dir, calls = _stub(tmp_path)
@@ -2307,6 +2416,7 @@ def _placeholder_in_main(project):
     _git(project, "commit", "-qm", "plan: review file placeholder on main")
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_t203_p1_a_worktree_copy_wins_over_main_placeholder_and_the_run_is_in_the_worktree(tmp_path):
     project, checkout = _project(tmp_path, review=_plain_review(), worktree=True)
     _placeholder_in_main(project)
@@ -2353,6 +2463,7 @@ def test_t203_p1_a_minimal_record_in_a_worktree_wins_over_main_without_it(tmp_pa
 
 
 # ── Stage 4 P2 — a session inside a linked worktree starts nothing ──────────────────────
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 @pytest.mark.parametrize("entry", ["stop", "start"])
 def test_t203_p2_the_hook_in_a_linked_worktree_starts_nothing(tmp_path, entry):
     project, checkout = _project(tmp_path, review=_plain_review(), worktree=True)
@@ -2397,6 +2508,7 @@ def test_t203_sec_row_branch_reads_the_newest_started_segment(row_text, branch):
     assert _auto_mode().row_branch(f"{RFR_ROW} | {row_text}") == branch
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_t203_sec_a_decoy_naming_the_task_and_sorting_first_loses_to_the_row_branch(tmp_path):
     row = _row_with_branch("feat/t951")
     project, checkout = _project(tmp_path, review=_plain_review(), worktree=True, rows=(row,))
@@ -2413,6 +2525,7 @@ def test_t203_sec_a_decoy_naming_the_task_and_sorting_first_loses_to_the_row_bra
     assert _row(decoy)[0].startswith("☐ pass")
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 @pytest.mark.parametrize("entry", ["stop", "start"])
 def test_t203_sec_two_worktrees_naming_the_task_and_no_branch_in_the_row_start_nothing(tmp_path, entry):
     project, checkout = _project(tmp_path, review=_plain_review(), worktree=True)  # RFR_ROW: no branch
@@ -2460,6 +2573,7 @@ def _files(root):
                   if p.is_file() and "__pycache__" not in p.parts)
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [via _stub]")
 def test_t234_start_from_a_plugin_cache_runs_in_the_project_not_the_cache(tmp_path):
     """A `Bash` tool call has no $CLAUDE_PROJECT_DIR. `--start` finds the project from the cwd and
     hands it to the detached `--run`, so the log, the run record and the result land in the project

@@ -192,6 +192,7 @@ def test_ac5_user_rules_never_removed(tmp_path):
     assert after["ask"].count("Bash(git push -f *)") == 1
 
 
+@pytest.mark.posix_only("relies on POSIX permission bits or execute bits, which Windows does not enforce [S_IMODE]")
 def test_ac5_file_mode_is_kept(tmp_path):
     p = write_settings(tmp_path, kit_shaped())
     os.chmod(p, 0o644)
@@ -244,6 +245,7 @@ def test_ac6_unsafe_file_exit_2_byte_identical_reason_on_stderr(tmp_path, text):
         assert sha(p) == before and os.stat(p).st_mtime_ns == mtime
 
 
+@pytest.mark.posix_only("creates a symlink, which needs Developer Mode or admin rights on Windows [os.symlink]")
 def test_ac6_symlinked_settings_is_refused(tmp_path):
     real = tmp_path / "real.json"
     real.write_text("{}\n")

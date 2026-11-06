@@ -155,6 +155,7 @@ def test_source_rule_that_prints_differently_is_refused(home, key, rule):
     assert tree_hash(home) == before
 
 
+@pytest.mark.posix_only("creates a symlink, which needs Developer Mode or admin rights on Windows [symlink_to]")
 def test_dangling_source_base_link_is_refused(home):
     source = make_source(home, agents="rules")
     (source / "settings.base.json").symlink_to(home / "gone.json")
@@ -308,6 +309,7 @@ def test_second_apply_writes_nothing(home):
     assert len(backups(target)) == 1
 
 
+@pytest.mark.posix_only("relies on POSIX permission bits or execute bits, which Windows does not enforce [S_IMODE]")
 def test_mode_600_survives_on_settings_and_on_the_backup(home):
     source = make_source(home, base={"permissions": {"deny": ["a"]}})
     target = make_claude(home, settings={})
@@ -353,6 +355,7 @@ def test_links_are_made_for_skills_and_instructions(home):
         assert not (target / "skills" / "notes.txt").exists()
 
 
+@pytest.mark.posix_only("creates a symlink, which needs Developer Mode or admin rights on Windows [symlink_to]")
 def test_conflicts_are_reported_and_left_unchanged(home):
     source = make_source(home, agents="rules", skills=["x", "y"])
     target = make_claude(home)
@@ -382,6 +385,7 @@ def test_empty_claude_md_is_a_conflict(home):
     assert not (target / "CLAUDE.md").is_symlink()
 
 
+@pytest.mark.posix_only("creates a symlink, which needs Developer Mode or admin rights on Windows [symlink_to]")
 def test_dangling_link_is_a_conflict(home):
     source = make_source(home, agents="rules")
     target = make_claude(home)
@@ -391,6 +395,7 @@ def test_dangling_link_is_a_conflict(home):
     assert os.readlink(target / "CLAUDE.md") == str(home / "gone")
 
 
+@pytest.mark.posix_only("creates a symlink, which needs Developer Mode or admin rights on Windows [symlink_to]")
 def test_correct_link_is_no_change(home):
     source = make_source(home, agents="rules")
     target = make_claude(home)
@@ -399,6 +404,7 @@ def test_correct_link_is_no_change(home):
     assert "no change" in result.stdout and "conflict" not in result.stdout
 
 
+@pytest.mark.posix_only("creates a symlink, which needs Developer Mode or admin rights on Windows [symlink_to]")
 @pytest.mark.parametrize("kind", ["link", "file"])
 def test_skills_path_that_is_not_a_plain_folder_is_a_conflict(home, kind):
     """A link there would drop our links into whatever folder it points at."""
@@ -415,6 +421,7 @@ def test_skills_path_that_is_not_a_plain_folder_is_a_conflict(home, kind):
     assert list(outside.iterdir()) == []
 
 
+@pytest.mark.posix_only("creates a symlink, which needs Developer Mode or admin rights on Windows [symlink_to]")
 def test_symlinked_settings_is_reported_and_not_replaced(home):
     source = make_source(home, base={"permissions": {"deny": ["a"]}})
     real = home / "real.json"
@@ -530,9 +537,10 @@ def test_non_finite_number_in_source_is_refused(home, bad):
 
 
 # The kernel lets root write a 444 file, so os.access says yes: these two need a non-root user.
-needs_non_root = pytest.mark.skipif(os.geteuid() == 0, reason="needs a non-root user")
+needs_non_root = pytest.mark.skipif(hasattr(os, "geteuid") and os.geteuid() == 0, reason="needs a non-root user")
 
 
+@pytest.mark.posix_only("relies on POSIX permission bits or execute bits, which Windows does not enforce [chmod(0o444)]")
 @needs_non_root
 @pytest.mark.parametrize("command", ["plan", "apply", "status"])
 def test_read_only_settings_is_refused_and_the_lock_holds(home, command):
@@ -552,6 +560,7 @@ def test_read_only_settings_is_refused_and_the_lock_holds(home, command):
         assert json.loads((good / "settings.json").read_text())["permissions"]["deny"] == ["a"]
 
 
+@pytest.mark.posix_only("relies on POSIX permission bits or execute bits, which Windows does not enforce [chmod(0o444)]")
 @needs_non_root
 def test_read_only_settings_with_nothing_to_add_is_in_sync(home):
     source = make_source(home, base={"permissions": {"deny": ["a"]}})
@@ -595,6 +604,7 @@ def test_missing_target_folder_codes(home):
     assert run(home, "status", "--source", str(source), "--claude-dir", str(good)).returncode == 0
 
 
+@pytest.mark.posix_only("creates a symlink, which needs Developer Mode or admin rights on Windows [symlink_to]")
 @pytest.mark.parametrize("command", ["plan", "apply", "status"])
 @pytest.mark.parametrize("flag", ["--claude-dir", "--codex-dir"])
 def test_target_equal_to_source_is_refused_and_the_next_goes_on(home, command, flag):
@@ -648,6 +658,7 @@ def test_link_left_broken_by_the_source_is_a_conflict(home, gone, flag):
     assert tree_hash(target) == before  # apply never removes it
 
 
+@pytest.mark.posix_only("creates a symlink, which needs Developer Mode or admin rights on Windows [symlink_to]")
 def test_broken_link_is_reported_once_when_the_source_part_exists(home):
     source = make_source(home, agents="rules")
     target = make_claude(home)
@@ -658,6 +669,7 @@ def test_broken_link_is_reported_once_when_the_source_part_exists(home):
     assert "conflict CLAUDE.md: broken link, not changed" in result.stdout
 
 
+@pytest.mark.posix_only("creates a symlink, which needs Developer Mode or admin rights on Windows [symlink_to]")
 def test_broken_link_outside_the_source_is_left_alone(home):
     source = make_source(home)
     target = make_claude(home)
@@ -669,6 +681,7 @@ def test_broken_link_outside_the_source_is_left_alone(home):
     assert "broken link" not in result.stdout
 
 
+@pytest.mark.posix_only("creates a symlink, which needs Developer Mode or admin rights on Windows [symlink_to]")
 def test_relative_broken_link_into_the_source_is_found(home):
     source = make_source(home)
     target = make_claude(home)
@@ -676,6 +689,7 @@ def test_relative_broken_link_into_the_source_is_found(home):
     assert run(home, "status", "--source", str(source), "--claude-dir", str(target)).returncode == 1
 
 
+@pytest.mark.posix_only("creates a symlink, which needs Developer Mode or admin rights on Windows [symlink_to]")
 def test_broken_link_found_through_a_linked_source_path(home):
     source = make_source(home)
     alias = home / "alias"
@@ -707,6 +721,7 @@ def load_module():
     return module
 
 
+@pytest.mark.posix_only("creates a symlink, which needs Developer Mode or admin rights on Windows [symlink_to]")
 def test_only_settings_json_is_opened_in_a_target(home, monkeypatch, capsys):
     source = make_source(home, base={"permissions": {"deny": ["a"]}}, agents="rules", skills=["one"])
     target = make_claude(home, settings={})

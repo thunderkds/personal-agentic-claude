@@ -11,6 +11,7 @@ AC 9  — no shipped text points at a doctrine section of `CLAUDE.md`.
 AC 10 — `CLAUDE_LEGACY.md` is byte-identical to the branch base; T173 commits touch no
         historical record.
 """
+import pytest
 import re
 import shutil
 import subprocess
@@ -277,6 +278,7 @@ def _validate(cwd: Path) -> subprocess.CompletedProcess:
     return subprocess.run(["sh", "scripts/validate.sh"], cwd=cwd, capture_output=True, text=True)
 
 
+@pytest.mark.posix_only("runs a shell script through sh/bash; shell suites are not run on Windows [via _validate]")
 def test_ac8_validate_fails_when_agents_md_references_a_missing_path():
     missing = "docs/claude-md/pipeline-stages.md"
     assert f"`{missing}`" in _text(AGENTS_MD), "fixture path must be referenced in AGENTS.md"

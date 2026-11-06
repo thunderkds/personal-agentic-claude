@@ -97,6 +97,7 @@ def test_ac11_link_resolves_onto_real_canon_content(name):
     )
 
 
+@pytest.mark.posix_only("creates a symlink, which needs Developer Mode or admin rights on Windows [symlink_to]")
 @pytest.mark.parametrize("name", sorted(CANON_LINKS))
 def test_ac11_mutation_control_deleting_the_link_is_detected(tmp_path, name):
     """Anti-vacuity control: reproduce the layout, delete the link, confirm the checks fail.
