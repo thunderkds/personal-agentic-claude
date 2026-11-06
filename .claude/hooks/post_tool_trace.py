@@ -22,6 +22,7 @@ with an exclusive file lock. Neither the anchor nor the lock may break the
 tool call: on failure the line is still written, marked `"anchor": "failed"`
 or `"lock": "failed"`.
 """
+import contextlib
 import json
 import os
 import sys
@@ -51,9 +52,9 @@ try:
 except Exception:
     chain_hash = None
 try:
-    import fcntl
-except Exception:  # not POSIX: appends go unlocked and say so
-    fcntl = None
+    from filelock import file_lock
+except Exception:  # no helper: appends go unlocked and say so
+    file_lock = None
 
 
 def summarize(tool_input):
@@ -178,9 +179,10 @@ def main():
     append_record(trace_path, task_id, record)
 
 
-def _lock(f):
+def _lock(f, stack):
+    """Take the lock for as long as `stack` is open; False when it can't be taken."""
     try:
-        fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+        stack.enter_context(file_lock(f))
         return True
     except Exception:
         return False
@@ -212,10 +214,10 @@ def _write_anchor(task_id, line_no, digest):
 
 def append_record(trace_path, task_id, record):
     """Append one chained, anchored line. The lock is held from reading the
-    chain head to writing the line, so two agents can't fork the chain; it is
-    released when the file closes."""
-    with open(trace_path, "a+b") as f:
-        if not _lock(f):
+    chain head to writing the line (flushed before it is released), so two agents
+    can't fork the chain."""
+    with open(trace_path, "a+b") as f, contextlib.ExitStack() as stack:
+        if not _lock(f, stack):
             record["lock"] = "failed"
         line = None
         if chain_hash is not None:
@@ -240,6 +242,7 @@ def append_record(trace_path, task_id, record):
                 record.pop(key, None)
             line = json.dumps(record)
         f.write((line + "\n").encode("utf-8"))
+        f.flush()  # the line is on disk before the lock is released
 
 
 main()
