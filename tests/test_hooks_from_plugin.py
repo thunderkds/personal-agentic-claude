@@ -484,7 +484,7 @@ def test_no_data_path_comes_from_file(hook):
     for line in source.splitlines():
         if "__file__" in line and not line.lstrip().startswith("#"):
             allowed = (line.startswith("HOOKS_DIR = ") or "sys.path.insert" in line
-                       or "subprocess.Popen" in line)
+                       or "subprocess.Popen" in line or "start_detached(" in line)  # T265
             assert allowed, line
     assert "from project_root import" in source
 

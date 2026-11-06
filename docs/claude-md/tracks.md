@@ -359,8 +359,9 @@ disagree about which tasks are in auto mode.
 The hook then starts one new headless session in the task's checkout (the main checkout or its worktree):
 `claude -p "/verify <ID>" --max-budget-usd 2 --output-format json`. The session uses your normal permission
 settings, never `--dangerously-skip-permissions`. The hook returns at once: the run is detached in its own
-session (`setsid`). `CLAUDE_AUTO_VERIFY_BUDGET_USD` changes the budget, and `CLAUDE_AUTO_VERIFY_TIMEOUT_S`
-the time limit (default 1800). The run writes its output to `.claude/verify-runs/<ID>-<commit>.log`
+session (`setsid`; on Windows a new process group). On timeout the hook kills the run with its children
+(`.claude/hooks/lib/proc.py`). `CLAUDE_AUTO_VERIFY_BUDGET_USD` changes the budget, and
+`CLAUDE_AUTO_VERIFY_TIMEOUT_S` the time limit (default 1800). The run writes its output to `.claude/verify-runs/<ID>-<commit>.log`
 (gitignored) — the same path and the same one-run-per-commit lock on both tracks. One task and commit run
 once: to run again on the same commit, delete that log. A commit that changes only the file holding the
 task's result counts as the same code.
