@@ -127,13 +127,13 @@ def work(tmp_path_factory):
     return w
 
 
-def _pwsh(work, script, path="bin-full", timeout=300):
+def _pwsh(work, script, path="bin-full", timeout=300, repo="/work/kit"):
     """Run a PowerShell command line in the container; `/work` is `work`."""
     cmd = ["docker", "run", "--rm", "--network", "none", "--user", f"{os.getuid()}:{os.getgid()}",
            "-v", "/usr:/host/usr:ro", "-v", f"{work}:/work",
            "-e", "HOME=/work/home", "-e", "GIT_EXEC_PATH=/work/git-core",
            "-e", "GIT_TEMPLATE_DIR=/host/usr/share/git-core/templates",
-           "-e", f"PATH=/work/{path}:/opt/microsoft/powershell/7", "-e", "SUPERVISOR_REPO=/work/kit",
+           "-e", f"PATH=/work/{path}:/opt/microsoft/powershell/7", "-e", f"SUPERVISOR_REPO={repo}",
            "-e", "GIT_AUTHOR_NAME=t268", "-e", "GIT_AUTHOR_EMAIL=t268@example.invalid",
            "-e", "GIT_COMMITTER_NAME=t268", "-e", "GIT_COMMITTER_EMAIL=t268@example.invalid",
            IMAGE, "/opt/microsoft/powershell/7/pwsh", "-NoProfile", "-NonInteractive", "-Command", script]
@@ -146,8 +146,8 @@ def _new_repo(work, name):
     return repo, f"/work/{name}"
 
 
-def _install(work, cdir, path="bin-full", extra="-Yes"):
-    return _pwsh(work, f"Set-Location '{cdir}'; & /work/kit/setup.ps1 {extra}; exit $LASTEXITCODE", path)
+def _install(work, cdir, path="bin-full", extra="-Yes", repo="/work/kit"):
+    return _pwsh(work, f"Set-Location '{cdir}'; & /work/kit/setup.ps1 {extra}; exit $LASTEXITCODE", path, repo=repo)
 
 
 def _files_block(lock):
@@ -311,3 +311,21 @@ def test_existing_install_without_consent_cancels(work):
     assert r.returncode == 0, r.stdout + r.stderr
     assert "update.ps1" in r.stdout + r.stderr or "Update" in r.stdout + r.stderr
     assert _backups(repo) == []
+
+
+@needs_docker
+def test_a_manifest_path_outside_the_project_stops_before_any_write(work):
+    """A fetched MANIFEST line `../escape` would copy outside the project: the run stops first."""
+    bad = os.path.join(work, "badkit")
+    subprocess.run(["git", "clone", "-q", os.path.join(work, "kit"), bad], check=True)
+    with open(os.path.join(bad, "MANIFEST"), "a", encoding="utf-8") as f:
+        f.write("../escape\n")
+    os.makedirs(os.path.join(bad, "..", "escape-src"), exist_ok=True)
+    git = ["git", "-C", bad, "-c", "user.name=t268", "-c", "user.email=t268@example.invalid"]
+    subprocess.run(git + ["commit", "-qam", "bad"], check=True)
+    repo, cdir = _new_repo(work, "escape-target")
+    before = sorted(os.listdir(repo))
+    r = _install(work, cdir, repo="/work/badkit")
+    assert r.returncode == 1, r.stdout + r.stderr
+    assert "MANIFEST path '../escape'" in r.stderr
+    assert sorted(os.listdir(repo)) == before and not os.path.exists(os.path.join(work, "escape"))

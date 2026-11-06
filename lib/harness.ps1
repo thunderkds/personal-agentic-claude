@@ -300,11 +300,19 @@ function Test-HarnessWouldBackUp([string]$Src, [string]$Dst, [string[]]$Ignore =
 }
 
 # ports harness_manifest_path: field 1 of a MANIFEST line; '' for a comment, a blank line or a
-# `!` exclusion. Trailing `<cli>=<dest>` pairs are ignored (Claude Code only).
+# `!` exclusion. Trailing `<cli>=<dest>` pairs are ignored (Claude Code only). A path that could
+# leave the project (rooted, a drive, a `..` segment, a backslash) stops the run: every path is
+# read, and the plan is printed, before the first write.
 function Get-HarnessManifestPath([string]$Line) {
     $text = $Line.Replace("`r", '').Trim()
     if (-not $text -or $text.StartsWith('#') -or $text.StartsWith('!')) { return '' }
-    return ($text -split '\s+')[0]
+    $rel = ($text -split '\s+')[0]
+    if ($rel.StartsWith('/') -or $rel.Contains('\') -or $rel.Contains(':') -or
+            (@($rel.Split([char]'/')) -contains '..')) {
+        Write-HarnessError "MANIFEST path '$rel' must be a relative path inside the project (no leading '/', no drive, no '..'). The fetched Easy Kit may be corrupt."
+        throw $script:HarnessStop
+    }
+    return $rel
 }
 
 # ports harness_manifest_exclusions: the `!<path>` lines, without the `!`.
@@ -355,7 +363,7 @@ function Clear-HarnessTemp {
 # ports harness_fetch: git clone --depth 1 <url> <dest>.
 function Invoke-HarnessFetch([string]$Url, [string]$Dest) {
     Write-HarnessInfo "Fetching (shallow clone): $Url"
-    $result = Invoke-HarnessNative 'git' @('clone', '--depth', '1', '--quiet', $Url, $Dest)
+    $result = Invoke-HarnessNative 'git' @('clone', '--depth', '1', '--quiet', '--', $Url, $Dest)
     if ($result.ExitCode -ne 0) {
         foreach ($line in $result.Output) { [Console]::Error.WriteLine($line) }
         Write-HarnessError "Failed to clone '$Url'. Check the URL, network connectivity, and git credentials."
