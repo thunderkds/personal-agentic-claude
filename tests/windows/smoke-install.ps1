@@ -121,7 +121,23 @@ try {
     Assert-Smoke ((Get-SmokeBackups $repo).Length -eq 0) 'a fresh install made a backup'
 
     Write-Host '== run 2: second run is idempotent'
+    $settingsPath = Join-HarnessPath $repo '.claude/settings.json'
+    $userHook = '{"hooks": [{"type": "command", "command": "echo user-own-hook"}]}' | ConvertFrom-Json
+    if ($settings.hooks.PSObject.Properties.Name -contains 'Stop') {
+        $settings.hooks.Stop = @($settings.hooks.Stop) + @($userHook)
+    } else {
+        $settings.hooks | Add-Member -MemberType NoteProperty -Name 'Stop' -Value @($userHook)
+    }
+    [IO.File]::WriteAllText($settingsPath, ($settings | ConvertTo-Json -Depth 20))
+    $hookCount = 0
+    foreach ($event in $settings.hooks.PSObject.Properties) { $hookCount += @($event.Value).Length }
     [void](Invoke-SmokeSetup $repo)
+    $settingsAfter = [IO.File]::ReadAllText($settingsPath) | ConvertFrom-Json
+    $countAfter = 0
+    foreach ($event in $settingsAfter.hooks.PSObject.Properties) { $countAfter += @($event.Value).Length }
+    Assert-Smoke ($countAfter -eq $hookCount) "the second run changed the hook entry count: $hookCount -> $countAfter"
+    $userKept = @(@($settingsAfter.hooks.Stop) | Where-Object { @($_.hooks)[0].command -eq 'echo user-own-hook' }).Length
+    Assert-Smoke ($userKept -eq 1) 'the second run dropped the user Stop hook'
     Assert-Smoke ((Get-SmokeBackups $repo).Length -eq 0) 'the second run made a backup'
     Assert-Smoke ((Get-SmokeFilesBlock $repo) -ceq $filesBlock) 'the second run changed the lock hashes'
 

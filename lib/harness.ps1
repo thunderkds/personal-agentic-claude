@@ -307,12 +307,18 @@ function Get-HarnessManifestPath([string]$Line) {
     $text = $Line.Replace("`r", '').Trim()
     if (-not $text -or $text.StartsWith('#') -or $text.StartsWith('!')) { return '' }
     $rel = ($text -split '\s+')[0]
-    if ($rel.StartsWith('/') -or $rel.Contains('\') -or $rel.Contains(':') -or
-            (@($rel.Split([char]'/')) -contains '..')) {
-        Write-HarnessError "MANIFEST path '$rel' must be a relative path inside the project (no leading '/', no drive, no '..'). The fetched Easy Kit may be corrupt."
+    Assert-HarnessSafeRel $rel 'MANIFEST path'
+    return $rel
+}
+
+# Stop the run (an [error], then HarnessStop) when a MANIFEST path or `!` exclusion could leave
+# the project: empty, rooted, a drive, a backslash or a `..` segment.
+function Assert-HarnessSafeRel([string]$Rel, [string]$Kind) {
+    if (-not $Rel -or $Rel.StartsWith('/') -or $Rel.Contains('\') -or $Rel.Contains(':') -or
+            (@($Rel.Split([char]'/')) -contains '..')) {
+        Write-HarnessError "$Kind '$Rel' must be a relative path inside the project (no leading '/', no drive, no '..'). The fetched Easy Kit may be corrupt."
         throw $script:HarnessStop
     }
-    return $rel
 }
 
 # ports harness_manifest_exclusions: the `!<path>` lines, without the `!`.
@@ -322,7 +328,10 @@ function Get-HarnessManifestExclusions([string]$Manifest) {
         $text = $line.Replace("`r", '').Trim()
         if (-not $text) { continue }
         $field = ($text -split '\s+')[0]
-        if ($field.Length -gt 1 -and $field[0] -eq [char]'!') { $found.Add($field.Substring(1)) }
+        if ($field.Length -gt 1 -and $field[0] -eq [char]'!') {
+            Assert-HarnessSafeRel $field.Substring(1) 'MANIFEST exclusion'
+            $found.Add($field.Substring(1))
+        }
     }
     return , $found.ToArray()
 }
@@ -374,41 +383,52 @@ function Invoke-HarnessFetch([string]$Url, [string]$Dest) {
 # ports _harness_install_excluding: install <src> over <dst> when the MANIFEST excludes a path under
 # <rel>. The kit's copy is staged without it, and the project's own excluded path is held aside and
 # put back, so it is neither installed, backed up nor compared. The work folder sits next to <dst>,
-# so every move stays on one volume.
+# so every move stays on one volume. Whatever happens, held content is put back; if a move back
+# fails, the work folder is kept (never deleted), named in an [error], and the run stops.
 function Install-HarnessExcluding([string]$Src, [string]$Dst, [string]$Rel, [string[]]$Subs) {
     $work = "$Dst.easykit-" + [guid]::NewGuid().ToString('N').Substring(0, 8)
     $stage = Join-HarnessPath $work 'stage'
     $held = Join-HarnessPath $work 'held'
     [void][IO.Directory]::CreateDirectory($work)
+    $restored = $true
     try {
-        Copy-HarnessPath $Src $stage
-        $canHold = Test-HarnessDirectory $Dst
-        foreach ($sub in $Subs) {
-            Remove-HarnessPath (Join-HarnessPath $stage $sub)
-            $own = Join-HarnessPath $Dst $sub
-            if ($canHold -and (Test-HarnessPresent $own)) {
-                $keep = Join-HarnessPath $held $sub
-                [void][IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($keep))
-                Move-HarnessItem $own $keep
-            }
-        }
         try {
+            Copy-HarnessPath $Src $stage
+            $canHold = Test-HarnessDirectory $Dst
+            foreach ($sub in $Subs) {
+                Remove-HarnessPath (Join-HarnessPath $stage $sub)
+                $own = Join-HarnessPath $Dst $sub
+                if ($canHold -and (Test-HarnessPresent $own)) {
+                    $keep = Join-HarnessPath $held $sub
+                    [void][IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($keep))
+                    Move-HarnessItem $own $keep
+                }
+            }
             Backup-HarnessPath $stage $Dst $Rel
             Remove-HarnessPath $Dst
             Copy-HarnessPath $stage $Dst
         } finally {
             foreach ($sub in $Subs) {
                 $keep = Join-HarnessPath $held $sub
-                if (Test-HarnessPresent $keep) {
+                if (-not (Test-HarnessPresent $keep)) { continue }
+                try {
                     $own = Join-HarnessPath $Dst $sub
                     [void][IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($own))
                     Move-HarnessItem $keep $own
+                } catch {
+                    $restored = $false
+                    Write-HarnessError "Could not put your own './$Rel/$sub' back ($($_.Exception.Message)). It is safe in '$keep': move it back by hand."
                 }
             }
         }
     } finally {
-        Remove-HarnessPath $work
+        if ($restored) {
+            Remove-HarnessPath $work
+        } else {
+            Write-HarnessError "Kept '$held' (your own files, not deleted). Move them back to './$Rel', then delete '$work' and re-run."
+        }
     }
+    if (-not $restored) { throw $script:HarnessStop }
 }
 
 # ports harness_copy_manifest: copy each MANIFEST path from <tmp> into <target> as real files. A

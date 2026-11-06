@@ -245,9 +245,21 @@ def test_edited_file_is_backed_up_and_a_rerun_is_idempotent(work):
     assert _install(work, cdir).returncode == 0
     lock = os.path.join(repo, ".claude", "harness-lock.json")
     first = _files_block(lock)
+    settings_path = os.path.join(repo, ".claude", "settings.json")
+    with open(settings_path, encoding="utf-8") as f:
+        settings = json.load(f)
+    user_hook = {"hooks": [{"type": "command", "command": "echo user-own-hook"}]}
+    settings["hooks"].setdefault("Stop", []).append(user_hook)
+    with open(settings_path, "w", encoding="utf-8") as f:
+        json.dump(settings, f, indent=2)
+    count = sum(len(g) for g in settings["hooks"].values())
     r = _install(work, cdir)
     assert r.returncode == 0, r.stdout + r.stderr
     assert _backups(repo) == [] and _files_block(lock) == first
+    with open(settings_path, encoding="utf-8") as f:
+        after = json.load(f)
+    assert sum(len(g) for g in after["hooks"].values()) == count  # review P3: no entry lost or added
+    assert user_hook in after["hooks"]["Stop"]
     agents = os.path.join(repo, "AGENTS.md")
     with open(agents, "a", encoding="utf-8") as f:
         f.write("\nmy own line\n")
@@ -329,3 +341,56 @@ def test_a_manifest_path_outside_the_project_stops_before_any_write(work):
     assert r.returncode == 1, r.stdout + r.stderr
     assert "MANIFEST path '../escape'" in r.stderr
     assert sorted(os.listdir(repo)) == before and not os.path.exists(os.path.join(work, "escape"))
+
+
+@needs_docker
+def test_an_exclusion_outside_the_project_stops_before_any_write(work):
+    """Review P2: `!.claude/hooks/../../../victim` must not reach the hold/remove code."""
+    bad = os.path.join(work, "badexcl")
+    subprocess.run(["git", "clone", "-q", os.path.join(work, "kit"), bad], check=True)
+    with open(os.path.join(bad, "MANIFEST"), "a", encoding="utf-8") as f:
+        f.write("!.claude/hooks/../../../victim\n")
+    git = ["git", "-C", bad, "-c", "user.name=t268", "-c", "user.email=t268@example.invalid"]
+    subprocess.run(git + ["commit", "-qam", "bad"], check=True)
+    repo, cdir = _new_repo(work, "excl-target")
+    os.makedirs(os.path.join(repo, "victim"))
+    with open(os.path.join(repo, "victim", "keep.txt"), "w") as f:
+        f.write("mine")
+    before = sorted(os.listdir(repo))
+    r = _install(work, cdir, repo="/work/badexcl")
+    assert r.returncode == 1, r.stdout + r.stderr
+    assert "'.claude/hooks/../../../victim'" in r.stderr
+    assert sorted(os.listdir(repo)) == before and os.path.isfile(os.path.join(repo, "victim", "keep.txt"))
+
+
+HOLD_SCRIPT = r"""
+. /work/kit/lib/harness.ps1
+$root = '/tmp/hold-' + '{case}'
+$src = "$root/kit"; $dst = "$root/proj/hooks"
+foreach ($d in @("$src", "$dst/t1", "$dst/t2")) { [void][IO.Directory]::CreateDirectory($d) }
+[IO.File]::WriteAllText("$src/a.py", 'kit')
+[IO.File]::WriteAllText("$dst/t1/own1.txt", 'mine1')
+[IO.File]::WriteAllText("$dst/t2/own2.txt", 'mine2')
+$script:moves = 0
+function Move-HarnessItem([string]$From, [string]$To) {
+    $script:moves += 1
+    if ('{case}' -eq 'restore' -and $To.StartsWith("$dst/")) { throw 'locked by antivirus' }
+    if ('{case}' -eq 'hold' -and $From.StartsWith("$dst/") -and $script:moves -eq 2) { throw 'locked by antivirus' }
+    if ([IO.Directory]::Exists($From)) { [IO.Directory]::Move($From, $To) } else { [IO.File]::Move($From, $To) }
+}
+try { Install-HarnessExcluding $src $dst 'hooks' @('t1', 't2') } catch { Write-Host "caught: $_" }
+Get-ChildItem -LiteralPath $root -Recurse -File -Force | ForEach-Object { Write-Host "FILE $($_.FullName)" }
+"""
+
+
+@needs_docker
+@pytest.mark.parametrize("case", ["restore", "hold"])
+def test_held_excluded_content_survives_a_failed_move(work, case):
+    """Review P1: when a move of the project's own excluded content fails, it is never deleted."""
+    r = _pwsh(work, HOLD_SCRIPT.replace("{case}", case))
+    out = r.stdout + r.stderr
+    files = [l.split(" ", 1)[1] for l in r.stdout.splitlines() if l.startswith("FILE ")]
+    for own in ("own1.txt", "own2.txt"):
+        assert any(f.endswith("/" + own) for f in files), f"{own} was deleted:\n{out}"
+    if case == "restore":
+        assert "[error]" in out and "/held" in out, out
