@@ -76,7 +76,7 @@ $ ls .github/workflows
 ci.yml        # no Windows workflow; no tests/conftest.py or repo-root conftest.py
 ```
 
-**AFTER**: Fri Nov 6 12:01-12:05 UTC 2026 (Linux): `python3 -m pytest .claude/hooks/tests/ tests/ -q` -> `3433 passed, 25 subtests passed in 217.85s`. `.github/workflows/windows.yml` exists (job `python-tests` on `windows-latest`, Python 3.12, `python -I -m pytest tests/ .claude/hooks/tests/ -q`); 148 test functions (after the review fixes below) carry `@pytest.mark.posix_only("<reason>")`. The Windows run itself is unverified until the first push.
+**AFTER**: Fri Nov 6 12:01-12:05 UTC 2026 (Linux): `python3 -m pytest .claude/hooks/tests/ tests/ -q` -> `3435 passed, 25 subtests passed in 196.23s` (after the review fixes). `.github/workflows/windows.yml` exists (job `python-tests` on `windows-latest`, Python 3.12, `python -I -m pytest tests/ .claude/hooks/tests/ -q`); 148 test functions (after the review fixes below) carry `@pytest.mark.posix_only("<reason>")`. The Windows run itself is unverified until the first push.
 
 **DELTA**: Every push and pull request now runs the kit's Python tests on a real Windows runner, with POSIX-only tests skipped and a written reason for each.
 
