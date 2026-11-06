@@ -145,3 +145,16 @@ A fixture-board harness like the existing gate tests, run with `sys.platform` fo
 - [ ] Self-review: `Skill({ skill: "code-review" })` run
 - [ ] Security review: `Skill({ skill: "security-review" })` run (High risk)
 - [ ] Lint passes
+
+---
+
+## Amendment (2026-11-06)
+
+Supervisor amendment (new fact from the official Claude Code docs, code.claude.com/docs/en/hooks.md): on native Windows the shell tool is often the PowerShell tool, with tool_name "PowerShell" and tool_input.command (same shape as Bash). The docs tell hook authors to match `Bash|PowerShell`. Today this gate ignores every tool but Bash: `.claude/hooks/pre_bash_block_unsafe_merge.py:1322` `if event.get("tool_name") != "Bash":` exits 0, and line ~291 `if record.get("tool_name") != "Bash":` skips PowerShell records when it reads the trace. So a PowerShell-tool `git push` is never gated, whatever the syntax fallback does. T266 (another agent) widens the matchers in settings.json/hooks.json to `Bash|PowerShell`; T267 owns the hook code.
+
+Added to scope, in `pre_bash_block_unsafe_merge.py` only: (1) accept tool_name in {"Bash","PowerShell"} at line ~1322 and ~291 and at any other tool_name check in that file; (2) tests: replay the AC 4/5 matrix with event tool_name "PowerShell", plus: tool_name "Read"/"Write" still exits 0, and a plain POSIX `git push` with tool_name "Bash" is unchanged; (3) a mutation control that restores the `!= "Bash"` check and shows the PowerShell test going red; (4) the syntax-blind fallback stays as planned. Do not edit settings.json or hooks.json (T266). BEFORE capture includes a PowerShell-tool event `{"tool_name":"PowerShell","tool_input":{"command":"git push origin main"}}` on the fixture, showing exit 0 (allow) today.
+
+| # | Criterion (testable) | Traces to requirement |
+|---|----------------------|-----------------------|
+| 8 | An event with tool_name "PowerShell" is gated like "Bash": the AC 4/5 matrix replayed with tool_name "PowerShell" gives the same verdicts; a PowerShell trace record that runs a test runner counts as verification like a Bash one | Amendment (1), (2) |
+| 9 | Every other tool name ("Read", "Write", …) still exits 0 with no output | Amendment (2) |

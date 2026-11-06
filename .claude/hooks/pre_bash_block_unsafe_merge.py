@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-PreToolUse hook — fires before every Bash tool call.
+PreToolUse hook — fires before every Bash or PowerShell tool call (T267: the PowerShell tool and
+PowerShell-spelled git writes such as `git.exe push` are read too; see `windows_git_write`).
 
 Blocks git push/merge/rebase/pull commands if:
   1. Any task in PROJECT_KANBAN.md is still In Progress or Ready for Review
@@ -126,6 +127,103 @@ def defines_git_alias(scannable):
     """True when a command segment of `scannable` runs `git` with an inline alias (T211 D3)."""
     return any(GIT_ALIAS_PATTERN.search(segment) and not DATA_COMMAND_PATTERN.match(segment)
                for segment in COMMAND_SEPARATOR_PATTERN.split(scannable))
+
+
+# T267: native Windows. The shell tool there is often `PowerShell` (same `tool_input.command`
+# shape as `Bash`), so both are read, in `main()` and in the event trace.
+SHELL_TOOLS = frozenset({"Bash", "PowerShell"})
+
+# T267 (Debate, 3 Advocates; Stage 4 review fixes): no PowerShell lexer. `BLOCKED_PATTERNS` needs
+# whitespace after `git`, so `git.exe push`, ``git` push`` and `& "C:\…\git.exe" push` never
+# matched. A syntax-blind fallback runs beside it, only for the `PowerShell` tool or on a Windows
+# host; on Linux and macOS the Bash tool never runs it, so POSIX verdicts are the pre-T267 ones. A
+# command it flags gets the whole-board check, exactly like a plain `git push`.
+#   * PowerShell tool: one rule. Remove backticks, `^`, `+` and every quote (ASCII and Unicode),
+#     then flag any `push`, `merge` (not `merge-base`), `rebase`, `pull` or `alias.` word anywhere,
+#     with or without a `git` word: PowerShell can name git in too many ways (`Start-Process … git`,
+#     a splat, `Set-Alias`, `& ${g}`, `('gi'+'t')`). It over-blocks a mention (`git commit -m
+#     "merge gate fix"`, `Select-String merge`, `Push-Location`): the accepted direction.
+#   * Bash tool on Windows (Git Bash): heredoc bodies stripped first (data to bash), then backticks
+#     and quotes removed; a `git` word (`git`, `git.exe`, `git.cmd`) followed on the same line by a
+#     verb, or by a `$`/`@` expansion while a verb is anywhere (`$a='push'; git $a`); or an
+#     indirection marker (`& $name`, `& <path>git.exe`, `iex`, `Invoke-Expression`, `cmd /c`,
+#     `powershell`/`pwsh`) and a verb anywhere.
+#     Before that, block comments (`<# #>`) are removed, `$(x)` is read as `x`, and `${x}`, `$x`
+#     are removed (`pu$()sh`, `"p$("u")sh"`, `pu${null}sh`). Flagged too, with no verb: any
+#     `-EncodedCommand` flag (`-`, `--`, `/`, a Unicode dash; any prefix from `e`; `-enc,` after
+#     quotes go), and code decoded or built at run time (`FromBase64String`,
+#     `ScriptBlock]::Create`, `iex`, `Invoke-Expression`).
+#   * Bash tool on Windows: also `powershell`/`pwsh` with an `-EncodedCommand` flag.
+# Known limit: a verb built at run time is out of reach of a text check, as git config aliases are
+# (see the module docstring): `-join`, `-f` format strings, `[char]` codes, string multiplication or
+# indexing, and variables set in another statement (`$v="pu"; git "${v}sh"`). Bash on the base has
+# the same class (`x=pu; git ${x}sh`).
+#
+# Every pattern here is matched in linear time, never as one `git…verb` regex: a lazy `[^\n]*?`
+# between the two is quadratic (measured: 100 000 characters took 36 s), and a hook that times out
+# is a non-blocking error — the call would run.
+WINDOWS_GIT_WORD = re.compile(r"\bgit(?:\.exe|\.cmd)?\b", re.IGNORECASE)
+WINDOWS_GIT_FALLBACK = re.compile(  # the git-write verbs the fallback looks for
+    r"\b(?:push|merge(?!-base\b)|rebase|pull)\b|\balias\.", re.IGNORECASE)
+WINDOWS_INDIRECTION = re.compile(
+    r"&\s*\$\w|&[^&\n]*\bgit(?:\.exe|\.cmd)?\b|\biex\b|\bInvoke-Expression\b"
+    r"|\bcmd(?:\.exe)?\s+/[ck]\b|\b(?:powershell|pwsh)(?:\.exe)?\b", re.IGNORECASE)
+WINDOWS_ENCODED_COMMAND = re.compile(
+    "(?:^|[\\s,(@;])(?:--?|/|[\u2013\u2014\u2015])e(?:c|n\\w*)?(?=[\\s:,;)]|$)", re.IGNORECASE)
+POWERSHELL_RUNTIME_CODE = re.compile(
+    r"FromBase64String|ScriptBlock\]::Create|\biex\b|\bInvoke-Expression\b", re.IGNORECASE)
+POWERSHELL_SUBEXPRESSION = re.compile(r"\$\(([^()\n]*)\)")  # `$(x)` is read as `x` (not nested)
+POWERSHELL_VARIABLE = re.compile(r"\$\{[^{}$\n]*\}|\$\w+(?::\w+)?")  # `${x}`, `$x`, `$env:X`
+WINDOWS_SHELL_WORD = re.compile(r"\b(?:powershell|pwsh)(?:\.exe)?\b", re.IGNORECASE)
+POWERSHELL_NOISE = re.compile("[`^+'\"\u2018\u2019\u201a\u201b\u201c\u201d\u201e]")
+LINE_CONTINUATION = re.compile(r"[`\\]\r?\n")
+
+
+def _strip_block_comments(text):
+    """`text` without PowerShell `<# … #>` comments; an unclosed one is left as it is."""
+    pieces, pos = [], 0
+    while True:
+        start = text.find("<#", pos)
+        end = text.find("#>", start + 2) if start != -1 else -1
+        if end == -1:
+            break
+        pieces.append(text[pos:start])
+        pos = end + 2
+    pieces.append(text[pos:])
+    return "".join(pieces)
+
+
+def _runs_encoded_command(text):
+    return bool(WINDOWS_SHELL_WORD.search(text) and WINDOWS_ENCODED_COMMAND.search(text))
+
+
+def windows_git_write(command, tool_name):
+    """True when the T267 fallback is on for this call and `command` may hold a git write."""
+    if not isinstance(command, str):
+        return False
+    if tool_name == "PowerShell":
+        text = POWERSHELL_SUBEXPRESSION.sub(r"\1", _strip_block_comments(command))
+        text = POWERSHELL_NOISE.sub("", POWERSHELL_VARIABLE.sub("", text))
+        return bool(WINDOWS_GIT_FALLBACK.search(text) or WINDOWS_ENCODED_COMMAND.search(text)
+                    or POWERSHELL_RUNTIME_CODE.search(text))
+    if sys.platform != "win32":
+        return False
+    text = LINE_CONTINUATION.sub(" ", strip_heredoc_bodies(command))
+    for char in "`\"'":
+        text = text.replace(char, "")
+    any_verb = WINDOWS_GIT_FALLBACK.search(text) is not None
+    # Split on `\n` only: `str.splitlines` also splits on `\x85`, `\u2028` and others, which would
+    # put `git.exe` and `push` on two "lines" a shell may read as one.
+    for line in text.split("\n"):
+        word = WINDOWS_GIT_WORD.search(line)
+        if word is None:
+            continue
+        if WINDOWS_GIT_FALLBACK.search(line, word.end()):
+            return True
+        rest = line[word.end():]
+        if any_verb and ("$" in rest or "@" in rest):
+            return True
+    return _runs_encoded_command(text) or bool(any_verb and WINDOWS_INDIRECTION.search(text))
 
 # --- Evidence matching: "invoked" vs "merely mentioned" (T044 defect C) ------
 #
@@ -288,7 +386,7 @@ def trace_shows_verification(task_id):
                     continue
                 if record.get("is_error"):
                     continue
-                if record.get("tool_name") != "Bash":
+                if record.get("tool_name") not in SHELL_TOOLS:
                     continue
                 if invokes_test_runner(extract_command(record.get("summary"))):
                     return True
@@ -1319,7 +1417,8 @@ def main():
 
     if not isinstance(event, dict):
         block_unreadable_input("event is not an object")
-    if event.get("tool_name") != "Bash":
+    tool_name = event.get("tool_name")
+    if not isinstance(tool_name, str) or tool_name not in SHELL_TOOLS:
         sys.exit(0)
 
     # T250 G1: the folder holding this session's transcript, where a user `/verify` line's own
@@ -1350,7 +1449,10 @@ def main():
     # negative means "not verified" and refuses the merge; here it would mean
     # "not a push" and wave one through.
     scannable = strip_quoted_spans(strip_heredoc_bodies(command))
-    if (not any(re.search(p, scannable) for p in BLOCKED_PATTERNS)
+    # T267 round 3: the linear fallback runs first, so a command it flags never waits on the slower
+    # checks after it (a hook that times out does not block).
+    if (not windows_git_write(command, tool_name)
+            and not any(re.search(p, scannable) for p in BLOCKED_PATTERNS)
             and not defines_git_alias(scannable)):
         sys.exit(0)
 
@@ -1417,13 +1519,17 @@ def main():
     # lanes, a teammate's row) would empty both lists, so a branch named after it
     # would meet no check at all (Stage 4 finding 4; D3 as revised). An unresolved
     # push, and every such task, keep the whole board (D2).
-    scoped = pushed_task_ids(command, event.get("cwd"))
+    # T267 review P0-1: the narrowing below reads POSIX quoting with shlex, and PowerShell's differs
+    # (`\` escapes nothing there), so a PowerShell call is never narrowed: no scoped push, no T250
+    # session filter, no branch targets. It checks the whole board.
+    powershell = tool_name == "PowerShell"
+    scoped = None if powershell else pushed_task_ids(command, event.get("cwd"))
     if scoped is not None and scoped in {tid.upper() for tid in [*in_progress, *ready_review]}:
         in_progress = [tid for tid in in_progress if tid.upper() == scoped]
         ready_review = [tid for tid in ready_review if tid.upper() == scoped]
 
     # T250 G2: of the In Progress tasks left, only this session's work blocks a merge.
-    if in_progress:
+    if in_progress and not powershell:
         rows = dict(tasks_in_section("In Progress", id_pattern, with_lines=True))
         in_progress = session_owned_in_progress(
             [(tid, rows.get(tid, "")) for tid in in_progress], command, event.get("cwd"),
@@ -1441,7 +1547,7 @@ def main():
         uncommitted = []
         # T210 D4: the task branches this command merges or pushes, where they can be resolved;
         # T211 D2: every branch of an octopus merge, and the ones it cannot confirm.
-        targets, doubts = branch_targets(command, event.get("cwd"))
+        targets, doubts = ([], []) if powershell else branch_targets(command, event.get("cwd"))
         uncommitted.extend(OCTOPUS_DOUBT_MESSAGE.format(branch=branch) for branch in doubts)
         for tid in ready_review:
             # Look for a filled verify row in the Evidence table — in the guide,

@@ -62,7 +62,13 @@ GATE_REL = ".claude/hooks/pre_bash_block_unsafe_merge.py"
 #          `/verify <ID>` entry in that session's transcript and the same code as the head; an In
 #          Progress task blocks a merge only when this session worked on it, the merge brings in its
 #          branch, or that cannot be told (`tasks/TASK_GUIDE_T250.md`). User-approved, 2026-11-04.
-AUTHORISED_TASKS = ("T182", "T188", "T190", "T197", "T196", "T210", "T211", "T232", "T250")
+#   T267 — D1-D3: a git write spelled for PowerShell (`git.exe push`, ``git` push``, `& $g push`,
+#          `iex`/`-EncodedCommand`) and every call by the PowerShell tool are gated like a plain
+#          `git push`; narrowing is unchanged, so an unresolved spelling checks the whole board
+#          (`tasks/TASK_GUIDE_T267.md`). Authorised by the Supervisor in auto mode, within the
+#          user's request for native Windows support, 2026-11-06; the user reviews it at merge.
+AUTHORISED_TASKS = ("T182", "T188", "T190", "T197", "T196", "T210", "T211", "T232", "T250",
+                    "T267")
 
 
 def _git(root, *args):
