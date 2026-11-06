@@ -60,16 +60,16 @@ Paused: auto-mode check failed — no test run in memory/event-trace/T267.jsonl 
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | [paste the red run against the prior content, or the mutation diff (`git diff --stat`, non-empty) before each verdict] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_windows_merge_gate.py` (179 tests, written in this task): AC 4/8 matrix of 18 spellings × 3 boards × tool Bash/PowerShell, each compared with the plain command's verdict; AC 4 `-EncodedCommand`; AC 5 / AC 8 negatives on win32 for both tools; AC 2 Linux baseline (15 commands, verdicts recorded on `eb76a9af`) and marker / PowerShell-tool activation; AC 3 `pushed_task_ids` is None for every flagged spelling, unreadable input still blocks; AC 8 PowerShell trace record counts; AC 9 Read/Write/Edit/Agent/None ignored, Bash plain push unchanged; edge: 10k and 100k inputs under 1 s; two mutation controls. Run on `290612e2`: `python3 -m pytest .claude/hooks/tests/test_windows_merge_gate.py -q` → `179 passed in 0.26s` — pass |
+| Verification command run | ☐ pass / ☑ fail | `python3 -m pytest .claude/hooks/tests/test_windows_merge_gate.py -q && python3 -m pytest .claude/hooks/tests -q` on `290612e2`: first part `179 passed`; second part (run with `tests` too) `2 failed, 3597 passed, 25 subtests passed in 210.99s`. The 2 failures are the authorised-task pins, not behaviour: `test_stop_auto_mode_check.py::test_merge_gate_is_untouched` and `tests/test_auto_mode.py::test_ac4_merge_gate_file_is_unchanged` → `commit names no task authorised to change .claude/hooks/pre_bash_block_unsafe_merge.py (T182, …, T250): 'feat(T267): …'`. The guide's edge case says `merge_gate_guard.AUTHORISED_TASKS` is not touched, so T267 is not on it — Supervisor decision needed (add `T267` with sign-off, or not). Gate subset `-k "merge or gate or unsafe"` on `70246dc1`'s tree: `1 failed, 616 passed` (same pin) |
+| Negative cases hold | ☑ pass | Red first: test file committed alone at `58240334` against the unchanged hook → `63 failed, 88 passed in 0.47s` (the 88 are the Linux baseline, AC 5 and AC 9, which must hold before and after). Self-review gaps red before `290612e2`: `16 failed, 163 passed`. Mutation 1, fallback branch removed from `main()`: `git diff --stat` → `.claude/hooks/pre_bash_block_unsafe_merge.py \| 3 +--` → `61 failed, 118 passed`, incl. `test_ac4_…[git.exe push origin main-git push origin main-in_progress-Bash]`. Mutation 2, `if tool_name != "Bash":` restored: `git diff --stat` → `… \| 2 +-` → `41 failed, 138 passed`, incl. `test_ac8_powershell_tool_plain_push_blocks_like_bash`. Both restored with `git checkout`; the same two mutations also run inside the suite (`test_mutation_*`) — pass |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| Full smoke suite still green (no regression) | ☐ pass / ☑ fail | `python3 -m pytest .claude/hooks/tests tests -q` on `290612e2`: `2 failed, 3597 passed` — only the two authorised-task pins above; no behaviour test regressed (base before T267 had the same suite minus the 179 new tests). `ruff check` on the hook: 1 error `E741` at the existing `for l in block.splitlines()`, identical on `eb76a9af` — nothing new |
 | **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | No UI: a Python hook and its tests |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | No UI |
+| **UI: Responsiveness at target viewports** | ☑ N/A | No UI |
 
 ---
 
@@ -96,9 +96,18 @@ PowerShell 'git push origin main'         exit=0 ALLOW  (no output)
 
 Three spellings slip past today: `git.exe push`, ``git` push``, and any command from the PowerShell tool.
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**: same command and fixture, on `290612e2`:
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```
+290612e2
+captured 2026-11-06T12:45:37+00:00
+Bash       'git push origin main'         exit=0 BLOCK  • Tasks still In Progress: T900
+Bash       'git.exe push origin main'     exit=0 BLOCK  • Tasks still In Progress: T900
+Bash       'git` push'                    exit=0 BLOCK  • Tasks still In Progress: T900
+PowerShell 'git push origin main'         exit=0 BLOCK  • Tasks still In Progress: T900
+```
+
+**DELTA**: On native Windows, a push, merge, rebase or pull sent through the PowerShell tool or spelled for PowerShell (`git.exe push`, ``git` push``, `& $g push`, `iex "git push"`) now meets the same merge gate as a plain `git push`, and plain POSIX commands on Linux and macOS get the verdicts they got before.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
