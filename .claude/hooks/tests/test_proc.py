@@ -109,6 +109,10 @@ def test_posix_kill_tree_twice_is_a_no_op():
         proc_mod.kill_tree(p)
         assert _wait_gone(grandchild)
     finally:
+        try:
+            os.killpg(p.pid, signal.SIGKILL)  # cleanup: only the group this test created
+        except OSError:
+            pass
         p.stdout.close()
 
 
