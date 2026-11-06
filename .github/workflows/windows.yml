@@ -9,10 +9,13 @@
 #   Rulesets) -> tick "Require status checks to pass before merging" -> search for
 #   "Python tests (Windows)" -> select it -> Save. Do this only when the job is green; the plan
 #   (docs/windows-support-plan.md) requires it before T264 moves to Done.
+# Versions of pytest and pyyaml are deliberately unpinned for now: the repo has no lockfile or
+# requirements file, and a pin invented here would have no source. Pin them when one exists.
 name: Windows
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 permissions:

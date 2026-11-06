@@ -37,6 +37,8 @@ def _problems(text):
     on = data.get("on", data.get(True))  # YAML 1.1 reads the bare key `on` as True
     if not isinstance(on, dict) or not {"push", "pull_request"} <= set(on):
         problems.append("must run on push and pull_request")
+    if isinstance(on, dict) and "pull_request_target" in on:
+        problems.append("must not use pull_request_target (it runs with secrets on fork code)")
     if data.get("permissions") != {"contents": "read"}:
         problems.append("permissions must be exactly contents: read")
     if re.search(r"\bsecrets\.", text):
@@ -54,6 +56,10 @@ def _problems(text):
     for u in uses:
         if not (SHA_REF.match(u) or TAG_REF.match(u)):
             problems.append(f"{u} is not pinned to a full SHA or an exact version tag")
+    for s in steps:
+        if str(s.get("uses", "")).startswith("actions/checkout@") \
+                and s.get("with", {}).get("persist-credentials") is not False:
+            problems.append("the checkout step must set persist-credentials: false")
     py = [s for s in steps if str(s.get("uses", "")).startswith("actions/setup-python@")]
     if not py or py[0].get("with", {}).get("python-version") != "3.12":
         problems.append('setup-python must pin python-version: "3.12" (a string)')
@@ -79,6 +85,8 @@ def test_workflow_matches_the_acceptance_criteria():
     ('"3.12"', '"3"'),
     ("python -I -m pytest", "python -m pytest"),
     ("  pull_request:\n", ""),
+    ("  pull_request:\n", "  pull_request_target:\n"),
+    ("persist-credentials: false", "persist-credentials: true"),
     ("run: python -I -m pip install pytest pyyaml", "run: echo ${{ secrets.TOKEN }}"),
 ])
 def test_mutation_control_a_broken_workflow_is_caught(old, new):

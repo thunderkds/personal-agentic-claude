@@ -215,7 +215,6 @@ def test_ac4_a_message_naming_a_spaced_worktree_is_not_work(tmp_path):
                   worktrees=(SPACED_WT,)) is False
 
 
-@pytest.mark.posix_only("creates a symlink, which needs Developer Mode or admin rights on Windows [symlink_to]")
 def test_ac4_an_edit_through_a_symlinked_path_is_work(tmp_path):
     real = tmp_path / "real-wt-t900"
     (real / "src").mkdir(parents=True)

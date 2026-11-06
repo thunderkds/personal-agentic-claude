@@ -116,7 +116,6 @@ def test_every_skill_dir_path_exists_in_the_plugin_layout():
     assert not missing, "\n".join(missing)
 
 
-@pytest.mark.posix_only("creates a symlink, which needs Developer Mode or admin rights on Windows [symlink_to]")
 def test_every_skill_dir_path_exists_in_the_setup_install_layout(tmp_path):
     """`setup.sh` layout: Claude Code names the skill dir `<project>/.claude/skills/<name>`, and
     `.claude/skills` is a relative symlink onto `<project>/skills`. The kernel resolves `..` after the
@@ -495,7 +494,6 @@ def build_layout(tmp_path, layout):
     return kit / "skills", project
 
 
-@pytest.mark.posix_only("creates a symlink, which needs Developer Mode or admin rights on Windows [via build_layout]")
 @pytest.mark.parametrize("layout", ["install", "plugin"])
 def test_every_skill_dir_command_runs(tmp_path, layout):
     skills_parent, project = build_layout(tmp_path, layout)

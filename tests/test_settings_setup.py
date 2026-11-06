@@ -245,7 +245,6 @@ def test_ac6_unsafe_file_exit_2_byte_identical_reason_on_stderr(tmp_path, text):
         assert sha(p) == before and os.stat(p).st_mtime_ns == mtime
 
 
-@pytest.mark.posix_only("creates a symlink, which needs Developer Mode or admin rights on Windows [os.symlink]")
 def test_ac6_symlinked_settings_is_refused(tmp_path):
     real = tmp_path / "real.json"
     real.write_text("{}\n")
