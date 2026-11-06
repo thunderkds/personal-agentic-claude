@@ -33,7 +33,6 @@ The Gate 5/6 and record readers are the merge gate's own (`pre_bash_block_unsafe
 without running its bottom-of-file `main()` — the technique its tests use. Any failure to load them
 is an exception, which the caller turns into "done not moved" (fail closed, never a crash).
 """
-import fcntl
 import os
 import re
 import types
@@ -42,6 +41,7 @@ from datetime import date
 
 import auto_mode as am
 import verify_record as vr
+from filelock import file_lock
 
 HOOKS_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GATE_FILE = os.path.join(HOOKS_DIR, "pre_bash_block_unsafe_merge.py")
@@ -188,12 +188,8 @@ def record_gaps(gate, root, task_id, tasks_dir, head, session):
 def _lock(root):
     path = os.path.join(root, LOCK_REL)
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "a") as handle:
-        fcntl.flock(handle, fcntl.LOCK_EX)
-        try:
-            yield
-        finally:
-            fcntl.flock(handle, fcntl.LOCK_UN)
+    with open(path, "a") as handle, file_lock(handle):
+        yield
 
 
 def _write(path, text):

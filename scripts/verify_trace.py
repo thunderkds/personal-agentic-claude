@@ -28,6 +28,7 @@ Exit 2: bad task name or no trace file. This reports; it blocks nothing.
 Limits: the anchor is protected by permission rules, which raise the bar but
 are not a proof (see TASK_REVIEW_T148).
 """
+import contextlib
 import json
 import os
 import sys
@@ -37,17 +38,17 @@ sys.path.insert(0, os.path.join(ROOT, ".claude", "hooks", "lib"))
 from trace_chain import GENESIS, anchor_path, chain_hash, safe_name  # noqa: E402
 
 try:
-    import fcntl
+    from filelock import file_lock
 except Exception:
-    fcntl = None
+    file_lock = None
 
 
 def read_locked(trace, anchor_file, task):
     """Trace bytes and anchors, both read under a shared lock on the trace, so an
     append in flight (anchor written, line not yet) can't look like a mismatch."""
-    with open(trace, "rb") as f:
+    with open(trace, "rb") as f, contextlib.ExitStack() as stack:
         try:
-            fcntl.flock(f.fileno(), fcntl.LOCK_SH)
+            stack.enter_context(file_lock(f, shared=True))
         except Exception:
             pass
         return f.read(), read_anchors(anchor_file, task)
