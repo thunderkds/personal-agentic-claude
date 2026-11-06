@@ -35,6 +35,8 @@ VERCEL_HOST = OLD + ".vercel.app"
 ALLOWED = {
     ("setup.sh", "${_user}/" + OLD + ".git"):
         "fork fallback: a fork made before the rename still carries the old name",
+    ("lib/harness.ps1", "$user/" + OLD + ".git"):
+        "fork fallback in the PowerShell port of kit_repo_url (T268), as in setup.sh",
     ("scripts/memory_usage_report.py", OLD):
         "the local checkout folder's name in recorded event traces, not the GitHub repo",
     (".claude/hooks/tests/test_memory_usage_report.py", OLD):
