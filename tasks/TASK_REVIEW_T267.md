@@ -32,27 +32,16 @@ naming the merge — no `<...>` left (`docs/claude-md/tracks.md` `### Auto close
 ## Auto decisions
 
 Mode: auto
-1. <what was decided> — RULE: <the rule>
-2. <what was decided> — FACT: <path>:<line> "<quoted text>"
-3. <what was decided> — DEBATED: <option> (Advocate 1: <its proposal>; Advocate 2: <its proposal>) ⚠ decided for you — please review
-4. <what was decided> — SAFER OPTION: <why> ⚠ decided for you — please review
-Paused: <only when a stop that stays paused the task: which one, and why>
-Checks: tests `<command>` — <result>; reviews <skill — result>; real run `<command>` — printed `<what it printed>` (auto-checked, not /verify)
-Memory: <each entry the memory pass wrote, as `file — entry` | nothing new>
-Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | /verify (yours)>
-
--->
-
-## Auto decisions
-
-Mode: auto
-1. No PowerShell lexer; the gate keeps POSIX shlex for narrowing and gains a syntax-blind detection fallback (`git.exe push`, ``git` push``, `& $g push` do not match today) — DEBATED: fallback only, no lexer (Advocate 1: tokenizer plus conservative raw-text fallback; Advocate 2: tokenize both syntaxes plus a block tripwire; Advocate 3: syntax-blind fallback beside BLOCKED_PATTERNS, no PowerShell parser, unresolved goes to the whole-board check) ⚠ decided for you — please review
-2. The fallback is active only on win32 or when the text carries a PowerShell marker, so POSIX behaviour does not change — RULE: `AGENTS.md § Karpathy Engineering Principles` (Surgical Changes)
-3. Over-matching is accepted (a quoted "git push" may be gated on Windows) — RULE: .claude/hooks/pre_bash_block_unsafe_merge.py:835 "Seeing more text than bash runs can only make this global."
-4. `git branch -D` is not added to this hook; T266 ships its Python twin of the guardrail — RULE: `docs/windows-support-plan.md § Tasks` (T-W5 row)
-Checks: pending (T267 in progress)
-Memory: pending (written before the run ends)
-Not done: merge (yours); auto verify: not started
+1. No PowerShell lexer; the gate keeps POSIX shlex for narrowing only and gains a syntax-blind detection fallback (`git.exe push`, ``git` push``, `& $g push` did not match before) — DEBATED: fallback only, no lexer (Advocate 1: tokenizer plus conservative raw-text fallback; Advocate 2: tokenize both syntaxes plus a block tripwire; Advocate 3: syntax-blind fallback beside BLOCKED_PATTERNS, no PowerShell parser, unresolved goes to the whole-board check) ⚠ decided for you — please review
+2. The fallback is active only for the PowerShell tool or on win32, so Linux and macOS behaviour does not change — RULE: AGENTS.md § Karpathy Engineering Principles (Surgical Changes)
+3. Over-matching is accepted (a quoted "git push", `git commit -m "merge gate fix"` or `Select-String merge` is gated on the PowerShell tool) — RULE: .claude/hooks/pre_bash_block_unsafe_merge.py:933 "Seeing more text than bash runs can only make this global."
+4. `git branch -D` is not added to this hook; the git-guardrails Python twin moves to T268 — RULE: docs/windows-support-plan.md § Tasks (T-W5 row)
+5. T267 is added to the merge-gate allowlist `AUTHORISED_TASKS` and its pin test, with the Supervisor's sign-off, because this task must change the gate — RULE: .claude/hooks/tests/merge_gate_guard.py:22 "A task that must touch the gate adds its ID to"
+6. Three review rounds changed the rule, each because a reviewer reproduced a silent allow: a PowerShell call is never narrowed to one task; for the PowerShell tool one rule flags push, merge, rebase, pull or `alias.` anywhere after stripping backtick, `^`, `+`, quotes, comments and empty `$` expansions; encoded-command forms and run-time decoding (`iex`, `FromBase64String`, `ScriptBlock::Create`) are flagged; the linear detector runs before the slow alias check — RULE: skills/resolve-question/SKILL.md § Debate (auto mode only) (Decide rule 1: an option the opened Citations show is necessary wins; the repros are in .claude/hooks/tests/test_windows_merge_gate.py `POWERSHELL_SPELLINGS`)
+7. A verb built at run time (`-join`, `-f`, `[char]`, a variable set in another statement) stays an accepted known limit, the same class as the Bash base (`x=pu; git ${x}sh` also passes) — RULE: .claude/hooks/pre_bash_block_unsafe_merge.py:157 "Known limit: a verb built at run time"; the quadratic `GIT_ALIAS_PATTERN` (a 240 KB command times out the hook) is not fixed here and goes to follow-up T270 in docs/windows-support-plan.md § Risks
+Checks: tests `python3 -m pytest .claude/hooks/tests tests -q` — 3695 passed; `test_windows_merge_gate.py` — 274 passed; reviews code-review + security-review (3 independent reviewers, 4 rounds: 3 P0 + 3 P1 fixed, no open P0 known; reviewers keep finding new PowerShell spellings, so treat the gate as raised, not closed); real run: Linux Bash baseline of 32 commands matches base eb76a9af, PowerShell-tool `git push` / `git.exe push` / ``git` push`` block on a fixture board (auto-checked, not /verify)
+Memory: memory/decisions.md — "2026-11-06 Native Windows support, first six tasks"; memory/learnings.md — "On native Windows a Bash-only hook matcher never fires" (MEMORY.md index line left out: the hot tier is over its ratchet)
+Not done: merge (yours); auto verify: running (T182); real Windows run of the gate (T263 CI after your push); follow-up T270; /verify for T263 (yours)
 
 
 ## Evidence
