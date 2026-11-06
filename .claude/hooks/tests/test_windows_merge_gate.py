@@ -106,8 +106,8 @@ def gate(tmp_path, monkeypatch):
         root = tmp_path / name
         tasks = root / "tasks"
         trace = root / "memory" / "event-trace"
-        tasks.mkdir(parents=True)
-        trace.mkdir(parents=True)
+        tasks.mkdir(parents=True, exist_ok=True)
+        trace.mkdir(parents=True, exist_ok=True)
         for tid in ("T900", "T901"):
             (tasks / f"TASK_GUIDE_{tid}.md").write_text(GUIDE_VACATED.format(tid=tid), "utf-8")
         for tid in spec["verified"]:

@@ -127,6 +127,62 @@ def defines_git_alias(scannable):
     return any(GIT_ALIAS_PATTERN.search(segment) and not DATA_COMMAND_PATTERN.match(segment)
                for segment in COMMAND_SEPARATOR_PATTERN.split(scannable))
 
+
+# T267: native Windows. The shell tool there is often `PowerShell` (same `tool_input.command`
+# shape as `Bash`), so both are read, in `main()` and in the event trace.
+SHELL_TOOLS = frozenset({"Bash", "PowerShell"})
+
+# T267 (Debate, 3 Advocates): no PowerShell lexer. `BLOCKED_PATTERNS` needs whitespace after `git`,
+# so `git.exe push`, ``git` push`` and `& "C:\…\git.exe" push` never matched. This syntax-blind
+# fallback reads the raw command — not the `strip_quoted_spans` output — with backticks and quote
+# characters removed (``gi`t`` and `"git".exe` are `git`), and flags a git write when either
+#   * a `git` word (`git`, `git.exe`, `git.cmd`) is followed on the same line by a verb, or
+#   * an indirection marker (`& $name`, `& <path>git.exe`, `iex`, `Invoke-Expression`, `cmd /c`,
+#     `powershell`/`pwsh`) and a verb are both anywhere in the text, or
+#   * `powershell`/`pwsh` runs `-EncodedCommand` (any prefix): the verb is in base64, unreadable.
+# A flagged command gets the whole-board check: the POSIX tokenizer cannot resolve these spellings,
+# so `pushed_task_ids` returns None for them. Over-matching is the accepted direction (a quoted
+# mention of a push is gated here). Known limit: a verb built at run time (`'pu'+'sh'`) is out of
+# reach of a text check, as git config aliases are (see the module docstring).
+#
+# On only on a Windows host, for the `PowerShell` tool, or when the text carries a PowerShell
+# marker, so a plain POSIX command on Linux or macOS meets exactly the pre-T267 checks.
+#
+# Matched in two linear passes per line, never as one `git…verb` regex: a lazy `[^\n]*?` between
+# the two is quadratic (measured: 100 000 characters took 36 s), and a hook that times out is a
+# non-blocking error — the call would run.
+WINDOWS_GIT_WORD = re.compile(r"\bgit(?:\.exe|\.cmd)?\b", re.IGNORECASE)
+WINDOWS_GIT_FALLBACK = re.compile(  # the git-write verbs the fallback looks for
+    r"\b(?:push|merge(?!-base\b)|rebase|pull)\b|\balias\.", re.IGNORECASE)
+WINDOWS_INDIRECTION = re.compile(
+    r"&\s*\$\w|&[^&\n]*\bgit(?:\.exe|\.cmd)?\b|\biex\b|\bInvoke-Expression\b"
+    r"|\bcmd(?:\.exe)?\s+/[ck]\b|\b(?:powershell|pwsh)(?:\.exe)?\b", re.IGNORECASE)
+WINDOWS_ENCODED_COMMAND = re.compile(r"(?:^|\s)-e(?:c|n\w*)?(?=\s|$)", re.IGNORECASE)
+WINDOWS_SHELL_WORD = re.compile(r"\b(?:powershell|pwsh)(?:\.exe)?\b", re.IGNORECASE)
+POWERSHELL_MARKER = re.compile(
+    r"`|\$env:|(?<![\w-])-(?:and|or)\b|\bInvoke-Expression\b|\biex\b|&\s*\$|\.exe\b",
+    re.IGNORECASE)
+LINE_CONTINUATION = re.compile(r"[`\\]\r?\n")
+
+
+def windows_git_write(command, tool_name):
+    """True when the T267 fallback is on for this call and `command` may hold a git write."""
+    if not isinstance(command, str):
+        return False
+    if not (sys.platform == "win32" or tool_name == "PowerShell"
+            or POWERSHELL_MARKER.search(command)):
+        return False
+    text = LINE_CONTINUATION.sub(" ", command)
+    for char in "`\"'":
+        text = text.replace(char, "")
+    for line in text.splitlines():
+        word = WINDOWS_GIT_WORD.search(line)
+        if word and WINDOWS_GIT_FALLBACK.search(line, word.end()):
+            return True
+    if WINDOWS_SHELL_WORD.search(text) and WINDOWS_ENCODED_COMMAND.search(text):
+        return True
+    return bool(WINDOWS_INDIRECTION.search(text) and WINDOWS_GIT_FALLBACK.search(text))
+
 # --- Evidence matching: "invoked" vs "merely mentioned" (T044 defect C) ------
 #
 # This used to be a single `\b(pytest|npm test|jest|…|verify)\b` substring search
@@ -288,7 +344,7 @@ def trace_shows_verification(task_id):
                     continue
                 if record.get("is_error"):
                     continue
-                if record.get("tool_name") != "Bash":
+                if record.get("tool_name") not in SHELL_TOOLS:
                     continue
                 if invokes_test_runner(extract_command(record.get("summary"))):
                     return True
@@ -1319,7 +1375,8 @@ def main():
 
     if not isinstance(event, dict):
         block_unreadable_input("event is not an object")
-    if event.get("tool_name") != "Bash":
+    tool_name = event.get("tool_name")
+    if tool_name not in SHELL_TOOLS:
         sys.exit(0)
 
     # T250 G1: the folder holding this session's transcript, where a user `/verify` line's own
@@ -1351,7 +1408,8 @@ def main():
     # "not a push" and wave one through.
     scannable = strip_quoted_spans(strip_heredoc_bodies(command))
     if (not any(re.search(p, scannable) for p in BLOCKED_PATTERNS)
-            and not defines_git_alias(scannable)):
+            and not defines_git_alias(scannable)
+            and not windows_git_write(command, tool_name)):
         sys.exit(0)
 
     # T157: in board mode `online` the board cache is refreshed before it is evaluated
