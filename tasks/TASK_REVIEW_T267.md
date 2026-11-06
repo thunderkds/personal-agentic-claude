@@ -60,15 +60,27 @@ Not done: merge (yours); auto verify: not started
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `.claude/hooks/tests/test_windows_merge_gate.py` (179 tests, written in this task): AC 4/8 matrix of 18 spellings × 3 boards × tool Bash/PowerShell, each compared with the plain command's verdict; AC 4 `-EncodedCommand`; AC 5 / AC 8 negatives on win32 for both tools; AC 2 Linux baseline (15 commands, verdicts recorded on `eb76a9af`) and marker / PowerShell-tool activation; AC 3 `pushed_task_ids` is None for every flagged spelling, unreadable input still blocks; AC 8 PowerShell trace record counts; AC 9 Read/Write/Edit/Agent/None ignored, Bash plain push unchanged; edge: 10k and 100k inputs under 1 s; two mutation controls. Run on `290612e2`: `python3 -m pytest .claude/hooks/tests/test_windows_merge_gate.py -q` → `179 passed in 0.26s` — pass |
-| Verification command run | ☑ pass | `python3 -m pytest .claude/hooks/tests/test_windows_merge_gate.py -q && python3 -m pytest .claude/hooks/tests -q` — first part `179 passed`; whole suite incl. `tests/` on the T267 head after the Supervisor-approved `AUTHORISED_TASKS` entry (`d44284ae` + pinned-tuple update): `3600 passed, 25 subtests passed in 189.72s (0:03:09)` — pass |
+| Verification command run | ☑ pass | On `48f4f0c3` (review fixes): `python3 -m pytest .claude/hooks/tests/test_windows_merge_gate.py -q` → `234 passed in 0.32s`; `python3 -m pytest .claude/hooks/tests tests -q` → `3655 passed, 25 subtests passed in 188.25s (0:03:08)` — pass |
 | Negative cases hold | ☑ pass | Red first: test file committed alone at `58240334` against the unchanged hook → `63 failed, 88 passed in 0.47s` (the 88 are the Linux baseline, AC 5 and AC 9, which must hold before and after). Self-review gaps red before `290612e2`: `16 failed, 163 passed`. Mutation 1, fallback branch removed from `main()`: `git diff --stat` → `.claude/hooks/pre_bash_block_unsafe_merge.py \| 3 +--` → `61 failed, 118 passed`, incl. `test_ac4_…[git.exe push origin main-git push origin main-in_progress-Bash]`. Mutation 2, `if tool_name != "Bash":` restored: `git diff --stat` → `… \| 2 +-` → `41 failed, 138 passed`, incl. `test_ac8_powershell_tool_plain_push_blocks_like_bash`. Both restored with `git checkout`; the same two mutations also run inside the suite (`test_mutation_*`) — pass |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☑ pass | `python3 -m pytest .claude/hooks/tests tests -q` → `3600 passed, 25 subtests passed in 189.72s (0:03:09)`, 0 failed. `ruff check` on the hook: only the existing `E741` (`for l in block.splitlines()`), identical on `eb76a9af` — pass |
+| Full smoke suite still green (no regression) | ☑ pass | `python3 -m pytest .claude/hooks/tests tests -q` on `48f4f0c3` → `3655 passed, 25 subtests passed in 188.25s (0:03:08)`, 0 failed. `ruff check` on the hook: only the existing `E741` (`for l in block.splitlines()`), identical on `eb76a9af` — pass |
 | **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
 | **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | No UI: a Python hook and its tests |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | No UI |
 | **UI: Responsiveness at target viewports** | ☑ N/A | No UI |
+
+## Review fixes
+
+Stage 4 review (2026-11-06) found 2 P0, 1 P1, 1 P2 and 1 P3 finding; all were fixed in `48f4f0c3`, tests first. Red run of the new tests against `d44284ae`+pin: `40 failed, 194 passed in 0.56s` (P0-1 failed with `assert (None is not None)`, i.e. the PowerShell call was allowed; P3 failed with `TypeError: cannot use 'list' as a set element`).
+
+- **P0-1 (narrowing):** for tool `PowerShell`, `main()` sets `scoped = None`, skips the T250 session filter and uses `([], [])` for branch targets, so the whole board is checked. Bash tool unchanged. Test: `test_review_p0_1_powershell_call_is_never_narrowed` (the reviewer's `--force-with-lease="x\"; …` repro on a real `feat/t900-x` repo: Bash allows as before, PowerShell blocks naming T901).
+- **P0-2 (detection):** for tool `PowerShell` one rule: remove backtick, `^`, `+` and ASCII/Unicode quotes, then flag any `push`/`merge` (not `merge-base`)/`rebase`/`pull`/`alias.` word anywhere, plus the `-EncodedCommand` rule. All 15 reviewer repros are in `POWERSHELL_SPELLINGS`, each compared with the plain command on 3 boards. Known limit kept in the hook comment: verbs built at run time (`-join`, `[char]`).
+- **P1-1 (POSIX):** the fallback runs only for tool `PowerShell` or on `win32`; the marker activation is gone. Bash on `win32` reads `strip_heredoc_bodies(command)`. `LINUX_BASELINE` gained the 3 reproduced regressions plus `git.exe push origin main` and ``git` push`` (base `eb76a9af` allows all 5 on Linux/Bash).
+- **P2:** `test_review_p2_powershell_mention_of_a_verb_over_blocks_known_decision` records the over-block (`git commit -m "merge gate fix"`, `Select-String merge`, `Push-Location`) for tool PowerShell.
+- **P3:** `if not isinstance(tool_name, str) or tool_name not in SHELL_TOOLS:`; test with a list, a dict and an int.
+- Mutation controls updated and still red on their mutants (`test_mutation_*`, run in the suite). The 10k/100k timing tests also time the Bash-on-win32 path.
+- Not touched, as instructed: `GIT_ALIAS_PATTERN` (pre-existing quadratic case, follow-up task).
 
 ---
 
@@ -95,15 +107,18 @@ PowerShell 'git push origin main'         exit=0 ALLOW  (no output)
 
 Three spellings slip past today: `git.exe push`, ``git` push``, and any command from the PowerShell tool.
 
-**AFTER**: same command and fixture, on `290612e2`:
+**AFTER**: same demo on `48f4f0c3` (after the review fixes), with three PowerShell-tool rows added. On this Linux host the Bash tool gets the base verdicts by design (review P1-1); the Bash-tool-on-`win32` path is covered by the tests, which force `sys.platform`:
 
 ```
-290612e2
-captured 2026-11-06T12:45:37+00:00
+48f4f0c3
+captured 2026-11-06T13:06:50+00:00
 Bash       'git push origin main'         exit=0 BLOCK  • Tasks still In Progress: T900
-Bash       'git.exe push origin main'     exit=0 BLOCK  • Tasks still In Progress: T900
-Bash       'git` push'                    exit=0 BLOCK  • Tasks still In Progress: T900
+Bash       'git.exe push origin main'     exit=0 ALLOW  (no output)
+Bash       'git` push'                    exit=0 ALLOW  (no output)
 PowerShell 'git push origin main'         exit=0 BLOCK  • Tasks still In Progress: T900
+PowerShell 'git.exe push origin main'     exit=0 BLOCK  • Tasks still In Progress: T900
+PowerShell 'git` push'                    exit=0 BLOCK  • Tasks still In Progress: T900
+PowerShell 'Start-Process -ArgumentList push -FilePath git' exit=0 BLOCK  • Tasks still In Progress: T900
 ```
 
 **DELTA**: On native Windows, a push, merge, rebase or pull sent through the PowerShell tool or spelled for PowerShell (`git.exe push`, ``git` push``, `& $g push`, `iex "git push"`) now meets the same merge gate as a plain `git push`, and plain POSIX commands on Linux and macOS get the verdicts they got before.
