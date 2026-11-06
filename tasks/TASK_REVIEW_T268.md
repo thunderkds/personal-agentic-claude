@@ -67,8 +67,46 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured by the implementing agent in the worktree on branch `feat/t268-setup-ps1` at
+`e781f503`, before any implementation commit):
+
+```
+2026-11-06T14:43:08Z
+$ ls setup.ps1 lib/harness.ps1
+ls: cannot access 'setup.ps1': No such file or directory
+ls: cannot access 'lib/harness.ps1': No such file or directory
+exit=2
+$ grep -nE "^\s+- (uses|name):" .github/workflows/windows.yml
+31:      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+36:      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+40:      - name: Install pytest and PyYAML
+43:      - name: Python tests
+$ python3 -m pytest .claude/hooks/tests tests -q
+3784 passed, 25 subtests passed in 196.58s (0:03:16)
+2026-11-06T14:46:25Z
+```
+
+The new tests, written first, red against the base (no `setup.ps1` yet):
+
+```
+2026-11-06T14:47:24Z
+$ python3 -m pytest tests/test_setup_ps1_static.py tests/test_setup_ps1_pwsh.py -q
+FAILED tests/test_setup_ps1_static.py::test_installer_source_is_51_safe_and_posix_free[setup.ps1]
+FAILED tests/test_setup_ps1_static.py::test_installer_source_is_51_safe_and_posix_free[lib/harness.ps1]
+FAILED tests/test_setup_ps1_static.py::test_smoke_script_is_51_safe - Asserti...
+FAILED tests/test_setup_ps1_static.py::test_setup_ps1_dot_sources_the_library_and_calls_both_helpers
+FAILED tests/test_setup_ps1_static.py::test_mutation_control_a_missing_header_is_caught[...] (x2)
+FAILED tests/test_setup_ps1_static.py::test_mutation_control_a_banned_token_is_caught[...] (x7)
+FAILED tests/test_setup_ps1_pwsh.py::test_the_windows_ci_smoke_passes_in_linux_pwsh
+FAILED tests/test_setup_ps1_pwsh.py::test_install_matches_the_manifest_and_setup_sh
+FAILED tests/test_setup_ps1_pwsh.py::test_edited_file_is_backed_up_and_a_rerun_is_idempotent
+FAILED tests/test_setup_ps1_pwsh.py::test_python_is_found_when_py_and_python3_are_absent
+FAILED tests/test_setup_ps1_pwsh.py::test_no_usable_python_stops_with_nothing_written[bin-nopy]
+FAILED tests/test_setup_ps1_pwsh.py::test_no_usable_python_stops_with_nothing_written[bin-stub]
+FAILED tests/test_setup_ps1_pwsh.py::test_outside_a_git_repo_stops_with_nothing_written
+FAILED tests/test_setup_ps1_pwsh.py::test_existing_install_without_consent_cancels
+21 failed, 1 passed in 5.25s
+```
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
