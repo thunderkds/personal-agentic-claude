@@ -69,6 +69,28 @@ def test_posix_kill_tree_kills_parent_and_grandchild():
         p.stdout.close()
 
 
+# ── Review P1 — the leader exited, its group lives on: kill_tree still kills the group ──────
+@POSIX
+def test_posix_kill_tree_kills_the_group_after_the_leader_exited(tmp_path):
+    pidfile = tmp_path / "pid"
+    p = proc_mod.start_detached(["sh", "-c", 'sleep 30 & echo $! > "$1"; exit 0', "sh", str(pidfile)],
+                                stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
+    try:
+        with pytest.raises(subprocess.TimeoutExpired):
+            p.communicate(timeout=1)  # the grandchild holds the pipes open
+        grandchild = int(pidfile.read_text())
+        assert not _gone(grandchild), "fixture: the grandchild is not running"
+        proc_mod.kill_tree(p)
+        assert _wait_gone(grandchild), f"grandchild {grandchild} survived kill_tree"
+        p.communicate(timeout=5)
+    finally:
+        try:
+            os.killpg(p.pid, signal.SIGKILL)  # cleanup: only the group this test created
+        except OSError:
+            pass
+
+
 # ── AC 5 / Success 3 — an exited process: no raise, second call a no-op ──────────────────────
 @POSIX
 def test_posix_kill_tree_on_exited_process_does_not_raise():
@@ -133,7 +155,7 @@ def test_windows_start_detached_uses_creationflags_not_new_session(win):
     proc_mod.start_detached(["claude", "-p", "/verify T1"], stdout=subprocess.PIPE)
     [(argv, kwargs)] = win["popen"]
     assert argv == ["claude", "-p", "/verify T1"]
-    assert kwargs["creationflags"] == 0x00000200 | 0x00000008  # NEW_PROCESS_GROUP | DETACHED
+    assert kwargs["creationflags"] == 0x00000200 | 0x08000000  # NEW_PROCESS_GROUP | NO_WINDOW
     assert "start_new_session" not in kwargs
     assert not kwargs.get("shell")
     assert kwargs["stdout"] is subprocess.PIPE
@@ -151,6 +173,14 @@ def test_windows_kill_tree_on_exited_process_runs_nothing(win):
     proc_mod.kill_tree(p)
     proc_mod.kill_tree(p)
     assert win["run"] == [] and p.killed == 0
+
+
+def test_windows_kill_tree_runs_taskkill_without_polling_first(win):
+    """Review P2a: poll() would reap an exited leader and skip taskkill for its live children."""
+    p = _FakeProc(pid=7)
+    p.poll = lambda: pytest.fail("kill_tree called poll()")
+    proc_mod.kill_tree(p)
+    assert win["run"] == [(["taskkill", "/T", "/F", "/PID", "7"], win["run"][0][1])]
 
 
 def test_windows_kill_tree_falls_back_to_kill_when_taskkill_is_missing(win, monkeypatch):

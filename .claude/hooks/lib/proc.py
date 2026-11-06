@@ -3,8 +3,11 @@
 
 POSIX: `start_new_session=True` (setsid) makes the child lead its own process group, so it
 survives the hook that started it; `kill_tree` sends SIGKILL to that whole group.
-Windows: `CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS` detaches the child; `kill_tree` runs
-`taskkill /T /F /PID <pid>`, which kills the process and every process it started.
+Windows: `CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW` detaches the child with a hidden console
+(its console children - cmd.exe, node, git - share it and open no window); `kill_tree` runs
+`taskkill /T /F /PID <pid>`, which kills the process and every process it started. Limit:
+`taskkill /T` walks the tree from the process, so it cannot reach an orphan whose parent has already
+exited (Windows Job Objects would; they are on T265's cut list).
 
 Never a shell, never a command string: `argv` is a list, and the PID handed to `taskkill` must be
 an `int`. Use `kill_tree` only on a process that `start_detached` started.
@@ -17,7 +20,7 @@ import sys
 
 # Win32 process-creation flags (the `subprocess` constants exist only on Windows).
 CREATE_NEW_PROCESS_GROUP = 0x00000200
-DETACHED_PROCESS = 0x00000008
+CREATE_NO_WINDOW = 0x08000000
 
 
 def _windows():
@@ -32,18 +35,20 @@ def start_detached(argv, **popen_kwargs):
         raise ValueError("start_detached never runs a shell")
     if _windows():
         popen_kwargs["creationflags"] = (popen_kwargs.get("creationflags", 0)
-                                         | CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS)
+                                         | CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW)
         return subprocess.Popen(argv, **popen_kwargs)
     return subprocess.Popen(argv, start_new_session=True, **popen_kwargs)
 
 
 def kill_tree(proc):
-    """Kill `proc` and its children. A process that already exited is a no-op, never an error."""
+    """Kill `proc` and its children. A process already reaped (by an earlier wait or poll) is a
+    no-op, never an error. Never calls `poll()` itself: that would reap a leader that exited while
+    its children still run, and skip the kill."""
     pid = proc.pid
     if not isinstance(pid, int) or isinstance(pid, bool):
         raise TypeError(f"pid must be an int, not {type(pid).__name__}")
-    if proc.poll() is not None:
-        return  # exited and reaped: its PID (and group ID) may now belong to another process
+    if proc.returncode is not None:
+        return  # reaped: its PID (and group ID) may now belong to another process
     if _windows():
         try:
             done = subprocess.run(["taskkill", "/T", "/F", "/PID", str(pid)],
@@ -56,7 +61,9 @@ def kill_tree(proc):
         return
     import signal  # SIGKILL exists only on POSIX
     try:
-        os.killpg(pid, signal.SIGKILL)  # the group `start_new_session` made; not reaped, so ours
+        # The group `start_new_session` made. The leader is not reaped (alive or a zombie), so its
+        # PID and group ID cannot be reused: the group is still ours, even if the leader exited.
+        os.killpg(pid, signal.SIGKILL)
     except OSError:
         _kill_parent(proc)
 
