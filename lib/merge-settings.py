@@ -12,9 +12,15 @@ Exit codes:
 Ownership rule (Supervisor decision, TASK_GUIDE_T111 "Approach"):
     A hook *entry* (one element of settings["hooks"][<event>]) belongs to the kit
     if any of its `hooks[].command` strings references a path under
-    `.claude/hooks/`. Matching is done on the PATH found inside the command, not
-    on the whole string, so `python3 "$CLAUDE_PROJECT_DIR"/.claude/hooks/x.py`
-    and `python3 ./.claude/hooks/x.py` are the same entry.
+    `.claude/hooks/`, or (exec form, T266) any element of its `hooks[].args` is
+    exactly a hook script path (`ARG_HOOK_PATH_RE`: an optional
+    `${CLAUDE_PROJECT_DIR}/`, `${CLAUDE_PLUGIN_ROOT}/`, `$CLAUDE_PROJECT_DIR/` or
+    `./` prefix, then `.claude/hooks/<name>.py`, nothing else). An `args` element
+    that only mentions the directory (`--out .claude/hooks/dist`) is not a kit path.
+    Matching is done on the PATH found inside the command, not on the whole
+    string, so `python3 "$CLAUDE_PROJECT_DIR"/.claude/hooks/x.py`,
+    `python3 ./.claude/hooks/x.py` and the exec form
+    `py -3 ${CLAUDE_PROJECT_DIR}/.claude/hooks/x.py` are the same entry.
 
     Kit entries are reconciled against the upstream file: an entry whose hook
     script set matches an upstream entry is REPLACED by upstream's version in
@@ -54,6 +60,9 @@ import sys
 import tempfile
 
 HOOK_PATH_RE = re.compile(r"\.claude/hooks/[^\s\"']+")
+# T266: an exec-form `args` element counts only when it is exactly a hook script path.
+ARG_HOOK_PATH_RE = re.compile(
+    r"(?:\$\{CLAUDE_(?:PROJECT_DIR|PLUGIN_ROOT)\}/|\$CLAUDE_PROJECT_DIR/|\./)?(\.claude/hooks/[\w.\-]+\.py)")
 
 
 def die(reason):
@@ -62,19 +71,22 @@ def die(reason):
 
 
 def hook_paths(group):
-    """Every `.claude/hooks/...` path referenced by one hook entry, in its
-    `command` or, for an exec-form hook (T266), in any string of its `args`."""
+    """Every `.claude/hooks/...` path referenced by one hook entry: found inside its
+    `command`, or, for an exec-form hook (T266), an `args` element that is exactly
+    a hook script path."""
     paths = []
     for hook in group.get("hooks") or []:
         if not isinstance(hook, dict):
             continue
+        found = HOOK_PATH_RE.search(hook.get("command") or "")
+        if found:
+            paths.append(found.group(0))
+            continue
         args = hook.get("args")
-        texts = [hook.get("command") or ""]
-        texts += [a for a in (args if isinstance(args, list) else []) if isinstance(a, str)]
-        for text in texts:
-            found = HOOK_PATH_RE.search(text)
-            if found:
-                paths.append(found.group(0))
+        for arg in (args if isinstance(args, list) else []):
+            whole = ARG_HOOK_PATH_RE.fullmatch(arg) if isinstance(arg, str) else None
+            if whole:
+                paths.append(whole.group(1))
                 break
     return paths
 

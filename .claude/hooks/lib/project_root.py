@@ -112,17 +112,22 @@ def wires_in_repo_hook(root, name):
     except (OSError, ValueError, AttributeError):
         return False
     target = ".claude/hooks/" + name
+    exact_args = {target, "./" + target, "${CLAUDE_PROJECT_DIR}/" + target,
+                  "$CLAUDE_PROJECT_DIR/" + target}  # T266: never the plugin root
     for groups in (events.values() if isinstance(events, dict) else ()):
         for group in (groups if isinstance(groups, list) else ()):
             entries = group.get("hooks") if isinstance(group, dict) else None
             for entry in (entries if isinstance(entries, list) else ()):
                 command = entry.get("command") if isinstance(entry, dict) else None
+                if (isinstance(command, str) and target in command
+                        and "CLAUDE_PLUGIN_ROOT" not in command):
+                    return True
+                # T266: an exec-form hook carries the path in `args`; only an element that is
+                # exactly the project's hook script path counts (same rule as merge-settings.py).
                 args = entry.get("args") if isinstance(entry, dict) else None
-                # T266: an exec-form hook carries the path in `args`, not in `command`.
-                for text in [command] + (args if isinstance(args, list) else []):
-                    if (isinstance(text, str) and target in text
-                            and "CLAUDE_PLUGIN_ROOT" not in text):
-                        return True
+                if any(isinstance(arg, str) and arg in exact_args
+                       for arg in (args if isinstance(args, list) else [])):
+                    return True
     return False
 
 
