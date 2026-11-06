@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-PreToolUse hook — fires before every Bash tool call.
+PreToolUse hook — fires before every Bash or PowerShell tool call (T267: the PowerShell tool and
+PowerShell-spelled git writes such as `git.exe push` are read too; see `windows_git_write`).
 
 Blocks git push/merge/rebase/pull commands if:
   1. Any task in PROJECT_KANBAN.md is still In Progress or Ready for Review
@@ -136,7 +137,8 @@ SHELL_TOOLS = frozenset({"Bash", "PowerShell"})
 # so `git.exe push`, ``git` push`` and `& "C:\…\git.exe" push` never matched. This syntax-blind
 # fallback reads the raw command — not the `strip_quoted_spans` output — with backticks and quote
 # characters removed (``gi`t`` and `"git".exe` are `git`), and flags a git write when either
-#   * a `git` word (`git`, `git.exe`, `git.cmd`) is followed on the same line by a verb, or
+#   * a `git` word (`git`, `git.exe`, `git.cmd`) is followed on the same line by a verb, or by a
+#     `$`/`@` expansion while a verb is anywhere in the text (`$a='push'; git $a`), or
 #   * an indirection marker (`& $name`, `& <path>git.exe`, `iex`, `Invoke-Expression`, `cmd /c`,
 #     `powershell`/`pwsh`) and a verb are both anywhere in the text, or
 #   * `powershell`/`pwsh` runs `-EncodedCommand` (any prefix): the verb is in base64, unreadable.
@@ -175,13 +177,22 @@ def windows_git_write(command, tool_name):
     text = LINE_CONTINUATION.sub(" ", command)
     for char in "`\"'":
         text = text.replace(char, "")
-    for line in text.splitlines():
+    any_verb = WINDOWS_GIT_FALLBACK.search(text) is not None
+    # Split on `\n` only: `str.splitlines` also splits on `\x85`, ` ` and others, which would
+    # put `git.exe` and `push` on two "lines" a shell may read as one.
+    for line in text.split("\n"):
         word = WINDOWS_GIT_WORD.search(line)
-        if word and WINDOWS_GIT_FALLBACK.search(line, word.end()):
+        if word is None:
+            continue
+        if WINDOWS_GIT_FALLBACK.search(line, word.end()):
+            return True
+        # `$a='push'; git $a`, `git @a`: an argument the shell expands may be the verb.
+        rest = line[word.end():]
+        if any_verb and ("$" in rest or "@" in rest):
             return True
     if WINDOWS_SHELL_WORD.search(text) and WINDOWS_ENCODED_COMMAND.search(text):
         return True
-    return bool(WINDOWS_INDIRECTION.search(text) and WINDOWS_GIT_FALLBACK.search(text))
+    return bool(any_verb and WINDOWS_INDIRECTION.search(text))
 
 # --- Evidence matching: "invoked" vs "merely mentioned" (T044 defect C) ------
 #

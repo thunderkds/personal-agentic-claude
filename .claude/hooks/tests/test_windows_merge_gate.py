@@ -162,6 +162,12 @@ SPELLINGS = [
     ('$g = "C:\\Git\\' + GIT + '.exe"\n& $g push', PUSH),
     ("Invoke-Expression $c  # $c holds: push", PUSH),
     ("& $g -c alias.p=push p", PUSH),
+    # Self-review gaps: the verb sits in a variable after the git word, and a Unicode line
+    # separator that `str.splitlines` would split on but a shell need not.
+    ("$a='push'; " + GIT + " $a origin main", PUSH + " origin main"),
+    ("$a=@('push'); " + GIT + ".exe @a", PUSH),
+    (GIT + ".exe push", PUSH),
+    (GIT + ".exe\x85push", PUSH),
 ]
 
 
