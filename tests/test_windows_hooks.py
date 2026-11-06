@@ -257,9 +257,12 @@ def assert_exec_form(result, root_var, launcher, count=11):
         assert hook["args"][:-1] == lead, hook
         assert re.fullmatch(r"\$\{%s\}/\.claude/hooks/\w+\.py" % root_var, hook["args"][-1]), hook
     for text in all_strings(result["hooks"]):
-        for bad in FORBIDDEN:
-            assert bad not in text, (bad, text)
-        assert '"' not in text and "\\" not in text, text
+        assert "python3" not in text and "sh -c" not in text, text
+    for hook in hooks:  # quotes: only the strings the harness executes, not description prose
+        for text in [hook["command"]] + hook["args"]:
+            for bad in FORBIDDEN:
+                assert bad not in text, (bad, text)
+            assert '"' not in text and "\\" not in text, text
 
 
 class ConverterTest(unittest.TestCase):

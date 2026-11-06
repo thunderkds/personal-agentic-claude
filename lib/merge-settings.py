@@ -62,14 +62,20 @@ def die(reason):
 
 
 def hook_paths(group):
-    """Every `.claude/hooks/...` path referenced by one hook entry."""
+    """Every `.claude/hooks/...` path referenced by one hook entry, in its
+    `command` or, for an exec-form hook (T266), in any string of its `args`."""
     paths = []
     for hook in group.get("hooks") or []:
         if not isinstance(hook, dict):
             continue
-        found = HOOK_PATH_RE.search(hook.get("command") or "")
-        if found:
-            paths.append(found.group(0))
+        args = hook.get("args")
+        texts = [hook.get("command") or ""]
+        texts += [a for a in (args if isinstance(args, list) else []) if isinstance(a, str)]
+        for text in texts:
+            found = HOOK_PATH_RE.search(text)
+            if found:
+                paths.append(found.group(0))
+                break
     return paths
 
 
