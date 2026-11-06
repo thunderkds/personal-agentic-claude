@@ -96,11 +96,11 @@ Register T-W1 on the board, then write its `TASK_GUIDE`. Board IDs: T-W1 = T262 
 
 **State.**
 - Merged into `windows` and Done: T262 ADR-0003 + `.gitattributes`; T264 file lock; T265 process start/kill; T266 PowerShell matchers + exec-form converter; T267 merge gate sees the PowerShell tool. T263 (Windows CI job) is merged but its `verify` row is blocked: it needs a real Windows run.
-- Built, reviewed, auto verify PASS, NOT merged yet: T268 (`feat/t268-setup-ps1`, `setup.ps1` + `lib/harness.ps1`) and T271 (`feat/t271-update-ps1`, built on T268: `update.ps1` + `lib/harness-update.ps1`). Both sit in Ready for Review.
+- Merged into `windows` 2026-11-07 by the user (`3403729e`, `d26dabe7`): T268 (`setup.ps1` + `lib/harness.ps1`) and T271 (`update.ps1` + `lib/harness-update.ps1`). Both still show Ready for Review on the board until the first Windows CI run.
 - Not started: T269 (release v2.3.0: bump `.claude-plugin/plugin.json`, `plugin/.claude-plugin/plugin.json`, `README.md` line 3; README "Windows" section; `ship` release notes and rollback plan; no tag, no push without the user).
 
 **User actions waiting** (the model's merge gate blocks its own merges while T263 is unverified):
-1. `! bash /tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-personal-agentic-claude/ba8d2885-149b-442b-a832-cab0d11b2433/scratchpad/merge_windows2.sh` (merges T268 then T271 into `windows`; this scratchpad file may be gone: the commands are `git merge --no-ff feat/t268-setup-ps1` then `git merge --no-ff feat/t271-update-ps1`). Earlier script `merge_windows.sh` already merged T262-T267.
+1. ~~Merge T268 then T271 into `windows`~~ — done 2026-11-07.
 2. Push `windows`, open a PR to `main` (the Windows workflow runs on `pull_request`, and on `push` only to `main`).
 3. Read the first `Python tests (Windows)` run and the four smoke steps (`setup.ps1` and `update.ps1`, each under Windows PowerShell 5.1 and pwsh 7). Expect red at first; the run lists what is still missing on Windows. Then `/verify T263` (or tell the Supervisor the result).
 
