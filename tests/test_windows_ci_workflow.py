@@ -67,6 +67,9 @@ def _problems(text):
     for needle in ("python -I -m pytest", "tests/", ".claude/hooks/tests/"):
         if needle not in runs:
             problems.append(f"a run step must contain {needle!r}")
+    shells = {str(s.get("shell")) for s in steps if "tests/windows/smoke-install.ps1" in str(s.get("run", ""))}
+    if not {"powershell", "pwsh"} <= shells:
+        problems.append("the setup.ps1 smoke (T268) must run under shell: powershell (5.1) and shell: pwsh")
     head = text.split("\nname:", 1)[0]
     if "required" not in head or "status checks" not in head.lower():
         problems.append("header comment must say how to make the job required")
@@ -88,6 +91,8 @@ def test_workflow_matches_the_acceptance_criteria():
     ("  pull_request:\n", "  pull_request_target:\n"),
     ("persist-credentials: false", "persist-credentials: true"),
     ("run: python -I -m pip install pytest pyyaml", "run: echo ${{ secrets.TOKEN }}"),
+    ("shell: powershell\n", "shell: pwsh\n"),
+    ("run: ./tests/windows/smoke-install.ps1", "run: echo skipped"),
 ])
 def test_mutation_control_a_broken_workflow_is_caught(old, new):
     text = _text()

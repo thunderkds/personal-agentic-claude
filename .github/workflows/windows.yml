@@ -42,3 +42,17 @@ jobs:
 
       - name: Python tests
         run: python -I -m pytest tests/ .claude/hooks/tests/ -q
+
+      # T268: install the kit with setup.ps1 into a temp repo and check the result (junctions,
+      # lock, Windows hook form, backups, second-run idempotence). Once per PowerShell edition.
+      - name: setup.ps1 smoke (Windows PowerShell 5.1)
+        shell: powershell
+        env:
+          SUPERVISOR_REPO: ${{ github.workspace }}
+        run: ./tests/windows/smoke-install.ps1
+
+      - name: setup.ps1 smoke (PowerShell 7)
+        shell: pwsh
+        env:
+          SUPERVISOR_REPO: ${{ github.workspace }}
+        run: ./tests/windows/smoke-install.ps1
