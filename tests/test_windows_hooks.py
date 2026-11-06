@@ -242,6 +242,57 @@ class WiresInRepoHookTest(unittest.TestCase):
         self.assertFalse(self.wire(exec_group("-3", "${CLAUDE_PROJECT_DIR}/scripts/gate.py")))
 
 
+# --- Review fix P1: exec-form USER entries are never mistaken for kit entries ---------
+
+USER_EXEC_GROUPS = [
+    {"matcher": "Write", "hooks": [{"type": "command", "command": "node",
+                                    "args": ["build.js", "--out", ".claude/hooks/dist"]}]},
+    {"matcher": "Edit", "hooks": [{"type": "command", "command": "notify",
+                                   "args": ["--msg", "edited .claude/hooks/guard.py"]}]},
+    {"matcher": "Bash", "hooks": [{"type": "command", "command": "py",
+                                   "args": ["-3", "../.claude/hooks/x.py"]}]},
+]
+
+
+class ExecFormUserEntryTest(unittest.TestCase):
+    def test_user_args_mentioning_hooks_dir_are_not_kit_paths(self):
+        for group in USER_EXEC_GROUPS:
+            self.assertEqual(merge_settings.hook_paths(group), [], group)
+            self.assertFalse(merge_settings.is_kit_group(group), group)
+
+    def test_kit_exec_form_variants_still_recognised(self):
+        for arg in ("${CLAUDE_PROJECT_DIR}/.claude/hooks/x.py", "${CLAUDE_PLUGIN_ROOT}/.claude/hooks/x.py",
+                    "$CLAUDE_PROJECT_DIR/.claude/hooks/x.py", "./.claude/hooks/x.py", ".claude/hooks/x.py"):
+            self.assertEqual(merge_settings.hook_paths(exec_group("-3", arg)), [".claude/hooks/x.py"], arg)
+
+    def test_user_exec_entries_survive_a_real_merge(self):
+        project = tempfile.mkdtemp(prefix="t266-user-")
+        self.addCleanup(shutil.rmtree, project, True)
+        shutil.copytree(HOOKS_DIR, os.path.join(project, ".claude", "hooks"),
+                        ignore=shutil.ignore_patterns("tests", "__pycache__"))
+        target = os.path.join(project, ".claude", "settings.json")
+        with open(target, "w") as f:
+            json.dump({"hooks": {"PreToolUse": copy.deepcopy(USER_EXEC_GROUPS)}}, f)
+        proc = subprocess.run([sys.executable, MERGE, SETTINGS, target, project],
+                              capture_output=True, text=True, timeout=20)
+        self.assertEqual((proc.returncode, proc.stderr), (0, ""))
+        pre = load(target)["hooks"]["PreToolUse"]
+        for group in USER_EXEC_GROUPS:
+            self.assertIn(group, pre)
+        kit = [g for g in pre if merge_settings.is_kit_group(g)]
+        self.assertEqual(kit, load(SETTINGS)["hooks"]["PreToolUse"])
+
+    def test_wires_only_on_whole_element_path(self):
+        root = tempfile.mkdtemp(prefix="t266-wire2-")
+        self.addCleanup(shutil.rmtree, root, True)
+        os.makedirs(os.path.join(root, ".claude", "hooks"))
+        open(os.path.join(root, ".claude", "hooks", "guard.py"), "w").close()
+        for args in (["--msg", "edited .claude/hooks/guard.py"], ["../.claude/hooks/guard.py"]):
+            with open(os.path.join(root, ".claude", "settings.json"), "w") as f:
+                json.dump({"hooks": {"PreToolUse": [exec_group(*args, command="notify")]}}, f)
+            self.assertFalse(project_root.wires_in_repo_hook(root, "guard.py"), args)
+
+
 # --- AC5/AC6/AC7/AC8: the converter -------------------------------------------------
 
 FORBIDDEN = ("python3", "sh -c", '"$CLAUDE_PROJECT_DIR"', "'")

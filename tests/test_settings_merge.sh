@@ -616,5 +616,25 @@ else
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# T266 review fix P1 — an exec-form USER entry whose args only MENTION .claude/hooks/
+# stays a user entry: the merge keeps it and prints nothing.
+# ─────────────────────────────────────────────────────────────────────────────
+UX="$WORK/user-exec"
+mkdir -p "$UX/root/.claude/hooks"
+: > "$UX/root/.claude/hooks/kit_one.py"
+cat > "$UX/own.json" <<'EOF'
+{"hooks": {"PreToolUse": [
+  {"matcher": "Write", "hooks": [{"type": "command", "command": "node", "args": ["build.js", "--out", ".claude/hooks/dist"]}]},
+  {"matcher": "Edit", "hooks": [{"type": "command", "command": "notify", "args": ["--msg", "edited .claude/hooks/guard.py"]}]},
+  {"matcher": "Bash", "hooks": [{"type": "command", "command": "py", "args": ["-3", "../.claude/hooks/x.py"]}]}
+]}}
+EOF
+python3 "$MERGE" "$PD/kit.json" "$UX/own.json" "$UX/root" 2> "$UX/stderr" \
+  || fail "T266: merge exited non-zero on exec-form user entries"
+[ -s "$UX/stderr" ] && fail "T266: merge printed to stderr: $(cat "$UX/stderr")"
+assert_json "T266: exec-form user entries mentioning .claude/hooks/ all kept" "$UX/own.json" \
+  'sorted(cmds) == ["node", "notify", "py", "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/kit_one.py"]'
+
 printf '\n--- %d passed, %d failed ---\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ] || exit 1
