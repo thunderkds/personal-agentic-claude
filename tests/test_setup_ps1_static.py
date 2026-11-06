@@ -1,4 +1,4 @@
-"""T268 — static checks of the PowerShell installer source (AC 1, Success Criterion 6).
+"""T268 / T271 — static checks of the PowerShell installer source (AC 1, Success Criterion 6).
 
 `setup.ps1` and `lib/harness.ps1` must run on Windows PowerShell 5.1 as well as PowerShell 7, and must
 not reach for a POSIX tool. This test reads the source only; the behaviour is checked by
@@ -12,8 +12,8 @@ import re
 import pytest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-INSTALLER = ("setup.ps1", "lib/harness.ps1")
-SMOKE = "tests/windows/smoke-install.ps1"
+INSTALLER = ("setup.ps1", "lib/harness.ps1", "update.ps1", "lib/harness-update.ps1")
+SMOKES = ("tests/windows/smoke-install.ps1", "tests/windows/smoke-update.ps1")
 
 # A POSIX tool or a Python name the Windows installer must never call (AC 1). Whole words:
 # `setup.sh` in a comment is a file name, not a call to `sh`.
@@ -22,6 +22,8 @@ BANNED_WORDS = {
     "sh": re.compile(r"(?<![\w./\\-])sh(?![\w.-])"),
     "bash": re.compile(r"(?<![\w./\\-])bash(?![\w.-])"),
     "/dev/null": re.compile(r"/dev/null"),
+    # T271 AC 15: a recursive Remove-Item follows a junction into its target; use Remove-HarnessPath.
+    "Remove-Item -Recurse": re.compile(r"Remove-Item\b[^\n]*-Recurse", re.IGNORECASE),
 }
 
 # Syntax PowerShell 5.1 does not parse, or API it does not have (AC 1, Edge Case Checklist).
@@ -110,9 +112,20 @@ def test_installer_source_is_51_safe_and_posix_free(rel):
     assert problems(rel, _read(rel)) == []
 
 
-def test_smoke_script_is_51_safe():
-    assert os.path.isfile(os.path.join(ROOT, SMOKE)), f"{SMOKE} is missing"
-    assert problems(SMOKE, _read(SMOKE), installer=False) == []
+@pytest.mark.parametrize("rel", SMOKES)
+def test_smoke_script_is_51_safe(rel):
+    assert os.path.isfile(os.path.join(ROOT, rel)), f"{rel} is missing"
+    assert problems(rel, _read(rel), installer=False) == []
+
+
+def test_update_ps1_is_a_thin_alias_for_the_update_action():
+    """T271 AC 1: update.ps1 selects Update through the EASYKIT_ACTION seam and runs setup.ps1;
+    setup.ps1 dot-sources the update library and offers Update."""
+    alias = _code(_read("update.ps1"))
+    assert "EASYKIT_ACTION" in alias and "setup.ps1" in alias
+    setup = _read("setup.ps1")
+    assert re.search(r"^\.\s+.*harness-update\.ps1", setup, re.M), "setup.ps1 must dot-source lib/harness-update.ps1"
+    assert "1) Update (keeps your edits)" in setup
 
 
 def test_setup_ps1_dot_sources_the_library_and_calls_both_helpers():
@@ -125,7 +138,7 @@ def test_setup_ps1_dot_sources_the_library_and_calls_both_helpers():
 def test_manifest_does_not_list_the_installers():
     """setup.sh and lib/*.sh are not MANIFEST paths, so their PowerShell twins are not either."""
     paths = [l.split()[0] for l in _read("MANIFEST").splitlines() if l.strip() and not l.lstrip().startswith("#")]
-    assert not {"setup.ps1", "lib/harness.ps1", "lib", "setup.sh"} & set(paths)
+    assert not {"setup.ps1", "lib/harness.ps1", "lib", "setup.sh", "update.ps1", "lib/harness-update.ps1"} & set(paths)
 
 
 @pytest.mark.parametrize("old,new", [
@@ -146,6 +159,7 @@ def test_mutation_control_a_missing_header_is_caught(old, new):
     "Remove-Item /dev/null",
     "$y = 'café'",
     "$x = Get-Content $a | Set-Content $b",
+    "Remove-Item -LiteralPath $p -Recurse -Force",
 ])
 def test_mutation_control_a_banned_token_is_caught(injected):
     """Success Criterion 6: a banned token injected into setup.ps1 makes the static test fail."""

@@ -67,8 +67,38 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 > **before any implementation commit exists**; if it does not (docs, templates, skill-instruction
 > text), BEFORE is the **verbatim prior content** of what changed — a quoted excerpt, not a command.
 
-**BEFORE**: [pasted timestamped command output showing the thing absent/failing, captured before the
-first implementation commit] OR [verbatim excerpt of the prior content, for non-executable changes]
+**BEFORE** (captured by the implementing agent in the worktree on branch `feat/t271-update-ps1` at
+`f430d180`, before any implementation commit):
+
+```
+2026-11-06T15:34:28Z
+$ ls update.ps1 lib/harness-update.ps1
+ls: cannot access 'update.ps1': No such file or directory
+ls: cannot access 'lib/harness-update.ps1': No such file or directory
+exit=2
+$ grep -nE "Write-Host .  [0-9]\)|updateNote =" setup.ps1
+34:    $updateNote = 'Update (keeps your edits) is not in setup.ps1 yet: it comes with update.ps1 in a later Easy Kit version.'
+49:        Write-Host '  1) Reinstall (backs up your edits)'
+50:        Write-Host '  2) Cancel'
+63:    Write-Host '  1) Install'
+64:    Write-Host '  2) Cancel'
+84:    Write-Host '  1) New project'
+85:    Write-Host '  2) Existing / legacy project'
+$ grep -nE "^\s+- (uses|name):" .github/workflows/windows.yml
+31:      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+36:      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+40:      - name: Install pytest and PyYAML
+43:      - name: Python tests
+48:      - name: setup.ps1 smoke (Windows PowerShell 5.1)
+54:      - name: setup.ps1 smoke (PowerShell 7)
+$ python3 -m pytest tests/test_setup_ps1_static.py tests/test_setup_ps1_pwsh.py tests/test_windows_ci_workflow.py -q
+...........................................                              [100%]
+43 passed in 36.37s
+2026-11-06T15:35:04Z
+```
+
+So today an existing install offers only Reinstall or Cancel (lines 49-50), and there is no Update
+in PowerShell.
 
 **AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
 
