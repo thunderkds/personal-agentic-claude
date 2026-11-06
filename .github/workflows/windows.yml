@@ -56,3 +56,18 @@ jobs:
         env:
           SUPERVISOR_REPO: ${{ github.workspace }}
         run: ./tests/windows/smoke-install.ps1
+
+      # T271: install from this checkout, make a second local kit commit, run update.ps1 -Yes
+      # (replaced, added, removed and kept files, exec-form hooks, lock), then a second Update that
+      # must change nothing. Once per PowerShell edition.
+      - name: update.ps1 smoke (Windows PowerShell 5.1)
+        shell: powershell
+        env:
+          SUPERVISOR_REPO: ${{ github.workspace }}
+        run: ./tests/windows/smoke-update.ps1
+
+      - name: update.ps1 smoke (PowerShell 7)
+        shell: pwsh
+        env:
+          SUPERVISOR_REPO: ${{ github.workspace }}
+        run: ./tests/windows/smoke-update.ps1

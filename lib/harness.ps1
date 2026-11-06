@@ -1,6 +1,6 @@
 # lib/harness.ps1 - the PowerShell installer library (T268, ADR-0003 decisions 3 and 5).
 #
-# Dot-sourced by setup.ps1 (and, later, update.ps1: T271). It defines functions only and does no
+# Dot-sourced by setup.ps1 (before lib/harness-update.ps1, T271). It defines functions only and does no
 # work when it is loaded. Each function names the shell function in setup.sh or
 # lib/harness-fetch.sh it ports; setup.sh stays the source of truth for behaviour.
 #
@@ -314,11 +314,17 @@ function Get-HarnessManifestPath([string]$Line) {
 # Stop the run (an [error], then HarnessStop) when a MANIFEST path or `!` exclusion could leave
 # the project: empty, rooted, a drive, a backslash or a `..` segment.
 function Assert-HarnessSafeRel([string]$Rel, [string]$Kind) {
-    if (-not $Rel -or $Rel.StartsWith('/') -or $Rel.Contains('\') -or $Rel.Contains(':') -or
-            (@($Rel.Split([char]'/')) -contains '..')) {
+    if (-not (Test-HarnessSafeRel $Rel)) {
         Write-HarnessError "$Kind '$Rel' must be a relative path inside the project (no leading '/', no drive, no '..'). The fetched Easy Kit may be corrupt."
         throw $script:HarnessStop
     }
+}
+
+# A repo-relative path that stays inside the project: not empty, not rooted, no drive, no
+# backslash, no `..` segment.
+function Test-HarnessSafeRel([string]$Rel) {
+    return -not (-not $Rel -or $Rel.StartsWith('/') -or $Rel.Contains('\') -or $Rel.Contains(':') -or
+        (@($Rel.Split([char]'/')) -contains '..'))
 }
 
 # ports harness_manifest_exclusions: the `!<path>` lines, without the `!`.
@@ -490,20 +496,29 @@ function Install-HarnessCanonLinks([string]$Target) {
             Backup-HarnessPath $canonDir $link $rel
             Remove-HarnessPath $link
         }
-        $reason = 'the junction was not created'
-        try {
-            [void](New-Item -ItemType Junction -Path $link -Value $canonDir -ErrorAction Stop)
-        } catch {
-            $reason = $_.Exception.Message
-        }
-        if (Test-HarnessLink $link) { continue }
-        Remove-HarnessPath $link
-        Copy-HarnessPath $canonDir $link
-        Write-HarnessWarn "Could not create a junction at './$rel' ($reason)."
-        Write-HarnessWarn "Copied './$canon' to './$rel' instead. Re-run setup.ps1 after './$canon' changes, or Claude Code reads an old copy."
-        $copies.Add($rel)
+        if (New-HarnessCanonLink $Target $canon) { $copies.Add($rel) }
     }
     return , $copies.ToArray()
+}
+
+# Make ./.claude/<canon> a junction onto ./<canon>; when a junction cannot be made, copy ./<canon>
+# there instead and print both facts. Nothing may be at ./.claude/<canon>. $true when it is a copy.
+function New-HarnessCanonLink([string]$Target, [string]$Canon) {
+    $rel = ".claude/$Canon"
+    $link = Join-HarnessPath $Target $rel
+    $canonDir = Join-HarnessPath $Target $Canon
+    $reason = 'the junction was not created'
+    try {
+        [void](New-Item -ItemType Junction -Path $link -Value $canonDir -ErrorAction Stop)
+    } catch {
+        $reason = $_.Exception.Message
+    }
+    if (Test-HarnessLink $link) { return $false }
+    Remove-HarnessPath $link
+    Copy-HarnessPath $canonDir $link
+    Write-HarnessWarn "Could not create a junction at './$rel' ($reason)."
+    Write-HarnessWarn "Copied './$Canon' to './$rel' instead. Re-run setup.ps1 after './$Canon' changes, or Claude Code reads an old copy."
+    return $true
 }
 
 # ports ensure_gitignore_entry: add <entry> under a `# <reason>` comment unless the file already
@@ -707,13 +722,22 @@ function Write-HarnessLock([string]$Target, [string]$Manifest, [string]$ClaudeSr
         }
     }
     if (Test-HarnessFile (Join-HarnessPath $Target 'CLAUDE.md')) { [void]$set.Add('CLAUDE.md') }
-    $files = New-Object 'string[]' $set.Count
-    $set.CopyTo($files)
+    $entries = New-Object 'System.Collections.Generic.Dictionary[string,string]' ([StringComparer]::Ordinal)
+    foreach ($rel in $set) { $entries[$rel] = Get-HarnessFileHash (Join-HarnessPath $Target $rel) }
+    Write-HarnessLockEntries $Target $ClaudeSrc $KitCommit $CanonCopies $entries
+}
+
+# ports write_new_lock (lib/harness-update.sh) and the layout of write_harness_lock: the given
+# path -> hash entries in byte order. "claude_md_source" is left out when '' (still unresolved).
+# Written through a temp file and a rename, so a failure keeps the old lock whole.
+function Write-HarnessLockEntries([string]$Target, [string]$ClaudeSrc, [string]$KitCommit, [string[]]$CanonCopies, $Entries) {
+    $files = New-Object 'string[]' $Entries.Count
+    $Entries.Keys.CopyTo($files, 0)
     [Array]::Sort($files, [StringComparer]::Ordinal)
 
     $out = New-Object System.Text.StringBuilder
     [void]$out.Append("{`n")
-    [void]$out.Append('  "claude_md_source": "' + (ConvertTo-HarnessJsonString $ClaudeSrc) + "`",`n")
+    if ($ClaudeSrc) { [void]$out.Append('  "claude_md_source": "' + (ConvertTo-HarnessJsonString $ClaudeSrc) + "`",`n") }
     if ($KitCommit) { [void]$out.Append('  "kit_commit": "' + $KitCommit + "`",`n") }
     if ($CanonCopies.Length -gt 0) {
         $quoted = @($CanonCopies | ForEach-Object { '"' + (ConvertTo-HarnessJsonString $_) + '"' })
@@ -722,13 +746,28 @@ function Write-HarnessLock([string]$Target, [string]$Manifest, [string]$ClaudeSr
     [void]$out.Append("  `"files`": {`n")
     $lines = New-Object 'System.Collections.Generic.List[string]'
     foreach ($rel in $files) {
-        $hash = Get-HarnessFileHash (Join-HarnessPath $Target $rel)
-        $lines.Add('    "' + (ConvertTo-HarnessJsonString $rel) + '": "' + $hash + '"')
+        $lines.Add('    "' + (ConvertTo-HarnessJsonString $rel) + '": "' + $Entries[$rel] + '"')
     }
     [void]$out.Append(($lines -join ",`n"))
     [void]$out.Append("`n  }`n}`n")
     $lock = Join-HarnessPath $Target '.claude/harness-lock.json'
     [void][IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($lock))
-    [IO.File]::WriteAllText($lock, $out.ToString(), $script:HarnessUtf8)
+    Write-HarnessBytesAtomic $lock ($script:HarnessUtf8.GetBytes($out.ToString()))
     Write-HarnessInfo "Wrote ./.claude/harness-lock.json ($($files.Length) file hashes)."
+}
+
+# Write <Bytes> to <Path> through a temp file in the same folder, then a rename: a failure leaves
+# the old file whole. The temp file is removed if anything fails.
+function Write-HarnessBytesAtomic([string]$Path, [byte[]]$Bytes) {
+    $tmp = "$Path.easykit-" + [guid]::NewGuid().ToString('N').Substring(0, 8)
+    try {
+        [IO.File]::WriteAllBytes($tmp, $Bytes)
+        if (Test-HarnessPresent $Path) {
+            [IO.File]::Replace($tmp, $Path, [NullString]::Value)
+        } else {
+            [IO.File]::Move($tmp, $Path)
+        }
+    } finally {
+        if (Test-HarnessPresent $tmp) { Remove-HarnessPath $tmp }
+    }
 }
