@@ -21,6 +21,8 @@ Run with: python3 -m pytest .claude/hooks/tests/test_windows_merge_gate.py -q
 import io
 import json
 import os
+import shutil
+import subprocess
 import sys
 import time
 import types
@@ -95,6 +97,10 @@ BOARDS = {
     # A Ready for Review task with complete evidence: every git write is allowed.
     "complete": dict(board=kanban(ready=("T900",)), verified=("T900",)),
 }
+# Review P0-1: T901 In Progress with no evidence, T900 in Ready for Review and verified, so only
+# a push narrowed to T900 is allowed.
+NARROW_BOARD = dict(board=kanban(in_progress=("T901",), ready=("T900",)), verified=("T900",))
+GIT_ENV = {"GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_NOSYSTEM": "1"}
 
 
 @pytest.fixture
@@ -102,7 +108,7 @@ def gate(tmp_path, monkeypatch):
     """`gate(name, platform="win32")` builds board `name` and points the module at it."""
     def build(name, platform="win32", module=None):
         module = module or merge_gate
-        spec = BOARDS[name]
+        spec = NARROW_BOARD if name == "narrow" else BOARDS[name]
         root = tmp_path / name
         tasks = root / "tasks"
         trace = root / "memory" / "event-trace"
@@ -123,11 +129,13 @@ def gate(tmp_path, monkeypatch):
     return build
 
 
-def run_gate(command, tool_name="Bash", module=None, tool_input=None):
+def run_gate(command, tool_name="Bash", module=None, tool_input=None, cwd=None):
     """Drive the hook's real `main()` over one event: the block reason, or None for allow."""
     module = module or merge_gate
     event = {"tool_name": tool_name,
              "tool_input": tool_input if tool_input is not None else {"command": command}}
+    if cwd is not None:
+        event["cwd"] = cwd
     saved = (sys.stdin, sys.stdout, sys.stderr)
     sys.stdin, sys.stdout, sys.stderr = io.StringIO(json.dumps(event)), io.StringIO(), io.StringIO()
     try:
@@ -169,6 +177,46 @@ SPELLINGS = [
     (GIT + ".exe push", PUSH),
     (GIT + ".exe\x85push", PUSH),
 ]
+
+
+# Review P0-2: spellings with no `git` word before the verb on the same line, read only by the
+# PowerShell tool's one rule (a verb word anywhere, after removing escapes, `+` and quotes).
+POWERSHELL_SPELLINGS = [
+    ("Start-Process -ArgumentList push,origin,main " + GIT, PUSH + " origin main"),
+    ("Start-Process -ArgumentList 'push' -FilePath " + GIT, PUSH),
+    ("$p = @{\n FilePath = '" + GIT + "'\n ArgumentList = 'push'\n}\nStart-Process @p -Wait", PUSH),
+    (GIT + " (\n'push')", PUSH),
+    ("[Diagnostics.Process]::Start(\n'" + GIT + "',\n'push')", PUSH),
+    ("Set-Alias g " + GIT + "\ng push origin main", PUSH + " origin main"),
+    ("New-Alias g " + GIT + "\ng push origin main", PUSH + " origin main"),
+    ("sal g " + GIT + "\ng push origin main", PUSH + " origin main"),
+    ("$g='" + GIT + "'\n. $g push", PUSH),
+    ("& ${g} push", PUSH),
+    ("& $($g) push", PUSH),
+    ("& ('gi'+'t') push", PUSH),
+    ("cmd /c gi^t pu^sh", PUSH),
+    ("g\u2019it push", PUSH),
+    ("& $g pu\u201csh\u201d", PUSH),
+]
+
+
+@pytest.mark.parametrize("board", sorted(BOARDS))
+@pytest.mark.parametrize("spelling,plain", POWERSHELL_SPELLINGS)
+def test_review_p0_2_powershell_spelling_gets_the_plain_verdict(gate, board, spelling, plain):
+    gate(board)
+    assert run_gate(spelling, "PowerShell") == run_gate(plain, "Bash"), spelling
+
+
+def test_review_p2_powershell_mention_of_a_verb_over_blocks_known_decision(gate):
+    """Known decision: for the PowerShell tool a verb word anywhere is gated, so a commit message
+    or a search that names one is blocked while a task is In Progress. Over-blocking is the
+    accepted direction; the Bash tool on Linux is unchanged."""
+    gate("in_progress")
+    for command in (GIT + ' commit -m "merge gate fix"', "Select-String merge notes.txt",
+                    "Push-Location C:\\src"):
+        assert run_gate(command, "PowerShell") is not None, command
+    gate("in_progress", platform="linux")
+    assert run_gate(GIT + ' commit -m "merge gate fix"', "Bash") is None
 
 
 @pytest.mark.parametrize("tool_name", ["Bash", "PowerShell"])
@@ -223,10 +271,12 @@ def test_edge_quoted_mention_over_blocks_on_win32_known_decision(gate):
 # AC 2: activation — win32, the PowerShell tool, or a PowerShell marker
 # ---------------------------------------------------------------------------
 
-def test_ac2_marker_turns_the_fallback_on_off_windows(gate):
+def test_review_p1_1_markers_do_not_turn_the_fallback_on_for_bash_on_linux(gate):
+    """Review P1-1: off Windows the Bash tool runs bash, so the fallback is off and the
+    pre-T267 verdict stands, PowerShell-looking text or not."""
     gate("in_progress", platform="linux")
-    assert run_gate(GIT + ".exe push origin main") is not None
-    assert run_gate(GIT + "` push") is not None
+    assert run_gate(GIT + ".exe push origin main") is None
+    assert run_gate(GIT + "` push") is None
 
 
 def test_ac2_powershell_tool_turns_the_fallback_on_off_windows(gate):
@@ -259,6 +309,12 @@ LINUX_BASELINE = [
     ("cat > f <<'E'\n" + PUSH + "\nE", False),
     ("git log; echo push", False),
     ("ls -la", False),
+    # Review P1-1: these blocked on the first T267 cut through the PowerShell-marker activation.
+    (GIT + " commit -F - <<'EOF'\nfix: the gate now reads `" + PUSH + "`\nEOF", False),
+    (GIT + " commit -m 'merge gate reads `" + GIT + ".exe`'", False),
+    (GIT + " log --grep=push -- x.exe", False),
+    (GIT + ".exe push origin main", False),
+    (GIT + "` push", False),
 ]
 
 
@@ -320,6 +376,39 @@ def test_ac9_bash_plain_push_is_unchanged(gate):
     assert "Tasks still In Progress: T900" in run_gate(PUSH)
 
 
+@pytest.mark.parametrize("tool_name", [["Bash"], {"x": 1}, 7])
+def test_review_p3_non_string_tool_name_is_ignored_without_raising(gate, tool_name):
+    gate("in_progress")
+    assert run_gate(PUSH, tool_name) is None
+
+
+def git(cwd, *args):
+    done = subprocess.run(["git", "-C", str(cwd), *args], capture_output=True, text=True,
+                          timeout=30, env={**os.environ, **GIT_ENV})
+    assert done.returncode == 0, done.stderr
+    return done.stdout.strip()
+
+
+def test_review_p0_1_powershell_call_is_never_narrowed(gate, tmp_path, monkeypatch):
+    """shlex reads `\\"` as an escaped quote; PowerShell does not, so there the text below runs a
+    second push of main. A PowerShell call therefore checks the whole board (T901 blocks), while
+    the Bash tool, where shlex's reading is bash's, keeps the T197 narrowing (T900 alone)."""
+    for key, value in GIT_ENV.items():
+        monkeypatch.setenv(key, value)
+    root = gate("narrow")
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    git(repo, "init", "-q", "-b", "feat/t900-x")
+    shutil.copytree(root / "tasks", repo / "tasks")
+    git(repo, "add", "-A")
+    git(repo, "-c", "user.email=t@example.com", "-c", "user.name=t", "commit", "-qm", "tasks")
+    command = (PUSH + ' --force-with-lease="x\\"; ' + PUSH + ' origin main #\\"" origin feat/t900-x')
+    assert run_gate(command, "Bash", cwd=str(repo)) is None  # fixture: Bash narrows to T900
+    blocked = run_gate(command, "PowerShell", cwd=str(repo))
+    assert blocked is not None and "T901" in blocked
+    assert run_gate(PUSH + " origin feat/t900-x", "PowerShell", cwd=str(repo)) is not None
+
+
 # ---------------------------------------------------------------------------
 # Edge: the detector stays linear
 # ---------------------------------------------------------------------------
@@ -343,6 +432,7 @@ def test_edge_detector_is_fast_on_100k_input(monkeypatch):
     monkeypatch.setattr(sys, "platform", "win32")
     start = time.perf_counter()
     assert not merge_gate.windows_git_write("git " * 25000, "PowerShell")
+    assert not merge_gate.windows_git_write("git " * 25000, "Bash")
     assert time.perf_counter() - start < 1.0
 
 
@@ -361,7 +451,7 @@ def test_mutation_without_the_fallback_branch_git_exe_push_passes(gate):
 
 def test_mutation_bash_only_check_lets_the_powershell_tool_through(gate):
     mutant = load_hook_module("merge_gate_t267_bash_only", mutate=(
-        "if tool_name not in SHELL_TOOLS:", 'if tool_name != "Bash":'))
+        "tool_name not in SHELL_TOOLS:", 'tool_name != "Bash":'))
     gate("in_progress", module=mutant)
     assert run_gate(PUSH + " origin main", "PowerShell", module=mutant) is None
     gate("in_progress")

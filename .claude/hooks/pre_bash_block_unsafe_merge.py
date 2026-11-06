@@ -133,26 +133,28 @@ def defines_git_alias(scannable):
 # shape as `Bash`), so both are read, in `main()` and in the event trace.
 SHELL_TOOLS = frozenset({"Bash", "PowerShell"})
 
-# T267 (Debate, 3 Advocates): no PowerShell lexer. `BLOCKED_PATTERNS` needs whitespace after `git`,
-# so `git.exe push`, ``git` push`` and `& "C:\…\git.exe" push` never matched. This syntax-blind
-# fallback reads the raw command — not the `strip_quoted_spans` output — with backticks and quote
-# characters removed (``gi`t`` and `"git".exe` are `git`), and flags a git write when either
-#   * a `git` word (`git`, `git.exe`, `git.cmd`) is followed on the same line by a verb, or by a
-#     `$`/`@` expansion while a verb is anywhere in the text (`$a='push'; git $a`), or
-#   * an indirection marker (`& $name`, `& <path>git.exe`, `iex`, `Invoke-Expression`, `cmd /c`,
-#     `powershell`/`pwsh`) and a verb are both anywhere in the text, or
-#   * `powershell`/`pwsh` runs `-EncodedCommand` (any prefix): the verb is in base64, unreadable.
-# A flagged command gets the whole-board check: the POSIX tokenizer cannot resolve these spellings,
-# so `pushed_task_ids` returns None for them. Over-matching is the accepted direction (a quoted
-# mention of a push is gated here). Known limit: a verb built at run time (`'pu'+'sh'`) is out of
-# reach of a text check, as git config aliases are (see the module docstring).
+# T267 (Debate, 3 Advocates; Stage 4 review fixes): no PowerShell lexer. `BLOCKED_PATTERNS` needs
+# whitespace after `git`, so `git.exe push`, ``git` push`` and `& "C:\…\git.exe" push` never
+# matched. A syntax-blind fallback runs beside it, only for the `PowerShell` tool or on a Windows
+# host; on Linux and macOS the Bash tool never runs it, so POSIX verdicts are the pre-T267 ones. A
+# command it flags gets the whole-board check, exactly like a plain `git push`.
+#   * PowerShell tool: one rule. Remove backticks, `^`, `+` and every quote (ASCII and Unicode),
+#     then flag any `push`, `merge` (not `merge-base`), `rebase`, `pull` or `alias.` word anywhere,
+#     with or without a `git` word: PowerShell can name git in too many ways (`Start-Process … git`,
+#     a splat, `Set-Alias`, `& ${g}`, `('gi'+'t')`). It over-blocks a mention (`git commit -m
+#     "merge gate fix"`, `Select-String merge`, `Push-Location`): the accepted direction.
+#   * Bash tool on Windows (Git Bash): heredoc bodies stripped first (data to bash), then backticks
+#     and quotes removed; a `git` word (`git`, `git.exe`, `git.cmd`) followed on the same line by a
+#     verb, or by a `$`/`@` expansion while a verb is anywhere (`$a='push'; git $a`); or an
+#     indirection marker (`& $name`, `& <path>git.exe`, `iex`, `Invoke-Expression`, `cmd /c`,
+#     `powershell`/`pwsh`) and a verb anywhere.
+#   * Both: `powershell`/`pwsh` running `-EncodedCommand` (any prefix): the verb is in base64.
+# Known limit: a verb built at run time (`-join`, `[char]` codes) is out of reach of a text check,
+# as git config aliases are (see the module docstring).
 #
-# On only on a Windows host, for the `PowerShell` tool, or when the text carries a PowerShell
-# marker, so a plain POSIX command on Linux or macOS meets exactly the pre-T267 checks.
-#
-# Matched in two linear passes per line, never as one `git…verb` regex: a lazy `[^\n]*?` between
-# the two is quadratic (measured: 100 000 characters took 36 s), and a hook that times out is a
-# non-blocking error — the call would run.
+# Every pattern here is matched in linear time, never as one `git…verb` regex: a lazy `[^\n]*?`
+# between the two is quadratic (measured: 100 000 characters took 36 s), and a hook that times out
+# is a non-blocking error — the call would run.
 WINDOWS_GIT_WORD = re.compile(r"\bgit(?:\.exe|\.cmd)?\b", re.IGNORECASE)
 WINDOWS_GIT_FALLBACK = re.compile(  # the git-write verbs the fallback looks for
     r"\b(?:push|merge(?!-base\b)|rebase|pull)\b|\balias\.", re.IGNORECASE)
@@ -161,24 +163,28 @@ WINDOWS_INDIRECTION = re.compile(
     r"|\bcmd(?:\.exe)?\s+/[ck]\b|\b(?:powershell|pwsh)(?:\.exe)?\b", re.IGNORECASE)
 WINDOWS_ENCODED_COMMAND = re.compile(r"(?:^|\s)-e(?:c|n\w*)?(?=\s|$)", re.IGNORECASE)
 WINDOWS_SHELL_WORD = re.compile(r"\b(?:powershell|pwsh)(?:\.exe)?\b", re.IGNORECASE)
-POWERSHELL_MARKER = re.compile(
-    r"`|\$env:|(?<![\w-])-(?:and|or)\b|\bInvoke-Expression\b|\biex\b|&\s*\$|\.exe\b",
-    re.IGNORECASE)
+POWERSHELL_NOISE = re.compile("[`^+'\"\u2018\u2019\u201a\u201b\u201c\u201d\u201e]")
 LINE_CONTINUATION = re.compile(r"[`\\]\r?\n")
+
+
+def _runs_encoded_command(text):
+    return bool(WINDOWS_SHELL_WORD.search(text) and WINDOWS_ENCODED_COMMAND.search(text))
 
 
 def windows_git_write(command, tool_name):
     """True when the T267 fallback is on for this call and `command` may hold a git write."""
     if not isinstance(command, str):
         return False
-    if not (sys.platform == "win32" or tool_name == "PowerShell"
-            or POWERSHELL_MARKER.search(command)):
+    if tool_name == "PowerShell":
+        text = POWERSHELL_NOISE.sub("", command)
+        return bool(WINDOWS_GIT_FALLBACK.search(text)) or _runs_encoded_command(text)
+    if sys.platform != "win32":
         return False
-    text = LINE_CONTINUATION.sub(" ", command)
+    text = LINE_CONTINUATION.sub(" ", strip_heredoc_bodies(command))
     for char in "`\"'":
         text = text.replace(char, "")
     any_verb = WINDOWS_GIT_FALLBACK.search(text) is not None
-    # Split on `\n` only: `str.splitlines` also splits on `\x85`, ` ` and others, which would
+    # Split on `\n` only: `str.splitlines` also splits on `\x85`, `\u2028` and others, which would
     # put `git.exe` and `push` on two "lines" a shell may read as one.
     for line in text.split("\n"):
         word = WINDOWS_GIT_WORD.search(line)
@@ -186,13 +192,10 @@ def windows_git_write(command, tool_name):
             continue
         if WINDOWS_GIT_FALLBACK.search(line, word.end()):
             return True
-        # `$a='push'; git $a`, `git @a`: an argument the shell expands may be the verb.
         rest = line[word.end():]
         if any_verb and ("$" in rest or "@" in rest):
             return True
-    if WINDOWS_SHELL_WORD.search(text) and WINDOWS_ENCODED_COMMAND.search(text):
-        return True
-    return bool(any_verb and WINDOWS_INDIRECTION.search(text))
+    return _runs_encoded_command(text) or bool(any_verb and WINDOWS_INDIRECTION.search(text))
 
 # --- Evidence matching: "invoked" vs "merely mentioned" (T044 defect C) ------
 #
@@ -1387,7 +1390,7 @@ def main():
     if not isinstance(event, dict):
         block_unreadable_input("event is not an object")
     tool_name = event.get("tool_name")
-    if tool_name not in SHELL_TOOLS:
+    if not isinstance(tool_name, str) or tool_name not in SHELL_TOOLS:
         sys.exit(0)
 
     # T250 G1: the folder holding this session's transcript, where a user `/verify` line's own
@@ -1486,13 +1489,17 @@ def main():
     # lanes, a teammate's row) would empty both lists, so a branch named after it
     # would meet no check at all (Stage 4 finding 4; D3 as revised). An unresolved
     # push, and every such task, keep the whole board (D2).
-    scoped = pushed_task_ids(command, event.get("cwd"))
+    # T267 review P0-1: the narrowing below reads POSIX quoting with shlex, and PowerShell's differs
+    # (`\` escapes nothing there), so a PowerShell call is never narrowed: no scoped push, no T250
+    # session filter, no branch targets. It checks the whole board.
+    powershell = tool_name == "PowerShell"
+    scoped = None if powershell else pushed_task_ids(command, event.get("cwd"))
     if scoped is not None and scoped in {tid.upper() for tid in [*in_progress, *ready_review]}:
         in_progress = [tid for tid in in_progress if tid.upper() == scoped]
         ready_review = [tid for tid in ready_review if tid.upper() == scoped]
 
     # T250 G2: of the In Progress tasks left, only this session's work blocks a merge.
-    if in_progress:
+    if in_progress and not powershell:
         rows = dict(tasks_in_section("In Progress", id_pattern, with_lines=True))
         in_progress = session_owned_in_progress(
             [(tid, rows.get(tid, "")) for tid in in_progress], command, event.get("cwd"),
@@ -1510,7 +1517,7 @@ def main():
         uncommitted = []
         # T210 D4: the task branches this command merges or pushes, where they can be resolved;
         # T211 D2: every branch of an octopus merge, and the ones it cannot confirm.
-        targets, doubts = branch_targets(command, event.get("cwd"))
+        targets, doubts = ([], []) if powershell else branch_targets(command, event.get("cwd"))
         uncommitted.extend(OCTOPUS_DOUBT_MESSAGE.format(branch=branch) for branch in doubts)
         for tid in ready_review:
             # Look for a filled verify row in the Evidence table — in the guide,
