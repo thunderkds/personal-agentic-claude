@@ -1,4 +1,4 @@
-# TASK_REVIEW — T262: [Short Title]
+# TASK_REVIEW — T262: Native Windows support, step 1 - decision record and LF line endings
 
 > Sibling of `tasks/TASK_GUIDE_T262.md`. Everything here is **filled by the reviewer at Stage
 > 4/5** — it is deliberately NOT in the guide, because the implementing agent re-reads the guide on
@@ -109,3 +109,15 @@ $ python3 -m pytest tests/test_windows_gitattributes.py -q
 **DELTA**: A Windows checkout now keeps LF in shell and Python files whatever `core.autocrlf` says, and the native-Windows design is recorded once in ADR-0003.
 
 **WITNESS**: Pending. The implementing agent (common-infrastructure) ran the commands above on 2026-11-06; the Supervisor or the auto verify run adds the independent witness from `memory/event-trace/T262.jsonl`.
+
+---
+
+## Review fixes
+
+Stage 4 review found three P3 items. All fixed on 2026-11-06.
+
+1. `docs/adr/0003-native-windows-support.md` Context said "ten hook commands". `grep -c 'python3' .claude/settings.json` printed `11` (the pattern in the review message, `python3 "$CLAUDE_PROJECT_DIR`, matches 0 because the JSON escapes the quotes as `\"`; the 11 lines are all `python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/*.py`). The ADR now says "eleven".
+2. Line 1 of this file now reads `Native Windows support, step 1 - decision record and LF line endings`.
+3. `test_attribute_file_leaves_no_crlf_in_the_index` now carries a comment: it is a regression guard for the current index state, not a proof of AC 5.
+
+Re-run: `python3 -m pytest tests/test_windows_gitattributes.py -q` -> `7 passed in 0.11s`.

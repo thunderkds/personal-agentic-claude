@@ -60,6 +60,8 @@ def test_binary_files_are_marked_binary():
 # --- AC5 -------------------------------------------------------------------------------------
 
 def test_attribute_file_leaves_no_crlf_in_the_index():
+    # Regression guard for the current index state, not a proof of AC 5: .gitattributes cannot put
+    # CRLF into the index by itself, so this test cannot fail because of it.
     out = subprocess.run(["git", "ls-files", "--eol"], cwd=REPO, capture_output=True, check=True,
                          text=True).stdout
     crlf = [line for line in out.splitlines() if line.startswith("i/crlf") or line.startswith("i/mixed")]

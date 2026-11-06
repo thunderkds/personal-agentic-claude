@@ -14,7 +14,7 @@ Easy Kit runs today on macOS and Linux only. A scan of the repo (`docs/windows-s
 - The installer (`setup.sh`, `update.sh`, `lib/*.sh`) is Bash.
 - `.claude/skills` and `.claude/agents` are load-bearing relative symlinks. Creating a symlink on Windows needs Developer Mode or admin rights, and git needs `core.symlinks=true`.
 - Three hooks and scripts import `fcntl`, and `stop_auto_verify.py` uses `os.killpg` and `SIGKILL`. Neither exists on Windows.
-- The ten hook commands in `.claude/settings.json` call `python3`, which is often missing on Windows.
+- The eleven hook commands in `.claude/settings.json` call `python3`, which is often missing on Windows.
 - A Windows checkout with `core.autocrlf=true` turns `#!/bin/bash` into `#!/bin/bash\r`, a broken shebang.
 
 **Hard to reverse**: the installer language and the shell target decide which files the project must keep in step for years. **Surprising without context**: the kit gets a second installer in a second language, while `setup.sh` stays as it is. **Genuine trade-off**: four shapes were weighed (see Alternatives Considered).
