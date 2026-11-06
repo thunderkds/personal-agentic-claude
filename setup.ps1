@@ -261,7 +261,7 @@ function Invoke-Setup {
         Assert-HarnessNoManifestLinks $target $manifest
         $lockFiles = Read-HarnessLockFiles $lock
         $fresh = Get-HarnessFreshFiles $tmp $manifest
-        Assert-HarnessNoLinkedParents $target (@($fresh) + @($lockFiles.Keys))
+        Assert-HarnessNoLinkedParents $target (@($fresh) + @(Get-HarnessKeysUnderRoots $manifest $lockFiles))
     }
 
     if ($seam -eq 'update') {

@@ -18,6 +18,7 @@ Run with: python3 -m pytest tests/test_update_ps1_pwsh.py -q
 """
 import json
 import os
+import shlex
 import shutil
 import subprocess
 
@@ -379,6 +380,113 @@ def test_a_link_inside_a_kit_folder_stops_before_any_write(work, kit_b, installe
     assert r.returncode == 1, r.stdout + r.stderr
     assert f"'./skills/{skill}' is a link" in r.stderr
     assert _tree(repo) == tree and _tree(outside) == outside_tree
+
+
+@pytest.fixture(scope="module")
+def kit_c(work):
+    """Kit C: kit A with a case-only rename of one templates file, and the `docs/claude-md`
+    MANIFEST line dropped (that folder is no longer shipped)."""
+    c = os.path.join(work, "kitc")
+    subprocess.run(["git", "clone", "-q", os.path.join(work, "kit"), c], check=True)
+    tmpl = sorted(n for n in os.listdir(os.path.join(c, "templates"))
+                  if os.path.isfile(os.path.join(c, "templates", n)))
+    name = tmpl[2]
+    renamed = name.swapcase()
+    assert renamed != name
+    os.rename(os.path.join(c, "templates", name), os.path.join(c, "templates", renamed))
+    manifest = os.path.join(c, "MANIFEST")
+    lines = [l for l in _read(manifest).splitlines(True) if not (l.split() and l.split()[0] == "docs/claude-md")]
+    with open(manifest, "w", encoding="utf-8") as f:
+        f.writelines(lines)
+    _git(c, "add", "-A")
+    _git(c, "commit", "-qm", "kit C")
+    return {"old": "templates/" + name, "new": "templates/" + renamed}
+
+
+@needs_docker
+def test_a_case_only_rename_removes_nothing_the_kit_still_ships(work, kit_c, installed):
+    """Review P2-1: on NTFS both casings are one file; removing the old key deleted the file just
+    refreshed. On Linux they are two files: the safe outcome is that neither is removed."""
+    repo, cdir = _copy(work, installed, "caserename")
+    r = _update(work, cdir, repo="/work/kitc")
+    out = r.stdout + r.stderr
+    assert r.returncode in (0, 2), out
+    new = os.path.join(repo, kit_c["new"])
+    assert os.path.isfile(new) and base._sha(new) == base._sha(os.path.join(work, "kitc", kit_c["new"])), out
+    assert kit_c["new"] in _lock(repo)["files"]
+    assert os.path.isfile(os.path.join(repo, kit_c["old"])), "the old casing was removed:\n" + out
+
+
+@needs_docker
+def test_a_link_replacing_a_dropped_kit_folder_does_not_stop_update(work, kit_c, installed):
+    """Review P3-1: lock entries outside every current MANIFEST path are only carried over, so a
+    link there (a folder the kit stopped shipping) is no reason to stop."""
+    repo, cdir = _copy(work, installed, "droproot")
+    outside = os.path.join(work, "outside-docs")
+    shutil.move(os.path.join(repo, "docs", "claude-md"), outside)
+    os.symlink(outside, os.path.join(repo, "docs", "claude-md"))
+    outside_tree = _tree(outside)
+    r = _update(work, cdir, repo="/work/kitc")
+    out = r.stdout + r.stderr
+    assert r.returncode in (0, 2), out
+    assert "is a link" not in out
+    assert os.path.islink(os.path.join(repo, "docs", "claude-md")) and _tree(outside) == outside_tree
+
+
+needs_script = pytest.mark.skipif(shutil.which("script") is None, reason="util-linux `script` is absent (it gives docker a pty)")
+
+
+def _update_tty(work, cdir, answers, repo="/work/kitb"):
+    """update.ps1 at a terminal: `docker run -it` under `script`, which supplies the pty."""
+    cmd = ["docker", "run", "--rm", "-it", "--network", "none", "--user", f"{os.getuid()}:{os.getgid()}",
+           "-v", "/usr:/host/usr:ro", "-v", f"{work}:/work",
+           "-e", "HOME=/work/home", "-e", "GIT_EXEC_PATH=/work/git-core",
+           "-e", "GIT_TEMPLATE_DIR=/host/usr/share/git-core/templates",
+           "-e", "PATH=/work/bin-full:/opt/microsoft/powershell/7", "-e", f"SUPERVISOR_REPO={repo}",
+           base.IMAGE, "/opt/microsoft/powershell/7/pwsh", "-NoProfile", "-Command",
+           f"Set-Location '{cdir}'; & /work/kit/update.ps1; exit $LASTEXITCODE"]
+    return subprocess.run(["script", "-qec", shlex.join(cmd), "/dev/null"], input=answers,
+                          capture_output=True, text=True, timeout=300)
+
+
+@needs_docker
+@needs_script
+def test_overwrite_all_at_a_terminal_backs_up_then_replaces(work, kit_b, installed):
+    """Review P2-2: choose_update_mode 2 (overwrite all): the user's version goes to .bak-<id>."""
+    repo, cdir = _copy(work, installed, "tty-over")
+    x1 = os.path.join(repo, kit_b["X1"])
+    _append(x1, "\nuser X1 edit\n")
+    with open(x1, "rb") as f:
+        mine = f.read()
+    r = _update_tty(work, cdir, "2\n")
+    assert r.returncode == 0, r.stdout
+    baks = [n for n in os.listdir(repo) if n.startswith("AGENTS.md.bak-")]
+    assert len(baks) == 1, r.stdout
+    with open(os.path.join(repo, baks[0]), "rb") as f:
+        assert f.read() == mine
+    assert base._sha(x1) == base._sha(os.path.join(work, "kitb", kit_b["X1"]))
+    log = _read(os.path.join(repo, ".claude", "update-log.md")).splitlines()
+    assert "Decided by: auto-approve (overwrite all)" in log
+    assert f"- AGENTS.md \u2014 overwrote (your edits; backup {baks[0]})" in log
+
+
+@needs_docker
+@needs_script
+def test_a_failed_backup_keeps_the_users_file_and_its_lock_hash(work, kit_b, installed):
+    """Review P2-2: overwrite all, but the backup cannot be made (read-only folder)."""
+    repo, cdir = _copy(work, installed, "tty-bkfail")
+    x2 = os.path.join(repo, kit_b["X2"])
+    before = base._sha(x2)
+    parent = os.path.dirname(x2)
+    os.chmod(parent, 0o555)
+    try:
+        r = _update_tty(work, cdir, "2\n")
+    finally:
+        os.chmod(parent, 0o755)
+    assert r.returncode == 2, r.stdout
+    assert base._sha(x2) == before
+    assert _lock(repo)["files"][kit_b["X2"]] == _lock(installed)["files"][kit_b["X2"]]
+    assert f"- {kit_b['X2']} \u2014 kept (backup failed:" in _read(os.path.join(repo, ".claude", "update-log.md"))
 
 
 @needs_docker

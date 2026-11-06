@@ -140,6 +140,16 @@ function Assert-HarnessNoLinkedParents([string]$Target, [string[]]$Rels) {
     }
 }
 
+# The lock entries under a current MANIFEST path: the only ones Update may write or remove.
+function Get-HarnessKeysUnderRoots([string]$Manifest, $LockFiles) {
+    $roots = Get-HarnessManifestRoots $Manifest
+    $found = New-Object 'System.Collections.Generic.List[string]'
+    foreach ($key in $LockFiles.Keys) {
+        if (Get-HarnessRootOf $roots $key) { $found.Add($key) }
+    }
+    return , $found.ToArray()
+}
+
 # ports build_fresh_file_list: every kit file under the MANIFEST paths, as a repo-relative '/'
 # path. A directory is expanded to its files in byte order; a link is skipped (`find -type f`);
 # a `!` exclusion is left out. Every path is checked before the first write.
@@ -402,8 +412,16 @@ function Update-HarnessUnshipped([string]$Tmp, [string]$Target, [string]$Manifes
         Write-HarnessError 'The fetched upstream looks incomplete (empty file list or a MANIFEST path missing) - nothing was removed. Re-run once the upstream is whole.'
     }
     $units = New-HarnessSet
+    # A case-only rename by the kit: on NTFS both names are one file, just refreshed. Never remove
+    # it; drop the old key (review P2-1).
+    $processedAnyCase = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
+    foreach ($rel in $Processed) { [void]$processedAnyCase.Add($rel) }
     foreach ($key in @($LockFiles.Keys)) {
         if ($Processed.Contains($key)) { continue }
+        if ($processedAnyCase.Contains($key)) {
+            Write-HarnessInfo "kept '$key': the kit now ships it under another letter case (a case-only rename)."
+            continue
+        }
         $hash = $LockFiles[$key]
         $root = Get-HarnessRootOf $roots $key
         if (-not $root -or -not $canDelete) {
@@ -432,7 +450,7 @@ function Update-HarnessUnshipped([string]$Tmp, [string]$Target, [string]$Manifes
 # ports plan_removals: the same classification, read-only. Remove holds units, Keep holds files.
 function Get-HarnessRemovalPlan([string]$Tmp, [string]$Target, [string]$Manifest, [string[]]$Fresh, $LockFiles) {
     $roots = Get-HarnessManifestRoots $Manifest
-    $freshSet = New-HarnessSet
+    $freshSet = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
     foreach ($rel in $Fresh) { [void]$freshSet.Add($rel) }
     $remove = New-Object 'System.Collections.Generic.List[string]'
     $keep = New-Object 'System.Collections.Generic.List[string]'
@@ -687,15 +705,30 @@ function Update-HarnessCanonLinks([string]$Target, [string[]]$Copies, $Drift) {
                 continue
             }
             if (Test-HarnessSameContent $canonDir $link) { continue }
-            $stage = "$link.easykit-" + [guid]::NewGuid().ToString('N').Substring(0, 8)
+            # Stage the new copy, rename the old one aside, swap; the old copy is removed only after
+            # the swap, and put back if the swap fails (review P3-2).
+            $id = [guid]::NewGuid().ToString('N').Substring(0, 8)
+            $stage = "$link.easykit-$id"
+            $aside = "$link.easykit-old-$id"
             try {
                 Copy-HarnessPath $canonDir $stage
+                Move-HarnessItem $link $aside
             } catch {
                 Remove-HarnessPath $stage
                 throw
             }
-            Remove-HarnessPath $link
-            Move-HarnessItem $stage $link
+            try {
+                Move-HarnessItem $stage $link
+            } catch {
+                Move-HarnessItem $aside $link
+                Remove-HarnessPath $stage
+                throw
+            }
+            try {
+                Remove-HarnessPath $aside
+            } catch {
+                Write-HarnessWarn "Could not remove the old copy '$aside' ($($_.Exception.Message)); delete it by hand."
+            }
             Write-HarnessInfo "Refreshed './$rel' (a copy of './$canon')."
             continue
         }
@@ -757,9 +790,18 @@ function Write-HarnessUpdateLog([string]$Target, [string]$Entry) {
         return
     }
     try {
-        $bytes = $script:HarnessUtf8.GetBytes($Entry)
-        if (Test-HarnessFile $log) {
-            $bytes = [byte[]](@($bytes) + @([byte]10) + @([IO.File]::ReadAllBytes($log)))
+        $entryBytes = $script:HarnessUtf8.GetBytes($Entry)
+        $stream = New-Object IO.MemoryStream
+        try {
+            $stream.Write($entryBytes, 0, $entryBytes.Length)
+            if (Test-HarnessFile $log) {
+                $older = [IO.File]::ReadAllBytes($log)
+                $stream.WriteByte(10)
+                $stream.Write($older, 0, $older.Length)
+            }
+            $bytes = $stream.ToArray()
+        } finally {
+            $stream.Dispose()
         }
         Write-HarnessBytesAtomic $log $bytes
         Write-HarnessInfo 'Recorded this run in ./.claude/update-log.md.'
