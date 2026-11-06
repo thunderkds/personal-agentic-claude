@@ -58,16 +58,16 @@ Not done: merge (yours); auto verify: not started
 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
-| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☐ pass / ☐ fail | [test file path(s) — required before Done] |
-| Verification command run | ☐ pass / ☐ fail | [paste actual output] |
-| Negative cases hold | ☐ pass / ☐ fail | [paste the red run against the prior content, or the mutation diff (`git diff --stat`, non-empty) before each verdict] |
+| **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_windows_hooks.py` (32 tests, new in this task): AC1 `MatcherTest` (settings.json, hooks/hooks.json, plugin/hooks/hooks.json; exact-name regex); AC2/3 `SensitivePathPowerShellTest`, `MemoryHookPowerShellTest` (subprocess, PowerShell vs Bash verdicts, Read/Glob silent, no-command); AC4/10 `HookPathsTest`, `WiresInRepoHookTest`; AC5/6 `ConverterTest`; AC7 `RoundTripTest` + `test_idempotent`; AC8 `CliTest`; SC5 `MutationControlTest`. RED first at `3facd258`: `18 failed, 14 passed in 0.62s`. GREEN at `f726d641`: `32 passed in 0.60s`. Pins repointed: `.claude/hooks/tests/test_pre_tool_sensitive_path.py:277`, `tests/test_subagent_sandbox_profile.py` (settings diff allow-list, matcher lines only) |
+| Verification command run | ☑ pass | `python3 -m pytest tests/test_windows_hooks.py -q && bash tests/test_settings_merge.sh && python3 -m pytest .claude/hooks/tests tests -q` at 2026-11-06T12:48:40Z: `32 passed in 0.60s` / `--- 49 passed, 0 failed ---` / `3452 passed, 25 subtests passed in 236.96s (0:03:56)` |
+| Negative cases hold | ☑ pass | Mutation (SC5), `diff -u` of `lib/windows_hooks.py`: `-    return converted` / `+    return hook` (identity conversion) -> `5 failed, 27 passed in 0.61s` (`test_repo_settings_to_py`, `test_repo_settings_to_python`, `test_plugin_root_converts`, `test_cli_writes_exec_form`, plus the in-file control's anchor check); restored -> `32 passed`. The same mutation also runs inside the suite (`MutationControlTest`). AC10: exec-form `args` path `${CLAUDE_PROJECT_DIR}/scripts/mine.py` is not a kit group and `merge_event_groups` keeps it (`test_negative_exec_form_outside_hooks_is_user_entry`); unknown launcher `python3` -> exit 2, no file written |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
+| Full smoke suite still green (no regression) | ☑ pass | BEFORE at `dcf83f54`: shell merge `49 passed, 0 failed`, pytest `3420 passed, 25 subtests passed`. AFTER at `f726d641`: `49 passed, 0 failed`, `3452 passed, 25 subtests passed` (3420 + 32 new, 0 failed). An intermediate run (`fe7b5e34`) had 3 failures, all fixed in `f726d641`: T233 D3 sync test and T243 byte-copy test (root `hooks/hooks.json` is the source of the plugin copy and was not yet widened) and the T147 settings-diff pin |
 | **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
-| **UI: Visual regression (diff or verdict pasted)** | ☐ pass / ☐ fail / ☐ N/A | [screenshot path or LLM verdict — required for UI tasks, Hard-Stop Gate 6] |
-| **UI: Design-system compliance (tokens/colors/typography verified)** | ☐ pass / ☐ fail / ☐ N/A | [method used + output] |
-| **UI: Responsiveness at target viewports** | ☐ pass / ☐ fail / ☐ N/A | [viewports tested, any overflow findings] |
+| **UI: Visual regression (diff or verdict pasted)** | ☑ N/A | no UI component: hooks, JSON settings and a Python converter |
+| **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ N/A | no UI component |
+| **UI: Responsiveness at target viewports** | ☑ N/A | no UI component |
 
 ---
 
@@ -100,9 +100,24 @@ $ python3 -m pytest .claude/hooks/tests tests -q
 
 The PowerShell `cat .env` call gets no decision (silent allow), and no matcher names `PowerShell`, so on Windows without Git Bash none of the three shell-inspecting hooks fires at all.
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER**: same script at `3facd258` working tree with the implementation applied (committed as `fe7b5e34`):
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+```
+captured 2026-11-06T12:44:04Z  HEAD 3facd258
+.claude/settings.json ['Write', 'Agent', 'Bash|PowerShell', '.*', 'Agent', 'Bash|PowerShell', 'Edit|Write|Bash|PowerShell', '.*', None, None, None]
+plugin/hooks/hooks.json ['Write', 'Agent', 'Bash|PowerShell', '.*', 'Agent', 'Bash|PowerShell', 'Edit|Write|Bash|PowerShell', '.*', None, None, None]
+tool_name=PowerShell exit=0 output={"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "ask", "permissionDecisionReason": "[hook:sensitive-path] This PowerShell call touches a sensitive path: .env (pattern `.env`). Listed in .claude/sensitive-paths.txt and no active task predicts it."}}
+tool_name=Bash exit=0 output={"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "ask", "permissionDecisionReason": "[hook:sensitive-path] This Bash call touches a sensitive path: .env (pattern `.env`). Listed in .claude/sensitive-paths.txt and no active task predicts it."}}
+$ python3 lib/windows_hooks.py .claude/settings.json win.json --launcher py   -> exit=0
+{"description": "Block git push/merge if pipeline gates are not satisfied", "matcher": "Bash|PowerShell", "hooks": [{"type": "command", "command": "py", "args": ["-3", "${CLAUDE_PROJECT_DIR}/.claude/hooks/pre_bash_block_unsafe_merge.py"]}]}
+$ python3 lib/windows_hooks.py .claude/settings.json x.json --launcher python3
+windows_hooks.py: error: argument --launcher: invalid choice: 'python3' (choose from py, python)
+exit=2   (x.json not created)
+```
+
+Suites at `f726d641`: `--- 49 passed, 0 failed ---`; `3452 passed, 25 subtests passed`.
+
+**DELTA**: On Windows without Git Bash, a PowerShell command that reads `.env` now asks the user first instead of passing silently, and the Windows installer (T268) can write every kit hook as `py -3` exec form with one call to `to_windows_settings`.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
