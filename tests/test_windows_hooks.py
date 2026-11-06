@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """T266 — kit hooks fire on the PowerShell tool, and the installer can write the Windows hook form.
 
-AC1  matchers in .claude/settings.json and plugin/hooks/hooks.json cover PowerShell
+AC1  matchers in .claude/settings.json, hooks/hooks.json and its plugin/ copy cover PowerShell
 AC2/3 pre_tool_sensitive_path.py and post_bash_memory_update.py accept tool_name "PowerShell"
 AC4/10 merge-settings.py hook_paths and project_root.wires_in_repo_hook read exec-form `args`
 AC5/6 lib/windows_hooks.py to_windows_settings converts kit entries to exec form
@@ -25,6 +25,7 @@ import unittest
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SETTINGS = os.path.join(REPO_ROOT, ".claude", "settings.json")
 PLUGIN_HOOKS = os.path.join(REPO_ROOT, "plugin", "hooks", "hooks.json")
+ROOT_HOOKS = os.path.join(REPO_ROOT, "hooks", "hooks.json")  # source of the plugin copy (T243)
 HOOKS_DIR = os.path.join(REPO_ROOT, ".claude", "hooks")
 MERGE = os.path.join(REPO_ROOT, "lib", "merge-settings.py")
 CONVERTER = os.path.join(REPO_ROOT, "lib", "windows_hooks.py")
@@ -73,7 +74,7 @@ import project_root  # noqa: E402
 
 class MatcherTest(unittest.TestCase):
     def test_settings_and_plugin_matchers_cover_powershell(self):
-        for path in (SETTINGS, PLUGIN_HOOKS):
+        for path in (SETTINGS, PLUGIN_HOOKS, ROOT_HOOKS):
             doc = load(path)
             matchers = [g.get("matcher") for ev in doc["hooks"].values() for g in ev]
             self.assertEqual(matchers, EXPECTED_MATCHERS, path)
