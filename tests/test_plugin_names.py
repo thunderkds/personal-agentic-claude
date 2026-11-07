@@ -16,6 +16,7 @@ Run with: python3 -m pytest tests/test_plugin_names.py -q
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -345,6 +346,9 @@ def test_trace_hook_records_either_agent_type(tmp_path, agent_type):
     assert json.loads(trace.read_text().splitlines()[-1])["spawn"]["agent_type"] == agent_type
 
 
+LAUNCHER = r"`(?:python3|py -3|python) "  # T275: the launcher a hook message names
+
+
 def test_spawn_hook_names_the_scripts_it_mentions_by_paths_that_exist(tmp_path):
     """The hook tells the agent to run `board_sync.py` (guide incomplete) and `memory_slice.py` (no
     slice); from a plugin the project holds no copy, so each message carries the path of the kit the
@@ -366,18 +370,21 @@ def test_spawn_hook_names_the_scripts_it_mentions_by_paths_that_exist(tmp_path):
 
     guide.write_text("# TASK_GUIDE — T900: x\n")
     blocked = json.loads(spawn().stdout)["reason"]
-    board_sync = re.search(r"`python3 (\S+board_sync\.py) update --guide <ID>`", blocked)
+    # T275: any launcher (`python3`, `py -3`, `python`) and a path that may be shell-quoted.
+    board_sync = re.search(LAUNCHER + r"('[^']*board_sync\.py'|\S+board_sync\.py) update --guide <ID>`", blocked)
     assert board_sync, blocked
-    assert board_sync.group(1) == str(plugin / "scripts" / "board_sync.py")
-    assert Path(board_sync.group(1)).exists()
+    board_sync_path = shlex.split(board_sync.group(1))[0]
+    assert board_sync_path == str(plugin / "scripts" / "board_sync.py")
+    assert Path(board_sync_path).exists()
 
     guide.write_text((REPO / "tasks" / "TASK_GUIDE_T234.md").read_text(encoding="utf-8"))
     result = spawn()
     context = json.loads(result.stdout)["hookSpecificOutput"]["additionalContext"]
-    named = re.search(r"`python3 (\S+memory_slice\.py) <guide>`", context)
+    named = re.search(LAUNCHER + r"('[^']*memory_slice\.py'|\S+memory_slice\.py) <guide>`", context)
     assert named, context
-    assert named.group(1) == str(plugin / "skills" / "craft-spawn-prompt" / "scripts" / "memory_slice.py")
-    assert Path(named.group(1)).exists()
+    named_path = shlex.split(named.group(1))[0]
+    assert named_path == str(plugin / "skills" / "craft-spawn-prompt" / "scripts" / "memory_slice.py")
+    assert Path(named_path).exists()
 
 
 # --- paths in messages are safe to paste ------------------------------------------------------

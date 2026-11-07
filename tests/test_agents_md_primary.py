@@ -103,11 +103,19 @@ AC6_HEADING = re.compile(r"^## .*cannot enforce", re.IGNORECASE)
 # T178: the one later section allowed outside the opening block and the AC 6 section. Its
 # content is pinned by `tests/test_tracks.py` (<= 12 lines, the short rule, the pointer).
 ADDED_SECTIONS = ("## Tracks",)
+# T275: the one rule added to Permanent Rules (the Python launcher on Windows). Pinned by
+# `.claude/hooks/tests/test_python_launcher.py::test_agents_md_holds_the_python_launcher_rule`.
+ADDED_LINES = (
+    "- On Windows, `python3` is often missing. Read `python3` in any command a skill or a hook message gives you as `py -3`, or as `python` when `py` is absent.",
+    "  Run the same command with that launcher. On macOS and Linux keep `python3`.",
+)
 
 
 def _without_added_sections(lines: list[str]) -> list[str]:
     out, skipping = [], False
     for line in lines:
+        if line in ADDED_LINES:
+            continue
         if line.strip() in ADDED_SECTIONS:
             skipping = True
             continue

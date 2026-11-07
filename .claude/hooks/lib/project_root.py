@@ -18,6 +18,7 @@ this module means.
 """
 import json
 import os
+import shutil
 import sys
 
 _LIB_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -54,6 +55,16 @@ def _nearest_kit_project(here):
         if parent == here:
             return None
         here = parent
+
+
+def python_launcher():
+    """The command word a hook message gives the agent to run a kit script (T275, ADR-0003 decision 3).
+
+    `python3` on macOS and Linux. On Windows `python3` is often missing: `py -3` when the `py` launcher
+    is on PATH, else `python`. Read at call time, so a test can patch `sys.platform` and `shutil.which`."""
+    if sys.platform != "win32":
+        return "python3"
+    return "py -3" if shutil.which("py") else "python"
 
 
 NO_PROJECT = ("no project found: run this from inside a project that holds PROJECT_KANBAN.md or "
