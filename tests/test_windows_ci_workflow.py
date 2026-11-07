@@ -23,11 +23,37 @@ TEST_GLOBS = ("tests/*.py", ".claude/hooks/tests/*.py")
 
 SHA_REF = re.compile(r"^[\w.-]+/[\w.-]+@[0-9a-f]{40}$")
 TAG_REF = re.compile(r"^[\w.-]+/[\w.-]+@v\d+\.\d+\.\d+$")
+GATE_JOB = "Repo gate (Git Bash)"  # T277: scripts/validate.sh under Git Bash, a job of its own
 
 
 def _text():
     with open(WORKFLOW, encoding="utf-8") as f:
         return f.read()
+
+
+def _gate_problems(data):
+    """T277 AC 6: the job `Repo gate (Git Bash)` runs `bash scripts/validate.sh`, and may not be red-tolerant."""
+    gates = [j for j in (data.get("jobs") or {}).values() if j.get("name") == GATE_JOB]
+    if len(gates) != 1:
+        return [f"needs exactly one job named {GATE_JOB!r}"]
+    job, problems = gates[0], []
+    steps = job.get("steps") or []
+    if job.get("runs-on") != "windows-latest":
+        problems.append("the repo gate must run on windows-latest")
+    if "continue-on-error" in job or any("continue-on-error" in s for s in steps):
+        problems.append("the repo gate must not set continue-on-error")
+    if not any(s.get("shell") == "bash" and re.search(r"^bash scripts/validate\.sh\s*$", str(s.get("run", "")))
+               for s in steps):
+        problems.append("a step must run `bash scripts/validate.sh` with shell: bash")
+    for s in steps:
+        if "uses" in s and not (SHA_REF.match(s["uses"]) or TAG_REF.match(s["uses"])):
+            problems.append(f"{s['uses']} is not pinned to a full SHA or an exact version tag")
+        if str(s.get("uses", "")).startswith("actions/checkout@") \
+                and s.get("with", {}).get("persist-credentials") is not False:
+            problems.append("the repo gate checkout must set persist-credentials: false")
+    if not any(str(s.get("uses", "")).startswith("actions/checkout@") for s in steps):
+        problems.append("the repo gate needs actions/checkout")
+    return problems
 
 
 def _problems(text):
@@ -73,6 +99,7 @@ def _problems(text):
     shells = {str(s.get("shell")) for s in steps if "tests/windows/smoke-update.ps1" in str(s.get("run", ""))}
     if not {"powershell", "pwsh"} <= shells:
         problems.append("the update.ps1 smoke (T271) must run under shell: powershell (5.1) and shell: pwsh")
+    problems += _gate_problems(data)
     head = text.split("\nname:", 1)[0]
     if "required" not in head or "status checks" not in head.lower():
         problems.append("header comment must say how to make the job required")
@@ -97,6 +124,12 @@ def test_workflow_matches_the_acceptance_criteria():
     ("shell: powershell\n", "shell: pwsh\n"),
     ("run: ./tests/windows/smoke-install.ps1", "run: echo skipped"),
     ("run: ./tests/windows/smoke-update.ps1", "run: echo skipped"),
+    ("name: Repo gate (Git Bash)", "name: Repo gate"),
+    ("name: Repo gate (Git Bash)\n    runs-on: windows-latest", "name: Repo gate (Git Bash)\n    runs-on: ubuntu-latest"),
+    ("name: Repo gate (Git Bash)\n", "name: Repo gate (Git Bash)\n    continue-on-error: true\n"),
+    ("        run: bash scripts/validate.sh\n", "        run: bash scripts/validate.sh\n        continue-on-error: true\n"),
+    ("run: bash scripts/validate.sh", "run: echo skipped"),
+    ("shell: bash\n", "shell: pwsh\n"),
     ("shell: powershell\n        env:\n          SUPERVISOR_REPO: ${{ github.workspace }}\n        run: ./tests/windows/smoke-update.ps1",
      "shell: pwsh\n        env:\n          SUPERVISOR_REPO: ${{ github.workspace }}\n        run: ./tests/windows/smoke-update.ps1"),
 ])
@@ -106,6 +139,16 @@ def test_mutation_control_a_broken_workflow_is_caught(old, new):
     mutated = text.replace(old, new, 1)
     assert mutated != text
     assert _problems(mutated), f"{old!r} -> {new!r} went unnoticed"
+
+
+def test_the_repo_gate_job_is_valid_yaml_and_separate_from_the_python_tests_job():
+    """T277 AC 6, 7: the file parses, and the gate is its own job, so its result shows on its own."""
+    data = yaml.safe_load(_text())
+    jobs = data["jobs"]
+    by_name = {j.get("name"): k for k, j in jobs.items()}
+    assert GATE_JOB in by_name and "Python tests (Windows)" in by_name
+    assert by_name[GATE_JOB] != by_name["Python tests (Windows)"]
+    assert not any("validate.sh" in str(s.get("run", "")) for s in jobs[by_name["Python tests (Windows)"]]["steps"])
 
 
 def _posix_only_marks():
