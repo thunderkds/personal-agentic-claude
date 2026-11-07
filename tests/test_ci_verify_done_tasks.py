@@ -6,11 +6,15 @@ import sys
 import tempfile
 import unittest
 
+import pytest
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCRIPT = os.path.join(ROOT, "scripts", "ci_verify_done_tasks.py")
 
 TODO = "- [ ] **T900** - the task under test\n"
 DONE = "- [x] **T900** - the task under test\n"
+# T274: the script runs each Verification Command with `bash -c`; a Windows machine may have only the WSL stub
+BASH = "scripts/ci_verify_done_tasks.py runs the Verification Command with bash -c, and a Windows machine may have only the WSL stub"
 PLACEHOLDER = (
     "# the single command (or short sequence) that proves this task works\n"
     "[e.g. pytest tests/test_T001.py -q   |   npm test -- T001]\n"
@@ -79,6 +83,7 @@ class CiVerifyDoneTasksTest(unittest.TestCase):
         return fx
 
     # SC1
+    @pytest.mark.needs_bash(BASH)
     def test_passing_block_prints_pass_and_exits_zero(self):
         result = self.fixture("true").run()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -90,12 +95,14 @@ class CiVerifyDoneTasksTest(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stdout)
         self.assertIn("T900: FAIL", result.stdout)
 
+    @pytest.mark.needs_bash(BASH)
     def test_block_runs_from_repo_root_and_command_is_printed_first(self):
         result = self.fixture("test -f PROJECT_KANBAN.md").run()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertLess(result.stdout.index("test -f PROJECT_KANBAN.md"),
                         result.stdout.index("T900: PASS"))
 
+    @pytest.mark.needs_bash(BASH)
     def test_block_runs_as_written_without_errexit(self):
         # `bash -c` as written: a failing middle line does not abort the block.
         result = self.fixture("false\ntrue").run()
@@ -157,6 +164,7 @@ class CiVerifyDoneTasksTest(unittest.TestCase):
         self.assertIn("T900: FAIL", result.stdout)
 
     # SC6
+    @pytest.mark.needs_bash(BASH)
     def test_bold_cross_reference_in_prose_is_not_selected(self):
         row_a = "- [x] **T900** - done, see also **T901** which is not mine\n"
         fx = Fixture(kanban("- [ ] **T900** - x\n"), kanban(row_a), guide("true"))
@@ -166,6 +174,7 @@ class CiVerifyDoneTasksTest(unittest.TestCase):
         self.assertIn("T900: PASS", result.stdout)
         self.assertNotIn("T901", result.stdout.replace("tasks moved to Done: T900", ""))
 
+    @pytest.mark.needs_bash(BASH)
     def test_cross_reference_does_not_select_a_task_that_was_already_done(self):
         before = kanban("- [x] **T901** - already done\n", TODO)
         after = kanban("- [x] **T901** - already done\n",
@@ -199,6 +208,7 @@ class CiVerifyDoneTasksTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout)
         self.assertIn("no tasks moved to Done", result.stdout)
 
+    @pytest.mark.needs_bash(BASH)
     def test_failing_task_does_not_hide_the_others(self):
         board_b = kanban(DONE, "- [x] **T901** - second\n")
         fx = Fixture(kanban(TODO, "- [ ] **T901** - second\n"), board_b, guide("false"))
@@ -211,6 +221,7 @@ class CiVerifyDoneTasksTest(unittest.TestCase):
         self.assertIn("T900: FAIL", result.stdout)
         self.assertIn("T901: PASS", result.stdout)
 
+    @pytest.mark.needs_bash(BASH)
     def test_base_that_advanced_on_main_does_not_select_main_only_moves(self):
         # BASE has moved on with T901 Done; the PR branch left before that.
         fx = Fixture(kanban(TODO, "- [ ] **T901** - other\n"),
