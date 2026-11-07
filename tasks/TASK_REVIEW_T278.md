@@ -48,8 +48,8 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 | Check | Result | Notes / output snippet |
 |-------|--------|------------------------|
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_t278_self_review_docs.py` (5 tests: 6 nodes in order + `is-outcome` last, the four chips, existing classes only / no paragraph, word limits, banned words). Red first: `5 failed` on the unchanged tree. |
-| Verification command run | ☑ pass | `python3 -m pytest tests/test_t278_self_review_docs.py tests/test_site_content.py tests/test_site_story.py tests/test_site_visual_first.py tests/test_docs_t151.py -q` -> `224 passed in 0.60s` (implementer run, 2026-11-07) |
-| Negative cases hold | ☑ pass | Mutation: deleted `<li class="chip">merge</li>` from `site/docs.html`; `FAILED tests/test_t278_self_review_docs.py::test_chips_row_lists_the_four_things_the_loop_never_does`, `1 failed, 4 passed`. Restored; `5 passed`. (`git diff --stat` during mutation: `site/docs.html | 11 +++++++++++`.) |
+| Verification command run | ☑ pass | After the Stage 4 label fixes (node 4 "Up to 3", node 5 "You approve or reject"): `python3 -m pytest tests/test_t278_self_review_docs.py tests/test_site_content.py tests/test_site_story.py tests/test_site_visual_first.py tests/test_docs_t151.py -q` -> `224 passed in 0.67s`. The 150-visible-word pin on `#skills` holds; to fit it, `cited` and the word `loop` in the heading were dropped. |
+| Negative cases hold | ☑ pass | Re-run on the final tree: deleted `<li class="chip">merge</li>` -> `FAILED tests/test_t278_self_review_docs.py::test_chips_row_lists_the_four_things_the_loop_never_does`, `1 failed, 4 passed`. Restored -> `5 passed`. |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☐ pass / ☐ fail | [what was reviewed vs. skipped, and why] |
 | Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
@@ -89,7 +89,7 @@ no tests ran in 0.00s
 
 The four existing files alone on the unchanged tree: `219 passed in 0.83s`.
 
-**AFTER**: the same Verification Command, post-change: `224 passed in 0.60s`. New content in `#skills`, after the `ux-evaluate` paragraph: `<div class="flow-visual">` holding `<h3><code>self-review</code> loop</h3>`, an `<ol class="flow flow-row is-long" aria-label="The self-review loop, in order">` of 6 nodes (You start it `/self-review` / New records? none: stops / One miner / 3 proposals cited / Approve or reject / Kanban task normal pipeline, `is-outcome`), `<p class="lead">Never:</p>`, and `<ul class="flow-chips">` with `edit kit files`, `merge`, `push`, `call the network`.
+**AFTER**: the same Verification Command, post-change: `224 passed in 0.60s`. New content in `#skills`, after the `ux-evaluate` paragraph: `<div class="flow-visual">` holding `<h3><code>self-review</code></h3>`, an `<ol class="flow flow-row is-long" aria-label="The self-review loop, in order">` of 6 nodes (You start it `/self-review` / New records? none: stops / One miner / Up to 3 / You approve or reject / Kanban task normal pipeline, `is-outcome`), `<p class="lead">Never:</p>`, and `<ul class="flow-chips">` with `edit kit files`, `merge`, `push`, `call the network`.
 
 **DELTA**: A reader of the docs page sees, at a glance, that the user starts the self-review loop, approves each proposal, and that the loop never edits kit files, merges, pushes or calls the network.
 

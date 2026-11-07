@@ -52,7 +52,7 @@ def test_flow_has_six_nodes_in_order_and_the_last_is_the_outcome():  # AC 1, 2
     assert len(nodes) == 6
     assert [c for c, _ in nodes[:5]] == ["flow-node"] * 5 and nodes[5][0] == "flow-node is-outcome"
     texts = [_text(b) for _, b in nodes]
-    for i, needle in enumerate(["/self-review", "none", "miner", "3 proposals", "approve", "kanban"]):
+    for i, needle in enumerate(["/self-review", "none", "miner", "up to 3", "approve", "kanban"]):
         assert needle in texts[i].lower(), f"node {i + 1} lacks {needle!r}: {texts[i]!r}"
     assert "normal pipeline" in texts[5]
 
