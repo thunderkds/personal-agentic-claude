@@ -3027,3 +3027,7 @@ Invoked from the main checkout, `security-review` builds its diff from the curre
 
 ### 2026-11-05 — A Decision record that quotes the auto tag is read as an auto-mode run (T261)
 `lib/auto_mode.py` `tagged` matches the literal auto tag anywhere in a record, code spans included (`auto_windows` strips code spans; `tagged` does not). A normal-mode record that quoted the tag in a follow-up note made `stop_auto_mode_check.py` demand `Mode: auto` and `Memory:`, and write a `Paused:` line. Until fixed: never write the bracketed tag in a non-auto record; say "auto tag". Also: an `AGENTS.md` edit needs `T070_BASELINE_REF` in `.claude/hooks/tests/test_agent_guide_dedup.py` repointed to the edit commit (commit the edit first), and `MEMORY.md` sits at its 42,000-char ratchet, so a new index line needs `/compact-memory` first.
+
+### 2026-11-07 — The 150-word section pin sets the budget for any new visual on `docs.html` (T278)
+`tests/test_site_visual_first.py` `test_every_section_shows_at_most_150_words_on_first_load` counts visible words per section; code elements do not count. `#skills` already held 113, so a new diagram had about 37 words. Plan labels first: a node title of 2–3 words, a meta only if it carries a fact, no unit word you can drop. `test_visible_lead_paragraphs_are_one_line_summaries` also caps a visible lead at 35 words. Cost of getting it wrong: two fix rounds that traded "proposals" and "reject" against the pin. The pin is shared by all 17 sections; change it only in its own task.
+**Files**: site/docs.html, tests/test_site_visual_first.py
