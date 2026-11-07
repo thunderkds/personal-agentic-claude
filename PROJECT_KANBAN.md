@@ -87,6 +87,9 @@
 
 
 ### In Progress
+- [ ] **T277** — `block-dangerous-git` gets a Python twin; `validate.sh` runs in the Windows job under Git Bash | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T277.md` | Registered 2026-11-07 by the user ("let do all of this") from the first real Windows test run (63 failures) | Started 2026-11-07: branch `feat/t277-guardrails-py`, worktree `../wt-t277`
+- [ ] **T275** — `python3` on Windows: hook messages and instructions name a launcher that exists | common-infrastructure | C2 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T275.md` | Registered 2026-11-07 by the user ("let do all of this") from the first real Windows test run (63 failures) | Started 2026-11-07: branch `feat/t275-python-launcher`, worktree `../wt-t275`
+- [ ] **T274** — The test suite is honest on Windows: skip what a machine cannot do, normalize paths | common-infrastructure | C2 | Risk: Low | P1 | Guide: `tasks/TASK_GUIDE_T274.md` | Registered 2026-11-07 by the user ("let do all of this") from the first real Windows test run (63 failures) | Started 2026-11-07: branch `feat/t274-windows-tests-honest`, worktree `../wt-t274`
 
 
 
