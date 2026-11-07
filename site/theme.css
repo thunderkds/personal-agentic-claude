@@ -299,7 +299,7 @@ section { margin: var(--s-8) 0; scroll-margin-top: calc(var(--header-h) + var(--
   .nav-toggle { min-height: 44px; }
   .sidebar a { min-height: 44px; display: flex; align-items: center; }
   .family-nav a { min-height: 44px; }
-  .page-nav a { display: inline-flex; align-items: center; min-height: 44px; }
+  .page-nav a { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; justify-content: center; }
   .brand { min-height: 44px; }
 }
 
