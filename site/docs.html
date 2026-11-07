@@ -1908,6 +1908,19 @@ curl -fsSL https://raw.githubusercontent.com/$GITHUB_USERNAME/easy-kit/main/setu
   <code>ux-evaluate</code> (Stage 3): the frontend agent screenshots its UI at 375px and 1280px,
   judges nine UX checks and the guide's UX rows, and fixes each fail. <code>code-review</code> runs it again.
 </p>
+<div class="flow-visual">
+  <h3><code>self-review</code></h3>
+  <ol class="flow flow-row is-long" aria-label="The self-review loop, in order">
+    <li class="flow-node"><span class="step-no">01</span><span class="flow-title">You start it</span><span class="flow-meta"><code>/self-review</code></span></li>
+    <li class="flow-node"><span class="step-no">02</span><span class="flow-title">New records?</span><span class="flow-meta">none: stops</span></li>
+    <li class="flow-node"><span class="step-no">03</span><span class="flow-title">One miner</span></li>
+    <li class="flow-node"><span class="step-no">04</span><span class="flow-title">Up to 3 proposals</span><span class="flow-meta">cited</span></li>
+    <li class="flow-node"><span class="step-no">05</span><span class="flow-title">You approve</span></li>
+    <li class="flow-node is-outcome"><span class="step-no">06</span><span class="flow-title">Kanban task</span><span class="flow-meta">normal pipeline</span></li>
+  </ol>
+  <p class="lead">Never:</p>
+  <ul class="flow-chips"><li class="chip">edit kit files</li><li class="chip">merge</li><li class="chip">push</li><li class="chip">call the network</li></ul>
+</div>
 </section>
 
 <section id="hooks">
