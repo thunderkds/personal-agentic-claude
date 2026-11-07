@@ -52,7 +52,8 @@ Mode: auto
 4. Spawned the implementer on `claude`, sonnet — FACT: `PROJECT_SPEC.md` `## CLI Model Table`, row `claude`, C1 `sonnet`
 Checks: tests `python3 -m pytest tests .claude/hooks/tests -q -p no:cacheprovider` — 3427 passed; reviews code-review — 0 P0, 0 P1, 0 P2 (security-review not run, Risk Low); real run `tap_probe.py` on `docs.html` and `index.html` at 375px — banner no longer lists `Home` or `Docs` (auto-checked, not /verify)
 Memory: `memory/decisions.md` — T279 nav width decision; `memory/learnings.md` — tap_probe scans the whole page
-Not done: merge (yours); push (yours, also the T278 merge `07d70c4e` on `main`); the other tap targets under 44px (not on the board); auto verify: running (T182)
+Not done: merge (yours); push (yours, also the T278 merge `07d70c4e` on `main`); the other tap targets under 44px (not on the board); auto verify: ☑ pass (session f7a8f8d0-e3bc-486d-bc19-399f6f9320e2, commit 426d36b9c215dac14d844b88580971ae79d34e03, log .claude/verify-runs/T279-426d36b9c215.log)
+Closed: row moved to Done 2026-11-07 — auto verify pass (session f7a8f8d0-e3bc-486d-bc19-399f6f9320e2, commit 426d36b9c215dac14d844b88580971ae79d34e03); Gates 5 and 6 checked
 
 ## Evidence
 
@@ -61,7 +62,7 @@ Not done: merge (yours); push (yours, also the T278 merge `07d70c4e` on `main`);
 | **New test(s) cover Acceptance Criteria (file paths pasted)** | ☑ pass | `tests/test_t279_nav_tap_targets.py` (2 tests: min-width + centring in the phone block; no min-width leak outside it). Red first: `1 failed, 1 passed` on the unchanged CSS. Implementer's run; the reviewer re-runs. |
 | Verification command run | ☑ pass | `python3 -m pytest tests/test_t279_nav_tap_targets.py tests/test_site_content.py tests/test_site_story.py tests/test_site_visual_first.py tests/test_docs_t151.py -q` -> `221 passed in 0.76s`. Wider `-k "site or docs or t278 or t279"` -> `253 passed, 1653 deselected`. No baseline or pin edited. |
 | Negative cases hold | ☑ pass | Mutation (implementer): removed `min-width: 44px` on line 302 (`git diff --stat`: `site/theme.css`, 1 insertion, 1 deletion), new test -> `FAILED ...test_page_nav_links_are_44px_wide_and_centred_on_phones` (`1 failed, 1 passed`); restored, `221 passed`. Reviewer re-runs. |
-| verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
+| verify | ☑ pass | auto-run by hook, session f7a8f8d0-e3bc-486d-bc19-399f6f9320e2, commit 426d36b9c215dac14d844b88580971ae79d34e03, log .claude/verify-runs/T279-426d36b9c215.log — pass |
 | Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | `code-review` (Supervisor, inline) on `main...fix/t279-nav-tap-targets`: `site/theme.css` (1 line), `tests/test_t279_nav_tap_targets.py` (new), guide and this file. Consumers: `docs.html` and `index.html` (shared header), the site CSS pin tests. Lane check: `lane: C1, 2 files, 46 lines, FITS`. Findings: 0 P0, 0 P1, 0 P2. Security-review not run: Risk Low, CSS only. Implementer's own scope note: nothing else reads `.page-nav a`. |
 | Full smoke suite still green (no regression) | ☑ pass | In the worktree at `733d4729`: `python3 -m pytest tests .claude/hooks/tests -q -p no:cacheprovider` -> `3427 passed, 25 subtests passed in 190.07s`. |
 | **Companion score (easy-verifier)** | ☑ N/A | Not run: the score skill is optional and this is a one-line CSS change. |
