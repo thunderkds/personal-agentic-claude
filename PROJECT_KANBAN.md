@@ -87,7 +87,6 @@
 
 
 ### In Progress
-- [ ] **T272** — `setup.ps1` checks the fetched kit before it changes the project | common-infrastructure | C1 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T272.md` | Registered 2026-11-07 by the user ("yes") from the first real Windows install log (installer moved files aside, then failed on a missing `lib/windows_hooks.py`) | Started 2026-11-07: branch `feat/t272-setup-preflight`, worktree `../wt-t272`
 
 
 
@@ -96,6 +95,7 @@
 
 
 ### Ready for Review
+- [ ] **T272** — `setup.ps1` checks the fetched kit before it changes the project | common-infrastructure | C1 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T272.md` | Registered 2026-11-07 by the user ("yes") from the first real Windows install log (installer moved files aside, then failed on a missing `lib/windows_hooks.py`) | Started 2026-11-07: branch `feat/t272-setup-preflight`, worktree `../wt-t272` | Stage 4 2026-11-07: code review (Supervisor, inline) + security check (fail-closed preflight, constant file names, no user input in the path): no P0/P1/P2, 1 P3 left (error text says "no Windows support" also for a missing `merge-settings.py`); implementer 3845 passed, Docker pwsh tests ran; `html-report` not generated | Ready for Review 2026-11-07 (commit b67a2bbd)
 - [ ] **T273** — Windows parity ledger: `docs/windows-parity.md` lists every hook, script, library, installer and shell test with its Windows proof, and a test keeps it complete | Supervisor | C1 | Risk: Low | P1 | Started 2026-11-07: branch `feat/t273-windows-parity-ledger`, worktree `../wt-t273` | Ready for Review 2026-11-07 | Track: minimal | Record: tasks/MINIMAL_LOG.md
 - [ ] **T271** — Native Windows support, step 8 — `update.ps1` and the Update action of `setup.ps1` | common-infrastructure | C3 | Risk: High | P1 | Started 2026-11-06: branch `feat/t271-update-ps1` (on T268), worktree `../wt-t271` | Stage 4 2026-11-06: independent code + security review: no P0/P1, 2 P2 + 3 P3 fixed in 7e3ee6b8 | Ready for Review 2026-11-06
 - [ ] **T268** — Native Windows support, step 7 — `setup.ps1`, the PowerShell installer (install and reinstall) | common-infrastructure | C3 | Risk: High | P1 | Started 2026-11-06: branch `feat/t268-setup-ps1`, worktree `../wt-t268`; user chose pure PowerShell port, install + update (update split to T271) | Stage 4 2026-11-06: independent code + security review: no P0, 1 P1 (held user files deleted on a failed restore), 1 P2 (exclusion path escape), 1 P3, all fixed in 863913c2 | Ready for Review 2026-11-06
