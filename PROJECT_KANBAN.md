@@ -1,5 +1,5 @@
 # PROJECT_KANBAN.md
-**Last updated**: 2026-11-06
+**Last updated**: 2026-11-07
 
 > Compact task board. Full context lives in `PROJECT_SPEC.md`. Update this file whenever a task status changes.
 
@@ -87,6 +87,7 @@
 
 
 ### In Progress
+- [ ] **T272** — `setup.ps1` checks the fetched kit before it changes the project | common-infrastructure | C1 | Risk: Medium | P1 | Guide: `tasks/TASK_GUIDE_T272.md` | Registered 2026-11-07 by the user ("yes") from the first real Windows install log (installer moved files aside, then failed on a missing `lib/windows_hooks.py`) | Started 2026-11-07: branch `feat/t272-setup-preflight`, worktree `../wt-t272`
 
 
 
