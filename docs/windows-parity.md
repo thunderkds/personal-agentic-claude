@@ -3,7 +3,9 @@
 Date: 2026-11-07 (T273). Goal: the kit on native Windows behaves like the kit on Ubuntu.
 This file is the measure. It lists every hook, script, library, installer entry point and shell test,
 and says how each one is proven on Windows. `tests/test_windows_parity_ledger.py` fails when a file is
-missing from the table, when a row has no reason, or when a cited proof file does not exist.
+missing from the table, when a row has no reason, when a cited proof file does not exist, or when the
+skip counts are wrong. It checks the shape and the counts only. A person must check that a status is true
+(a `covered` row is not checked against the test's content), so review the prose when you change a row.
 
 Windows CI run seen: no
 
@@ -31,7 +33,7 @@ to `yes (<run URL>)` after the first run, then fix what the run shows.
 | `smoke-install.sh` | `tests/test_setup.sh` | `tests/windows/smoke-install.ps1` | n/a | POSIX smoke test. Windows twin is `smoke-install.ps1`. |
 | `merge-settings.py`, `windows_hooks.py` | `tests/test_windows_hooks.py` | `tests/test_windows_hooks.py` | covered | Python, same code on both systems. |
 | `post_tool_trace.py`, `filelock.py` | `.claude/hooks/tests/test_filelock.py` | `.claude/hooks/tests/test_filelock.py` | covered | T264 replaced `fcntl` with one portable lock. |
-| `pre_bash_block_unsafe_merge.py`, `shell_data.py` | `.claude/hooks/tests/test_merge_gate_guard.py` | `.claude/hooks/tests/test_windows_merge_gate.py` | partial | T267 tests the PowerShell spellings of git writes. Eight merge-gate tests are `posix_only` (see Skip inventory). To close: port them with a portable stub. |
+| `pre_bash_block_unsafe_merge.py`, `shell_data.py` | `.claude/hooks/tests/test_merge_gate_guard.py` | `.claude/hooks/tests/test_windows_merge_gate.py` | partial | T267 tests the PowerShell spellings of git writes. Two merge-gate tests are `posix_only` (see Skip inventory). To close: port them with a portable stub. |
 | `stop_auto_verify.py`, `proc.py`, `auto_closeout.py`, `trace_chain.py`, `verify_record.py` | `tests/test_auto_verify.py` | `.claude/hooks/tests/test_proc.py` | partial | 114 `posix_only` tests in `tests/test_auto_verify.py` skip on Windows (they need a stub `claude` and a POSIX session). Start, timeout and kill are not tested end to end on Windows. To close: a portable stub `claude` (follow-up T-W2b in `docs/windows-support-plan.md`). |
 | `stop_auto_mode_check.py`, `auto_mode.py`, `session_work.py` | `.claude/hooks/tests/test_t250_session_ownership.py` | `.claude/hooks/tests/test_t252_marked_ownership.py` | partial | Part of the ownership tests are `posix_only`. To close: same stub as the row above. |
 | `pre_tool_sensitive_path.py` | `.claude/hooks/tests/test_vital_slice.py` | `.github/workflows/windows.yml` | covered | Already normalises `\` to `/`; its tests run in the Windows job. |
@@ -53,6 +55,7 @@ to `yes (<run URL>)` after the first run, then fix what the run shows.
 | `validate.sh`, `test-agent-template.sh`, `test-claude-md-refs.sh`, `token-audit.sh` | `scripts/validate.sh` | none | gap | Bash only. The repo gate `validate.sh` never runs on Windows. To close: run them under Git Bash (installed on `windows-latest`) in the Windows job, or port the checks to pytest. |
 | `test_setup.sh`, `test_install_backups.sh`, `test_install_update_smoke.sh`, `test_one_command_menu.sh`, `test_cli_and_project_menus.sh`, `test_t098_harness_presence.sh` | the files themselves | `tests/test_setup_ps1_pwsh.py` | partial | Install and reinstall scenarios have PowerShell tests, but not one for one. To close: list each shell scenario with its PowerShell twin, then add the missing ones. |
 | `test_update.sh`, `test_update_auto_approve.sh`, `test_update_claude_md.sh`, `test_update_removals.sh`, `test_manifest_exclusions.sh`, `test_harness_fetch.sh`, `test_settings_merge.sh` | the files themselves | `tests/test_update_ps1_pwsh.py` | partial | Update scenarios have PowerShell tests, but not one for one. To close: same list as the row above. |
+| `pty.sh` | `tests/test_board_init.py` | `tests/test_board_init.py` | n/a | A helper that gives a shell test a pseudo-terminal. Windows has none. The pytest that needs a terminal is `posix_only` (see Skip inventory). |
 | `test_harness_projection.sh` | the file itself | `tasks/TASK_GUIDE_T268.md` | n/a | Codex and Cursor projection is cut from the Windows installer (Claude Code only; T268 cut list). |
 | `test_shellcheck_clean.sh` | the file itself | `.github/workflows/windows.yml` | n/a | Lints shell scripts, which Windows does not run. Stays on Linux CI. |
 | `test_pack_catalog.sh`, `test_tech_lead_pack.sh`, `test_tech_lead_pipeline_pointer.sh`, `test_readme_current.sh` | the files themselves | none | gap | Checks of repo content, run by bash. To close: port them to pytest so one version runs on both systems. |

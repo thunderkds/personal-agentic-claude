@@ -45,7 +45,7 @@ def _inventory():
     names = set()
     for pat in (".claude/hooks/*.py", ".claude/hooks/lib/*.py", "scripts/*.py", "scripts/*.sh",
                 "lib/*.py", "lib/*.sh", "lib/*.ps1", "skills/*/scripts/*.py",
-                "skills/*/scripts/*.sh", "tests/*.sh", "tests/windows/*.ps1"):
+                "skills/*/scripts/*.sh", "tests/*.sh", "tests/lib/*.sh", "tests/windows/*.ps1"):
         names.update(p.name for p in REPO.glob(pat))
     names.update(n for n in ("setup.sh", "update.sh", "setup.ps1", "update.ps1") if (REPO / n).is_file())
     return names
