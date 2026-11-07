@@ -9,7 +9,7 @@ skip counts are wrong. It checks the shape and the counts only. A person must ch
 
 Windows CI run seen: no
 
-A manual run on a real Windows machine (2026-11-07, Python 3.15, no Developer Mode) passed install, update and the T272 preflight. Its test run ended early (63 failed, 1111 passed, a test hung). T274 to T277 answer it. The manual end-to-end steps are in `docs/windows-manual-checklist.md`.
+A manual run on a real Windows machine (2026-11-07, Python 3.15, no Developer Mode) passed install, update and the T272 preflight. Its test run ended early (63 failed, 1111 passed, a test hung). T274 to T277 answer it: the test suite skips what a machine cannot do (T274), hook messages name a launcher that exists (T275), the plugin and deny-rule risks are written down (T276), and the git guardrail has a Windows form (T277). The manual end-to-end steps are in `docs/windows-manual-checklist.md`.
 
 "No" means the `Python tests (Windows)` job (`.github/workflows/windows.yml`) has not run yet, so every
 `covered` below means "a test exists that runs on Windows", never "it passed on Windows". Change the line
@@ -36,11 +36,11 @@ to `yes (<run URL>)` after the first run, then fix what the run shows.
 | `merge-settings.py`, `windows_hooks.py` | `tests/test_windows_hooks.py` | `tests/test_windows_hooks.py` | covered | Python, same code on both systems. |
 | `post_tool_trace.py`, `filelock.py` | `.claude/hooks/tests/test_filelock.py` | `.claude/hooks/tests/test_filelock.py` | covered | T264 replaced `fcntl` with one portable lock. |
 | `pre_bash_block_unsafe_merge.py`, `shell_data.py` | `.claude/hooks/tests/test_merge_gate_guard.py` | `.claude/hooks/tests/test_windows_merge_gate.py` | partial | T267 tests the PowerShell spellings of git writes. Two merge-gate tests are `posix_only` (see Skip inventory). To close: port them with a portable stub. |
-| `stop_auto_verify.py`, `proc.py`, `auto_closeout.py`, `trace_chain.py`, `verify_record.py` | `tests/test_auto_verify.py` | `.claude/hooks/tests/test_proc.py` | partial | 114 `posix_only` tests in `tests/test_auto_verify.py` skip on Windows (they need a stub `claude` and a POSIX session). Start, timeout and kill are not tested end to end on Windows. To close: a portable stub `claude` (follow-up T-W2b in `docs/windows-support-plan.md`). |
+| `stop_auto_verify.py`, `proc.py`, `auto_closeout.py`, `trace_chain.py`, `verify_record.py` | `tests/test_auto_verify.py` | `.claude/hooks/tests/test_proc.py` | partial | 115 `posix_only` tests in `tests/test_auto_verify.py` skip on Windows (they need a stub `claude` and a POSIX session). Start, timeout and kill are not tested end to end on Windows. To close: a portable stub `claude` (follow-up T-W2b in `docs/windows-support-plan.md`). |
 | `stop_auto_mode_check.py`, `auto_mode.py`, `session_work.py` | `.claude/hooks/tests/test_t250_session_ownership.py` | `.claude/hooks/tests/test_t252_marked_ownership.py` | partial | Part of the ownership tests are `posix_only`. To close: same stub as the row above. |
 | `pre_tool_sensitive_path.py` | `.claude/hooks/tests/test_vital_slice.py` | `.github/workflows/windows.yml` | covered | Already normalises `\` to `/`; its tests run in the Windows job. |
 | `post_agent_move_to_review.py`, `post_bash_memory_update.py`, `post_write_register_task.py`, `pre_agent_step_limit.py`, `pre_agent_validate_guide.py`, `stop_review_reminder.py` | `.claude/hooks/tests/` | `.github/workflows/windows.yml` | covered | Pure Python; the hook tests run in the Windows job. |
-| `project_root.py`, `task_context.py`, `guide_sections.py` | `tests/test_hooks_from_plugin.py` | `tests/test_windows_hooks.py` | covered | Pure Python shared by the hooks. |
+| `project_root.py`, `task_context.py`, `guide_sections.py` | `tests/test_hooks_from_plugin.py` | `tests/test_windows_hooks.py` | covered | Pure Python shared by the hooks. T275 added `python_launcher()` to `project_root.py`: hook messages say `py -3` on Windows. Skill text keeps `python3`; the rule in `AGENTS.md` (Permanent Rules) tells the agent to read it as `py -3`. |
 | `board_sync.py`, `pull_moment.py` | `tests/test_pull_moments.py` | `.github/workflows/windows.yml` | covered | Pure Python. |
 | `lane_check.py`, `verify_trace.py`, `ci_verify_done_tasks.py` | `tests/test_ci_verify_done_tasks.py` | `.github/workflows/windows.yml` | covered | Pure Python. `verify_trace.py` uses the portable lock. |
 | `memory_usage_report.py`, `token_audit.py`, `token_meter.py` | `tests/test_token_meter.py` | `.github/workflows/windows.yml` | covered | Pure Python. |
@@ -53,8 +53,8 @@ to `yes (<run URL>)` after the first run, then fix what the run shows.
 | `dotfiles.py` | `tests/test_dotfiles.py` | `tests/test_dotfiles.py` | partial | Three tests are `posix_only` (permission bits). Windows ignores those bits. |
 | `apply_profile.py` | `tests/test_settings_setup.py` | `tests/test_settings_setup.py` | partial | One test is `posix_only` (permission bits). |
 | `tap_probe.py` | `tests/test_t248_tap_probe.py` | `tests/test_t248_tap_probe.py` | partial | Runs a probe through a shell; one related test is `posix_only`. Nothing shows it on Windows. |
-| `block-dangerous-git.sh` | `skills/git-guardrails-claude-code/SKILL.md` | none | gap | A `.sh` hook needs bash on PATH. The Python twin was cut from T266 and has no task. To close: write `block-dangerous-git.py` and wire it in `windows_hooks.py`. |
-| `validate.sh`, `test-agent-template.sh`, `test-claude-md-refs.sh`, `token-audit.sh` | `scripts/validate.sh` | none | gap | Bash only. The repo gate `validate.sh` never runs on Windows. To close: run them under Git Bash (installed on `windows-latest`) in the Windows job, or port the checks to pytest. |
+| `block-dangerous-git.sh`, `block-dangerous-git.py` | `tests/test_git_guardrails_py.py` | `tests/test_git_guardrails_py.py` | covered | T277 added the Python twin and the Windows registration (exec form, matcher for both the Bash and the PowerShell tool). The `.sh` parity half is `posix_only`. Both files share these gaps: `git  push` (two spaces), `git -C d push` and `git checkout -- .` are not blocked; quoted text is. A follow-up can tighten both. |
+| `validate.sh`, `test-agent-template.sh`, `test-claude-md-refs.sh`, `token-audit.sh` | `scripts/validate.sh` | `.github/workflows/windows.yml` | partial | T277 added the job `Repo gate (Git Bash)`, which runs `validate.sh` on `windows-latest`. Its result is unseen, and it may be red if the checkout has no symlinks. The other three scripts have no Windows run. To close: read the job result, then add the three scripts to it or port them to pytest. |
 | `test_setup.sh`, `test_install_backups.sh`, `test_install_update_smoke.sh`, `test_one_command_menu.sh`, `test_cli_and_project_menus.sh`, `test_t098_harness_presence.sh` | the files themselves | `tests/test_setup_ps1_pwsh.py` | partial | Install and reinstall scenarios have PowerShell tests, but not one for one. To close: list each shell scenario with its PowerShell twin, then add the missing ones. |
 | `test_update.sh`, `test_update_auto_approve.sh`, `test_update_claude_md.sh`, `test_update_removals.sh`, `test_manifest_exclusions.sh`, `test_harness_fetch.sh`, `test_settings_merge.sh` | the files themselves | `tests/test_update_ps1_pwsh.py` | partial | Update scenarios have PowerShell tests, but not one for one. To close: same list as the row above. |
 | `pty.sh` | `tests/test_board_init.py` | `tests/test_board_init.py` | n/a | A helper that gives a shell test a pseudo-terminal. Windows has none. The pytest that needs a terminal is `posix_only` (see Skip inventory). |
@@ -75,8 +75,10 @@ Counted by the test, so this table cannot go stale.
 | `tests/test_board_init.py` | 7 |
 | `.claude/hooks/tests/test_t250_session_ownership.py` | 6 |
 | `tests/test_repo_name.py` | 5 |
-| `tests/test_dotfiles.py` | 3 |
+| `tests/test_dotfiles.py` | 4 |
 | `tests/test_plugin_names.py` | 3 |
+| `tests/test_self_review.py` | 1 |
+| `tests/test_git_guardrails_py.py` | 3 |
 | `tests/test_t245_ux_evaluate.py` | 1 |
 | `tests/test_plugin_init.py` | 1 |
 | `tests/test_hooks_from_plugin.py` | 1 |
@@ -93,8 +95,8 @@ Counted by the test, so this table cannot go stale.
 
 ## Next steps, by value
 
-1. First Windows run: push, open the PR, read the job, set the `Windows CI run seen` line, fix what it shows.
-2. Portable stub `claude`: unblocks the 114 skipped auto-verify tests (largest single gap).
-3. `block-dangerous-git.py`: a safety hook with no Windows form.
-4. `validate.sh` under Git Bash in the Windows job: the repo's own gate.
-5. A real end-to-end session on Windows (`/wake`, one minimal task, one blocked merge, one auto verify), kept as a checklist in the repo.
+1. Push, open the PR, read the job `Python tests (Windows)` and the job `Repo gate (Git Bash)`, set the `Windows CI run seen` line, fix what they show.
+2. Run `docs/windows-manual-checklist.md` on a real machine (10 steps; step 9 checks the deny rule, step 10 the plugin).
+3. Find the test that hangs on Windows: `py -3 -m pytest tests .claude\hooks\tests -q --timeout=60`.
+4. Portable stub `claude`: unblocks the 115 skipped auto-verify tests (the largest single gap).
+5. Tighten the git guardrail patterns in both twins.

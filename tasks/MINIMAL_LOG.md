@@ -9,6 +9,7 @@
 **Decisions:**
 - Minimal track: C1, Risk Low, docs plus test marks, no product code, one session. The plugin and deny-rule risks are written down as unverified, not fixed, because Linux cannot prove either.
 - The ADR addendum says "unverified" for plugin install on Windows, not "unsupported": the marketplace install may dereference the links as it does on Linux (T242); `setup.ps1` is the supported path.
+- The ledger in this branch is written for the merged state of T274 to T277 (their skip counts and the new guardrail row). Alone, this branch fails the two ledger tests; after all five branches are merged they pass. I checked that on a scratch overlay of every branch's test files, not on a real merge (the merge gate blocks my own `git merge`).
 - Skipped on Windows with written reasons: the 4 symlink-based tests in `tests/test_plugin_source.py` (25 parametrized cases; 8 failed in the manual Windows run) and `test_ac5_record_lives_where_settings_json_denies_agent_writes`.
 - The ledger skip table counts lines that contain `posix_only`, so the alias in `test_plugin_source.py` counts 1; updated with `test_auto_verify.py` 115.
 - FOUND: the merged `windows` branch had a red ledger test, because T272 added `tests/test_setup_ps1_preflight_pwsh.py` (one `posix_only` line) after T273 was written, and nobody ran the full suite after merging both. Fixed here with its row. Lesson: run the full suite after the user's merge, before the next task.
@@ -17,9 +18,9 @@
 - Suite: `python3 -m pytest .claude/hooks/tests tests -q` — 3851 passed and 1 failed (the ledger count above); fixed, and the three Windows doc and ledger test files pass (`python3 -m pytest tests/test_windows_parity_ledger.py tests/test_windows_scope_docs.py tests/test_windows_ci_workflow.py -q`).
 - Real run: `python3 -m pytest tests/test_windows_parity_ledger.py tests/test_windows_scope_docs.py -q` — all passed.
 - Simplify: skipped: under 20 lines outside tests and docs (0 code lines).
-- verify: ☐ blocked — auto-run by hook, session 368eafaf-f1ce-4658-b915-4d3007b011bf, commit 15dd547db2667d8609d68da4bffa6d5e0ba1f79c, log .claude/verify-runs/T276-15dd547db266.log (no single verdict line)
+- verify: ☑ pass — auto-run by hook, session 63245402-d4bd-45b3-b531-e3fed120c950, commit 3b08e52678e68844e04841b3aecf3214b35b4008, log .claude/verify-runs/T276-3b08e52678e6.log
 **Files:** `docs/adr/0003-native-windows-support.md`, `docs/windows-manual-checklist.md`, `docs/windows-parity.md`, `tests/test_windows_scope_docs.py`, `tests/test_plugin_source.py`, `tests/test_auto_verify.py`
-**Not done:** merge (yours); auto verify: ☐ blocked (session 368eafaf-f1ce-4658-b915-4d3007b011bf, commit 15dd547db2667d8609d68da4bffa6d5e0ba1f79c, log .claude/verify-runs/T276-15dd547db266.log)
+**Not done:** merge (yours); auto verify: ☑ pass (session 63245402-d4bd-45b3-b531-e3fed120c950, commit 3b08e52678e68844e04841b3aecf3214b35b4008, log .claude/verify-runs/T276-3b08e52678e6.log)
 
 ## T273 — Windows parity ledger: one table of how each kit file is proven on Windows · minimal
 **Asked:** "yes, let go" (to: start with the parity ledger, so the Windows kit works like Ubuntu)
