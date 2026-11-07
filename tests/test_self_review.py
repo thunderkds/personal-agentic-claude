@@ -408,7 +408,7 @@ def test_ac10_default_report_path(tmp_path):
     r = cli(repo, "post", miner_file(tmp_path, []), "--head", head(repo), "--repo", repo)
     assert r.returncode == 0
     path = r.stdout.strip()
-    assert os.path.dirname(path) == os.path.join(repo, "reports", "self-review")
+    assert os.path.normpath(os.path.dirname(path)) == os.path.normpath(os.path.join(repo, "reports", "self-review"))
     assert os.path.basename(path).startswith("self-review-") and path.endswith(".md")
 
 
@@ -789,6 +789,7 @@ def test_fx7_first_parent_walk_never_mines_a_file_twice(tmp_path):
     assert pre(repo)[0]["status"] == "nothing-new"
 
 
+@pytest.mark.posix_only("Windows refuses a file name with a pipe character [TASK_REVIEW_X1|evil.md]")
 def test_fx9_odd_review_file_name_is_ignored(tmp_path):
     repo = make_repo(tmp_path, tids=("X2", "X3"), topics=(STALE,))
     write_review(repo, "X1|evil", (STALE,))

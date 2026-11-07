@@ -171,6 +171,9 @@ def test_ac2_stage_1_has_the_steps_environment_then_agent_team():
 # --- AC3 ----------------------------------------------------------------------------------------------
 
 def _tree_without_warning(src):
+    # T275: the hook names its launcher through `python_launcher()` (POSIX text unchanged: `python3`).
+    # Put the base spelling back, so this pin keeps comparing what T239 pinned and nothing else.
+    src = src.replace("project_root, python_launcher\n", "project_root\n").replace("`{python_launcher()} ", "`python3 ")
     tree = ast.parse(src)
     tree.body = [n for n in tree.body if not (isinstance(n, ast.FunctionDef) and n.name == "check_readiness_warning")]
     return ast.dump(tree)

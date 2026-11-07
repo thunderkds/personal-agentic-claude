@@ -321,18 +321,22 @@ def run_dirty(repo):
     result = subprocess.run([sys.executable, str(DIRTY)], cwd=repo, capture_output=True,
                             text=True, timeout=30)
     assert result.returncode == 0
-    return sorted(result.stdout.splitlines())
+    return sorted(result.stdout.replace("\\", "/").splitlines())  # git prints C:/x, Path prints C:\x
+
+
+def _posix(text):
+    return text.replace("\\", "/")
 
 
 def test_dirty_worktrees_maps_lowercase_board_branch(tmp_path):
     repo, trees = dirty_repo(tmp_path, ENG)
-    assert run_dirty(repo) == sorted([f"ENG-170 {trees['wt170']} 1 modified, 0 untracked",
-                                      f"T142 {trees['wt142']} 1 modified, 0 untracked"])
+    assert run_dirty(repo) == sorted([_posix(f"ENG-170 {trees['wt170']} 1 modified, 0 untracked"),
+                                      _posix(f"T142 {trees['wt142']} 1 modified, 0 untracked")])
 
 
 def test_dirty_worktrees_without_config_maps_t_ids_only(tmp_path):
     repo, trees = dirty_repo(tmp_path, None)
-    assert run_dirty(repo) == [f"T142 {trees['wt142']} 1 modified, 0 untracked"]
+    assert run_dirty(repo) == [_posix(f"T142 {trees['wt142']} 1 modified, 0 untracked")]
 
 
 # --- AC4: bad config falls back to T\d+ with one warning ----------------------------------

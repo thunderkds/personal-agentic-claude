@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-PostToolUse hook — fires after every Bash tool call.
+PostToolUse hook — fires after every Bash or PowerShell (T266) tool call.
 
 When the command is `git push` or `git merge`, prompts the Supervisor
 to run the diff-driven memory-update pass on the two-tier memory system.
@@ -74,7 +74,7 @@ def main():
     except Exception:
         sys.exit(0)
 
-    if event.get("tool_name") != "Bash":
+    if event.get("tool_name") not in ("Bash", "PowerShell"):  # T266: PowerShell tool on Windows
         sys.exit(0)
 
     command = event.get("tool_input", {}).get("command", "")

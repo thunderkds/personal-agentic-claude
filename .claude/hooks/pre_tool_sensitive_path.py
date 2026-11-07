@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-PreToolUse hook (T146) — fires before every Edit, Write and Bash tool call.
+PreToolUse hook (T146) — fires before every Edit, Write, Bash and PowerShell (T266) tool call.
 
 Asks the human first when the call touches a path listed in
 `.claude/sensitive-paths.txt` (`.env*`, secrets, production configs, infra),
@@ -289,7 +289,7 @@ def candidate_paths(tool_name, tool_input, cwd):
         return [file_path]
     command = tool_input.get("command")
     if not isinstance(command, str):
-        raise ValueError("Bash call has no command string")
+        raise ValueError(f"{tool_name} call has no command string")
     return command_tokens(command, cwd)
 
 
@@ -309,7 +309,7 @@ def main():
         ask(f"Malformed hook input ({type(exc).__name__}: {exc}) — cannot tell "
             "whether this call touches a sensitive path.")
 
-    if tool_name not in ("Edit", "Write", "Bash"):
+    if tool_name not in ("Edit", "Write", "Bash", "PowerShell"):  # T266: PowerShell tool on Windows
         sys.exit(0)
 
     root = project_dir()

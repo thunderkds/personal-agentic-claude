@@ -70,7 +70,7 @@ import json
 import os
 import re
 import shlex
-import signal
+import shutil
 import subprocess
 import sys
 
@@ -96,6 +96,7 @@ KANBAN = os.path.join(ROOT, "PROJECT_KANBAN.md")
 
 import auto_closeout as ac  # noqa: E402
 import auto_mode as am  # noqa: E402
+from proc import kill_tree, start_detached  # noqa: E402
 import verify_record as vr  # noqa: E402
 
 CHILD_ENV = "CLAUDE_AUTO_VERIFY_RUN"
@@ -199,11 +200,11 @@ def start(task, head):
         return log_rel, False  # this task and commit already ran (or is running)
     env = dict(os.environ, **{CHILD_ENV: "1", "CLAUDE_PROJECT_DIR": ROOT})
     try:
-        subprocess.Popen([sys.executable, os.path.abspath(__file__), "--run", task.task_id,
-                          task.report_path, task.checkout, head, log_rel, task.track,
-                          "marked" if task.marker else "unmarked"],
-                         cwd=ROOT, env=env, stdin=subprocess.DEVNULL, stdout=fd, stderr=fd,
-                         close_fds=True, start_new_session=True)  # setsid: survives this hook
+        start_detached([sys.executable, os.path.abspath(__file__), "--run", task.task_id,
+                        task.report_path, task.checkout, head, log_rel, task.track,
+                        "marked" if task.marker else "unmarked"],
+                       cwd=ROOT, env=env, stdin=subprocess.DEVNULL, stdout=fd, stderr=fd,
+                       close_fds=True)  # detached (lib/proc.py): survives this hook
     finally:
         os.close(fd)
     return log_rel, True
@@ -367,19 +368,17 @@ def call_claude(checkout):
                "--output-format", "json"]
     print("$ " + shlex.join(command), flush=True)
     env = {k: v for k, v in os.environ.items() if k != "CLAUDE_PROJECT_DIR"}
+    # T265: on Windows `claude` is a `.cmd` shim that Popen finds only by its full path.
+    argv = [shutil.which("claude") or "claude", *command[1:]] if sys.platform == "win32" else command
     try:
-        proc = subprocess.Popen(command, cwd=checkout, env=env, stdin=subprocess.DEVNULL,
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
-                                start_new_session=True)
+        proc = start_detached(argv, cwd=checkout, env=env, stdin=subprocess.DEVNULL,
+                              stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     except FileNotFoundError:
         return "", "claude not found on PATH"
     try:
         out, err = proc.communicate(timeout=timeout_s())
     except subprocess.TimeoutExpired:
-        try:
-            os.killpg(proc.pid, signal.SIGKILL)
-        except Exception:
-            proc.kill()
+        kill_tree(proc)
         out, err = proc.communicate()
         print(out or "", err or "", sep="\n", flush=True)
         return None, f"timed out after {timeout_s()}s"

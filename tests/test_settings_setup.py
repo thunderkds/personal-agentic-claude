@@ -192,6 +192,7 @@ def test_ac5_user_rules_never_removed(tmp_path):
     assert after["ask"].count("Bash(git push -f *)") == 1
 
 
+@pytest.mark.posix_only("relies on POSIX permission bits or execute bits, which Windows does not enforce [S_IMODE]")
 def test_ac5_file_mode_is_kept(tmp_path):
     p = write_settings(tmp_path, kit_shaped())
     os.chmod(p, 0o644)

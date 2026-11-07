@@ -165,6 +165,9 @@ def test_sc5_supervisor_settings_have_no_permissions_or_sandbox():
                     'verify row and its record"',
                     '"command": "python3 \\"$CLAUDE_PROJECT_DIR\\"/.claude/hooks/'
                     'stop_auto_verify.py"'}
+        # T266: the shell-inspecting matchers widen to the PowerShell tool; matcher lines only.
+        allowed |= {'"matcher": "Bash"', '"matcher": "Bash|PowerShell"',
+                    '"matcher": "Edit|Write|Bash"', '"matcher": "Edit|Write|Bash|PowerShell"'}
         assert set(changed) <= allowed, set(changed) - allowed
 
 

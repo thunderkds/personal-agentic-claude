@@ -16,6 +16,7 @@ Run with: python3 -m pytest tests/test_plugin_names.py -q
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -25,6 +26,8 @@ import pytest
 
 REPO = Path(__file__).resolve().parents[1]
 SKILLS = REPO / "skills"
+# T274: why a test that makes a symlink is skipped on a machine that cannot (conftest.py needs_symlinks)
+LINKS = "the test builds the .claude/skills link of a setup.sh install, which needs Developer Mode or admin on Windows"
 AGENTS = REPO / "agents"
 SKILL_DIR_VAR = "${CLAUDE_SKILL_DIR}"
 AGENT_NAMES = ("common-infrastructure", "backend-developer", "frontend-developer", "qa-expert")
@@ -116,6 +119,7 @@ def test_every_skill_dir_path_exists_in_the_plugin_layout():
     assert not missing, "\n".join(missing)
 
 
+@pytest.mark.needs_symlinks(LINKS)
 def test_every_skill_dir_path_exists_in_the_setup_install_layout(tmp_path):
     """`setup.sh` layout: Claude Code names the skill dir `<project>/.claude/skills/<name>`, and
     `.claude/skills` is a relative symlink onto `<project>/skills`. The kernel resolves `..` after the
@@ -342,6 +346,9 @@ def test_trace_hook_records_either_agent_type(tmp_path, agent_type):
     assert json.loads(trace.read_text().splitlines()[-1])["spawn"]["agent_type"] == agent_type
 
 
+LAUNCHER = r"`(?:python3|py -3|python) "  # T275: the launcher a hook message names
+
+
 def test_spawn_hook_names_the_scripts_it_mentions_by_paths_that_exist(tmp_path):
     """The hook tells the agent to run `board_sync.py` (guide incomplete) and `memory_slice.py` (no
     slice); from a plugin the project holds no copy, so each message carries the path of the kit the
@@ -363,18 +370,21 @@ def test_spawn_hook_names_the_scripts_it_mentions_by_paths_that_exist(tmp_path):
 
     guide.write_text("# TASK_GUIDE — T900: x\n")
     blocked = json.loads(spawn().stdout)["reason"]
-    board_sync = re.search(r"`python3 (\S+board_sync\.py) update --guide <ID>`", blocked)
+    # T275: any launcher (`python3`, `py -3`, `python`) and a path that may be shell-quoted.
+    board_sync = re.search(LAUNCHER + r"('[^']*board_sync\.py'|\S+board_sync\.py) update --guide <ID>`", blocked)
     assert board_sync, blocked
-    assert board_sync.group(1) == str(plugin / "scripts" / "board_sync.py")
-    assert Path(board_sync.group(1)).exists()
+    board_sync_path = shlex.split(board_sync.group(1))[0]
+    assert board_sync_path == str(plugin / "scripts" / "board_sync.py")
+    assert Path(board_sync_path).exists()
 
     guide.write_text((REPO / "tasks" / "TASK_GUIDE_T234.md").read_text(encoding="utf-8"))
     result = spawn()
     context = json.loads(result.stdout)["hookSpecificOutput"]["additionalContext"]
-    named = re.search(r"`python3 (\S+memory_slice\.py) <guide>`", context)
+    named = re.search(LAUNCHER + r"('[^']*memory_slice\.py'|\S+memory_slice\.py) <guide>`", context)
     assert named, context
-    assert named.group(1) == str(plugin / "skills" / "craft-spawn-prompt" / "scripts" / "memory_slice.py")
-    assert Path(named.group(1)).exists()
+    named_path = shlex.split(named.group(1))[0]
+    assert named_path == str(plugin / "skills" / "craft-spawn-prompt" / "scripts" / "memory_slice.py")
+    assert Path(named_path).exists()
 
 
 # --- paths in messages are safe to paste ------------------------------------------------------
@@ -494,7 +504,7 @@ def build_layout(tmp_path, layout):
     return kit / "skills", project
 
 
-@pytest.mark.parametrize("layout", ["install", "plugin"])
+@pytest.mark.parametrize("layout", [pytest.param("install", marks=pytest.mark.needs_symlinks(LINKS)), "plugin"])
 def test_every_skill_dir_command_runs(tmp_path, layout):
     skills_parent, project = build_layout(tmp_path, layout)
     ran = set()
@@ -633,6 +643,7 @@ def check_script(script, base, project, tmp_path, label):
         assert "memory-slice:T900" in result.stdout, text
 
 
+@pytest.mark.posix_only("runs a shell script through sh/bash; shell suites are not run on Windows [via kit_snapshot]")
 def test_codex_only_install_rewrites_the_variable_and_every_command_runs(tmp_path, kit_snapshot):
     project, out = real_install(tmp_path, kit_snapshot, CODEX_ANSWERS, "my codex project")
     assert not (project / ".claude" / "skills").exists(), "a Codex-only install makes no Claude Code link"
@@ -662,6 +673,7 @@ def test_codex_only_install_rewrites_the_variable_and_every_command_runs(tmp_pat
     assert ran, "no command ran"
 
 
+@pytest.mark.posix_only("runs a shell script through sh/bash; shell suites are not run on Windows [via kit_snapshot]")
 def test_claude_install_runs_every_command_by_the_dot_claude_path(tmp_path, kit_snapshot):
     project, out = real_install(tmp_path, kit_snapshot, CLAUDE_ANSWERS, "my claude project")
     assert (project / ".claude" / "skills").is_symlink() and not (project / ".codex").exists()
@@ -674,6 +686,7 @@ def test_claude_install_runs_every_command_by_the_dot_claude_path(tmp_path, kit_
         check_script(script, base, project, tmp_path, f"claude: {rel(path)}: {tail}")
 
 
+@pytest.mark.posix_only("runs a shell script through sh/bash; shell suites are not run on Windows [via kit_snapshot]")
 def test_update_rewrites_the_codex_copies_again_and_reports_nothing_edited(tmp_path, kit_snapshot):
     project, _ = real_install(tmp_path, kit_snapshot, CODEX_ANSWERS, "my codex project")
 

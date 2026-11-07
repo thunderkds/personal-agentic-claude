@@ -16,15 +16,16 @@ Installs a `PreToolUse` hook that intercepts and blocks destructive git commands
 Install for **this project only** (`.claude/settings.json`) or **all projects** (`~/.claude/settings.json`)?
 
 #### 2. Place the hook script
-The bundled script lives at `${CLAUDE_SKILL_DIR}/scripts/block-dangerous-git.sh`. Copy it to:
-- **Project**: `.claude/hooks/block-dangerous-git.sh`
-- **Global**: `~/.claude/hooks/block-dangerous-git.sh`
+The skill ships two twins with the same decisions. Pick one by platform:
+- **macOS, Linux, WSL**: `${CLAUDE_SKILL_DIR}/scripts/block-dangerous-git.sh` (needs `bash` and `jq`). Then `chmod +x` it.
+- **Native Windows**: `${CLAUDE_SKILL_DIR}/scripts/block-dangerous-git.py` (needs only Python).
 
-Then `chmod +x` it.
+Copy it to `.claude/hooks/` (**project**) or `~/.claude/hooks/` (**global**).
 
 #### 3. Register the hook (via the `update-config` skill)
-Add to the chosen settings file, merging into any existing `hooks.PreToolUse` array — never overwrite other settings:
+Add to the chosen settings file, merging into any existing `hooks.PreToolUse` array — never overwrite other settings.
 
+**macOS, Linux, WSL** (the `.sh`):
 ```json
 {
   "hooks": {
@@ -41,6 +42,23 @@ Add to the chosen settings file, merging into any existing `hooks.PreToolUse` ar
 ```
 (Global scope: use `~/.claude/hooks/block-dangerous-git.sh` as the command.)
 
+**Native Windows** (the `.py`, exec form: no shell, so no quoting):
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          { "type": "command", "command": "py", "args": ["-3", "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-dangerous-git.py"] }
+        ]
+      }
+    ]
+  }
+}
+```
+(Global scope: write the full path of `~/.claude/hooks/block-dangerous-git.py`; exec form does not expand `~`. With no `py` launcher, use `"command": "python"` and drop `"-3"`.) This is the form `lib/windows_hooks.py` writes for the kit's own hooks.
+
 #### 4. Ask about customization
 Ask whether to add/remove patterns from the blocked list; edit the copied script accordingly.
 
@@ -48,7 +66,7 @@ Ask whether to add/remove patterns from the blocked list; edit the copied script
 ```bash
 echo '{"tool_input":{"command":"git push origin main"}}' | .claude/hooks/block-dangerous-git.sh
 ```
-Should exit code 2 and print a BLOCKED message to stderr.
+Should exit code 2 and print a BLOCKED message to stderr. On Windows, pipe the same JSON into `py -3 .claude\hooks\block-dangerous-git.py`.
 
 ### Note for this framework
 The Supervisor commits/pushes only when the user explicitly asks. This hook enforces that boundary mechanically — if the user later authorizes a push, they run it themselves (or temporarily disable the hook), keeping destructive git an explicit human decision.

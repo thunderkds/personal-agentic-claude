@@ -59,7 +59,7 @@ LINE_CAPS = {
     "agents/frontend.md": 142,
     "agents/common-infrastructure.md": 137,
     "agents/qa.md": 129,
-    "AGENTS.md": 196,  # T169 scope extension: slimmed 218 -> 186 (user: <=200); cap ratchets down to the new count. T173: the doctrine moved to AGENTS.md (186 + opening line + non-Claude CLI section = 196)
+    "AGENTS.md": 198,  # T169 scope extension: slimmed 218 -> 186 (user: <=200); cap ratchets down to the new count. T173: the doctrine moved to AGENTS.md (186 + opening line + non-Claude CLI section = 196) T275: +2 lines, the Windows launcher rule in Permanent Rules (196 -> 198; user-set ceiling stays <=200)
     TASK_GUIDE_TEMPLATE: 205,  # T245: +8 lines for the UX Acceptance Criteria block (197 before)
 }
 
@@ -249,6 +249,7 @@ def test_ac6_the_pinned_simplicity_row_still_matches_every_role_guide(role):
 AGENT_TEMPLATE_SCRIPT_REF = "05a23df"
 
 
+@pytest.mark.posix_only("runs a shell script through sh/bash; shell suites are not run on Windows [sh]")
 def test_ac7_agent_template_script_is_unmodified_and_still_passes():
     rel = "scripts/test-agent-template.sh"
     assert (ROOT / rel).read_bytes() == read_at(rel, AGENT_TEMPLATE_SCRIPT_REF), f"{rel} was modified"

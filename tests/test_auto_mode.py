@@ -301,7 +301,7 @@ def test_ac1_agents_md_gains_no_line_and_stays_under_the_byte_cap():
     lines = _read(AGENTS_MD).splitlines()
     i = lines.index("## Tracks")
     assert lines[i + 2] == "", "## Tracks must stay one paragraph (AGENTS.md has 0 lines of headroom)"
-    assert len(lines) <= 196
+    assert len(lines) <= 198  # T275: +2 lines (the Windows launcher rule in Permanent Rules); was 196
     assert len(AGENTS_MD.read_bytes()) <= 32768
 
 

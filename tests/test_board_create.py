@@ -76,7 +76,7 @@ def run(sync, monkeypatch, root, board, *argv):
 
 
 def files(root):
-    return sorted(str(p.relative_to(root)) for p in Path(root).rglob("*")
+    return sorted(p.relative_to(root).as_posix() for p in Path(root).rglob("*")
                   if p.is_file() and ".claude" not in p.parts and p.name != "draft.md")
 
 

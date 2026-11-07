@@ -1,0 +1,89 @@
+# Windows CI (T263): runs the kit's Python tests on a real Windows runner.
+#
+# The job may be red at first. It lists what T264..T267 must fix. POSIX-only tests are
+# skipped on win32 through the `posix_only` marker in the root `conftest.py`, each with a reason.
+# Shell suites (tests/*.sh) do not run here.
+#
+# To make this job required (a repository admin does this; nothing in this file can):
+#   GitHub -> Settings -> Branches -> Branch protection rule for `main` (or Settings -> Rules ->
+#   Rulesets) -> tick "Require status checks to pass before merging" -> search for
+#   "Python tests (Windows)" -> select it -> Save. Do this only when the job is green; the plan
+#   (docs/windows-support-plan.md) requires it before T264 moves to Done.
+# Versions of pytest and pyyaml are deliberately unpinned for now: the repo has no lockfile or
+# requirements file, and a pin invented here would have no source. Pin them when one exists.
+name: Windows
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  python-tests:
+    name: Python tests (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      # Action references are pinned to a full commit SHA (the tag is in the comment).
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+
+      - name: Install pytest and PyYAML
+        run: python -I -m pip install pytest pyyaml
+
+      - name: Python tests
+        run: python -I -m pytest tests/ .claude/hooks/tests/ -q
+
+      # T268: install the kit with setup.ps1 into a temp repo and check the result (junctions,
+      # lock, Windows hook form, backups, second-run idempotence). Once per PowerShell edition.
+      - name: setup.ps1 smoke (Windows PowerShell 5.1)
+        shell: powershell
+        env:
+          SUPERVISOR_REPO: ${{ github.workspace }}
+        run: ./tests/windows/smoke-install.ps1
+
+      - name: setup.ps1 smoke (PowerShell 7)
+        shell: pwsh
+        env:
+          SUPERVISOR_REPO: ${{ github.workspace }}
+        run: ./tests/windows/smoke-install.ps1
+
+      # T271: install from this checkout, make a second local kit commit, run update.ps1 -Yes
+      # (replaced, added, removed and kept files, exec-form hooks, lock), then a second Update that
+      # must change nothing. Once per PowerShell edition.
+      - name: update.ps1 smoke (Windows PowerShell 5.1)
+        shell: powershell
+        env:
+          SUPERVISOR_REPO: ${{ github.workspace }}
+        run: ./tests/windows/smoke-update.ps1
+
+      - name: update.ps1 smoke (PowerShell 7)
+        shell: pwsh
+        env:
+          SUPERVISOR_REPO: ${{ github.workspace }}
+        run: ./tests/windows/smoke-update.ps1
+
+  # T277: the repo's own gate (scripts/validate.sh: MANIFEST, frontmatter, doctrine paths, canon
+  # symlinks) under Git Bash, which windows-latest ships. A job of its own, so a red result shows
+  # on its own and is not mixed with the Python tests. Not continue-on-error: red is the signal.
+  repo-gate:
+    name: Repo gate (Git Bash)
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: validate.sh
+        shell: bash
+        run: bash scripts/validate.sh

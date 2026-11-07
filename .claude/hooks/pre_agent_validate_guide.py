@@ -57,7 +57,7 @@ def block_spawn(reason):
 # T232 D4: unlike the advisory imports below, this one has no degraded mode. With no
 # project root the hook cannot look for a guide, so the spawn is blocked.
 try:
-    from project_root import exit_outside_kit_project, project_root
+    from project_root import exit_outside_kit_project, project_root, python_launcher
     exit_outside_kit_project()  # first, so a broken lib stays silent in a non-kit project
     ROOT = project_root()
 except Exception as exc:
@@ -316,7 +316,7 @@ def check_memory_slice_warning(prompt):
     return [
         "Spawn prompt names a TASK_GUIDE but has no `<!-- memory-slice:` marker, so "
         "the agent gets none of the memory lines its task touches. Run "
-        f"`python3 {shlex.quote(os.path.join(KIT_DIR, 'skills', 'craft-spawn-prompt', 'scripts', 'memory_slice.py'))} "
+        f"`{python_launcher()} {shlex.quote(os.path.join(KIT_DIR, 'skills', 'craft-spawn-prompt', 'scripts', 'memory_slice.py'))} "
         "<guide>` and paste its output verbatim (craft-spawn-prompt element 4)."
     ]
 
@@ -509,7 +509,7 @@ def main():
             "reason": (
                 f"[hook:pre_agent] Cannot spawn agent — incomplete TASK_GUIDE for: "
                 f"{'; '.join(incomplete)}. Fill those sections first (Stage 2); in board "
-                f"mode push them with `python3 {shlex.quote(os.path.join(KIT_DIR, 'scripts', 'board_sync.py'))} update --guide <ID>`."
+                f"mode push them with `{python_launcher()} {shlex.quote(os.path.join(KIT_DIR, 'scripts', 'board_sync.py'))} update --guide <ID>`."
             )
         }))
         sys.exit(0)

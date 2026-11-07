@@ -150,7 +150,7 @@ def test_ac1_init_creates_every_d2_file_and_the_project_counts_as_a_kit_project(
     assert result.returncode == 0, result.stderr
     for rel in D2_FILES:
         assert (repo / rel).is_file(), rel
-        assert f"+ created {rel}" in result.stdout, rel
+        assert f"+ created {rel}" in result.stdout.replace("\\", "/"), rel
     assert (repo / "tasks").is_dir()
     assert (repo / "CLAUDE.md").read_text(encoding="utf-8") == "@AGENTS.md\n"
     assert (repo / "AGENTS.md").read_bytes() == (REPO / "AGENTS.md").read_bytes()
@@ -239,7 +239,7 @@ def test_ac2_a_file_inside_a_copied_tree_is_kept_and_named(plugin, repo):
     mine.write_text("my guide\n", encoding="utf-8")
     result = run_init(plugin, repo)
     assert mine.read_text(encoding="utf-8") == "my guide\n"
-    assert "= kept templates/TASK_GUIDE_template.md" in result.stdout
+    assert "= kept templates/TASK_GUIDE_template.md" in result.stdout.replace("\\", "/")
     assert (repo / "templates" / "PROJECT_KANBAN_template.md").is_file()
 
 
@@ -448,6 +448,7 @@ def test_d8_init_reports_what_it_did_and_copies_no_bytecode(plugin, repo):
     assert not [p for p in repo.rglob("__pycache__") if ".git" not in p.parts]
 
 
+@pytest.mark.posix_only("relies on POSIX permission bits or execute bits, which Windows does not enforce [S_IRUSR]")
 def test_d8_a_hook_from_a_read_only_plugin_folder_still_gates(plugin, repo, tmp_path):
     """Accepting bytecode is safe: where the plugin folder is read-only, Python skips the write."""
     ro = tmp_path / "ro" / "easy-kit"

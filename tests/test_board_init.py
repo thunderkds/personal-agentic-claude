@@ -171,6 +171,7 @@ def test_no_terminal_does_nothing(tmp_path):
     assert board.calls == [] and not (tmp_path / ".claude").exists()
 
 
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [start_new_session]")
 def test_no_controlling_terminal_subprocess(tmp_path):
     (tmp_path / "scripts").mkdir()
     r = subprocess.run([sys.executable, str(SCRIPT), "init"], cwd=tmp_path, stdin=subprocess.DEVNULL,
@@ -264,25 +265,30 @@ offer_board_mode
     return r.stdout
 
 
+@pytest.mark.posix_only("runs a shell script through sh/bash; shell suites are not run on Windows [via run_offer]")
 def test_setup_asks_nothing_without_a_terminal(tmp_path):
     assert run_offer(tmp_path, 0, "y") == ""
 
 
+@pytest.mark.posix_only("runs a shell script through sh/bash; shell suites are not run on Windows [via run_offer]")
 def test_setup_default_is_no(tmp_path):
     out = run_offer(tmp_path, 1, "")
     assert "online board" in out and "INIT-CALLED" not in out
 
 
+@pytest.mark.posix_only("runs a shell script through sh/bash; shell suites are not run on Windows [via run_offer]")
 def test_setup_yes_calls_init(tmp_path):
     assert "INIT-CALLED scripts/board_sync.py init" in run_offer(tmp_path, 1, "y")
 
 
+@pytest.mark.posix_only("runs a shell script through sh/bash; shell suites are not run on Windows [via run_offer]")
 def test_setup_skips_when_already_configured_or_script_absent(tmp_path):
     assert run_offer(tmp_path, 1, "y", with_config=True) == ""
     assert run_offer(tmp_path / "x", 1, "y", with_script=False) == ""
 
 
 # Real terminal (T155 /verify) ---------------------------------------------------------------
+@pytest.mark.posix_only("needs a POSIX session, process group or controlling terminal, which Windows lacks [make_ctty]")
 def test_init_prompts_on_a_real_pty(tmp_path):
     """`open('/dev/tty', 'r+')` raises UnsupportedOperation (an OSError), which once made
     init exit silently on every real terminal. Run it with a pty as controlling terminal."""
@@ -330,6 +336,7 @@ def test_init_prompts_on_a_real_pty(tmp_path):
     assert not (tmp_path / ".claude" / "board.json").exists()
 
 
+@pytest.mark.posix_only("runs a shell script through sh/bash; shell suites are not run on Windows [via run_offer]")
 def test_setup_warns_when_init_writes_no_config(tmp_path):
     out = run_offer(tmp_path, 1, "y")  # stubbed python3 writes nothing
     assert "Board setup did not finish" in out

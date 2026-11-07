@@ -293,6 +293,7 @@ def test_a_malformed_evidence_table_never_blocks():
     assert gate(broken)[0] is None
 
 
+@pytest.mark.posix_only("relies on POSIX permission bits or execute bits, which Windows does not enforce [geteuid]")
 def test_an_unreadable_review_file_contributes_no_companion_block():
     """A parse failure must not raise, and must never be read as a failed row.
 
