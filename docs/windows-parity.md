@@ -9,6 +9,8 @@ skip counts are wrong. It checks the shape and the counts only. A person must ch
 
 Windows CI run seen: no
 
+A manual run on a real Windows machine (2026-11-07, Python 3.15, no Developer Mode) passed install, update and the T272 preflight. Its test run ended early (63 failed, 1111 passed, a test hung). T274 to T277 answer it. The manual end-to-end steps are in `docs/windows-manual-checklist.md`.
+
 "No" means the `Python tests (Windows)` job (`.github/workflows/windows.yml`) has not run yet, so every
 `covered` below means "a test exists that runs on Windows", never "it passed on Windows". Change the line
 to `yes (<run URL>)` after the first run, then fix what the run shows.
@@ -67,8 +69,9 @@ Counted by the test, so this table cannot go stale.
 
 | File | Lines |
 |---|---|
-| `tests/test_auto_verify.py` | 114 |
+| `tests/test_auto_verify.py` | 115 |
 | `tests/test_windows_ci_workflow.py` | 13 |
+| `tests/test_plugin_source.py` | 1 |
 | `tests/test_board_init.py` | 7 |
 | `.claude/hooks/tests/test_t250_session_ownership.py` | 6 |
 | `tests/test_repo_name.py` | 5 |

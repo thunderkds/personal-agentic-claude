@@ -16,6 +16,7 @@ import pytest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PLUGIN = os.path.join(ROOT, "plugin")
+_PLUGIN_LINKS = pytest.mark.posix_only("plugin/ is built from git symlinks; a Windows clone without the symlink right has plain files there, and the Windows plugin install is unverified (ADR-0003 addendum, T276)")
 PLUGIN_ROOT_PATH = re.compile(r"\$\{CLAUDE_PLUGIN_ROOT\}/([\w./-]+)")
 
 
@@ -59,11 +60,13 @@ def test_the_scan_finds_the_hook_and_init_paths():
     assert "skills/settings-setup/scripts/apply_profile.py" in paths
 
 
+@_PLUGIN_LINKS
 @pytest.mark.parametrize("rel", plugin_root_paths())
 def test_every_plugin_root_path_resolves_under_plugin(rel):
     assert os.path.exists(os.path.join(PLUGIN, rel)), rel
 
 
+@_PLUGIN_LINKS
 @pytest.mark.parametrize("rel", plugin_init_paths())
 def test_every_init_tree_and_file_resolves_under_plugin(rel):
     assert os.path.exists(os.path.join(PLUGIN, rel)), rel
@@ -76,6 +79,7 @@ def test_every_kit_hook_script_has_a_link():
         assert os.path.isfile(os.path.join(PLUGIN, ".claude", "hooks", name)), name
 
 
+@_PLUGIN_LINKS
 def test_every_link_resolves_inside_the_repo_and_is_relative():
     found = links()
     assert found
@@ -94,6 +98,7 @@ def test_every_link_resolves_inside_the_repo_and_is_relative():
 REAL_FILES = {".claude-plugin/plugin.json", ".claude-plugin/icon.png", "hooks/hooks.json"}
 
 
+@_PLUGIN_LINKS
 def test_plugin_holds_only_links_folders_and_the_real_copies():
     for dirpath, dirs, names in os.walk(PLUGIN):
         for name in names:

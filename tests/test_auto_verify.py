@@ -753,6 +753,7 @@ def test_ac5_a_record_the_agent_could_write_is_not_trusted(tmp_path):
     assert _merge(project, _env(tmp_path, project))[0] == "block"
 
 
+@pytest.mark.posix_only("fnmatches a Windows path against the POSIX deny glob; whether Claude Code matches the T251 rule on Windows is unverified (ADR-0003 addendum, docs/windows-manual-checklist.md step 9)")
 def test_ac5_record_lives_where_settings_json_denies_agent_writes(tmp_path, monkeypatch):
     """With no override, the record path falls under the kit's `permissions.deny` rules: the
     `Edit(...)` glob (Edit and Write tools) and the `Bash(*...*)` pattern (any shell command that

@@ -86,3 +86,11 @@ A root `.gitattributes` sets `* text=auto eol=lf`, so a Windows checkout keeps L
 - [ ] T266: launcher-independent hook commands, `block-dangerous-git` rewritten in Python.
 - [ ] T267: merge-gate parser for PowerShell, fail closed.
 - [ ] T268: `setup.ps1` and `update.ps1`, the junction and copy fallback, the parity test.
+
+### Addendum (T276, 2026-11-07): what the v2.3.0 beta does not claim
+
+A first real Windows run (Windows 11, Python 3.15, no Developer Mode) passed install, update and the T272 preflight. It also showed two risks that Linux cannot prove. Both stay **unverified** in the beta. Neither is a promise.
+
+- **Plugin install on Windows is unverified.** `plugin/` is a folder of git symlinks. A Windows clone without the symlink right turns them into plain files, and 8 tests in `tests/test_plugin_source.py` fail there. Claude Code's marketplace install may dereference the links on its own, as it does on Linux (T242), but nobody has checked on Windows. **The supported Windows install is `setup.ps1`.** Those 8 tests are skipped on Windows with this reason.
+- **The agent-write deny rule is unverified on Windows.** `Edit(~/.claude/projects/**/*.jsonl)` (T251) is written with `/` and `~`. Whether Claude Code matches it against a Windows path is not tested. `test_ac5_record_lives_where_settings_json_denies_agent_writes` fnmatches a Windows path against a POSIX glob, so it is skipped on Windows with this reason. A person checks the real behavior with step 9 of `docs/windows-manual-checklist.md`.
+- **Follow-up change:** the `block-dangerous-git` Python twin listed under T266 was cut from T266. T277 builds it.
