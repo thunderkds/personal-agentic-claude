@@ -83,6 +83,7 @@ Counted by the test, so this table cannot go stale.
 | `tests/test_agents_md_primary.py` | 1 |
 | `tests/test_companion_scoring_skills.py` | 1 |
 | `tests/test_update_ps1_pwsh.py` | 1 |
+| `tests/test_setup_ps1_preflight_pwsh.py` | 1 |
 | `tests/test_setup_ps1_pwsh.py` | 1 |
 | `tests/test_settings_setup.py` | 1 |
 | `.claude/hooks/tests/test_merge_gate_t095.py` | 1 |
