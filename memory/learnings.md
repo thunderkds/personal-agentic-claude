@@ -3031,3 +3031,7 @@ Invoked from the main checkout, `security-review` builds its diff from the curre
 ### 2026-11-07 — The 150-word section pin sets the budget for any new visual on `docs.html` (T278)
 `tests/test_site_visual_first.py` `test_every_section_shows_at_most_150_words_on_first_load` counts visible words per section; code elements do not count. `#skills` already held 113, so a new diagram had about 37 words. Plan labels first: a node title of 2–3 words, a meta only if it carries a fact, no unit word you can drop. `test_visible_lead_paragraphs_are_one_line_summaries` also caps a visible lead at 35 words. Cost of getting it wrong: two fix rounds that traded "proposals" and "reject" against the pin. The pin is shared by all 17 sections; change it only in its own task.
 **Files**: site/docs.html, tests/test_site_visual_first.py
+
+### 2026-11-07 — `tap_probe.py` scans the whole page; judge a header change by what the banner lists for the header (T279)
+On T278 a scratch copy that hid every section but `#skills` printed `2 under 44px` (the nav links). The same probe on the full page printed 131 on `docs.html` and 18 on `index.html`, so a guide AC "0 under 44px" could never pass. Write the AC as "the changed element is not listed", and read the red boxes on it. A scratch copy that hides sections also understates the count for any later whole-page claim.
+**Files**: skills/ux-evaluate/scripts/tap_probe.py, site/theme.css

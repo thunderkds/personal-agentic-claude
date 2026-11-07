@@ -2807,3 +2807,9 @@ The log refuses a symlink/non-file path, writes via `mktemp` in `.claude/` + `mv
 **Verified**: code-review 0 P0, 1 P1 ("3 proposals" for "at most 3"), 1 P2 (node 5 had no actor), both fixed; `ux-evaluate` pass at 375 and 1280; full suite 3425 passed; auto verify pass (`c5fcdda9`); merged 2026-11-07 (`07d70c4e`, --no-ff, not pushed).
 **Not done**: node 5 says "You approve", not "approve or reject", to fit the word pin. `Home` and `Docs` in the top nav are under 44px at 375px (older, not this task; not on the board).
 **Files**: site/docs.html, tests/test_t278_self_review_docs.py, skills/self-review/SKILL.md
+
+### 2026-11-07 — T279: the nav links `Home` and `Docs` get `min-width: 44px` on phones; AC 2 judged by the nav, not the whole page
+**Decision** (user: "yes, let update, merge and push [auto]", answering the offer to register a task for the T278 `ux-evaluate` B-d finding): one declaration pair, `min-width: 44px; justify-content: center;`, on the existing `.page-nav a` rule inside `@media (max-width: 719px)` of `site/theme.css`. The links were 44px tall (T-earlier rule) but 38px and 31px wide. A new test pins the rule and that it stays inside the phone block. In auto mode the merge and the push were not done (`docs/claude-md/tracks.md` `## Auto mode`, table row 19); they stay with the user.
+**Why**: `test_touch_targets_reach_44px_below_720px` checks `min-height` only, so width slipped through.
+**Rejected**: fixing every target the probe lists (about 129 on `docs.html`, 16 on `index.html`: body links, journey cards, Settings-tool controls); inline text links are a usual exemption and the fix would touch many components. Not on the board.
+**Files**: site/theme.css, tests/test_t279_nav_tap_targets.py
