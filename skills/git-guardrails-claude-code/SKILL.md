@@ -48,7 +48,7 @@ Add to the chosen settings file, merging into any existing `hooks.PreToolUse` ar
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": "Bash|PowerShell",
         "hooks": [
           { "type": "command", "command": "py", "args": ["-3", "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-dangerous-git.py"] }
         ]

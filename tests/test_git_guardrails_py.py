@@ -249,3 +249,15 @@ def test_the_skill_check_can_fail():
     posix = {"type": "command", "command": 'python3 "$CLAUDE_PROJECT_DIR"/.claude/hooks/block-dangerous-git.py'}
     assert windows_hooks.convert_hook(posix, "py") != wrong
     assert windows_hooks.convert_hook(posix, "python") != hook  # no "-3" with launcher "python"
+
+
+def test_the_windows_registration_matches_the_powershell_tool_too():
+    """Review finding (P1): on Windows Claude Code can run git through the PowerShell tool. The kit's own
+    hooks use "Bash|PowerShell" (.claude/settings.json); a "Bash"-only matcher lets a PowerShell
+    `git push` past the guardrail."""
+    import re
+    text = SKILL.read_text(encoding="utf-8")
+    blocks = re.findall(r"```json\n(.*?)```", text, re.S)
+    win = [b for b in blocks if "block-dangerous-git.py" in b]
+    assert len(win) == 1, "expected one Windows JSON block"
+    assert '"matcher": "Bash|PowerShell"' in win[0]
