@@ -23,6 +23,8 @@ SCRIPT = SKILL_DIR / "scripts" / "dotfiles.py"
 DENY = ["Read(./.env)", "Read(~/.ssh/**)", "Bash(rm -rf *)", "Bash(sudo *)",
         "Bash(curl *)", "Edit(~/.bashrc)", "Bash(git push --force*)"]
 SECRET = "sk-secret-value-T228"
+# T274: why a test that makes a symlink is skipped on a machine that cannot (conftest.py needs_symlinks)
+LINKS = "the test makes or follows a symlink, which needs Developer Mode or admin on Windows"
 
 
 @pytest.fixture
@@ -155,6 +157,7 @@ def test_source_rule_that_prints_differently_is_refused(home, key, rule):
     assert tree_hash(home) == before
 
 
+@pytest.mark.needs_symlinks(LINKS)
 def test_dangling_source_base_link_is_refused(home):
     source = make_source(home, agents="rules")
     (source / "settings.base.json").symlink_to(home / "gone.json")
@@ -188,6 +191,7 @@ def test_source_that_cannot_be_written_as_utf8_is_refused(home):
     assert tree_hash(home) == before
 
 
+@pytest.mark.needs_symlinks(LINKS)
 def test_each_source_part_is_optional(home):
     source = make_source(home, skills=["one"])
     target = make_claude(home, settings={"a": 1})
@@ -295,6 +299,7 @@ def test_apply_backs_up_prior_bytes_before_a_change(home):
     assert (target / names[0]).read_text() == raw
 
 
+@pytest.mark.needs_symlinks(LINKS)
 def test_second_apply_writes_nothing(home):
     source = make_source(home, base={"permissions": {"deny": DENY}}, agents="rules", skills=["one"])
     target = make_claude(home, settings={})
@@ -337,6 +342,7 @@ def test_backup_never_overwrites_an_existing_backup(home, monkeypatch):
 
 # --- AC6 / SC5: links -------------------------------------------------------------------------
 
+@pytest.mark.needs_symlinks(LINKS)
 def test_links_are_made_for_skills_and_instructions(home):
     source = make_source(home, agents="rules", skills=["one", ".hidden"])
     (source / "skills" / "notes.txt").write_text("not a skill")
@@ -354,6 +360,7 @@ def test_links_are_made_for_skills_and_instructions(home):
         assert not (target / "skills" / "notes.txt").exists()
 
 
+@pytest.mark.needs_symlinks(LINKS)
 def test_conflicts_are_reported_and_left_unchanged(home):
     source = make_source(home, agents="rules", skills=["x", "y"])
     target = make_claude(home)
@@ -383,6 +390,7 @@ def test_empty_claude_md_is_a_conflict(home):
     assert not (target / "CLAUDE.md").is_symlink()
 
 
+@pytest.mark.needs_symlinks(LINKS)
 def test_dangling_link_is_a_conflict(home):
     source = make_source(home, agents="rules")
     target = make_claude(home)
@@ -392,6 +400,7 @@ def test_dangling_link_is_a_conflict(home):
     assert os.readlink(target / "CLAUDE.md") == str(home / "gone")
 
 
+@pytest.mark.needs_symlinks(LINKS)
 def test_correct_link_is_no_change(home):
     source = make_source(home, agents="rules")
     target = make_claude(home)
@@ -400,7 +409,7 @@ def test_correct_link_is_no_change(home):
     assert "no change" in result.stdout and "conflict" not in result.stdout
 
 
-@pytest.mark.parametrize("kind", ["link", "file"])
+@pytest.mark.parametrize("kind", [pytest.param("link", marks=pytest.mark.needs_symlinks(LINKS)), "file"])
 def test_skills_path_that_is_not_a_plain_folder_is_a_conflict(home, kind):
     """A link there would drop our links into whatever folder it points at."""
     source = make_source(home, skills=["one"])
@@ -416,6 +425,7 @@ def test_skills_path_that_is_not_a_plain_folder_is_a_conflict(home, kind):
     assert list(outside.iterdir()) == []
 
 
+@pytest.mark.needs_symlinks(LINKS)
 def test_symlinked_settings_is_reported_and_not_replaced(home):
     source = make_source(home, base={"permissions": {"deny": ["a"]}})
     real = home / "real.json"
@@ -430,6 +440,7 @@ def test_symlinked_settings_is_reported_and_not_replaced(home):
 
 # --- AC7: Codex and missing folders -----------------------------------------------------------
 
+@pytest.mark.needs_symlinks(LINKS)
 def test_codex_target_never_gets_settings(home):
     source = make_source(home, base={"permissions": {"deny": ["a"]}}, agents="rules")
     codex = home / ".codex"
@@ -585,6 +596,7 @@ def test_write_failure_is_refused_and_the_next_goes_on(home, monkeypatch, capsys
     assert "disk full" in capsys.readouterr().out
 
 
+@pytest.mark.needs_symlinks(LINKS)
 def test_missing_target_folder_codes(home):
     source = make_source(home, agents="rules")
     good = make_claude(home)
@@ -600,6 +612,7 @@ def test_missing_target_folder_codes(home):
 
 @pytest.mark.parametrize("command", ["plan", "apply", "status"])
 @pytest.mark.parametrize("flag", ["--claude-dir", "--codex-dir"])
+@pytest.mark.needs_symlinks(LINKS)
 def test_target_equal_to_source_is_refused_and_the_next_goes_on(home, command, flag):
     source = make_source(home, base={"permissions": {"deny": ["a"]}}, agents="rules", skills=["one"])
     alias = home / "alias"
@@ -613,6 +626,7 @@ def test_target_equal_to_source_is_refused_and_the_next_goes_on(home, command, f
     assert str(good) in result.stdout
 
 
+@pytest.mark.needs_symlinks(LINKS)
 def test_status_exit_codes(home):
     source = make_source(home, base={"permissions": {"deny": ["a"]}}, agents="rules")
     target = make_claude(home, settings={})
@@ -627,6 +641,7 @@ def test_status_exit_codes(home):
 
 @pytest.mark.parametrize("gone", ["AGENTS.md", "skills/one", "skills/two"])
 @pytest.mark.parametrize("flag", ["--claude-dir", "--codex-dir"])
+@pytest.mark.needs_symlinks(LINKS)
 def test_link_left_broken_by_the_source_is_a_conflict(home, gone, flag):
     source = make_source(home, agents="rules", skills=["one", "two"])
     target = home / "target"
@@ -651,6 +666,7 @@ def test_link_left_broken_by_the_source_is_a_conflict(home, gone, flag):
     assert tree_hash(target) == before  # apply never removes it
 
 
+@pytest.mark.needs_symlinks(LINKS)
 def test_broken_link_is_reported_once_when_the_source_part_exists(home):
     source = make_source(home, agents="rules")
     target = make_claude(home)
@@ -661,6 +677,7 @@ def test_broken_link_is_reported_once_when_the_source_part_exists(home):
     assert "conflict CLAUDE.md: broken link, not changed" in result.stdout
 
 
+@pytest.mark.needs_symlinks(LINKS)
 def test_broken_link_outside_the_source_is_left_alone(home):
     source = make_source(home)
     target = make_claude(home)
@@ -672,6 +689,7 @@ def test_broken_link_outside_the_source_is_left_alone(home):
     assert "broken link" not in result.stdout
 
 
+@pytest.mark.needs_symlinks(LINKS)
 def test_relative_broken_link_into_the_source_is_found(home):
     source = make_source(home)
     target = make_claude(home)
@@ -679,6 +697,7 @@ def test_relative_broken_link_into_the_source_is_found(home):
     assert run(home, "status", "--source", str(source), "--claude-dir", str(target)).returncode == 1
 
 
+@pytest.mark.needs_symlinks(LINKS)
 def test_broken_link_found_through_a_linked_source_path(home):
     source = make_source(home)
     alias = home / "alias"
@@ -710,6 +729,7 @@ def load_module():
     return module
 
 
+@pytest.mark.needs_symlinks(LINKS)
 def test_only_settings_json_is_opened_in_a_target(home, monkeypatch, capsys):
     source = make_source(home, base={"permissions": {"deny": ["a"]}}, agents="rules", skills=["one"])
     target = make_claude(home, settings={})
@@ -832,6 +852,7 @@ def test_t230_a_target_holding_the_source_is_still_allowed(home):
 
 
 @pytest.mark.parametrize("name", ["evil\nplan: + link CLAUDE.md", "a\tb", "a\x1b[2Kb"])
+@pytest.mark.posix_only("Windows refuses a folder name with a newline, a tab or an ESC character [mkdir of the odd name]")
 def test_t230_a_skill_folder_name_with_unprintable_text_is_refused(home, name):
     source = make_source(home, skills=["ok"])
     (source / "skills" / name).mkdir()

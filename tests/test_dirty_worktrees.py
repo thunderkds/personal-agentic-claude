@@ -1,5 +1,6 @@
 """T150 - dirty_worktrees.py (SC1-SC5) and the spawn-mode doc strings (SC6)."""
 import os
+import shutil
 import subprocess
 import sys
 
@@ -29,6 +30,11 @@ def run(cwd):
     return r.stdout
 
 
+def _posix(text):
+    """The script prints the path git gives (C:/x); the test builds it with the OS separator (C:\\x)."""
+    return text.replace("\\", "/")
+
+
 def make_repo(tmp_path):
     repo = tmp_path / "repo"
     repo.mkdir()
@@ -54,7 +60,7 @@ def test_sc1_dirty_in_progress_worktree_reported(tmp_path):
     repo = make_repo(tmp_path)
     wt = add_tree(repo, tmp_path, "wt901", "feat/t901-x", True)
     out = run(repo)
-    assert out.strip() == f"T901 {wt} 1 modified, 2 untracked"
+    assert _posix(out.strip()) == _posix(f"T901 {wt} 1 modified, 2 untracked")
 
 
 def test_sc2_clean_worktree_silent(tmp_path):
@@ -105,7 +111,7 @@ def test_subfolder_run_finds_board(tmp_path):
     wt = add_tree(repo, tmp_path, "wt901", "feat/t901-x", True)
     docs = repo / "docs"
     docs.mkdir()
-    assert run(docs).strip() == f"T901 {wt} 1 modified, 2 untracked"
+    assert _posix(run(docs).strip()) == _posix(f"T901 {wt} 1 modified, 2 untracked")
 
 
 def test_sc5_no_board(tmp_path):
@@ -123,7 +129,7 @@ def test_sc5_not_a_git_repo(tmp_path):
 def test_sc5_missing_worktree_dir(tmp_path):
     repo = make_repo(tmp_path)
     wt = add_tree(repo, tmp_path, "wt901", "feat/t901-x", True)
-    subprocess.run(["rm", "-rf", str(wt)], check=True)
+    shutil.rmtree(wt)
     assert run(repo) == ""
 
 

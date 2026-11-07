@@ -38,12 +38,15 @@ def _run(args, tools=()):
     import tempfile
 
     with tempfile.TemporaryDirectory() as bindir:
+        windows = os.name == "nt"  # Windows runs a fake tool only as <tool>.cmd, found through PATHEXT
         for tool in tools:
-            path = os.path.join(bindir, tool)
+            path = os.path.join(bindir, tool + (".cmd" if windows else ""))
             with open(path, "w") as f:
-                f.write("#!/bin/sh\nexit 0\n")
+                f.write("@exit /b 0\r\n" if windows else "#!/bin/sh\nexit 0\n")
             os.chmod(path, 0o755)
         env = {"PATH": bindir, "HOME": bindir}
+        if windows:
+            env["PATHEXT"] = ".COM;.EXE;.BAT;.CMD"
         return subprocess.run(
             [sys.executable, SCRIPT] + list(args), capture_output=True, text=True, env=env, cwd=bindir
         )
