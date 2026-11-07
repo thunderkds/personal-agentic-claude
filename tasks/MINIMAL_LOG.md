@@ -4,6 +4,23 @@
 > new record directly under this note. On first use, the Supervisor creates `tasks/MINIMAL_LOG.md` from
 > this template and deletes the example comment. The same block is the Supervisor's final chat message.
 
+## T273 — Windows parity ledger: one table of how each kit file is proven on Windows · minimal
+**Asked:** "yes, let go" (to: start with the parity ledger, so the Windows kit works like Ubuntu)
+**Decisions:**
+- Built a ledger document plus a test, no product code — C1, Risk Low, one session, no data change, so the minimal track.
+- Statuses are `covered`, `partial`, `gap`, `n/a`. `covered` means a test that runs in the Windows job exists, never that it passed on Windows; the ledger says "Windows CI run seen: no" and the test requires that line.
+- The skip table is counted by the test from the `posix_only` marks, so it cannot go stale.
+- The row for `test-pty.sh` I first wrote did not match a real file; I removed it before the run.
+- Assumed: rows citing `tests/` for scripts I did not read in full are `covered` only where a dedicated test file exists; the rest are `partial` or `gap` with a reason.
+**Checked:**
+- New test `tests/test_windows_parity_ledger.py` (5 tests) — failed before the ledger existed (5 failed), passes after (5 passed).
+- Mutation controls — deleting a row, changing a skip count, citing a missing proof file, and blanking a reason each turn one test red.
+- Suite: `python3 -m pytest .claude/hooks/tests tests -q` — 3843 passed, 25 subtests passed.
+- Real run: `python3 -m pytest tests/test_windows_parity_ledger.py -q` — printed `5 passed`.
+- Simplify: skipped: under 20 lines outside tests and docs (0 code lines).
+**Files:** `docs/windows-parity.md`, `tests/test_windows_parity_ledger.py`
+**Not done:** merge (the user decides). Findings from the ledger are not fixed here: no Windows run yet, 114 skipped auto-verify tests, `block-dangerous-git` has no Windows form, `validate.sh` does not run on Windows.
+
 ## T261 — The minimal track runs `/simplify` after the change · minimal
 **Asked:** "let investigate more clearly and do if you think it's good for progress, if needed take an experiment"
 **Decisions:**
