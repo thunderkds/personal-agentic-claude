@@ -157,10 +157,10 @@ The three Docker pwsh scenarios, the mutation control, the static test, the work
 
 | Item | Result | Pasted evidence |
 |------|--------|-----------------|
-| New test(s) cover acceptance criteria | ☐ | |
-| Test suite passes (verification command above) | ☐ | |
-| Mutation control goes red | ☐ | |
-| Pre-existing pin tests | ☐ | |
+| New test(s) cover acceptance criteria | ☑ | `tests/test_setup_ps1_preflight_pwsh.py`: `7 passed in 15.28s` (Docker pwsh RAN, image present; not skipped). Before the code: `6 failed, 1 passed in 16.03s` |
+| Test suite passes (verification command above) | ☑ | 2026-11-07T04:32Z: `76 passed in 127.96s` (the guide's four files + the new one); `python3 -m pytest .claude/hooks/tests tests -q` -> `3845 passed, 25 subtests passed in 372.49s` |
+| Mutation control goes red | ☑ | `test_sc4_mutation_control_...`: setup.ps1 copy without the fenced preflight -> project tree changes (moved `.claude/hooks`, lock written), so scenario 1 would fail; the real run leaves `changed/added paths: []` |
+| Pre-existing pin tests | ☑ | `grep -rln setup.ps1 tests .claude/hooks/tests`: `test_windows_ci_workflow.py`, `test_setup_ps1_pwsh.py`, `test_setup_ps1_static.py`, `test_update_ps1_pwsh.py`; none pins the MANIFEST check or the new text; all pass unchanged |
 | UI: visual regression | ☐ N/A (no UI) | |
 | UI: design-system compliance | ☐ N/A (no UI) | |
 | UI: responsiveness | ☐ N/A (no UI) | |

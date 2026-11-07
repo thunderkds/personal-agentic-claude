@@ -249,6 +249,16 @@ function Invoke-Setup {
         Write-HarnessError 'MANIFEST not found in the fetched Easy Kit. The repo may be corrupt.'
         return 1
     }
+    # T272 preflight begin
+    # Install-HarnessSettings reads these two helpers from the clone, and neither is in the MANIFEST.
+    # Check them here, before any question and any project write, on every action.
+    foreach ($needed in @('lib/windows_hooks.py', 'lib/merge-settings.py')) {
+        if (-not (Test-HarnessFile (Join-HarnessPath $tmp $needed))) {
+            Write-HarnessError "The fetched Easy Kit has no $needed, so it has no Windows support yet. Nothing was changed. Wait for a kit release that supports Windows, or point SUPERVISOR_REPO at a kit that has it."
+            return 1
+        }
+    }
+    # T272 preflight end
 
     $installed = Test-HarnessFile $lock
     $claudeDefault = 'CLAUDE.md'
