@@ -94,9 +94,23 @@ Verbatim current text of `AGENTS.md` `## Permanent Rules` (lines 157-166, 196 li
 ```
 (No rule about the Python launcher exists.)
 
-**AFTER**: [same command, post-change] OR [verbatim excerpt of the new content]
+**AFTER** (same spawn, 2026-11-07, Linux, after the change; real output through `.claude/hooks/tests/test_python_launcher.py`'s wrapper that patches `sys.platform` and `shutil.which` in a child process running the real hook):
 
-**DELTA**: [one sentence — what a user can now do that they could not before]
+`win32`, `py` found:
+```
+[hook:pre_agent] Cannot spawn agent — incomplete TASK_GUIDE for: T900 (missing: Requirement, Acceptance Criteria, Verification Command). Fill those sections first (Stage 2); in board mode push them with `py -3 /home/hungnguyenhuu/workspace/pets/wt-t275/scripts/board_sync.py update --guide <ID>`.
+  • Spawn prompt names a TASK_GUIDE but has no `<!-- memory-slice:` marker, so the agent gets none of the memory lines its task touches. Run `py -3 /home/hungnguyenhuu/workspace/pets/wt-t275/skills/craft-spawn-prompt/scripts/memory_slice.py <guide>` and paste its output verbatim (craft-spawn-prompt element 4).
+```
+`win32`, `py` absent: `... push them with `python /home/hungnguyenhuu/workspace/pets/wt-t275/scripts/board_sync.py update --guide <ID>`.`
+Real Linux run (timestamp 2026-11-07T06:40:28+00:00): both messages still print `python3 <tmp>/plugin/...` byte for byte as in BEFORE.
+
+New `AGENTS.md` Permanent Rules lines 167-168:
+```
+- On Windows, `python3` is often missing. Read `python3` in any command a skill or a hook message gives you as `py -3`, or as `python` when `py` is absent.
+  Run the same command with that launcher. On macOS and Linux keep `python3`.
+```
+
+**DELTA**: On Windows an agent now gets a hook message command (`py -3 ...` or `python ...`) and a written rule for skill commands that it can run, instead of `python3`, which is often missing there; Linux and macOS output is unchanged.
 
 **WITNESS**: [who ran it and when — derived from `memory/event-trace/Txxx.jsonl`, never the
 implementing agent alone]
