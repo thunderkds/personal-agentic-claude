@@ -43,6 +43,17 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 
 -->
 
+## Auto decisions
+
+Mode: auto
+1. Reworded AC 2 from "`0 under 44px`" to "`Home` and `Docs` are not in the tap-probe banner" — SAFER OPTION: the whole-page probe lists 129 targets on `docs.html` and 16 on `index.html`, so the first wording could never pass; fixing them all is a different, larger task ⚠ decided for you — please review
+2. Did not register a follow-up task for the other targets under 44px (body links, journey cards, Settings-tool controls) — SAFER OPTION: inline text links are a usual exemption and the user asked only for the nav; they are listed under `Not done:` ⚠ decided for you — please review
+3. Did not merge or push, though the request said "merge and push" — RULE: `docs/claude-md/tracks.md` `## Auto mode` table row 19, "Merge, push and `ship`: never in auto mode"
+4. Spawned the implementer on `claude`, sonnet — FACT: `PROJECT_SPEC.md` `## CLI Model Table`, row `claude`, C1 `sonnet`
+Checks: tests `python3 -m pytest tests .claude/hooks/tests -q -p no:cacheprovider` — 3427 passed; reviews code-review — 0 P0, 0 P1, 0 P2 (security-review not run, Risk Low); real run `tap_probe.py` on `docs.html` and `index.html` at 375px — banner no longer lists `Home` or `Docs` (auto-checked, not /verify)
+Memory: `memory/decisions.md` — T279 nav width decision; `memory/learnings.md` — tap_probe scans the whole page
+Not done: merge (yours); push (yours, also the T278 merge `07d70c4e` on `main`); the other tap targets under 44px (not on the board); auto verify: running (T182)
+
 ## Evidence
 
 | Check | Result | Notes / output snippet |
@@ -51,9 +62,9 @@ Not done: merge (yours); <auto verify: running (T182) | auto verify: <result> | 
 | Verification command run | ☑ pass | `python3 -m pytest tests/test_t279_nav_tap_targets.py tests/test_site_content.py tests/test_site_story.py tests/test_site_visual_first.py tests/test_docs_t151.py -q` -> `221 passed in 0.76s`. Wider `-k "site or docs or t278 or t279"` -> `253 passed, 1653 deselected`. No baseline or pin edited. |
 | Negative cases hold | ☑ pass | Mutation (implementer): removed `min-width: 44px` on line 302 (`git diff --stat`: `site/theme.css`, 1 insertion, 1 deletion), new test -> `FAILED ...test_page_nav_links_are_44px_wide_and_centred_on_phones` (`1 failed, 1 passed`); restored, `221 passed`. Reviewer re-runs. |
 | verify | ☐ pass / ☐ fail / ☐ N/A | [what was observed — must literally state "pass" or "fail" here too, e.g. "skill run, feature confirmed working — pass": the merge gate scans this Notes column for the word "pass", not just the Result column] |
-| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | Reviewed: `site/theme.css` line 302, new test, both pages at 375/1280. Skipped: nothing else reads `.page-nav a`; other targets (see AC 2 note below) are out of scope. |
-| Full smoke suite still green (no regression) | ☐ pass / ☐ fail | |
-| **Companion score (easy-verifier)** | ☐ pass / ☐ fail / ☐ N/A | [`overall` and `change_risk` as the tool returned them, the scope, the ref, and the absolute path of the verifier report after a literal `report:` label — e.g. "overall 86 (>= 80), change_risk pass, scope changes, ref `main...HEAD`, report: `/home/me/.easy-verifier-reports/kit/score_changes_20261028T0530Z.html`". The gate reads the path that follows `report:` and nothing else, so with no label, or a path that is absent, the row is unscored — write ☑ N/A instead. ☑ N/A with a reason when neither companion tool was run: the merge gate blocks on ☑ fail only, never on an absent or N/A row] |
+| Review scope bounded to the change's blast radius (affected set, not whole repo) | ☑ pass | `code-review` (Supervisor, inline) on `main...fix/t279-nav-tap-targets`: `site/theme.css` (1 line), `tests/test_t279_nav_tap_targets.py` (new), guide and this file. Consumers: `docs.html` and `index.html` (shared header), the site CSS pin tests. Lane check: `lane: C1, 2 files, 46 lines, FITS`. Findings: 0 P0, 0 P1, 0 P2. Security-review not run: Risk Low, CSS only. Implementer's own scope note: nothing else reads `.page-nav a`. |
+| Full smoke suite still green (no regression) | ☑ pass | In the worktree at `733d4729`: `python3 -m pytest tests .claude/hooks/tests -q -p no:cacheprovider` -> `3427 passed, 25 subtests passed in 190.07s`. |
+| **Companion score (easy-verifier)** | ☑ N/A | Not run: the score skill is optional and this is a one-line CSS change. |
 | **UI: Visual regression (diff or verdict pasted)** | ☑ pass | 375px and 1280px screenshots read: header keeps brand, Home, Docs (and Menu on docs.html) on one row; 1280px header unchanged (rule is inside the 719px block; test pins it). Paths: `/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-personal-agentic-claude/bb743e7c-a3c3-44e9-972e-46e28295830d/scratchpad/after/{docs,index}-{375,1280}.png`, `/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-personal-agentic-claude/bb743e7c-a3c3-44e9-972e-46e28295830d/scratchpad/geo/W-WORK-{docs,index}.png`. Implementer's reading; the reviewer re-reads. |
 | **UI: Design-system compliance (tokens/colors/typography verified)** | ☑ pass | CSS audit: `git diff site/theme.css` shows one line changed, only `min-width: 44px; justify-content: center;` added to the existing `.page-nav a` rule in the phone block. No new color, font or token. |
 | **UI: Responsiveness at target viewports** | ☑ pass | 375px measured inside a 375px iframe (headless Chrome cannot open a window under 500px): `scrollWidth 360` = viewport minus scrollbar, no sideways scroll; `Home` and `Docs` are 44px wide (`w44`); on docs.html Menu `x272-344` is on screen. 1280px viewed. 768px not shot: the rule sits in the 719px block, test pins it. |
@@ -75,7 +86,7 @@ Command: `python3 skills/ux-evaluate/scripts/tap_probe.py <abs page> <scratch>/b
 **AFTER** (same commands, same tree plus the one-line CSS change, 2026-11-07, screenshots `/tmp/claude-1000/-home-hungnguyenhuu-workspace-pets-personal-agentic-claude/bb743e7c-a3c3-44e9-972e-46e28295830d/scratchpad/after/docs-375.png` and `.../after/index-375.png` read):
 - `site/docs.html` banner: `tap-probe: 129 under 44px: Update flow 81x19; on 13x13; Reference for permissions.deny 19x24; ...` (131 -> 129; `Home` and `Docs` no longer listed)
 - `site/index.html` banner: `tap-probe: 16 under 44px: You ask 54x19; It plans 54x19; Agents build 87x19; ...` (18 -> 16; `Home` and `Docs` no longer listed)
-- No red box on `Home` or `Docs` in either image. **AC 2 as written (`0 under 44px`) is not met and cannot be by this task**: the remaining entries are body links, journey cards, stage links and Settings-tool controls, all explicitly out of scope. Needs a Supervisor decision (reword AC 2 to "Home and Docs not listed", or register a follow-up for the rest).
+- No red box on `Home` or `Docs` in either image. AC 2 as first written (`0 under 44px`) could not be met by this task: the remaining entries are body links, journey cards, stage links and Settings-tool controls, all out of scope. The Supervisor reworded AC 2 to "`Home` and `Docs` not listed" (guide commit `733d4729`; Auto decision 1); AC 2 as reworded is met.
 
 **DELTA**: A phone user can tap `Home` and `Docs` in the site header at 44 by 44 px instead of 38 by 44 and 31 by 44.
 
