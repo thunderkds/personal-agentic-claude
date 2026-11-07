@@ -71,3 +71,19 @@ jobs:
         env:
           SUPERVISOR_REPO: ${{ github.workspace }}
         run: ./tests/windows/smoke-update.ps1
+
+  # T277: the repo's own gate (scripts/validate.sh: MANIFEST, frontmatter, doctrine paths, canon
+  # symlinks) under Git Bash, which windows-latest ships. A job of its own, so a red result shows
+  # on its own and is not mixed with the Python tests. Not continue-on-error: red is the signal.
+  repo-gate:
+    name: Repo gate (Git Bash)
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: validate.sh
+        shell: bash
+        run: bash scripts/validate.sh
