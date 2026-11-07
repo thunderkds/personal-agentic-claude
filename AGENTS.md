@@ -164,6 +164,8 @@ See [`docs/claude-md/pipeline-stages.md`](docs/claude-md/pipeline-stages.md) for
 - Stage 5 verify is mandatory before any merge. After all tasks integrate, Stage 5 `ship` produces the release/rollback plan.
 - The Supervisor must always specify the exact CLI + spawn command for every sub-agent.
 - Never assume the user knows how to run a particular CLI — always give the full command.
+- On Windows, `python3` is often missing. Read `python3` in any command a skill or a hook message gives you as `py -3`, or as `python` when `py` is absent.
+  Run the same command with that launcher. On macOS and Linux keep `python3`.
 
 ### Hard-Stop Gates (Supervisor-level — not skippable by any rationale)
 > These gates exist because pipeline bypasses happen when tasks *feel* small. Perceived smallness is **never** a valid reason to skip any gate below.
